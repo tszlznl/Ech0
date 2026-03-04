@@ -17,7 +17,7 @@
     </div>
     <div
       ref="mainColumn"
-      class="sm:max-w-lg w-full sm:mt-1 sm:min-h-0 sm:h-full sm:overflow-y-auto sm:[overscroll-behavior:contain]"
+      class="sm:max-w-lg w-full sm:min-h-0 sm:h-full sm:overflow-y-auto sm:[overscroll-behavior:contain]"
       :style="{ '--echo-date-sticky-top': echoDateStickyTop }"
       :class="isZenMode ? 'sm:mx-auto sm:shrink-0' : ''"
     >
@@ -104,13 +104,18 @@ const echoDateStickyTop = ref('0px')
 const backTopStyle = ref({ right: '100px' }) // 默认 fallback
 const TIMELINE_SCROLL_KEY = 'home:timeline:scrollTop'
 let timelineScrollRaf: number | null = null
+let stickyBarObserver: ResizeObserver | null = null
 
-const updatePosition = () => {
+const updateStickyTop = () => {
   if (window.innerWidth >= 640 && topStickyBar.value) {
-    echoDateStickyTop.value = `${topStickyBar.value.offsetHeight}px`
+    echoDateStickyTop.value = `${topStickyBar.value.offsetHeight - 1}px`
   } else {
     echoDateStickyTop.value = '0px'
   }
+}
+
+const updatePosition = () => {
+  updateStickyTop()
 
   if (mainColumn.value) {
     const rect = mainColumn.value.getBoundingClientRect()
@@ -151,11 +156,14 @@ const { runWithBfCacheGuard } = useBfCacheRestore({
 })
 
 onMounted(async () => {
-  // 监听窗口大小变化
   schedulePositionUpdate()
   window.addEventListener('resize', schedulePositionUpdate)
   if (mainColumn.value) {
     mainColumn.value.addEventListener('scroll', saveTimelineScrollPosition, { passive: true })
+  }
+  if (topStickyBar.value) {
+    stickyBarObserver = new ResizeObserver(updateStickyTop)
+    stickyBarObserver.observe(topStickyBar.value)
   }
   window.requestAnimationFrame(() => {
     restoreTimelineScrollPosition()
@@ -170,6 +178,10 @@ onBeforeUnmount(() => {
   if (timelineScrollRaf !== null) {
     window.cancelAnimationFrame(timelineScrollRaf)
     timelineScrollRaf = null
+  }
+  if (stickyBarObserver) {
+    stickyBarObserver.disconnect()
+    stickyBarObserver = null
   }
 })
 </script>

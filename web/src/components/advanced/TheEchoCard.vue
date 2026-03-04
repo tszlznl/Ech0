@@ -413,7 +413,7 @@ onBeforeUnmount(() => {
 }
 
 .timeline-marker.is-first::before {
-  top: -12px;
+  display: none;
 }
 
 .timeline-marker::after {
