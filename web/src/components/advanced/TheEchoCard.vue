@@ -103,7 +103,7 @@
     </div>
 
     <!-- 图片 && 内容 -->
-    <div class="border-l-2 border-[var(--timeline-line-color)] ml-1">
+    <div class="border-l-2 border-[var(--timeline-line-color)] ml-1 -mt-px">
       <div class="px-4 py-3">
         <!-- 根据布局决定文字与图片顺序 -->
         <!-- grid 和 horizontal 时，文字在图片上；其他布局（waterfall/carousel/null/undefined）文字在图片下 -->
@@ -378,5 +378,16 @@ onBeforeUnmount(() => {
   top: var(--echo-date-sticky-top, 0px);
   z-index: 8;
   background-color: var(--bg-color);
+}
+
+.echo-header-sticky::after {
+  content: '';
+  position: absolute;
+  left: 0.25rem;
+  top: 50%;
+  bottom: -1px;
+  width: 2px;
+  background-color: var(--timeline-line-color);
+  pointer-events: none;
 }
 </style>
