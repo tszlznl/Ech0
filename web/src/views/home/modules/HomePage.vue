@@ -23,9 +23,10 @@
     >
       <div
         ref="topStickyBar"
-        class="hidden sm:block sticky top-0 z-20 relative -mx-2 sm:-mx-4 md:-mx-6 px-2 sm:px-4 md:px-6 pt-2 pb-1 bg-[var(--bg-color)]"
+        class="hidden sm:block sticky top-0 z-20 relative -mx-2 sm:-mx-4 md:-mx-6 px-2 sm:px-4 md:px-6 pt-2 bg-[var(--bg-color)]"
       >
         <TheTop class="sm:px-4" />
+        <div class="w-full h-2 bg-[var(--bg-color)]"></div>
       </div>
       <TheEchos v-if="!todoMode && !isFilteringMode && !inboxMode" :scroll-target="mainColumn" />
       <TheFilteredEchos

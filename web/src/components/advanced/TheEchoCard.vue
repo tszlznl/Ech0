@@ -1,16 +1,18 @@
 <template>
-  <div class="w-full">
+  <div class="echo-timeline w-full">
     <!-- 日期时间 && 操作按钮 -->
     <div class="echo-header-sticky flex justify-between items-center">
       <!-- 日期时间 -->
-      <div class="flex justify-start items-center h-auto">
-        <div class="flex items-center pr-1">
+      <div class="flex justify-start items-center h-9">
+        <div class="flex items-center h-full pr-1">
           <!-- 小点 -->
-          <div class="w-2 h-2 rounded-full bg-[var(--timeline-dot-color)] mr-2"></div>
+          <div class="timeline-marker" :class="{ 'is-first': props.index === 0 }">
+            <div class="w-2 h-2 rounded-full bg-[var(--timeline-dot-color)]"></div>
+          </div>
           <!-- 具体日期时间 -->
           <div
             @click="handleExpandEcho(echo.id)"
-            class="flex justify-start text-sm text-nowrap text-[var(--timeline-datetime-color)] hover:underline hover:decoration-offset-3 hover:decoration-1 mr-1"
+            class="flex items-center h-full justify-start leading-none text-sm text-nowrap text-[var(--timeline-datetime-color)] hover:underline hover:decoration-offset-3 hover:decoration-1 mr-1"
           >
             {{ formatDate(props.echo.created_at) }}
           </div>
@@ -103,7 +105,7 @@
     </div>
 
     <!-- 图片 && 内容 -->
-    <div class="border-l-2 border-[var(--timeline-line-color)] ml-1 -mt-px">
+    <div class="timeline-content">
       <div class="px-4 py-3">
         <!-- 根据布局决定文字与图片顺序 -->
         <!-- grid 和 horizontal 时，文字在图片上；其他布局（waterfall/carousel/null/undefined）文字在图片下 -->
@@ -206,6 +208,7 @@ type Echo = App.Api.Ech0.Echo
 
 const props = defineProps<{
   echo: Echo
+  index?: number
 }>()
 
 const isLikeAnimating = ref(false)
@@ -380,13 +383,62 @@ onBeforeUnmount(() => {
   background-color: var(--bg-color);
 }
 
-.echo-header-sticky::after {
+.echo-timeline {
+  --timeline-axis-offset: calc(0.25rem + 1px);
+  --timeline-line-width: 2px;
+  --timeline-dot-size: 0.5rem;
+  --timeline-dot-gap: 0.3rem;
+}
+
+.timeline-marker {
+  position: relative;
+  width: var(--timeline-dot-size);
+  height: 100%;
+  margin-right: 0.5rem;
+  margin-left: calc(var(--timeline-axis-offset) - (var(--timeline-dot-size) / 2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timeline-marker::before {
   content: '';
   position: absolute;
-  left: 0.25rem;
-  top: 50%;
-  bottom: -1px;
-  width: 2px;
+  left: calc(50% - (var(--timeline-line-width) / 2));
+  top: -2px;
+  bottom: calc(50% + (var(--timeline-dot-size) / 2) + var(--timeline-dot-gap));
+  width: var(--timeline-line-width);
+  background-color: var(--timeline-line-color);
+  pointer-events: none;
+}
+
+.timeline-marker.is-first::before {
+  top: -12px;
+}
+
+.timeline-marker::after {
+  content: '';
+  position: absolute;
+  left: calc(50% - (var(--timeline-line-width) / 2));
+  top: calc(50% + (var(--timeline-dot-size) / 2) + var(--timeline-dot-gap));
+  bottom: -2px;
+  width: var(--timeline-line-width);
+  background-color: var(--timeline-line-color);
+  pointer-events: none;
+}
+
+.timeline-content {
+  position: relative;
+  margin-left: var(--timeline-axis-offset);
+}
+
+.timeline-content::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  bottom: 0;
+  left: calc((var(--timeline-line-width) / -2));
+  width: var(--timeline-line-width);
   background-color: var(--timeline-line-color);
   pointer-events: none;
 }
