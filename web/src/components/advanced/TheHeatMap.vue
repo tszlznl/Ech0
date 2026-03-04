@@ -17,7 +17,7 @@
     <!-- 自定义 tooltip -->
     <div
       v-if="tooltip.visible"
-      class="absolute z-50 px-2 py-1 bg-orange-500 text-white text-xs rounded shadow"
+      class="fixed z-50 px-2 py-1 bg-orange-500 text-white text-xs rounded shadow"
       :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px' }"
     >
       {{ tooltip.text }}
@@ -78,7 +78,13 @@ function showTooltip(row: number, col: number, event: MouseEvent) {
 
     // 计算 tooltip 的位置
     tooltip.value.x = rect.left
-    tooltip.value.y = rect.top - 30 // 位于 cell 上方
+    
+    // 智能调整垂直位置，防止顶部被遮挡
+    if (rect.top < 40) {
+      tooltip.value.y = rect.bottom + 10 // 显示在下方
+    } else {
+      tooltip.value.y = rect.top - 30 // 显示在上方
+    }
   }
 }
 
