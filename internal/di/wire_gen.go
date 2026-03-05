@@ -7,7 +7,6 @@
 package di
 
 import (
-	"github.com/google/wire"
 	"github.com/lin-snow/ech0/internal/cache"
 	"github.com/lin-snow/ech0/internal/event"
 	"github.com/lin-snow/ech0/internal/fediverse"
@@ -25,17 +24,17 @@ import (
 	"github.com/lin-snow/ech0/internal/handler/web"
 	"github.com/lin-snow/ech0/internal/metric"
 	"github.com/lin-snow/ech0/internal/monitor"
-	repository2 "github.com/lin-snow/ech0/internal/repository/common"
-	repository9 "github.com/lin-snow/ech0/internal/repository/connect"
-	repository3 "github.com/lin-snow/ech0/internal/repository/echo"
-	repository6 "github.com/lin-snow/ech0/internal/repository/fediverse"
+	repository8 "github.com/lin-snow/ech0/internal/repository/common"
+	repository10 "github.com/lin-snow/ech0/internal/repository/connect"
+	repository5 "github.com/lin-snow/ech0/internal/repository/echo"
+	repository3 "github.com/lin-snow/ech0/internal/repository/fediverse"
 	repository7 "github.com/lin-snow/ech0/internal/repository/inbox"
 	"github.com/lin-snow/ech0/internal/repository/keyvalue"
-	repository10 "github.com/lin-snow/ech0/internal/repository/queue"
-	repository4 "github.com/lin-snow/ech0/internal/repository/setting"
-	repository8 "github.com/lin-snow/ech0/internal/repository/todo"
-	"github.com/lin-snow/ech0/internal/repository/user"
-	repository5 "github.com/lin-snow/ech0/internal/repository/webhook"
+	repository2 "github.com/lin-snow/ech0/internal/repository/queue"
+	repository9 "github.com/lin-snow/ech0/internal/repository/setting"
+	repository6 "github.com/lin-snow/ech0/internal/repository/todo"
+	repository4 "github.com/lin-snow/ech0/internal/repository/user"
+	"github.com/lin-snow/ech0/internal/repository/webhook"
 	service11 "github.com/lin-snow/ech0/internal/service/agent"
 	service9 "github.com/lin-snow/ech0/internal/service/backup"
 	"github.com/lin-snow/ech0/internal/service/common"
@@ -52,82 +51,23 @@ import (
 	"gorm.io/gorm"
 )
 
-// Injectors from wire.go:
-
-// BuildHandlers 使用wire生成的代码来构建Handlers实例
-func BuildHandlers(dbProvider func() *gorm.DB, cacheFactory *cache.CacheFactory, tmFactory *transaction.TransactionManagerFactory, ebProvider func() event.IEventBus) (*Handlers, error) {
-	webHandler := handler.NewWebHandler()
-	transactionManager := ProvideTransactionManager(tmFactory)
-	iCache := ProvideCache(cacheFactory)
-	userRepositoryInterface := repository.NewUserRepository(dbProvider, iCache)
-	commonRepositoryInterface := repository2.NewCommonRepository(dbProvider)
-	echoRepositoryInterface := repository3.NewEchoRepository(dbProvider, iCache)
-	keyValueRepositoryInterface := keyvalue.NewKeyValueRepository(dbProvider, iCache)
-	commonServiceInterface := service.NewCommonService(transactionManager, commonRepositoryInterface, echoRepositoryInterface, keyValueRepositoryInterface, ebProvider)
-	settingRepositoryInterface := repository4.NewSettingRepository(dbProvider)
-	webhookRepositoryInterface := repository5.NewWebhookRepository(dbProvider)
-	settingServiceInterface := service2.NewSettingService(transactionManager, commonServiceInterface, keyValueRepositoryInterface, settingRepositoryInterface, webhookRepositoryInterface, ebProvider)
-	userServiceInterface := service3.NewUserService(transactionManager, userRepositoryInterface, settingServiceInterface, ebProvider)
-	userHandler := handler2.NewUserHandler(userServiceInterface)
-	fediverseRepositoryInterface := repository6.NewFediverseRepository(dbProvider)
-	fediverseCore := fediverse.NewFediverseCore(fediverseRepositoryInterface, keyValueRepositoryInterface, userRepositoryInterface, echoRepositoryInterface)
-	fediverseServiceInterface := service4.NewFediverseService(fediverseCore, transactionManager, fediverseRepositoryInterface, userRepositoryInterface, echoRepositoryInterface)
-	echoServiceInterface := service5.NewEchoService(transactionManager, commonServiceInterface, echoRepositoryInterface, commonRepositoryInterface, fediverseServiceInterface, keyValueRepositoryInterface, ebProvider)
-	echoHandler := handler3.NewEchoHandler(echoServiceInterface)
-	commonHandler := handler4.NewCommonHandler(commonServiceInterface)
-	settingHandler := handler5.NewSettingHandler(settingServiceInterface)
-	inboxRepositoryInterface := repository7.NewInboxRepository(dbProvider)
-	inboxServiceInterface := service6.NewInboxService(transactionManager, commonServiceInterface, inboxRepositoryInterface)
-	inboxHandler := handler6.NewInboxHandler(inboxServiceInterface)
-	todoRepositoryInterface := repository8.NewTodoRepository(dbProvider, iCache)
-	todoServiceInterface := service7.NewTodoService(transactionManager, todoRepositoryInterface, commonServiceInterface)
-	todoHandler := handler7.NewTodoHandler(todoServiceInterface)
-	connectRepositoryInterface := repository9.NewConnectRepository(dbProvider)
-	connectServiceInterface := service8.NewConnectService(transactionManager, connectRepositoryInterface, echoRepositoryInterface, commonServiceInterface, settingServiceInterface)
-	connectHandler := handler8.NewConnectHandler(connectServiceInterface)
-	backupServiceInterface := service9.NewBackupService(commonServiceInterface, ebProvider)
-	backupHandler := handler9.NewBackupHandler(backupServiceInterface)
-	fediverseHandler := handler10.NewFediverseHandler(fediverseServiceInterface)
-	metricCollector := metric.NewSystemCollector()
-	monitorMonitor := monitor.NewMonitor(metricCollector)
-	dashboardServiceInterface := service10.NewDashboardService(monitorMonitor, commonServiceInterface)
-	dashboardHandler := handler11.NewDashboardHandler(dashboardServiceInterface)
-	agentServiceInterface := service11.NewAgentService(settingServiceInterface, echoServiceInterface, todoServiceInterface, keyValueRepositoryInterface)
-	agentHandler := handler12.NewAgentHandler(agentServiceInterface)
-	handlers := NewHandlers(webHandler, userHandler, echoHandler, commonHandler, settingHandler, inboxHandler, todoHandler, connectHandler, backupHandler, fediverseHandler, dashboardHandler, agentHandler)
-	return handlers, nil
-}
-
-func BuildTasker(dbProvider func() *gorm.DB, cacheFactory *cache.CacheFactory, tmFactory *transaction.TransactionManagerFactory, ebProvider func() event.IEventBus) (*task.Tasker, error) {
-	transactionManager := ProvideTransactionManager(tmFactory)
-	commonRepositoryInterface := repository2.NewCommonRepository(dbProvider)
-	iCache := ProvideCache(cacheFactory)
-	echoRepositoryInterface := repository3.NewEchoRepository(dbProvider, iCache)
-	keyValueRepositoryInterface := keyvalue.NewKeyValueRepository(dbProvider, iCache)
-	commonServiceInterface := service.NewCommonService(transactionManager, commonRepositoryInterface, echoRepositoryInterface, keyValueRepositoryInterface, ebProvider)
-	settingRepositoryInterface := repository4.NewSettingRepository(dbProvider)
-	webhookRepositoryInterface := repository5.NewWebhookRepository(dbProvider)
-	settingServiceInterface := service2.NewSettingService(transactionManager, commonServiceInterface, keyValueRepositoryInterface, settingRepositoryInterface, webhookRepositoryInterface, ebProvider)
-	queueRepositoryInterface := repository10.NewQueueRepository(dbProvider)
-	tasker := task.NewTasker(commonServiceInterface, settingServiceInterface, ebProvider, queueRepositoryInterface)
-	return tasker, nil
-}
+// Injectors from event_injector.go:
 
 func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() event.IEventBus, cacheFactory *cache.CacheFactory, tmFactory *transaction.TransactionManagerFactory) (*event.EventRegistrar, error) {
-	webhookRepositoryInterface := repository5.NewWebhookRepository(dbProvider)
-	queueRepositoryInterface := repository10.NewQueueRepository(dbProvider)
+	webhookRepositoryInterface := repository.NewWebhookRepository(dbProvider)
+	queueRepositoryInterface := repository2.NewQueueRepository(dbProvider)
 	transactionManager := ProvideTransactionManager(tmFactory)
 	webhookDispatcher := event.NewWebhookDispatcher(ebProvider, webhookRepositoryInterface, queueRepositoryInterface, transactionManager)
-	fediverseRepositoryInterface := repository6.NewFediverseRepository(dbProvider)
+	fediverseRepositoryInterface := repository3.NewFediverseRepository(dbProvider)
 	iCache := ProvideCache(cacheFactory)
 	keyValueRepositoryInterface := keyvalue.NewKeyValueRepository(dbProvider, iCache)
-	userRepositoryInterface := repository.NewUserRepository(dbProvider, iCache)
-	echoRepositoryInterface := repository3.NewEchoRepository(dbProvider, iCache)
+	userRepositoryInterface := repository4.NewUserRepository(dbProvider, iCache)
+	echoRepositoryInterface := repository5.NewEchoRepository(dbProvider, iCache)
 	fediverseCore := fediverse.NewFediverseCore(fediverseRepositoryInterface, keyValueRepositoryInterface, userRepositoryInterface, echoRepositoryInterface)
 	fediverseAgent := event.NewFediverseAgent(fediverseCore, queueRepositoryInterface, transactionManager)
 	deadLetterResolver := event.NewDeadLetterResolver(queueRepositoryInterface, webhookDispatcher, fediverseAgent)
 	backupScheduler := event.NewBackupScheduler()
-	todoRepositoryInterface := repository8.NewTodoRepository(dbProvider, iCache)
+	todoRepositoryInterface := repository6.NewTodoRepository(dbProvider, iCache)
 	inboxRepositoryInterface := repository7.NewInboxRepository(dbProvider)
 	agentProcessor := event.NewAgentProcessor(echoRepositoryInterface, todoRepositoryInterface, userRepositoryInterface, keyValueRepositoryInterface, inboxRepositoryInterface)
 	inboxDispatcher := event.NewInboxDispatcher(inboxRepositoryInterface, keyValueRepositoryInterface)
@@ -136,74 +76,65 @@ func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() event.IEv
 	return eventRegistrar, nil
 }
 
-// wire.go:
+// Injectors from handlers_injector.go:
 
-// CacheSet 包含了构建缓存所需的所有 Provider
-var CacheSet = wire.NewSet(
-	ProvideCache,
-)
+// BuildHandlers 使用wire生成的代码来构建Handlers实例
+func BuildHandlers(dbProvider func() *gorm.DB, cacheFactory *cache.CacheFactory, tmFactory *transaction.TransactionManagerFactory, ebProvider func() event.IEventBus) (*Handlers, error) {
+	webHandler := handler.NewWebHandler()
+	transactionManager := ProvideTransactionManager(tmFactory)
+	iCache := ProvideCache(cacheFactory)
+	userRepositoryInterface := repository4.NewUserRepository(dbProvider, iCache)
+	commonRepositoryInterface := repository8.NewCommonRepository(dbProvider)
+	echoRepositoryInterface := repository5.NewEchoRepository(dbProvider, iCache)
+	keyValueRepositoryInterface := keyvalue.NewKeyValueRepository(dbProvider, iCache)
+	commonService := service.NewCommonService(transactionManager, commonRepositoryInterface, echoRepositoryInterface, keyValueRepositoryInterface, ebProvider)
+	settingRepositoryInterface := repository9.NewSettingRepository(dbProvider)
+	webhookRepositoryInterface := repository.NewWebhookRepository(dbProvider)
+	settingService := service2.NewSettingService(transactionManager, commonService, keyValueRepositoryInterface, settingRepositoryInterface, webhookRepositoryInterface, ebProvider)
+	userService := service3.NewUserService(transactionManager, userRepositoryInterface, settingService, ebProvider)
+	userHandler := handler2.NewUserHandler(userService)
+	fediverseRepositoryInterface := repository3.NewFediverseRepository(dbProvider)
+	fediverseCore := fediverse.NewFediverseCore(fediverseRepositoryInterface, keyValueRepositoryInterface, userRepositoryInterface, echoRepositoryInterface)
+	fediverseService := service4.NewFediverseService(fediverseCore, transactionManager, fediverseRepositoryInterface, userRepositoryInterface, echoRepositoryInterface)
+	echoService := service5.NewEchoService(transactionManager, commonService, echoRepositoryInterface, commonRepositoryInterface, fediverseService, keyValueRepositoryInterface, ebProvider)
+	echoHandler := handler3.NewEchoHandler(echoService)
+	commonHandler := handler4.NewCommonHandler(commonService)
+	settingHandler := handler5.NewSettingHandler(settingService)
+	inboxRepositoryInterface := repository7.NewInboxRepository(dbProvider)
+	inboxService := service6.NewInboxService(transactionManager, commonService, inboxRepositoryInterface)
+	inboxHandler := handler6.NewInboxHandler(inboxService)
+	todoRepositoryInterface := repository6.NewTodoRepository(dbProvider, iCache)
+	todoService := service7.NewTodoService(transactionManager, todoRepositoryInterface, commonService)
+	todoHandler := handler7.NewTodoHandler(todoService)
+	connectRepositoryInterface := repository10.NewConnectRepository(dbProvider)
+	connectService := service8.NewConnectService(transactionManager, connectRepositoryInterface, echoRepositoryInterface, commonService, settingService)
+	connectHandler := handler8.NewConnectHandler(connectService)
+	backupService := service9.NewBackupService(commonService, ebProvider)
+	backupHandler := handler9.NewBackupHandler(backupService)
+	fediverseHandler := handler10.NewFediverseHandler(fediverseService)
+	metricCollector := metric.NewSystemCollector()
+	monitorMonitor := monitor.NewMonitor(metricCollector)
+	dashboardService := service10.NewDashboardService(monitorMonitor, commonService)
+	dashboardHandler := handler11.NewDashboardHandler(dashboardService)
+	agentService := service11.NewAgentService(settingService, echoService, todoService, keyValueRepositoryInterface)
+	agentHandler := handler12.NewAgentHandler(agentService)
+	handlers := NewHandlers(webHandler, userHandler, echoHandler, commonHandler, settingHandler, inboxHandler, todoHandler, connectHandler, backupHandler, fediverseHandler, dashboardHandler, agentHandler)
+	return handlers, nil
+}
 
-// TransactionManagerSet 包含了构建事务管理器所需的所有 Provider
-var TransactionManagerSet = wire.NewSet(
-	ProvideTransactionManager,
-)
+// Injectors from tasker_injector.go:
 
-// WebSet 包含了构建 WebHandler 所需的所有 Provider
-var WebSet = wire.NewSet(handler.NewWebHandler)
-
-// UserSet 包含了构建 UserHandler 所需的所有 Provider
-var UserSet = wire.NewSet(repository.NewUserRepository, service3.NewUserService, handler2.NewUserHandler)
-
-// EchoSet 包含了构建 EchoHandler 所需的所有 Provider
-var EchoSet = wire.NewSet(repository3.NewEchoRepository, service5.NewEchoService, handler3.NewEchoHandler)
-
-// CommonSet 包含了构建 CommonHandler 所需的所有 Provider
-var CommonSet = wire.NewSet(repository2.NewCommonRepository, service.NewCommonService, handler4.NewCommonHandler)
-
-// KeyValueSet 包含了构建 KeyValueRepository 所需的所有 Provider
-var KeyValueSet = wire.NewSet(keyvalue.NewKeyValueRepository)
-
-// SettingSet 包含了构建 SettingHandler 所需的所有 Provider
-var SettingSet = wire.NewSet(repository4.NewSettingRepository, service2.NewSettingService, handler5.NewSettingHandler)
-
-// TodoSet 包含了构建 TodoHandler 所需的所有 Provider
-var TodoSet = wire.NewSet(repository8.NewTodoRepository, service7.NewTodoService, handler7.NewTodoHandler)
-
-// ConnectSet 包含了构建 ConnectHandler 所需的所有 Provider
-var ConnectSet = wire.NewSet(repository9.NewConnectRepository, service8.NewConnectService, handler8.NewConnectHandler)
-
-// BackupSet 包含了构建 BackupHandler 所需的所有 Provider
-var BackupSet = wire.NewSet(handler9.NewBackupHandler, service9.NewBackupService)
-
-// DashboardSet 包含了构建 DashboardHandler 所需的所有 Provider
-var DashboardSet = wire.NewSet(service10.NewDashboardService, handler11.NewDashboardHandler)
-
-// AgentSet 包含了构建 AgentHandler 所需的所有 Provider
-var AgentSet = wire.NewSet(service11.NewAgentService, handler12.NewAgentHandler)
-
-// WebhookSet 包含了构建 WebhookDispatcher 所需的所有 Provider
-var WebhookSet = wire.NewSet(repository5.NewWebhookRepository)
-
-// InboxSet 包含了构建 InboxRepository 所需的所有 Provider
-var InboxSet = wire.NewSet(repository7.NewInboxRepository, service6.NewInboxService, handler6.NewInboxHandler)
-
-// TaskSet 包含了构建 Tasker 所需的所有 Provider
-var TaskSet = wire.NewSet(task.NewTasker)
-
-// QueueSet 包含了构建 Queue 所需的所有 Provider
-var QueueSet = wire.NewSet(repository10.NewQueueRepository)
-
-// FediverseCoreSet 包含了构建 FediverseCore 所需的所有 Provider
-var FediverseCoreSet = wire.NewSet(fediverse.NewFediverseCore)
-
-// FediverseSet 包含了构建 Fediverse 所需的所有 Provider
-var FediverseSet = wire.NewSet(repository6.NewFediverseRepository, service4.NewFediverseService, handler10.NewFediverseHandler, event.NewFediverseAgent)
-
-// EventSet 包含了构建 Event 相关所需的所有 Provider
-var EventSet = wire.NewSet(event.NewWebhookDispatcher, event.NewBackupScheduler, event.NewDeadLetterResolver, event.NewAgentProcessor, event.NewInboxDispatcher, event.NewEventHandlers, event.NewEventRegistry)
-
-// MetricSet 包含了构建 Metric 相关所需的所有 Provider
-var MetricSet = wire.NewSet(metric.NewSystemCollector)
-
-// MonitorSet 包含了构建 Monitor 相关所需的所有 Provider
-var MonitorSet = wire.NewSet(monitor.NewMonitor)
+func BuildTasker(dbProvider func() *gorm.DB, cacheFactory *cache.CacheFactory, tmFactory *transaction.TransactionManagerFactory, ebProvider func() event.IEventBus) (*task.Tasker, error) {
+	transactionManager := ProvideTransactionManager(tmFactory)
+	commonRepositoryInterface := repository8.NewCommonRepository(dbProvider)
+	iCache := ProvideCache(cacheFactory)
+	echoRepositoryInterface := repository5.NewEchoRepository(dbProvider, iCache)
+	keyValueRepositoryInterface := keyvalue.NewKeyValueRepository(dbProvider, iCache)
+	commonService := service.NewCommonService(transactionManager, commonRepositoryInterface, echoRepositoryInterface, keyValueRepositoryInterface, ebProvider)
+	settingRepositoryInterface := repository9.NewSettingRepository(dbProvider)
+	webhookRepositoryInterface := repository.NewWebhookRepository(dbProvider)
+	settingService := service2.NewSettingService(transactionManager, commonService, keyValueRepositoryInterface, settingRepositoryInterface, webhookRepositoryInterface, ebProvider)
+	queueRepositoryInterface := repository2.NewQueueRepository(dbProvider)
+	tasker := task.NewTasker(commonService, settingService, ebProvider, queueRepositoryInterface)
+	return tasker, nil
+}

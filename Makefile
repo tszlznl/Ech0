@@ -13,7 +13,7 @@ IMAGE_TAG?=latest
 OS?=$(if $(GOHOSTOS),$(GOHOSTOS),linux)
 ARCH?=$(if $(GOHOSTARCH),$(GOHOSTARCH),amd64)
 
-.PHONY: help air-install run dev web-dev lint fmt test wire build-image push-image
+.PHONY: help air-install run dev web-dev lint fmt test wire wire-check build-image push-image
 
 help:
 	@echo "Available targets:"
@@ -25,6 +25,7 @@ help:
 	@echo "  make fmt         - Run golangci-lint formatters"
 	@echo "  make test        - Run Go tests"
 	@echo "  make wire        - Generate DI code via Wire"
+	@echo "  make wire-check  - Verify Wire code is up-to-date"
 	@echo "  make build-image - Build Docker image"
 	@echo "  make push-image  - Push Docker image"
 
@@ -50,7 +51,10 @@ test:
 	go test ./...
 
 wire:
-	cd internal/di && wire
+	go generate ./internal/di
+
+wire-check: wire
+	git diff --exit-code -- internal/di/wire_gen.go
 build-image:
 	@echo "Building image for platform: $(OS)/$(ARCH)"
 	docker build --platform $(OS)/$(ARCH) \
