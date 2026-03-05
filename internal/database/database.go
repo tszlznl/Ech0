@@ -105,13 +105,6 @@ func InitDatabase() {
 		})
 	}
 
-	// 执行旧数据库迁移和数据修复任务
-	if err := UpdateMigration(); err != nil {
-		util.HandlePanicError(&commonModel.ServerError{
-			Msg: commonModel.MIGRATE_DB_PANIC,
-			Err: err,
-		})
-	}
 }
 
 // MigrateDB 执行数据库迁移
