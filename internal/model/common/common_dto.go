@@ -15,6 +15,8 @@ type PageQueryDto struct {
 type FileDto struct {
 	// 文件的 URL 地址
 	URL string `json:"url" binding:"required"`
+	// 可直接访问地址（前端渲染应优先使用）
+	AccessURL string `json:"access_url,omitempty"`
 	// 文件来源，如 local/s3/url
 	Source string `json:"source" binding:"required"`
 	// 对象存储的 Key, 用于删除 S3/R2 上的文件

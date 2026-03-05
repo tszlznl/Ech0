@@ -2,10 +2,13 @@ package local
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/lin-snow/ech0/internal/config"
 	"github.com/lin-snow/ech0/internal/storage"
@@ -15,21 +18,35 @@ import (
 )
 
 type Adapter struct {
-	fs afero.Fs
+	fs       afero.Fs
+	imageDir string
+	audioDir string
 }
 
 func NewAdapter(fs afero.Fs) *Adapter {
-	return &Adapter{fs: fs}
+	return &Adapter{
+		fs:       fs,
+		imageDir: filepath.Clean(config.Config().Upload.ImagePath),
+		audioDir: filepath.Clean(config.Config().Upload.AudioPath),
+	}
+}
+
+func NewAdapterWithDirs(fs afero.Fs, imageDir, audioDir string) *Adapter {
+	return &Adapter{
+		fs:       fs,
+		imageDir: filepath.Clean(imageDir),
+		audioDir: filepath.Clean(audioDir),
+	}
 }
 
 func (a *Adapter) Save(_ context.Context, req storage.SaveRequest) (storage.FileObject, error) {
-	dir, prefix := targetDirAndURLPrefix(req.Category)
+	dir, prefix := a.targetDirAndURLPrefix(req.Category)
 	if err := a.fs.MkdirAll(dir, 0o750); err != nil {
 		return storage.FileObject{}, err
 	}
 
 	ext := filepath.Ext(req.FileName)
-	fileName, err := storageUtil.GenerateRandomFilename(req.UserID, ext)
+	fileName, err := generateLocalFilename(req.UserID, ext)
 	if err != nil {
 		return storage.FileObject{}, err
 	}
@@ -62,7 +79,7 @@ func (a *Adapter) Delete(_ context.Context, req storage.DeleteRequest) error {
 	if req.URL == "" {
 		return nil
 	}
-	baseDir, prefix := resolveBaseDirAndPrefix(req)
+	baseDir, prefix := a.resolveBaseDirAndPrefix(req)
 	localPath, err := fileUtil.ValidateAndSanitizePath(baseDir, req.URL, prefix)
 	if err != nil {
 		return err
@@ -89,17 +106,29 @@ func (a *Adapter) Exists(_ context.Context, path string) (bool, error) {
 	return true, nil
 }
 
-func resolveBaseDirAndPrefix(req storage.DeleteRequest) (string, string) {
+func (a *Adapter) resolveBaseDirAndPrefix(req storage.DeleteRequest) (string, string) {
 	if req.Category == storage.CategoryAudio || strings.HasPrefix(req.URL, "/audios/") {
-		return filepath.Clean(config.Config().Upload.AudioPath), "/audios/"
+		return a.audioDir, "/audios/"
 	}
-	return filepath.Clean(config.Config().Upload.ImagePath), "/images/"
+	return a.imageDir, "/images/"
 }
 
-func targetDirAndURLPrefix(category storage.Category) (string, string) {
+func (a *Adapter) targetDirAndURLPrefix(category storage.Category) (string, string) {
 	if category == storage.CategoryAudio {
-		return filepath.Clean(config.Config().Upload.AudioPath), "/audios/"
+		return a.audioDir, "/audios/"
 	}
-	return filepath.Clean(config.Config().Upload.ImagePath), "/images/"
+	return a.imageDir, "/images/"
+}
+
+func generateLocalFilename(userID uint, ext string) (string, error) {
+	if ext == "" {
+		ext = ".bin"
+	}
+	randBytes := make([]byte, 3)
+	if _, err := rand.Read(randBytes); err != nil {
+		return "", err
+	}
+	randomPart := hex.EncodeToString(randBytes)
+	return fmt.Sprintf("%d_%d_%s%s", userID, time.Now().UTC().Unix(), randomPart, ext), nil
 }
 

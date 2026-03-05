@@ -70,24 +70,6 @@ func (commonService *CommonService) CommonGetUserByUserId(userId uint) (userMode
 	return commonService.commonRepository.GetUserByUserId(userId)
 }
 
-func (commonService *CommonService) UploadImage(
-	userId uint,
-	file *multipart.FileHeader,
-	source string,
-) (commonModel.ImageDto, error) {
-	fileDto, err := commonService.UploadFile(userId, file, source, storageDomain.CategoryImage)
-	if err != nil {
-		return commonModel.ImageDto{}, err
-	}
-	return commonModel.ImageDto{
-		URL:       fileDto.URL,
-		SOURCE:    fileDto.Source,
-		ObjectKey: fileDto.ObjectKey,
-		Width:     fileDto.Width,
-		Height:    fileDto.Height,
-	}, nil
-}
-
 func (commonService *CommonService) UploadFile(
 	userId uint,
 	file *multipart.FileHeader,
@@ -174,6 +156,7 @@ func (commonService *CommonService) UploadFile(
 
 	fileDto := commonModel.FileDto{
 		URL:         storedObject.URL,
+		AccessURL:   ResolveAccessFileURL(storedObject.URL, string(storedObject.Source)),
 		Source:      string(storedObject.Source),
 		ObjectKey:   storedObject.ObjectKey,
 		ContentType: storedObject.ContentType,
@@ -191,12 +174,30 @@ func (commonService *CommonService) UploadFile(
 	return fileDto, nil
 }
 
-func (commonService *CommonService) DeleteImage(userid uint, url, source, objectKey string) error {
-	return commonService.DeleteFile(userid, commonModel.FileDto{
-		URL:       url,
-		Source:    source,
-		ObjectKey: objectKey,
-	})
+func ResolveAccessFileURL(rawURL, source string) string {
+	cleanURL := strings.TrimSpace(rawURL)
+	if cleanURL == "" {
+		return ""
+	}
+	lowerURL := strings.ToLower(cleanURL)
+	if strings.HasPrefix(lowerURL, "http://") || strings.HasPrefix(lowerURL, "https://") {
+		return cleanURL
+	}
+
+	if source == echoModel.ImageSourceLocal {
+		if strings.HasPrefix(cleanURL, "/api/") {
+			return cleanURL
+		}
+		if strings.HasPrefix(cleanURL, "/") {
+			return "/api" + cleanURL
+		}
+		return "/api/" + strings.TrimLeft(cleanURL, "/")
+	}
+
+	if strings.HasPrefix(cleanURL, "/") {
+		return cleanURL
+	}
+	return "/" + strings.TrimLeft(cleanURL, "/")
 }
 
 func (commonService *CommonService) DeleteFile(userid uint, file commonModel.FileDto) error {
@@ -214,15 +215,6 @@ func (commonService *CommonService) DeleteFile(userid uint, file commonModel.Fil
 	}
 
 	return commonService.deleteFileBySource(file.URL, normalizeFileSource(file.Source), file.ObjectKey)
-}
-
-func (commonService *CommonService) DirectDeleteImage(url, source, objectKey string) error {
-	// 检查图片是否存在
-	if url == "" {
-		return errors.New(commonModel.IMAGE_NOT_FOUND)
-	}
-
-	return commonService.deleteFileBySource(url, normalizeFileSource(source), objectKey)
 }
 
 func (commonService *CommonService) deleteFileBySource(url, source, objectKey string) error {
@@ -492,15 +484,6 @@ func (commonService *CommonService) PlayMusic(ctx *gin.Context) {
 	}
 
 	http.ServeContent(ctx.Writer, ctx.Request, musicName, stat.ModTime(), readSeeker)
-}
-
-// GetS3PresignURL 获取 S3 预签名 URL
-func (commonService *CommonService) GetS3PresignURL(
-	userid uint,
-	s3Dto *commonModel.GetPresignURLDto,
-	method string,
-) (commonModel.PresignDto, error) {
-	return commonService.GetFilePresignURL(userid, s3Dto, method)
 }
 
 func (commonService *CommonService) GetFilePresignURL(

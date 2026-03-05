@@ -28,6 +28,7 @@ type Image struct {
 	ID          uint   `gorm:"primaryKey"       json:"id"`
 	EchoID      uint   `gorm:"index;not null"   json:"echo_id"`              // 关联的 Echo ID
 	ImageURL    string `gorm:"type:text"        json:"image_url"`            // 图片URL
+	AccessURL   string `gorm:"-"                json:"access_url,omitempty"` // 可直接访问地址
 	ImageSource string `gorm:"type:varchar(20)" json:"image_source"`         // 图片来源: local/url/s3
 	ObjectKey   string `gorm:"type:text"        json:"object_key,omitempty"` // 对象存储的Key (如果是本地存储则为空)
 	Width       int    `gorm:"default:0"        json:"width,omitempty"`      // 图片宽度

@@ -2409,6 +2409,10 @@ const docTemplate = `{
         "model.Image": {
             "type": "object",
             "properties": {
+                "access_url": {
+                    "description": "可直接访问地址（前端渲染应优先使用）",
+                    "type": "string"
+                },
                 "height": {
                     "description": "图片高度",
                     "type": "integer"
@@ -2445,6 +2449,10 @@ const docTemplate = `{
                 "url"
             ],
             "properties": {
+                "access_url": {
+                    "description": "可直接访问地址（前端渲染应优先使用）",
+                    "type": "string"
+                },
                 "height": {
                     "description": "图片高度",
                     "type": "integer"

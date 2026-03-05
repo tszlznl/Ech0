@@ -24,7 +24,7 @@ func TestModule_ZipUnzipCopy_WithMemMapFs(t *testing.T) {
 	if err := module.UnzipFile("data/archive.zip", "data/unzipped"); err != nil {
 		t.Fatalf("unzip failed: %v", err)
 	}
-	if err := module.CopyDirectory("data/unzipped/src", "data/copied"); err != nil {
+	if err := module.CopyDirectory("data/unzipped", "data/copied"); err != nil {
 		t.Fatalf("copy failed: %v", err)
 	}
 

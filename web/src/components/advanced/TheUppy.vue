@@ -214,9 +214,11 @@ const initUppy = () => {
     if (memorySource.value === ImageSource.LOCAL) {
       const res = response.body as unknown as App.Api.Response<App.Api.File.FileDto>
       const fileUrl = String(res.data.url)
+      const accessUrl = String(res.data.access_url || fileUrl)
       const { width, height } = res.data
       const item: App.Api.Ech0.FileToAdd = {
         image_url: fileUrl,
+        access_url: accessUrl,
         image_source: ImageSource.LOCAL,
         object_key: '',
         width: width,
@@ -229,6 +231,7 @@ const initUppy = () => {
 
       const item: App.Api.Ech0.FileToAdd = {
         image_url: uploadedFile.url,
+        access_url: uploadedFile.url,
         image_source: ImageSource.S3,
         object_key: uploadedFile.objectKey,
       }

@@ -90,10 +90,6 @@ func (commonHandler *CommonHandler) UploadFile() gin.HandlerFunc {
 	})
 }
 
-func (commonHandler *CommonHandler) UploadImage() gin.HandlerFunc {
-	return commonHandler.UploadFile()
-}
-
 // DeleteFile 删除文件
 //
 //	@Summary		删除文件
@@ -135,10 +131,6 @@ func (commonHandler *CommonHandler) DeleteFile() gin.HandlerFunc {
 			Msg: commonModel.DELETE_SUCCESS,
 		}
 	})
-}
-
-func (commonHandler *CommonHandler) DeleteImage() gin.HandlerFunc {
-	return commonHandler.DeleteFile()
 }
 
 // GetStatus 获取Echo状态
@@ -420,10 +412,6 @@ func (commonHandler *CommonHandler) GetFilePresignURL() gin.HandlerFunc {
 			Msg:  commonModel.GET_S3_PRESIGN_URL_SUCCESS,
 		}
 	})
-}
-
-func (commonHandler *CommonHandler) GetS3PresignURL() gin.HandlerFunc {
-	return commonHandler.GetFilePresignURL()
 }
 
 // GetWebsiteTitle 获取网站标题

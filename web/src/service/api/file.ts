@@ -17,11 +17,6 @@ export function fetchUploadFile(file: File, source?: string, category = 'image')
   })
 }
 
-// 兼容旧调用
-export function fetchUploadImage(file: File, source?: string) {
-  return fetchUploadFile(file, source, 'image')
-}
-
 // 删除文件
 export function fetchDeleteFile(file: App.Api.Ech0.FileToDelete) {
   return request({
@@ -31,7 +26,3 @@ export function fetchDeleteFile(file: App.Api.Ech0.FileToDelete) {
   })
 }
 
-// 兼容旧调用
-export function fetchDeleteImage(image: App.Api.Ech0.ImageToDelete) {
-  return fetchDeleteFile(image)
-}

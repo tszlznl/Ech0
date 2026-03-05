@@ -195,6 +195,9 @@ definitions:
     type: object
   model.Image:
     properties:
+      access_url:
+        description: 可直接访问地址（前端渲染应优先使用）
+        type: string
       height:
         description: 图片高度
         type: integer
@@ -218,6 +221,9 @@ definitions:
     type: object
   model.ImageDto:
     properties:
+      access_url:
+        description: 可直接访问地址（前端渲染应优先使用）
+        type: string
       height:
         description: 图片高度
         type: integer

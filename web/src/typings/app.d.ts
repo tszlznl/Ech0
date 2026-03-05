@@ -77,6 +77,8 @@ declare namespace App {
       }
       type FileDto = {
         url: string
+        /** 可直接用于渲染的 URL（优先于 url） */
+        access_url?: string
         source: string
         object_key?: string
         content_type?: string
@@ -117,6 +119,8 @@ declare namespace App {
         id: number
         echo_id: number
         image_url: string
+        /** 可直接用于渲染的 URL（优先于 image_url） */
+        access_url?: string
         image_source: string
         object_key?: string // 对象存储的Key (如果是本地存储则为空)
         width?: number // 图片宽度
@@ -133,6 +137,8 @@ declare namespace App {
 
       type FileToAdd = {
         image_url: string
+        /** 前端预览用的可直接访问地址，提交时仍使用 image_url */
+        access_url?: string
         image_source: string
         object_key?: string // 对象存储的Key (如果是本地存储则为空)
         width?: number // 图片宽度

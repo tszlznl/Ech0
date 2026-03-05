@@ -17,7 +17,7 @@ func (r *readSeekCloser) Close() error { return nil }
 
 func TestAdapter_SaveAndDelete_Image(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	adapter := NewAdapter(fs)
+	adapter := NewAdapterWithDirs(fs, "data/images", "data/audios")
 
 	reader := &readSeekCloser{Reader: bytes.NewReader([]byte("fake-image-content"))}
 	saved, err := adapter.Save(context.Background(), storage.SaveRequest{
@@ -49,7 +49,7 @@ func TestAdapter_SaveAndDelete_Image(t *testing.T) {
 
 func TestAdapter_Save_AudioUsesMusicName(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	adapter := NewAdapter(fs)
+	adapter := NewAdapterWithDirs(fs, "data/images", "data/audios")
 
 	rs := &readSeekCloser{Reader: bytes.NewReader([]byte("fake-audio-content"))}
 	saved, err := adapter.Save(context.Background(), storage.SaveRequest{

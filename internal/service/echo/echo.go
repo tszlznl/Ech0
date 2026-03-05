@@ -193,6 +193,7 @@ func (echoService *EchoService) GetEchosByPage(
 	}
 	for i := range result.Items {
 		result.Items[i].NormalizeFiles()
+		echoService.setEchoAccessURLs(&result.Items[i])
 	}
 
 	// 处理echosByPage中的图片URL (暂不处理，防止拖慢列表加载速度)
@@ -227,7 +228,11 @@ func (echoService *EchoService) DeleteEchoById(userid, id uint) error {
 		// 删除Echo中的图片
 		if len(echo.Images) > 0 {
 			for _, img := range echo.Images {
-				if err := echoService.commonService.DirectDeleteImage(img.ImageURL, img.ImageSource, img.ObjectKey); err != nil {
+				if err := echoService.commonService.DeleteFile(userid, commonModel.FileDto{
+					URL:       img.ImageURL,
+					Source:    img.ImageSource,
+					ObjectKey: img.ObjectKey,
+				}); err != nil {
 					return err
 				}
 			}
@@ -279,6 +284,7 @@ func (echoService *EchoService) GetTodayEchos(userid uint, timezone string) ([]m
 	todayEchos := echoService.echoRepository.GetTodayEchos(showPrivate, timezone)
 	for i := range todayEchos {
 		todayEchos[i].NormalizeFiles()
+		echoService.setEchoAccessURLs(&todayEchos[i])
 	}
 
 	// 处理todayEchos中的图片URL (暂不处理，防止拖慢列表加载速度)
@@ -426,8 +432,6 @@ func (echoService *EchoService) GetEchoById(userId, id uint) (*model.Echo, error
 			if !user.IsAdmin {
 				return nil, errors.New(commonModel.NO_PERMISSION_DENIED)
 			}
-
-			return echo, nil
 		}
 	}
 
@@ -435,6 +439,7 @@ func (echoService *EchoService) GetEchoById(userId, id uint) (*model.Echo, error
 	// echoService.commonService.RefreshEchoImageURL(echo)
 
 	echo.NormalizeFiles()
+	echoService.setEchoAccessURLs(echo)
 	// 返回Echo
 	return echo, nil
 }
@@ -548,9 +553,31 @@ func (echoService *EchoService) GetEchosByTagId(
 	if err != nil {
 		return commonModel.PageQueryResult[[]model.Echo]{}, err
 	}
+	for i := range echos {
+		echos[i].NormalizeFiles()
+		echoService.setEchoAccessURLs(&echos[i])
+	}
 
 	return commonModel.PageQueryResult[[]model.Echo]{
 		Items: echos,
 		Total: total,
 	}, nil
+}
+
+func (echoService *EchoService) setEchoAccessURLs(echo *model.Echo) {
+	if echo == nil {
+		return
+	}
+	for i := range echo.Images {
+		echo.Images[i].AccessURL = commonService.ResolveAccessFileURL(
+			echo.Images[i].ImageURL,
+			echo.Images[i].ImageSource,
+		)
+	}
+	for i := range echo.Files {
+		echo.Files[i].AccessURL = commonService.ResolveAccessFileURL(
+			echo.Files[i].ImageURL,
+			echo.Files[i].ImageSource,
+		)
+	}
 }
