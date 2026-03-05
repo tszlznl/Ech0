@@ -626,7 +626,7 @@ func (commonService *CommonService) GetS3Client() (storageUtil.ObjectStorage, se
 	if err != nil || value == "" {
 		return nil, s3setting, errors.New(commonModel.S3_NOT_CONFIGURED)
 	}
-	if err := jsonUtil.JSONUnmarshal([]byte(value.(string)), &s3setting); err != nil {
+	if err := jsonUtil.JSONUnmarshal([]byte(value), &s3setting); err != nil {
 		return nil, s3setting, errors.New(commonModel.S3_CONFIG_ERROR)
 	}
 	s3setting.Endpoint = httpUtil.TrimURL(s3setting.Endpoint)

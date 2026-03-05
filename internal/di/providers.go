@@ -69,6 +69,11 @@ func ProvideCache(factory *cache.CacheFactory) cache.ICache[string, any] {
 	return factory.Cache()
 }
 
+// ProvideCacheCleanup 提供缓存清理函数给生命周期管理使用
+func ProvideCacheCleanup(factory *cache.CacheFactory) func() error {
+	return factory.Cleanup
+}
+
 // ProvideTransactionManager 提供事务管理器实例给 wire 注入
 func ProvideTransactionManager(
 	factory *transaction.TransactionManagerFactory,

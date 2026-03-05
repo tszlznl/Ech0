@@ -21,3 +21,11 @@ func NewCacheFactory() *CacheFactory {
 func (f *CacheFactory) Cache() ICache[string, any] {
 	return f.cache
 }
+
+// Cleanup 释放缓存资源
+func (f *CacheFactory) Cleanup() error {
+	if f == nil || f.cache == nil {
+		return nil
+	}
+	return f.cache.Close()
+}

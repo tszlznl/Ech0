@@ -56,85 +56,66 @@ func (echoRepository *EchoRepository) GetEchosByPage(
 	search string,
 	showPrivate bool,
 ) ([]model.Echo, int64) {
-	// 查找缓存
 	cacheKey := GetEchoPageCacheKey(page, pageSize, search, showPrivate)
-	if cachedResult, err := echoRepository.cache.Get(cacheKey); err == nil {
-		// 缓存命中，直接返回
-		// 类型断言
-		cachedResultTyped, ok := cachedResult.(commonModel.PageQueryResult[[]model.Echo])
-		if ok {
-			return cachedResultTyped.Items, cachedResultTyped.Total
-		}
+	pageResult, err := cache.ReadThroughTyped[commonModel.PageQueryResult[[]model.Echo]](
+		echoRepository.cache,
+		cacheKey,
+		1,
+		func() (commonModel.PageQueryResult[[]model.Echo], error) {
+			// 计算偏移量
+			offset := (page - 1) * pageSize
+			var echos []model.Echo
+			var total int64
+
+			query := echoRepository.db().Model(&model.Echo{})
+			if search != "" {
+				query = query.Where("content LIKE ?", "%"+search+"%")
+			}
+			if !showPrivate {
+				query = query.Where("private = ?", false)
+			}
+
+			if dbErr := query.Count(&total).
+				Preload("Images").
+				Preload("Tags").
+				Limit(pageSize).
+				Offset(offset).
+				Order("created_at DESC").
+				Find(&echos).Error; dbErr != nil {
+				return commonModel.PageQueryResult[[]model.Echo]{}, dbErr
+			}
+
+			TrackEchoPageCacheKey(cacheKey)
+			return commonModel.PageQueryResult[[]model.Echo]{
+				Items: echos,
+				Total: total,
+			}, nil
+		},
+	)
+	if err != nil {
+		return []model.Echo{}, 0
 	}
-
-	// 如果缓存未命中，进行数据库查询
-
-	// 计算偏移量
-	offset := (page - 1) * pageSize
-
-	// 查询数据库
-	var echos []model.Echo
-	var total int64
-
-	query := echoRepository.db().Model(&model.Echo{})
-
-	// 如果 search 不为空，添加模糊查询条件
-	if search != "" {
-		searchPattern := "%" + search + "%" // 模糊匹配模式
-		query = query.Where("content LIKE ?", searchPattern)
-	}
-
-	// 如果不是管理员，过滤私密Echo
-	if !showPrivate {
-		query = query.Where("private = ?", false)
-	}
-
-	// 获取总数并进行分页查询
-	query.Count(&total).
-		Preload("Images").
-		Preload("Tags").
-		Limit(pageSize).
-		Offset(offset).
-		Order("created_at DESC").
-		Find(&echos)
-
-	// 保存到缓存
-	echoKeyList = append(echoKeyList, cacheKey) // 记录缓存键
-	echoRepository.cache.Set(cacheKey, commonModel.PageQueryResult[[]model.Echo]{
-		Items: echos,
-		Total: total,
-	}, 1)
-
-	// 返回结果
-	return echos, total
+	return pageResult.Items, pageResult.Total
 }
 
 // GetEchosById 根据 ID 获取 Echo
 func (echoRepository *EchoRepository) GetEchosById(id uint) (*model.Echo, error) {
-	// 查询缓存
 	cacheKey := GetEchoByIDCacheKey(id)
-	if cachedEcho, err := echoRepository.cache.Get(cacheKey); err == nil {
-		// 缓存命中，直接返回
-		if echo, ok := cachedEcho.(*model.Echo); ok {
-			return echo, nil
+	echo, err := cache.ReadThroughTyped[*model.Echo](echoRepository.cache, cacheKey, 1, func() (*model.Echo, error) {
+		var row model.Echo
+		result := echoRepository.db().Preload("Images").Preload("Tags").First(&row, id)
+		if result.Error != nil {
+			return nil, result.Error
 		}
+		return &row, nil
+	})
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
 	}
-
-	// 缓存未命中，查询数据库
-	// 使用 Preload 预加载关联的 Images
-	var echo model.Echo
-	result := echoRepository.db().Preload("Images").Preload("Tags").First(&echo, id)
-	if result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, nil // 如果未找到记录，则返回 nil
-		}
-		return nil, result.Error // 其他错误返回
+	if err != nil {
+		return nil, err
 	}
-
-	// 保存到缓存
-	echoRepository.cache.Set(cacheKey, &echo, 1)
-
-	return &echo, nil
+	return echo, nil
 }
 
 // DeleteEchoById 删除 Echo
@@ -152,7 +133,7 @@ func (echoRepository *EchoRepository) DeleteEchoById(ctx context.Context, id uin
 	}
 
 	// 清除缓存
-	echoRepository.cache.Delete(GetEchoByIDCacheKey(id))      // 删除具体 Echo 的缓存
+	echoRepository.cache.Delete(GetEchoByIDCacheKey(id)) // 删除具体 Echo 的缓存
 	ClearTodayEchosCache(echoRepository.cache)
 
 	// 清除相关缓存
@@ -165,52 +146,52 @@ func (echoRepository *EchoRepository) DeleteEchoById(ctx context.Context, id uin
 func (echoRepository *EchoRepository) GetTodayEchos(showPrivate bool, timezone string) []model.Echo {
 	normalizedTimezone := timezoneUtil.NormalizeTimezone(timezone)
 
-	// 查找缓存
-	if cachedTodayEchos, err := echoRepository.cache.Get(GetTodayEchosCacheKey(showPrivate, normalizedTimezone)); err == nil {
-		// 缓存命中，直接返回
-		if todayEchos, ok := cachedTodayEchos.([]model.Echo); ok {
-			return todayEchos
-		}
-	}
-
-	// 查询数据库
-	var echos []model.Echo
-
-	// 先按用户时区计算日界，再转为 UTC 查询数据库。
-	loc := timezoneUtil.LoadLocationOrUTC(normalizedTimezone)
-	nowUser := time.Now().UTC().In(loc)
-	startOfDayUser := time.Date(nowUser.Year(), nowUser.Month(), nowUser.Day(), 0, 0, 0, 0, loc)
-	endOfDayUser := startOfDayUser.Add(24 * time.Hour)
-	startOfDayUTC := startOfDayUser.UTC()
-	endOfDayUTC := endOfDayUser.UTC()
-
-	query := echoRepository.db().Model(&model.Echo{})
-	// 如果不是管理员，过滤私密Echo
-	if !showPrivate {
-		query = query.Where("private = ?", false)
-	}
-
-	// 添加当天的时间过滤
-	query = query.Where("created_at >= ? AND created_at < ?", startOfDayUTC, endOfDayUTC)
-
-	// 获取总数并进行分页查询
-	query.
-		Preload("Images").
-		Preload("Tags").
-		Order("created_at DESC").
-		Find(&echos)
-
-	// 保存到缓存，缓存到明天零点
-	ttl := time.Until(endOfDayUser)
-	if ttl <= 0 {
-		ttl = time.Minute
-	}
 	cacheKey := GetTodayEchosCacheKey(showPrivate, normalizedTimezone)
-	TrackTodayEchosCacheKey(cacheKey)
-	echoRepository.cache.SetWithTTL(cacheKey, echos, 1, ttl)
+	todayEchos, err := cache.ReadThroughTypedWithStore[[]model.Echo](
+		echoRepository.cache,
+		cacheKey,
+		func(echos []model.Echo) {
+			loc := timezoneUtil.LoadLocationOrUTC(normalizedTimezone)
+			nowUser := time.Now().UTC().In(loc)
+			startOfDayUser := time.Date(nowUser.Year(), nowUser.Month(), nowUser.Day(), 0, 0, 0, 0, loc)
+			endOfDayUser := startOfDayUser.Add(24 * time.Hour)
+			ttl := time.Until(endOfDayUser)
+			if ttl <= 0 {
+				ttl = time.Minute
+			}
+			TrackTodayEchosCacheKey(cacheKey)
+			echoRepository.cache.SetWithTTL(cacheKey, echos, 1, ttl)
+		},
+		func() ([]model.Echo, error) {
+			var echos []model.Echo
 
-	// 返回结果
-	return echos
+			// 先按用户时区计算日界，再转为 UTC 查询数据库。
+			loc := timezoneUtil.LoadLocationOrUTC(normalizedTimezone)
+			nowUser := time.Now().UTC().In(loc)
+			startOfDayUser := time.Date(nowUser.Year(), nowUser.Month(), nowUser.Day(), 0, 0, 0, 0, loc)
+			endOfDayUser := startOfDayUser.Add(24 * time.Hour)
+			startOfDayUTC := startOfDayUser.UTC()
+			endOfDayUTC := endOfDayUser.UTC()
+
+			query := echoRepository.db().Model(&model.Echo{})
+			if !showPrivate {
+				query = query.Where("private = ?", false)
+			}
+			query = query.Where("created_at >= ? AND created_at < ?", startOfDayUTC, endOfDayUTC)
+			if err := query.
+				Preload("Images").
+				Preload("Tags").
+				Order("created_at DESC").
+				Find(&echos).Error; err != nil {
+				return nil, err
+			}
+
+			return echos, nil
+		})
+	if err != nil {
+		return []model.Echo{}
+	}
+	return todayEchos
 }
 
 // UpdateEcho 更新 Echo
@@ -285,7 +266,7 @@ func (echoRepository *EchoRepository) LikeEcho(ctx context.Context, id uint) err
 
 	// 清除相关缓存
 	ClearEchoPageCache(echoRepository.cache)
-	echoRepository.cache.Delete(GetEchoByIDCacheKey(id))      // 删除具体 Echo 的缓存
+	echoRepository.cache.Delete(GetEchoByIDCacheKey(id)) // 删除具体 Echo 的缓存
 	ClearTodayEchosCache(echoRepository.cache)
 
 	return nil

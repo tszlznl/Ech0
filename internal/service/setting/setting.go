@@ -91,7 +91,7 @@ func (settingService *SettingService) GetSetting(setting *model.SystemSetting) e
 			return nil
 		}
 
-		if err := jsonUtil.JSONUnmarshal([]byte(systemSetting.(string)), setting); err != nil {
+		if err := jsonUtil.JSONUnmarshal([]byte(systemSetting), setting); err != nil {
 			return err
 		}
 
@@ -172,7 +172,7 @@ func (settingService *SettingService) GetCommentSetting(setting *model.CommentSe
 			return nil
 		}
 
-		if err := jsonUtil.JSONUnmarshal([]byte(commentSetting.(string)), setting); err != nil {
+		if err := jsonUtil.JSONUnmarshal([]byte(commentSetting), setting); err != nil {
 			return err
 		}
 
@@ -252,7 +252,7 @@ func (settingService *SettingService) GetS3Setting(userid uint, setting *model.S
 			return nil
 		}
 
-		if err := jsonUtil.JSONUnmarshal([]byte(s3Setting.(string)), setting); err != nil {
+		if err := jsonUtil.JSONUnmarshal([]byte(s3Setting), setting); err != nil {
 			return err
 		}
 
@@ -405,7 +405,7 @@ func (settingService *SettingService) GetOAuth2Setting(
 			return nil
 		}
 
-		if err := jsonUtil.JSONUnmarshal([]byte(oauthSetting.(string)), setting); err != nil {
+		if err := jsonUtil.JSONUnmarshal([]byte(oauthSetting), setting); err != nil {
 			return err
 		}
 
@@ -721,7 +721,7 @@ func (settingService *SettingService) GetFediverseSetting(
 			return nil
 		}
 
-		if err := jsonUtil.JSONUnmarshal([]byte(fediverseSetting.(string)), setting); err != nil {
+		if err := jsonUtil.JSONUnmarshal([]byte(fediverseSetting), setting); err != nil {
 			return err
 		}
 
@@ -803,7 +803,7 @@ func (settingService *SettingService) GetBackupScheduleSetting(
 			return nil
 		}
 
-		if err := jsonUtil.JSONUnmarshal([]byte(backupSchedule.(string)), setting); err != nil {
+		if err := jsonUtil.JSONUnmarshal([]byte(backupSchedule), setting); err != nil {
 			return err
 		}
 
@@ -890,7 +890,7 @@ func (settingService *SettingService) GetAgentInfo(setting *model.AgentSetting) 
 			return nil
 		}
 
-		if err := jsonUtil.JSONUnmarshal([]byte(agentSetting.(string)), setting); err != nil {
+		if err := jsonUtil.JSONUnmarshal([]byte(agentSetting), setting); err != nil {
 			return err
 		}
 
@@ -937,7 +937,7 @@ func (settingService *SettingService) GetAgentSettings(
 			return nil
 		}
 
-		if err := jsonUtil.JSONUnmarshal([]byte(agentSetting.(string)), setting); err != nil {
+		if err := jsonUtil.JSONUnmarshal([]byte(agentSetting), setting); err != nil {
 			return err
 		}
 

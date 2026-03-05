@@ -33,6 +33,7 @@ type Server struct {
 	httpServer     *http.Server          // 用于优雅停止服务器
 	tasker         *task.Tasker          // 任务器
 	eventRegistrar *event.EventRegistrar // 事件注册器
+	cacheCleanup   func() error          // 缓存资源清理
 }
 
 // New 创建一个新的服务器实例
@@ -57,6 +58,7 @@ func (s *Server) Init() {
 
 	// CacheFactory
 	cacheFactory := cache.NewCacheFactory()
+	s.cacheCleanup = cacheFactory.Cleanup
 
 	// TransactionManagerFactory
 	transactionManagerFactory := transaction.NewTransactionManagerFactory(database.GetDB)
@@ -156,18 +158,28 @@ func (s *Server) Stop(ctx context.Context) error {
 
 	if s.httpServer == nil {
 		fmt.Println("⚠️ HTTP 服务器未启动，无需关闭")
-		return nil
-	}
-
-	if err := s.httpServer.Shutdown(shutdownCtx); err != nil {
-		return err
+	} else {
+		if err := s.httpServer.Shutdown(shutdownCtx); err != nil {
+			return err
+		}
 	}
 
 	// 停止任务器
-	s.tasker.Stop()
+	if s.tasker != nil {
+		s.tasker.Stop()
+	}
 
 	// 等待事件系统任务结束
-	s.eventRegistrar.Wait()
+	if s.eventRegistrar != nil {
+		s.eventRegistrar.Wait()
+	}
+
+	// 清理缓存资源
+	if s.cacheCleanup != nil {
+		if cleanupErr := s.cacheCleanup(); cleanupErr != nil {
+			fmt.Printf("⚠️ 缓存清理失败: %v\n", cleanupErr)
+		}
+	}
 
 	return nil
 }

@@ -56,8 +56,7 @@ func (id *InboxDispatcher) handleEch0UpdateCheck(ctx context.Context) error {
 		}
 	}
 
-	releaseVersionStr, _ := releaseVersion.(string)
-	if releaseVersionStr != "" && releaseVersionStr == latestVersion {
+	if releaseVersion != "" && releaseVersion == latestVersion {
 		return nil
 	}
 

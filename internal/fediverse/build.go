@@ -29,7 +29,7 @@ func (core *FediverseCore) BuildActor(
 	if err != nil {
 		return model.Actor{}, nil, err
 	}
-	if err := jsonUtil.JSONUnmarshal([]byte(settingStr.(string)), &setting); err != nil {
+	if err := jsonUtil.JSONUnmarshal([]byte(settingStr), &setting); err != nil {
 		return model.Actor{}, nil, err
 	}
 

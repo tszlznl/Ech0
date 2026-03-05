@@ -17,7 +17,7 @@ func (core *FediverseCore) PushEchoToFediverse(userId uint, echo echoModel.Echo)
 	// 检查是否开启了联邦网络功能
 	var fediverseSetting settingModel.FediverseSetting
 	if fediverseSettingJSON, err := core.keyvalueRepo.GetKeyValue(commonModel.FediverseSettingKey); err == nil {
-		if err := jsonUtil.JSONUnmarshal([]byte(fediverseSettingJSON.(string)), &fediverseSetting); err != nil {
+		if err := jsonUtil.JSONUnmarshal([]byte(fediverseSettingJSON), &fediverseSetting); err != nil {
 			return err
 		}
 	} else {

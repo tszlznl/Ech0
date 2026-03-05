@@ -82,9 +82,7 @@ func (agentService *AgentService) getRecentFromCache(cacheKey string) (string, b
 	if err != nil {
 		return "", false
 	}
-
-	value, ok := cachedValue.(string)
-	return value, ok
+	return cachedValue, true
 }
 
 func (agentService *AgentService) buildRecentSummary(ctx context.Context) (string, error) {

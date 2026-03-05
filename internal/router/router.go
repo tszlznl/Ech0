@@ -23,52 +23,17 @@ func SetupRouter(r *gin.Engine, h *di.Handlers) {
 	// 	c.File("./template/index.html")
 	// })
 
-	// === 使用 embed 提供前端 ===)
-	setupTemplateRoutes(r, h)
+	ctx := &RouterContext{
+		Engine:   r,
+		Handlers: h,
+	}
 
-	// ===     静态资源映射     ===
-	r.Static("api/images", "./data/images")
-
-	// ===        中间件        ===
-	// Setup Middleware
-	setupMiddleware(r)
-
-	// ===  路由组与各模块路由  ===
-	// Setup Router Groups
-	appRouterGroup := setupRouterGroup(r)
-
-	// Setup Resource Routes
-	setupResourceRoutes(appRouterGroup, h)
-
-	// Setup User Routes
-	setupUserRoutes(appRouterGroup, h)
-
-	// Setup Echo Routes
-	setupEchoRoutes(appRouterGroup, h)
-
-	// Setup Common Routes
-	setupCommonRoutes(appRouterGroup, h)
-
-	// Setup Setting Routes
-	setupSettingRoutes(appRouterGroup, h)
-
-	// Setup To Do Routes
-	setupTodoRoutes(appRouterGroup, h)
-
-	// Setup Connect Routes
-	setupConnectRoutes(appRouterGroup, h)
-
-	// Setup Fediverse Routes
-	setupFediverseRoutes(appRouterGroup, h)
-
-	// Setup Dashboard Routes
-	setupDashboardRoutes(appRouterGroup, h)
-
-	// Setup Agent Routes
-	setupAgentRoutes(appRouterGroup, h)
-
-	// Setup Inbox Routes
-	setupInboxRoutes(appRouterGroup, h)
+	for _, module := range coreRouteModules() {
+		module.Register(ctx)
+	}
+	for _, module := range businessRouteModules() {
+		module.Register(ctx)
+	}
 }
 
 // setupRouterGroup 初始化路由组
