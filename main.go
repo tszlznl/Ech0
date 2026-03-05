@@ -12,7 +12,7 @@ func init() {
 	logUtil.InitLogger()
 
 	// Config
-	config.LoadAppConfig()
+	config.Config()
 }
 
 func main() {

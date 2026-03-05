@@ -20,9 +20,9 @@ var SSHServer *ssh.Server
 
 // SSHStart 启动 SSH 服务器
 func SSHStart() {
-	host := config.Config.SSH.Host
-	port := config.Config.SSH.Port
-	key := config.Config.SSH.Key
+	host := config.Config().SSH.Host
+	port := config.Config().SSH.Port
+	key := config.Config().SSH.Key
 
 	var err error
 

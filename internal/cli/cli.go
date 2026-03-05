@@ -25,7 +25,7 @@ var s *server.Server // s 是全局的 Ech0 服务器实例
 
 // isWebPortInUse 检查 Web 端口是否已被占用（通常表示已有实例在运行）
 func isWebPortInUse() bool {
-	port := config.Config.Server.Port
+	port := config.Config().Server.Port
 	ln, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		return true
@@ -42,7 +42,7 @@ func canStartWebServer() bool {
 	}
 
 	if isWebPortInUse() {
-		port := config.Config.Server.Port
+		port := config.Config().Server.Port
 		tui.PrintCLIInfo("⚠️ 启动服务", "Web 端口 "+port+" 已被占用，可能已有实例在运行")
 		return false
 	}

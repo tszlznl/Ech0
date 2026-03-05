@@ -43,7 +43,7 @@ func New() *Server {
 // Init 初始化服务器
 func (s *Server) Init() {
 	// Mode
-	if config.Config.Server.Mode == "debug" {
+	if config.Config().Server.Mode == "debug" {
 		gin.SetMode(gin.DebugMode)
 	} else {
 		gin.SetMode(gin.ReleaseMode)
@@ -112,7 +112,7 @@ func (s *Server) Init() {
 
 // Start 异步启动服务器
 func (s *Server) Start() {
-	port := config.Config.Server.Port
+	port := config.Config().Server.Port
 	PrintGreetings(port)
 
 	s.httpServer = &http.Server{

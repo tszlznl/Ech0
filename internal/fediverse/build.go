@@ -74,7 +74,7 @@ func (core *FediverseCore) BuildActor(
 		PublicKey: model.PublicKey{
 			ID:           serverURL + "/users/" + user.Username + "#main-key",
 			Owner:        serverURL + "/users/" + user.Username,
-			PublicKeyPem: string(config.RSA_PUBLIC_KEY),
+			PublicKeyPem: string(config.Config().Security.RSAPublicKey),
 			Type:         "Key",
 		},
 	}, &setting, nil

@@ -40,7 +40,7 @@ func UploadFileToLocal(
 // UploadImageToLocal 将图片上传到本地存储
 func UploadImageToLocal(file *multipart.FileHeader, userID uint) (string, error) {
 	// 创建图片存储目录
-	if err := createDirIfNotExist(config.Config.Upload.ImagePath); err != nil {
+	if err := createDirIfNotExist(config.Config().Upload.ImagePath); err != nil {
 		return "", err
 	}
 
@@ -54,7 +54,7 @@ func UploadImageToLocal(file *multipart.FileHeader, userID uint) (string, error)
 		return "", err
 	}
 	// 保存文件到指定目录
-	savePath := filepath.Join(config.Config.Upload.ImagePath, newFileName)
+	savePath := filepath.Join(config.Config().Upload.ImagePath, newFileName)
 	src, err := file.Open()
 	if err != nil {
 		return "", err
@@ -92,7 +92,7 @@ func UploadImageToLocal(file *multipart.FileHeader, userID uint) (string, error)
 // UploadAudioToLocal 将音频上传到本地存储
 func UploadAudioToLocal(file *multipart.FileHeader, userID uint) (string, error) {
 	// 创建音频存储目录
-	if err := createDirIfNotExist(config.Config.Upload.AudioPath); err != nil {
+	if err := createDirIfNotExist(config.Config().Upload.AudioPath); err != nil {
 		return "", err
 	}
 
@@ -101,7 +101,7 @@ func UploadAudioToLocal(file *multipart.FileHeader, userID uint) (string, error)
 
 	// 重名音频文件名（暂时使用固定名字 music + 扩展名）
 	newFileName := fmt.Sprintf("music%s", ext)
-	savePath := filepath.Join(config.Config.Upload.AudioPath, newFileName)
+	savePath := filepath.Join(config.Config().Upload.AudioPath, newFileName)
 	src, err := file.Open()
 	if err != nil {
 		return "", err

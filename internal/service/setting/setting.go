@@ -60,15 +60,15 @@ func (settingService *SettingService) GetSetting(setting *model.SystemSetting) e
 		)
 		if err != nil {
 			// 数据库中不存在数据，手动添加初始数据
-			setting.SiteTitle = config.Config.Setting.SiteTitle
-			setting.ServerLogo = config.Config.Setting.ServerLogo
-			setting.ServerName = config.Config.Setting.Servername
-			setting.ServerURL = config.Config.Setting.Serverurl
-			setting.AllowRegister = config.Config.Setting.AllowRegister
-			setting.ICPNumber = config.Config.Setting.Icpnumber
-			setting.MetingAPI = config.Config.Setting.MetingAPI
-			setting.CustomCSS = config.Config.Setting.CustomCSS
-			setting.CustomJS = config.Config.Setting.CustomJS
+			setting.SiteTitle = config.Config().Setting.SiteTitle
+			setting.ServerLogo = config.Config().Setting.ServerLogo
+			setting.ServerName = config.Config().Setting.Servername
+			setting.ServerURL = config.Config().Setting.Serverurl
+			setting.AllowRegister = config.Config().Setting.AllowRegister
+			setting.ICPNumber = config.Config().Setting.Icpnumber
+			setting.MetingAPI = config.Config().Setting.MetingAPI
+			setting.CustomCSS = config.Config().Setting.CustomCSS
+			setting.CustomJS = config.Config().Setting.CustomJS
 
 			// 处理 URL
 			setting.ServerURL = httpUtil.TrimURL(setting.ServerURL)
@@ -153,9 +153,9 @@ func (settingService *SettingService) GetCommentSetting(setting *model.CommentSe
 		)
 		if err != nil {
 			// 数据库中不存在数据，手动添加初始数据
-			setting.EnableComment = config.Config.Comment.EnableComment
-			setting.Provider = config.Config.Comment.Provider
-			setting.CommentAPI = config.Config.Comment.CommentAPI
+			setting.EnableComment = config.Config().Comment.EnableComment
+			setting.Provider = config.Config().Comment.Provider
+			setting.CommentAPI = config.Config().Comment.CommentAPI
 
 			// 处理 URL
 			setting.CommentAPI = httpUtil.TrimURL(setting.CommentAPI)

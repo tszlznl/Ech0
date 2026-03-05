@@ -154,7 +154,7 @@ func GetMIMETypeFromFilenameOrURL(filenameOrURL string) string {
 
 // PostActivity 发送 POST 请求
 func PostActivity(activity []byte, inboxURL string, actorID string) error {
-	priv := config.RSA_PRIVATE
+	priv := config.Config().Security.RSAPrivate
 	if priv == nil {
 		return fmt.Errorf("private key is not initialized")
 	}

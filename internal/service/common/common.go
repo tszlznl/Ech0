@@ -86,13 +86,13 @@ func (commonService *CommonService) UploadImage(
 	// 检查文件类型是否合法
 	if !storageUtil.IsAllowedType(
 		file.Header.Get("Content-Type"),
-		config.Config.Upload.AllowedTypes,
+		config.Config().Upload.AllowedTypes,
 	) {
 		return commonModel.ImageDto{}, errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
 	}
 
 	// 检查文件大小是否合法
-	if file.Size > int64(config.Config.Upload.ImageMaxSize) {
+	if file.Size > int64(config.Config().Upload.ImageMaxSize) {
 		return commonModel.ImageDto{}, errors.New(commonModel.FILE_SIZE_EXCEED_LIMIT)
 	}
 
@@ -407,13 +407,13 @@ func (commonService *CommonService) UploadMusic(
 	// 检查文件类型是否合法
 	if !storageUtil.IsAllowedType(
 		file.Header.Get("Content-Type"),
-		config.Config.Upload.AllowedTypes,
+		config.Config().Upload.AllowedTypes,
 	) {
 		return "", errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
 	}
 
 	// 检查文件大小是否合法
-	if file.Size > int64(config.Config.Upload.AudioMaxSize) {
+	if file.Size > int64(config.Config().Upload.AudioMaxSize) {
 		return "", errors.New(commonModel.FILE_SIZE_EXCEED_LIMIT)
 	}
 
@@ -478,7 +478,7 @@ func (commonService *CommonService) PlayMusic(ctx *gin.Context) {
 	}
 
 	// 获取音乐文件的路径
-	musicPath := config.Config.Upload.AudioPath + musicName
+	musicPath := config.Config().Upload.AudioPath + musicName
 
 	// 检查文件是否存在
 	if _, err := os.Stat(musicPath); os.IsNotExist(err) {
@@ -540,12 +540,12 @@ func (commonService *CommonService) GetS3PresignURL(
 	switch contentType[:5] {
 	case "image":
 		// 检查文件类型是否合法
-		if !storageUtil.IsAllowedType(contentType, config.Config.Upload.AllowedTypes) {
+		if !storageUtil.IsAllowedType(contentType, config.Config().Upload.AllowedTypes) {
 			return result, errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
 		}
 	case "audio":
 		// 检查文件类型是否合法
-		if !storageUtil.IsAllowedType(contentType, config.Config.Upload.AllowedTypes) {
+		if !storageUtil.IsAllowedType(contentType, config.Config().Upload.AllowedTypes) {
 			return result, errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
 		}
 	default:

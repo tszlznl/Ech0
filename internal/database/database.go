@@ -68,8 +68,8 @@ func IsWriteLocked() bool {
 // InitDatabase 初始化数据库连接
 func InitDatabase() {
 	// 读取数据库类型和保存路径
-	dbType := config.Config.Database.Type
-	dbPath := config.Config.Database.Path
+	dbType := config.Config().Database.Type
+	dbPath := config.Config().Database.Path
 
 	dir := dbPath[:len(dbPath)-len("/ech0.db")] // 提取目录部分
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
@@ -82,7 +82,7 @@ func InitDatabase() {
 	if dbType == "sqlite" {
 		var err error
 		ll := logger.LogLevel(logger.Error)
-		if config.Config.Database.LogMode == "release" {
+		if config.Config().Database.LogMode == "release" {
 			ll = logger.LogLevel(logger.Silent)
 		}
 		SQLiteDB, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
@@ -158,7 +158,7 @@ func HotChangeDatabase(newDBPath string) error {
 
 	// 打开新连接
 	ll := logger.LogLevel(logger.Error)
-	if config.Config.Database.LogMode == "release" {
+	if config.Config().Database.LogMode == "release" {
 		ll = logger.LogLevel(logger.Silent)
 	}
 
