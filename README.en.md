@@ -221,13 +221,7 @@ docker image prune -f
 
 Run the binary directly (for example, on Windows double-click `Ech0.exe`).
 
-### 🔐 SSH Mode
-
-Connect to the instance via port 6278:
-
-```shell
-ssh -p 6278 ssh.vaaat.com
-``` -->
+-->
 
 ---
 
@@ -311,7 +305,7 @@ ssh -p 6278 ssh.vaaat.com
 ### Start Backend & Frontend
 ```shell
 # Backend
-make run # normal backend start (equivalent to go run main.go web)
+make run # normal backend start (equivalent to go run main.go serve)
 make dev # backend hot reload with Air
 
 # Frontend

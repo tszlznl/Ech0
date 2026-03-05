@@ -82,9 +82,7 @@ func BuildApp() (*app.App, func(), error) {
 	server := ProvideHTTPServer(engine, bundle)
 	httpRuntime := ProvideHTTPRuntime(server)
 	v4 := ProvideWebComponents(runtime, eventRuntime, taskRuntime, httpRuntime)
-	sshServer := ProvideSSHServer()
-	sshRuntime := ProvideSSHRuntime(sshServer)
-	v5 := ProvideApp(v4, sshRuntime)
+	v5 := ProvideApp(v4)
 	return v5, func() {
 	}, nil
 }

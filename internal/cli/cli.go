@@ -97,37 +97,6 @@ func DoServeWithBlock() {
 	tui.PrintCLIInfo("🎉 停止服务成功", "Ech0 服务器已停止")
 }
 
-// DoServeWithSSHAndBlock 启动 SSH 和 Web，并阻塞当前线程
-func DoServeWithSSHAndBlock() {
-	if !canStartWebServer() {
-		return
-	}
-
-	if err := runtimeApp.StartSSH(context.Background()); err != nil {
-		tui.PrintCLIInfo("😭 启动服务失败", err.Error())
-		return
-	}
-
-	if err := runtimeApp.StartWeb(context.Background()); err != nil {
-		_ = runtimeApp.StopSSH(context.Background())
-		tui.PrintCLIInfo("😭 启动服务失败", err.Error())
-		return
-	}
-
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := runtimeApp.StopAll(ctx); err != nil {
-		tui.PrintCLIInfo("❌ 服务停止", "服务强制关闭")
-		os.Exit(1)
-	}
-	tui.PrintCLIInfo("🎉 停止服务成功", "Ech0 服务已停止")
-}
-
 // DoStopServe 停止服务
 func DoStopServe() {
 	if runtimeApp == nil || !runtimeApp.IsWebRunning() {
@@ -196,28 +165,6 @@ func DoHello() {
 	tui.PrintCLIBanner()
 }
 
-// DoSSH 启动或停止 SSH 服务
-func DoSSH() {
-	if runtimeApp == nil {
-		tui.PrintCLIInfo("⚠️ 启动服务", "应用未初始化")
-		return
-	}
-
-	if runtimeApp.IsSSHRunning() {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-		if err := runtimeApp.StopSSH(ctx); err != nil {
-			tui.PrintCLIInfo("❌ 服务停止", "SSH 服务器强制关闭")
-			return
-		}
-	} else {
-		if err := runtimeApp.StartSSH(context.Background()); err != nil {
-			tui.PrintCLIInfo("😭 启动服务失败", err.Error())
-			return
-		}
-	}
-}
-
 // DoTui 执行 TUI
 func DoTui() {
 	// 清除屏幕当前字符
@@ -238,12 +185,6 @@ func DoTui() {
 			options = append(options, huh.NewOption("🙈 服务已在其他进程中运行", "servebusy"))
 		} else {
 			options = append(options, huh.NewOption("🚀 启动 Web 服务", "serve"))
-		}
-
-		if runtimeApp != nil && runtimeApp.IsSSHRunning() {
-			options = append(options, huh.NewOption("🛑 停止 SSH 服务", "ssh"))
-		} else {
-			options = append(options, huh.NewOption("🔐 启动 SSH 服务", "ssh"))
 		}
 
 		options = append(options,
@@ -270,8 +211,6 @@ func DoTui() {
 			DoServe()
 		case "servebusy":
 			tui.PrintCLIInfo("ℹ️ Web 服务状态", "当前 Web 服务由其他进程运行，无法在此进程内停止")
-		case "ssh":
-			DoSSH()
 		case "stopserve":
 			tui.ClearScreen()
 			DoStopServe()

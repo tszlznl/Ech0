@@ -10,7 +10,6 @@ import (
 	"os"
 	"strconv"
 	"sync"
-
 )
 
 var (
@@ -25,7 +24,6 @@ type AppConfig struct {
 	Upload   UploadConfig
 	Setting  SettingConfig
 	Comment  CommentConfig
-	SSH      SSHConfig
 	Security SecurityConfig
 }
 
@@ -75,12 +73,6 @@ type CommentConfig struct {
 	EnableComment bool   // 是否启用评论
 	Provider      string // 评论提供者
 	CommentAPI    string // 评论 API 地址
-}
-
-type SSHConfig struct {
-	Port string // SSH 端口
-	Host string // SSH 主机地址
-	Key  string // SSH 私钥路径
 }
 
 type SecurityConfig struct {
@@ -155,11 +147,6 @@ func defaultConfig() *AppConfig {
 			Provider:      "twikoo",
 			CommentAPI:    "",
 		},
-		SSH: SSHConfig{
-			Port: "6278",
-			Host: "0.0.0.0",
-			Key:  "data/ssh/id_ed25519",
-		},
 	}
 }
 
@@ -173,9 +160,6 @@ func applyEnvOverrides(cfg *AppConfig) {
 	setStringEnv("ECH0_UPLOAD_IMAGE_PATH", &cfg.Upload.ImagePath)
 	setStringEnv("ECH0_UPLOAD_AUDIO_PATH", &cfg.Upload.AudioPath)
 	setStringEnv("ECH0_SERVER_URL", &cfg.Setting.Serverurl)
-	setStringEnv("ECH0_SSH_HOST", &cfg.SSH.Host)
-	setStringEnv("ECH0_SSH_PORT", &cfg.SSH.Port)
-	setStringEnv("ECH0_SSH_KEY", &cfg.SSH.Key)
 	setIntEnv("ECH0_JWT_EXPIRES", &cfg.Auth.Jwt.Expires)
 }
 

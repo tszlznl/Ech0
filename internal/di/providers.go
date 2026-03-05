@@ -12,10 +12,8 @@ import (
 	runtimeCache "github.com/lin-snow/ech0/internal/runtime/cache"
 	runtimeEvent "github.com/lin-snow/ech0/internal/runtime/event"
 	runtimeHTTP "github.com/lin-snow/ech0/internal/runtime/http"
-	runtimeSSH "github.com/lin-snow/ech0/internal/runtime/ssh"
 	runtimeTask "github.com/lin-snow/ech0/internal/runtime/task"
 	"github.com/lin-snow/ech0/internal/server"
-	sshServer "github.com/lin-snow/ech0/internal/ssh"
 	"github.com/lin-snow/ech0/internal/task"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"gorm.io/gorm"
@@ -90,14 +88,6 @@ func ProvideTaskRuntime(tasker *task.Tasker) *runtimeTask.Runtime {
 	return runtimeTask.New(tasker)
 }
 
-func ProvideSSHServer() *sshServer.Server {
-	return sshServer.New()
-}
-
-func ProvideSSHRuntime(s *sshServer.Server) *runtimeSSH.Runtime {
-	return runtimeSSH.New(s)
-}
-
 func ProvideCacheRuntime(cleanup func() error) *runtimeCache.Runtime {
 	return runtimeCache.New(cleanup)
 }
@@ -143,7 +133,6 @@ func ProvideWebComponents(
 
 func ProvideApp(
 	webComponents []app.Component,
-	sshRuntime *runtimeSSH.Runtime,
 ) *app.App {
-	return app.NewApp(webComponents, sshRuntime)
+	return app.NewApp(webComponents)
 }

@@ -4,6 +4,6 @@ package app
 type App = Kernel
 
 // NewApp 提供应用层构造入口，保持 main/newApp 语义清晰。
-func NewApp(webComponents []Component, sshComponent Component) *App {
-	return NewKernel(webComponents, sshComponent)
+func NewApp(webComponents []Component) *App {
+	return NewKernel(webComponents)
 }

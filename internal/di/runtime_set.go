@@ -10,7 +10,5 @@ var RuntimeSet = wire.NewSet(
 	ProvideHTTPRuntime,
 	ProvideEventRuntime,
 	ProvideTaskRuntime,
-	ProvideSSHServer,
-	ProvideSSHRuntime,
 	ProvideCacheRuntime,
 )

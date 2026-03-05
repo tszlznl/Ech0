@@ -236,14 +236,6 @@ docker image prune -f
 
 直接运行对应的二进制文件即可。例如在 Windows 中，双击 `Ech0.exe`。 -->
 
-<!-- ### 🔐 SSH 模式
-
-在终端通过 6278 端口连接部署实例：
-
-```shell
-ssh -p 6278 ssh.vaaat.com
-``` -->
-
 ---
 
 ## 常见问题
@@ -359,8 +351,7 @@ ssh -p 6278 ssh.vaaat.com
 ### 启动前后端联调
 **第一步： 后端（在 Ech0 根目录下）：**
 ```shell
-make run # 普通启动后端（等价于 go run main.go web）
-
+make run # 普通启动后端（等价于 go run main.go serve）
 make dev # 使用 Air 启动后端热重载
 ```
 > 如果依赖注入关系发生了变化先需要在`ech0/internal/di/`下执行`wire`命令生成新的`wire_gen.go`文件

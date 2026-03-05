@@ -17,7 +17,7 @@ ARCH?=$(if $(GOHOSTARCH),$(GOHOSTARCH),amd64)
 
 help:
 	@echo "Available targets:"
-	@echo "  make run         - Run backend in web mode"
+	@echo "  make run         - Run backend in serve mode"
 	@echo "  make dev         - Run backend with Air hot reload"
 	@echo "  make air-install - Install Air to GOPATH/bin"
 	@echo "  make web-dev     - Run frontend dev server"
@@ -33,7 +33,7 @@ air-install:
 	go install github.com/air-verse/air@latest
 
 run:
-	go run ./main.go web
+	go run ./main.go serve
 
 dev:
 	air -c .air.toml

@@ -11,17 +11,14 @@ type Kernel struct {
 	mu sync.Mutex
 
 	webComponents []Component
-	sshComponent  Component
 
 	webRunning bool
-	sshRunning bool
 }
 
 // NewKernel 创建应用内核。
-func NewKernel(webComponents []Component, sshComponent Component) *Kernel {
+func NewKernel(webComponents []Component) *Kernel {
 	return &Kernel{
 		webComponents: webComponents,
-		sshComponent:  sshComponent,
 	}
 }
 
@@ -103,79 +100,10 @@ func (k *Kernel) StopWeb(ctx context.Context) error {
 	return errors.Join(errs...)
 }
 
-// StartSSH 启动 SSH 组件。
-func (k *Kernel) StartSSH(ctx context.Context) error {
-	k.mu.Lock()
-	defer k.mu.Unlock()
-
-	if k.sshComponent == nil {
-		return &AppError{
-			Code:      CodeDependencyMissing,
-			Op:        "kernel.start_ssh",
-			Component: "ssh",
-		}
-	}
-	if k.sshRunning {
-		return &AppError{
-			Code:      CodeInvalidState,
-			Op:        "kernel.start_ssh",
-			Component: "ssh",
-		}
-	}
-	if err := k.sshComponent.Start(ctx); err != nil {
-		return &AppError{
-			Code:      CodeComponentStartFailed,
-			Op:        "kernel.start_ssh",
-			Component: k.sshComponent.Name(),
-			Cause:     err,
-		}
-	}
-
-	k.sshRunning = true
-	return nil
-}
-
-// StopSSH 停止 SSH 组件。
-func (k *Kernel) StopSSH(ctx context.Context) error {
-	k.mu.Lock()
-	defer k.mu.Unlock()
-
-	if k.sshComponent == nil {
-		return &AppError{
-			Code:      CodeDependencyMissing,
-			Op:        "kernel.stop_ssh",
-			Component: "ssh",
-		}
-	}
-	if !k.sshRunning {
-		return &AppError{
-			Code:      CodeInvalidState,
-			Op:        "kernel.stop_ssh",
-			Component: "ssh",
-		}
-	}
-	if err := k.sshComponent.Stop(ctx); err != nil {
-		return &AppError{
-			Code:      CodeComponentStopFailed,
-			Op:        "kernel.stop_ssh",
-			Component: k.sshComponent.Name(),
-			Cause:     err,
-		}
-	}
-
-	k.sshRunning = false
-	return nil
-}
-
 // StopAll 停止所有已运行组件。
 func (k *Kernel) StopAll(ctx context.Context) error {
 	var errs []error
 
-	if k.IsSSHRunning() {
-		if err := k.StopSSH(ctx); err != nil {
-			errs = append(errs, err)
-		}
-	}
 	if k.IsWebRunning() {
 		if err := k.StopWeb(ctx); err != nil {
 			errs = append(errs, err)
@@ -190,13 +118,6 @@ func (k *Kernel) IsWebRunning() bool {
 	k.mu.Lock()
 	defer k.mu.Unlock()
 	return k.webRunning
-}
-
-// IsSSHRunning 返回 SSH 组件是否运行中。
-func (k *Kernel) IsSSHRunning() bool {
-	k.mu.Lock()
-	defer k.mu.Unlock()
-	return k.sshRunning
 }
 
 func (k *Kernel) stopReverse(ctx context.Context, components []Component) {

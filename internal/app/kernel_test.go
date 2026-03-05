@@ -32,7 +32,7 @@ func TestKernelStartAndStopOrder(t *testing.T) {
 		&mockComponent{name: "event", order: &order},
 		&mockComponent{name: "task", order: &order},
 		&mockComponent{name: "http", order: &order},
-	}, nil)
+	})
 
 	if err := k.StartWeb(context.Background()); err != nil {
 		t.Fatalf("start web failed: %v", err)
@@ -65,7 +65,7 @@ func TestKernelStartRollbackOnFailure(t *testing.T) {
 		&mockComponent{name: "event", order: &order},
 		&mockComponent{name: "task", order: &order, startErr: errors.New("boom")},
 		&mockComponent{name: "http", order: &order},
-	}, nil)
+	})
 
 	if err := k.StartWeb(context.Background()); err == nil {
 		t.Fatalf("expected start error")
@@ -91,19 +91,13 @@ func TestKernelStartRollbackOnFailure(t *testing.T) {
 
 func TestKernelStopAll(t *testing.T) {
 	order := make([]string, 0, 12)
-	k := NewKernel(
-		[]Component{
-			&mockComponent{name: "event", order: &order},
-			&mockComponent{name: "task", order: &order},
-		},
-		&mockComponent{name: "ssh", order: &order},
-	)
+	k := NewKernel([]Component{
+		&mockComponent{name: "event", order: &order},
+		&mockComponent{name: "task", order: &order},
+	})
 
 	if err := k.StartWeb(context.Background()); err != nil {
 		t.Fatalf("start web failed: %v", err)
-	}
-	if err := k.StartSSH(context.Background()); err != nil {
-		t.Fatalf("start ssh failed: %v", err)
 	}
 	if err := k.StopAll(context.Background()); err != nil {
 		t.Fatalf("stop all failed: %v", err)
@@ -117,7 +111,7 @@ func TestKernelStopAll(t *testing.T) {
 		}
 		return false
 	}
-	if !contains("stop:ssh") || !contains("stop:task") || !contains("stop:event") {
+	if !contains("stop:task") || !contains("stop:event") {
 		t.Fatalf("expected stop order entries missing: %v", order)
 	}
 }
