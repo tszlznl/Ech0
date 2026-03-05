@@ -8,7 +8,6 @@ import (
 	connectHandler "github.com/lin-snow/ech0/internal/handler/connect"
 	dashboardHandler "github.com/lin-snow/ech0/internal/handler/dashboard"
 	echoHandler "github.com/lin-snow/ech0/internal/handler/echo"
-	fediverseHandler "github.com/lin-snow/ech0/internal/handler/fediverse"
 	inboxHandler "github.com/lin-snow/ech0/internal/handler/inbox"
 	settingHandler "github.com/lin-snow/ech0/internal/handler/setting"
 	todoHandler "github.com/lin-snow/ech0/internal/handler/todo"
@@ -27,7 +26,6 @@ var BackupSet = wire.NewSet(backupHandler.ProviderSet)
 var DashboardSet = wire.NewSet(dashboardHandler.ProviderSet)
 var AgentSet = wire.NewSet(agentHandler.ProviderSet)
 var InboxSet = wire.NewSet(inboxHandler.ProviderSet)
-var FediverseSet = wire.NewSet(fediverseHandler.ProviderSet)
 
 var ProviderSet = wire.NewSet(
 	WebSet,
@@ -41,5 +39,4 @@ var ProviderSet = wire.NewSet(
 	DashboardSet,
 	AgentSet,
 	InboxSet,
-	FediverseSet,
 )

@@ -27,8 +27,6 @@ func BuildEventRegistrar(
 		KeyValueSet,
 		QueueSet,
 		WebhookSet,
-		FediverseCoreSet,
-		FediverseSet,
 		EventSet,
 	)
 	return &event.EventRegistrar{}, nil

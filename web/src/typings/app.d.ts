@@ -268,11 +268,6 @@ declare namespace App {
         auth_type: string
       }
 
-      type FediverseSetting = {
-        enable: boolean
-        server_url: string
-      }
-
       type Webhook = {
         id: number
         name: string
@@ -348,64 +343,6 @@ declare namespace App {
       type Connected = {
         id: number
         connect_url: string
-      }
-    }
-
-    namespace Fediverse {
-      type Actor = Record<string, unknown>
-
-      type FollowActionRequest = {
-        targetActor: string
-      }
-
-      type FollowResponse = {
-        activityId: string
-      }
-
-      // type LikeActionRequest = {
-      //   targetActor: string
-      //   object: string
-      //   objectType?: string
-      // }
-
-      type UnfollowResponse = {
-        activityId: string
-        followActivityId?: string
-      }
-
-      // type LikeResponse = {
-      //   activityId: string
-      // }
-
-      // type UndoLikeResponse = {
-      //   activityId: string
-      //   likeActivityId?: string
-      // }
-
-      type TimelineItem = {
-        id: number
-        activityId: string
-        actorId: string
-        actorPreferredUsername: string
-        actorDisplayName: string
-        actorAvatar: string
-        objectId: string
-        objectType: string
-        objectAttributedTo: string
-        summary: string
-        content: string
-        to: string[]
-        cc: string[]
-        rawActivity?: unknown
-        rawObject?: unknown
-        publishedAt: string
-        createdAt: string
-        updatedAt: string
-      }
-
-      type TimelineResult = {
-        total: number
-        items: TimelineItem[]
       }
     }
 

@@ -13,7 +13,6 @@ import (
 	connectHandler "github.com/lin-snow/ech0/internal/handler/connect"
 	dashboardHandler "github.com/lin-snow/ech0/internal/handler/dashboard"
 	echoHandler "github.com/lin-snow/ech0/internal/handler/echo"
-	fediverseHandler "github.com/lin-snow/ech0/internal/handler/fediverse"
 	inboxHandler "github.com/lin-snow/ech0/internal/handler/inbox"
 	settingHandler "github.com/lin-snow/ech0/internal/handler/setting"
 	todoHandler "github.com/lin-snow/ech0/internal/handler/todo"
@@ -37,7 +36,6 @@ func TestSetupRouter_RegistersKeyRoutes(t *testing.T) {
 		{method: http.MethodGet, path: "/api/settings"},
 		{method: http.MethodGet, path: "/api/agent/recent"},
 		{method: http.MethodGet, path: "/ws/dashboard/metrics"},
-		{method: http.MethodGet, path: "/.well-known/webfinger"},
 	}
 
 	routes := engine.Routes()
@@ -83,7 +81,6 @@ func buildTestHandlers() *handler.Bundle {
 		todoHandler.NewTodoHandler(nil),
 		connectHandler.NewConnectHandler(nil),
 		backupHandler.NewBackupHandler(nil),
-		fediverseHandler.NewFediverseHandler(nil),
 		dashboardHandler.NewDashboardHandler(nil),
 		agentHandler.NewAgentHandler(nil),
 	)

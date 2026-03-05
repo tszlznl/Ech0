@@ -4,7 +4,6 @@ package event
 type EventHandlers struct {
 	wbd *WebhookDispatcher  // webhook 事件处理器
 	dlr *DeadLetterResolver // 死信处理器
-	fa  *FediverseAgent     // 联邦事件处理器
 	bs  *BackupScheduler    // 备份事件调度器
 	ap  *AgentProcessor     // Agent事件处理器
 	id  *InboxDispatcher    // Inbox事件处理器
@@ -14,12 +13,11 @@ type EventHandlers struct {
 func NewEventHandlers(
 	wbd *WebhookDispatcher,
 	dlr *DeadLetterResolver,
-	fa *FediverseAgent,
 	bs *BackupScheduler,
 	ap *AgentProcessor,
 	id *InboxDispatcher,
 ) *EventHandlers {
-	return &EventHandlers{wbd: wbd, dlr: dlr, fa: fa, bs: bs, ap: ap, id: id}
+	return &EventHandlers{wbd: wbd, dlr: dlr, bs: bs, ap: ap, id: id}
 }
 
 // EventRegistrar 事件注册器
@@ -41,13 +39,6 @@ func (er *EventRegistrar) Register() error {
 		er.eh.dlr.Handle,
 		EventTypeDeadLetterRetried,
 	) // 订阅死信事件，交给 DeadLetterResolver 处理
-	if err != nil {
-		return err
-	}
-	err = er.eb.Subscribe(
-		er.eh.fa.Handle,
-		EventTypeEchoCreated,
-	) // 订阅 EchoCreated 事件，交给 FediverseAgent 处理
 	if err != nil {
 		return err
 	}
@@ -95,5 +86,4 @@ func (er *EventRegistrar) Register() error {
 // Wait 等待所有事件处理完成
 func (er *EventRegistrar) Wait() {
 	er.eh.wbd.Wait()
-	er.eh.fa.Wait()
 }

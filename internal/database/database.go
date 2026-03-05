@@ -12,7 +12,6 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	connectModel "github.com/lin-snow/ech0/internal/model/connect"
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
-	fediverseModel "github.com/lin-snow/ech0/internal/model/fediverse"
 	inboxModel "github.com/lin-snow/ech0/internal/model/inbox"
 	queueModel "github.com/lin-snow/ech0/internal/model/queue"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
@@ -125,11 +124,6 @@ func MigrateDB() error {
 		&settingModel.AccessTokenSetting{},
 		&inboxModel.Inbox{},
 		&authModel.Passkey{},
-
-		// Fediverse 相关
-		&fediverseModel.Follow{},
-		&fediverseModel.Follower{},
-		&fediverseModel.InboxStatus{},
 	}
 
 	return GetDB().AutoMigrate(

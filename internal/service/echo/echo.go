@@ -13,7 +13,6 @@ import (
 	repository "github.com/lin-snow/ech0/internal/repository/echo"
 	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
-	fediverseService "github.com/lin-snow/ech0/internal/service/fediverse"
 	"github.com/lin-snow/ech0/internal/transaction"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
@@ -25,7 +24,6 @@ type EchoService struct {
 	commonService    *commonService.CommonService
 	echoRepository   repository.EchoRepositoryInterface
 	commonRepository commonRepository.CommonRepositoryInterface
-	fediverseService *fediverseService.FediverseService
 	kvRepository     keyvalueRepository.KeyValueRepositoryInterface
 	eventBus         event.IEventBus
 }
@@ -35,7 +33,6 @@ func NewEchoService(
 	commonService *commonService.CommonService,
 	echoRepository repository.EchoRepositoryInterface,
 	commonRepository commonRepository.CommonRepositoryInterface,
-	fediverseService *fediverseService.FediverseService,
 	kvRepository keyvalueRepository.KeyValueRepositoryInterface,
 	eventBusProvider func() event.IEventBus,
 ) *EchoService {
@@ -44,7 +41,6 @@ func NewEchoService(
 		commonService:    commonService,
 		echoRepository:   echoRepository,
 		commonRepository: commonRepository,
-		fediverseService: fediverseService,
 		kvRepository:     kvRepository,
 		eventBus:         eventBusProvider(),
 	}
@@ -134,7 +130,7 @@ func (echoService *EchoService) PostEcho(userid uint, newEcho *model.Echo) error
 		return fetchErr
 	}
 	if savedEcho != nil {
-		// 推送事件(Webhook, Fediverse, Agent等)
+		// 推送事件(Webhook, Agent等)
 		if pubErr := echoService.eventBus.Publish(
 			context.Background(),
 			event.NewEvent(

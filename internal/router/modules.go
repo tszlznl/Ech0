@@ -105,12 +105,6 @@ func businessRouteModules() []RouteModule {
 			},
 		},
 		routeModule{
-			name: "fediverse",
-			register: func(ctx *RouterContext) {
-				setupFediverseRoutes(ctx.Groups, ctx.Handlers)
-			},
-		},
-		routeModule{
 			name: "dashboard",
 			register: func(ctx *RouterContext) {
 				setupDashboardRoutes(ctx.Groups, ctx.Handlers)

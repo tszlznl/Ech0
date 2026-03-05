@@ -6,7 +6,6 @@ package di
 import (
 	"github.com/google/wire"
 	"github.com/lin-snow/ech0/internal/event"
-	fediverse "github.com/lin-snow/ech0/internal/fediverse"
 	handler "github.com/lin-snow/ech0/internal/handler"
 	"github.com/lin-snow/ech0/internal/metric"
 	"github.com/lin-snow/ech0/internal/monitor"
@@ -34,13 +33,6 @@ var InboxSet = wire.NewSet(repository.InboxSet, service.InboxSet, handler.InboxS
 var QueueSet = wire.NewSet(repository.QueueSet)
 
 var TaskSet = wire.NewSet(task.NewTasker)
-var FediverseCoreSet = wire.NewSet(fediverse.NewFediverseCore)
-var FediverseSet = wire.NewSet(
-	repository.FediverseSet,
-	service.FediverseSet,
-	handler.FediverseSet,
-	event.NewFediverseAgent,
-)
 var EventSet = wire.NewSet(
 	event.NewWebhookDispatcher,
 	event.NewBackupScheduler,

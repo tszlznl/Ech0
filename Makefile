@@ -33,7 +33,7 @@ air-install:
 	go install github.com/air-verse/air@latest
 
 run:
-	go run ./main.go serve
+	go run ./cmd/ech0 serve
 
 dev:
 	air -c .air.toml

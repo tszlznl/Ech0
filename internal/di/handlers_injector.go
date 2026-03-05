@@ -37,8 +37,6 @@ func BuildHandlers(
 		DashboardSet,
 		AgentSet,
 		BackupSet,
-		FediverseCoreSet,
-		FediverseSet,
 		handler.NewBundle,
 	)
 	return &handler.Bundle{}, nil

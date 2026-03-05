@@ -126,8 +126,6 @@ const (
 	OAuth2SettingKey = "oauth2_setting"
 	// ServerURLKey 是服务器URL设置的键
 	ServerURLKey = "server_url"
-	// FediverseSettingKey 是联邦网络设置的键
-	FediverseSettingKey = "fediverse_setting"
 	// BackupScheduleKey 是备份计划设置的键
 	BackupScheduleKey = "backup_schedule"
 	// AgentSettingKey 是 Agent 设置的键
