@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lin-snow/ech0/internal/handler"
 	agentHandler "github.com/lin-snow/ech0/internal/handler/agent"
 	backupHandler "github.com/lin-snow/ech0/internal/handler/backup"
 	commonHandler "github.com/lin-snow/ech0/internal/handler/common"
@@ -18,7 +19,6 @@ import (
 	todoHandler "github.com/lin-snow/ech0/internal/handler/todo"
 	userHandler "github.com/lin-snow/ech0/internal/handler/user"
 	webHandler "github.com/lin-snow/ech0/internal/handler/web"
-	"github.com/lin-snow/ech0/internal/di"
 )
 
 func TestSetupRouter_RegistersKeyRoutes(t *testing.T) {
@@ -72,8 +72,8 @@ func containsRoute(routes []gin.RouteInfo, method, path string) bool {
 	return false
 }
 
-func buildTestHandlers() *di.Handlers {
-	return di.NewHandlers(
+func buildTestHandlers() *handler.Bundle {
+	return handler.NewBundle(
 		webHandler.NewWebHandler(),
 		userHandler.NewUserHandler(nil),
 		echoHandler.NewEchoHandler(nil),

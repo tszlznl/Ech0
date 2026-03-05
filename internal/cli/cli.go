@@ -13,15 +13,19 @@ import (
 	"time"
 
 	"github.com/charmbracelet/huh"
+	"github.com/lin-snow/ech0/internal/app"
 	"github.com/lin-snow/ech0/internal/backup"
 	"github.com/lin-snow/ech0/internal/config"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
-	"github.com/lin-snow/ech0/internal/server"
-	"github.com/lin-snow/ech0/internal/ssh"
 	"github.com/lin-snow/ech0/internal/tui"
 )
 
-var s *server.Server // s 是全局的 Ech0 服务器实例
+var runtimeApp *app.App
+
+// SetApp 注入应用实例。
+func SetApp(a *app.App) {
+	runtimeApp = a
+}
 
 // isWebPortInUse 检查 Web 端口是否已被占用（通常表示已有实例在运行）
 func isWebPortInUse() bool {
@@ -36,7 +40,12 @@ func isWebPortInUse() bool {
 
 // canStartWebServer 检查当前进程或系统端口是否允许启动 Web 服务
 func canStartWebServer() bool {
-	if s != nil {
+	if runtimeApp == nil {
+		tui.PrintCLIInfo("⚠️ 启动服务", "应用未初始化")
+		return false
+	}
+
+	if runtimeApp.IsWebRunning() {
 		tui.PrintCLIInfo("⚠️ 启动服务", "Web 服务已在当前进程中运行")
 		return false
 	}
@@ -56,12 +65,9 @@ func DoServe() {
 		return
 	}
 
-	// 创建 Ech0 服务器
-	s = server.New()
-	// 初始化 Ech0
-	s.Init()
-	// 启动 Ech0
-	s.Start()
+	if err := runtimeApp.StartWeb(context.Background()); err != nil {
+		tui.PrintCLIInfo("😭 启动服务失败", err.Error())
+	}
 }
 
 // DoServeWithBlock 阻塞当前线程，直到服务器停止
@@ -70,12 +76,10 @@ func DoServeWithBlock() {
 		return
 	}
 
-	// 创建 Ech0 服务器
-	s = server.New()
-	// 初始化 Ech0
-	s.Init()
-	// 启动 Ech0
-	s.Start()
+	if err := runtimeApp.StartWeb(context.Background()); err != nil {
+		tui.PrintCLIInfo("😭 启动服务失败", err.Error())
+		return
+	}
 
 	// 阻塞主线程，直到接收到终止信号
 	quit := make(chan os.Signal, 1)
@@ -86,11 +90,10 @@ func DoServeWithBlock() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := s.Stop(ctx); err != nil {
+	if err := runtimeApp.StopWeb(ctx); err != nil {
 		tui.PrintCLIInfo("❌ 服务停止", "服务器强制关闭")
 		os.Exit(1)
 	}
-	s = nil
 	tui.PrintCLIInfo("🎉 停止服务成功", "Ech0 服务器已停止")
 }
 
@@ -100,13 +103,34 @@ func DoServeWithSSHAndBlock() {
 		return
 	}
 
-	DoSSH()
-	DoServeWithBlock()
+	if err := runtimeApp.StartSSH(context.Background()); err != nil {
+		tui.PrintCLIInfo("😭 启动服务失败", err.Error())
+		return
+	}
+
+	if err := runtimeApp.StartWeb(context.Background()); err != nil {
+		_ = runtimeApp.StopSSH(context.Background())
+		tui.PrintCLIInfo("😭 启动服务失败", err.Error())
+		return
+	}
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := runtimeApp.StopAll(ctx); err != nil {
+		tui.PrintCLIInfo("❌ 服务停止", "服务强制关闭")
+		os.Exit(1)
+	}
+	tui.PrintCLIInfo("🎉 停止服务成功", "Ech0 服务已停止")
 }
 
 // DoStopServe 停止服务
 func DoStopServe() {
-	if s == nil {
+	if runtimeApp == nil || !runtimeApp.IsWebRunning() {
 		tui.PrintCLIInfo("⚠️ 停止服务", "Ech0 服务器未启动")
 		return
 	}
@@ -115,12 +139,10 @@ func DoStopServe() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := s.Stop(ctx); err != nil {
+	if err := runtimeApp.StopWeb(ctx); err != nil {
 		tui.PrintCLIInfo("😭 停止服务失败", err.Error())
 		return
 	}
-
-	s = nil // 清空全局服务器实例
 
 	tui.PrintCLIInfo("🎉 停止服务成功", "Ech0 服务器已停止")
 }
@@ -176,11 +198,21 @@ func DoHello() {
 
 // DoSSH 启动或停止 SSH 服务
 func DoSSH() {
-	if ssh.SSHServer == nil {
-		ssh.SSHStart()
-	} else {
-		if err := ssh.SSHStop(); err != nil {
+	if runtimeApp == nil {
+		tui.PrintCLIInfo("⚠️ 启动服务", "应用未初始化")
+		return
+	}
+
+	if runtimeApp.IsSSHRunning() {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		if err := runtimeApp.StopSSH(ctx); err != nil {
 			tui.PrintCLIInfo("❌ 服务停止", "SSH 服务器强制关闭")
+			return
+		}
+	} else {
+		if err := runtimeApp.StartSSH(context.Background()); err != nil {
+			tui.PrintCLIInfo("😭 启动服务失败", err.Error())
 			return
 		}
 	}
@@ -200,7 +232,7 @@ func DoTui() {
 		var action string
 		var options []huh.Option[string]
 
-		if s != nil {
+		if runtimeApp != nil && runtimeApp.IsWebRunning() {
 			options = append(options, huh.NewOption("🛑 停止 Web 服务", "stopserve"))
 		} else if isWebPortInUse() {
 			options = append(options, huh.NewOption("🙈 服务已在其他进程中运行", "servebusy"))
@@ -208,7 +240,7 @@ func DoTui() {
 			options = append(options, huh.NewOption("🚀 启动 Web 服务", "serve"))
 		}
 
-		if ssh.SSHServer != nil {
+		if runtimeApp != nil && runtimeApp.IsSSHRunning() {
 			options = append(options, huh.NewOption("🛑 停止 SSH 服务", "ssh"))
 		} else {
 			options = append(options, huh.NewOption("🔐 启动 SSH 服务", "ssh"))
@@ -250,7 +282,7 @@ func DoTui() {
 			DoBackup()
 		case "restore":
 			// 如果服务器已经启动，则先停止服务器
-			if s != nil {
+			if runtimeApp != nil && runtimeApp.IsWebRunning() {
 				tui.PrintCLIInfo("⚠️ 警告", "恢复数据前请先停止服务器")
 			} else {
 				// 获取备份文件路径

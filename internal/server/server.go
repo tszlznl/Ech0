@@ -10,110 +10,34 @@ package server
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lin-snow/ech0/internal/cache"
 	"github.com/lin-snow/ech0/internal/config"
-	"github.com/lin-snow/ech0/internal/database"
-	"github.com/lin-snow/ech0/internal/di"
-	"github.com/lin-snow/ech0/internal/event"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
-	"github.com/lin-snow/ech0/internal/router"
-	"github.com/lin-snow/ech0/internal/task"
-	"github.com/lin-snow/ech0/internal/transaction"
 	errUtil "github.com/lin-snow/ech0/internal/util/err"
 )
 
-// Server 服务器结构体，包含Gin引擎
+// Server 是纯 HTTP runtime，只负责 gin/http 生命周期。
 type Server struct {
-	GinEngine      *gin.Engine
-	httpServer     *http.Server          // 用于优雅停止服务器
-	tasker         *task.Tasker          // 任务器
-	eventRegistrar *event.EventRegistrar // 事件注册器
-	cacheCleanup   func() error          // 缓存资源清理
+	GinEngine  *gin.Engine
+	httpServer *http.Server // 用于优雅停止服务器
 }
 
-// New 创建一个新的服务器实例
-func New() *Server {
-	return &Server{}
-}
-
-// Init 初始化服务器
-func (s *Server) Init() {
-	// Mode
-	if config.Config().Server.Mode == "debug" {
-		gin.SetMode(gin.DebugMode)
-	} else {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
-	// Gin Engine
-	s.GinEngine = gin.New()
-
-	// Database
-	database.InitDatabase()
-
-	// CacheFactory
-	cacheFactory := cache.NewCacheFactory()
-	s.cacheCleanup = cacheFactory.Cleanup
-
-	// TransactionManagerFactory
-	transactionManagerFactory := transaction.NewTransactionManagerFactory(database.GetDB)
-
-	// Event System
-	event.InitEventBus()
-
-	// Handlers
-	handlers, err := di.BuildHandlers(
-		database.GetDB,
-		cacheFactory,
-		transactionManagerFactory,
-		event.GetEventBus,
-	)
-	if err != nil {
-		errUtil.HandlePanicError(&commonModel.ServerError{
-			Msg: commonModel.INIT_HANDLERS_PANIC,
-			Err: err,
-		})
-	}
-
-	// Router
-	router.SetupRouter(s.GinEngine, handlers)
-
-	// Tasker
-	s.tasker, err = di.BuildTasker(
-		database.GetDB,
-		cacheFactory,
-		transactionManagerFactory,
-		event.GetEventBus,
-	)
-	if err != nil {
-		errUtil.HandlePanicError(&commonModel.ServerError{
-			Msg: commonModel.INIT_TASKER_PANIC,
-			Err: err,
-		})
-	}
-
-	// EventRegistrar
-	s.eventRegistrar, err = di.BuildEventRegistrar(
-		database.GetDB,
-		event.GetEventBus,
-		cacheFactory,
-		transactionManagerFactory,
-	)
-	if err != nil {
-		errUtil.HandlePanicError(&commonModel.ServerError{
-			Msg: commonModel.INIT_EVENT_REGISTRAR_PANIC,
-			Err: err,
-		})
+// New 创建一个新的 HTTP server 实例。
+func New(engine *gin.Engine) *Server {
+	return &Server{
+		GinEngine: engine,
 	}
 }
 
 // Start 异步启动服务器
-func (s *Server) Start() {
+func (s *Server) Start(context.Context) error {
+	if s.GinEngine == nil {
+		return errors.New("gin engine is nil")
+	}
+
 	port := config.Config().Server.Port
 	PrintGreetings(port)
 
@@ -133,16 +57,7 @@ func (s *Server) Start() {
 		}
 	}()
 
-	// 启动任务器
-	go s.tasker.Start()
-
-	// 注册事件
-	if err := s.eventRegistrar.Register(); err != nil {
-		errUtil.HandlePanicError(&commonModel.ServerError{
-			Msg: commonModel.INIT_EVENT_REGISTRAR_PANIC,
-			Err: err,
-		})
-	}
+	return nil
 }
 
 // Stop 优雅停止服务器
@@ -157,27 +72,10 @@ func (s *Server) Stop(ctx context.Context) error {
 	}
 
 	if s.httpServer == nil {
-		fmt.Println("⚠️ HTTP 服务器未启动，无需关闭")
+		return nil
 	} else {
 		if err := s.httpServer.Shutdown(shutdownCtx); err != nil {
 			return err
-		}
-	}
-
-	// 停止任务器
-	if s.tasker != nil {
-		s.tasker.Stop()
-	}
-
-	// 等待事件系统任务结束
-	if s.eventRegistrar != nil {
-		s.eventRegistrar.Wait()
-	}
-
-	// 清理缓存资源
-	if s.cacheCleanup != nil {
-		if cleanupErr := s.cacheCleanup(); cleanupErr != nil {
-			fmt.Printf("⚠️ 缓存清理失败: %v\n", cleanupErr)
 		}
 	}
 

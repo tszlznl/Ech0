@@ -2,7 +2,7 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/lin-snow/ech0/internal/di"
+	"github.com/lin-snow/ech0/internal/handler"
 	"github.com/lin-snow/ech0/internal/middleware"
 )
 
@@ -14,7 +14,7 @@ type AppRouterGroup struct {
 }
 
 // SetupRouter 配置路由
-func SetupRouter(r *gin.Engine, h *di.Handlers) {
+func SetupRouter(r *gin.Engine, h *handler.Bundle) {
 	// === 使用本地目录提供前端 ===)
 	// // Setup Frontend
 	// r.Use(static.Serve("/", static.LocalFile("./template", false)))

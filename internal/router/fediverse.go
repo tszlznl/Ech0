@@ -1,8 +1,8 @@
 package router
 
-import "github.com/lin-snow/ech0/internal/di"
+import "github.com/lin-snow/ech0/internal/handler"
 
-func setupFediverseRoutes(appRouterGroup *AppRouterGroup, h *di.Handlers) {
+func setupFediverseRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	//==============
 	// Fediverse 必须要的路由
 	//==============

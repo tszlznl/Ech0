@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/lin-snow/ech0/internal/app"
 	"github.com/lin-snow/ech0/internal/cli"
 	"github.com/spf13/cobra"
 )
@@ -64,6 +65,11 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(infoCmd)
 	rootCmd.AddCommand(helloCmd)
+}
+
+// Bootstrap 注入应用实例。
+func Bootstrap(a *app.App) {
+	cli.SetApp(a)
 }
 
 // Execute 是根命令的入口函数

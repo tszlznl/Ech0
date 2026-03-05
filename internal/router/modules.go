@@ -2,13 +2,13 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/lin-snow/ech0/internal/di"
+	"github.com/lin-snow/ech0/internal/handler"
 )
 
 // RouterContext 聚合路由注册需要的上下文。
 type RouterContext struct {
 	Engine   *gin.Engine
-	Handlers *di.Handlers
+	Handlers *handler.Bundle
 	Groups   *AppRouterGroup
 }
 

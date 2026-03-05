@@ -7,21 +7,23 @@
 package di
 
 import (
+	"github.com/lin-snow/ech0/internal/app"
 	"github.com/lin-snow/ech0/internal/cache"
 	"github.com/lin-snow/ech0/internal/event"
 	"github.com/lin-snow/ech0/internal/fediverse"
-	handler12 "github.com/lin-snow/ech0/internal/handler/agent"
-	handler9 "github.com/lin-snow/ech0/internal/handler/backup"
-	handler4 "github.com/lin-snow/ech0/internal/handler/common"
-	handler8 "github.com/lin-snow/ech0/internal/handler/connect"
-	handler11 "github.com/lin-snow/ech0/internal/handler/dashboard"
-	handler3 "github.com/lin-snow/ech0/internal/handler/echo"
-	handler10 "github.com/lin-snow/ech0/internal/handler/fediverse"
-	handler6 "github.com/lin-snow/ech0/internal/handler/inbox"
-	handler5 "github.com/lin-snow/ech0/internal/handler/setting"
-	handler7 "github.com/lin-snow/ech0/internal/handler/todo"
-	handler2 "github.com/lin-snow/ech0/internal/handler/user"
-	"github.com/lin-snow/ech0/internal/handler/web"
+	"github.com/lin-snow/ech0/internal/handler"
+	handler13 "github.com/lin-snow/ech0/internal/handler/agent"
+	handler10 "github.com/lin-snow/ech0/internal/handler/backup"
+	handler5 "github.com/lin-snow/ech0/internal/handler/common"
+	handler9 "github.com/lin-snow/ech0/internal/handler/connect"
+	handler12 "github.com/lin-snow/ech0/internal/handler/dashboard"
+	handler4 "github.com/lin-snow/ech0/internal/handler/echo"
+	handler11 "github.com/lin-snow/ech0/internal/handler/fediverse"
+	handler7 "github.com/lin-snow/ech0/internal/handler/inbox"
+	handler6 "github.com/lin-snow/ech0/internal/handler/setting"
+	handler8 "github.com/lin-snow/ech0/internal/handler/todo"
+	handler3 "github.com/lin-snow/ech0/internal/handler/user"
+	handler2 "github.com/lin-snow/ech0/internal/handler/web"
 	"github.com/lin-snow/ech0/internal/metric"
 	"github.com/lin-snow/ech0/internal/monitor"
 	repository8 "github.com/lin-snow/ech0/internal/repository/common"
@@ -35,6 +37,7 @@ import (
 	repository6 "github.com/lin-snow/ech0/internal/repository/todo"
 	repository4 "github.com/lin-snow/ech0/internal/repository/user"
 	"github.com/lin-snow/ech0/internal/repository/webhook"
+	"github.com/lin-snow/ech0/internal/runtime/http"
 	service11 "github.com/lin-snow/ech0/internal/service/agent"
 	service9 "github.com/lin-snow/ech0/internal/service/backup"
 	"github.com/lin-snow/ech0/internal/service/common"
@@ -50,6 +53,41 @@ import (
 	"github.com/lin-snow/ech0/internal/transaction"
 	"gorm.io/gorm"
 )
+
+// Injectors from app_injector.go:
+
+// BuildApp 构建应用内核。
+func BuildApp() (*app.App, func(), error) {
+	cacheFactory := ProvideCacheFactory()
+	v := ProvideCacheCleanup(cacheFactory)
+	runtime := ProvideCacheRuntime(v)
+	v2 := ProvideDBProvider()
+	v3 := ProvideEventBusProvider()
+	transactionManagerFactory := ProvideTransactionManagerFactory(v2)
+	eventRegistrar, err := ProvideEventRegistrar(v2, v3, cacheFactory, transactionManagerFactory)
+	if err != nil {
+		return nil, nil, err
+	}
+	eventRuntime := ProvideEventRuntime(eventRegistrar)
+	tasker, err := ProvideTasker(v2, cacheFactory, transactionManagerFactory, v3)
+	if err != nil {
+		return nil, nil, err
+	}
+	taskRuntime := ProvideTaskRuntime(tasker)
+	engine := ProvideGinEngine()
+	bundle, err := ProvideHandlers(v2, cacheFactory, transactionManagerFactory, v3)
+	if err != nil {
+		return nil, nil, err
+	}
+	server := ProvideHTTPServer(engine, bundle)
+	httpRuntime := ProvideHTTPRuntime(server)
+	v4 := ProvideWebComponents(runtime, eventRuntime, taskRuntime, httpRuntime)
+	sshServer := ProvideSSHServer()
+	sshRuntime := ProvideSSHRuntime(sshServer)
+	v5 := ProvideApp(v4, sshRuntime)
+	return v5, func() {
+	}, nil
+}
 
 // Injectors from event_injector.go:
 
@@ -79,8 +117,8 @@ func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() event.IEv
 // Injectors from handlers_injector.go:
 
 // BuildHandlers 使用wire生成的代码来构建Handlers实例
-func BuildHandlers(dbProvider func() *gorm.DB, cacheFactory *cache.CacheFactory, tmFactory *transaction.TransactionManagerFactory, ebProvider func() event.IEventBus) (*Handlers, error) {
-	webHandler := handler.NewWebHandler()
+func BuildHandlers(dbProvider func() *gorm.DB, cacheFactory *cache.CacheFactory, tmFactory *transaction.TransactionManagerFactory, ebProvider func() event.IEventBus) (*handler.Bundle, error) {
+	webHandler := handler2.NewWebHandler()
 	transactionManager := ProvideTransactionManager(tmFactory)
 	iCache := ProvideCache(cacheFactory)
 	userRepositoryInterface := repository4.NewUserRepository(dbProvider, iCache)
@@ -92,34 +130,52 @@ func BuildHandlers(dbProvider func() *gorm.DB, cacheFactory *cache.CacheFactory,
 	webhookRepositoryInterface := repository.NewWebhookRepository(dbProvider)
 	settingService := service2.NewSettingService(transactionManager, commonService, keyValueRepositoryInterface, settingRepositoryInterface, webhookRepositoryInterface, ebProvider)
 	userService := service3.NewUserService(transactionManager, userRepositoryInterface, settingService, ebProvider)
-	userHandler := handler2.NewUserHandler(userService)
+	userHandler := handler3.NewUserHandler(userService)
 	fediverseRepositoryInterface := repository3.NewFediverseRepository(dbProvider)
 	fediverseCore := fediverse.NewFediverseCore(fediverseRepositoryInterface, keyValueRepositoryInterface, userRepositoryInterface, echoRepositoryInterface)
 	fediverseService := service4.NewFediverseService(fediverseCore, transactionManager, fediverseRepositoryInterface, userRepositoryInterface, echoRepositoryInterface)
 	echoService := service5.NewEchoService(transactionManager, commonService, echoRepositoryInterface, commonRepositoryInterface, fediverseService, keyValueRepositoryInterface, ebProvider)
-	echoHandler := handler3.NewEchoHandler(echoService)
-	commonHandler := handler4.NewCommonHandler(commonService)
-	settingHandler := handler5.NewSettingHandler(settingService)
+	echoHandler := handler4.NewEchoHandler(echoService)
+	commonHandler := handler5.NewCommonHandler(commonService)
+	settingHandler := handler6.NewSettingHandler(settingService)
 	inboxRepositoryInterface := repository7.NewInboxRepository(dbProvider)
 	inboxService := service6.NewInboxService(transactionManager, commonService, inboxRepositoryInterface)
-	inboxHandler := handler6.NewInboxHandler(inboxService)
+	inboxHandler := handler7.NewInboxHandler(inboxService)
 	todoRepositoryInterface := repository6.NewTodoRepository(dbProvider, iCache)
 	todoService := service7.NewTodoService(transactionManager, todoRepositoryInterface, commonService)
-	todoHandler := handler7.NewTodoHandler(todoService)
+	todoHandler := handler8.NewTodoHandler(todoService)
 	connectRepositoryInterface := repository10.NewConnectRepository(dbProvider)
 	connectService := service8.NewConnectService(transactionManager, connectRepositoryInterface, echoRepositoryInterface, commonService, settingService)
-	connectHandler := handler8.NewConnectHandler(connectService)
+	connectHandler := handler9.NewConnectHandler(connectService)
 	backupService := service9.NewBackupService(commonService, ebProvider)
-	backupHandler := handler9.NewBackupHandler(backupService)
-	fediverseHandler := handler10.NewFediverseHandler(fediverseService)
+	backupHandler := handler10.NewBackupHandler(backupService)
+	fediverseHandler := handler11.NewFediverseHandler(fediverseService)
 	metricCollector := metric.NewSystemCollector()
 	monitorMonitor := monitor.NewMonitor(metricCollector)
 	dashboardService := service10.NewDashboardService(monitorMonitor, commonService)
-	dashboardHandler := handler11.NewDashboardHandler(dashboardService)
+	dashboardHandler := handler12.NewDashboardHandler(dashboardService)
 	agentService := service11.NewAgentService(settingService, echoService, todoService, keyValueRepositoryInterface)
-	agentHandler := handler12.NewAgentHandler(agentService)
-	handlers := NewHandlers(webHandler, userHandler, echoHandler, commonHandler, settingHandler, inboxHandler, todoHandler, connectHandler, backupHandler, fediverseHandler, dashboardHandler, agentHandler)
-	return handlers, nil
+	agentHandler := handler13.NewAgentHandler(agentService)
+	bundle := handler.NewBundle(webHandler, userHandler, echoHandler, commonHandler, settingHandler, inboxHandler, todoHandler, connectHandler, backupHandler, fediverseHandler, dashboardHandler, agentHandler)
+	return bundle, nil
+}
+
+// Injectors from runtime_injector.go:
+
+// BuildWebRuntime 构建 HTTP runtime（用于测试和独立启动场景）。
+func BuildWebRuntime() (*http.Runtime, error) {
+	engine := ProvideGinEngine()
+	v := ProvideDBProvider()
+	cacheFactory := ProvideCacheFactory()
+	transactionManagerFactory := ProvideTransactionManagerFactory(v)
+	v2 := ProvideEventBusProvider()
+	bundle, err := ProvideHandlers(v, cacheFactory, transactionManagerFactory, v2)
+	if err != nil {
+		return nil, err
+	}
+	server := ProvideHTTPServer(engine, bundle)
+	runtime := ProvideHTTPRuntime(server)
+	return runtime, nil
 }
 
 // Injectors from tasker_injector.go:

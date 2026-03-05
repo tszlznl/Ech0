@@ -7,6 +7,7 @@ import (
 	"github.com/google/wire"
 	"github.com/lin-snow/ech0/internal/cache"
 	"github.com/lin-snow/ech0/internal/event"
+	"github.com/lin-snow/ech0/internal/handler"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"gorm.io/gorm"
 )
@@ -17,7 +18,7 @@ func BuildHandlers(
 	cacheFactory *cache.CacheFactory,
 	tmFactory *transaction.TransactionManagerFactory,
 	ebProvider func() event.IEventBus,
-) (*Handlers, error) {
+) (*handler.Bundle, error) {
 	wire.Build(
 		CacheSet,
 		TransactionManagerSet,
@@ -38,7 +39,7 @@ func BuildHandlers(
 		BackupSet,
 		FediverseCoreSet,
 		FediverseSet,
-		NewHandlers,
+		handler.NewBundle,
 	)
-	return &Handlers{}, nil
+	return &handler.Bundle{}, nil
 }

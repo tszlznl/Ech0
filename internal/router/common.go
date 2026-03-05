@@ -1,9 +1,9 @@
 package router
 
-import "github.com/lin-snow/ech0/internal/di"
+import "github.com/lin-snow/ech0/internal/handler"
 
 // setupCommonRoutes 设置普通路由
-func setupCommonRoutes(appRouterGroup *AppRouterGroup, h *di.Handlers) {
+func setupCommonRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	// Public
 	appRouterGroup.PublicRouterGroup.GET("/status", h.CommonHandler.GetStatus())
 	appRouterGroup.PublicRouterGroup.GET("/heatmap", h.CommonHandler.GetHeatMap())

@@ -5,28 +5,37 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"time"
 
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/ssh"
+	chssh "github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/lin-snow/ech0/internal/config"
 	"github.com/lin-snow/ech0/internal/tui"
 )
 
-var SSHServer *ssh.Server
+// Server 是 SSH runtime 的实例化封装。
+type Server struct {
+	server *chssh.Server
+}
 
-// SSHStart 启动 SSH 服务器
-func SSHStart() {
+// New 创建一个 SSH runtime。
+func New() *Server {
+	return &Server{}
+}
+
+// Start 启动 SSH 服务器。
+func (s *Server) Start(context.Context) error {
+	if s.server != nil {
+		return errors.New("ssh server already running")
+	}
+
 	host := config.Config().SSH.Host
 	port := config.Config().SSH.Port
 	key := config.Config().SSH.Key
 
-	var err error
-
-	SSHServer, err = wish.NewServer(
+	newServer, err := wish.NewServer(
 		wish.WithAddress(net.JoinHostPort(host, port)),
 		wish.WithHostKeyPath(key),
 		wish.WithMiddleware(
@@ -35,61 +44,50 @@ func SSHStart() {
 		),
 	)
 	if err != nil {
-		fmt.Printf("Could not start ssh server: %v\n", err)
-		return
+		return err
 	}
 
-	// done := make(chan os.Signal, 1)
-	// signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-	// log.Info("Starting SSH server", "host", host, "port", port)
+	s.server = newServer
+
 	go func() {
 		fmt.Println("🚀 Ech0 SSH已启动，监听端口", port)
-		if serveErr := SSHServer.ListenAndServe(); serveErr != nil &&
-			!errors.Is(serveErr, ssh.ErrServerClosed) {
+		if serveErr := s.server.ListenAndServe(); serveErr != nil &&
+			!errors.Is(serveErr, chssh.ErrServerClosed) {
 			fmt.Printf("ssh server run failed: %v\n", serveErr)
 		}
 	}()
 
-	// <-done
-	// // log.Info("Stopping SSH server")
-	// ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	// defer func() { cancel() }()
-	// if err := s.Shutdown(ctx); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
-	// 	// log.Error("Could not stop server", "error", err)
-	// }
+	return nil
 }
 
-// SSHStop 停止 SSH 服务器
-func SSHStop() error {
-	if SSHServer == nil {
+// Stop 停止 SSH 服务器。
+func (s *Server) Stop(ctx context.Context) error {
+	if s.server == nil {
 		return nil
 	}
 
-	// When it arrives, we create a context with a timeout.
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer func() { cancel() }()
-
-	// When we start the shutdown, the server will no longer accept new
-	// connections, but will wait as much as the given context allows for the
-	// active connections to finish.
-	// After the timeout, it shuts down anyway.
-	if err := SSHServer.Shutdown(ctx); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
+	if err := s.server.Shutdown(ctx); err != nil && !errors.Is(err, chssh.ErrServerClosed) {
 		// 强制关闭服务器
-		if closeErr := SSHServer.Close(); closeErr != nil {
+		if closeErr := s.server.Close(); closeErr != nil {
 			fmt.Printf("force close ssh server failed: %v\n", closeErr)
 		}
 
 		return err
 	}
 
-	SSHServer = nil // Clear the server instance
+	s.server = nil
 	return nil
+}
+
+// IsRunning 返回 SSH runtime 是否运行中。
+func (s *Server) IsRunning() bool {
+	return s.server != nil
 }
 
 // ActivetermMiddleware Middleware will exit 1 connections trying with no active terminals.
 func ActivetermMiddleware() wish.Middleware {
-	return func(next ssh.Handler) ssh.Handler {
-		return func(sess ssh.Session) {
+	return func(next chssh.Handler) chssh.Handler {
+		return func(sess chssh.Session) {
 			_, _, active := sess.Pty()
 			if active {
 				next(sess)
@@ -105,7 +103,7 @@ func ActivetermMiddleware() wish.Middleware {
 // handles the incoming ssh.Session. Here we just grab the terminal info and
 // pass it to the new model. You can also return tea.ProgramOptions (such as
 // tea.WithAltScreen) on a session by session basis.
-func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+func teaHandler(s chssh.Session) (tea.Model, []tea.ProgramOption) {
 	// This should never fail, as we are using the activeterm middleware.
 	pty, _, _ := s.Pty()
 

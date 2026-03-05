@@ -1,68 +1,25 @@
 package di
 
 import (
+	"github.com/gin-gonic/gin"
+	"github.com/lin-snow/ech0/internal/app"
 	"github.com/lin-snow/ech0/internal/cache"
-	agentHandler "github.com/lin-snow/ech0/internal/handler/agent"
-	backupHandler "github.com/lin-snow/ech0/internal/handler/backup"
-	commonHandler "github.com/lin-snow/ech0/internal/handler/common"
-	connectHandler "github.com/lin-snow/ech0/internal/handler/connect"
-	dashboardHandler "github.com/lin-snow/ech0/internal/handler/dashboard"
-	echoHandler "github.com/lin-snow/ech0/internal/handler/echo"
-	fediverseHandler "github.com/lin-snow/ech0/internal/handler/fediverse"
-	inboxHandler "github.com/lin-snow/ech0/internal/handler/inbox"
-	settingHandler "github.com/lin-snow/ech0/internal/handler/setting"
-	todoHandler "github.com/lin-snow/ech0/internal/handler/todo"
-	userHandler "github.com/lin-snow/ech0/internal/handler/user"
-	webHandler "github.com/lin-snow/ech0/internal/handler/web"
+	"github.com/lin-snow/ech0/internal/config"
+	"github.com/lin-snow/ech0/internal/database"
+	"github.com/lin-snow/ech0/internal/event"
+	"github.com/lin-snow/ech0/internal/handler"
+	"github.com/lin-snow/ech0/internal/router"
+	runtimeCache "github.com/lin-snow/ech0/internal/runtime/cache"
+	runtimeEvent "github.com/lin-snow/ech0/internal/runtime/event"
+	runtimeHTTP "github.com/lin-snow/ech0/internal/runtime/http"
+	runtimeSSH "github.com/lin-snow/ech0/internal/runtime/ssh"
+	runtimeTask "github.com/lin-snow/ech0/internal/runtime/task"
+	"github.com/lin-snow/ech0/internal/server"
+	sshServer "github.com/lin-snow/ech0/internal/ssh"
+	"github.com/lin-snow/ech0/internal/task"
 	"github.com/lin-snow/ech0/internal/transaction"
+	"gorm.io/gorm"
 )
-
-// Handlers 聚合各个模块的Handler
-type Handlers struct {
-	WebHandler       *webHandler.WebHandler
-	UserHandler      *userHandler.UserHandler
-	EchoHandler      *echoHandler.EchoHandler
-	CommonHandler    *commonHandler.CommonHandler
-	SettingHandler   *settingHandler.SettingHandler
-	InboxHandler     *inboxHandler.InboxHandler
-	TodoHandler      *todoHandler.TodoHandler
-	ConnectHandler   *connectHandler.ConnectHandler
-	BackupHandler    *backupHandler.BackupHandler
-	FediverseHandler *fediverseHandler.FediverseHandler
-	DashboardHandler *dashboardHandler.DashboardHandler
-	AgentHandler     *agentHandler.AgentHandler
-}
-
-// NewHandlers 创建Handlers实例
-func NewHandlers(
-	webHandler *webHandler.WebHandler,
-	userHandler *userHandler.UserHandler,
-	echoHandler *echoHandler.EchoHandler,
-	commonHandler *commonHandler.CommonHandler,
-	settingHandler *settingHandler.SettingHandler,
-	inboxHandler *inboxHandler.InboxHandler,
-	todoHandler *todoHandler.TodoHandler,
-	connectHandler *connectHandler.ConnectHandler,
-	backupHandler *backupHandler.BackupHandler,
-	fediverseHandler *fediverseHandler.FediverseHandler,
-	dashboardHandler *dashboardHandler.DashboardHandler,
-	agentHandler *agentHandler.AgentHandler,
-) *Handlers {
-	return &Handlers{
-		WebHandler:       webHandler,
-		UserHandler:      userHandler,
-		EchoHandler:      echoHandler,
-		CommonHandler:    commonHandler,
-		SettingHandler:   settingHandler,
-		InboxHandler:     inboxHandler,
-		TodoHandler:      todoHandler,
-		ConnectHandler:   connectHandler,
-		BackupHandler:    backupHandler,
-		FediverseHandler: fediverseHandler,
-		DashboardHandler: dashboardHandler,
-		AgentHandler:     agentHandler,
-	}
-}
 
 // ProvideCache 提供通用缓存实例给 wire 注入
 func ProvideCache(factory *cache.CacheFactory) cache.ICache[string, any] {
@@ -79,4 +36,114 @@ func ProvideTransactionManager(
 	factory *transaction.TransactionManagerFactory,
 ) transaction.TransactionManager {
 	return factory.TransactionManager()
+}
+
+// ProvideDBProvider 提供数据库 Provider。
+func ProvideDBProvider() func() *gorm.DB {
+	database.InitDatabase()
+	return database.GetDB
+}
+
+// ProvideEventBusProvider 提供 EventBus Provider。
+func ProvideEventBusProvider() func() event.IEventBus {
+	event.InitEventBus()
+	return event.GetEventBus
+}
+
+// ProvideCacheFactory 创建缓存工厂。
+func ProvideCacheFactory() *cache.CacheFactory {
+	return cache.NewCacheFactory()
+}
+
+// ProvideTransactionManagerFactory 创建事务管理器工厂。
+func ProvideTransactionManagerFactory(
+	dbProvider func() *gorm.DB,
+) *transaction.TransactionManagerFactory {
+	return transaction.NewTransactionManagerFactory(dbProvider)
+}
+
+// ProvideGinEngine 创建 Gin 引擎。
+func ProvideGinEngine() *gin.Engine {
+	if config.Config().Server.Mode == "debug" {
+		gin.SetMode(gin.DebugMode)
+	} else {
+		gin.SetMode(gin.ReleaseMode)
+	}
+	return gin.New()
+}
+
+// ProvideHTTPServer 创建并装配纯 HTTP runtime。
+func ProvideHTTPServer(engine *gin.Engine, handlers *handler.Bundle) *server.Server {
+	router.SetupRouter(engine, handlers)
+	return server.New(engine)
+}
+
+func ProvideHTTPRuntime(s *server.Server) *runtimeHTTP.Runtime {
+	return runtimeHTTP.New(s)
+}
+
+func ProvideEventRuntime(registrar *event.EventRegistrar) *runtimeEvent.Runtime {
+	return runtimeEvent.New(registrar)
+}
+
+func ProvideTaskRuntime(tasker *task.Tasker) *runtimeTask.Runtime {
+	return runtimeTask.New(tasker)
+}
+
+func ProvideSSHServer() *sshServer.Server {
+	return sshServer.New()
+}
+
+func ProvideSSHRuntime(s *sshServer.Server) *runtimeSSH.Runtime {
+	return runtimeSSH.New(s)
+}
+
+func ProvideCacheRuntime(cleanup func() error) *runtimeCache.Runtime {
+	return runtimeCache.New(cleanup)
+}
+
+func ProvideHandlers(
+	dbProvider func() *gorm.DB,
+	cacheFactory *cache.CacheFactory,
+	tmFactory *transaction.TransactionManagerFactory,
+	ebProvider func() event.IEventBus,
+) (*handler.Bundle, error) {
+	return BuildHandlers(dbProvider, cacheFactory, tmFactory, ebProvider)
+}
+
+func ProvideTasker(
+	dbProvider func() *gorm.DB,
+	cacheFactory *cache.CacheFactory,
+	tmFactory *transaction.TransactionManagerFactory,
+	ebProvider func() event.IEventBus,
+) (*task.Tasker, error) {
+	return BuildTasker(dbProvider, cacheFactory, tmFactory, ebProvider)
+}
+
+func ProvideEventRegistrar(
+	dbProvider func() *gorm.DB,
+	ebProvider func() event.IEventBus,
+	cacheFactory *cache.CacheFactory,
+	tmFactory *transaction.TransactionManagerFactory,
+) (*event.EventRegistrar, error) {
+	return BuildEventRegistrar(dbProvider, ebProvider, cacheFactory, tmFactory)
+}
+
+// ProvideWebComponents 组装 Web 组件启动顺序。
+// 启动顺序: cache(no-op) -> event -> task -> http
+// 停止顺序: http -> task -> event -> cache
+func ProvideWebComponents(
+	cacheRuntime *runtimeCache.Runtime,
+	eventRuntime *runtimeEvent.Runtime,
+	taskRuntime *runtimeTask.Runtime,
+	httpRuntime *runtimeHTTP.Runtime,
+) []app.Component {
+	return []app.Component{cacheRuntime, eventRuntime, taskRuntime, httpRuntime}
+}
+
+func ProvideApp(
+	webComponents []app.Component,
+	sshRuntime *runtimeSSH.Runtime,
+) *app.App {
+	return app.NewApp(webComponents, sshRuntime)
 }
