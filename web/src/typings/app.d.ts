@@ -103,7 +103,7 @@ declare namespace App {
 
       type Image = {
         id: number
-        message_id: number
+        echo_id: number
         image_url: string
         image_source: string
         object_key?: string // 对象存储的Key (如果是本地存储则为空)

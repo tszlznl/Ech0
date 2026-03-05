@@ -122,7 +122,7 @@ func (echoRepository *EchoRepository) GetEchosById(id uint) (*model.Echo, error)
 func (echoRepository *EchoRepository) DeleteEchoById(ctx context.Context, id uint) error {
 	var echo model.Echo
 	// 删除外键images
-	echoRepository.getDB(ctx).Where("message_id = ?", id).Delete(&model.Image{})
+	echoRepository.getDB(ctx).Where("echo_id = ?", id).Delete(&model.Image{})
 
 	result := echoRepository.getDB(ctx).Delete(&echo, id)
 	if result.Error != nil {
@@ -202,7 +202,7 @@ func (echoRepository *EchoRepository) UpdateEcho(ctx context.Context, echo *mode
 	ClearTodayEchosCache(echoRepository.cache)
 
 	// 1. 先删除该 Echo 关联的所有旧图片
-	if err := echoRepository.getDB(ctx).Where("message_id = ?", echo.ID).Delete(&model.Image{}).Error; err != nil {
+	if err := echoRepository.getDB(ctx).Where("echo_id = ?", echo.ID).Delete(&model.Image{}).Error; err != nil {
 		return err
 	}
 
@@ -224,7 +224,7 @@ func (echoRepository *EchoRepository) UpdateEcho(ctx context.Context, echo *mode
 		var images []model.Image
 		for _, img := range echo.Images {
 			// 确保每个图片都关联到正确的 Echo ID
-			img.MessageID = echo.ID
+			img.EchoID = echo.ID
 			images = append(images, img)
 		}
 		// 批量插入新图片

@@ -327,7 +327,7 @@ func (echoService *EchoService) UpdateEcho(userid uint, echo *model.Echo) error 
 			echo.Images[i].ImageURL = ""
 		}
 		// 确保外键正确设置
-		echo.Images[i].MessageID = echo.ID
+		echo.Images[i].EchoID = echo.ID
 	}
 
 	// 检查是否为空

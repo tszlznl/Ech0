@@ -2424,8 +2424,8 @@ const docTemplate = `{
                     "description": "图片URL",
                     "type": "string"
                 },
-                "message_id": {
-                    "description": "关联的Echo ID(注意⚠️: 该字段名为MessageID, 但实际关联的是Echo表,因为为了兼容旧版Echo用户)",
+                "echo_id": {
+                    "description": "关联的 Echo ID",
                     "type": "integer"
                 },
                 "object_key": {

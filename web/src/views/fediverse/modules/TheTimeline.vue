@@ -236,7 +236,7 @@ const resolvedItems = computed(() =>
     const images = extractAttachmentUrls(item.rawObject, contentHtmlCandidate)
     const galleryImages: App.Api.Ech0.Image[] = images.map((url, index) => ({
       id: index,
-      message_id: item.id ?? 0,
+      echo_id: item.id ?? 0,
       image_url: url,
       image_source: ImageSource.URL,
     }))
