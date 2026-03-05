@@ -42,7 +42,8 @@ func coreRouteModules() []RouteModule {
 		routeModule{
 			name: "static-assets",
 			register: func(ctx *RouterContext) {
-				ctx.Engine.Static("api/images", "./data/images")
+				ctx.Engine.Static("api/files/images", "./data/files/images")
+				ctx.Engine.Static("api/files/audios", "./data/files/audios")
 			},
 		},
 		routeModule{

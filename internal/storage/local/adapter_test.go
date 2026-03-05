@@ -17,7 +17,7 @@ func (r *readSeekCloser) Close() error { return nil }
 
 func TestAdapter_SaveAndDelete_Image(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	adapter := NewAdapterWithDirs(fs, "data/images", "data/audios")
+	adapter := NewAdapterWithDirs(fs, "data/files/images", "data/files/audios")
 
 	reader := &readSeekCloser{Reader: bytes.NewReader([]byte("fake-image-content"))}
 	saved, err := adapter.Save(context.Background(), storage.SaveRequest{
@@ -49,7 +49,7 @@ func TestAdapter_SaveAndDelete_Image(t *testing.T) {
 
 func TestAdapter_Save_AudioUsesMusicName(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	adapter := NewAdapterWithDirs(fs, "data/images", "data/audios")
+	adapter := NewAdapterWithDirs(fs, "data/files/images", "data/files/audios")
 
 	rs := &readSeekCloser{Reader: bytes.NewReader([]byte("fake-audio-content"))}
 	saved, err := adapter.Save(context.Background(), storage.SaveRequest{
@@ -62,8 +62,8 @@ func TestAdapter_Save_AudioUsesMusicName(t *testing.T) {
 	if err != nil {
 		t.Fatalf("save audio failed: %v", err)
 	}
-	if saved.URL != "/audios/music.mp3" {
-		t.Fatalf("expected /audios/music.mp3, got %s", saved.URL)
+	if saved.URL != "/files/audios/music.mp3" {
+		t.Fatalf("expected /files/audios/music.mp3, got %s", saved.URL)
 	}
 }
 

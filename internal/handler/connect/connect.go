@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	res "github.com/lin-snow/ech0/internal/handler/response"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
-	model "github.com/lin-snow/ech0/internal/model/connect"
+	connectModel "github.com/lin-snow/ech0/internal/model/connect"
 	service "github.com/lin-snow/ech0/internal/service/connect"
 )
 
@@ -28,7 +28,7 @@ func NewConnectHandler(connectService *service.ConnectService) *ConnectHandler {
 //	@Tags			连接管理
 //	@Accept			json
 //	@Produce		json
-//	@Param			connected	body		model.Connected	true	"连接信息"
+//	@Param			connected	body		connectModel.Connected	true	"连接信息"
 //	@Success		200			{object}	res.Response	"添加连接成功"
 //	@Failure		200			{object}	res.Response	"添加连接失败"
 //	@Router			/addConnect [post]
@@ -36,7 +36,7 @@ func (connectHandler *ConnectHandler) AddConnect() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		userId := ctx.MustGet("userid").(uint)
 
-		var connected model.Connected
+		var connected connectModel.Connected
 		if err := ctx.ShouldBindJSON(&connected); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_REQUEST_BODY,
@@ -100,7 +100,7 @@ func (connectHandler *ConnectHandler) DeleteConnect() gin.HandlerFunc {
 //	@Tags			连接管理
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response{data=[]model.Connected}	"获取连接信息成功"
+//	@Success		200	{object}	res.Response{data=[]connectModel.Connected}	"获取连接信息成功"
 //	@Failure		200	{object}	res.Response							"获取连接信息失败"
 //	@Router			/connects/info [get]
 func (connectHandler *ConnectHandler) GetConnectsInfo() gin.HandlerFunc {
@@ -128,7 +128,7 @@ func (connectHandler *ConnectHandler) GetConnectsInfo() gin.HandlerFunc {
 //	@Tags			连接管理
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response{data=model.Connected}	"获取连接信息成功"
+//	@Success		200	{object}	res.Response{data=connectModel.Connected}	"获取连接信息成功"
 //	@Failure		200	{object}	res.Response						"获取连接信息失败"
 //	@Router			/connect [get]
 func (connectHandler *ConnectHandler) GetConnect() gin.HandlerFunc {
@@ -155,7 +155,7 @@ func (connectHandler *ConnectHandler) GetConnect() gin.HandlerFunc {
 //	@Tags			连接管理
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response{data=[]model.Connected}	"获取连接列表成功"
+//	@Success		200	{object}	res.Response{data=[]connectModel.Connected}	"获取连接列表成功"
 //	@Failure		200	{object}	res.Response							"获取连接列表失败"
 //	@Router			/connect/list [get]
 func (connectHandler *ConnectHandler) GetConnects() gin.HandlerFunc {

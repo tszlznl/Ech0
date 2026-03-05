@@ -444,9 +444,9 @@ func GetImageURL(image echoModel.Image, serverURL string) string {
 }
 
 // ValidateAndSanitizePath 验证并清理文件路径，防止路径遍历攻击
-// baseDir: 允许的基础目录（如 "data/images"）
-// userInput: 用户提供的路径部分（如 "/images/xxx.png"）
-// prefix: 需要去除的前缀（如 "/images/"）
+// baseDir: 允许的基础目录（如 "data/files/images"）
+// userInput: 用户提供的路径部分（如 "/files/images/xxx.png"）
+// prefix: 需要去除的前缀（如 "/files/images/"）
 // 返回: 安全的完整路径和错误
 func ValidateAndSanitizePath(baseDir, userInput, prefix string) (string, error) {
 	if userInput == "" {

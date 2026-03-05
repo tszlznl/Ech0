@@ -55,7 +55,7 @@ func TestCopyDirectoryWithMemMapFs(t *testing.T) {
 }
 
 func TestValidateAndSanitizePath(t *testing.T) {
-	p, err := ValidateAndSanitizePath("data/images", "/images/demo.png", "/images/")
+	p, err := ValidateAndSanitizePath("data/files/images", "/files/images/demo.png", "/files/images/")
 	if err != nil {
 		t.Fatalf("sanitize should succeed: %v", err)
 	}
@@ -63,7 +63,7 @@ func TestValidateAndSanitizePath(t *testing.T) {
 		t.Fatal("sanitized path should not be empty")
 	}
 
-	if _, err := ValidateAndSanitizePath("data/images", "/images/../../passwd", "/images/"); err == nil {
+	if _, err := ValidateAndSanitizePath("data/files/images", "/files/images/../../passwd", "/files/images/"); err == nil {
 		t.Fatal("path traversal should be rejected")
 	}
 }

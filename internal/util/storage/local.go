@@ -87,7 +87,7 @@ func UploadImageToLocal(fs afero.Fs, file *multipart.FileHeader, userID uint) (s
 	}
 
 	// 返回图片的 URL
-	imageURL := fmt.Sprintf("/images/%s", newFileName)
+	imageURL := fmt.Sprintf("/files/images/%s", newFileName)
 	return imageURL, nil
 }
 
@@ -135,7 +135,7 @@ func UploadAudioToLocal(fs afero.Fs, file *multipart.FileHeader, userID uint) (s
 	}
 
 	// 返回音频的 URL
-	audioURL := fmt.Sprintf("/audios/%s", newFileName)
+	audioURL := fmt.Sprintf("/files/audios/%s", newFileName)
 	return audioURL, nil
 }
 

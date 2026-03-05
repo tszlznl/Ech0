@@ -116,8 +116,8 @@ func defaultConfig() *AppConfig {
 		Upload: UploadConfig{
 			ImageMaxSize: 20971520,
 			AudioMaxSize: 20971520,
-			ImagePath:    "data/images/",
-			AudioPath:    "data/audios/",
+			ImagePath:    "data/files/images/",
+			AudioPath:    "data/files/audios/",
 			AllowedTypes: []string{
 				"image/jpeg",
 				"image/png",

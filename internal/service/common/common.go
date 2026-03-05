@@ -409,7 +409,7 @@ func (commonService *CommonService) DeleteMusic(userid uint) error {
 	audioFiles := []string{"music.flac", "music.m4a", "music.mp3"}
 
 	for _, file := range audioFiles {
-		audioPath := fmt.Sprintf("data/audios/%s", file)
+		audioPath := filepath.Join(config.Config().Upload.AudioPath, file)
 		if storageUtil.FileExists(commonService.fs, audioPath) {
 			return storageUtil.DeleteFileFromLocal(commonService.fs, audioPath)
 		}
@@ -423,9 +423,9 @@ func (commonService *CommonService) GetPlayMusicUrl() string {
 	audioFiles := []string{"music.flac", "music.m4a", "music.mp3"}
 
 	for _, file := range audioFiles {
-		audioPath := fmt.Sprintf("data/audios/%s", file)
+		audioPath := filepath.Join(config.Config().Upload.AudioPath, file)
 		if storageUtil.FileExists(commonService.fs, audioPath) {
-			return fmt.Sprintf("/audios/%s", file)
+			return fmt.Sprintf("/files/audios/%s", file)
 		}
 	}
 
@@ -439,7 +439,7 @@ func (commonService *CommonService) PlayMusic(ctx *gin.Context) {
 	musicName := ""
 	if musicURL != "" {
 		// 只保留最后的文件名
-		musicName = musicURL[len("/audios/"):]
+		musicName = strings.TrimPrefix(musicURL, "/files/audios/")
 	}
 
 	// 获取音乐文件的路径

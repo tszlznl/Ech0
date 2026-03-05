@@ -5,12 +5,7 @@ const joinBaseAndPath = (baseUrl: string, path: string) => `${baseUrl.replace(/\
 
 const normalizeLegacyMediaPath = (path: string) => {
   if (path.startsWith('/api/')) return path
-  if (
-    path.startsWith('/images/') ||
-    path.startsWith('/audios/') ||
-    path.startsWith('images/') ||
-    path.startsWith('audios/')
-  ) {
+  if (path.startsWith('/files/') || path.startsWith('files/')) {
     return path.startsWith('/') ? `/api${path}` : `/api/${path}`
   }
   return path

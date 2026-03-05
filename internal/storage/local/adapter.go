@@ -107,17 +107,17 @@ func (a *Adapter) Exists(_ context.Context, path string) (bool, error) {
 }
 
 func (a *Adapter) resolveBaseDirAndPrefix(req storage.DeleteRequest) (string, string) {
-	if req.Category == storage.CategoryAudio || strings.HasPrefix(req.URL, "/audios/") {
-		return a.audioDir, "/audios/"
+	if req.Category == storage.CategoryAudio || strings.Contains(req.URL, "/files/audios/") {
+		return a.audioDir, "/files/audios/"
 	}
-	return a.imageDir, "/images/"
+	return a.imageDir, "/files/images/"
 }
 
 func (a *Adapter) targetDirAndURLPrefix(category storage.Category) (string, string) {
 	if category == storage.CategoryAudio {
-		return a.audioDir, "/audios/"
+		return a.audioDir, "/files/audios/"
 	}
-	return a.imageDir, "/images/"
+	return a.imageDir, "/files/images/"
 }
 
 func generateLocalFilename(userID uint, ext string) (string, error) {
