@@ -55,7 +55,7 @@ func NewCommonService(
 	echoRepository echoRepository.EchoRepositoryInterface,
 	keyvalueRepository keyvalueRepository.KeyValueRepositoryInterface,
 	eventBusProvider func() event.IEventBus,
-) CommonServiceInterface {
+) *CommonService {
 	return &CommonService{
 		txManager:          tm,
 		commonRepository:   commonRepository,

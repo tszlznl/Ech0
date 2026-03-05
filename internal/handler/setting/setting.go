@@ -11,11 +11,11 @@ import (
 )
 
 type SettingHandler struct {
-	settingService service.SettingServiceInterface
+	settingService *service.SettingService
 }
 
 // NewSettingHandler SettingHandler 的构造函数
-func NewSettingHandler(settingService service.SettingServiceInterface) *SettingHandler {
+func NewSettingHandler(settingService *service.SettingService) *SettingHandler {
 	return &SettingHandler{
 		settingService: settingService,
 	}

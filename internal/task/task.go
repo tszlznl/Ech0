@@ -20,15 +20,15 @@ import (
 
 type Tasker struct {
 	scheduler      gocron.Scheduler
-	commonService  commonService.CommonServiceInterface
-	settingService settingService.SettingServiceInterface
+	commonService  *commonService.CommonService
+	settingService *settingService.SettingService
 	eventBus       event.IEventBus
 	queueRepo      queueRepository.QueueRepositoryInterface
 }
 
 func NewTasker(
-	commonService commonService.CommonServiceInterface,
-	settingService settingService.SettingServiceInterface,
+	commonService *commonService.CommonService,
+	settingService *settingService.SettingService,
 	eventBusProvider func() event.IEventBus,
 	queueRepo queueRepository.QueueRepositoryInterface,
 ) *Tasker {

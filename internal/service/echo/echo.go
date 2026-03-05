@@ -22,23 +22,23 @@ import (
 
 type EchoService struct {
 	txManager        transaction.TransactionManager
-	commonService    commonService.CommonServiceInterface
+	commonService    *commonService.CommonService
 	echoRepository   repository.EchoRepositoryInterface
 	commonRepository commonRepository.CommonRepositoryInterface
-	fediverseService fediverseService.FediverseServiceInterface
+	fediverseService *fediverseService.FediverseService
 	kvRepository     keyvalueRepository.KeyValueRepositoryInterface
 	eventBus         event.IEventBus
 }
 
 func NewEchoService(
 	tm transaction.TransactionManager,
-	commonService commonService.CommonServiceInterface,
+	commonService *commonService.CommonService,
 	echoRepository repository.EchoRepositoryInterface,
 	commonRepository commonRepository.CommonRepositoryInterface,
-	fediverseService fediverseService.FediverseServiceInterface,
+	fediverseService *fediverseService.FediverseService,
 	kvRepository keyvalueRepository.KeyValueRepositoryInterface,
 	eventBusProvider func() event.IEventBus,
-) EchoServiceInterface {
+) *EchoService {
 	return &EchoService{
 		txManager:        tm,
 		commonService:    commonService,

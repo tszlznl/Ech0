@@ -13,11 +13,11 @@ import (
 )
 
 type CommonHandler struct {
-	commonService service.CommonServiceInterface
+	commonService *service.CommonService
 }
 
 // NewCommonHandler CommonHandler 的构造函数
-func NewCommonHandler(commonService service.CommonServiceInterface) *CommonHandler {
+func NewCommonHandler(commonService *service.CommonService) *CommonHandler {
 	return &CommonHandler{
 		commonService: commonService,
 	}

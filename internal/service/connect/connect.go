@@ -25,17 +25,17 @@ type ConnectService struct {
 	txManager         transaction.TransactionManager
 	connectRepository repository.ConnectRepositoryInterface
 	echoRepository    echoRepository.EchoRepositoryInterface
-	commonService     commonService.CommonServiceInterface
-	settingService    settingService.SettingServiceInterface
+	commonService     *commonService.CommonService
+	settingService    *settingService.SettingService
 }
 
 func NewConnectService(
 	tm transaction.TransactionManager,
 	connectRepository repository.ConnectRepositoryInterface,
 	echoRepository echoRepository.EchoRepositoryInterface,
-	commonService commonService.CommonServiceInterface,
-	settingService settingService.SettingServiceInterface,
-) ConnectServiceInterface {
+	commonService *commonService.CommonService,
+	settingService *settingService.SettingService,
+) *ConnectService {
 	return &ConnectService{
 		txManager:         tm,
 		connectRepository: connectRepository,

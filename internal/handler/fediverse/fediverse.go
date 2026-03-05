@@ -12,10 +12,10 @@ import (
 )
 
 type FediverseHandler struct {
-	service service.FediverseServiceInterface
+	service *service.FediverseService
 }
 
-func NewFediverseHandler(fediverseService service.FediverseServiceInterface) *FediverseHandler {
+func NewFediverseHandler(fediverseService *service.FediverseService) *FediverseHandler {
 	return &FediverseHandler{
 		service: fediverseService,
 	}

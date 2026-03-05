@@ -18,14 +18,14 @@ import (
 )
 
 type BackupService struct {
-	commonService commonService.CommonServiceInterface
+	commonService *commonService.CommonService
 	eventBus      event.IEventBus
 }
 
 func NewBackupService(
-	commonService commonService.CommonServiceInterface,
+	commonService *commonService.CommonService,
 	eventBusProvider func() event.IEventBus,
-) BackupServiceInterface {
+) *BackupService {
 	return &BackupService{
 		commonService: commonService,
 		eventBus:      eventBusProvider(),

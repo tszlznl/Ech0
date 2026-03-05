@@ -37,7 +37,7 @@ import (
 type UserService struct {
 	txManager      transaction.TransactionManager         // 事务管理器
 	userRepository repository.UserRepositoryInterface     // 用户数据层接口
-	settingService settingService.SettingServiceInterface // 系统设置数据层接口
+	settingService *settingService.SettingService // 系统设置数据层接口
 	eventBus       event.IEventBus                        // 事件总线
 }
 
@@ -48,13 +48,13 @@ type UserService struct {
 //   - settingService: 系统设置数据层接口实现
 //
 // 返回:
-//   - UserServiceInterface: 用户服务接口实现
+//   - *UserService: 用户服务实现
 func NewUserService(
 	tm transaction.TransactionManager,
 	userRepository repository.UserRepositoryInterface,
-	settingService settingService.SettingServiceInterface,
+	settingService *settingService.SettingService,
 	eventBusProvider func() event.IEventBus,
-) UserServiceInterface {
+) *UserService {
 	return &UserService{
 		txManager:      tm,
 		userRepository: userRepository,

@@ -27,7 +27,7 @@ import (
 
 type SettingService struct {
 	txManager          transaction.TransactionManager
-	commonService      commonService.CommonServiceInterface
+	commonService      *commonService.CommonService
 	keyvalueRepository keyvalueRepository.KeyValueRepositoryInterface
 	settingRepository  settingRepository.SettingRepositoryInterface
 	webhookRepository  webhookRepository.WebhookRepositoryInterface
@@ -36,12 +36,12 @@ type SettingService struct {
 
 func NewSettingService(
 	tm transaction.TransactionManager,
-	commonService commonService.CommonServiceInterface,
+	commonService *commonService.CommonService,
 	keyvalueRepository keyvalueRepository.KeyValueRepositoryInterface,
 	settingRepository settingRepository.SettingRepositoryInterface,
 	webhookRepository webhookRepository.WebhookRepositoryInterface,
 	ebProvider func() event.IEventBus,
-) SettingServiceInterface {
+) *SettingService {
 	return &SettingService{
 		txManager:          tm,
 		commonService:      commonService,

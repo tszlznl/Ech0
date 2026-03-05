@@ -15,14 +15,14 @@ import (
 type TodoService struct {
 	txManager      transaction.TransactionManager       // 事务管理器
 	todoRepository repository.TodoRepositoryInterface   // To do数据层接口
-	commonService  commonService.CommonServiceInterface // 公共服务接口
+	commonService  *commonService.CommonService // 公共服务接口
 }
 
 func NewTodoService(
 	tm transaction.TransactionManager,
 	todoRepository repository.TodoRepositoryInterface,
-	commonService commonService.CommonServiceInterface,
-) TodoServiceInterface {
+	commonService *commonService.CommonService,
+) *TodoService {
 	return &TodoService{
 		txManager:      tm,
 		todoRepository: todoRepository,

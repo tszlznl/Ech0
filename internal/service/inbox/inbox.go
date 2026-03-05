@@ -16,15 +16,15 @@ import (
 
 type InboxService struct {
 	txManager       transaction.TransactionManager
-	commonService   commonService.CommonServiceInterface
+	commonService   *commonService.CommonService
 	inboxRepository inboxRepository.InboxRepositoryInterface
 }
 
 func NewInboxService(
 	tm transaction.TransactionManager,
-	commonSvc commonService.CommonServiceInterface,
+	commonSvc *commonService.CommonService,
 	inboxRepo inboxRepository.InboxRepositoryInterface,
-) InboxServiceInterface {
+) *InboxService {
 	return &InboxService{
 		txManager:       tm,
 		commonService:   commonSvc,

@@ -22,7 +22,7 @@ func NewFediverseService(
 	fediverseRepository repository.FediverseRepositoryInterface,
 	userRepository userRepository.UserRepositoryInterface,
 	echoRepository echoRepository.EchoRepositoryInterface,
-) FediverseServiceInterface {
+) *FediverseService {
 	return &FediverseService{
 		core:                core,
 		txManager:           txManager,

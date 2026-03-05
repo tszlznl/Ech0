@@ -20,19 +20,19 @@ import (
 )
 
 type AgentService struct {
-	settingService settingService.SettingServiceInterface
-	echoService    echoService.EchoServiceInterface
-	todoService    todoService.TodoServiceInterface
+	settingService *settingService.SettingService
+	echoService    *echoService.EchoService
+	todoService    *todoService.TodoService
 	kvRepository   keyvalueRepository.KeyValueRepositoryInterface
 	recentGenGroup singleflight.Group
 }
 
 func NewAgentService(
-	settingService settingService.SettingServiceInterface,
-	echoService echoService.EchoServiceInterface,
-	todoService todoService.TodoServiceInterface,
+	settingService *settingService.SettingService,
+	echoService *echoService.EchoService,
+	todoService *todoService.TodoService,
 	kvRepository keyvalueRepository.KeyValueRepositoryInterface,
-) AgentServiceInterface {
+) *AgentService {
 	return &AgentService{
 		settingService: settingService,
 		echoService:    echoService,
