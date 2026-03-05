@@ -1,6 +1,8 @@
 package di
 
 import (
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/lin-snow/ech0/internal/app"
 	"github.com/lin-snow/ech0/internal/cache"
@@ -8,14 +10,22 @@ import (
 	"github.com/lin-snow/ech0/internal/database"
 	"github.com/lin-snow/ech0/internal/event"
 	"github.com/lin-snow/ech0/internal/handler"
+	commonModel "github.com/lin-snow/ech0/internal/model/common"
+	settingModel "github.com/lin-snow/ech0/internal/model/setting"
+	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
 	"github.com/lin-snow/ech0/internal/router"
 	runtimeCache "github.com/lin-snow/ech0/internal/runtime/cache"
 	runtimeEvent "github.com/lin-snow/ech0/internal/runtime/event"
 	runtimeHTTP "github.com/lin-snow/ech0/internal/runtime/http"
 	runtimeTask "github.com/lin-snow/ech0/internal/runtime/task"
 	"github.com/lin-snow/ech0/internal/server"
+	"github.com/lin-snow/ech0/internal/storage"
+	storageFactory "github.com/lin-snow/ech0/internal/storage/factory"
 	"github.com/lin-snow/ech0/internal/task"
 	"github.com/lin-snow/ech0/internal/transaction"
+	httpUtil "github.com/lin-snow/ech0/internal/util/http"
+	jsonUtil "github.com/lin-snow/ech0/internal/util/json"
+	"github.com/spf13/afero"
 	"gorm.io/gorm"
 )
 
@@ -51,6 +61,35 @@ func ProvideEventBusProvider() func() event.IEventBus {
 // ProvideCacheFactory 创建缓存工厂。
 func ProvideCacheFactory() *cache.CacheFactory {
 	return cache.NewCacheFactory()
+}
+
+func ProvideAferoFs() afero.Fs {
+	return afero.NewOsFs()
+}
+
+func ProvideStoragePort(
+	fs afero.Fs,
+	keyvalueRepo keyvalueRepository.KeyValueRepositoryInterface,
+) storage.StoragePort {
+	mode := storageFactory.ModeLocal
+	var s3Setting settingModel.S3Setting
+
+	if value, err := keyvalueRepo.GetKeyValue(commonModel.S3SettingKey); err == nil && strings.TrimSpace(value) != "" {
+		if err := jsonUtil.JSONUnmarshal([]byte(value), &s3Setting); err == nil && s3Setting.Enable {
+			s3Setting.Endpoint = httpUtil.TrimURL(s3Setting.Endpoint)
+			mode = storageFactory.ModeS3
+		}
+	}
+
+	port, err := storageFactory.Build(storageFactory.BuildInput{
+		Mode:      mode,
+		FS:        fs,
+		S3Setting: s3Setting,
+	})
+	if err != nil {
+		port, _ = storageFactory.Build(storageFactory.BuildInput{Mode: storageFactory.ModeLocal, FS: fs})
+	}
+	return port
 }
 
 // ProvideTransactionManagerFactory 创建事务管理器工厂。

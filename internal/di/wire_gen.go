@@ -110,13 +110,15 @@ func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() event.IEv
 // BuildHandlers 使用wire生成的代码来构建Handlers实例
 func BuildHandlers(dbProvider func() *gorm.DB, cacheFactory *cache.CacheFactory, tmFactory *transaction.TransactionManagerFactory, ebProvider func() event.IEventBus) (*handler.Bundle, error) {
 	webHandler := handler2.NewWebHandler()
+	fs := ProvideAferoFs()
 	transactionManager := ProvideTransactionManager(tmFactory)
 	iCache := ProvideCache(cacheFactory)
 	userRepositoryInterface := repository5.NewUserRepository(dbProvider, iCache)
 	commonRepositoryInterface := repository7.NewCommonRepository(dbProvider)
 	echoRepositoryInterface := repository3.NewEchoRepository(dbProvider, iCache)
 	keyValueRepositoryInterface := keyvalue.NewKeyValueRepository(dbProvider, iCache)
-	commonService := service.NewCommonService(transactionManager, commonRepositoryInterface, echoRepositoryInterface, keyValueRepositoryInterface, ebProvider)
+	storagePort := ProvideStoragePort(fs, keyValueRepositoryInterface)
+	commonService := service.NewCommonService(transactionManager, commonRepositoryInterface, echoRepositoryInterface, keyValueRepositoryInterface, storagePort, fs, ebProvider)
 	settingRepositoryInterface := repository8.NewSettingRepository(dbProvider)
 	webhookRepositoryInterface := repository.NewWebhookRepository(dbProvider)
 	settingService := service2.NewSettingService(transactionManager, commonService, keyValueRepositoryInterface, settingRepositoryInterface, webhookRepositoryInterface, ebProvider)
@@ -135,7 +137,7 @@ func BuildHandlers(dbProvider func() *gorm.DB, cacheFactory *cache.CacheFactory,
 	connectRepositoryInterface := repository9.NewConnectRepository(dbProvider)
 	connectService := service7.NewConnectService(transactionManager, connectRepositoryInterface, echoRepositoryInterface, commonService, settingService)
 	connectHandler := handler9.NewConnectHandler(connectService)
-	backupService := service8.NewBackupService(commonService, ebProvider)
+	backupService := service8.NewBackupService(commonService, fs, ebProvider)
 	backupHandler := handler10.NewBackupHandler(backupService)
 	metricCollector := metric.NewSystemCollector()
 	monitorMonitor := monitor.NewMonitor(metricCollector)
@@ -168,16 +170,18 @@ func BuildWebRuntime() (*http.Runtime, error) {
 // Injectors from tasker_injector.go:
 
 func BuildTasker(dbProvider func() *gorm.DB, cacheFactory *cache.CacheFactory, tmFactory *transaction.TransactionManagerFactory, ebProvider func() event.IEventBus) (*task.Tasker, error) {
+	fs := ProvideAferoFs()
 	transactionManager := ProvideTransactionManager(tmFactory)
 	commonRepositoryInterface := repository7.NewCommonRepository(dbProvider)
 	iCache := ProvideCache(cacheFactory)
 	echoRepositoryInterface := repository3.NewEchoRepository(dbProvider, iCache)
 	keyValueRepositoryInterface := keyvalue.NewKeyValueRepository(dbProvider, iCache)
-	commonService := service.NewCommonService(transactionManager, commonRepositoryInterface, echoRepositoryInterface, keyValueRepositoryInterface, ebProvider)
+	storagePort := ProvideStoragePort(fs, keyValueRepositoryInterface)
+	commonService := service.NewCommonService(transactionManager, commonRepositoryInterface, echoRepositoryInterface, keyValueRepositoryInterface, storagePort, fs, ebProvider)
 	settingRepositoryInterface := repository8.NewSettingRepository(dbProvider)
 	webhookRepositoryInterface := repository.NewWebhookRepository(dbProvider)
 	settingService := service2.NewSettingService(transactionManager, commonService, keyValueRepositoryInterface, settingRepositoryInterface, webhookRepositoryInterface, ebProvider)
 	queueRepositoryInterface := repository2.NewQueueRepository(dbProvider)
-	tasker := task.NewTasker(commonService, settingService, ebProvider, queueRepositoryInterface)
+	tasker := task.NewTasker(commonService, settingService, ebProvider, queueRepositoryInterface, fs)
 	return tasker, nil
 }

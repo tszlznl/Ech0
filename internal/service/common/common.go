@@ -2,14 +2,12 @@ package service
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"mime"
 	"mime/multipart"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -21,20 +19,19 @@ import (
 	"github.com/lin-snow/ech0/internal/event"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
-	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
 	repository "github.com/lin-snow/ech0/internal/repository/common"
 	echoRepository "github.com/lin-snow/ech0/internal/repository/echo"
 	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
+	storageDomain "github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/transaction"
-	fileUtil "github.com/lin-snow/ech0/internal/util/file"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	imgUtil "github.com/lin-snow/ech0/internal/util/img"
-	jsonUtil "github.com/lin-snow/ech0/internal/util/json"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	mdUtil "github.com/lin-snow/ech0/internal/util/md"
 	storageUtil "github.com/lin-snow/ech0/internal/util/storage"
 	timezoneUtil "github.com/lin-snow/ech0/internal/util/timezone"
+	"github.com/spf13/afero"
 	"go.uber.org/zap"
 	"golang.org/x/net/html"
 )
@@ -42,10 +39,10 @@ import (
 type CommonService struct {
 	txManager          transaction.TransactionManager
 	commonRepository   repository.CommonRepositoryInterface
-	objStorage         storageUtil.ObjectStorage
-	objStorageMu       sync.RWMutex // 保护 objStorage 的并发访问
+	storagePort        storageDomain.StoragePort
 	echoRepository     echoRepository.EchoRepositoryInterface
 	keyvalueRepository keyvalueRepository.KeyValueRepositoryInterface
+	fs                 afero.Fs
 	eventBus           event.IEventBus
 }
 
@@ -54,6 +51,8 @@ func NewCommonService(
 	commonRepository repository.CommonRepositoryInterface,
 	echoRepository echoRepository.EchoRepositoryInterface,
 	keyvalueRepository keyvalueRepository.KeyValueRepositoryInterface,
+	storagePort storageDomain.StoragePort,
+	fs afero.Fs,
 	eventBusProvider func() event.IEventBus,
 ) *CommonService {
 	return &CommonService{
@@ -61,7 +60,8 @@ func NewCommonService(
 		commonRepository:   commonRepository,
 		echoRepository:     echoRepository,
 		keyvalueRepository: keyvalueRepository,
-		objStorage:         nil,
+		storagePort:        storagePort,
+		fs:                 fs,
 		eventBus:           eventBusProvider(),
 	}
 }
@@ -75,12 +75,32 @@ func (commonService *CommonService) UploadImage(
 	file *multipart.FileHeader,
 	source string,
 ) (commonModel.ImageDto, error) {
-	user, err := commonService.commonRepository.GetUserByUserId(userId)
+	fileDto, err := commonService.UploadFile(userId, file, source, storageDomain.CategoryImage)
 	if err != nil {
 		return commonModel.ImageDto{}, err
 	}
+	return commonModel.ImageDto{
+		URL:       fileDto.URL,
+		SOURCE:    fileDto.Source,
+		ObjectKey: fileDto.ObjectKey,
+		Width:     fileDto.Width,
+		Height:    fileDto.Height,
+	}, nil
+}
+
+func (commonService *CommonService) UploadFile(
+	userId uint,
+	file *multipart.FileHeader,
+	source string,
+	category storageDomain.Category,
+) (commonModel.FileDto, error) {
+	_ = source
+	user, err := commonService.commonRepository.GetUserByUserId(userId)
+	if err != nil {
+		return commonModel.FileDto{}, err
+	}
 	if !user.IsAdmin {
-		return commonModel.ImageDto{}, errors.New(commonModel.NO_PERMISSION_DENIED)
+		return commonModel.FileDto{}, errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
 	// 检查文件类型是否合法
@@ -88,29 +108,52 @@ func (commonService *CommonService) UploadImage(
 		file.Header.Get("Content-Type"),
 		config.Config().Upload.AllowedTypes,
 	) {
-		return commonModel.ImageDto{}, errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
+		return commonModel.FileDto{}, errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
 	}
 
 	// 检查文件大小是否合法
-	if file.Size > int64(config.Config().Upload.ImageMaxSize) {
-		return commonModel.ImageDto{}, errors.New(commonModel.FILE_SIZE_EXCEED_LIMIT)
+	limit := int64(config.Config().Upload.ImageMaxSize)
+	if category == storageDomain.CategoryAudio {
+		limit = int64(config.Config().Upload.AudioMaxSize)
+	}
+	if file.Size > limit {
+		return commonModel.FileDto{}, errors.New(commonModel.FILE_SIZE_EXCEED_LIMIT)
 	}
 
-	// 调用存储函数存储图片
-	imageUrl, err := storageUtil.UploadFile(
-		file,
-		commonModel.ImageType,
-		commonModel.LOCAL_FILE,
-		user.ID,
-	)
-	if err != nil {
-		return commonModel.ImageDto{}, err
+	uploadType := commonModel.ImageType
+	if category == storageDomain.CategoryAudio {
+		uploadType = commonModel.AudioType
 	}
 
-	// 获取图片尺寸
-	width, height, err := imgUtil.GetImageSizeFromFile(file)
+	reader, err := file.Open()
 	if err != nil {
-		return commonModel.ImageDto{}, err
+		return commonModel.FileDto{}, err
+	}
+	defer func() { _ = reader.Close() }()
+
+	readSeeker, ok := reader.(storageDomain.ReadSeekCloser)
+	if !ok {
+		return commonModel.FileDto{}, errors.New("uploaded file does not support seek")
+	}
+
+	storedObject, err := commonService.storagePort.Save(context.Background(), storageDomain.SaveRequest{
+		UserID:      user.ID,
+		FileName:    file.Filename,
+		ContentType: file.Header.Get("Content-Type"),
+		Category:    category,
+		Reader:      readSeeker,
+	})
+	if err != nil {
+		return commonModel.FileDto{}, err
+	}
+
+	width := 0
+	height := 0
+	if category.IsImageLike() {
+		width, height, err = imgUtil.GetImageSizeFromFile(file)
+		if err != nil {
+			return commonModel.FileDto{}, err
+		}
 	}
 
 	// 触发图片上传事件
@@ -120,24 +163,43 @@ func (commonService *CommonService) UploadImage(
 		event.EventPayload{
 			event.EventPayloadUser: user,
 			event.EventPayloadFile: file.Filename,
-			event.EventPayloadURL:  imageUrl,
+			event.EventPayloadURL:  storedObject.URL,
 			event.EventPayloadSize: file.Size,
-			event.EventPayloadType: commonModel.ImageType,
+			event.EventPayloadType: uploadType,
 		},
 	)); err != nil {
 		logUtil.GetLogger().
 			Error("Failed to publish resource uploaded event", zap.String("error", err.Error()))
 	}
 
-	return commonModel.ImageDto{
-		URL:    imageUrl,
-		SOURCE: source,
-		Width:  width,
-		Height: height,
-	}, nil
+	fileDto := commonModel.FileDto{
+		URL:         storedObject.URL,
+		Source:      string(storedObject.Source),
+		ObjectKey:   storedObject.ObjectKey,
+		ContentType: storedObject.ContentType,
+		Category:    string(category),
+		Width:       width,
+		Height:      height,
+	}
+	if category.IsImageLike() {
+		fileDto.Metadata.Image = &commonModel.ImageMetadataDto{
+			Width:  width,
+			Height: height,
+		}
+	}
+
+	return fileDto, nil
 }
 
-func (commonService *CommonService) DeleteImage(userid uint, url, source, object_key string) error {
+func (commonService *CommonService) DeleteImage(userid uint, url, source, objectKey string) error {
+	return commonService.DeleteFile(userid, commonModel.FileDto{
+		URL:       url,
+		Source:    source,
+		ObjectKey: objectKey,
+	})
+}
+
+func (commonService *CommonService) DeleteFile(userid uint, file commonModel.FileDto) error {
 	user, err := commonService.commonRepository.GetUserByUserId(userid)
 	if err != nil {
 		return err
@@ -147,94 +209,32 @@ func (commonService *CommonService) DeleteImage(userid uint, url, source, object
 	}
 
 	// 检查图片是否存在
-	if url == "" {
+	if file.URL == "" {
 		return errors.New(commonModel.IMAGE_NOT_FOUND)
 	}
 
-	switch source {
-	case echoModel.ImageSourceLocal:
-		// 使用安全的路径验证和清理，防止路径遍历攻击
-		imagePath, err := fileUtil.ValidateAndSanitizePath("data/images", url, "/images/")
-		if err != nil {
-			return fmt.Errorf("路径验证失败: %w", err)
-		}
-
-		// 删除图片
-		return storageUtil.DeleteFileFromLocal(imagePath)
-	case echoModel.ImageSourceURL:
-		// 无需处理
-	case echoModel.ImageSourceS3:
-		if object_key == "" {
-			// 如果没有传入 object_key，则无法删除,忽略
-			return nil
-		}
-
-		_, _, err := commonService.GetS3Client()
-		if err != nil {
-			// 如果没有配置 S3，则无法删除,忽略
-			return nil
-		}
-
-		// 删除 S3 上的图片
-		return commonService.objStorage.DeleteObject(context.Background(), object_key)
-	default:
-		// 未知图片来源按本地图片处理
-		// 使用安全的路径验证和清理，防止路径遍历攻击
-		imagePath, err := fileUtil.ValidateAndSanitizePath("data/images", url, "/images/")
-		if err != nil {
-			return fmt.Errorf("路径验证失败: %w", err)
-		}
-
-		// 删除图片
-		return storageUtil.DeleteFileFromLocal(imagePath)
-	}
-
-	return nil
+	return commonService.deleteFileBySource(file.URL, normalizeFileSource(file.Source), file.ObjectKey)
 }
 
-func (commonService *CommonService) DirectDeleteImage(url, source, object_key string) error {
+func (commonService *CommonService) DirectDeleteImage(url, source, objectKey string) error {
 	// 检查图片是否存在
 	if url == "" {
 		return errors.New(commonModel.IMAGE_NOT_FOUND)
 	}
 
-	switch source {
-	case echoModel.ImageSourceLocal:
-		// 使用安全的路径验证和清理，防止路径遍历攻击
-		imagePath, err := fileUtil.ValidateAndSanitizePath("data/images", url, "/images/")
-		if err != nil {
-			return fmt.Errorf("路径验证失败: %w", err)
-		}
+	return commonService.deleteFileBySource(url, normalizeFileSource(source), objectKey)
+}
 
-		// 删除图片
-		return storageUtil.DeleteFileFromLocal(imagePath)
-	case echoModel.ImageSourceURL:
-		// 无需处理
-	case echoModel.ImageSourceS3:
-		cli, _, err := commonService.GetS3Client()
-		if err != nil {
-			// 如果没有配置 S3，则无法删除,忽略
-			return nil
-		}
-		if object_key == "" {
-			// 如果没有传入 object_key，则无法删除,忽略
-			return nil
-		}
-		// 删除 S3 上的图片
-		return cli.DeleteObject(context.Background(), object_key)
-	default:
-		// 未知图片来源按本地图片处理
-		// 使用安全的路径验证和清理，防止路径遍历攻击
-		imagePath, err := fileUtil.ValidateAndSanitizePath("data/images", url, "/images/")
-		if err != nil {
-			return fmt.Errorf("路径验证失败: %w", err)
-		}
-
-		// 删除图片
-		return storageUtil.DeleteFileFromLocal(imagePath)
+func (commonService *CommonService) deleteFileBySource(url, source, objectKey string) error {
+	if source == echoModel.ImageSourceURL {
+		return nil
 	}
-
-	return nil
+	return commonService.storagePort.Delete(context.Background(), storageDomain.DeleteRequest{
+		URL:       url,
+		Source:    storageDomain.Source(source),
+		ObjectKey: objectKey,
+		Category:  storageDomain.CategoryFile,
+	})
 }
 
 func (commonService *CommonService) GetSysAdmin() (userModel.User, error) {
@@ -396,39 +396,12 @@ func (commonService *CommonService) UploadMusic(
 	userId uint,
 	file *multipart.FileHeader,
 ) (string, error) {
-	user, err := commonService.commonRepository.GetUserByUserId(userId)
-	if err != nil {
-		return "", err
-	}
-	if !user.IsAdmin {
-		return "", errors.New(commonModel.NO_PERMISSION_DENIED)
-	}
-
-	// 检查文件类型是否合法
-	if !storageUtil.IsAllowedType(
-		file.Header.Get("Content-Type"),
-		config.Config().Upload.AllowedTypes,
-	) {
-		return "", errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
-	}
-
-	// 检查文件大小是否合法
-	if file.Size > int64(config.Config().Upload.AudioMaxSize) {
-		return "", errors.New(commonModel.FILE_SIZE_EXCEED_LIMIT)
-	}
-
-	// 调用存储函数存储图片
-	audioUrl, err := storageUtil.UploadFile(
-		file,
-		commonModel.AudioType,
-		commonModel.LOCAL_FILE,
-		user.ID,
-	)
+	fileDto, err := commonService.UploadFile(userId, file, string(echoModel.ImageSourceLocal), storageDomain.CategoryAudio)
 	if err != nil {
 		return "", err
 	}
 
-	return audioUrl, nil
+	return fileDto.URL, nil
 }
 
 func (commonService *CommonService) DeleteMusic(userid uint) error {
@@ -445,8 +418,8 @@ func (commonService *CommonService) DeleteMusic(userid uint) error {
 
 	for _, file := range audioFiles {
 		audioPath := fmt.Sprintf("data/audios/%s", file)
-		if storageUtil.FileExists(audioPath) {
-			return storageUtil.DeleteFileFromLocal(audioPath)
+		if storageUtil.FileExists(commonService.fs, audioPath) {
+			return storageUtil.DeleteFileFromLocal(commonService.fs, audioPath)
 		}
 	}
 
@@ -459,7 +432,7 @@ func (commonService *CommonService) GetPlayMusicUrl() string {
 
 	for _, file := range audioFiles {
 		audioPath := fmt.Sprintf("data/audios/%s", file)
-		if storageUtil.FileExists(audioPath) {
+		if storageUtil.FileExists(commonService.fs, audioPath) {
 			return fmt.Sprintf("/audios/%s", file)
 		}
 	}
@@ -481,7 +454,8 @@ func (commonService *CommonService) PlayMusic(ctx *gin.Context) {
 	musicPath := config.Config().Upload.AudioPath + musicName
 
 	// 检查文件是否存在
-	if _, err := os.Stat(musicPath); os.IsNotExist(err) {
+	stat, err := commonService.fs.Stat(musicPath)
+	if err != nil {
 		ctx.String(http.StatusNotFound, "音乐文件不存在")
 		return
 	}
@@ -504,13 +478,32 @@ func (commonService *CommonService) PlayMusic(ctx *gin.Context) {
 	ctx.Header("Pragma", "no-cache")
 	ctx.Header("Expires", "0")
 
-	// 使用流式传输，避免将整个文件加载到内存
-	// http.ServeFile 会自动处理 Range 请求，支持断点续传
-	http.ServeFile(ctx.Writer, ctx.Request, musicPath)
+	reader, err := commonService.fs.Open(musicPath)
+	if err != nil {
+		ctx.String(http.StatusNotFound, "音乐文件不存在")
+		return
+	}
+	defer func() { _ = reader.Close() }()
+
+	readSeeker, ok := reader.(io.ReadSeeker)
+	if !ok {
+		ctx.String(http.StatusInternalServerError, "音乐文件读取失败")
+		return
+	}
+
+	http.ServeContent(ctx.Writer, ctx.Request, musicName, stat.ModTime(), readSeeker)
 }
 
 // GetS3PresignURL 获取 S3 预签名 URL
 func (commonService *CommonService) GetS3PresignURL(
+	userid uint,
+	s3Dto *commonModel.GetPresignURLDto,
+	method string,
+) (commonModel.PresignDto, error) {
+	return commonService.GetFilePresignURL(userid, s3Dto, method)
+}
+
+func (commonService *CommonService) GetFilePresignURL(
 	userid uint,
 	s3Dto *commonModel.GetPresignURLDto,
 	method string,
@@ -556,54 +549,32 @@ func (commonService *CommonService) GetS3PresignURL(
 	result.FileName = s3Dto.FileName
 	result.ContentType = contentType
 
-	// 获取 S3 配置和客户端
-	_, s3setting, err := commonService.GetS3Client()
+	presignResponse, err := commonService.storagePort.PresignUpload(context.Background(), storageDomain.PresignRequest{
+		UserID:      userid,
+		FileName:    s3Dto.FileName,
+		ContentType: contentType,
+		Method:      method,
+		Expiry:      24 * time.Hour,
+		Category:    storageDomain.CategoryImage,
+	})
 	if err != nil {
 		return result, err
 	}
-
-	// 检查是否开启了 S3
-	if !s3setting.Enable {
-		return result, errors.New(commonModel.S3_NOT_ENABLED)
-	}
-
-	// 生成 Object Key (包含 PathPrefix)
-	// prefix := strings.Trim(s3setting.PathPrefix, "/")
-	// safeName := strings.ReplaceAll(s3Dto.FileName, " ", "_")
-	// objectKey := fmt.Sprintf("%s/%d_%s", prefix, time.Now().Unix(), safeName)
-	// objectKey = strings.TrimPrefix(objectKey, "/")
-	objectKey, err := buildObjectKey(userid, s3Dto.FileName, s3setting.PathPrefix)
-	if err != nil {
-		return result, err
-	}
-	result.ObjectKey = objectKey
-
-	// 生成预签名 URL (有效期24小时)
-	presignURL, err := commonService.objStorage.PresignURL(
-		context.Background(),
-		objectKey,
-		24*time.Hour,
-		method,
-	)
-	if err != nil {
-		return result, err
-	}
-	result.PresignURL = presignURL
-
-	// 生成访问 URL
-	fileURL, err := commonService.GetS3ObjectURL(s3setting, objectKey)
-	if err != nil {
-		return result, err
-	}
-	result.FileURL = fileURL
+	result.ObjectKey = presignResponse.ObjectKey
+	result.PresignURL = presignResponse.PresignURL
+	result.FileURL = presignResponse.FileURL
 
 	// 保存到临时文件表
 	now := time.Now().UTC().Unix()
+	fileType := string(storageDomain.CategoryImage)
+	if strings.HasPrefix(contentType, "audio") {
+		fileType = string(storageDomain.CategoryAudio)
+	}
 	tempFile := commonModel.TempFile{
 		FileName:       result.FileName,
 		Storage:        string(commonModel.S3_FILE),
-		FileType:       string(commonModel.ImageType),
-		Bucket:         s3setting.BucketName,
+		FileType:       fileType,
+		Bucket:         "",
 		ObjectKey:      result.ObjectKey,
 		Deleted:        false,
 		CreatedAt:      now,
@@ -618,87 +589,18 @@ func (commonService *CommonService) GetS3PresignURL(
 	return result, nil
 }
 
+func normalizeFileSource(source string) string {
+	switch source {
+	case echoModel.ImageSourceS3:
+		return echoModel.ImageSourceS3
+	case echoModel.ImageSourceURL:
+		return echoModel.ImageSourceURL
+	default:
+		return echoModel.ImageSourceLocal
+	}
+}
+
 // GetS3Client 获取 S3 客户端和配置信息（支持 R2 / AWS / MinIO / 其他）
-func (commonService *CommonService) GetS3Client() (storageUtil.ObjectStorage, settingModel.S3Setting, error) {
-	// 检查是否配置了 S3
-	var s3setting settingModel.S3Setting
-	value, err := commonService.keyvalueRepository.GetKeyValue(commonModel.S3SettingKey)
-	if err != nil || value == "" {
-		return nil, s3setting, errors.New(commonModel.S3_NOT_CONFIGURED)
-	}
-	if err := jsonUtil.JSONUnmarshal([]byte(value), &s3setting); err != nil {
-		return nil, s3setting, errors.New(commonModel.S3_CONFIG_ERROR)
-	}
-	s3setting.Endpoint = httpUtil.TrimURL(s3setting.Endpoint)
-
-	// 使用读锁检查客户端是否已存在
-	commonService.objStorageMu.RLock()
-	if commonService.objStorage != nil {
-		client := commonService.objStorage
-		commonService.objStorageMu.RUnlock()
-		return client, s3setting, nil
-	}
-	commonService.objStorageMu.RUnlock()
-
-	// 使用写锁初始化 S3 客户端
-	commonService.objStorageMu.Lock()
-	defer commonService.objStorageMu.Unlock()
-
-	// 双重检查：其他 goroutine 可能已经初始化了客户端
-	if commonService.objStorage != nil {
-		return commonService.objStorage, s3setting, nil
-	}
-
-	// 初始化 S3 客户端
-	client, err := storageUtil.NewMinioStorage(
-		s3setting.Endpoint,
-		s3setting.AccessKey,
-		s3setting.SecretKey,
-		s3setting.BucketName,
-		s3setting.Region,
-		s3setting.Provider,
-		s3setting.UseSSL,
-	)
-	if err != nil {
-		return nil, s3setting, errors.New(commonModel.S3_CONFIG_ERROR)
-	}
-
-	commonService.objStorage = client
-	return commonService.objStorage, s3setting, nil
-}
-
-// GetS3ObjectURL 获取 S3 对象的 URL（支持自定义 CDN）
-func (CommonService *CommonService) GetS3ObjectURL(
-	s3Setting settingModel.S3Setting,
-	objectKey string,
-) (string, error) {
-	if s3Setting.Endpoint == "" || s3Setting.BucketName == "" || objectKey == "" {
-		return "", errors.New(commonModel.S3_CONFIG_ERROR)
-	}
-
-	protocol := "http"
-	if s3Setting.UseSSL {
-		protocol = "https"
-	}
-
-	// 默认使用 Endpoint
-	baseURL := fmt.Sprintf("%s://%s/%s", protocol, s3Setting.Endpoint, s3Setting.BucketName)
-
-	// 如果配置了 CDNURL，则替换为 CDN 地址
-	if trimmedCDN := strings.TrimSpace(s3Setting.CDNURL); trimmedCDN != "" {
-		// 用户一般会直接填 https://cdn.xxx.com，不需要拼 protocol
-		cdnURL := strings.TrimRight(trimmedCDN, "/")
-		lowerCDN := strings.ToLower(cdnURL)
-		if !strings.HasPrefix(lowerCDN, "http://") && !strings.HasPrefix(lowerCDN, "https://") {
-			cdnURL = fmt.Sprintf("%s://%s", protocol, cdnURL)
-		}
-		baseURL = cdnURL
-	}
-
-	// 拼接对象路径
-	objectKey = strings.TrimLeft(objectKey, "/")
-	return fmt.Sprintf("%s/%s", baseURL, objectKey), nil
-}
 
 // CleanupTempFiles 清理过期的临时文件
 func (commonService *CommonService) CleanupTempFiles() error {
@@ -720,18 +622,15 @@ func (commonService *CommonService) CleanupTempFiles() error {
 				// TODO: 删除本地文件
 
 			case string(commonModel.S3_FILE):
-				// 获取 S3 客户端
-				cli, _, err := commonService.GetS3Client()
-				if err != nil {
-					// 如果没有配置 S3，则无法删除,忽略
-					continue
-				}
 				if file.ObjectKey == "" {
 					// 如果没有传入 object_key，则无法删除,忽略
 					continue
 				}
-				// 删除 S3 上的文件
-				if err := cli.DeleteObject(context.Background(), file.ObjectKey); err != nil {
+				if err := commonService.storagePort.Delete(context.Background(), storageDomain.DeleteRequest{
+					Source:    storageDomain.SourceS3,
+					ObjectKey: file.ObjectKey,
+					Category:  storageDomain.CategoryFile,
+				}); err != nil {
 					// 记录日志，继续处理下一个文件
 					fmt.Printf("删除S3临时文件失败: %s, 错误: %v\n", file.ObjectKey, err)
 				}
@@ -750,11 +649,6 @@ func (commonService *CommonService) CleanupTempFiles() error {
 }
 
 func (commonService *CommonService) RefreshEchoImageURL(echo *echoModel.Echo) {
-	_, s3setting, err := commonService.GetS3Client()
-	if err != nil {
-		return
-	}
-
 	// 用 channel 或 waitGroup 并发刷新 URL
 	var wg sync.WaitGroup
 	mu := sync.Mutex{}
@@ -764,7 +658,7 @@ func (commonService *CommonService) RefreshEchoImageURL(echo *echoModel.Echo) {
 			wg.Add(1)
 			go func(i int) {
 				defer wg.Done()
-				if newURL, err := commonService.GetS3ObjectURL(s3setting, echo.Images[i].ObjectKey); err == nil {
+				if newURL, err := commonService.storagePort.ResolveURL(context.Background(), echo.Images[i].ObjectKey); err == nil {
 					mu.Lock()
 					echo.Images[i].ImageURL = newURL
 					mu.Unlock()
@@ -779,21 +673,6 @@ func (commonService *CommonService) RefreshEchoImageURL(echo *echoModel.Echo) {
 	_ = commonService.txManager.Run(func(ctx context.Context) error {
 		return commonService.echoRepository.UpdateEcho(ctx, echo)
 	})
-}
-
-// buildObjectKey 构建对象存储的对象键
-func buildObjectKey(userID uint, fileName, prefix string) (string, error) {
-	prefix = strings.Trim(prefix, "/")
-	ext := filepath.Ext(fileName)
-	timestamp := time.Now().UTC().Unix()
-	randBytes := make([]byte, 3)
-	if _, err := rand.Read(randBytes); err != nil {
-		return "", err
-	}
-	randomStr := hex.EncodeToString(randBytes)
-
-	objectKey := fmt.Sprintf("%s/%d_%d_%s%s", prefix, userID, timestamp, randomStr, ext)
-	return strings.TrimPrefix(objectKey, "/"), nil
 }
 
 // GetWebsiteTitle 获取网站标题

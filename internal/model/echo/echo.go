@@ -8,6 +8,7 @@ type Echo struct {
 	Content       string    `gorm:"type:text;not null"                               json:"content"`
 	Username      string    `gorm:"type:varchar(100)"                                json:"username,omitempty"`
 	Images        []Image   `gorm:"foreignKey:EchoID;constraint:OnDelete:CASCADE"    json:"images,omitempty"`
+	Files         []Image   `gorm:"-"                                                 json:"files,omitempty"`
 	Layout        string    `gorm:"type:varchar(50);default:'waterfall'"             json:"layout,omitempty"`
 	Private       bool      `gorm:"default:false"                                    json:"private"`
 	UserID        uint      `gorm:"not null;index"                                   json:"user_id"`
@@ -16,6 +17,10 @@ type Echo struct {
 	Tags          []Tag     `gorm:"many2many:echo_tags;"                             json:"tags,omitempty"`
 	FavCount      int       `gorm:"default:0"                                        json:"fav_count"`
 	CreatedAt     time.Time `                                                        json:"created_at"`
+}
+
+func (e *Echo) NormalizeFiles() {
+	e.Files = e.Images
 }
 
 // Image 定义Image实体

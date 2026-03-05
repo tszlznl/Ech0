@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"mime/multipart"
-	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -14,21 +13,25 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	"github.com/spf13/afero"
 	"go.uber.org/zap"
 )
 
 type BackupService struct {
 	commonService *commonService.CommonService
 	eventBus      event.IEventBus
+	fs            afero.Fs
 }
 
 func NewBackupService(
 	commonService *commonService.CommonService,
+	fs afero.Fs,
 	eventBusProvider func() event.IEventBus,
 ) *BackupService {
 	return &BackupService{
 		commonService: commonService,
 		eventBus:      eventBusProvider(),
+		fs:            fs,
 	}
 }
 
@@ -44,7 +47,7 @@ func (backupService *BackupService) Backup(userid uint) error {
 	}
 
 	// 执行备份
-	if _, _, err := backup.ExecuteBackup(); err != nil {
+	if _, _, err := backup.ExecuteBackup(backupService.fs); err != nil {
 		return err
 	}
 
@@ -81,13 +84,13 @@ func (backupService *BackupService) ExportBackup(ctx *gin.Context, userid uint) 
 	// 1. 先备份
 	var backupFilePath string // 备份文件路径
 
-	backupFilePath, _, err = backup.ExecuteBackup()
+	backupFilePath, _, err = backup.ExecuteBackup(backupService.fs)
 	if err != nil {
 		return err
 	}
 
 	// 2. 计算文件大小
-	fileInfo, err := os.Stat(backupFilePath)
+	fileInfo, err := backupService.fs.Stat(backupFilePath)
 	if err != nil {
 		return err
 	}
@@ -143,7 +146,7 @@ func (backupService *BackupService) ImportBackup(
 	}
 
 	// 确保临时目录存在，避免容器环境中不存在 ./temp 导致上传失败
-	if err := os.MkdirAll("./temp", 0o755); err != nil {
+	if err := backupService.fs.MkdirAll("./temp", 0o755); err != nil {
 		return errors.New(commonModel.SNAPSHOT_UPLOAD_FAILED + ": " + err.Error())
 	}
 
@@ -155,7 +158,7 @@ func (backupService *BackupService) ImportBackup(
 	}
 
 	// 执行恢复
-	if err := backup.ExcuteRestoreOnline(tempFilePath, timestamp); err != nil {
+	if err := backup.ExcuteRestoreOnline(backupService.fs, tempFilePath, timestamp); err != nil {
 		return errors.New(commonModel.SNAPSHOT_RESTORE_FAILED + ": " + err.Error())
 	}
 

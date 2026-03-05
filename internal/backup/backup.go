@@ -3,13 +3,14 @@ package backup
 import (
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/lin-snow/ech0/internal/database"
+	storageZip "github.com/lin-snow/ech0/internal/storage/zip"
 	fileUtil "github.com/lin-snow/ech0/internal/util/file"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	"github.com/spf13/afero"
 	"go.uber.org/zap"
 )
 
@@ -22,12 +23,13 @@ const (
 )
 
 // ExecuteBackup 执行备份
-func ExecuteBackup() (string, string, error) {
+func ExecuteBackup(fs afero.Fs) (string, string, error) {
 	backupTime := time.Now().UTC().Format(timeLayout)
 	backupFileName := fmt.Sprintf("%s_%s.zip", backupFileName, backupTime) // 暂时不开启多备份，每次只保留最新的一份备份
 	backupPath := fmt.Sprintf("%s/%s", backupDir, backupFileName)
+	zipModule := storageZip.NewModule(fs)
 
-	return backupPath, backupFileName, fileUtil.ZipDirectoryWithOptions(
+	return backupPath, backupFileName, zipModule.ZipDirectory(
 		dataDir,
 		backupPath,
 		fileUtil.ZipOptions{
@@ -37,9 +39,9 @@ func ExecuteBackup() (string, string, error) {
 }
 
 // ExecuteRestore 执行恢复
-func ExecuteRestore(backupFilePath string) error {
+func ExecuteRestore(fs afero.Fs, backupFilePath string) error {
 	// 检查备份文件是否存在
-	if !fileUtil.FileExists(backupFilePath) {
+	if _, err := fs.Stat(backupFilePath); err != nil {
 		return errors.New("备份文件不存在: " + backupFilePath)
 	}
 
@@ -52,8 +54,9 @@ func ExecuteRestore(backupFilePath string) error {
 	logUtil.CloseLogger()
 	defer logUtil.ReopenLogger()
 
+	zipModule := storageZip.NewModule(fs)
 	// 解压备份文件到数据目录
-	if err := fileUtil.UnzipFile(backupFilePath, dataDir); err != nil {
+	if err := zipModule.UnzipFile(backupFilePath, dataDir); err != nil {
 		return err
 	}
 
@@ -61,9 +64,9 @@ func ExecuteRestore(backupFilePath string) error {
 }
 
 // ExcuteRestoreOnline 在线恢复备份
-func ExcuteRestoreOnline(filePath string, timeStamp int64) error {
+func ExcuteRestoreOnline(fs afero.Fs, filePath string, timeStamp int64) error {
 	// 检查备份文件是否存在
-	if !fileUtil.FileExists(filePath) {
+	if _, err := fs.Stat(filePath); err != nil {
 		return errors.New("备份文件不存在: " + filePath)
 	}
 
@@ -81,13 +84,13 @@ func ExcuteRestoreOnline(filePath string, timeStamp int64) error {
 	// 解压备份文件到数据目录 （./temp/snapshot_时间戳）
 	extractPath := fmt.Sprintf("temp/snapshot_%d", timeStamp)
 	defer func() {
-		if err := os.RemoveAll(extractPath); err != nil {
+		if err := fs.RemoveAll(extractPath); err != nil {
 			logUtil.GetLogger().
 				Warn("Failed to cleanup extracted snapshot temp directory",
 					zap.String("path", extractPath),
 					zap.String("error", err.Error()))
 		}
-		if err := os.Remove(filePath); err != nil && !os.IsNotExist(err) {
+		if err := fs.Remove(filePath); err != nil {
 			logUtil.GetLogger().
 				Warn("Failed to cleanup uploaded snapshot zip",
 					zap.String("path", filePath),
@@ -95,7 +98,8 @@ func ExcuteRestoreOnline(filePath string, timeStamp int64) error {
 		}
 	}()
 
-	if err := fileUtil.UnzipFile(filePath, extractPath); err != nil {
+	zipModule := storageZip.NewModule(fs)
+	if err := zipModule.UnzipFile(filePath, extractPath); err != nil {
 		return err
 	}
 
@@ -108,7 +112,7 @@ func ExcuteRestoreOnline(filePath string, timeStamp int64) error {
 
 	// 复制备份覆盖到正式数据目录
 	dataPath := "data"
-	if err := fileUtil.CopyDirectory(extractPath, dataPath); err != nil {
+	if err := zipModule.CopyDirectory(extractPath, dataPath); err != nil {
 		return err
 	}
 

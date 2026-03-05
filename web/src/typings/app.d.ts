@@ -68,13 +68,24 @@ declare namespace App {
     }
 
     namespace File {
-      type ImageDto = {
+      type FileMetadata = {
+        image?: { width?: number; height?: number }
+        video?: { width?: number; height?: number; duration_ms?: number }
+        audio?: { duration_ms?: number }
+        pdf?: { pages?: number }
+        markdown?: { word_count?: number }
+      }
+      type FileDto = {
         url: string
         source: string
         object_key?: string
+        content_type?: string
+        category?: 'image' | 'video' | 'audio' | 'pdf' | 'markdown' | 'file'
+        metadata?: FileMetadata
         width?: number
         height?: number
       }
+      type ImageDto = FileDto
     }
 
     namespace Ech0 {
@@ -90,7 +101,8 @@ declare namespace App {
         username: string
         image_url: string
         image_source: string
-        images: Image[]
+        images: FileObject[]
+        files?: FileObject[]
         layout?: string
         private: boolean
         user_id: number
@@ -101,7 +113,7 @@ declare namespace App {
         created_at: string
       }
 
-      type Image = {
+      type FileObject = {
         id: number
         echo_id: number
         image_url: string
@@ -110,6 +122,7 @@ declare namespace App {
         width?: number // 图片宽度
         height?: number // 图片高度
       }
+      type Image = FileObject
 
       type Tag = {
         id: number
@@ -118,13 +131,14 @@ declare namespace App {
         created_at: string
       }
 
-      type ImageToAdd = {
+      type FileToAdd = {
         image_url: string
         image_source: string
         object_key?: string // 对象存储的Key (如果是本地存储则为空)
         width?: number // 图片宽度
         height?: number // 图片高度
       }
+      type ImageToAdd = FileToAdd
 
       type TagToAdd = {
         id?: number
@@ -135,7 +149,8 @@ declare namespace App {
 
       type EchoToAdd = {
         content: string
-        images?: ImageToAdd[] | null
+        images?: FileToAdd[] | null
+        files?: FileToAdd[] | null
         tags?: TagToAdd[] | null
         layout?: string | null
         extension?: string | null
@@ -147,7 +162,8 @@ declare namespace App {
         id: number
         content: string
         username: string
-        images?: ImageToAdd[] | null
+        images?: FileToAdd[] | null
+        files?: FileToAdd[] | null
         tags?: TagToAdd[] | null
         layout?: string | null
         private: boolean
@@ -175,11 +191,12 @@ declare namespace App {
         count: number
       }[]
 
-      type ImageToDelete = {
+      type FileToDelete = {
         url: string
         source: string
         object_key?: string // 对象存储的 Key, 用于删除 S3/R2 上的图片
       }
+      type ImageToDelete = FileToDelete
 
       type GithubCardData = {
         name: string

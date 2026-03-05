@@ -49,6 +49,9 @@ func NewEchoService(
 // PostEcho 创建新的Echo
 func (echoService *EchoService) PostEcho(userid uint, newEcho *model.Echo) error {
 	newEcho.UserID = userid
+	if len(newEcho.Images) == 0 && len(newEcho.Files) > 0 {
+		newEcho.Images = newEcho.Files
+	}
 
 	user, err := echoService.commonService.CommonGetUserByUserId(userid)
 	if err != nil {
@@ -188,6 +191,9 @@ func (echoService *EchoService) GetEchosByPage(
 		Items: echosByPage,
 		Total: total,
 	}
+	for i := range result.Items {
+		result.Items[i].NormalizeFiles()
+	}
 
 	// 处理echosByPage中的图片URL (暂不处理，防止拖慢列表加载速度)
 	// for i := range result.Items {
@@ -271,6 +277,9 @@ func (echoService *EchoService) GetTodayEchos(userid uint, timezone string) ([]m
 
 	// 获取当日发布的Echos
 	todayEchos := echoService.echoRepository.GetTodayEchos(showPrivate, timezone)
+	for i := range todayEchos {
+		todayEchos[i].NormalizeFiles()
+	}
 
 	// 处理todayEchos中的图片URL (暂不处理，防止拖慢列表加载速度)
 	// for i := range todayEchos {
@@ -282,6 +291,9 @@ func (echoService *EchoService) GetTodayEchos(userid uint, timezone string) ([]m
 
 // UpdateEcho 更新指定ID的Echo
 func (echoService *EchoService) UpdateEcho(userid uint, echo *model.Echo) error {
+	if len(echo.Images) == 0 && len(echo.Files) > 0 {
+		echo.Images = echo.Files
+	}
 	user, err := echoService.commonService.CommonGetUserByUserId(userid)
 	if err != nil {
 		return err
@@ -422,6 +434,7 @@ func (echoService *EchoService) GetEchoById(userId, id uint) (*model.Echo, error
 	// 刷新图片URL (暂不处理，防止拖慢详情加载速度)
 	// echoService.commonService.RefreshEchoImageURL(echo)
 
+	echo.NormalizeFiles()
 	// 返回Echo
 	return echo, nil
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/lin-snow/ech0/internal/app"
 	"github.com/lin-snow/ech0/internal/cli"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
 
@@ -70,6 +71,7 @@ func init() {
 // Bootstrap 注入应用实例。
 func Bootstrap(a *app.App) {
 	cli.SetApp(a)
+	cli.SetBackupFS(afero.NewOsFs())
 }
 
 // Execute 是根命令的入口函数

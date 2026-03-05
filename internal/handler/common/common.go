@@ -7,6 +7,7 @@ import (
 	res "github.com/lin-snow/ech0/internal/handler/response"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
+	storageDomain "github.com/lin-snow/ech0/internal/storage"
 	service "github.com/lin-snow/ech0/internal/service/common"
 	errorUtil "github.com/lin-snow/ech0/internal/util/err"
 	timezoneUtil "github.com/lin-snow/ech0/internal/util/timezone"
@@ -38,18 +39,18 @@ func NewCommonHandler(commonService *service.CommonService) *CommonHandler {
 // 	}
 // }
 
-// UploadImage 上传图片
+// UploadFile 上传文件
 //
-//	@Summary		上传图片
-//	@Description	用户上传图片，成功后返回图片的访问 URL
+//	@Summary		上传文件
+//	@Description	用户上传文件，成功后返回文件访问信息
 //	@Tags			通用功能
 //	@Accept			multipart/form-data
 //	@Produce		json
-//	@Param			file	formData	file						true	"图片文件"
-//	@Success		200		{object}	res.Response{data=string}	"上传成功，返回图片URL"
+//	@Param			file	formData	file						true	"文件"
+//	@Success		200		{object}	res.Response{data=object}	"上传成功，返回文件信息"
 //	@Failure		200		{object}	res.Response				"上传失败"
-//	@Router			/images/upload [post]
-func (commonHandler *CommonHandler) UploadImage() gin.HandlerFunc {
+//	@Router			/files/upload [post]
+func (commonHandler *CommonHandler) UploadFile() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 提取上传的 File数据
 		file, err := ctx.FormFile("file")
@@ -60,8 +61,12 @@ func (commonHandler *CommonHandler) UploadImage() gin.HandlerFunc {
 			}
 		}
 
-		// 从表单中提取source字符串
-		source := ctx.PostForm("ImageSource")
+		// 从表单中提取 source/category
+		source := ctx.PostForm("source")
+		if source == "" {
+			source = ctx.PostForm("ImageSource")
+		}
+		category := storageDomain.NormalizeCategory(ctx.PostForm("category"))
 		if source != string(echoModel.ImageSourceLocal) &&
 			source != string(echoModel.ImageSourceS3) {
 			source = string(echoModel.ImageSourceLocal)
@@ -70,8 +75,7 @@ func (commonHandler *CommonHandler) UploadImage() gin.HandlerFunc {
 		// 提取userid
 		userId := ctx.MustGet("userid").(uint)
 
-		// 调用 CommonService 上传文件
-		imageDto, err := commonHandler.commonService.UploadImage(userId, file, source)
+		fileDto, err := commonHandler.commonService.UploadFile(userId, file, source, category)
 		if err != nil {
 			return res.Response{
 				Msg: "",
@@ -80,36 +84,40 @@ func (commonHandler *CommonHandler) UploadImage() gin.HandlerFunc {
 		}
 
 		return res.Response{
-			Data: imageDto,
+			Data: fileDto,
 			Msg:  commonModel.UPLOAD_SUCCESS,
 		}
 	})
 }
 
-// DeleteImage 删除图片
+func (commonHandler *CommonHandler) UploadImage() gin.HandlerFunc {
+	return commonHandler.UploadFile()
+}
+
+// DeleteFile 删除文件
 //
-//	@Summary		删除图片
-//	@Description	用户删除已上传的图片，需传入图片 URL 和来源信息
+//	@Summary		删除文件
+//	@Description	用户删除已上传的文件，需传入文件 URL 和来源信息
 //	@Tags			通用功能
 //	@Accept			json
 //	@Produce		json
-//	@Param			imageDto	body		commonModel.ImageDto	true	"图片删除请求体"
+//	@Param			fileDto	body		commonModel.FileDto		true	"文件删除请求体"
 //	@Success		200			{object}	res.Response			"删除成功"
 //	@Failure		200			{object}	res.Response			"删除失败"
-//	@Router			/images/delete [delete]
-func (commonHandler *CommonHandler) DeleteImage() gin.HandlerFunc {
+//	@Router			/files/delete [delete]
+func (commonHandler *CommonHandler) DeleteFile() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		userId := ctx.MustGet("userid").(uint)
 
-		var imageDto commonModel.ImageDto
-		if err := ctx.ShouldBindJSON(&imageDto); err != nil {
+		var fileDto commonModel.FileDto
+		if err := ctx.ShouldBindJSON(&fileDto); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_REQUEST_BODY,
 				Err: err,
 			}
 		}
 
-		if err := commonHandler.commonService.DeleteImage(userId, imageDto.URL, imageDto.SOURCE, imageDto.ObjectKey); err != nil {
+		if err := commonHandler.commonService.DeleteFile(userId, fileDto); err != nil {
 			ctx.JSON(
 				http.StatusOK,
 				commonModel.Fail[string](errorUtil.HandleError(&commonModel.ServerError{
@@ -127,6 +135,10 @@ func (commonHandler *CommonHandler) DeleteImage() gin.HandlerFunc {
 			Msg: commonModel.DELETE_SUCCESS,
 		}
 	})
+}
+
+func (commonHandler *CommonHandler) DeleteImage() gin.HandlerFunc {
+	return commonHandler.DeleteFile()
 }
 
 // GetStatus 获取Echo状态
@@ -372,18 +384,18 @@ func (commonHandler *CommonHandler) Healthz() gin.HandlerFunc {
 	})
 }
 
-// GetS3PresignURL 获取 S3 预签名 URL
+// GetFilePresignURL 获取文件预签名 URL
 //
-//	@Summary		获取 S3 预签名 URL
-//	@Description	获取用于上传文件到 S3 的预签名 URL
+//	@Summary		获取文件预签名 URL
+//	@Description	获取用于上传文件到对象存储的预签名 URL
 //	@Tags			通用功能
 //	@Accept			json
 //	@Produce		json
 //	@Param			s3Dto	body		commonModel.GetPresignURLDto	true	"S3 预签名请求体"
 //	@Success		200		{object}	res.Response{data=object}		"获取预签名 URL 成功"
 //	@Failure		200		{object}	res.Response					"获取预签名 URL 失败"
-//	@Router			/s3/presign [put]
-func (commonHandler *CommonHandler) GetS3PresignURL() gin.HandlerFunc {
+//	@Router			/files/presign [put]
+func (commonHandler *CommonHandler) GetFilePresignURL() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		userId := ctx.MustGet("userid").(uint)
 		// 解析请求体中的参数
@@ -395,7 +407,7 @@ func (commonHandler *CommonHandler) GetS3PresignURL() gin.HandlerFunc {
 			}
 		}
 
-		presignDto, err := commonHandler.commonService.GetS3PresignURL(userId, &s3Dto, "PUT")
+		presignDto, err := commonHandler.commonService.GetFilePresignURL(userId, &s3Dto, "PUT")
 		if err != nil {
 			return res.Response{
 				Msg: "",
@@ -408,6 +420,10 @@ func (commonHandler *CommonHandler) GetS3PresignURL() gin.HandlerFunc {
 			Msg:  commonModel.GET_S3_PRESIGN_URL_SUCCESS,
 		}
 	})
+}
+
+func (commonHandler *CommonHandler) GetS3PresignURL() gin.HandlerFunc {
+	return commonHandler.GetFilePresignURL()
 }
 
 // GetWebsiteTitle 获取网站标题

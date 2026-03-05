@@ -5,14 +5,16 @@ import (
 	"errors"
 	"io"
 	"mime/multipart"
-	"os"
 	"time"
 
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
+	settingModel "github.com/lin-snow/ech0/internal/model/setting"
+	"github.com/spf13/afero"
 )
 
 // UploadFile 根据文件类型和存储类型上传文件
 func UploadFile(
+	fs afero.Fs,
 	file *multipart.FileHeader,
 	fileType commonModel.UploadFileType,
 	storageType commonModel.FileStorageType,
@@ -24,7 +26,7 @@ func UploadFile(
 
 	switch storageType {
 	case commonModel.LOCAL_FILE:
-		return UploadFileToLocal(file, fileType, userID)
+		return UploadFileToLocal(fs, file, fileType, userID)
 	case commonModel.S3_FILE:
 		// TODO: Implement S3 file upload
 	default:
@@ -45,9 +47,9 @@ func IsAllowedType(contentType string, allowedTypes []string) bool {
 }
 
 // createDirIfNotExist 创建目录如果不存在
-func createDirIfNotExist(imagePath string) error {
-	if _, err := os.Stat(imagePath); os.IsNotExist(err) {
-		if err := os.MkdirAll(imagePath, os.ModePerm); err != nil {
+func createDirIfNotExist(fs afero.Fs, imagePath string) error {
+	if _, err := fs.Stat(imagePath); err != nil {
+		if err := fs.MkdirAll(imagePath, 0o755); err != nil {
 			return err
 		}
 	}
@@ -55,9 +57,9 @@ func createDirIfNotExist(imagePath string) error {
 }
 
 // FileExists 文件是否存在
-func FileExists(filePath string) bool {
-	_, err := os.Stat(filePath)
-	return !os.IsNotExist(err)
+func FileExists(fs afero.Fs, filePath string) bool {
+	_, err := fs.Stat(filePath)
+	return err == nil
 }
 
 // ObjectStorage 对象存储接口
@@ -84,4 +86,12 @@ type ObjectStorage interface {
 		expiry time.Duration,
 		method string,
 	) (string, error)
+}
+
+// FileStoragePort 提供统一的文件存储能力（local/s3 对齐）
+type FileStoragePort interface {
+	UploadLocal(file *multipart.FileHeader, fileType commonModel.UploadFileType, userID uint) (string, error)
+	DeleteLocal(filePath string) error
+	PresignURL(ctx context.Context, userID uint, dto *commonModel.GetPresignURLDto, method string, setting settingModel.S3Setting) (commonModel.PresignDto, error)
+	DeleteObject(ctx context.Context, objectKey string) error
 }

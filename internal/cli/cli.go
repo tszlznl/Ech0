@@ -18,13 +18,19 @@ import (
 	"github.com/lin-snow/ech0/internal/config"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	"github.com/lin-snow/ech0/internal/tui"
+	"github.com/spf13/afero"
 )
 
 var runtimeApp *app.App
+var backupFS afero.Fs
 
 // SetApp 注入应用实例。
 func SetApp(a *app.App) {
 	runtimeApp = a
+}
+
+func SetBackupFS(fs afero.Fs) {
+	backupFS = fs
 }
 
 // isWebPortInUse 检查 Web 端口是否已被占用（通常表示已有实例在运行）
@@ -118,7 +124,11 @@ func DoStopServe() {
 
 // DoBackup 执行备份
 func DoBackup() {
-	_, backupFileName, err := backup.ExecuteBackup()
+	if backupFS == nil {
+		tui.PrintCLIInfo("😭 执行结果", "备份失败: 文件系统未初始化")
+		return
+	}
+	_, backupFileName, err := backup.ExecuteBackup(backupFS)
 	if err != nil {
 		// 处理错误
 		tui.PrintCLIInfo("😭 执行结果", "备份失败: "+err.Error())
@@ -134,7 +144,11 @@ func DoBackup() {
 
 // DoRestore 执行恢复
 func DoRestore(backupFilePath string) {
-	err := backup.ExecuteRestore(backupFilePath)
+	if backupFS == nil {
+		tui.PrintCLIInfo("😭 执行结果", "恢复失败: 文件系统未初始化")
+		return
+	}
+	err := backup.ExecuteRestore(backupFS, backupFilePath)
 	if err != nil {
 		// 处理错误
 		tui.PrintCLIInfo("😭 执行结果", "恢复失败: "+err.Error())

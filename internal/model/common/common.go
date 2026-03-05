@@ -38,6 +38,7 @@ type Heatmap struct {
 type (
 	UploadFileType  string
 	FileStorageType string
+	FileCategory    string
 	CommentProvider string
 	S3Provider      string
 	OAuth2Provider  string
@@ -51,6 +52,13 @@ const (
 	ImageType UploadFileType = "image"
 	// AudioType  音频类型
 	AudioType UploadFileType = "audio"
+)
+
+const (
+	// FileCategoryImage 统一文件类别：图片
+	FileCategoryImage FileCategory = "image"
+	// FileCategoryAudio 统一文件类别：音频
+	FileCategoryAudio FileCategory = "audio"
 )
 
 const (

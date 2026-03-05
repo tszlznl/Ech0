@@ -2,7 +2,9 @@ package util
 
 import (
 	"archive/zip"
+	"bytes"
 	"fmt"
+	iofs "io/fs"
 	"io"
 	"os"
 	"path/filepath"
@@ -10,6 +12,7 @@ import (
 
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
+	"github.com/spf13/afero"
 )
 
 // ZipOptions ZIP 压缩选项
@@ -35,19 +38,19 @@ func DefaultZipOptions() ZipOptions {
 }
 
 // ZipDirectory 压缩目录到 ZIP 文件
-func ZipDirectory(sourceDir string, zipPath string) error {
-	return ZipDirectoryWithOptions(sourceDir, zipPath, DefaultZipOptions())
+func ZipDirectory(fs afero.Fs, sourceDir string, zipPath string) error {
+	return ZipDirectoryWithOptions(fs, sourceDir, zipPath, DefaultZipOptions())
 }
 
 // ZipDirectoryWithOptions 使用自定义选项压缩目录
-func ZipDirectoryWithOptions(sourceDir string, zipPath string, options ZipOptions) error {
+func ZipDirectoryWithOptions(fs afero.Fs, sourceDir string, zipPath string, options ZipOptions) error {
 	// 验证输入参数
 	if sourceDir == "" || zipPath == "" {
 		return fmt.Errorf("源目录和目标文件路径不能为空")
 	}
 
 	// 检查源目录是否存在
-	sourceStat, err := os.Stat(sourceDir)
+	sourceStat, err := fs.Stat(sourceDir)
 	if err != nil {
 		return fmt.Errorf("无法访问源目录 %s: %w", sourceDir, err)
 	}
@@ -55,18 +58,13 @@ func ZipDirectoryWithOptions(sourceDir string, zipPath string, options ZipOption
 		return fmt.Errorf("源路径 %s 不是一个目录", sourceDir)
 	}
 
-	// 清空目标目录下的所有文件
-	if err := cleanBackupDir("backup"); err != nil {
-		return err // 或者带提示信息
-	}
-
 	// 确保目标目录存在
-	if err := os.MkdirAll(filepath.Dir(zipPath), 0o755); err != nil {
+	if err := fs.MkdirAll(filepath.Dir(zipPath), 0o755); err != nil {
 		return fmt.Errorf("无法创建目标目录: %w", err)
 	}
 
 	// 创建 ZIP 文件
-	zipFile, err := os.Create(zipPath)
+	zipFile, err := fs.Create(zipPath)
 	if err != nil {
 		return fmt.Errorf("无法创建 ZIP 文件 %s: %w", zipPath, err)
 	}
@@ -87,7 +85,7 @@ func ZipDirectoryWithOptions(sourceDir string, zipPath string, options ZipOption
 	// 计算总文件数量用于进度显示
 	var totalFiles int64
 	if options.ProgressCallback != nil {
-		err := filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
+		err := afero.Walk(fs, sourceDir, func(path string, info iofs.FileInfo, err error) error {
 			if err != nil {
 				return nil // 跳过错误文件
 			}
@@ -105,7 +103,7 @@ func ZipDirectoryWithOptions(sourceDir string, zipPath string, options ZipOption
 	sourceDir = filepath.Clean(sourceDir)
 
 	// 遍历目录中的所有文件和子目录
-	return filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
+	return afero.Walk(fs, sourceDir, func(path string, info iofs.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("遍历文件 %s 时出错: %w", path, err)
 		}
@@ -151,20 +149,18 @@ func ZipDirectoryWithOptions(sourceDir string, zipPath string, options ZipOption
 		}
 
 		// 打开原始文件
-		file, err := os.Open(path)
+		file, err := fs.Open(path)
 		if err != nil {
 			return fmt.Errorf("打开文件 %s 失败: %w", path, err)
 		}
-		defer func() {
-			if closeErr := file.Close(); closeErr != nil {
-				fmt.Printf("警告: 关闭文件 %s 时出错: %v\n", path, closeErr)
-			}
-		}()
-
 		// 拷贝文件内容到 zip 条目中
 		_, err = io.Copy(zipEntry, file)
+		closeErr := file.Close()
 		if err != nil {
 			return fmt.Errorf("复制文件内容 %s 失败: %w", path, err)
+		}
+		if closeErr != nil {
+			return fmt.Errorf("关闭文件 %s 失败: %w", path, closeErr)
 		}
 
 		// 更新进度
@@ -178,7 +174,7 @@ func ZipDirectoryWithOptions(sourceDir string, zipPath string, options ZipOption
 }
 
 // shouldIncludeFile 判断是否应该包含文件
-func shouldIncludeFile(info os.FileInfo, options ZipOptions) bool {
+func shouldIncludeFile(info iofs.FileInfo, options ZipOptions) bool {
 	filename := info.Name()
 
 	// 检查隐藏文件
@@ -218,22 +214,43 @@ func shouldIncludeFile(info os.FileInfo, options ZipOptions) bool {
 //}
 
 // UnzipFile 解压 ZIP 文件到指定目录
-func UnzipFile(src, dest string) error {
-	reader, err := zip.OpenReader(src)
+func UnzipFile(fs afero.Fs, src, dest string) error {
+	srcFile, err := fs.Open(src)
 	if err != nil {
 		return fmt.Errorf("打开 ZIP 文件失败: %w", err)
 	}
 	defer func() {
-		_ = reader.Close()
+		_ = srcFile.Close()
 	}()
+	stat, err := srcFile.Stat()
+	if err != nil {
+		return fmt.Errorf("读取 ZIP 文件信息失败: %w", err)
+	}
+	readerAt, ok := srcFile.(io.ReaderAt)
+	var reader *zip.Reader
+	if ok {
+		reader, err = zip.NewReader(readerAt, stat.Size())
+		if err != nil {
+			return fmt.Errorf("打开 ZIP Reader 失败: %w", err)
+		}
+	} else {
+		content, readErr := io.ReadAll(srcFile)
+		if readErr != nil {
+			return fmt.Errorf("读取 ZIP 内容失败: %w", readErr)
+		}
+		reader, err = zip.NewReader(bytes.NewReader(content), int64(len(content)))
+		if err != nil {
+			return fmt.Errorf("打开 ZIP Reader 失败: %w", err)
+		}
+	}
 
 	// 确保目标目录存在
-	if err := os.MkdirAll(dest, 0o755); err != nil {
+	if err := fs.MkdirAll(dest, 0o755); err != nil {
 		return fmt.Errorf("创建目标目录失败: %w", err)
 	}
 
 	for _, file := range reader.File {
-		err := extractFile(file, dest)
+		err := extractFile(fs, file, dest)
 		if err != nil {
 			return fmt.Errorf("解压文件 %s 失败: %w", file.Name, err)
 		}
@@ -243,20 +260,20 @@ func UnzipFile(src, dest string) error {
 }
 
 // extractFile 解压单个文件
-func extractFile(file *zip.File, destDir string) error {
+func extractFile(fs afero.Fs, file *zip.File, destDir string) error {
 	filePath := filepath.Join(destDir, file.Name)
 
 	// 防止路径穿越攻击
-	if !strings.HasPrefix(filePath, filepath.Clean(destDir)+string(os.PathSeparator)) {
+	if !strings.HasPrefix(filePath, filepath.Clean(destDir)+string(filepath.Separator)) {
 		return fmt.Errorf("无效的文件路径: %s", file.Name)
 	}
 
 	if file.FileInfo().IsDir() {
-		return os.MkdirAll(filePath, file.FileInfo().Mode())
+		return fs.MkdirAll(filePath, file.FileInfo().Mode())
 	}
 
 	// 确保父目录存在
-	if err := os.MkdirAll(filepath.Dir(filePath), 0o755); err != nil {
+	if err := fs.MkdirAll(filepath.Dir(filePath), 0o755); err != nil {
 		return err
 	}
 
@@ -268,7 +285,7 @@ func extractFile(file *zip.File, destDir string) error {
 		_ = fileReader.Close()
 	}()
 
-	targetFile, err := os.OpenFile(
+	targetFile, err := fs.OpenFile(
 		filePath,
 		os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
 		file.FileInfo().Mode(),
@@ -285,22 +302,22 @@ func extractFile(file *zip.File, destDir string) error {
 }
 
 // FileExists 检查文件或目录是否存在
-func FileExists(path string) bool {
-	_, err := os.Stat(path)
-	if os.IsNotExist(err) {
+func FileExists(fs afero.Fs, path string) bool {
+	_, err := fs.Stat(path)
+	if err != nil {
 		return false
 	}
-	return err == nil
+	return true
 }
 
 // CopyDirectory 复制整个目录到目标路径（会清空目标目录后再复制）
-func CopyDirectory(src, dest string) error {
+func CopyDirectory(fs afero.Fs, src, dest string) error {
 	if src == "" || dest == "" {
 		return fmt.Errorf("源目录和目标目录不能为空")
 	}
 
 	// 检查源目录
-	srcInfo, err := os.Stat(src)
+	srcInfo, err := fs.Stat(src)
 	if err != nil {
 		return fmt.Errorf("无法访问源目录 %s: %w", src, err)
 	}
@@ -308,32 +325,26 @@ func CopyDirectory(src, dest string) error {
 		return fmt.Errorf("源路径 %s 不是目录", src)
 	}
 
-	// 防止把源复制到自身
-	srcAbs, err := filepath.Abs(src)
-	if err != nil {
-		return fmt.Errorf("获取源目录绝对路径失败: %w", err)
+	// 防止把源复制到自身或其子目录（基于清理后的逻辑路径）
+	srcClean := filepath.Clean(src)
+	destClean := filepath.Clean(dest)
+	if srcClean == destClean {
+		return fmt.Errorf("源目录和目标目录不能相同: %s", srcClean)
 	}
-	destAbs, err := filepath.Abs(dest)
-	if err != nil {
-		return fmt.Errorf("获取目标目录绝对路径失败: %w", err)
-	}
-	if srcAbs == destAbs {
-		return fmt.Errorf("源目录和目标目录不能相同: %s", srcAbs)
-	}
-	if strings.HasPrefix(destAbs, srcAbs+string(os.PathSeparator)) {
-		return fmt.Errorf("目标目录 %s 不能位于源目录 %s 内", destAbs, srcAbs)
+	if strings.HasPrefix(destClean, srcClean+string(filepath.Separator)) {
+		return fmt.Errorf("目标目录 %s 不能位于源目录 %s 内", destClean, srcClean)
 	}
 
-	if err := os.MkdirAll(destAbs, srcInfo.Mode()); err != nil {
+	if err := fs.MkdirAll(destClean, srcInfo.Mode()); err != nil {
 		return fmt.Errorf("创建目标目录失败: %w", err)
 	}
 
-	return filepath.Walk(srcAbs, func(path string, info os.FileInfo, walkErr error) error {
+	return afero.Walk(fs, srcClean, func(path string, info iofs.FileInfo, walkErr error) error {
 		if walkErr != nil {
 			return fmt.Errorf("遍历目录 %s 时出错: %w", path, walkErr)
 		}
 
-		relPath, err := filepath.Rel(srcAbs, path)
+		relPath, err := filepath.Rel(srcClean, path)
 		if err != nil {
 			return fmt.Errorf("计算相对路径失败: %w", err)
 		}
@@ -341,34 +352,20 @@ func CopyDirectory(src, dest string) error {
 			return nil
 		}
 
-		targetPath := filepath.Join(destAbs, relPath)
+		targetPath := filepath.Join(destClean, relPath)
 
 		if info.IsDir() {
-			if err := os.MkdirAll(targetPath, info.Mode()); err != nil {
+			if err := fs.MkdirAll(targetPath, info.Mode()); err != nil {
 				return fmt.Errorf("创建目录 %s 失败: %w", targetPath, err)
 			}
 			return nil
 		}
 
-		if info.Mode()&os.ModeSymlink != 0 {
-			if err := ensureRemoved(targetPath); err != nil {
-				return err
-			}
-			linkTarget, err := os.Readlink(path)
-			if err != nil {
-				return fmt.Errorf("读取符号链接 %s 失败: %w", path, err)
-			}
-			if err := os.Symlink(linkTarget, targetPath); err != nil {
-				return fmt.Errorf("创建符号链接 %s -> %s 失败: %w", targetPath, linkTarget, err)
-			}
-			return nil
-		}
-
-		if err := ensureDir(filepath.Dir(targetPath)); err != nil {
+		if err := ensureDir(fs, filepath.Dir(targetPath)); err != nil {
 			return err
 		}
 
-		if err := copyFile(path, targetPath, info.Mode()); err != nil {
+		if err := copyFile(fs, path, targetPath, info.Mode()); err != nil {
 			return err
 		}
 
@@ -376,26 +373,23 @@ func CopyDirectory(src, dest string) error {
 	})
 }
 
-func ensureDir(dir string) error {
-	return os.MkdirAll(dir, 0o755)
+func ensureDir(fs afero.Fs, dir string) error {
+	return fs.MkdirAll(dir, 0o755)
 }
 
-func ensureRemoved(path string) error {
-	if _, err := os.Lstat(path); err != nil {
-		if os.IsNotExist(err) {
-			return nil
-		}
+func ensureRemoved(fs afero.Fs, path string) error {
+	if _, err := fs.Stat(path); err != nil {
 		return fmt.Errorf("检查路径 %s 失败: %w", path, err)
 	}
-	return os.RemoveAll(path)
+	return fs.RemoveAll(path)
 }
 
-func copyFile(src, dest string, perm os.FileMode) error {
-	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
+func copyFile(fs afero.Fs, src, dest string, perm iofs.FileMode) error {
+	if err := fs.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
 		return fmt.Errorf("创建文件目录失败: %w", err)
 	}
 
-	in, err := os.Open(src)
+	in, err := fs.Open(src)
 	if err != nil {
 		return fmt.Errorf("打开源文件 %s 失败: %w", src, err)
 	}
@@ -403,7 +397,7 @@ func copyFile(src, dest string, perm os.FileMode) error {
 		_ = in.Close()
 	}()
 
-	out, err := os.OpenFile(dest, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, perm)
+	out, err := fs.OpenFile(dest, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, perm)
 	if err != nil {
 		return fmt.Errorf("创建目标文件 %s 失败: %w", dest, err)
 	}
@@ -418,17 +412,17 @@ func copyFile(src, dest string, perm os.FileMode) error {
 	return nil
 }
 
-// cleanBackupDir 清理备份目录
-func cleanBackupDir(path string) error {
-	entries, err := os.ReadDir(path)
+// CleanDir 清理目录内容
+func CleanDir(fs afero.Fs, path string) error {
+	entries, err := afero.ReadDir(fs, path)
 	if err != nil {
-		return fmt.Errorf("读取备份目录失败: %w", err)
+		return fmt.Errorf("读取目录失败: %w", err)
 	}
 
 	for _, entry := range entries {
 		fullPath := filepath.Join(path, entry.Name())
-		if err := os.RemoveAll(fullPath); err != nil {
-			return fmt.Errorf("删除旧备份失败: %w", err)
+		if err := fs.RemoveAll(fullPath); err != nil {
+			return fmt.Errorf("删除目录项失败: %w", err)
 		}
 	}
 
@@ -462,6 +456,9 @@ func ValidateAndSanitizePath(baseDir, userInput, prefix string) (string, error) 
 	// 去除指定前缀
 	if prefix != "" && strings.HasPrefix(userInput, prefix) {
 		userInput = strings.TrimPrefix(userInput, prefix)
+	}
+	if strings.Contains(userInput, "..") {
+		return "", fmt.Errorf("非法路径片段")
 	}
 
 	// 只提取文件名，禁止任何目录遍历

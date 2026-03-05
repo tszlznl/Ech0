@@ -20,6 +20,8 @@ func BuildTasker(
 ) (*task.Tasker, error) {
 	wire.Build(
 		CacheSet,
+		FsSet,
+		StorageSet,
 		KeyValueSet,
 		TransactionManagerSet,
 		WebhookSet,

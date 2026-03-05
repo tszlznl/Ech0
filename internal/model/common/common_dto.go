@@ -9,16 +9,68 @@ type PageQueryDto struct {
 	Search   string `json:"search"   form:"search"`   // 用于搜索的关键字
 }
 
-// ImageDto 用于图片相关的请求数据传输对象
+// FileDto 用于文件相关的请求数据传输对象
+//
+// swagger:model FileDto
+type FileDto struct {
+	// 文件的 URL 地址
+	URL string `json:"url" binding:"required"`
+	// 文件来源，如 local/s3/url
+	Source string `json:"source" binding:"required"`
+	// 对象存储的 Key, 用于删除 S3/R2 上的文件
+	ObjectKey string `json:"object_key"`
+	// MIME 类型
+	ContentType string `json:"content_type,omitempty"`
+	// 文件类别，如 image/audio
+	Category string `json:"category,omitempty"`
+	// 分类元数据（不同类别填充不同字段）
+	Metadata FileMetadataDto `json:"metadata,omitempty"`
+	// 图片宽度（非图片可为空）
+	Width int `json:"width"`
+	// 图片高度（非图片可为空）
+	Height int `json:"height"`
+}
+
+type FileMetadataDto struct {
+	Image    *ImageMetadataDto    `json:"image,omitempty"`
+	Video    *VideoMetadataDto    `json:"video,omitempty"`
+	Audio    *AudioMetadataDto    `json:"audio,omitempty"`
+	PDF      *PDFMetadataDto      `json:"pdf,omitempty"`
+	Markdown *MarkdownMetadataDto `json:"markdown,omitempty"`
+}
+
+type ImageMetadataDto struct {
+	Width  int `json:"width,omitempty"`
+	Height int `json:"height,omitempty"`
+}
+
+type VideoMetadataDto struct {
+	Width      int `json:"width,omitempty"`
+	Height     int `json:"height,omitempty"`
+	DurationMs int `json:"duration_ms,omitempty"`
+}
+
+type AudioMetadataDto struct {
+	DurationMs int `json:"duration_ms,omitempty"`
+}
+
+type PDFMetadataDto struct {
+	Pages int `json:"pages,omitempty"`
+}
+
+type MarkdownMetadataDto struct {
+	WordCount int `json:"word_count,omitempty"`
+}
+
+// ImageDto 兼容旧版图片 DTO（建议使用 FileDto）
 //
 // swagger:model ImageDto
 type ImageDto struct {
-	// 图片的 URL 地址
 	URL       string `json:"url"        binding:"required"`
 	SOURCE    string `json:"source"     binding:"required"`
-	ObjectKey string `json:"object_key"` // 对象存储的 Key, 用于删除 S3/R2 上的图片
-	Width     int    `json:"width"`      // 图片宽度
-	Height    int    `json:"height"`     // 图片高度
+	ObjectKey string `json:"object_key"`
+	Width     int    `json:"width"`
+	Height    int    `json:"height"`
 }
 
 // PresignDto 用于响应 S3 预签名 URL 的请求数据传输对象

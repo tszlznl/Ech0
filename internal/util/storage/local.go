@@ -15,10 +15,12 @@ import (
 
 	"github.com/lin-snow/ech0/internal/config"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
+	"github.com/spf13/afero"
 )
 
 // UploadFileToLocal 根据文件类型上传文件到本地存储
 func UploadFileToLocal(
+	fs afero.Fs,
 	file *multipart.FileHeader,
 	fileType commonModel.UploadFileType,
 	userID uint,
@@ -27,10 +29,10 @@ func UploadFileToLocal(
 	switch fileType {
 	case commonModel.ImageType:
 		// 上传图片到本地
-		return UploadImageToLocal(file, userID)
+		return UploadImageToLocal(fs, file, userID)
 	case commonModel.AudioType:
 		// 上传音频到本地
-		return UploadAudioToLocal(file, userID)
+		return UploadAudioToLocal(fs, file, userID)
 	default:
 		// 不支持的文件类型
 		return "", errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
@@ -38,9 +40,9 @@ func UploadFileToLocal(
 }
 
 // UploadImageToLocal 将图片上传到本地存储
-func UploadImageToLocal(file *multipart.FileHeader, userID uint) (string, error) {
+func UploadImageToLocal(fs afero.Fs, file *multipart.FileHeader, userID uint) (string, error) {
 	// 创建图片存储目录
-	if err := createDirIfNotExist(config.Config().Upload.ImagePath); err != nil {
+	if err := createDirIfNotExist(fs, config.Config().Upload.ImagePath); err != nil {
 		return "", err
 	}
 
@@ -65,11 +67,11 @@ func UploadImageToLocal(file *multipart.FileHeader, userID uint) (string, error)
 		}
 	}()
 
-	if err = os.MkdirAll(filepath.Dir(savePath), 0o750); err != nil {
+	if err = fs.MkdirAll(filepath.Dir(savePath), 0o750); err != nil {
 		return "", err
 	}
 
-	out, err := os.Create(savePath)
+	out, err := fs.Create(savePath)
 	if err != nil {
 		return "", err
 	}
@@ -90,9 +92,9 @@ func UploadImageToLocal(file *multipart.FileHeader, userID uint) (string, error)
 }
 
 // UploadAudioToLocal 将音频上传到本地存储
-func UploadAudioToLocal(file *multipart.FileHeader, userID uint) (string, error) {
+func UploadAudioToLocal(fs afero.Fs, file *multipart.FileHeader, userID uint) (string, error) {
 	// 创建音频存储目录
-	if err := createDirIfNotExist(config.Config().Upload.AudioPath); err != nil {
+	if err := createDirIfNotExist(fs, config.Config().Upload.AudioPath); err != nil {
 		return "", err
 	}
 
@@ -113,11 +115,11 @@ func UploadAudioToLocal(file *multipart.FileHeader, userID uint) (string, error)
 		}
 	}()
 
-	if err = os.MkdirAll(filepath.Dir(savePath), 0o750); err != nil {
+	if err = fs.MkdirAll(filepath.Dir(savePath), 0o750); err != nil {
 		return "", err
 	}
 
-	out, err := os.Create(savePath)
+	out, err := fs.Create(savePath)
 	if err != nil {
 		return "", err
 	}
@@ -138,9 +140,9 @@ func UploadAudioToLocal(file *multipart.FileHeader, userID uint) (string, error)
 }
 
 // DeleteFileFromLocal 删除本地文件
-func DeleteFileFromLocal(filePath string) error {
-	err := os.Remove(filePath)
-	if err != nil && !os.IsNotExist(err) {
+func DeleteFileFromLocal(fs afero.Fs, filePath string) error {
+	err := fs.Remove(filePath)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		// 只有当错误不是"文件不存在"时才返回错误
 		return err
 	}

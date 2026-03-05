@@ -21,6 +21,8 @@ func BuildHandlers(
 ) (*handler.Bundle, error) {
 	wire.Build(
 		CacheSet,
+		FsSet,
+		StorageSet,
 		TransactionManagerSet,
 		WebSet,
 		UserSet,

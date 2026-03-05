@@ -36,7 +36,7 @@ const props = defineProps<{
 
 const memorySource = ref<string>(props.TheImageSource) // 用于记住上传方式
 const isUploading = ref<boolean>(false) // 是否正在上传
-const files = ref<App.Api.Ech0.ImageToAdd[]>([]) // 已上传的文件列表
+const files = ref<App.Api.Ech0.FileToAdd[]>([]) // 已上传的文件列表
 const tempFiles = ref<Map<string, { url: string; objectKey: string }>>(new Map()) // 用于S3临时存储文件回显地址的 Map(key: fileName, value: {url, objectKey})
 
 const userStore = useUserStore()
@@ -111,7 +111,7 @@ const initUppy = () => {
   if (memorySource.value == ImageSource.LOCAL) {
     console.log('使用本地存储')
     uppy.use(XHRUpload, {
-      endpoint: `${backendURL}/api/images/upload`, // 本地上传接口
+      endpoint: `${backendURL}/api/files/upload`, // 本地上传接口
       fieldName: 'file',
       formData: true,
       headers: {
@@ -212,10 +212,10 @@ const initUppy = () => {
 
     // 分两种情况: Local 或者 S3
     if (memorySource.value === ImageSource.LOCAL) {
-      const res = response.body as unknown as App.Api.Response<App.Api.File.ImageDto>
+      const res = response.body as unknown as App.Api.Response<App.Api.File.FileDto>
       const fileUrl = String(res.data.url)
       const { width, height } = res.data
-      const item: App.Api.Ech0.ImageToAdd = {
+      const item: App.Api.Ech0.FileToAdd = {
         image_url: fileUrl,
         image_source: ImageSource.LOCAL,
         object_key: '',
@@ -227,7 +227,7 @@ const initUppy = () => {
       const uploadedFile = tempFiles.value.get(file?.name || '') || ''
       if (!uploadedFile) return
 
-      const item: App.Api.Ech0.ImageToAdd = {
+      const item: App.Api.Ech0.FileToAdd = {
         image_url: uploadedFile.url,
         image_source: ImageSource.S3,
         object_key: uploadedFile.objectKey,
@@ -239,8 +239,8 @@ const initUppy = () => {
   uppy.on('complete', () => {
     isUploading.value = false
     editorStore.ImageUploading = false
-    const ImageToAddResult = [...files.value]
-    editorStore.handleUppyUploaded(ImageToAddResult)
+    const filesToAddResult = [...files.value]
+    editorStore.handleUppyUploaded(filesToAddResult)
     files.value = []
     tempFiles.value.clear()
   })
