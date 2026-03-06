@@ -22,6 +22,7 @@ import (
 	"github.com/lin-snow/ech0/internal/storage"
 	storageFactory "github.com/lin-snow/ech0/internal/storage/factory"
 	"github.com/lin-snow/ech0/internal/task"
+	stgx "github.com/lin-snow/ech0/pkg/storagex"
 	"github.com/lin-snow/ech0/internal/transaction"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	jsonUtil "github.com/lin-snow/ech0/internal/util/json"
@@ -67,29 +68,39 @@ func ProvideAferoFs() afero.Fs {
 	return afero.NewOsFs()
 }
 
-func ProvideStoragePort(
-	fs afero.Fs,
+func ProvideStorageService(
 	keyvalueRepo keyvalueRepository.KeyValueRepositoryInterface,
-) storage.StoragePort {
+) *storage.StorageService {
 	mode := storageFactory.ModeLocal
-	var s3Setting settingModel.S3Setting
+	var objectCfg *stgx.ObjectStorageConfig
 
+	var s3Setting settingModel.S3Setting
 	if value, err := keyvalueRepo.GetKeyValue(commonModel.S3SettingKey); err == nil && strings.TrimSpace(value) != "" {
 		if err := jsonUtil.JSONUnmarshal([]byte(value), &s3Setting); err == nil && s3Setting.Enable {
-			s3Setting.Endpoint = httpUtil.TrimURL(s3Setting.Endpoint)
 			mode = storageFactory.ModeS3
+			objectCfg = &stgx.ObjectStorageConfig{
+				Endpoint:   httpUtil.TrimURL(s3Setting.Endpoint),
+				AccessKey:  s3Setting.AccessKey,
+				SecretKey:  s3Setting.SecretKey,
+				BucketName: s3Setting.BucketName,
+				Region:     s3Setting.Region,
+				Provider:   s3Setting.Provider,
+				UseSSL:     s3Setting.UseSSL,
+				CDNURL:     s3Setting.CDNURL,
+				PathPrefix: s3Setting.PathPrefix,
+			}
 		}
 	}
 
-	port, err := storageFactory.Build(storageFactory.BuildInput{
-		Mode:      mode,
-		FS:        fs,
-		S3Setting: s3Setting,
+	svc, err := storageFactory.Build(storageFactory.BuildInput{
+		Mode:         mode,
+		DataRoot:     "data/files",
+		ObjectConfig: objectCfg,
 	})
 	if err != nil {
-		port, _ = storageFactory.Build(storageFactory.BuildInput{Mode: storageFactory.ModeLocal, FS: fs})
+		svc, _ = storageFactory.Build(storageFactory.BuildInput{Mode: storageFactory.ModeLocal, DataRoot: "data/files"})
 	}
-	return port
+	return svc
 }
 
 // ProvideTransactionManagerFactory 创建事务管理器工厂。

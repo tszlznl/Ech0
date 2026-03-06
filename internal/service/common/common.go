@@ -20,6 +20,7 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
+	stgx "github.com/lin-snow/ech0/pkg/storagex"
 	repository "github.com/lin-snow/ech0/internal/repository/common"
 	echoRepository "github.com/lin-snow/ech0/internal/repository/echo"
 	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
@@ -31,7 +32,6 @@ import (
 	mdUtil "github.com/lin-snow/ech0/internal/util/md"
 	storageUtil "github.com/lin-snow/ech0/internal/util/storage"
 	timezoneUtil "github.com/lin-snow/ech0/internal/util/timezone"
-	"github.com/spf13/afero"
 	"go.uber.org/zap"
 	"golang.org/x/net/html"
 )
@@ -39,10 +39,9 @@ import (
 type CommonService struct {
 	txManager          transaction.TransactionManager
 	commonRepository   repository.CommonRepositoryInterface
-	storagePort        storageDomain.StoragePort
+	storage            *storageDomain.StorageService
 	echoRepository     echoRepository.EchoRepositoryInterface
 	keyvalueRepository keyvalueRepository.KeyValueRepositoryInterface
-	fs                 afero.Fs
 	eventBus           event.IEventBus
 }
 
@@ -51,8 +50,7 @@ func NewCommonService(
 	commonRepository repository.CommonRepositoryInterface,
 	echoRepository echoRepository.EchoRepositoryInterface,
 	keyvalueRepository keyvalueRepository.KeyValueRepositoryInterface,
-	storagePort storageDomain.StoragePort,
-	fs afero.Fs,
+	storage *storageDomain.StorageService,
 	eventBusProvider func() event.IEventBus,
 ) *CommonService {
 	return &CommonService{
@@ -60,8 +58,7 @@ func NewCommonService(
 		commonRepository:   commonRepository,
 		echoRepository:     echoRepository,
 		keyvalueRepository: keyvalueRepository,
-		storagePort:        storagePort,
-		fs:                 fs,
+		storage:            storage,
 		eventBus:           eventBusProvider(),
 	}
 }
@@ -85,7 +82,6 @@ func (commonService *CommonService) UploadFile(
 		return commonModel.FileDto{}, errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	// 检查文件类型是否合法
 	if !storageUtil.IsAllowedType(
 		file.Header.Get("Content-Type"),
 		config.Config().Upload.AllowedTypes,
@@ -93,7 +89,6 @@ func (commonService *CommonService) UploadFile(
 		return commonModel.FileDto{}, errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
 	}
 
-	// 检查文件大小是否合法
 	limit := int64(config.Config().Upload.ImageMaxSize)
 	if category == storageDomain.CategoryAudio {
 		limit = int64(config.Config().Upload.AudioMaxSize)
@@ -113,18 +108,15 @@ func (commonService *CommonService) UploadFile(
 	}
 	defer func() { _ = reader.Close() }()
 
-	readSeeker, ok := reader.(storageDomain.ReadSeekCloser)
-	if !ok {
-		return commonModel.FileDto{}, errors.New("uploaded file does not support seek")
-	}
-
-	storedObject, err := commonService.storagePort.Save(context.Background(), storageDomain.SaveRequest{
-		UserID:      user.ID,
-		FileName:    file.Filename,
-		ContentType: file.Header.Get("Content-Type"),
-		Category:    category,
-		Reader:      readSeeker,
-	})
+	contentType := file.Header.Get("Content-Type")
+	result, err := commonService.storage.Upload(
+		context.Background(),
+		stgx.Category(category),
+		user.ID,
+		file.Filename,
+		contentType,
+		reader,
+	)
 	if err != nil {
 		return commonModel.FileDto{}, err
 	}
@@ -138,14 +130,13 @@ func (commonService *CommonService) UploadFile(
 		}
 	}
 
-	// 触发图片上传事件
-	user.Password = "" // 清除密码字段，避免泄露
+	user.Password = ""
 	if err := commonService.eventBus.Publish(context.Background(), event.NewEvent(
 		event.EventTypeResourceUploaded,
 		event.EventPayload{
 			event.EventPayloadUser: user,
 			event.EventPayloadFile: file.Filename,
-			event.EventPayloadURL:  storedObject.URL,
+			event.EventPayloadURL:  result.URL,
 			event.EventPayloadSize: file.Size,
 			event.EventPayloadType: uploadType,
 		},
@@ -155,11 +146,11 @@ func (commonService *CommonService) UploadFile(
 	}
 
 	fileDto := commonModel.FileDto{
-		URL:         storedObject.URL,
-		AccessURL:   ResolveAccessFileURL(storedObject.URL, string(storedObject.Source)),
-		Source:      string(storedObject.Source),
-		ObjectKey:   storedObject.ObjectKey,
-		ContentType: storedObject.ContentType,
+		URL:         result.URL,
+		AccessURL:   ResolveAccessFileURL(result.URL, commonService.storage.Source()),
+		Source:      commonService.storage.Source(),
+		ObjectKey:   result.ObjectKey,
+		ContentType: result.ContentType,
 		Category:    string(category),
 		Width:       width,
 		Height:      height,
@@ -209,7 +200,6 @@ func (commonService *CommonService) DeleteFile(userid uint, file commonModel.Fil
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	// 检查图片是否存在
 	if file.URL == "" {
 		return errors.New(commonModel.IMAGE_NOT_FOUND)
 	}
@@ -221,12 +211,11 @@ func (commonService *CommonService) deleteFileBySource(url, source, objectKey st
 	if source == echoModel.ImageSourceURL {
 		return nil
 	}
-	return commonService.storagePort.Delete(context.Background(), storageDomain.DeleteRequest{
-		URL:       url,
-		Source:    storageDomain.Source(source),
-		ObjectKey: objectKey,
-		Category:  storageDomain.CategoryFile,
-	})
+	vpath := objectKeyToVirtualPath(objectKey)
+	if vpath == "" {
+		return nil
+	}
+	return commonService.storage.Delete(context.Background(), vpath)
 }
 
 func (commonService *CommonService) GetSysAdmin() (userModel.User, error) {
@@ -234,13 +223,11 @@ func (commonService *CommonService) GetSysAdmin() (userModel.User, error) {
 }
 
 func (commonService *CommonService) GetStatus() (commonModel.Status, error) {
-	// 获取系统管理员信息
 	sysuser, err := commonService.commonRepository.GetSysAdmin()
 	if err != nil {
 		return commonModel.Status{}, err
 	}
 
-	// 获取所有用户状态信息
 	var users []commonModel.UserStatus
 	allusers, err := commonService.commonRepository.GetAllUsers()
 	if err != nil {
@@ -261,11 +248,11 @@ func (commonService *CommonService) GetStatus() (commonModel.Status, error) {
 		return status, err
 	}
 
-	status.SysAdminID = sysuser.ID     // 管理员ID
-	status.Username = sysuser.Username // 管理员用户名
-	status.Logo = sysuser.Avatar       // 管理员头像
-	status.Users = users               // 所有用户状态
-	status.TotalEchos = len(echos)     // Echo总数
+	status.SysAdminID = sysuser.ID
+	status.Username = sysuser.Username
+	status.Logo = sysuser.Avatar
+	status.Users = users
+	status.TotalEchos = len(echos)
 
 	return status, nil
 }
@@ -300,13 +287,11 @@ func (commonService *CommonService) GetHeatMap(timezone string) ([]commonModel.H
 }
 
 func (commonService *CommonService) GenerateRSS(ctx *gin.Context) (string, error) {
-	// 获取所有Echo
 	echos, err := commonService.commonRepository.GetAllEchos(false)
 	if err != nil {
 		return "", err
 	}
 
-	// 生成 RSS 订阅链接
 	schema := "http"
 	if ctx.Request.TLS != nil {
 		schema = "https"
@@ -332,11 +317,9 @@ func (commonService *CommonService) GenerateRSS(ctx *gin.Context) (string, error
 
 		title := msg.Username + " - " + msg.CreatedAt.Format("2006-01-02")
 
-		// 添加图片链接到正文前(scheme://host/api/ImageURL)
 		if len(msg.Images) > 0 {
 			var imageContent []byte
 			for _, image := range msg.Images {
-				// 根据图片来源生成链接
 				var imageURL string
 				switch image.ImageSource {
 				case echoModel.ImageSourceLocal:
@@ -353,7 +336,6 @@ func (commonService *CommonService) GenerateRSS(ctx *gin.Context) (string, error
 			renderedContent = append(imageContent, renderedContent...)
 		}
 
-		// 添加标签到正文后
 		if len(msg.Tags) > 0 {
 			for _, tag := range msg.Tags {
 				renderedContent = fmt.Appendf(
@@ -405,13 +387,13 @@ func (commonService *CommonService) DeleteMusic(userid uint) error {
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	// 支持的音频格式
 	audioFiles := []string{"music.flac", "music.m4a", "music.mp3"}
+	ctx := context.Background()
 
 	for _, file := range audioFiles {
-		audioPath := filepath.Join(config.Config().Upload.AudioPath, file)
-		if storageUtil.FileExists(commonService.fs, audioPath) {
-			return storageUtil.DeleteFileFromLocal(commonService.fs, audioPath)
+		vpath := stgx.JoinPath("audios", file)
+		if exists, _ := commonService.storage.Exists(ctx, vpath); exists {
+			return commonService.storage.Delete(ctx, vpath)
 		}
 	}
 
@@ -419,40 +401,39 @@ func (commonService *CommonService) DeleteMusic(userid uint) error {
 }
 
 func (commonService *CommonService) GetPlayMusicUrl() string {
-	// 支持的音频格式
 	audioFiles := []string{"music.flac", "music.m4a", "music.mp3"}
+	ctx := context.Background()
 
 	for _, file := range audioFiles {
-		audioPath := filepath.Join(config.Config().Upload.AudioPath, file)
-		if storageUtil.FileExists(commonService.fs, audioPath) {
+		vpath := stgx.JoinPath("audios", file)
+		if exists, _ := commonService.storage.Exists(ctx, vpath); exists {
+			url, err := commonService.storage.ResolveURL(ctx, vpath)
+			if err == nil {
+				return url
+			}
 			return fmt.Sprintf("/files/audios/%s", file)
 		}
 	}
 
-	// 没有找到音频文件
 	return ""
 }
 
 func (commonService *CommonService) PlayMusic(ctx *gin.Context) {
-	// 以文件流的形式返回音乐文件
 	musicURL := commonService.GetPlayMusicUrl()
-	musicName := ""
-	if musicURL != "" {
-		// 只保留最后的文件名
-		musicName = strings.TrimPrefix(musicURL, "/files/audios/")
+	if musicURL == "" {
+		ctx.String(http.StatusNotFound, "音乐文件不存在")
+		return
 	}
 
-	// 获取音乐文件的路径
-	musicPath := config.Config().Upload.AudioPath + musicName
+	musicName := filepath.Base(musicURL)
+	vpath := stgx.JoinPath("audios", musicName)
 
-	// 检查文件是否存在
-	stat, err := commonService.fs.Stat(musicPath)
+	info, err := commonService.storage.Stat(context.Background(), vpath)
 	if err != nil {
 		ctx.String(http.StatusNotFound, "音乐文件不存在")
 		return
 	}
 
-	// 获取 Content-Type
 	contentType := "audio/mpeg"
 	lowerName := strings.ToLower(musicName)
 	switch {
@@ -464,13 +445,12 @@ func (commonService *CommonService) PlayMusic(ctx *gin.Context) {
 		contentType = "audio/mp4"
 	}
 
-	// 设置响应头
 	ctx.Header("Content-Type", contentType)
 	ctx.Header("Cache-Control", "no-cache, no-store, must-revalidate")
 	ctx.Header("Pragma", "no-cache")
 	ctx.Header("Expires", "0")
 
-	reader, err := commonService.fs.Open(musicPath)
+	reader, err := commonService.storage.Open(context.Background(), vpath)
 	if err != nil {
 		ctx.String(http.StatusNotFound, "音乐文件不存在")
 		return
@@ -483,7 +463,7 @@ func (commonService *CommonService) PlayMusic(ctx *gin.Context) {
 		return
 	}
 
-	http.ServeContent(ctx.Writer, ctx.Request, musicName, stat.ModTime(), readSeeker)
+	http.ServeContent(ctx.Writer, ctx.Request, musicName, info.ModTime, readSeeker)
 }
 
 func (commonService *CommonService) GetFilePresignURL(
@@ -493,7 +473,6 @@ func (commonService *CommonService) GetFilePresignURL(
 ) (commonModel.PresignDto, error) {
 	var result commonModel.PresignDto
 
-	// 权限检查
 	user, err := commonService.commonRepository.GetUserByUserId(userid)
 	if err != nil {
 		return result, err
@@ -502,25 +481,21 @@ func (commonService *CommonService) GetFilePresignURL(
 		return result, errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	// 参数校验
 	if s3Dto.FileName == "" {
 		return result, errors.New(commonModel.INVALID_PARAMS)
 	}
-	ext := filepath.Ext(s3Dto.FileName) // ".png"
+	ext := filepath.Ext(s3Dto.FileName)
 	contentType := mime.TypeByExtension(ext)
 	if contentType == "" {
 		contentType = "application/octet-stream"
 	}
 
-	// 检查Content-Type是否为Image开头
 	switch contentType[:5] {
 	case "image":
-		// 检查文件类型是否合法
 		if !storageUtil.IsAllowedType(contentType, config.Config().Upload.AllowedTypes) {
 			return result, errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
 		}
 	case "audio":
-		// 检查文件类型是否合法
 		if !storageUtil.IsAllowedType(contentType, config.Config().Upload.AllowedTypes) {
 			return result, errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
 		}
@@ -528,26 +503,25 @@ func (commonService *CommonService) GetFilePresignURL(
 		return result, errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
 	}
 
-	// 填充返回结果
 	result.FileName = s3Dto.FileName
 	result.ContentType = contentType
 
-	presignResponse, err := commonService.storagePort.PresignUpload(context.Background(), storageDomain.PresignRequest{
-		UserID:      userid,
-		FileName:    s3Dto.FileName,
-		ContentType: contentType,
-		Method:      method,
-		Expiry:      24 * time.Hour,
-		Category:    storageDomain.CategoryImage,
-	})
+	presignResult, err := commonService.storage.Presign(
+		context.Background(),
+		stgx.CategoryImage,
+		userid,
+		s3Dto.FileName,
+		contentType,
+		method,
+		24*time.Hour,
+	)
 	if err != nil {
 		return result, err
 	}
-	result.ObjectKey = presignResponse.ObjectKey
-	result.PresignURL = presignResponse.PresignURL
-	result.FileURL = presignResponse.FileURL
+	result.ObjectKey = presignResult.ObjectKey
+	result.PresignURL = presignResult.PresignURL
+	result.FileURL = presignResult.FileURL
 
-	// 保存到临时文件表
 	now := time.Now().UTC().Unix()
 	fileType := string(storageDomain.CategoryImage)
 	if strings.HasPrefix(contentType, "audio") {
@@ -583,45 +557,26 @@ func normalizeFileSource(source string) string {
 	}
 }
 
-// GetS3Client 获取 S3 客户端和配置信息（支持 R2 / AWS / MinIO / 其他）
-
-// CleanupTempFiles 清理过期的临时文件
 func (commonService *CommonService) CleanupTempFiles() error {
-	// 获取所有未删除的临时文件
 	files, err := commonService.commonRepository.GetAllTempFiles()
 	if err != nil {
 		return err
 	}
 
-	// 当前时间戳
 	now := time.Now().UTC().Unix()
+	ctx := context.Background()
 
 	for _, file := range files {
-		// 如果最后访问时间超过24小时，则删除
 		if now-file.LastAccessedAt > 24*3600 {
-			// 删除文件
-			switch file.Storage {
-			case string(commonModel.LOCAL_FILE):
-				// TODO: 删除本地文件
-
-			case string(commonModel.S3_FILE):
-				if file.ObjectKey == "" {
-					// 如果没有传入 object_key，则无法删除,忽略
-					continue
+			if file.ObjectKey != "" {
+				vpath := objectKeyToVirtualPath(file.ObjectKey)
+				if vpath != "" {
+					if err := commonService.storage.Delete(ctx, vpath); err != nil {
+						fmt.Printf("删除临时文件失败: %s, 错误: %v\n", file.ObjectKey, err)
+					}
 				}
-				if err := commonService.storagePort.Delete(context.Background(), storageDomain.DeleteRequest{
-					Source:    storageDomain.SourceS3,
-					ObjectKey: file.ObjectKey,
-					Category:  storageDomain.CategoryFile,
-				}); err != nil {
-					// 记录日志，继续处理下一个文件
-					fmt.Printf("删除S3临时文件失败: %s, 错误: %v\n", file.ObjectKey, err)
-				}
-			default:
-				// 未知存储类型，忽略
 			}
 
-			// 从数据库中删除记录(开启事务)
 			_ = commonService.txManager.Run(func(ctx context.Context) error {
 				return commonService.commonRepository.DeleteTempFilePermanently(ctx, file.ID)
 			})
@@ -632,7 +587,6 @@ func (commonService *CommonService) CleanupTempFiles() error {
 }
 
 func (commonService *CommonService) RefreshEchoImageURL(echo *echoModel.Echo) {
-	// 用 channel 或 waitGroup 并发刷新 URL
 	var wg sync.WaitGroup
 	mu := sync.Mutex{}
 
@@ -641,7 +595,8 @@ func (commonService *CommonService) RefreshEchoImageURL(echo *echoModel.Echo) {
 			wg.Add(1)
 			go func(i int) {
 				defer wg.Done()
-				if newURL, err := commonService.storagePort.ResolveURL(context.Background(), echo.Images[i].ObjectKey); err == nil {
+				vpath := objectKeyToVirtualPath(echo.Images[i].ObjectKey)
+				if newURL, err := commonService.storage.ResolveURL(context.Background(), vpath); err == nil {
 					mu.Lock()
 					echo.Images[i].ImageURL = newURL
 					mu.Unlock()
@@ -652,13 +607,11 @@ func (commonService *CommonService) RefreshEchoImageURL(echo *echoModel.Echo) {
 
 	wg.Wait()
 
-	// 所有 URL 都拿到了，再一次性更新 DB
 	_ = commonService.txManager.Run(func(ctx context.Context) error {
 		return commonService.echoRepository.UpdateEcho(ctx, echo)
 	})
 }
 
-// GetWebsiteTitle 获取网站标题
 func (commonService *CommonService) GetWebsiteTitle(websiteURL string) (string, error) {
 	websiteURL = httpUtil.TrimURL(websiteURL)
 
@@ -667,7 +620,6 @@ func (commonService *CommonService) GetWebsiteTitle(websiteURL string) (string, 
 		return "", err
 	}
 
-	// 解析 HTML 并提取标题
 	doc, err := html.Parse(strings.NewReader(string(body)))
 	if err != nil {
 		return "", fmt.Errorf("解析 HTML 失败: %w", err)
@@ -681,7 +633,6 @@ func (commonService *CommonService) GetWebsiteTitle(websiteURL string) (string, 
 	return title, nil
 }
 
-// extractTitle 从 HTML 节点中提取 title 标签的内容
 func extractTitle(n *html.Node) string {
 	if n.Type == html.ElementNode && n.Data == "title" {
 		if n.FirstChild != nil {
@@ -697,4 +648,14 @@ func extractTitle(n *html.Node) string {
 	}
 
 	return ""
+}
+
+// objectKeyToVirtualPath converts a stored object key (e.g. "images/a.png")
+// to a VFS virtual path (e.g. "/images/a.png").
+func objectKeyToVirtualPath(key string) string {
+	key = strings.TrimSpace(key)
+	if key == "" {
+		return ""
+	}
+	return "/" + strings.TrimLeft(key, "/")
 }

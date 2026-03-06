@@ -16,7 +16,7 @@ import (
 
 var CacheSet = wire.NewSet(ProvideCache)
 var FsSet = wire.NewSet(ProvideAferoFs)
-var StorageSet = wire.NewSet(ProvideStoragePort)
+var StorageSet = wire.NewSet(ProvideStorageService)
 var TransactionManagerSet = wire.NewSet(ProvideTransactionManager)
 
 var WebSet = wire.NewSet(handler.WebSet)

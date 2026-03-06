@@ -1,8 +1,7 @@
 package storage
 
 import (
-	"strings"
-	"time"
+	stgx "github.com/lin-snow/ech0/pkg/storagex"
 )
 
 type Category string
@@ -55,71 +54,10 @@ type FileMetadata struct {
 	Markdown *MarkdownMetadata `json:"markdown,omitempty"`
 }
 
-type FileObject struct {
-	URL         string       `json:"url"`
-	Source      Source       `json:"source"`
-	ObjectKey   string       `json:"object_key,omitempty"`
-	ContentType string       `json:"content_type,omitempty"`
-	Category    Category     `json:"category,omitempty"`
-	Metadata    FileMetadata `json:"metadata,omitempty"`
-}
-
-type SaveRequest struct {
-	UserID      uint
-	FileName    string
-	ContentType string
-	Category    Category
-	Reader      ReadSeekCloser
-}
-
-type DeleteRequest struct {
-	URL       string
-	Source    Source
-	ObjectKey string
-	Category  Category
-}
-
-type PresignRequest struct {
-	UserID      uint
-	FileName    string
-	ContentType string
-	Method      string
-	Expiry      time.Duration
-	Category    Category
-}
-
-type PresignResponse struct {
-	FileName    string `json:"file_name"`
-	ContentType string `json:"content_type"`
-	ObjectKey   string `json:"object_key"`
-	PresignURL  string `json:"presign_url"`
-	FileURL     string `json:"file_url"`
-}
-
-type ReadSeekCloser interface {
-	Read(p []byte) (n int, err error)
-	Seek(offset int64, whence int) (int64, error)
-	Close() error
-}
-
 func NormalizeCategory(raw string) Category {
-	switch Category(strings.ToLower(strings.TrimSpace(raw))) {
-	case CategoryImage:
-		return CategoryImage
-	case CategoryVideo:
-		return CategoryVideo
-	case CategoryAudio:
-		return CategoryAudio
-	case CategoryPDF:
-		return CategoryPDF
-	case CategoryMarkdown:
-		return CategoryMarkdown
-	default:
-		return CategoryFile
-	}
+	return Category(stgx.NormalizeCategory(raw))
 }
 
 func (c Category) IsImageLike() bool {
 	return c == CategoryImage
 }
-

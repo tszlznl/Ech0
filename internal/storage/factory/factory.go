@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	"github.com/lin-snow/ech0/internal/storage"
 	localStorage "github.com/lin-snow/ech0/internal/storage/local"
-	s3Storage "github.com/lin-snow/ech0/internal/storage/s3"
-	"github.com/spf13/afero"
+	objectStorage "github.com/lin-snow/ech0/internal/storage/objectfs"
+	stgx "github.com/lin-snow/ech0/pkg/storagex"
 )
 
 type Mode string
@@ -19,22 +18,64 @@ const (
 )
 
 type BuildInput struct {
-	Mode      Mode
-	FS        afero.Fs
-	S3Setting settingModel.S3Setting
+	Mode         Mode
+	DataRoot     string                    // local filesystem root, e.g. "data/files"
+	ObjectConfig *stgx.ObjectStorageConfig // object storage config (S3/R2/MinIO/...)
 }
 
-func Build(input BuildInput) (storage.StoragePort, error) {
+// Build creates a StorageService backed by the unified VFS.
+func Build(input BuildInput) (*storage.StorageService, error) {
 	switch Mode(strings.ToLower(strings.TrimSpace(string(input.Mode)))) {
 	case ModeS3:
-		if !input.S3Setting.Enable {
-			return nil, fmt.Errorf("s3 mode selected but s3 is disabled")
+		if input.ObjectConfig == nil {
+			return nil, fmt.Errorf("s3 mode selected but no object storage config provided")
 		}
-		return s3Storage.NewAdapter(input.S3Setting)
+		return buildObject(*input.ObjectConfig)
 	case ModeLocal, "":
-		return localStorage.NewAdapter(input.FS), nil
+		return buildLocal(input.DataRoot)
 	default:
 		return nil, fmt.Errorf("unsupported storage mode: %s", input.Mode)
 	}
 }
 
+// BuildFS creates a raw storagex.FS without the StorageService wrapper.
+func BuildFS(input BuildInput) (stgx.FS, error) {
+	switch Mode(strings.ToLower(strings.TrimSpace(string(input.Mode)))) {
+	case ModeS3:
+		if input.ObjectConfig == nil {
+			return nil, fmt.Errorf("s3 mode selected but no object storage config provided")
+		}
+		return objectStorage.New(*input.ObjectConfig)
+	case ModeLocal, "":
+		var opts []localStorage.Option
+		if input.DataRoot != "" {
+			opts = append(opts, localStorage.WithRoot(input.DataRoot))
+		}
+		return localStorage.NewLocalFS(opts...), nil
+	default:
+		return nil, fmt.Errorf("unsupported storage mode: %s", input.Mode)
+	}
+}
+
+func buildLocal(dataRoot string) (*storage.StorageService, error) {
+	var opts []localStorage.Option
+	if dataRoot != "" {
+		opts = append(opts, localStorage.WithRoot(dataRoot))
+	}
+	fs := localStorage.NewLocalFS(opts...)
+	return storage.NewStorageService(storage.StorageServiceConfig{
+		FS:     fs,
+		Source: string(storage.SourceLocal),
+	}), nil
+}
+
+func buildObject(cfg stgx.ObjectStorageConfig) (*storage.StorageService, error) {
+	fs, err := objectStorage.New(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return storage.NewStorageService(storage.StorageServiceConfig{
+		FS:     fs,
+		Source: string(storage.SourceS3),
+	}), nil
+}
