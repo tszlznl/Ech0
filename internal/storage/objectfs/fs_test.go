@@ -1,69 +1,83 @@
 package objectfs
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/lin-snow/ech0/pkg/s3x"
 	stgx "github.com/lin-snow/ech0/pkg/storagex"
 )
 
-type fakeObjectStorage struct {
-	uploaded map[string]string
+// fakeClient implements s3x.Client for testing.
+type fakeClient struct {
+	objects map[string][]byte
 }
 
-func newFakeObjectStorage() *fakeObjectStorage {
-	return &fakeObjectStorage{uploaded: make(map[string]string)}
+func newFakeClient() *fakeClient {
+	return &fakeClient{objects: make(map[string][]byte)}
 }
 
-func (f *fakeObjectStorage) Upload(_ context.Context, key string, r io.Reader, _ string) error {
-	data, _ := io.ReadAll(r)
-	f.uploaded[key] = string(data)
+func (f *fakeClient) PutObject(_ context.Context, _, key string, body io.Reader, _ string) error {
+	data, _ := io.ReadAll(body)
+	f.objects[key] = data
 	return nil
 }
 
-func (f *fakeObjectStorage) Download(_ context.Context, key string) (io.ReadCloser, error) {
-	content, ok := f.uploaded[key]
+func (f *fakeClient) GetObject(_ context.Context, _, key string) (io.ReadCloser, error) {
+	data, ok := f.objects[key]
 	if !ok {
-		return nil, stgx.ErrNotFound
+		return nil, fmt.Errorf("NoSuchKey")
 	}
-	return io.NopCloser(strings.NewReader(content)), nil
+	return io.NopCloser(bytes.NewReader(data)), nil
 }
 
-func (f *fakeObjectStorage) ListObjects(_ context.Context, prefix string) ([]string, error) {
-	var result []string
-	for key := range f.uploaded {
+func (f *fakeClient) DeleteObject(_ context.Context, _, key string) error {
+	delete(f.objects, key)
+	return nil
+}
+
+func (f *fakeClient) HeadObject(_ context.Context, _, key string) (*s3x.ObjectInfo, error) {
+	data, ok := f.objects[key]
+	if !ok {
+		return nil, fmt.Errorf("NotFound")
+	}
+	return &s3x.ObjectInfo{Key: key, Size: int64(len(data))}, nil
+}
+
+func (f *fakeClient) ListObjects(_ context.Context, _, prefix string) ([]s3x.ObjectEntry, error) {
+	var entries []s3x.ObjectEntry
+	for key, data := range f.objects {
 		if strings.HasPrefix(key, prefix) {
-			result = append(result, key)
+			entries = append(entries, s3x.ObjectEntry{Key: key, Size: int64(len(data))})
 		}
 	}
-	return result, nil
+	return entries, nil
 }
 
-func (f *fakeObjectStorage) ListObjectStream(_ context.Context, _ string) (<-chan string, error) {
-	ch := make(chan string)
-	close(ch)
-	return ch, nil
+func (f *fakeClient) PresignGetObject(_ context.Context, _, key string, _ time.Duration) (string, error) {
+	return "https://presigned/GET/" + key, nil
 }
 
-func (f *fakeObjectStorage) DeleteObject(_ context.Context, key string) error {
-	delete(f.uploaded, key)
-	return nil
+func (f *fakeClient) PresignPutObject(_ context.Context, _, key string, _ time.Duration) (string, error) {
+	return "https://presigned/PUT/" + key, nil
 }
 
-func (f *fakeObjectStorage) PresignURL(_ context.Context, key string, _ time.Duration, method string) (string, error) {
-	return "https://presigned/" + method + "/" + key, nil
+func newTestFS(fake *fakeClient, pathPrefix string, cfg stgx.ObjectStorageConfig) *ObjectFS {
+	return New(fake, cfg, WithPathPrefix(pathPrefix))
 }
 
 func TestObjectFS_WriteAndOpen(t *testing.T) {
-	fake := newFakeObjectStorage()
-	fs := &ObjectFS{
-		client:     fake,
-		cfg:        stgx.ObjectStorageConfig{BucketName: "test-bucket", UseSSL: true, Endpoint: "s3.example.com"},
-		pathPrefix: "uploads",
-	}
+	fake := newFakeClient()
+	fs := newTestFS(fake, "uploads", stgx.ObjectStorageConfig{
+		BucketName: "test-bucket",
+		UseSSL:     true,
+		Endpoint:   "s3.example.com",
+	})
 	ctx := context.Background()
 
 	err := fs.Write(ctx, "/images/test.png", strings.NewReader("hello"), stgx.WriteOptions{ContentType: "image/png"})
@@ -71,7 +85,7 @@ func TestObjectFS_WriteAndOpen(t *testing.T) {
 		t.Fatalf("write failed: %v", err)
 	}
 
-	if _, ok := fake.uploaded["uploads/images/test.png"]; !ok {
+	if _, ok := fake.objects["uploads/images/test.png"]; !ok {
 		t.Fatal("expected key uploads/images/test.png in storage")
 	}
 
@@ -87,51 +101,81 @@ func TestObjectFS_WriteAndOpen(t *testing.T) {
 }
 
 func TestObjectFS_Delete(t *testing.T) {
-	fake := newFakeObjectStorage()
-	fake.uploaded["uploads/images/test.png"] = "data"
-	fs := &ObjectFS{client: fake, pathPrefix: "uploads"}
-	ctx := context.Background()
+	fake := newFakeClient()
+	fake.objects["uploads/images/test.png"] = []byte("data")
+	fs := newTestFS(fake, "uploads", stgx.ObjectStorageConfig{BucketName: "b"})
 
-	if err := fs.Delete(ctx, "/images/test.png"); err != nil {
+	if err := fs.Delete(context.Background(), "/images/test.png"); err != nil {
 		t.Fatalf("delete failed: %v", err)
 	}
-	if _, ok := fake.uploaded["uploads/images/test.png"]; ok {
+	if _, ok := fake.objects["uploads/images/test.png"]; ok {
 		t.Fatal("expected key to be deleted")
 	}
 }
 
 func TestObjectFS_Exists(t *testing.T) {
-	fake := newFakeObjectStorage()
-	fake.uploaded["uploads/images/test.png"] = "data"
-	fs := &ObjectFS{client: fake, pathPrefix: "uploads"}
+	fake := newFakeClient()
+	fake.objects["uploads/images/test.png"] = []byte("data")
+	fs := newTestFS(fake, "uploads", stgx.ObjectStorageConfig{BucketName: "b"})
 	ctx := context.Background()
 
-	ok, err := fs.Exists(ctx, "/images/test.png")
-	if err != nil {
-		t.Fatalf("exists failed: %v", err)
-	}
+	ok, _ := fs.Exists(ctx, "/images/test.png")
 	if !ok {
 		t.Fatal("expected file to exist")
 	}
 
-	ok, err = fs.Exists(ctx, "/images/nope.png")
-	if err != nil {
-		t.Fatalf("exists failed: %v", err)
-	}
+	ok, _ = fs.Exists(ctx, "/images/nope.png")
 	if ok {
 		t.Fatal("expected file not to exist")
 	}
 }
 
-func TestObjectFS_ResolveURL(t *testing.T) {
-	fs := &ObjectFS{
-		cfg: stgx.ObjectStorageConfig{
-			BucketName: "my-bucket",
-			Endpoint:   "s3.example.com",
-			UseSSL:     true,
-		},
-		pathPrefix: "uploads",
+func TestObjectFS_Stat(t *testing.T) {
+	fake := newFakeClient()
+	fake.objects["uploads/images/test.png"] = []byte("hello")
+	fs := newTestFS(fake, "uploads", stgx.ObjectStorageConfig{BucketName: "b"})
+
+	info, err := fs.Stat(context.Background(), "/images/test.png")
+	if err != nil {
+		t.Fatalf("stat failed: %v", err)
 	}
+	if info.Size != 5 {
+		t.Fatalf("expected size 5, got %d", info.Size)
+	}
+	if info.Path != "/images/test.png" {
+		t.Fatalf("expected path /images/test.png, got %s", info.Path)
+	}
+}
+
+func TestObjectFS_StatNotFound(t *testing.T) {
+	fs := newTestFS(newFakeClient(), "uploads", stgx.ObjectStorageConfig{BucketName: "b"})
+	_, err := fs.Stat(context.Background(), "/nope.txt")
+	if err != stgx.ErrNotFound {
+		t.Fatalf("expected ErrNotFound, got %v", err)
+	}
+}
+
+func TestObjectFS_List(t *testing.T) {
+	fake := newFakeClient()
+	fake.objects["uploads/images/a.png"] = []byte("a")
+	fake.objects["uploads/images/b.png"] = []byte("b")
+	fs := newTestFS(fake, "uploads", stgx.ObjectStorageConfig{BucketName: "b"})
+
+	infos, err := fs.List(context.Background(), "/images")
+	if err != nil {
+		t.Fatalf("list failed: %v", err)
+	}
+	if len(infos) != 2 {
+		t.Fatalf("expected 2 entries, got %d", len(infos))
+	}
+}
+
+func TestObjectFS_ResolveURL(t *testing.T) {
+	fs := newTestFS(newFakeClient(), "uploads", stgx.ObjectStorageConfig{
+		BucketName: "my-bucket",
+		Endpoint:   "s3.example.com",
+		UseSSL:     true,
+	})
 	url, err := fs.ResolveURL(context.Background(), "/images/test.png")
 	if err != nil {
 		t.Fatalf("resolve URL failed: %v", err)
@@ -143,15 +187,12 @@ func TestObjectFS_ResolveURL(t *testing.T) {
 }
 
 func TestObjectFS_ResolveURL_CDN(t *testing.T) {
-	fs := &ObjectFS{
-		cfg: stgx.ObjectStorageConfig{
-			BucketName: "my-bucket",
-			Endpoint:   "s3.example.com",
-			UseSSL:     true,
-			CDNURL:     "https://cdn.example.com",
-		},
-		pathPrefix: "uploads",
-	}
+	fs := newTestFS(newFakeClient(), "uploads", stgx.ObjectStorageConfig{
+		BucketName: "my-bucket",
+		Endpoint:   "s3.example.com",
+		UseSSL:     true,
+		CDNURL:     "https://cdn.example.com",
+	})
 	url, err := fs.ResolveURL(context.Background(), "/images/test.png")
 	if err != nil {
 		t.Fatalf("resolve URL failed: %v", err)
@@ -163,13 +204,11 @@ func TestObjectFS_ResolveURL_CDN(t *testing.T) {
 }
 
 func TestObjectFS_ResolveURL_NoPrefix(t *testing.T) {
-	fs := &ObjectFS{
-		cfg: stgx.ObjectStorageConfig{
-			BucketName: "my-bucket",
-			Endpoint:   "s3.example.com",
-			UseSSL:     true,
-		},
-	}
+	fs := newTestFS(newFakeClient(), "", stgx.ObjectStorageConfig{
+		BucketName: "my-bucket",
+		Endpoint:   "s3.example.com",
+		UseSSL:     true,
+	})
 	url, err := fs.ResolveURL(context.Background(), "/images/test.png")
 	if err != nil {
 		t.Fatalf("resolve URL failed: %v", err)
@@ -180,10 +219,19 @@ func TestObjectFS_ResolveURL_NoPrefix(t *testing.T) {
 	}
 }
 
-func TestObjectFS_Sign(t *testing.T) {
-	fake := newFakeObjectStorage()
-	fs := &ObjectFS{client: fake, pathPrefix: "uploads"}
+func TestObjectFS_Sign_GET(t *testing.T) {
+	fs := newTestFS(newFakeClient(), "uploads", stgx.ObjectStorageConfig{BucketName: "b"})
+	url, err := fs.Sign(context.Background(), "/images/test.png", "GET", 24*time.Hour)
+	if err != nil {
+		t.Fatalf("sign failed: %v", err)
+	}
+	if url != "https://presigned/GET/uploads/images/test.png" {
+		t.Fatalf("unexpected presign URL: %s", url)
+	}
+}
 
+func TestObjectFS_Sign_PUT(t *testing.T) {
+	fs := newTestFS(newFakeClient(), "uploads", stgx.ObjectStorageConfig{BucketName: "b"})
 	url, err := fs.Sign(context.Background(), "/images/test.png", "PUT", 24*time.Hour)
 	if err != nil {
 		t.Fatalf("sign failed: %v", err)

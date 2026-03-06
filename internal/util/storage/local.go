@@ -18,6 +18,15 @@ import (
 	"github.com/spf13/afero"
 )
 
+func createDirIfNotExist(fs afero.Fs, dir string) error {
+	if _, err := fs.Stat(dir); err != nil {
+		if err := fs.MkdirAll(dir, 0o755); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // UploadFileToLocal 根据文件类型上传文件到本地存储
 func UploadFileToLocal(
 	fs afero.Fs,

@@ -7,6 +7,7 @@ import (
 	"github.com/lin-snow/ech0/internal/storage"
 	localStorage "github.com/lin-snow/ech0/internal/storage/local"
 	objectStorage "github.com/lin-snow/ech0/internal/storage/objectfs"
+	"github.com/lin-snow/ech0/pkg/s3x"
 	stgx "github.com/lin-snow/ech0/pkg/storagex"
 )
 
@@ -45,7 +46,18 @@ func BuildFS(input BuildInput) (stgx.FS, error) {
 		if input.ObjectConfig == nil {
 			return nil, fmt.Errorf("s3 mode selected but no object storage config provided")
 		}
-		return objectStorage.New(*input.ObjectConfig)
+		cfg := *input.ObjectConfig
+		client, err := s3x.New(s3x.Config{
+			Endpoint:  cfg.Endpoint,
+			AccessKey: cfg.AccessKey,
+			SecretKey: cfg.SecretKey,
+			Region:    cfg.Region,
+			UseSSL:    cfg.UseSSL,
+		})
+		if err != nil {
+			return nil, err
+		}
+		return objectStorage.New(client, cfg), nil
 	case ModeLocal, "":
 		var opts []localStorage.Option
 		if input.DataRoot != "" {
@@ -70,10 +82,17 @@ func buildLocal(dataRoot string) (*storage.StorageService, error) {
 }
 
 func buildObject(cfg stgx.ObjectStorageConfig) (*storage.StorageService, error) {
-	fs, err := objectStorage.New(cfg)
+	client, err := s3x.New(s3x.Config{
+		Endpoint:  cfg.Endpoint,
+		AccessKey: cfg.AccessKey,
+		SecretKey: cfg.SecretKey,
+		Region:    cfg.Region,
+		UseSSL:    cfg.UseSSL,
+	})
 	if err != nil {
 		return nil, err
 	}
+	fs := objectStorage.New(client, cfg)
 	return storage.NewStorageService(storage.StorageServiceConfig{
 		FS:     fs,
 		Source: string(storage.SourceS3),

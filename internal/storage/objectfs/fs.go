@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	storageUtil "github.com/lin-snow/ech0/internal/util/storage"
+	"github.com/lin-snow/ech0/pkg/s3x"
 	stgx "github.com/lin-snow/ech0/pkg/storagex"
 )
 
@@ -17,8 +17,9 @@ import (
 //	pathPrefix = "uploads"
 //	virtual "/images/a.png" → key "uploads/images/a.png"
 type ObjectFS struct {
-	client     storageUtil.ObjectStorage
+	client     s3x.Client
 	cfg        stgx.ObjectStorageConfig
+	bucket     string
 	pathPrefix string
 }
 
@@ -34,29 +35,20 @@ func WithPathPrefix(prefix string) Option {
 	return func(o *options) { o.pathPrefix = prefix }
 }
 
-func New(cfg stgx.ObjectStorageConfig, opts ...Option) (*ObjectFS, error) {
+// New creates an ObjectFS backed by the given s3x.Client.
+// The client is created externally (e.g. via s3x.New) and injected here,
+// keeping ObjectFS free of SDK construction logic.
+func New(client s3x.Client, cfg stgx.ObjectStorageConfig, opts ...Option) *ObjectFS {
 	o := options{pathPrefix: strings.Trim(cfg.PathPrefix, "/")}
 	for _, fn := range opts {
 		fn(&o)
 	}
-
-	client, err := storageUtil.NewMinioStorage(
-		cfg.Endpoint,
-		cfg.AccessKey,
-		cfg.SecretKey,
-		cfg.BucketName,
-		cfg.Region,
-		cfg.Provider,
-		cfg.UseSSL,
-	)
-	if err != nil {
-		return nil, err
-	}
 	return &ObjectFS{
 		client:     client,
 		cfg:        cfg,
+		bucket:     cfg.BucketName,
 		pathPrefix: o.pathPrefix,
-	}, nil
+	}
 }
 
 func (fs *ObjectFS) objectKey(virtualPath string) (string, error) {
@@ -76,7 +68,7 @@ func (fs *ObjectFS) Open(ctx context.Context, path string) (io.ReadCloser, error
 	if err != nil {
 		return nil, err
 	}
-	return fs.client.Download(ctx, key)
+	return fs.client.GetObject(ctx, fs.bucket, key)
 }
 
 func (fs *ObjectFS) Write(ctx context.Context, path string, r io.Reader, opts stgx.WriteOptions) error {
@@ -84,7 +76,7 @@ func (fs *ObjectFS) Write(ctx context.Context, path string, r io.Reader, opts st
 	if err != nil {
 		return err
 	}
-	return fs.client.Upload(ctx, key, r, opts.ContentType)
+	return fs.client.PutObject(ctx, fs.bucket, key, r, opts.ContentType)
 }
 
 func (fs *ObjectFS) Delete(ctx context.Context, path string) error {
@@ -92,7 +84,7 @@ func (fs *ObjectFS) Delete(ctx context.Context, path string) error {
 	if err != nil {
 		return err
 	}
-	return fs.client.DeleteObject(ctx, key)
+	return fs.client.DeleteObject(ctx, fs.bucket, key)
 }
 
 func (fs *ObjectFS) Stat(ctx context.Context, path string) (*stgx.FileInfo, error) {
@@ -100,17 +92,17 @@ func (fs *ObjectFS) Stat(ctx context.Context, path string) (*stgx.FileInfo, erro
 	if err != nil {
 		return nil, err
 	}
-	objects, err := fs.client.ListObjects(ctx, key)
+	info, err := fs.client.HeadObject(ctx, fs.bucket, key)
 	if err != nil {
-		return nil, err
+		return nil, stgx.ErrNotFound
 	}
-	for _, k := range objects {
-		if strings.TrimLeft(k, "/") == key {
-			p, _ := stgx.NormalizePath(path)
-			return &stgx.FileInfo{Path: p}, nil
-		}
-	}
-	return nil, stgx.ErrNotFound
+	p, _ := stgx.NormalizePath(path)
+	return &stgx.FileInfo{
+		Path:        p,
+		Size:        info.Size,
+		ContentType: info.ContentType,
+		ModTime:     info.LastModified,
+	}, nil
 }
 
 func (fs *ObjectFS) List(ctx context.Context, prefix string) ([]stgx.FileInfo, error) {
@@ -118,13 +110,19 @@ func (fs *ObjectFS) List(ctx context.Context, prefix string) ([]stgx.FileInfo, e
 	if err != nil {
 		return nil, err
 	}
-	objects, err := fs.client.ListObjects(ctx, key)
+	if !strings.HasSuffix(key, "/") {
+		key += "/"
+	}
+	entries, err := fs.client.ListObjects(ctx, fs.bucket, key)
 	if err != nil {
 		return nil, err
 	}
 	var result []stgx.FileInfo
-	for _, k := range objects {
-		result = append(result, stgx.FileInfo{Path: fs.keyToVirtualPath(k)})
+	for _, e := range entries {
+		result = append(result, stgx.FileInfo{
+			Path: fs.keyToVirtualPath(e.Key),
+			Size: e.Size,
+		})
 	}
 	return result, nil
 }
@@ -134,16 +132,8 @@ func (fs *ObjectFS) Exists(ctx context.Context, path string) (bool, error) {
 	if err != nil {
 		return false, nil
 	}
-	objects, err := fs.client.ListObjects(ctx, key)
-	if err != nil {
-		return false, err
-	}
-	for _, k := range objects {
-		if strings.TrimLeft(k, "/") == key {
-			return true, nil
-		}
-	}
-	return false, nil
+	_, err = fs.client.HeadObject(ctx, fs.bucket, key)
+	return err == nil, nil
 }
 
 // ResolveURL implements storagex.URLResolver.
@@ -173,7 +163,14 @@ func (fs *ObjectFS) Sign(ctx context.Context, path string, method string, expiry
 	if err != nil {
 		return "", err
 	}
-	return fs.client.PresignURL(ctx, key, expiry, method)
+	switch strings.ToUpper(method) {
+	case "GET":
+		return fs.client.PresignGetObject(ctx, fs.bucket, key, expiry)
+	case "PUT":
+		return fs.client.PresignPutObject(ctx, fs.bucket, key, expiry)
+	default:
+		return "", fmt.Errorf("unsupported presign method: %s", method)
+	}
 }
 
 func (fs *ObjectFS) keyToVirtualPath(key string) string {

@@ -30,7 +30,6 @@ import (
 	imgUtil "github.com/lin-snow/ech0/internal/util/img"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	mdUtil "github.com/lin-snow/ech0/internal/util/md"
-	storageUtil "github.com/lin-snow/ech0/internal/util/storage"
 	timezoneUtil "github.com/lin-snow/ech0/internal/util/timezone"
 	"go.uber.org/zap"
 	"golang.org/x/net/html"
@@ -82,7 +81,7 @@ func (commonService *CommonService) UploadFile(
 		return commonModel.FileDto{}, errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	if !storageUtil.IsAllowedType(
+	if !isAllowedType(
 		file.Header.Get("Content-Type"),
 		config.Config().Upload.AllowedTypes,
 	) {
@@ -492,11 +491,11 @@ func (commonService *CommonService) GetFilePresignURL(
 
 	switch contentType[:5] {
 	case "image":
-		if !storageUtil.IsAllowedType(contentType, config.Config().Upload.AllowedTypes) {
+		if !isAllowedType(contentType, config.Config().Upload.AllowedTypes) {
 			return result, errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
 		}
 	case "audio":
-		if !storageUtil.IsAllowedType(contentType, config.Config().Upload.AllowedTypes) {
+		if !isAllowedType(contentType, config.Config().Upload.AllowedTypes) {
 			return result, errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
 		}
 	default:
@@ -658,4 +657,13 @@ func objectKeyToVirtualPath(key string) string {
 		return ""
 	}
 	return "/" + strings.TrimLeft(key, "/")
+}
+
+func isAllowedType(contentType string, allowedTypes []string) bool {
+	for _, allowed := range allowedTypes {
+		if contentType == allowed {
+			return true
+		}
+	}
+	return false
 }
