@@ -10,6 +10,8 @@ import (
 	"os"
 	"strconv"
 	"sync"
+
+	"github.com/joho/godotenv"
 )
 
 var (
@@ -22,9 +24,24 @@ type AppConfig struct {
 	Database DatabaseConfig
 	Auth     AuthConfig
 	Upload   UploadConfig
+	Storage  StorageConfig
 	Setting  SettingConfig
 	Comment  CommentConfig
 	Security SecurityConfig
+}
+
+type StorageConfig struct {
+	Mode       string // "local" or "s3", default "local"
+	DataRoot   string // local root directory, default "data/files"
+	Endpoint   string // S3-compatible endpoint
+	AccessKey  string
+	SecretKey  string
+	BucketName string
+	Region     string
+	Provider   string // "aws", "r2", "minio", "other"
+	UseSSL     bool
+	CDNURL     string
+	PathPrefix string
 }
 
 type ServerConfig struct {
@@ -86,6 +103,9 @@ type SecurityConfig struct {
 // Config 返回全局配置中心
 func Config() *AppConfig {
 	once.Do(func() {
+		if err := godotenv.Load(); err != nil {
+			log.Println("No .env file found, using system environment variables")
+		}
 		cfg = defaultConfig()
 		applyEnvOverrides(cfg)
 		cfg.Security.JWTSecret = getJWTSecret()
@@ -112,6 +132,10 @@ func defaultConfig() *AppConfig {
 				Issuer:   "ech0",
 				Audience: "ech0",
 			},
+		},
+		Storage: StorageConfig{
+			Mode:     "local",
+			DataRoot: "data/files",
 		},
 		Upload: UploadConfig{
 			ImageMaxSize: 20971520,
@@ -151,21 +175,73 @@ func defaultConfig() *AppConfig {
 }
 
 func applyEnvOverrides(cfg *AppConfig) {
+	// Server
 	setStringEnv("ECH0_SERVER_PORT", &cfg.Server.Port)
 	setStringEnv("ECH0_SERVER_HOST", &cfg.Server.Host)
 	setStringEnv("ECH0_SERVER_MODE", &cfg.Server.Mode)
+
+	// Database
 	setStringEnv("ECH0_DB_TYPE", &cfg.Database.Type)
 	setStringEnv("ECH0_DB_PATH", &cfg.Database.Path)
 	setStringEnv("ECH0_DB_LOGMODE", &cfg.Database.LogMode)
+
+	// Auth / JWT
+	setIntEnv("ECH0_JWT_EXPIRES", &cfg.Auth.Jwt.Expires)
+	setStringEnv("ECH0_JWT_ISSUER", &cfg.Auth.Jwt.Issuer)
+	setStringEnv("ECH0_JWT_AUDIENCE", &cfg.Auth.Jwt.Audience)
+
+	// Upload
+	setIntEnv("ECH0_UPLOAD_IMAGE_MAX_SIZE", &cfg.Upload.ImageMaxSize)
+	setIntEnv("ECH0_UPLOAD_AUDIO_MAX_SIZE", &cfg.Upload.AudioMaxSize)
 	setStringEnv("ECH0_UPLOAD_IMAGE_PATH", &cfg.Upload.ImagePath)
 	setStringEnv("ECH0_UPLOAD_AUDIO_PATH", &cfg.Upload.AudioPath)
-	setStringEnv("ECH0_SERVER_URL", &cfg.Setting.Serverurl)
-	setIntEnv("ECH0_JWT_EXPIRES", &cfg.Auth.Jwt.Expires)
+
+	// Storage (local)
+	setStringEnv("ECH0_STORAGE_MODE", &cfg.Storage.Mode)
+	setStringEnv("ECH0_STORAGE_DATA_ROOT", &cfg.Storage.DataRoot)
+
+	// Storage (S3-compatible)
+	setStringEnv("ECH0_S3_ENDPOINT", &cfg.Storage.Endpoint)
+	setStringEnv("ECH0_S3_ACCESS_KEY", &cfg.Storage.AccessKey)
+	setStringEnv("ECH0_S3_SECRET_KEY", &cfg.Storage.SecretKey)
+	setStringEnv("ECH0_S3_BUCKET", &cfg.Storage.BucketName)
+	setStringEnv("ECH0_S3_REGION", &cfg.Storage.Region)
+	setStringEnv("ECH0_S3_PROVIDER", &cfg.Storage.Provider)
+	setBoolEnv("ECH0_S3_USE_SSL", &cfg.Storage.UseSSL)
+	setStringEnv("ECH0_S3_CDN_URL", &cfg.Storage.CDNURL)
+	setStringEnv("ECH0_S3_PATH_PREFIX", &cfg.Storage.PathPrefix)
+
+	// Setting
+	setStringEnv("ECH0_SETTING_SITE_TITLE", &cfg.Setting.SiteTitle)
+	setStringEnv("ECH0_SETTING_SERVER_LOGO", &cfg.Setting.ServerLogo)
+	setStringEnv("ECH0_SETTING_SERVER_NAME", &cfg.Setting.Servername)
+	setStringEnv("ECH0_SETTING_SERVER_URL", &cfg.Setting.Serverurl)
+	setBoolEnv("ECH0_SETTING_ALLOW_REGISTER", &cfg.Setting.AllowRegister)
+	setStringEnv("ECH0_SETTING_ICP_NUMBER", &cfg.Setting.Icpnumber)
+	setStringEnv("ECH0_SETTING_METING_API", &cfg.Setting.MetingAPI)
+	setStringEnv("ECH0_SETTING_CUSTOM_CSS", &cfg.Setting.CustomCSS)
+	setStringEnv("ECH0_SETTING_CUSTOM_JS", &cfg.Setting.CustomJS)
+
+	// Comment
+	setBoolEnv("ECH0_COMMENT_ENABLE", &cfg.Comment.EnableComment)
+	setStringEnv("ECH0_COMMENT_PROVIDER", &cfg.Comment.Provider)
+	setStringEnv("ECH0_COMMENT_API", &cfg.Comment.CommentAPI)
 }
 
 func setStringEnv(key string, target *string) {
 	if value := os.Getenv(key); value != "" {
 		*target = value
+	}
+}
+
+func setBoolEnv(key string, target *bool) {
+	value := os.Getenv(key)
+	if value == "" {
+		return
+	}
+	parsed, err := strconv.ParseBool(value)
+	if err == nil {
+		*target = parsed
 	}
 }
 

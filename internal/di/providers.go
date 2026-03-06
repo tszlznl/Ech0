@@ -1,8 +1,6 @@
 package di
 
 import (
-	"strings"
-
 	"github.com/gin-gonic/gin"
 	"github.com/lin-snow/ech0/internal/app"
 	"github.com/lin-snow/ech0/internal/cache"
@@ -10,9 +8,6 @@ import (
 	"github.com/lin-snow/ech0/internal/database"
 	"github.com/lin-snow/ech0/internal/event"
 	"github.com/lin-snow/ech0/internal/handler"
-	commonModel "github.com/lin-snow/ech0/internal/model/common"
-	settingModel "github.com/lin-snow/ech0/internal/model/setting"
-	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
 	"github.com/lin-snow/ech0/internal/router"
 	runtimeCache "github.com/lin-snow/ech0/internal/runtime/cache"
 	runtimeEvent "github.com/lin-snow/ech0/internal/runtime/event"
@@ -24,8 +19,6 @@ import (
 	"github.com/lin-snow/ech0/internal/task"
 	stgx "github.com/lin-snow/ech0/pkg/storagex"
 	"github.com/lin-snow/ech0/internal/transaction"
-	httpUtil "github.com/lin-snow/ech0/internal/util/http"
-	jsonUtil "github.com/lin-snow/ech0/internal/util/json"
 	"github.com/spf13/afero"
 	"gorm.io/gorm"
 )
@@ -68,37 +61,28 @@ func ProvideAferoFs() afero.Fs {
 	return afero.NewOsFs()
 }
 
-func ProvideStorageService(
-	keyvalueRepo keyvalueRepository.KeyValueRepositoryInterface,
-) *storage.StorageService {
-	mode := storageFactory.ModeLocal
-	var objectCfg *stgx.ObjectStorageConfig
-
-	var s3Setting settingModel.S3Setting
-	if value, err := keyvalueRepo.GetKeyValue(commonModel.S3SettingKey); err == nil && strings.TrimSpace(value) != "" {
-		if err := jsonUtil.JSONUnmarshal([]byte(value), &s3Setting); err == nil && s3Setting.Enable {
-			mode = storageFactory.ModeS3
-			objectCfg = &stgx.ObjectStorageConfig{
-				Endpoint:   httpUtil.TrimURL(s3Setting.Endpoint),
-				AccessKey:  s3Setting.AccessKey,
-				SecretKey:  s3Setting.SecretKey,
-				BucketName: s3Setting.BucketName,
-				Region:     s3Setting.Region,
-				Provider:   s3Setting.Provider,
-				UseSSL:     s3Setting.UseSSL,
-				CDNURL:     s3Setting.CDNURL,
-				PathPrefix: s3Setting.PathPrefix,
-			}
+func ProvideStorageService() *storage.StorageService {
+	cfg := config.Config().Storage
+	input := storageFactory.BuildInput{
+		Mode:     storageFactory.Mode(cfg.Mode),
+		DataRoot: cfg.DataRoot,
+	}
+	if storageFactory.Mode(cfg.Mode) == storageFactory.ModeS3 {
+		input.ObjectConfig = &stgx.ObjectStorageConfig{
+			Endpoint:   cfg.Endpoint,
+			AccessKey:  cfg.AccessKey,
+			SecretKey:  cfg.SecretKey,
+			BucketName: cfg.BucketName,
+			Region:     cfg.Region,
+			Provider:   cfg.Provider,
+			UseSSL:     cfg.UseSSL,
+			CDNURL:     cfg.CDNURL,
+			PathPrefix: cfg.PathPrefix,
 		}
 	}
-
-	svc, err := storageFactory.Build(storageFactory.BuildInput{
-		Mode:         mode,
-		DataRoot:     "data/files",
-		ObjectConfig: objectCfg,
-	})
+	svc, err := storageFactory.Build(input)
 	if err != nil {
-		svc, _ = storageFactory.Build(storageFactory.BuildInput{Mode: storageFactory.ModeLocal, DataRoot: "data/files"})
+		svc, _ = storageFactory.Build(storageFactory.BuildInput{Mode: storageFactory.ModeLocal, DataRoot: cfg.DataRoot})
 	}
 	return svc
 }
