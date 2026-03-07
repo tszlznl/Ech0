@@ -10,7 +10,8 @@ import (
 	"github.com/google/wire"
 	"github.com/lin-snow/ech0/internal/app"
 	"github.com/lin-snow/ech0/internal/cache"
-	event2 "github.com/lin-snow/ech0/internal/event"
+	"github.com/lin-snow/ech0/internal/database"
+	"github.com/lin-snow/ech0/internal/event"
 	"github.com/lin-snow/ech0/internal/handler"
 	handler12 "github.com/lin-snow/ech0/internal/handler/agent"
 	handler10 "github.com/lin-snow/ech0/internal/handler/backup"
@@ -25,6 +26,7 @@ import (
 	handler2 "github.com/lin-snow/ech0/internal/handler/web"
 	"github.com/lin-snow/ech0/internal/metric"
 	"github.com/lin-snow/ech0/internal/monitor"
+	repository11 "github.com/lin-snow/ech0/internal/repository"
 	repository7 "github.com/lin-snow/ech0/internal/repository/common"
 	repository10 "github.com/lin-snow/ech0/internal/repository/connect"
 	repository3 "github.com/lin-snow/ech0/internal/repository/echo"
@@ -37,9 +39,10 @@ import (
 	repository5 "github.com/lin-snow/ech0/internal/repository/user"
 	"github.com/lin-snow/ech0/internal/repository/webhook"
 	cache2 "github.com/lin-snow/ech0/internal/runtime/cache"
-	"github.com/lin-snow/ech0/internal/runtime/event"
+	event2 "github.com/lin-snow/ech0/internal/runtime/event"
 	"github.com/lin-snow/ech0/internal/runtime/http"
 	"github.com/lin-snow/ech0/internal/runtime/task"
+	service11 "github.com/lin-snow/ech0/internal/service"
 	service10 "github.com/lin-snow/ech0/internal/service/agent"
 	service8 "github.com/lin-snow/ech0/internal/service/backup"
 	"github.com/lin-snow/ech0/internal/service/common"
@@ -60,64 +63,58 @@ import (
 
 // BuildWebApp 构建 Web 生命周期应用。
 func BuildWebApp() (*app.App, func(), error) {
+	v := database.ProvideDBProvider()
+	v2 := event.ProvideEventBusProvider()
 	iCache, err := cache.ProvideCache()
 	if err != nil {
 		return nil, nil, err
 	}
-	v := cache.ProvideCleanup(iCache)
-	shutdownHook := cache2.New(v)
-	v2 := ProvideDBProvider()
-	v3 := ProvideEventBusProvider()
-	gormTransactor := transaction.NewGormTransactor(v2)
-	eventRegistrar, err := ProvideEventRegistrar(v2, v3, iCache, gormTransactor)
+	gormTransactor := transaction.NewGormTransactor(v)
+	eventRegistrar, err := BuildEventRegistrar(v, v2, iCache, gormTransactor)
 	if err != nil {
 		return nil, nil, err
 	}
-	eventRuntime := event.New(eventRegistrar)
-	tasker, err := ProvideTasker(v2, iCache, gormTransactor, v3)
+	runtime := event2.New(eventRegistrar)
+	tasker, err := BuildTasker(v, iCache, gormTransactor, v2)
 	if err != nil {
 		return nil, nil, err
 	}
 	taskRuntime := task.New(tasker)
-	engine := ProvideGinEngine()
-	bundle, err := ProvideHandlers(v2, iCache, gormTransactor, v3)
+	engine := http.ProvideGinEngine()
+	bundle, err := BuildHandlers(v, iCache, gormTransactor, v2)
 	if err != nil {
 		return nil, nil, err
 	}
-	server := ProvideHTTPServer(engine, bundle)
+	server := http.ProvideHTTPServer(engine, bundle)
 	httpRuntime := http.New(server)
-	v4 := ProvideComponents(eventRuntime, taskRuntime, httpRuntime)
-	v5 := ProvideShutdownHooks(shutdownHook)
-	v6 := app.NewApp(v4, v5)
-	return v6, func() {
+	v3 := cache.ProvideCleanup(iCache)
+	cacheRuntime := cache2.New(v3)
+	v4 := app.ProvideLifecycles(runtime, taskRuntime, httpRuntime, cacheRuntime)
+	appApp := app.NewApp(v4)
+	return appApp, func() {
 	}, nil
 }
 
-// BuildApp 兼容旧入口，委托给 BuildWebApp。
-func BuildApp() (*app.App, func(), error) {
-	return BuildWebApp()
-}
-
-func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() event2.IEventBus, appCache cache.ICache[string, any], tx transaction.Transactor) (*event2.EventRegistrar, error) {
+func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() event.IEventBus, appCache cache.ICache[string, any], tx transaction.Transactor) (*event.EventRegistrar, error) {
 	webhookRepositoryInterface := repository.NewWebhookRepository(dbProvider)
 	queueRepositoryInterface := repository2.NewQueueRepository(dbProvider)
-	webhookDispatcher := event2.NewWebhookDispatcher(ebProvider, webhookRepositoryInterface, queueRepositoryInterface, tx)
-	deadLetterResolver := event2.NewDeadLetterResolver(queueRepositoryInterface, webhookDispatcher)
-	backupScheduler := event2.NewBackupScheduler()
+	webhookDispatcher := event.NewWebhookDispatcher(ebProvider, webhookRepositoryInterface, queueRepositoryInterface, tx)
+	deadLetterResolver := event.NewDeadLetterResolver(queueRepositoryInterface, webhookDispatcher)
+	backupScheduler := event.NewBackupScheduler()
 	echoRepositoryInterface := repository3.NewEchoRepository(dbProvider, appCache)
 	todoRepositoryInterface := repository4.NewTodoRepository(dbProvider, appCache)
 	userRepositoryInterface := repository5.NewUserRepository(dbProvider, appCache)
 	keyValueRepositoryInterface := keyvalue.NewKeyValueRepository(dbProvider, appCache)
 	inboxRepositoryInterface := repository6.NewInboxRepository(dbProvider)
-	agentProcessor := event2.NewAgentProcessor(echoRepositoryInterface, todoRepositoryInterface, userRepositoryInterface, keyValueRepositoryInterface, inboxRepositoryInterface)
-	inboxDispatcher := event2.NewInboxDispatcher(inboxRepositoryInterface, keyValueRepositoryInterface)
-	eventHandlers := event2.NewEventHandlers(webhookDispatcher, deadLetterResolver, backupScheduler, agentProcessor, inboxDispatcher)
-	eventRegistrar := event2.NewEventRegistry(ebProvider, eventHandlers)
+	agentProcessor := event.NewAgentProcessor(echoRepositoryInterface, todoRepositoryInterface, userRepositoryInterface, keyValueRepositoryInterface, inboxRepositoryInterface)
+	inboxDispatcher := event.NewInboxDispatcher(inboxRepositoryInterface, keyValueRepositoryInterface)
+	eventHandlers := event.NewEventHandlers(webhookDispatcher, deadLetterResolver, backupScheduler, agentProcessor, inboxDispatcher)
+	eventRegistrar := event.NewEventRegistry(ebProvider, eventHandlers)
 	return eventRegistrar, nil
 }
 
 // BuildHandlers 使用 wire 生成的代码来构建 Handlers 实例。
-func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor, ebProvider func() event2.IEventBus) (*handler.Bundle, error) {
+func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor, ebProvider func() event.IEventBus) (*handler.Bundle, error) {
 	webHandler := handler2.NewWebHandler()
 	userRepositoryInterface := repository5.NewUserRepository(dbProvider, appCache)
 	commonRepositoryInterface := repository7.NewCommonRepository(dbProvider)
@@ -159,24 +156,24 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 
 // BuildWebRuntime 构建 HTTP runtime（用于测试和独立启动场景）。
 func BuildWebRuntime() (*http.Runtime, error) {
-	engine := ProvideGinEngine()
-	v := ProvideDBProvider()
+	engine := http.ProvideGinEngine()
+	v := database.ProvideDBProvider()
 	iCache, err := cache.ProvideCache()
 	if err != nil {
 		return nil, err
 	}
 	gormTransactor := transaction.NewGormTransactor(v)
-	v2 := ProvideEventBusProvider()
-	bundle, err := ProvideHandlers(v, iCache, gormTransactor, v2)
+	v2 := event.ProvideEventBusProvider()
+	bundle, err := BuildHandlers(v, iCache, gormTransactor, v2)
 	if err != nil {
 		return nil, err
 	}
-	server := ProvideHTTPServer(engine, bundle)
+	server := http.ProvideHTTPServer(engine, bundle)
 	runtime := http.New(server)
 	return runtime, nil
 }
 
-func BuildTasker(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor, ebProvider func() event2.IEventBus) (*task2.Tasker, error) {
+func BuildTasker(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor, ebProvider func() event.IEventBus) (*task2.Tasker, error) {
 	commonRepositoryInterface := repository7.NewCommonRepository(dbProvider)
 	echoRepositoryInterface := repository3.NewEchoRepository(dbProvider, appCache)
 	keyValueRepositoryInterface := keyvalue.NewKeyValueRepository(dbProvider, appCache)
@@ -194,23 +191,25 @@ func BuildTasker(dbProvider func() *gorm.DB, appCache cache.ICache[string, any],
 
 // wire.go:
 
-var AppSet = wire.NewSet(
-	ProvideComponents,
-	ProvideShutdownHooks,
-	app.ProviderSet,
-)
+var AppSet = app.ProviderSet
 
 var DomainSet = wire.NewSet(
-	ProvideHandlers,
-	ProvideTasker,
-	ProvideEventRegistrar,
+	BuildHandlers,
+	BuildTasker,
+	BuildEventRegistrar,
 )
 
-var InfraSet = wire.NewSet(
-	ProvideDBProvider,
-	ProvideEventBusProvider, cache.ProviderSet, transaction.ProviderSet, ProvideGinEngine,
-)
+var InfraSet = wire.NewSet(database.ProviderSet, event.ProviderSet, cache.ProviderSet, transaction.ProviderSet)
 
-var RuntimeSet = wire.NewSet(
-	ProvideHTTPServer, http.ProviderSet, event.ProviderSet, task.ProviderSet, cache2.ProviderSet,
-)
+var RuntimeSet = wire.NewSet(http.ProviderSet, event2.ProviderSet, task.ProviderSet, cache2.ProviderSet)
+
+var EventGraphSet = wire.NewSet(repository11.EchoSet, service11.EchoSet, repository11.UserSet, service11.UserSet, repository11.TodoSet, service11.TodoSet, repository11.InboxSet, service11.InboxSet, repository11.KeyValueSet, repository11.QueueSet, repository11.WebhookSet, event.NewWebhookDispatcher, event.NewBackupScheduler, event.NewDeadLetterResolver, event.NewAgentProcessor, event.NewInboxDispatcher, event.NewEventHandlers, event.NewEventRegistry)
+
+var HandlerGraphSet = wire.NewSet(storage.ProviderSet, repository11.FileSet, handler.WebSet, repository11.UserSet, service11.UserSet, handler.UserSet, repository11.EchoSet, service11.EchoSet, handler.EchoSet, repository11.CommonSet, service11.CommonSet, handler.CommonSet, repository11.WebhookSet, repository11.KeyValueSet, repository11.SettingSet, service11.SettingSet, handler.SettingSet, repository11.InboxSet, service11.InboxSet, handler.InboxSet, repository11.TodoSet, service11.TodoSet, handler.TodoSet, repository11.ConnectSet, service11.ConnectSet, handler.ConnectSet, metric.NewSystemCollector, monitor.NewMonitor, service11.DashboardSet, handler.DashboardSet, service11.AgentSet, handler.AgentSet, service11.BackupSet, handler.BackupSet, handler.NewBundle)
+
+var TaskerGraphSet = wire.NewSet(storage.ProviderSet, repository11.FileSet, repository11.KeyValueSet, repository11.WebhookSet, repository11.SettingSet, service11.SettingSet, repository11.EchoSet, service11.EchoSet, repository11.CommonSet, service11.CommonSet, repository11.QueueSet, task2.NewTasker)
+
+// BuildApp 兼容旧入口，委托给 BuildWebApp。
+func BuildApp() (*app.App, func(), error) {
+	return BuildWebApp()
+}

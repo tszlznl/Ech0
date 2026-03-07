@@ -1,3 +1,4 @@
+//go:generate go run -mod=mod github.com/google/wire/cmd/wire
 //go:build wireinject
 // +build wireinject
 
@@ -7,43 +8,139 @@ import (
 	"github.com/google/wire"
 	"github.com/lin-snow/ech0/internal/app"
 	"github.com/lin-snow/ech0/internal/cache"
+	"github.com/lin-snow/ech0/internal/database"
 	"github.com/lin-snow/ech0/internal/event"
 	"github.com/lin-snow/ech0/internal/handler"
+	"github.com/lin-snow/ech0/internal/metric"
+	"github.com/lin-snow/ech0/internal/monitor"
+	"github.com/lin-snow/ech0/internal/repository"
 	runtimeCache "github.com/lin-snow/ech0/internal/runtime/cache"
 	runtimeEvent "github.com/lin-snow/ech0/internal/runtime/event"
 	runtimeHTTP "github.com/lin-snow/ech0/internal/runtime/http"
 	runtimeTask "github.com/lin-snow/ech0/internal/runtime/task"
+	"github.com/lin-snow/ech0/internal/service"
+	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/task"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"gorm.io/gorm"
 )
 
-var AppSet = wire.NewSet(
-	ProvideComponents,
-	ProvideShutdownHooks,
-	app.ProviderSet,
-)
+var AppSet = app.ProviderSet
 
 var DomainSet = wire.NewSet(
-	ProvideHandlers,
-	ProvideTasker,
-	ProvideEventRegistrar,
+	BuildHandlers,
+	BuildTasker,
+	BuildEventRegistrar,
 )
 
 var InfraSet = wire.NewSet(
-	ProvideDBProvider,
-	ProvideEventBusProvider,
+	database.ProviderSet,
+	event.ProviderSet,
 	cache.ProviderSet,
 	transaction.ProviderSet,
-	ProvideGinEngine,
 )
 
 var RuntimeSet = wire.NewSet(
-	ProvideHTTPServer,
 	runtimeHTTP.ProviderSet,
 	runtimeEvent.ProviderSet,
 	runtimeTask.ProviderSet,
 	runtimeCache.ProviderSet,
+)
+
+var EventGraphSet = wire.NewSet(
+	repository.EchoSet,
+	service.EchoSet,
+
+	repository.UserSet,
+	service.UserSet,
+
+	repository.TodoSet,
+	service.TodoSet,
+
+	repository.InboxSet,
+	service.InboxSet,
+
+	repository.KeyValueSet,
+	repository.QueueSet,
+	repository.WebhookSet,
+
+	event.NewWebhookDispatcher,
+	event.NewBackupScheduler,
+	event.NewDeadLetterResolver,
+	event.NewAgentProcessor,
+	event.NewInboxDispatcher,
+	event.NewEventHandlers,
+	event.NewEventRegistry,
+)
+
+var HandlerGraphSet = wire.NewSet(
+	storage.ProviderSet,
+	repository.FileSet,
+	handler.WebSet,
+
+	repository.UserSet,
+	service.UserSet,
+	handler.UserSet,
+
+	repository.EchoSet,
+	service.EchoSet,
+	handler.EchoSet,
+
+	repository.CommonSet,
+	service.CommonSet,
+	handler.CommonSet,
+
+	repository.WebhookSet,
+	repository.KeyValueSet,
+
+	repository.SettingSet,
+	service.SettingSet,
+	handler.SettingSet,
+
+	repository.InboxSet,
+	service.InboxSet,
+	handler.InboxSet,
+
+	repository.TodoSet,
+	service.TodoSet,
+	handler.TodoSet,
+
+	repository.ConnectSet,
+	service.ConnectSet,
+	handler.ConnectSet,
+
+	metric.NewSystemCollector,
+	monitor.NewMonitor,
+
+	service.DashboardSet,
+	handler.DashboardSet,
+
+	service.AgentSet,
+	handler.AgentSet,
+
+	service.BackupSet,
+	handler.BackupSet,
+
+	handler.NewBundle,
+)
+
+var TaskerGraphSet = wire.NewSet(
+	storage.ProviderSet,
+	repository.FileSet,
+	repository.KeyValueSet,
+	repository.WebhookSet,
+
+	repository.SettingSet,
+	service.SettingSet,
+
+	repository.EchoSet,
+	service.EchoSet,
+
+	repository.CommonSet,
+	service.CommonSet,
+
+	repository.QueueSet,
+	task.NewTasker,
 )
 
 // BuildWebApp 构建 Web 生命周期应用。
@@ -68,9 +165,7 @@ func BuildEventRegistrar(
 	appCache cache.ICache[string, any],
 	tx transaction.Transactor,
 ) (*event.EventRegistrar, error) {
-	wire.Build(
-		EventGraphSet,
-	)
+	wire.Build(EventGraphSet)
 	return &event.EventRegistrar{}, nil
 }
 
@@ -81,9 +176,7 @@ func BuildHandlers(
 	tx transaction.Transactor,
 	ebProvider func() event.IEventBus,
 ) (*handler.Bundle, error) {
-	wire.Build(
-		HandlerGraphSet,
-	)
+	wire.Build(HandlerGraphSet)
 	return &handler.Bundle{}, nil
 }
 
@@ -91,8 +184,7 @@ func BuildHandlers(
 func BuildWebRuntime() (*runtimeHTTP.Runtime, error) {
 	wire.Build(
 		InfraSet,
-		DomainSet,
-		ProvideHTTPServer,
+		BuildHandlers,
 		runtimeHTTP.ProviderSet,
 	)
 	return &runtimeHTTP.Runtime{}, nil
@@ -104,8 +196,6 @@ func BuildTasker(
 	tx transaction.Transactor,
 	ebProvider func() event.IEventBus,
 ) (*task.Tasker, error) {
-	wire.Build(
-		TaskerGraphSet,
-	)
+	wire.Build(TaskerGraphSet)
 	return &task.Tasker{}, nil
 }

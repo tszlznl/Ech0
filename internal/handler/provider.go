@@ -16,29 +16,15 @@ import (
 )
 
 var (
-	WebSet       = wire.NewSet(webHandler.ProviderSet)
-	UserSet      = wire.NewSet(userHandler.ProviderSet)
-	EchoSet      = wire.NewSet(echoHandler.ProviderSet)
-	CommonSet    = wire.NewSet(commonHandler.ProviderSet)
-	SettingSet   = wire.NewSet(settingHandler.ProviderSet)
-	TodoSet      = wire.NewSet(todoHandler.ProviderSet)
-	ConnectSet   = wire.NewSet(connectHandler.ProviderSet)
-	BackupSet    = wire.NewSet(backupHandler.ProviderSet)
-	DashboardSet = wire.NewSet(dashboardHandler.ProviderSet)
-	AgentSet     = wire.NewSet(agentHandler.ProviderSet)
-	InboxSet     = wire.NewSet(inboxHandler.ProviderSet)
-)
-
-var ProviderSet = wire.NewSet(
-	WebSet,
-	UserSet,
-	EchoSet,
-	CommonSet,
-	SettingSet,
-	TodoSet,
-	ConnectSet,
-	BackupSet,
-	DashboardSet,
-	AgentSet,
-	InboxSet,
+	WebSet       = wire.NewSet(webHandler.NewWebHandler)
+	UserSet      = wire.NewSet(userHandler.NewUserHandler)
+	EchoSet      = wire.NewSet(echoHandler.NewEchoHandler)
+	CommonSet    = wire.NewSet(commonHandler.NewCommonHandler)
+	SettingSet   = wire.NewSet(settingHandler.NewSettingHandler)
+	TodoSet      = wire.NewSet(todoHandler.NewTodoHandler)
+	ConnectSet   = wire.NewSet(connectHandler.NewConnectHandler)
+	BackupSet    = wire.NewSet(backupHandler.NewBackupHandler)
+	DashboardSet = wire.NewSet(dashboardHandler.NewDashboardHandler)
+	AgentSet     = wire.NewSet(agentHandler.NewAgentHandler)
+	InboxSet     = wire.NewSet(inboxHandler.NewInboxHandler)
 )

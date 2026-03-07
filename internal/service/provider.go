@@ -15,27 +15,14 @@ import (
 )
 
 var (
-	UserSet      = wire.NewSet(userService.ProviderSet)
-	EchoSet      = wire.NewSet(echoService.ProviderSet)
-	CommonSet    = wire.NewSet(commonService.ProviderSet)
-	SettingSet   = wire.NewSet(settingService.ProviderSet)
-	TodoSet      = wire.NewSet(todoService.ProviderSet)
-	ConnectSet   = wire.NewSet(connectService.ProviderSet)
-	BackupSet    = wire.NewSet(backupService.ProviderSet)
-	DashboardSet = wire.NewSet(dashboardService.ProviderSet)
-	AgentSet     = wire.NewSet(agentService.ProviderSet)
-	InboxSet     = wire.NewSet(inboxService.ProviderSet)
-)
-
-var ProviderSet = wire.NewSet(
-	UserSet,
-	EchoSet,
-	CommonSet,
-	SettingSet,
-	TodoSet,
-	ConnectSet,
-	BackupSet,
-	DashboardSet,
-	AgentSet,
-	InboxSet,
+	UserSet      = wire.NewSet(userService.NewUserService)
+	EchoSet      = wire.NewSet(echoService.NewEchoService)
+	CommonSet    = wire.NewSet(commonService.NewCommonService)
+	SettingSet   = wire.NewSet(settingService.NewSettingService)
+	TodoSet      = wire.NewSet(todoService.NewTodoService)
+	ConnectSet   = wire.NewSet(connectService.NewConnectService)
+	BackupSet    = wire.NewSet(backupService.NewBackupService)
+	DashboardSet = wire.NewSet(dashboardService.NewDashboardService)
+	AgentSet     = wire.NewSet(agentService.NewAgentService)
+	InboxSet     = wire.NewSet(inboxService.NewInboxService)
 )

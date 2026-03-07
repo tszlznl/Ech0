@@ -2,15 +2,13 @@ package app
 
 import "context"
 
-// Component 定义应用生命周期组件。
-type Component interface {
-	Name() string
+// Lifecycle 定义应用生命周期单元。
+type Lifecycle interface {
 	Start(ctx context.Context) error
 	Stop(ctx context.Context) error
 }
 
-// ShutdownHook 定义仅在应用退出时执行的资源清理钩子。
-type ShutdownHook interface {
+// Namer 为可选能力，用于生成更友好的生命周期错误信息。
+type Namer interface {
 	Name() string
-	Shutdown(ctx context.Context) error
 }

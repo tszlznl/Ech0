@@ -16,29 +16,15 @@ import (
 )
 
 var (
-	UserSet     = wire.NewSet(userRepository.ProviderSet)
-	EchoSet     = wire.NewSet(echoRepository.ProviderSet)
-	CommonSet   = wire.NewSet(commonRepository.ProviderSet)
-	FileSet     = wire.NewSet(fileRepository.ProviderSet)
-	KeyValueSet = wire.NewSet(keyvalueRepository.ProviderSet)
-	SettingSet  = wire.NewSet(settingRepository.ProviderSet)
-	TodoSet     = wire.NewSet(todoRepository.ProviderSet)
-	ConnectSet  = wire.NewSet(connectRepository.ProviderSet)
-	WebhookSet  = wire.NewSet(webhookRepository.ProviderSet)
-	InboxSet    = wire.NewSet(inboxRepository.ProviderSet)
-	QueueSet    = wire.NewSet(queueRepository.ProviderSet)
-)
-
-var ProviderSet = wire.NewSet(
-	UserSet,
-	EchoSet,
-	CommonSet,
-	FileSet,
-	KeyValueSet,
-	SettingSet,
-	TodoSet,
-	ConnectSet,
-	WebhookSet,
-	InboxSet,
-	QueueSet,
+	UserSet     = wire.NewSet(userRepository.NewUserRepository)
+	EchoSet     = wire.NewSet(echoRepository.NewEchoRepository)
+	CommonSet   = wire.NewSet(commonRepository.NewCommonRepository)
+	FileSet     = wire.NewSet(fileRepository.NewFileRepository)
+	KeyValueSet = wire.NewSet(keyvalueRepository.NewKeyValueRepository)
+	SettingSet  = wire.NewSet(settingRepository.NewSettingRepository)
+	TodoSet     = wire.NewSet(todoRepository.NewTodoRepository)
+	ConnectSet  = wire.NewSet(connectRepository.NewConnectRepository)
+	WebhookSet  = wire.NewSet(webhookRepository.NewWebhookRepository)
+	InboxSet    = wire.NewSet(inboxRepository.NewInboxRepository)
+	QueueSet    = wire.NewSet(queueRepository.NewQueueRepository)
 )

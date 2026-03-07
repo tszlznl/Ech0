@@ -2,22 +2,26 @@ package cache
 
 import "context"
 
-// ShutdownHook 用于在停止阶段执行缓存清理。
-type ShutdownHook struct {
+// Runtime 适配缓存清理到统一生命周期接口。
+type Runtime struct {
 	cleanup func() error
 }
 
-func New(cleanup func() error) *ShutdownHook {
-	return &ShutdownHook{cleanup: cleanup}
+func New(cleanup func() error) *Runtime {
+	return &Runtime{cleanup: cleanup}
 }
 
-func (h *ShutdownHook) Name() string {
+func (r *Runtime) Name() string {
 	return "cache_cleanup"
 }
 
-func (h *ShutdownHook) Shutdown(context.Context) error {
-	if h.cleanup == nil {
+func (r *Runtime) Start(context.Context) error {
+	return nil
+}
+
+func (r *Runtime) Stop(context.Context) error {
+	if r.cleanup == nil {
 		return nil
 	}
-	return h.cleanup()
+	return r.cleanup()
 }
