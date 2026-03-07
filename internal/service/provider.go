@@ -14,16 +14,18 @@ import (
 	userService "github.com/lin-snow/ech0/internal/service/user"
 )
 
-var UserSet = wire.NewSet(userService.ProviderSet)
-var EchoSet = wire.NewSet(echoService.ProviderSet)
-var CommonSet = wire.NewSet(commonService.ProviderSet)
-var SettingSet = wire.NewSet(settingService.ProviderSet)
-var TodoSet = wire.NewSet(todoService.ProviderSet)
-var ConnectSet = wire.NewSet(connectService.ProviderSet)
-var BackupSet = wire.NewSet(backupService.ProviderSet)
-var DashboardSet = wire.NewSet(dashboardService.ProviderSet)
-var AgentSet = wire.NewSet(agentService.ProviderSet)
-var InboxSet = wire.NewSet(inboxService.ProviderSet)
+var (
+	UserSet      = wire.NewSet(userService.ProviderSet)
+	EchoSet      = wire.NewSet(echoService.ProviderSet)
+	CommonSet    = wire.NewSet(commonService.ProviderSet)
+	SettingSet   = wire.NewSet(settingService.ProviderSet)
+	TodoSet      = wire.NewSet(todoService.ProviderSet)
+	ConnectSet   = wire.NewSet(connectService.ProviderSet)
+	BackupSet    = wire.NewSet(backupService.ProviderSet)
+	DashboardSet = wire.NewSet(dashboardService.ProviderSet)
+	AgentSet     = wire.NewSet(agentService.ProviderSet)
+	InboxSet     = wire.NewSet(inboxService.ProviderSet)
+)
 
 var ProviderSet = wire.NewSet(
 	UserSet,

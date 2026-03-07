@@ -10,7 +10,11 @@ func TestRistrettoCacheGetMiss(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create cache failed: %v", err)
 	}
-	defer c.Close()
+	defer func() {
+		if err := c.Close(); err != nil {
+			t.Errorf("close cache failed: %v", err)
+		}
+	}()
 
 	_, found, err := c.Get("missing")
 	if err != nil {
@@ -26,7 +30,11 @@ func TestRistrettoCacheSetAndGet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create cache failed: %v", err)
 	}
-	defer c.Close()
+	defer func() {
+		if err := c.Close(); err != nil {
+			t.Errorf("close cache failed: %v", err)
+		}
+	}()
 
 	ok := c.Set("k", 42, 1)
 	if !ok {
@@ -51,7 +59,11 @@ func TestRistrettoCacheSetWithTTL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create cache failed: %v", err)
 	}
-	defer c.Close()
+	defer func() {
+		if err := c.Close(); err != nil {
+			t.Errorf("close cache failed: %v", err)
+		}
+	}()
 
 	ok := c.SetWithTTL("ttl-k", 7, 1, 40_000_000) // 40ms
 	if !ok {

@@ -15,17 +15,19 @@ import (
 	webhookRepository "github.com/lin-snow/ech0/internal/repository/webhook"
 )
 
-var UserSet = wire.NewSet(userRepository.ProviderSet)
-var EchoSet = wire.NewSet(echoRepository.ProviderSet)
-var CommonSet = wire.NewSet(commonRepository.ProviderSet)
-var FileSet = wire.NewSet(fileRepository.ProviderSet)
-var KeyValueSet = wire.NewSet(keyvalueRepository.ProviderSet)
-var SettingSet = wire.NewSet(settingRepository.ProviderSet)
-var TodoSet = wire.NewSet(todoRepository.ProviderSet)
-var ConnectSet = wire.NewSet(connectRepository.ProviderSet)
-var WebhookSet = wire.NewSet(webhookRepository.ProviderSet)
-var InboxSet = wire.NewSet(inboxRepository.ProviderSet)
-var QueueSet = wire.NewSet(queueRepository.ProviderSet)
+var (
+	UserSet     = wire.NewSet(userRepository.ProviderSet)
+	EchoSet     = wire.NewSet(echoRepository.ProviderSet)
+	CommonSet   = wire.NewSet(commonRepository.ProviderSet)
+	FileSet     = wire.NewSet(fileRepository.ProviderSet)
+	KeyValueSet = wire.NewSet(keyvalueRepository.ProviderSet)
+	SettingSet  = wire.NewSet(settingRepository.ProviderSet)
+	TodoSet     = wire.NewSet(todoRepository.ProviderSet)
+	ConnectSet  = wire.NewSet(connectRepository.ProviderSet)
+	WebhookSet  = wire.NewSet(webhookRepository.ProviderSet)
+	InboxSet    = wire.NewSet(inboxRepository.ProviderSet)
+	QueueSet    = wire.NewSet(queueRepository.ProviderSet)
+)
 
 var ProviderSet = wire.NewSet(
 	UserSet,

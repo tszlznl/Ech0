@@ -28,7 +28,7 @@ func NewEchoRepository(
 }
 
 func (echoRepository *EchoRepository) getDB(ctx context.Context) *gorm.DB {
-	if tx, ok := ctx.Value(transaction.TxKey).(*gorm.DB); ok {
+	if tx, ok := transaction.TxFromContext(ctx); ok {
 		return tx
 	}
 	return echoRepository.db()

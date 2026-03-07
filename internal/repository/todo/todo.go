@@ -26,7 +26,7 @@ func NewTodoRepository(
 
 // getDB 从上下文中获取事务
 func (todoRepository *TodoRepository) getDB(ctx context.Context) *gorm.DB {
-	if tx, ok := ctx.Value(transaction.TxKey).(*gorm.DB); ok {
+	if tx, ok := transaction.TxFromContext(ctx); ok {
 		return tx
 	}
 	return todoRepository.db()

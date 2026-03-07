@@ -105,7 +105,7 @@ func (t *Tasker) DeadLetterConsumeTask() {
 		gocron.NewTask(
 			func() {
 				// 取出死信队列中的任务，逐个重试
-				deadLetters, err := t.queueRepo.ListDeadLetters(10)
+				deadLetters, err := t.queueRepo.ListDeadLetters(context.Background(), 10)
 				if err != nil {
 					logUtil.GetLogger().
 						Error("Failed To Get DeadLetters!", zap.String("error", err.Error()))

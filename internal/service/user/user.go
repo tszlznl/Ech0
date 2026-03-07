@@ -82,7 +82,7 @@ func (userService *UserService) Login(loginDto *authModel.LoginDto) (string, err
 	loginDto.Password = cryptoUtil.MD5Encrypt(loginDto.Password)
 
 	// 检查用户是否存在
-	user, err := userService.userRepository.GetUserByUsername(loginDto.Username)
+	user, err := userService.userRepository.GetUserByUsername(context.Background(), loginDto.Username)
 	if err != nil {
 		return "", errors.New(commonModel.USER_NOTFOUND)
 	}
@@ -112,7 +112,7 @@ func (userService *UserService) Login(loginDto *authModel.LoginDto) (string, err
 //   - error: 注册过程中的错误信息
 func (userService *UserService) Register(registerDto *authModel.RegisterDto) error {
 	// 检查用户数量是否超过限制
-	users, err := userService.userRepository.GetAllUsers()
+	users, err := userService.userRepository.GetAllUsers(context.Background())
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func (userService *UserService) Register(registerDto *authModel.RegisterDto) err
 	}
 
 	// 检查用户是否已经存在
-	user, err := userService.userRepository.GetUserByUsername(newUser.Username)
+	user, err := userService.userRepository.GetUserByUsername(context.Background(), newUser.Username)
 	if err == nil && user.ID != model.USER_NOT_EXISTS_ID {
 		return errors.New(commonModel.USERNAME_HAS_EXISTS)
 	}
@@ -199,7 +199,7 @@ func (userService *UserService) UpdateUser(userid uint, userdto model.UserInfoDt
 	// 检查是否需要更新用户名
 	if userdto.Username != "" && userdto.Username != user.Username {
 		// 检查用户名是否已存在
-		existingUser, _ := userService.userRepository.GetUserByUsername(userdto.Username)
+		existingUser, _ := userService.userRepository.GetUserByUsername(context.Background(), userdto.Username)
 		if existingUser.ID != model.USER_NOT_EXISTS_ID {
 			return errors.New(commonModel.USERNAME_ALREADY_EXISTS)
 		}
@@ -316,7 +316,7 @@ func (userService *UserService) UpdateUserAdmin(userid uint, id uint) error {
 //   - []model.User: 用户列表（不包含密码信息）
 //   - error: 获取过程中的错误信息
 func (userService *UserService) GetAllUsers() ([]model.User, error) {
-	allures, err := userService.userRepository.GetAllUsers()
+	allures, err := userService.userRepository.GetAllUsers(context.Background())
 	if err != nil {
 		return nil, err
 	}

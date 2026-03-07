@@ -16,8 +16,8 @@ var serveCmd = &cobra.Command{
 
 // webCmd 是仅启动 Web 服务并阻塞的命令
 var webCmd = &cobra.Command{
-	Use:   "web",
-	Short: "（兼容别名）仅启动 Web 服务（阻塞）",
+	Use:        "web",
+	Short:      "（兼容别名）仅启动 Web 服务（阻塞）",
 	Deprecated: "请使用 `serve`，`web` 后续版本将移除",
 	Hidden:     true,
 	Run: func(cmd *cobra.Command, args []string) {

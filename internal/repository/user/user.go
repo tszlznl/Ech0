@@ -28,29 +28,43 @@ func NewUserRepository(
 
 // getDB 从上下文中获取事务
 func (userRepository *UserRepository) getDB(ctx context.Context) *gorm.DB {
-	if tx, ok := ctx.Value(transaction.TxKey).(*gorm.DB); ok {
+	if tx, ok := transaction.TxFromContext(ctx); ok {
 		return tx
 	}
 	return userRepository.db()
 }
 
 // GetUserByUsername 根据用户名获取用户
-func (userRepository *UserRepository) GetUserByUsername(username string) (model.User, error) {
+func (userRepository *UserRepository) GetUserByUsername(ctx context.Context, username string) (model.User, error) {
 	cacheKey := GetUsernameKey(username)
-	return cache.ReadThroughTyped[model.User](userRepository.cache, cacheKey, 1, func() (model.User, error) {
-		user := model.User{}
-		err := userRepository.db().Where("username = ?", username).First(&user).Error
-		if err != nil {
-			return model.User{}, err
-		}
-		return user, nil
-	})
+	return cache.ReadThroughTypedUnlessTx[model.User](
+		ctx,
+		userRepository.cache,
+		cacheKey,
+		1,
+		func(ctx context.Context) (model.User, error) {
+			user := model.User{}
+			err := userRepository.getDB(ctx).Where("username = ?", username).First(&user).Error
+			if err != nil {
+				return model.User{}, err
+			}
+			return user, nil
+		},
+		func() (model.User, error) {
+			user := model.User{}
+			err := userRepository.db().Where("username = ?", username).First(&user).Error
+			if err != nil {
+				return model.User{}, err
+			}
+			return user, nil
+		},
+	)
 }
 
 // GetAllUsers 获取所有用户
-func (userRepository *UserRepository) GetAllUsers() ([]model.User, error) {
+func (userRepository *UserRepository) GetAllUsers(ctx context.Context) ([]model.User, error) {
 	var users []model.User
-	err := userRepository.db().Find(&users).Error
+	err := userRepository.getDB(ctx).Find(&users).Error
 	if err != nil {
 		return nil, err
 	}

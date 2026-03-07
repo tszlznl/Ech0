@@ -14,13 +14,16 @@ type mockComponent struct {
 }
 
 func (m *mockComponent) Name() string { return m.name }
+
 func (m *mockComponent) Healthy(context.Context) error {
 	return nil
 }
+
 func (m *mockComponent) Start(context.Context) error {
 	*m.order = append(*m.order, "start:"+m.name)
 	return m.startErr
 }
+
 func (m *mockComponent) Stop(context.Context) error {
 	*m.order = append(*m.order, "stop:"+m.name)
 	return m.stopErr

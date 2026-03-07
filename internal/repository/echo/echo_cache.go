@@ -36,8 +36,10 @@ func (t *cacheKeyTracker) SnapshotAndReset() []string {
 	return keys
 }
 
-var echoPageCacheKeys = newCacheKeyTracker()
-var todayEchoCacheKeys = newCacheKeyTracker()
+var (
+	echoPageCacheKeys  = newCacheKeyTracker()
+	todayEchoCacheKeys = newCacheKeyTracker()
+)
 
 const (
 	EchoPageCacheKeyPrefix = "echo_page" // echo_page:page:pageSize:search:showPrivate

@@ -21,7 +21,7 @@ func NewCommonRepository(dbProvider func() *gorm.DB) CommonRepositoryInterface {
 }
 
 func (commonRepository *CommonRepository) getDB(ctx context.Context) *gorm.DB {
-	if tx, ok := ctx.Value(transaction.TxKey).(*gorm.DB); ok {
+	if tx, ok := transaction.TxFromContext(ctx); ok {
 		return tx
 	}
 	return commonRepository.db()
@@ -35,28 +35,28 @@ func (commonRepository *CommonRepository) GetUserByUserId(ctx context.Context, u
 	return user, nil
 }
 
-func (commonRepository *CommonRepository) GetSysAdmin() (userModel.User, error) {
+func (commonRepository *CommonRepository) GetSysAdmin(ctx context.Context) (userModel.User, error) {
 	user := userModel.User{}
-	err := commonRepository.db().Where("is_admin = ?", true).First(&user).Error
+	err := commonRepository.getDB(ctx).Where("is_admin = ?", true).First(&user).Error
 	if err != nil {
 		return userModel.User{}, err
 	}
 	return user, nil
 }
 
-func (commonRepository *CommonRepository) GetAllUsers() ([]userModel.User, error) {
+func (commonRepository *CommonRepository) GetAllUsers(ctx context.Context) ([]userModel.User, error) {
 	var users []userModel.User
-	err := commonRepository.db().Find(&users).Error
+	err := commonRepository.getDB(ctx).Find(&users).Error
 	if err != nil {
 		return nil, err
 	}
 	return users, nil
 }
 
-func (commonRepository *CommonRepository) GetAllEchos(showPrivate bool) ([]echoModel.Echo, error) {
+func (commonRepository *CommonRepository) GetAllEchos(ctx context.Context, showPrivate bool) ([]echoModel.Echo, error) {
 	var echos []echoModel.Echo
 
-	query := commonRepository.db().
+	query := commonRepository.getDB(ctx).
 		Preload("EchoFiles", func(db *gorm.DB) *gorm.DB {
 			return db.Order("echo_files.sort_order ASC")
 		}).
@@ -76,11 +76,12 @@ func (commonRepository *CommonRepository) GetAllEchos(showPrivate bool) ([]echoM
 }
 
 func (commonRepository *CommonRepository) GetHeatMap(
+	ctx context.Context,
 	startUTC, endUTC time.Time,
 ) ([]time.Time, error) {
 	var results []time.Time
 
-	err := commonRepository.db().
+	err := commonRepository.getDB(ctx).
 		Table("echos").
 		Where("created_at >= ? AND created_at < ?", startUTC, endUTC).
 		Order("created_at ASC").

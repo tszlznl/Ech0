@@ -7,10 +7,10 @@ import (
 )
 
 type AppRouterGroup struct {
-	ResourceGroup    *gin.RouterGroup
+	ResourceGroup     *gin.RouterGroup
 	PublicRouterGroup *gin.RouterGroup
-	AuthRouterGroup  *gin.RouterGroup
-	WSRouterGroup    *gin.RouterGroup
+	AuthRouterGroup   *gin.RouterGroup
+	WSRouterGroup     *gin.RouterGroup
 }
 
 // SetupRouter 配置路由
@@ -36,9 +36,9 @@ func setupRouterGroup(r *gin.Engine) *AppRouterGroup {
 	auth.Use(middleware.NoCache(), middleware.JWTAuthMiddleware())
 	ws := r.Group("/ws")
 	return &AppRouterGroup{
-		ResourceGroup:    resource,
+		ResourceGroup:     resource,
 		PublicRouterGroup: public,
-		AuthRouterGroup:  auth,
-		WSRouterGroup:    ws,
+		AuthRouterGroup:   auth,
+		WSRouterGroup:     ws,
 	}
 }

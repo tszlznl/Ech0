@@ -61,10 +61,16 @@ func ExecuteBackup() (string, string, error) {
 	if err != nil {
 		return "", "", fmt.Errorf("create zip file: %w", err)
 	}
-	defer f.Close()
 
 	if err := vizip.Pack(ctx, dataFS, keys, f); err != nil {
+		if closeErr := f.Close(); closeErr != nil {
+			logUtil.GetLogger().Warn("Failed to close backup zip after pack error",
+				zap.String("path", backupPath), zap.String("error", closeErr.Error()))
+		}
 		return "", "", fmt.Errorf("pack zip: %w", err)
+	}
+	if err := f.Close(); err != nil {
+		return "", "", fmt.Errorf("close zip file: %w", err)
 	}
 
 	return backupPath, fileName, nil
@@ -140,7 +146,12 @@ func unpackZipToDir(zipPath, destDir string) error {
 	if err != nil {
 		return fmt.Errorf("open zip: %w", err)
 	}
-	defer f.Close()
+	defer func() {
+		if closeErr := f.Close(); closeErr != nil {
+			logUtil.GetLogger().Warn("Failed to close backup zip reader",
+				zap.String("path", zipPath), zap.String("error", closeErr.Error()))
+		}
+	}()
 
 	info, err := f.Stat()
 	if err != nil {

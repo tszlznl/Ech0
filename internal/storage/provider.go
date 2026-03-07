@@ -18,9 +18,11 @@ func ProvideURLResolver() URLResolver {
 	return NewURLResolver(config.Config().Storage)
 }
 
-var FSSet = wire.NewSet(ProvideFS)
-var URLResolverSet = wire.NewSet(ProvideURLResolver)
-var ProviderSet = wire.NewSet(FSSet, URLResolverSet)
+var (
+	FSSet          = wire.NewSet(ProvideFS)
+	URLResolverSet = wire.NewSet(ProvideURLResolver)
+	ProviderSet    = wire.NewSet(FSSet, URLResolverSet)
+)
 
 // NewFS builds a virefs.FS based on the given StorageConfig.
 // File classification (images/, audios/, etc.) is handled by VireFS Schema.

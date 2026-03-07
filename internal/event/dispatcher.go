@@ -59,7 +59,7 @@ func NewWebhookDispatcher(
 // Handle 由事件总线调用，负责调度事件到每个活跃的 webhook
 func (wd *WebhookDispatcher) Handle(ctx context.Context, e *Event) error {
 	// 获取所有开启的webhook
-	webhooks, err := wd.repo.ListActiveWebhooks()
+	webhooks, err := wd.repo.ListActiveWebhooks(ctx)
 	if err != nil {
 		return err
 	}

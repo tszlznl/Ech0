@@ -99,7 +99,7 @@ func (backupHandler *BackupHandler) ExportBackup() gin.HandlerFunc {
 //	@Tags			系统备份
 //	@Accept			multipart/form-data
 //	@Produce		json
-//	@Param			file	formData	file			true	"备份文件"
+//	@Param			file	formData	file				true	"备份文件"
 //	@Success		200		{object}	response.Response	"导入备份成功"
 //	@Failure		200		{object}	response.Response	"导入备份失败"
 //	@Router			/backup/import [post]

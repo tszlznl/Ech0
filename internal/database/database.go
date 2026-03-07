@@ -104,7 +104,6 @@ func InitDatabase() {
 			Err: err,
 		})
 	}
-
 }
 
 // MigrateDB 执行数据库迁移

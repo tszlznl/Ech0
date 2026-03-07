@@ -20,7 +20,7 @@ func NewConnectRepository(dbProvider func() *gorm.DB) ConnectRepositoryInterface
 
 // getDB 从上下文中获取事务
 func (connectRepository *ConnectRepository) getDB(ctx context.Context) *gorm.DB {
-	if tx, ok := ctx.Value(transaction.TxKey).(*gorm.DB); ok {
+	if tx, ok := transaction.TxFromContext(ctx); ok {
 		return tx
 	}
 	return connectRepository.db()

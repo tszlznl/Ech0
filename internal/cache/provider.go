@@ -15,6 +15,8 @@ func ProvideCleanup(cache ICache[string, any]) func() error {
 	}
 }
 
-var CacheSet = wire.NewSet(ProvideCache)
-var CleanupSet = wire.NewSet(ProvideCleanup)
-var ProviderSet = wire.NewSet(CacheSet, CleanupSet)
+var (
+	CacheSet    = wire.NewSet(ProvideCache)
+	CleanupSet  = wire.NewSet(ProvideCleanup)
+	ProviderSet = wire.NewSet(CacheSet, CleanupSet)
+)

@@ -10,8 +10,8 @@ import (
 
 type CommonRepositoryInterface interface {
 	GetUserByUserId(ctx context.Context, userid uint) (userModel.User, error)
-	GetSysAdmin() (userModel.User, error)
-	GetAllUsers() ([]userModel.User, error)
-	GetAllEchos(showPrivate bool) ([]echoModel.Echo, error)
-	GetHeatMap(startUTC, endUTC time.Time) ([]time.Time, error)
+	GetSysAdmin(ctx context.Context) (userModel.User, error)
+	GetAllUsers(ctx context.Context) ([]userModel.User, error)
+	GetAllEchos(ctx context.Context, showPrivate bool) ([]echoModel.Echo, error)
+	GetHeatMap(ctx context.Context, startUTC, endUTC time.Time) ([]time.Time, error)
 }

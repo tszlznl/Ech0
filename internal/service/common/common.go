@@ -191,23 +191,30 @@ func (s *CommonService) DeleteFile(userid uint, dto commonModel.FileDeleteDto) e
 		return errors.New(commonModel.IMAGE_NOT_FOUND)
 	}
 
-	ctx := context.Background()
-	_ = s.fs.Delete(ctx, dto.Key)
-	return s.fileRepository.DeleteByKey(ctx, dto.Key)
+	if err := s.transactor.Run(context.Background(), func(ctx context.Context) error {
+		return s.DeleteFileRecord(ctx, dto.Key)
+	}); err != nil {
+		return err
+	}
+
+	_ = s.DeleteStoredFile(dto.Key)
+	return nil
 }
 
 func (s *CommonService) GetSysAdmin() (userModel.User, error) {
-	return s.commonRepository.GetSysAdmin()
+	return s.commonRepository.GetSysAdmin(context.Background())
 }
 
 func (s *CommonService) GetStatus() (commonModel.Status, error) {
-	sysuser, err := s.commonRepository.GetSysAdmin()
+	ctx := context.Background()
+
+	sysuser, err := s.commonRepository.GetSysAdmin(ctx)
 	if err != nil {
 		return commonModel.Status{}, err
 	}
 
 	var users []commonModel.UserStatus
-	allusers, err := s.commonRepository.GetAllUsers()
+	allusers, err := s.commonRepository.GetAllUsers(ctx)
 	if err != nil {
 		return commonModel.Status{}, err
 	}
@@ -219,7 +226,7 @@ func (s *CommonService) GetStatus() (commonModel.Status, error) {
 		})
 	}
 
-	echos, err := s.commonRepository.GetAllEchos(true)
+	echos, err := s.commonRepository.GetAllEchos(ctx, true)
 	if err != nil {
 		return commonModel.Status{}, err
 	}
@@ -234,12 +241,13 @@ func (s *CommonService) GetStatus() (commonModel.Status, error) {
 }
 
 func (s *CommonService) GetHeatMap(timezone string) ([]commonModel.Heatmap, error) {
+	ctx := context.Background()
 	loc := timezoneUtil.LoadLocationOrUTC(timezone)
 	nowUser := time.Now().UTC().In(loc)
 	startUser := time.Date(nowUser.Year(), nowUser.Month(), nowUser.Day(), 0, 0, 0, 0, loc).AddDate(0, 0, -29)
 	endUserExclusive := startUser.AddDate(0, 0, 30)
 
-	createdAtList, err := s.commonRepository.GetHeatMap(startUser.UTC(), endUserExclusive.UTC())
+	createdAtList, err := s.commonRepository.GetHeatMap(ctx, startUser.UTC(), endUserExclusive.UTC())
 	if err != nil {
 		return nil, err
 	}
@@ -263,7 +271,7 @@ func (s *CommonService) GetHeatMap(timezone string) ([]commonModel.Heatmap, erro
 }
 
 func (s *CommonService) GenerateRSS(ctx *gin.Context) (string, error) {
-	echos, err := s.commonRepository.GetAllEchos(false)
+	echos, err := s.commonRepository.GetAllEchos(ctx.Request.Context(), false)
 	if err != nil {
 		return "", err
 	}
@@ -331,7 +339,11 @@ func (s *CommonService) UploadMusic(
 			strconv.FormatUint(uint64(fileDto.ID), 10),
 		)
 	}); err != nil {
-		logUtil.GetLogger().Error("Failed to save global music file ID", zap.String("error", err.Error()))
+		_ = s.transactor.Run(context.Background(), func(ctx context.Context) error {
+			return s.DeleteFileRecord(ctx, fileDto.Key)
+		})
+		_ = s.DeleteStoredFile(fileDto.Key)
+		return "", err
 	}
 
 	return fileDto.URL, nil
@@ -362,13 +374,16 @@ func (s *CommonService) DeleteMusic(userid uint) error {
 		return nil
 	}
 
-	_ = s.fs.Delete(ctx, fileRecord.Key)
-	_ = s.fileRepository.Delete(ctx, fileRecord.ID)
+	if err := s.transactor.Run(ctx, func(txCtx context.Context) error {
+		if err := s.keyvalueRepository.DeleteKeyValue(txCtx, globalMusicFileIDKey); err != nil {
+			return err
+		}
+		return s.fileRepository.Delete(txCtx, fileRecord.ID)
+	}); err != nil {
+		return err
+	}
 
-	_ = s.transactor.Run(ctx, func(txCtx context.Context) error {
-		return s.keyvalueRepository.DeleteKeyValue(txCtx, globalMusicFileIDKey)
-	})
-
+	_ = s.DeleteStoredFile(fileRecord.Key)
 	return nil
 }
 
@@ -586,4 +601,15 @@ func isAllowedType(contentType string, allowedTypes []string) bool {
 		}
 	}
 	return false
+}
+
+func (s *CommonService) DeleteFileRecord(ctx context.Context, key string) error {
+	return s.fileRepository.DeleteByKey(ctx, key)
+}
+
+func (s *CommonService) DeleteStoredFile(key string) error {
+	if key == "" {
+		return nil
+	}
+	return s.fs.Delete(context.Background(), key)
 }

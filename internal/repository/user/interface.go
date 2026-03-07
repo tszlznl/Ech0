@@ -13,10 +13,10 @@ type UserRepositoryInterface interface {
 	GetUserByID(ctx context.Context, id int) (model.User, error)
 
 	// GetUserByUsername 根据用户名获取用户
-	GetUserByUsername(username string) (model.User, error)
+	GetUserByUsername(ctx context.Context, username string) (model.User, error)
 
 	// GetAllUsers 获取所有用户
-	GetAllUsers() ([]model.User, error)
+	GetAllUsers(ctx context.Context) ([]model.User, error)
 
 	// CreateUser 创建一个新的用户
 	CreateUser(ctx context.Context, newUser *model.User) error

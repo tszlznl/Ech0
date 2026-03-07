@@ -15,17 +15,19 @@ import (
 	webHandler "github.com/lin-snow/ech0/internal/handler/web"
 )
 
-var WebSet = wire.NewSet(webHandler.ProviderSet)
-var UserSet = wire.NewSet(userHandler.ProviderSet)
-var EchoSet = wire.NewSet(echoHandler.ProviderSet)
-var CommonSet = wire.NewSet(commonHandler.ProviderSet)
-var SettingSet = wire.NewSet(settingHandler.ProviderSet)
-var TodoSet = wire.NewSet(todoHandler.ProviderSet)
-var ConnectSet = wire.NewSet(connectHandler.ProviderSet)
-var BackupSet = wire.NewSet(backupHandler.ProviderSet)
-var DashboardSet = wire.NewSet(dashboardHandler.ProviderSet)
-var AgentSet = wire.NewSet(agentHandler.ProviderSet)
-var InboxSet = wire.NewSet(inboxHandler.ProviderSet)
+var (
+	WebSet       = wire.NewSet(webHandler.ProviderSet)
+	UserSet      = wire.NewSet(userHandler.ProviderSet)
+	EchoSet      = wire.NewSet(echoHandler.ProviderSet)
+	CommonSet    = wire.NewSet(commonHandler.ProviderSet)
+	SettingSet   = wire.NewSet(settingHandler.ProviderSet)
+	TodoSet      = wire.NewSet(todoHandler.ProviderSet)
+	ConnectSet   = wire.NewSet(connectHandler.ProviderSet)
+	BackupSet    = wire.NewSet(backupHandler.ProviderSet)
+	DashboardSet = wire.NewSet(dashboardHandler.ProviderSet)
+	AgentSet     = wire.NewSet(agentHandler.ProviderSet)
+	InboxSet     = wire.NewSet(inboxHandler.ProviderSet)
+)
 
 var ProviderSet = wire.NewSet(
 	WebSet,

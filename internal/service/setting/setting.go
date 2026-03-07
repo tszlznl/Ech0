@@ -483,7 +483,7 @@ func (settingService *SettingService) GetAllWebhooks(userid uint) ([]webhookMode
 		return nil, errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	webhooks, err := settingService.webhookRepository.GetAllWebhooks()
+	webhooks, err := settingService.webhookRepository.GetAllWebhooks(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -595,7 +595,7 @@ func (settingService *SettingService) ListAccessTokens(
 		return nil, errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	tokens, err := settingService.settingRepository.ListAccessTokens(user.ID)
+	tokens, err := settingService.settingRepository.ListAccessTokens(context.Background(), user.ID)
 	if err != nil {
 		return []model.AccessTokenSetting{}, nil
 	}

@@ -32,7 +32,7 @@ func (tx *GormTransactor) Run(ctx context.Context, fn func(ctx context.Context) 
 	}
 
 	// 返回一个新的事务上下文
-	// 在这个上下文中，txKey 被设置为当前事务的 gorm.DB，使用gorm自带的自动事务管理
+	// 在这个上下文中，TxKey 被设置为当前事务的 gorm.DB，使用 GORM 自带的自动事务管理
 	return tx.dbProvider().Transaction(func(gormTx *gorm.DB) error {
 		// 将当前事务的 gorm.DB 设置到上下文中，这里创建一个新的上下文
 		txCtx := context.WithValue(ctx, TxKey, gormTx)
