@@ -12,9 +12,12 @@ import (
 	"github.com/lin-snow/ech0/internal/metric"
 	"github.com/lin-snow/ech0/internal/monitor"
 	repository "github.com/lin-snow/ech0/internal/repository"
-	fileRepo "github.com/lin-snow/ech0/internal/repository/file"
+	runtimeCache "github.com/lin-snow/ech0/internal/runtime/cache"
+	runtimeEvent "github.com/lin-snow/ech0/internal/runtime/event"
 	runtimeHTTP "github.com/lin-snow/ech0/internal/runtime/http"
+	runtimeTask "github.com/lin-snow/ech0/internal/runtime/task"
 	service "github.com/lin-snow/ech0/internal/service"
+	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/task"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"gorm.io/gorm"
@@ -22,7 +25,7 @@ import (
 
 var AppSet = wire.NewSet(
 	ProvideWebComponents,
-	ProvideApp,
+	app.ProviderSet,
 )
 
 var DomainSet = wire.NewSet(
@@ -34,27 +37,18 @@ var DomainSet = wire.NewSet(
 var InfraSet = wire.NewSet(
 	ProvideDBProvider,
 	ProvideEventBusProvider,
-	ProvideCacheFactory,
-	ProvideCache,
-	ProvideCacheCleanup,
-	ProvideTransactionManagerFactory,
-	ProvideTransactionManager,
+	cache.ProviderSet,
+	transaction.ProviderSet,
 	ProvideGinEngine,
 )
 
 var RuntimeSet = wire.NewSet(
 	ProvideHTTPServer,
-	ProvideHTTPRuntime,
-	ProvideEventRuntime,
-	ProvideTaskRuntime,
-	ProvideCacheRuntime,
+	runtimeHTTP.ProviderSet,
+	runtimeEvent.ProviderSet,
+	runtimeTask.ProviderSet,
+	runtimeCache.ProviderSet,
 )
-
-var CacheSet = wire.NewSet(ProvideCache)
-var FsSet = wire.NewSet(ProvideVireFS)
-var StorageSet = wire.NewSet(ProvideURLResolver)
-var FileSet = wire.NewSet(fileRepo.ProviderSet)
-var TransactionManagerSet = wire.NewSet(ProvideTransactionManager)
 
 var WebSet = wire.NewSet(handler.WebSet)
 var UserSet = wire.NewSet(repository.UserSet, service.UserSet, handler.UserSet)
@@ -106,8 +100,8 @@ func BuildEventRegistrar(
 		UserSet,
 		TodoSet,
 		InboxSet,
-		CacheSet,
-		TransactionManagerSet,
+		cache.CacheSet,
+		transaction.ManagerSet,
 		KeyValueSet,
 		QueueSet,
 		WebhookSet,
@@ -124,11 +118,10 @@ func BuildHandlers(
 	ebProvider func() event.IEventBus,
 ) (*handler.Bundle, error) {
 	wire.Build(
-		CacheSet,
-		FsSet,
-		StorageSet,
-		FileSet,
-		TransactionManagerSet,
+		cache.CacheSet,
+		storage.ProviderSet,
+		repository.FileSet,
+		transaction.ManagerSet,
 		WebSet,
 		UserSet,
 		EchoSet,
@@ -155,7 +148,7 @@ func BuildWebRuntime() (*runtimeHTTP.Runtime, error) {
 		InfraSet,
 		DomainSet,
 		ProvideHTTPServer,
-		ProvideHTTPRuntime,
+		runtimeHTTP.ProviderSet,
 	)
 	return &runtimeHTTP.Runtime{}, nil
 }
@@ -167,12 +160,11 @@ func BuildTasker(
 	ebProvider func() event.IEventBus,
 ) (*task.Tasker, error) {
 	wire.Build(
-		CacheSet,
-		FsSet,
-		StorageSet,
-		FileSet,
+		cache.CacheSet,
+		storage.ProviderSet,
+		repository.FileSet,
 		KeyValueSet,
-		TransactionManagerSet,
+		transaction.ManagerSet,
 		WebhookSet,
 		SettingSet,
 		EchoSet,

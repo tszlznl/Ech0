@@ -5,9 +5,22 @@ import (
 	"log"
 	"strings"
 
+	"github.com/google/wire"
 	virefs "github.com/lin-snow/VireFS"
 	"github.com/lin-snow/ech0/internal/config"
 )
+
+func ProvideFS() virefs.FS {
+	return NewFS(config.Config().Storage)
+}
+
+func ProvideURLResolver() URLResolver {
+	return NewURLResolver(config.Config().Storage)
+}
+
+var FSSet = wire.NewSet(ProvideFS)
+var URLResolverSet = wire.NewSet(ProvideURLResolver)
+var ProviderSet = wire.NewSet(FSSet, URLResolverSet)
 
 // NewFS builds a virefs.FS based on the given StorageConfig.
 // File classification (images/, audios/, etc.) is handled by VireFS Schema.

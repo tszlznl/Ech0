@@ -2,7 +2,6 @@ package di
 
 import (
 	"github.com/gin-gonic/gin"
-	virefs "github.com/lin-snow/VireFS"
 	"github.com/lin-snow/ech0/internal/app"
 	"github.com/lin-snow/ech0/internal/cache"
 	"github.com/lin-snow/ech0/internal/config"
@@ -15,25 +14,10 @@ import (
 	runtimeHTTP "github.com/lin-snow/ech0/internal/runtime/http"
 	runtimeTask "github.com/lin-snow/ech0/internal/runtime/task"
 	"github.com/lin-snow/ech0/internal/server"
-	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/task"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"gorm.io/gorm"
 )
-
-func ProvideCache(factory *cache.CacheFactory) cache.ICache[string, any] {
-	return factory.Cache()
-}
-
-func ProvideCacheCleanup(factory *cache.CacheFactory) func() error {
-	return factory.Cleanup
-}
-
-func ProvideTransactionManager(
-	factory *transaction.TransactionManagerFactory,
-) transaction.TransactionManager {
-	return factory.TransactionManager()
-}
 
 func ProvideDBProvider() func() *gorm.DB {
 	database.InitDatabase()
@@ -43,24 +27,6 @@ func ProvideDBProvider() func() *gorm.DB {
 func ProvideEventBusProvider() func() event.IEventBus {
 	event.InitEventBus()
 	return event.GetEventBus
-}
-
-func ProvideCacheFactory() *cache.CacheFactory {
-	return cache.NewCacheFactory()
-}
-
-func ProvideVireFS() virefs.FS {
-	return storage.NewFS(config.Config().Storage)
-}
-
-func ProvideURLResolver() storage.URLResolver {
-	return storage.NewURLResolver(config.Config().Storage)
-}
-
-func ProvideTransactionManagerFactory(
-	dbProvider func() *gorm.DB,
-) *transaction.TransactionManagerFactory {
-	return transaction.NewTransactionManagerFactory(dbProvider)
 }
 
 func ProvideGinEngine() *gin.Engine {
@@ -75,22 +41,6 @@ func ProvideGinEngine() *gin.Engine {
 func ProvideHTTPServer(engine *gin.Engine, handlers *handler.Bundle) *server.Server {
 	router.SetupRouter(engine, handlers)
 	return server.New(engine)
-}
-
-func ProvideHTTPRuntime(s *server.Server) *runtimeHTTP.Runtime {
-	return runtimeHTTP.New(s)
-}
-
-func ProvideEventRuntime(registrar *event.EventRegistrar) *runtimeEvent.Runtime {
-	return runtimeEvent.New(registrar)
-}
-
-func ProvideTaskRuntime(tasker *task.Tasker) *runtimeTask.Runtime {
-	return runtimeTask.New(tasker)
-}
-
-func ProvideCacheRuntime(cleanup func() error) *runtimeCache.Runtime {
-	return runtimeCache.New(cleanup)
 }
 
 func ProvideHandlers(
@@ -127,10 +77,4 @@ func ProvideWebComponents(
 	httpRuntime *runtimeHTTP.Runtime,
 ) []app.Component {
 	return []app.Component{cacheRuntime, eventRuntime, taskRuntime, httpRuntime}
-}
-
-func ProvideApp(
-	webComponents []app.Component,
-) *app.App {
-	return app.NewApp(webComponents)
 }
