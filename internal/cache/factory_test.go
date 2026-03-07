@@ -20,11 +20,11 @@ func (c *closeSpyCache) Close() error {
 	return nil
 }
 
-func TestCacheFactoryCleanup(t *testing.T) {
+func TestProvideCleanup(t *testing.T) {
 	spy := &closeSpyCache{}
-	f := &CacheFactory{cache: spy}
+	cleanup := ProvideCleanup(spy)
 
-	if err := f.Cleanup(); err != nil {
+	if err := cleanup(); err != nil {
 		t.Fatalf("cleanup failed: %v", err)
 	}
 	if !spy.closed {
@@ -32,9 +32,9 @@ func TestCacheFactoryCleanup(t *testing.T) {
 	}
 }
 
-func TestCacheFactoryCleanupNilFactory(t *testing.T) {
-	var f *CacheFactory
-	if err := f.Cleanup(); err != nil {
-		t.Fatalf("cleanup should not fail for nil factory: %v", err)
+func TestProvideCleanupNilCache(t *testing.T) {
+	cleanup := ProvideCleanup(nil)
+	if err := cleanup(); err != nil {
+		t.Fatalf("cleanup should not fail for nil cache: %v", err)
 	}
 }

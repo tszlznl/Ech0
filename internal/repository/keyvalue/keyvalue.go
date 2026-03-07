@@ -33,15 +33,27 @@ func (keyvalueRepository *KeyValueRepository) getDB(ctx context.Context) *gorm.D
 }
 
 // GetKeyValue 根据键获取值
-func (keyvalueRepository *KeyValueRepository) GetKeyValue(key string) (string, error) {
+func (keyvalueRepository *KeyValueRepository) GetKeyValue(ctx context.Context, key string) (string, error) {
 	cacheKey := GetKeyValueCacheKey(key)
-	return cache.ReadThroughTyped[string](keyvalueRepository.cache, cacheKey, 1, func() (string, error) {
-		var kv model.KeyValue
-		if err := keyvalueRepository.db().Where("key = ?", key).First(&kv).Error; err != nil {
-			return "", err
-		}
-		return kv.Value, nil
-	})
+	return cache.ReadThroughTypedUnlessTx[string](
+		ctx,
+		keyvalueRepository.cache,
+		cacheKey,
+		1,
+		func(ctx context.Context) (string, error) {
+			var kv model.KeyValue
+			if err := keyvalueRepository.getDB(ctx).Where("key = ?", key).First(&kv).Error; err != nil {
+				return "", err
+			}
+			return kv.Value, nil
+		},
+		func() (string, error) {
+			var kv model.KeyValue
+			if err := keyvalueRepository.db().Where("key = ?", key).First(&kv).Error; err != nil {
+				return "", err
+			}
+			return kv.Value, nil
+		})
 }
 
 // AddKeyValue 添加键值对

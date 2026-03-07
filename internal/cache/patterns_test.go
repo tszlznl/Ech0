@@ -1,11 +1,15 @@
 package cache
 
 import (
+	"context"
 	"errors"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/lin-snow/ech0/internal/transaction"
+	"gorm.io/gorm"
 )
 
 type memCache struct {
@@ -133,5 +137,37 @@ func TestReadThroughTypedSingleflight(t *testing.T) {
 
 	if atomic.LoadInt32(&calls) != 1 {
 		t.Fatalf("expected loader called once, got %d", calls)
+	}
+}
+
+func TestReadThroughTypedUnlessTxBypassesCache(t *testing.T) {
+	c := newMemCache()
+	c.Set("k", "cached", 1)
+
+	ctx := context.WithValue(context.Background(), transaction.TxKey, &gorm.DB{})
+	calls := 0
+
+	v, err := ReadThroughTypedUnlessTx[string](
+		ctx,
+		c,
+		"k",
+		1,
+		func(context.Context) (string, error) {
+			calls++
+			return "tx-value", nil
+		},
+		func() (string, error) {
+			t.Fatal("cached loader should not run inside tx")
+			return "", nil
+		},
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if v != "tx-value" {
+		t.Fatalf("unexpected tx value: %q", v)
+	}
+	if calls != 1 {
+		t.Fatalf("expected tx loader called once, got %d", calls)
 	}
 }

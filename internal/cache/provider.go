@@ -2,15 +2,19 @@ package cache
 
 import "github.com/google/wire"
 
-func ProvideCache(factory *CacheFactory) ICache[string, any] {
-	return factory.Cache()
+func ProvideCache() (ICache[string, any], error) {
+	return NewCache[string, any]()
 }
 
-func ProvideCleanup(factory *CacheFactory) func() error {
-	return factory.Cleanup
+func ProvideCleanup(cache ICache[string, any]) func() error {
+	return func() error {
+		if cache == nil {
+			return nil
+		}
+		return cache.Close()
+	}
 }
 
-var FactorySet = wire.NewSet(NewCacheFactory)
 var CacheSet = wire.NewSet(ProvideCache)
 var CleanupSet = wire.NewSet(ProvideCleanup)
-var ProviderSet = wire.NewSet(FactorySet, CacheSet, CleanupSet)
+var ProviderSet = wire.NewSet(CacheSet, CleanupSet)

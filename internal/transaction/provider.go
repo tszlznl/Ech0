@@ -2,10 +2,9 @@ package transaction
 
 import "github.com/google/wire"
 
-func ProvideTransactionManager(factory *TransactionManagerFactory) TransactionManager {
-	return factory.TransactionManager()
-}
+var TransactorSet = wire.NewSet(
+	NewGormTransactor,
+	wire.Bind(new(Transactor), new(*GormTransactor)),
+)
 
-var FactorySet = wire.NewSet(NewTransactionManagerFactory)
-var ManagerSet = wire.NewSet(ProvideTransactionManager)
-var ProviderSet = wire.NewSet(FactorySet, ManagerSet)
+var ProviderSet = TransactorSet

@@ -1,12 +1,30 @@
 package cache
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/lin-snow/ech0/internal/transaction"
 	"golang.org/x/sync/singleflight"
 )
 
 var readThroughGroup singleflight.Group
+
+// ReadThroughTypedUnlessTx 在事务中直接走 txLoader，避免读到事务外缓存。
+func ReadThroughTypedUnlessTx[T any](
+	ctx context.Context,
+	c ICache[string, any],
+	key string,
+	cost int64,
+	txLoader func(context.Context) (T, error),
+	loader func() (T, error),
+) (T, error) {
+	if transaction.HasTx(ctx) {
+		return txLoader(ctx)
+	}
+
+	return ReadThroughTyped(c, key, cost, loader)
+}
 
 // ReadThroughTyped 统一读穿透模式：先查缓存，未命中后走 loader 并回填缓存。
 func ReadThroughTyped[T any](

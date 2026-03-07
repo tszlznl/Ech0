@@ -4,7 +4,7 @@ import "context"
 
 type KeyValueRepositoryInterface interface {
 	// GetKeyValue 根据键获取值
-	GetKeyValue(key string) (string, error)
+	GetKeyValue(ctx context.Context, key string) (string, error)
 
 	// AddKeyValue 添加键值对
 	AddKeyValue(ctx context.Context, key string, value string) error

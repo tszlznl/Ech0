@@ -5,7 +5,6 @@ package di
 
 import (
 	"github.com/google/wire"
-	"github.com/lin-snow/ech0/internal/cache"
 	"github.com/lin-snow/ech0/internal/event"
 	"github.com/lin-snow/ech0/internal/handler"
 	"github.com/lin-snow/ech0/internal/metric"
@@ -14,7 +13,6 @@ import (
 	"github.com/lin-snow/ech0/internal/service"
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/task"
-	"github.com/lin-snow/ech0/internal/transaction"
 )
 
 var UserFeatureSet = wire.NewSet(repository.UserSet, service.UserSet, handler.UserSet)
@@ -33,8 +31,6 @@ var EventGraphSet = wire.NewSet(
 	UserFeatureSet,
 	TodoFeatureSet,
 	InboxFeatureSet,
-	cache.CacheSet,
-	transaction.ManagerSet,
 	repository.KeyValueSet,
 	repository.QueueSet,
 	repository.WebhookSet,
@@ -48,10 +44,8 @@ var EventGraphSet = wire.NewSet(
 )
 
 var HandlerGraphSet = wire.NewSet(
-	cache.CacheSet,
 	storage.ProviderSet,
 	repository.FileSet,
-	transaction.ManagerSet,
 	handler.WebSet,
 	UserFeatureSet,
 	EchoFeatureSet,
@@ -71,11 +65,9 @@ var HandlerGraphSet = wire.NewSet(
 )
 
 var TaskerGraphSet = wire.NewSet(
-	cache.CacheSet,
 	storage.ProviderSet,
 	repository.FileSet,
 	repository.KeyValueSet,
-	transaction.ManagerSet,
 	repository.WebhookSet,
 	SettingFeatureSet,
 	EchoFeatureSet,

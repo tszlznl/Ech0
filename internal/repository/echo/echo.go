@@ -97,22 +97,41 @@ func (echoRepository *EchoRepository) GetEchosByPage(
 	return pageResult.Items, pageResult.Total
 }
 
-func (echoRepository *EchoRepository) GetEchosById(id uint) (*model.Echo, error) {
+func (echoRepository *EchoRepository) GetEchosById(ctx context.Context, id uint) (*model.Echo, error) {
 	cacheKey := GetEchoByIDCacheKey(id)
-	echo, err := cache.ReadThroughTyped[*model.Echo](echoRepository.cache, cacheKey, 1, func() (*model.Echo, error) {
-		var row model.Echo
-		result := echoRepository.db().
-			Preload("EchoFiles", func(db *gorm.DB) *gorm.DB {
-				return db.Order("echo_files.sort_order ASC")
-			}).
-			Preload("EchoFiles.File").
-			Preload("Tags").
-			First(&row, id)
-		if result.Error != nil {
-			return nil, result.Error
-		}
-		return &row, nil
-	})
+	echo, err := cache.ReadThroughTypedUnlessTx[*model.Echo](
+		ctx,
+		echoRepository.cache,
+		cacheKey,
+		1,
+		func(ctx context.Context) (*model.Echo, error) {
+			var row model.Echo
+			result := echoRepository.getDB(ctx).
+				Preload("EchoFiles", func(db *gorm.DB) *gorm.DB {
+					return db.Order("echo_files.sort_order ASC")
+				}).
+				Preload("EchoFiles.File").
+				Preload("Tags").
+				First(&row, id)
+			if result.Error != nil {
+				return nil, result.Error
+			}
+			return &row, nil
+		},
+		func() (*model.Echo, error) {
+			var row model.Echo
+			result := echoRepository.db().
+				Preload("EchoFiles", func(db *gorm.DB) *gorm.DB {
+					return db.Order("echo_files.sort_order ASC")
+				}).
+				Preload("EchoFiles.File").
+				Preload("Tags").
+				First(&row, id)
+			if result.Error != nil {
+				return nil, result.Error
+			}
+			return &row, nil
+		})
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -299,9 +318,9 @@ func (echoRepository *EchoRepository) GetTagByName(name string) (*model.Tag, err
 	return &tag, nil
 }
 
-func (echoRepository *EchoRepository) GetTagsByNames(names []string) ([]*model.Tag, error) {
+func (echoRepository *EchoRepository) GetTagsByNames(ctx context.Context, names []string) ([]*model.Tag, error) {
 	var tags []*model.Tag
-	result := echoRepository.db().Where("name IN ?", names).Find(&tags)
+	result := echoRepository.getDB(ctx).Where("name IN ?", names).Find(&tags)
 	if result.Error != nil {
 		return nil, result.Error
 	}

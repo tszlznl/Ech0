@@ -25,19 +25,19 @@ type WebhookReplayPayload struct {
 }
 
 type WebhookDispatcher struct {
-	bus       IEventBus                                    // 事件总线
-	client    *http.Client                                 // HTTP 客户端
-	repo      webhookRepository.WebhookRepositoryInterface // Webhook 仓储层
-	pool      *async.WorkerPool                            // 任务池pool
-	queueRepo queueRepository.QueueRepositoryInterface     // 死信任务仓储
-	txManager transaction.TransactionManager               // 事务管理器
+	bus        IEventBus                                    // 事件总线
+	client     *http.Client                                 // HTTP 客户端
+	repo       webhookRepository.WebhookRepositoryInterface // Webhook 仓储层
+	pool       *async.WorkerPool                            // 任务池pool
+	queueRepo  queueRepository.QueueRepositoryInterface     // 死信任务仓储
+	transactor transaction.Transactor                       // 事务执行器
 }
 
 func NewWebhookDispatcher(
 	ebp func() IEventBus,
 	repo webhookRepository.WebhookRepositoryInterface,
 	queueRepo queueRepository.QueueRepositoryInterface,
-	txManager transaction.TransactionManager,
+	tx transaction.Transactor,
 ) *WebhookDispatcher {
 	return &WebhookDispatcher{
 		bus:       ebp(),     // 获取事件总线实例
@@ -51,8 +51,8 @@ func NewWebhookDispatcher(
 				IdleConnTimeout:     30 * time.Second, // 空闲连接超时时间
 			},
 		},
-		pool:      async.NewWorkerPool(6, 6), // 假设最大并发数为 6，任务队列大小为 6
-		txManager: txManager,                 // 注入事务管理器
+		pool:       async.NewWorkerPool(6, 6), // 假设最大并发数为 6，任务队列大小为 6
+		transactor: tx,                        // 注入事务执行器
 	}
 }
 
@@ -134,7 +134,7 @@ func (wd *WebhookDispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webh
 		deadLetter.Status = queueModel.DeadLetterStatusPending // 初始状态为待处理
 
 		// 使用事务保存死信任务
-		if err := wd.txManager.Run(func(ctx context.Context) error {
+		if err := wd.transactor.Run(ctx, func(ctx context.Context) error {
 			return wd.queueRepo.SaveDeadLetter(ctx, &deadLetter)
 		}); err != nil {
 			logUtil.GetLogger().

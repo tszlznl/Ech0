@@ -59,8 +59,8 @@ func BuildApp() (*app.App, func(), error) {
 func BuildEventRegistrar(
 	dbProvider func() *gorm.DB,
 	ebProvider func() event.IEventBus,
-	cacheFactory *cache.CacheFactory,
-	tmFactory *transaction.TransactionManagerFactory,
+	appCache cache.ICache[string, any],
+	tx transaction.Transactor,
 ) (*event.EventRegistrar, error) {
 	wire.Build(
 		EventGraphSet,
@@ -71,8 +71,8 @@ func BuildEventRegistrar(
 // BuildHandlers 使用 wire 生成的代码来构建 Handlers 实例。
 func BuildHandlers(
 	dbProvider func() *gorm.DB,
-	cacheFactory *cache.CacheFactory,
-	tmFactory *transaction.TransactionManagerFactory,
+	appCache cache.ICache[string, any],
+	tx transaction.Transactor,
 	ebProvider func() event.IEventBus,
 ) (*handler.Bundle, error) {
 	wire.Build(
@@ -94,8 +94,8 @@ func BuildWebRuntime() (*runtimeHTTP.Runtime, error) {
 
 func BuildTasker(
 	dbProvider func() *gorm.DB,
-	cacheFactory *cache.CacheFactory,
-	tmFactory *transaction.TransactionManagerFactory,
+	appCache cache.ICache[string, any],
+	tx transaction.Transactor,
 	ebProvider func() event.IEventBus,
 ) (*task.Tasker, error) {
 	wire.Build(

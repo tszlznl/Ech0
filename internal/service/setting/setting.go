@@ -26,7 +26,7 @@ import (
 )
 
 type SettingService struct {
-	txManager          transaction.TransactionManager
+	transactor         transaction.Transactor
 	commonService      *commonService.CommonService
 	keyvalueRepository keyvalueRepository.KeyValueRepositoryInterface
 	settingRepository  settingRepository.SettingRepositoryInterface
@@ -35,7 +35,7 @@ type SettingService struct {
 }
 
 func NewSettingService(
-	tm transaction.TransactionManager,
+	tx transaction.Transactor,
 	commonService *commonService.CommonService,
 	keyvalueRepository keyvalueRepository.KeyValueRepositoryInterface,
 	settingRepository settingRepository.SettingRepositoryInterface,
@@ -43,7 +43,7 @@ func NewSettingService(
 	ebProvider func() event.IEventBus,
 ) *SettingService {
 	return &SettingService{
-		txManager:          tm,
+		transactor:         tx,
 		commonService:      commonService,
 		keyvalueRepository: keyvalueRepository,
 		webhookRepository:  webhookRepository,
@@ -54,8 +54,9 @@ func NewSettingService(
 
 // GetSetting 获取设置
 func (settingService *SettingService) GetSetting(setting *model.SystemSetting) error {
-	return settingService.txManager.Run(func(ctx context.Context) error {
+	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		systemSetting, err := settingService.keyvalueRepository.GetKeyValue(
+			ctx,
 			commonModel.SystemSettingsKey,
 		)
 		if err != nil {
@@ -104,8 +105,8 @@ func (settingService *SettingService) UpdateSetting(
 	userid uint,
 	newSetting *model.SystemSettingDto,
 ) error {
-	return settingService.txManager.Run(func(ctx context.Context) error {
-		user, err := settingService.commonService.CommonGetUserByUserId(userid)
+	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
+		user, err := settingService.commonService.CommonGetUserByUserId(ctx, userid)
 		if err != nil {
 			return err
 		}
@@ -147,8 +148,9 @@ func (settingService *SettingService) UpdateSetting(
 
 // GetCommentSetting 获取评论设置
 func (settingService *SettingService) GetCommentSetting(setting *model.CommentSetting) error {
-	return settingService.txManager.Run(func(ctx context.Context) error {
+	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		commentSetting, err := settingService.keyvalueRepository.GetKeyValue(
+			ctx,
 			commonModel.CommentSettingKey,
 		)
 		if err != nil {
@@ -185,7 +187,7 @@ func (settingService *SettingService) UpdateCommentSetting(
 	userid uint,
 	newSetting *model.CommentSettingDto,
 ) error {
-	user, err := settingService.commonService.CommonGetUserByUserId(userid)
+	user, err := settingService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
 	}
@@ -193,7 +195,7 @@ func (settingService *SettingService) UpdateCommentSetting(
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	return settingService.txManager.Run(func(ctx context.Context) error {
+	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		// 检查评论服务提供者是否有效
 		if newSetting.Provider != string(commonModel.TWIKOO) &&
 			newSetting.Provider != string(commonModel.ARTALK) &&
@@ -224,8 +226,8 @@ func (settingService *SettingService) UpdateCommentSetting(
 
 // GetS3Setting 获取 S3 存储设置
 func (settingService *SettingService) GetS3Setting(userid uint, setting *model.S3Setting) error {
-	return settingService.txManager.Run(func(ctx context.Context) error {
-		s3Setting, err := settingService.keyvalueRepository.GetKeyValue(commonModel.S3SettingKey)
+	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
+		s3Setting, err := settingService.keyvalueRepository.GetKeyValue(ctx, commonModel.S3SettingKey)
 		if err != nil {
 			// 数据库中不存在数据，手动添加初始数据
 			setting.Enable = false
@@ -263,7 +265,7 @@ func (settingService *SettingService) GetS3Setting(userid uint, setting *model.S
 			setting.BucketName = "******"
 			setting.Endpoint = "******"
 		} else {
-			user, err := settingService.commonService.CommonGetUserByUserId(userid)
+			user, err := settingService.commonService.CommonGetUserByUserId(ctx, userid)
 			if err != nil {
 				return err
 			}
@@ -284,7 +286,7 @@ func (settingService *SettingService) UpdateS3Setting(
 	userid uint,
 	newSetting *model.S3SettingDto,
 ) error {
-	user, err := settingService.commonService.CommonGetUserByUserId(userid)
+	user, err := settingService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
 	}
@@ -292,7 +294,7 @@ func (settingService *SettingService) UpdateS3Setting(
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	return settingService.txManager.Run(func(ctx context.Context) error {
+	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		// 检查endpoint是否为http(s)动态改变USE SSL
 		if strings.HasPrefix(strings.ToLower(strings.TrimSpace(newSetting.Endpoint)), "https://") {
 			newSetting.UseSSL = true
@@ -362,9 +364,9 @@ func (settingService *SettingService) GetOAuth2Setting(
 	setting *model.OAuth2Setting,
 	forInternal bool,
 ) error {
-	return settingService.txManager.Run(func(ctx context.Context) error {
+	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		if !forInternal {
-			user, err := settingService.commonService.CommonGetUserByUserId(userid)
+			user, err := settingService.commonService.CommonGetUserByUserId(ctx, userid)
 			if err != nil {
 				return err
 			}
@@ -374,6 +376,7 @@ func (settingService *SettingService) GetOAuth2Setting(
 		}
 
 		oauthSetting, err := settingService.keyvalueRepository.GetKeyValue(
+			ctx,
 			commonModel.OAuth2SettingKey,
 		)
 		if err != nil {
@@ -418,7 +421,7 @@ func (settingService *SettingService) UpdateOAuth2Setting(
 	userid uint,
 	newSetting *model.OAuth2SettingDto,
 ) error {
-	user, err := settingService.commonService.CommonGetUserByUserId(userid)
+	user, err := settingService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
 	}
@@ -426,7 +429,7 @@ func (settingService *SettingService) UpdateOAuth2Setting(
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	return settingService.txManager.Run(func(ctx context.Context) error {
+	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		oauthSetting := &model.OAuth2Setting{
 			Enable:       newSetting.Enable,
 			Provider:     newSetting.Provider,
@@ -472,7 +475,7 @@ func (settingService *SettingService) GetOAuth2Status(status *model.OAuth2Status
 // GetAllWebhooks 获取所有 Webhook
 func (settingService *SettingService) GetAllWebhooks(userid uint) ([]webhookModel.Webhook, error) {
 	// 鉴权
-	user, err := settingService.commonService.CommonGetUserByUserId(userid)
+	user, err := settingService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return nil, err
 	}
@@ -491,7 +494,7 @@ func (settingService *SettingService) GetAllWebhooks(userid uint) ([]webhookMode
 // DeleteWebhook 删除 Webhook
 func (settingService *SettingService) DeleteWebhook(userid, id uint) error {
 	// 鉴权
-	user, err := settingService.commonService.CommonGetUserByUserId(userid)
+	user, err := settingService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
 	}
@@ -499,7 +502,7 @@ func (settingService *SettingService) DeleteWebhook(userid, id uint) error {
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	return settingService.txManager.Run(func(ctx context.Context) error {
+	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		return settingService.webhookRepository.DeleteWebhookByID(ctx, id)
 	})
 }
@@ -510,7 +513,7 @@ func (settingService *SettingService) UpdateWebhook(
 	newWebhook *model.WebhookDto,
 ) error {
 	// 鉴权
-	user, err := settingService.commonService.CommonGetUserByUserId(userid)
+	user, err := settingService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
 	}
@@ -535,7 +538,7 @@ func (settingService *SettingService) UpdateWebhook(
 		IsActive: newWebhook.IsActive,
 	}
 
-	return settingService.txManager.Run(func(ctx context.Context) error {
+	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		// 先删除再创建，避免部分字段无法更新的问题
 		if err := settingService.webhookRepository.DeleteWebhookByID(ctx, webhook.ID); err != nil {
 			return err
@@ -550,7 +553,7 @@ func (settingService *SettingService) CreateWebhook(
 	newWebhook *model.WebhookDto,
 ) error {
 	// 鉴权
-	user, err := settingService.commonService.CommonGetUserByUserId(userid)
+	user, err := settingService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
 	}
@@ -574,7 +577,7 @@ func (settingService *SettingService) CreateWebhook(
 		IsActive: newWebhook.IsActive,
 	}
 
-	return settingService.txManager.Run(func(ctx context.Context) error {
+	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		return settingService.webhookRepository.CreateWebhook(ctx, webhook)
 	})
 }
@@ -584,7 +587,7 @@ func (settingService *SettingService) ListAccessTokens(
 	userid uint,
 ) ([]model.AccessTokenSetting, error) {
 	// 鉴权
-	user, err := settingService.commonService.CommonGetUserByUserId(userid)
+	user, err := settingService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return nil, err
 	}
@@ -607,7 +610,7 @@ func (settingService *SettingService) ListAccessTokens(
 			validTokens = append(validTokens, token)
 		} else {
 			// 删除过期 token
-			_ = settingService.txManager.Run(func(ctx context.Context) error {
+			_ = settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 				return settingService.settingRepository.DeleteAccessTokenByID(ctx, uint(token.ID))
 			})
 		}
@@ -622,7 +625,7 @@ func (settingService *SettingService) CreateAccessToken(
 	newToken *model.AccessTokenSettingDto,
 ) (string, error) {
 	// 鉴权
-	user, err := settingService.commonService.CommonGetUserByUserId(userid)
+	user, err := settingService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return "", err
 	}
@@ -670,7 +673,7 @@ func (settingService *SettingService) CreateAccessToken(
 		CreatedAt: time.Now().UTC(),
 	}
 
-	if err := settingService.txManager.Run(func(ctx context.Context) error {
+	if err := settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		return settingService.settingRepository.CreateAccessToken(ctx, accessToken)
 	}); err != nil {
 		return "", err
@@ -682,7 +685,7 @@ func (settingService *SettingService) CreateAccessToken(
 // DeleteAccessToken 删除访问令牌
 func (settingService *SettingService) DeleteAccessToken(userid, id uint) error {
 	// 鉴权
-	user, err := settingService.commonService.CommonGetUserByUserId(userid)
+	user, err := settingService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
 	}
@@ -690,7 +693,7 @@ func (settingService *SettingService) DeleteAccessToken(userid, id uint) error {
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	return settingService.txManager.Run(func(ctx context.Context) error {
+	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		return settingService.settingRepository.DeleteAccessTokenByID(ctx, id)
 	})
 }
@@ -708,8 +711,9 @@ func (settingService *SettingService) GetBackupScheduleSetting(
 	// 	return errors.New(commonModel.NO_PERMISSION_DENIED)
 	// }
 
-	return settingService.txManager.Run(func(ctx context.Context) error {
+	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		backupSchedule, err := settingService.keyvalueRepository.GetKeyValue(
+			ctx,
 			commonModel.BackupScheduleKey,
 		)
 		if err != nil {
@@ -744,7 +748,7 @@ func (settingService *SettingService) UpdateBackupScheduleSetting(
 	newSetting *model.BackupScheduleDto,
 ) error {
 	// 鉴权
-	user, err := settingService.commonService.CommonGetUserByUserId(userid)
+	user, err := settingService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
 	}
@@ -752,7 +756,7 @@ func (settingService *SettingService) UpdateBackupScheduleSetting(
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	return settingService.txManager.Run(func(ctx context.Context) error {
+	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		var setting model.BackupSchedule
 		setting.Enable = newSetting.Enable
 		setting.CronExpression = newSetting.CronExpression
@@ -793,8 +797,9 @@ func (settingService *SettingService) UpdateBackupScheduleSetting(
 
 // GetAgentInfo 获取 Agent 信息
 func (settingService *SettingService) GetAgentInfo(setting *model.AgentSetting) error {
-	return settingService.txManager.Run(func(ctx context.Context) error {
+	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		agentSetting, err := settingService.keyvalueRepository.GetKeyValue(
+			ctx,
 			commonModel.AgentSettingKey,
 		)
 		if err != nil {
@@ -831,7 +836,7 @@ func (settingService *SettingService) GetAgentSettings(
 	setting *model.AgentSetting,
 ) error {
 	// 检查用户权限
-	user, err := settingService.commonService.CommonGetUserByUserId(userid)
+	user, err := settingService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
 	}
@@ -839,8 +844,9 @@ func (settingService *SettingService) GetAgentSettings(
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	return settingService.txManager.Run(func(ctx context.Context) error {
+	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		agentSetting, err := settingService.keyvalueRepository.GetKeyValue(
+			ctx,
 			commonModel.AgentSettingKey,
 		)
 		if err != nil {
@@ -878,7 +884,7 @@ func (settingService *SettingService) UpdateAgentSettings(
 	newSetting *model.AgentSettingDto,
 ) error {
 	// 检查用户权限
-	user, err := settingService.commonService.CommonGetUserByUserId(userid)
+	user, err := settingService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
 	}
@@ -905,7 +911,7 @@ func (settingService *SettingService) UpdateAgentSettings(
 		BaseURL:  httpUtil.TrimURL(newSetting.BaseURL),
 	}
 
-	return settingService.txManager.Run(func(ctx context.Context) error {
+	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		// 序列化为 JSON
 		settingToJSON, err := jsonUtil.JSONMarshal(setting)
 		if err != nil {

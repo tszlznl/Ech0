@@ -27,9 +27,9 @@ func (commonRepository *CommonRepository) getDB(ctx context.Context) *gorm.DB {
 	return commonRepository.db()
 }
 
-func (commonRepository *CommonRepository) GetUserByUserId(userId uint) (userModel.User, error) {
+func (commonRepository *CommonRepository) GetUserByUserId(ctx context.Context, userId uint) (userModel.User, error) {
 	var user userModel.User
-	if err := commonRepository.db().First(&user, userId).Error; err != nil {
+	if err := commonRepository.getDB(ctx).First(&user, userId).Error; err != nil {
 		return user, err
 	}
 	return user, nil

@@ -38,7 +38,7 @@ import (
 const globalMusicFileIDKey = "global_music_file_id"
 
 type CommonService struct {
-	txManager          transaction.TransactionManager
+	transactor         transaction.Transactor
 	commonRepository   repository.CommonRepositoryInterface
 	fs                 virefs.FS
 	resolveURL         storageDomain.URLResolver
@@ -50,7 +50,7 @@ type CommonService struct {
 }
 
 func NewCommonService(
-	tm transaction.TransactionManager,
+	tx transaction.Transactor,
 	commonRepository repository.CommonRepositoryInterface,
 	echoRepo echoRepository.EchoRepositoryInterface,
 	kvRepo keyvalueRepository.KeyValueRepositoryInterface,
@@ -60,7 +60,7 @@ func NewCommonService(
 	eventBusProvider func() event.IEventBus,
 ) *CommonService {
 	return &CommonService{
-		txManager:          tm,
+		transactor:         tx,
 		commonRepository:   commonRepository,
 		echoRepository:     echoRepo,
 		keyvalueRepository: kvRepo,
@@ -72,8 +72,8 @@ func NewCommonService(
 	}
 }
 
-func (s *CommonService) CommonGetUserByUserId(userId uint) (userModel.User, error) {
-	return s.commonRepository.GetUserByUserId(userId)
+func (s *CommonService) CommonGetUserByUserId(ctx context.Context, userId uint) (userModel.User, error) {
+	return s.commonRepository.GetUserByUserId(ctx, userId)
 }
 
 func (s *CommonService) UploadFile(
@@ -81,7 +81,7 @@ func (s *CommonService) UploadFile(
 	file *multipart.FileHeader,
 	category storageDomain.Category,
 ) (commonModel.FileDto, error) {
-	user, err := s.commonRepository.GetUserByUserId(userId)
+	user, err := s.commonRepository.GetUserByUserId(context.Background(), userId)
 	if err != nil {
 		return commonModel.FileDto{}, err
 	}
@@ -179,7 +179,7 @@ func (s *CommonService) UploadFile(
 }
 
 func (s *CommonService) DeleteFile(userid uint, dto commonModel.FileDeleteDto) error {
-	user, err := s.commonRepository.GetUserByUserId(userid)
+	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
 	}
@@ -325,7 +325,7 @@ func (s *CommonService) UploadMusic(
 		return "", err
 	}
 
-	if err := s.txManager.Run(func(ctx context.Context) error {
+	if err := s.transactor.Run(context.Background(), func(ctx context.Context) error {
 		return s.keyvalueRepository.AddOrUpdateKeyValue(
 			ctx, globalMusicFileIDKey,
 			strconv.FormatUint(uint64(fileDto.ID), 10),
@@ -338,7 +338,7 @@ func (s *CommonService) UploadMusic(
 }
 
 func (s *CommonService) DeleteMusic(userid uint) error {
-	user, err := s.commonRepository.GetUserByUserId(userid)
+	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
 	}
@@ -347,7 +347,7 @@ func (s *CommonService) DeleteMusic(userid uint) error {
 	}
 
 	ctx := context.Background()
-	val, err := s.keyvalueRepository.GetKeyValue(globalMusicFileIDKey)
+	val, err := s.keyvalueRepository.GetKeyValue(ctx, globalMusicFileIDKey)
 	if err != nil || val == "" {
 		return nil
 	}
@@ -365,7 +365,7 @@ func (s *CommonService) DeleteMusic(userid uint) error {
 	_ = s.fs.Delete(ctx, fileRecord.Key)
 	_ = s.fileRepository.Delete(ctx, fileRecord.ID)
 
-	_ = s.txManager.Run(func(txCtx context.Context) error {
+	_ = s.transactor.Run(ctx, func(txCtx context.Context) error {
 		return s.keyvalueRepository.DeleteKeyValue(txCtx, globalMusicFileIDKey)
 	})
 
@@ -373,7 +373,7 @@ func (s *CommonService) DeleteMusic(userid uint) error {
 }
 
 func (s *CommonService) GetPlayMusicUrl() string {
-	val, err := s.keyvalueRepository.GetKeyValue(globalMusicFileIDKey)
+	val, err := s.keyvalueRepository.GetKeyValue(context.Background(), globalMusicFileIDKey)
 	if err != nil || val == "" {
 		return ""
 	}
@@ -392,7 +392,7 @@ func (s *CommonService) GetPlayMusicUrl() string {
 }
 
 func (s *CommonService) PlayMusic(ctx *gin.Context) {
-	val, _ := s.keyvalueRepository.GetKeyValue(globalMusicFileIDKey)
+	val, _ := s.keyvalueRepository.GetKeyValue(context.Background(), globalMusicFileIDKey)
 	if val == "" {
 		ctx.String(http.StatusNotFound, "音乐文件不存在")
 		return
@@ -437,7 +437,7 @@ func (s *CommonService) GetFilePresignURL(
 ) (commonModel.PresignDto, error) {
 	var result commonModel.PresignDto
 
-	user, err := s.commonRepository.GetUserByUserId(userid)
+	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return result, err
 	}
@@ -509,7 +509,7 @@ func (s *CommonService) CleanupOrphanFiles() error {
 		return err
 	}
 
-	musicFileIDStr, _ := s.keyvalueRepository.GetKeyValue(globalMusicFileIDKey)
+	musicFileIDStr, _ := s.keyvalueRepository.GetKeyValue(ctx, globalMusicFileIDKey)
 	musicFileID := uint(0)
 	if musicFileIDStr != "" {
 		if id, err := strconv.ParseUint(musicFileIDStr, 10, 64); err == nil {

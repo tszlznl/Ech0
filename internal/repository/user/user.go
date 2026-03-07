@@ -72,28 +72,53 @@ func (userRepository *UserRepository) CreateUser(ctx context.Context, user *mode
 }
 
 // GetUserByID 根据用户ID获取用户
-func (userRepository *UserRepository) GetUserByID(id int) (model.User, error) {
+func (userRepository *UserRepository) GetUserByID(ctx context.Context, id int) (model.User, error) {
 	cacheKey := GetUserIDKey(uint(id))
-	return cache.ReadThroughTyped[model.User](userRepository.cache, cacheKey, 1, func() (model.User, error) {
-		var user model.User
-		if err := userRepository.db().First(&user, id).Error; err != nil {
-			return user, err
-		}
-		return user, nil
-	})
+	return cache.ReadThroughTypedUnlessTx[model.User](
+		ctx,
+		userRepository.cache,
+		cacheKey,
+		1,
+		func(ctx context.Context) (model.User, error) {
+			var user model.User
+			if err := userRepository.getDB(ctx).First(&user, id).Error; err != nil {
+				return user, err
+			}
+			return user, nil
+		},
+		func() (model.User, error) {
+			var user model.User
+			if err := userRepository.db().First(&user, id).Error; err != nil {
+				return user, err
+			}
+			return user, nil
+		})
 }
 
 // GetSysAdmin 获取系统管理员
-func (userRepository *UserRepository) GetSysAdmin() (model.User, error) {
+func (userRepository *UserRepository) GetSysAdmin(ctx context.Context) (model.User, error) {
 	cacheKey := GetSysAdminKey()
-	return cache.ReadThroughTyped[model.User](userRepository.cache, cacheKey, 1, func() (model.User, error) {
-		user := model.User{}
-		err := userRepository.db().Where("is_admin = ?", true).First(&user).Error
-		if err != nil {
-			return model.User{}, err
-		}
-		return user, nil
-	})
+	return cache.ReadThroughTypedUnlessTx[model.User](
+		ctx,
+		userRepository.cache,
+		cacheKey,
+		1,
+		func(ctx context.Context) (model.User, error) {
+			user := model.User{}
+			err := userRepository.getDB(ctx).Where("is_admin = ?", true).First(&user).Error
+			if err != nil {
+				return model.User{}, err
+			}
+			return user, nil
+		},
+		func() (model.User, error) {
+			user := model.User{}
+			err := userRepository.db().Where("is_admin = ?", true).First(&user).Error
+			if err != nil {
+				return model.User{}, err
+			}
+			return user, nil
+		})
 }
 
 // UpdateUser 更新用户信息
@@ -115,7 +140,7 @@ func (userRepository *UserRepository) UpdateUser(ctx context.Context, user *mode
 // DeleteUser 删除用户
 func (userRepository *UserRepository) DeleteUser(ctx context.Context, id uint) error {
 	// 先查找待删除的用户
-	userToDel, err := userRepository.GetUserByID(int(id))
+	userToDel, err := userRepository.GetUserByID(ctx, int(id))
 	if err != nil {
 		return err
 	}
@@ -200,7 +225,7 @@ func (userRepository *UserRepository) GetUserByOAuthID(
 		return model.User{}, err
 	}
 
-	return userRepository.GetUserByID(int(binding.UserID))
+	return userRepository.GetUserByID(ctx, int(binding.UserID))
 }
 
 // GetUserByOIDC 根据 OIDC 提供商、issuer 与 sub 获取用户
@@ -222,7 +247,7 @@ func (userRepository *UserRepository) GetUserByOIDC(
 		return model.User{}, err
 	}
 
-	return userRepository.GetUserByID(int(binding.UserID))
+	return userRepository.GetUserByID(ctx, int(binding.UserID))
 }
 
 // GetOAuthInfo 获取 OAuth2 信息

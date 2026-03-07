@@ -78,7 +78,7 @@ func (agentService *AgentService) GetRecent(ctx context.Context) (string, error)
 }
 
 func (agentService *AgentService) getRecentFromCache(cacheKey string) (string, bool) {
-	cachedValue, err := agentService.kvRepository.GetKeyValue(cacheKey)
+	cachedValue, err := agentService.kvRepository.GetKeyValue(context.Background(), cacheKey)
 	if err != nil {
 		return "", false
 	}

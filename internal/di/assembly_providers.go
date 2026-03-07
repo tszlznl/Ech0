@@ -45,29 +45,29 @@ func ProvideHTTPServer(engine *gin.Engine, handlers *handler.Bundle) *server.Ser
 
 func ProvideHandlers(
 	dbProvider func() *gorm.DB,
-	cacheFactory *cache.CacheFactory,
-	tmFactory *transaction.TransactionManagerFactory,
+	appCache cache.ICache[string, any],
+	tx transaction.Transactor,
 	ebProvider func() event.IEventBus,
 ) (*handler.Bundle, error) {
-	return BuildHandlers(dbProvider, cacheFactory, tmFactory, ebProvider)
+	return BuildHandlers(dbProvider, appCache, tx, ebProvider)
 }
 
 func ProvideTasker(
 	dbProvider func() *gorm.DB,
-	cacheFactory *cache.CacheFactory,
-	tmFactory *transaction.TransactionManagerFactory,
+	appCache cache.ICache[string, any],
+	tx transaction.Transactor,
 	ebProvider func() event.IEventBus,
 ) (*task.Tasker, error) {
-	return BuildTasker(dbProvider, cacheFactory, tmFactory, ebProvider)
+	return BuildTasker(dbProvider, appCache, tx, ebProvider)
 }
 
 func ProvideEventRegistrar(
 	dbProvider func() *gorm.DB,
 	ebProvider func() event.IEventBus,
-	cacheFactory *cache.CacheFactory,
-	tmFactory *transaction.TransactionManagerFactory,
+	appCache cache.ICache[string, any],
+	tx transaction.Transactor,
 ) (*event.EventRegistrar, error) {
-	return BuildEventRegistrar(dbProvider, ebProvider, cacheFactory, tmFactory)
+	return BuildEventRegistrar(dbProvider, ebProvider, appCache, tx)
 }
 
 func ProvideWebComponents(

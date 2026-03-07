@@ -19,7 +19,7 @@ import (
 )
 
 type EchoService struct {
-	txManager        transaction.TransactionManager
+	transactor       transaction.Transactor
 	commonService    *commonService.CommonService
 	echoRepository   repository.EchoRepositoryInterface
 	commonRepository commonRepository.CommonRepositoryInterface
@@ -28,7 +28,7 @@ type EchoService struct {
 }
 
 func NewEchoService(
-	tm transaction.TransactionManager,
+	tx transaction.Transactor,
 	commonService *commonService.CommonService,
 	echoRepository repository.EchoRepositoryInterface,
 	commonRepository commonRepository.CommonRepositoryInterface,
@@ -36,7 +36,7 @@ func NewEchoService(
 	eventBusProvider func() event.IEventBus,
 ) *EchoService {
 	return &EchoService{
-		txManager:        tm,
+		transactor:       tx,
 		commonService:    commonService,
 		echoRepository:   echoRepository,
 		commonRepository: commonRepository,
@@ -48,7 +48,7 @@ func NewEchoService(
 func (echoService *EchoService) PostEcho(userid uint, newEcho *model.Echo) error {
 	newEcho.UserID = userid
 
-	user, err := echoService.commonService.CommonGetUserByUserId(userid)
+	user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func (echoService *EchoService) PostEcho(userid uint, newEcho *model.Echo) error
 		return errors.New(commonModel.ECHO_CAN_NOT_BE_EMPTY)
 	}
 
-	if err := echoService.txManager.Run(func(ctx context.Context) error {
+	if err := echoService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		if err := echoService.ProcessEchoTags(ctx, newEcho); err != nil {
 			return err
 		}
@@ -91,7 +91,7 @@ func (echoService *EchoService) PostEcho(userid uint, newEcho *model.Echo) error
 		return err
 	}
 
-	savedEcho, fetchErr := echoService.echoRepository.GetEchosById(newEcho.ID)
+	savedEcho, fetchErr := echoService.echoRepository.GetEchosById(context.Background(), newEcho.ID)
 	if fetchErr != nil {
 		return fetchErr
 	}
@@ -126,7 +126,7 @@ func (echoService *EchoService) GetEchosByPage(
 
 	showPrivate := false
 	if userid != authModel.NO_USER_LOGINED {
-		user, err := echoService.commonService.CommonGetUserByUserId(userid)
+		user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userid)
 		if err != nil {
 			return commonModel.PageQueryResult[[]model.Echo]{}, err
 		}
@@ -146,7 +146,7 @@ func (echoService *EchoService) GetEchosByPage(
 }
 
 func (echoService *EchoService) DeleteEchoById(userid, id uint) error {
-	user, err := echoService.commonService.CommonGetUserByUserId(userid)
+	user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
 	}
@@ -154,8 +154,8 @@ func (echoService *EchoService) DeleteEchoById(userid, id uint) error {
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	if err := echoService.txManager.Run(func(ctx context.Context) error {
-		echo, err := echoService.echoRepository.GetEchosById(id)
+	if err := echoService.transactor.Run(context.Background(), func(ctx context.Context) error {
+		echo, err := echoService.echoRepository.GetEchosById(ctx, id)
 		if err != nil {
 			return err
 		}
@@ -195,7 +195,7 @@ func (echoService *EchoService) DeleteEchoById(userid, id uint) error {
 func (echoService *EchoService) GetTodayEchos(userid uint, timezone string) ([]model.Echo, error) {
 	showPrivate := false
 	if userid != authModel.NO_USER_LOGINED {
-		user, err := echoService.commonService.CommonGetUserByUserId(userid)
+		user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userid)
 		if err != nil {
 			return nil, err
 		}
@@ -207,7 +207,7 @@ func (echoService *EchoService) GetTodayEchos(userid uint, timezone string) ([]m
 }
 
 func (echoService *EchoService) UpdateEcho(userid uint, echo *model.Echo) error {
-	user, err := echoService.commonService.CommonGetUserByUserId(userid)
+	user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
 	}
@@ -242,7 +242,7 @@ func (echoService *EchoService) UpdateEcho(userid uint, echo *model.Echo) error 
 		return errors.New(commonModel.ECHO_CAN_NOT_BE_EMPTY)
 	}
 
-	if err := echoService.txManager.Run(func(ctx context.Context) error {
+	if err := echoService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		if err := echoService.ProcessEchoTags(ctx, echo); err != nil {
 			return err
 		}
@@ -268,13 +268,13 @@ func (echoService *EchoService) UpdateEcho(userid uint, echo *model.Echo) error 
 }
 
 func (echoService *EchoService) LikeEcho(id uint) error {
-	return echoService.txManager.Run(func(ctx context.Context) error {
+	return echoService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		return echoService.echoRepository.LikeEcho(ctx, id)
 	})
 }
 
 func (echoService *EchoService) GetEchoById(userId, id uint) (*model.Echo, error) {
-	echo, err := echoService.echoRepository.GetEchosById(id)
+	echo, err := echoService.echoRepository.GetEchosById(context.Background(), id)
 	if err != nil {
 		return nil, err
 	}
@@ -287,7 +287,7 @@ func (echoService *EchoService) GetEchoById(userId, id uint) (*model.Echo, error
 			return nil, errors.New(commonModel.NO_PERMISSION_DENIED)
 		}
 	} else {
-		user, err := echoService.commonService.CommonGetUserByUserId(userId)
+		user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userId)
 		if err != nil {
 			return nil, err
 		}
@@ -304,7 +304,7 @@ func (echoService *EchoService) GetAllTags() ([]model.Tag, error) {
 }
 
 func (echoService *EchoService) DeleteTag(userid, id uint) error {
-	user, err := echoService.commonService.CommonGetUserByUserId(userid)
+	user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
 	}
@@ -312,7 +312,7 @@ func (echoService *EchoService) DeleteTag(userid, id uint) error {
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	return echoService.txManager.Run(func(ctx context.Context) error {
+	return echoService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		return echoService.echoRepository.DeleteTagById(ctx, id)
 	})
 }
@@ -328,7 +328,7 @@ func (echoService *EchoService) ProcessEchoTags(ctx context.Context, echo *model
 		}
 	}
 
-	existingTags, err := echoService.echoRepository.GetTagsByNames(names)
+	existingTags, err := echoService.echoRepository.GetTagsByNames(ctx, names)
 	if err != nil {
 		return err
 	}
@@ -371,7 +371,7 @@ func (echoService *EchoService) GetEchosByTagId(
 
 	showPrivate := false
 	if userId != authModel.NO_USER_LOGINED {
-		user, err := echoService.commonService.CommonGetUserByUserId(userId)
+		user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userId)
 		if err != nil {
 			return commonModel.PageQueryResult[[]model.Echo]{}, err
 		}
