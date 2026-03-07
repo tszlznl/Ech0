@@ -164,24 +164,6 @@ definitions:
       username:
         type: string
     type: object
-  model.FediverseSetting:
-    properties:
-      enable:
-        description: 是否启用联邦网络功能
-        type: boolean
-      server_url:
-        description: 服务器 URL
-        type: string
-    type: object
-  model.FediverseSettingDto:
-    properties:
-      enable:
-        description: 是否启用联邦网络功能
-        type: boolean
-      server_url:
-        description: 服务器 URL
-        type: string
-    type: object
   model.GetPresignURLDto:
     properties:
       content_type:
@@ -1145,42 +1127,6 @@ paths:
       summary: 获取今天的Echo列表
       tags:
       - Echo
-  /fediverse/settings:
-    get:
-      consumes:
-      - application/json
-      description: 获取系统的联邦网络相关设置
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 获取联邦网络设置失败
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 获取联邦网络设置
-      tags:
-      - 系统设置
-    put:
-      consumes:
-      - application/json
-      description: 更新系统的联邦网络相关设置
-      parameters:
-      - description: 新的联邦网络设置
-        in: body
-        name: fediverseSettings
-        required: true
-        schema:
-          $ref: '#/definitions/model.FediverseSettingDto'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 更新联邦网络设置失败
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 更新联邦网络设置
-      tags:
-      - 系统设置
   /getmusic:
     get:
       consumes:
