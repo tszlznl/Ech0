@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -20,10 +21,40 @@ import (
 	"github.com/lin-snow/ech0/internal/tui"
 )
 
-var runtimeApp *app.App
+var (
+	runtimeApp     *app.App
+	runtimeCleanup func()
+	appFactory     func() (*app.App, func(), error)
+)
 
-func SetApp(a *app.App) {
-	runtimeApp = a
+func SetAppFactory(factory func() (*app.App, func(), error)) {
+	appFactory = factory
+}
+
+func ensureRuntimeApp() error {
+	if runtimeApp != nil {
+		return nil
+	}
+	if appFactory == nil {
+		return errors.New("应用工厂未初始化")
+	}
+
+	loadedApp, cleanup, err := appFactory()
+	if err != nil {
+		return err
+	}
+
+	runtimeApp = loadedApp
+	runtimeCleanup = cleanup
+	return nil
+}
+
+func releaseRuntimeApp() {
+	if runtimeCleanup != nil {
+		runtimeCleanup()
+	}
+	runtimeApp = nil
+	runtimeCleanup = nil
 }
 
 func isWebPortInUse() bool {
@@ -37,11 +68,11 @@ func isWebPortInUse() bool {
 }
 
 func canStartWebServer() bool {
-	if runtimeApp == nil {
+	if appFactory == nil {
 		tui.PrintCLIInfo("⚠️ 启动服务", "应用未初始化")
 		return false
 	}
-	if runtimeApp.IsWebRunning() {
+	if runtimeApp != nil && runtimeApp.IsRunning() {
 		tui.PrintCLIInfo("⚠️ 启动服务", "Web 服务已在当前进程中运行")
 		return false
 	}
@@ -57,7 +88,12 @@ func DoServe() {
 	if !canStartWebServer() {
 		return
 	}
-	if err := runtimeApp.StartWeb(context.Background()); err != nil {
+	if err := ensureRuntimeApp(); err != nil {
+		tui.PrintCLIInfo("😭 启动服务失败", err.Error())
+		return
+	}
+	if err := runtimeApp.Start(context.Background()); err != nil {
+		releaseRuntimeApp()
 		tui.PrintCLIInfo("😭 启动服务失败", err.Error())
 	}
 }
@@ -66,7 +102,12 @@ func DoServeWithBlock() {
 	if !canStartWebServer() {
 		return
 	}
-	if err := runtimeApp.StartWeb(context.Background()); err != nil {
+	if err := ensureRuntimeApp(); err != nil {
+		tui.PrintCLIInfo("😭 启动服务失败", err.Error())
+		return
+	}
+	if err := runtimeApp.Start(context.Background()); err != nil {
+		releaseRuntimeApp()
 		tui.PrintCLIInfo("😭 启动服务失败", err.Error())
 		return
 	}
@@ -78,15 +119,16 @@ func DoServeWithBlock() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := runtimeApp.StopWeb(ctx); err != nil {
+	if err := runtimeApp.Stop(ctx); err != nil {
 		tui.PrintCLIInfo("❌ 服务停止", "服务器强制关闭")
 		os.Exit(1)
 	}
+	releaseRuntimeApp()
 	tui.PrintCLIInfo("🎉 停止服务成功", "Ech0 服务器已停止")
 }
 
 func DoStopServe() {
-	if runtimeApp == nil || !runtimeApp.IsWebRunning() {
+	if runtimeApp == nil || !runtimeApp.IsRunning() {
 		tui.PrintCLIInfo("⚠️ 停止服务", "Ech0 服务器未启动")
 		return
 	}
@@ -94,11 +136,12 @@ func DoStopServe() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := runtimeApp.StopWeb(ctx); err != nil {
+	if err := runtimeApp.Stop(ctx); err != nil {
 		tui.PrintCLIInfo("😭 停止服务失败", err.Error())
 		return
 	}
 
+	releaseRuntimeApp()
 	tui.PrintCLIInfo("🎉 停止服务成功", "Ech0 服务器已停止")
 }
 
@@ -152,7 +195,7 @@ func DoTui() {
 		var action string
 		var options []huh.Option[string]
 
-		if runtimeApp != nil && runtimeApp.IsWebRunning() {
+		if runtimeApp != nil && runtimeApp.IsRunning() {
 			options = append(options, huh.NewOption("🛑 停止 Web 服务", "stopserve"))
 		} else if isWebPortInUse() {
 			options = append(options, huh.NewOption("🙈 服务已在其他进程中运行", "servebusy"))
@@ -193,7 +236,7 @@ func DoTui() {
 		case "backup":
 			DoBackup()
 		case "restore":
-			if runtimeApp != nil && runtimeApp.IsWebRunning() {
+			if runtimeApp != nil && runtimeApp.IsRunning() {
 				tui.PrintCLIInfo("⚠️ 警告", "恢复数据前请先停止服务器")
 			} else {
 				var path string

@@ -67,9 +67,9 @@ func init() {
 	rootCmd.AddCommand(helloCmd)
 }
 
-// Bootstrap 注入应用实例。
-func Bootstrap(a *app.App) {
-	cli.SetApp(a)
+// Bootstrap 注入应用工厂，按需装配 Web 生命周期应用。
+func Bootstrap(build func() (*app.App, func(), error)) {
+	cli.SetAppFactory(build)
 }
 
 // Execute 是根命令的入口函数

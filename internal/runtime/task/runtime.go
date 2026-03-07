@@ -20,15 +20,9 @@ func (r *Runtime) Name() string {
 }
 
 func (r *Runtime) Start(context.Context) error {
-	r.tasker.Start()
-	return nil
+	return r.tasker.Start()
 }
 
 func (r *Runtime) Stop(context.Context) error {
-	r.tasker.Stop()
-	return nil
-}
-
-func (r *Runtime) Healthy(context.Context) error {
-	return nil
+	return r.tasker.Stop()
 }

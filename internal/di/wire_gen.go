@@ -58,14 +58,14 @@ import (
 
 // Injectors from wire.go:
 
-// BuildApp 构建应用内核。
-func BuildApp() (*app.App, func(), error) {
+// BuildWebApp 构建 Web 生命周期应用。
+func BuildWebApp() (*app.App, func(), error) {
 	iCache, err := cache.ProvideCache()
 	if err != nil {
 		return nil, nil, err
 	}
 	v := cache.ProvideCleanup(iCache)
-	runtime := cache2.New(v)
+	shutdownHook := cache2.New(v)
 	v2 := ProvideDBProvider()
 	v3 := ProvideEventBusProvider()
 	gormTransactor := transaction.NewGormTransactor(v2)
@@ -86,10 +86,16 @@ func BuildApp() (*app.App, func(), error) {
 	}
 	server := ProvideHTTPServer(engine, bundle)
 	httpRuntime := http.New(server)
-	v4 := ProvideWebComponents(runtime, eventRuntime, taskRuntime, httpRuntime)
-	v5 := app.NewApp(v4)
-	return v5, func() {
+	v4 := ProvideComponents(eventRuntime, taskRuntime, httpRuntime)
+	v5 := ProvideShutdownHooks(shutdownHook)
+	v6 := app.NewApp(v4, v5)
+	return v6, func() {
 	}, nil
+}
+
+// BuildApp 兼容旧入口，委托给 BuildWebApp。
+func BuildApp() (*app.App, func(), error) {
+	return BuildWebApp()
 }
 
 func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() event2.IEventBus, appCache cache.ICache[string, any], tx transaction.Transactor) (*event2.EventRegistrar, error) {
@@ -189,7 +195,9 @@ func BuildTasker(dbProvider func() *gorm.DB, appCache cache.ICache[string, any],
 // wire.go:
 
 var AppSet = wire.NewSet(
-	ProvideWebComponents, app.ProviderSet,
+	ProvideComponents,
+	ProvideShutdownHooks,
+	app.ProviderSet,
 )
 
 var DomainSet = wire.NewSet(

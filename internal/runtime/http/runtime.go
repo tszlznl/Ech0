@@ -26,7 +26,3 @@ func (r *Runtime) Start(ctx context.Context) error {
 func (r *Runtime) Stop(ctx context.Context) error {
 	return r.server.Stop(ctx)
 }
-
-func (r *Runtime) Healthy(context.Context) error {
-	return nil
-}

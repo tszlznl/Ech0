@@ -13,12 +13,6 @@ func main() {
 	logUtil.InitLogger()
 	config.Config()
 
-	ech0App, cleanup, err := di.BuildApp()
-	if err != nil {
-		panic(err)
-	}
-	defer cleanup()
-
-	cmd.Bootstrap(ech0App)
+	cmd.Bootstrap(di.BuildWebApp)
 	cmd.Execute()
 }

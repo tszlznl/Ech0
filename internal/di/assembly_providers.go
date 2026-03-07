@@ -1,6 +1,8 @@
 package di
 
 import (
+	"sync"
+
 	"github.com/gin-gonic/gin"
 	"github.com/lin-snow/ech0/internal/app"
 	"github.com/lin-snow/ech0/internal/cache"
@@ -20,13 +22,19 @@ import (
 )
 
 func ProvideDBProvider() func() *gorm.DB {
-	database.InitDatabase()
-	return database.GetDB
+	var once sync.Once
+	return func() *gorm.DB {
+		once.Do(database.InitDatabase)
+		return database.GetDB()
+	}
 }
 
 func ProvideEventBusProvider() func() event.IEventBus {
-	event.InitEventBus()
-	return event.GetEventBus
+	var once sync.Once
+	return func() event.IEventBus {
+		once.Do(event.InitEventBus)
+		return event.GetEventBus()
+	}
 }
 
 func ProvideGinEngine() *gin.Engine {
@@ -70,11 +78,18 @@ func ProvideEventRegistrar(
 	return BuildEventRegistrar(dbProvider, ebProvider, appCache, tx)
 }
 
-func ProvideWebComponents(
-	cacheRuntime *runtimeCache.Runtime,
+func ProvideComponents(
 	eventRuntime *runtimeEvent.Runtime,
 	taskRuntime *runtimeTask.Runtime,
 	httpRuntime *runtimeHTTP.Runtime,
 ) []app.Component {
-	return []app.Component{cacheRuntime, eventRuntime, taskRuntime, httpRuntime}
+	// 启动顺序必须保持为 event -> task -> http：
+	// 1. 先注册事件处理器，避免后台任务启动后发布的事件没有订阅者。
+	// 2. 再启动任务调度器，让任务依赖的事件流已经可用。
+	// 3. 最后开放 HTTP 入口，避免服务对外可见时后台基础设施尚未完成初始化。
+	return []app.Component{eventRuntime, taskRuntime, httpRuntime}
+}
+
+func ProvideShutdownHooks(cacheHook *runtimeCache.ShutdownHook) []app.ShutdownHook {
+	return []app.ShutdownHook{cacheHook}
 }

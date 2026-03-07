@@ -19,7 +19,8 @@ import (
 )
 
 var AppSet = wire.NewSet(
-	ProvideWebComponents,
+	ProvideComponents,
+	ProvideShutdownHooks,
 	app.ProviderSet,
 )
 
@@ -45,8 +46,8 @@ var RuntimeSet = wire.NewSet(
 	runtimeCache.ProviderSet,
 )
 
-// BuildApp 构建应用内核。
-func BuildApp() (*app.App, func(), error) {
+// BuildWebApp 构建 Web 生命周期应用。
+func BuildWebApp() (*app.App, func(), error) {
 	wire.Build(
 		InfraSet,
 		DomainSet,
@@ -54,6 +55,11 @@ func BuildApp() (*app.App, func(), error) {
 		AppSet,
 	)
 	return &app.App{}, nil, nil
+}
+
+// BuildApp 兼容旧入口，委托给 BuildWebApp。
+func BuildApp() (*app.App, func(), error) {
+	return BuildWebApp()
 }
 
 func BuildEventRegistrar(

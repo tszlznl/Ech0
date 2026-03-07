@@ -1,5 +1,7 @@
 package event
 
+import "sync/atomic"
+
 // EventHandlers 事件处理器集合
 type EventHandlers struct {
 	wbd *WebhookDispatcher  // webhook 事件处理器
@@ -22,8 +24,9 @@ func NewEventHandlers(
 
 // EventRegistrar 事件注册器
 type EventRegistrar struct {
-	eb IEventBus      // 事件总线
-	eh *EventHandlers // 事件处理器集合
+	eb         IEventBus      // 事件总线
+	eh         *EventHandlers // 事件处理器集合
+	registered atomic.Bool
 }
 
 // NewEventRegistry 创建一个新的事件注册表
@@ -33,6 +36,10 @@ func NewEventRegistry(ebp func() IEventBus, eh *EventHandlers) *EventRegistrar {
 
 // Register 注册事件处理函数
 func (er *EventRegistrar) Register() error {
+	if er.registered.Load() {
+		return nil
+	}
+
 	var err error
 	// 订阅死信事件
 	err = er.eb.Subscribe(
@@ -80,10 +87,15 @@ func (er *EventRegistrar) Register() error {
 		return err
 	}
 
+	er.registered.Store(true)
 	return err
 }
 
-// Wait 等待所有事件处理完成
-func (er *EventRegistrar) Wait() {
+// Stop 等待已投递的异步处理任务完成。
+func (er *EventRegistrar) Stop() error {
+	if !er.registered.Load() {
+		return nil
+	}
 	er.eh.wbd.Wait()
+	return nil
 }

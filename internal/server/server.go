@@ -10,6 +10,7 @@ package server
 import (
 	"context"
 	"errors"
+	"net"
 	"net/http"
 	"time"
 
@@ -23,6 +24,7 @@ import (
 type Server struct {
 	GinEngine  *gin.Engine
 	httpServer *http.Server // 用于优雅停止服务器
+	listener   net.Listener
 }
 
 // New 创建一个新的 HTTP server 实例。
@@ -32,10 +34,13 @@ func New(engine *gin.Engine) *Server {
 	}
 }
 
-// Start 异步启动服务器
+// Start 启动服务器，并在返回前确认监听端口已成功绑定。
 func (s *Server) Start(context.Context) error {
 	if s.GinEngine == nil {
 		return errors.New("gin engine is nil")
+	}
+	if s.listener != nil {
+		return errors.New("http server already started")
 	}
 
 	port := config.Config().Server.Port
@@ -46,9 +51,15 @@ func (s *Server) Start(context.Context) error {
 		Handler: s.GinEngine,
 	}
 
-	// 启动服务器
+	listener, err := net.Listen("tcp", s.httpServer.Addr)
+	if err != nil {
+		return err
+	}
+	s.listener = listener
+
+	// 监听成功后再异步进入 Serve。
 	go func() {
-		if err := s.httpServer.ListenAndServe(); err != nil &&
+		if err := s.httpServer.Serve(listener); err != nil &&
 			!errors.Is(err, http.ErrServerClosed) {
 			errUtil.HandlePanicError(&commonModel.ServerError{
 				Msg: commonModel.GIN_RUN_FAILED,
@@ -79,5 +90,7 @@ func (s *Server) Stop(ctx context.Context) error {
 		}
 	}
 
+	s.httpServer = nil
+	s.listener = nil
 	return nil
 }

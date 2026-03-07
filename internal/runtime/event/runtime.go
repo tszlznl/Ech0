@@ -24,10 +24,5 @@ func (r *Runtime) Start(context.Context) error {
 }
 
 func (r *Runtime) Stop(context.Context) error {
-	r.registrar.Wait()
-	return nil
-}
-
-func (r *Runtime) Healthy(context.Context) error {
-	return nil
+	return r.registrar.Stop()
 }
