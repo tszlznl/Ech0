@@ -573,8 +573,7 @@ func (s *CommonService) keyGenForCategory(category storageDomain.Category, fileN
 			ext = ".bin"
 		}
 		return &storageDomain.StaticKeyGenerator{
-			Category: storageDomain.CategoryAudio,
-			Name:     "music" + ext,
+			Name: "music" + ext,
 		}
 	}
 	return s.keyGen

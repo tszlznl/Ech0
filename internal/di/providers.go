@@ -1,11 +1,8 @@
 package di
 
 import (
-	"context"
-	"log"
-	"strings"
-
 	"github.com/gin-gonic/gin"
+	virefs "github.com/lin-snow/VireFS"
 	"github.com/lin-snow/ech0/internal/app"
 	"github.com/lin-snow/ech0/internal/cache"
 	"github.com/lin-snow/ech0/internal/config"
@@ -21,8 +18,6 @@ import (
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/task"
 	"github.com/lin-snow/ech0/internal/transaction"
-
-	virefs "github.com/lin-snow/VireFS"
 	"gorm.io/gorm"
 )
 
@@ -54,130 +49,12 @@ func ProvideCacheFactory() *cache.CacheFactory {
 	return cache.NewCacheFactory()
 }
 
-// ProvideVireFS builds a virefs.FS based on the storage config.
 func ProvideVireFS() virefs.FS {
-	cfg := config.Config().Storage
-	switch strings.ToLower(strings.TrimSpace(cfg.Mode)) {
-	case "s3":
-		return buildS3FS(cfg)
-	default:
-		return buildLocalFS(cfg)
-	}
+	return storage.NewFS(config.Config().Storage)
 }
 
-// ProvideURLResolver builds a URLResolver based on the storage config.
 func ProvideURLResolver() storage.URLResolver {
-	cfg := config.Config().Storage
-	switch strings.ToLower(strings.TrimSpace(cfg.Mode)) {
-	case "s3":
-		return buildS3URLResolver(cfg)
-	default:
-		return buildLocalURLResolver()
-	}
-}
-
-func buildLocalFS(cfg config.StorageConfig) virefs.FS {
-	root := cfg.DataRoot
-	if root == "" {
-		root = "data/files"
-	}
-	fs, err := virefs.NewLocalFS(root,
-		virefs.WithCreateRoot(),
-		virefs.WithAtomicWrite(),
-	)
-	if err != nil {
-		log.Printf("[storage] failed to create local FS: %v, falling back to defaults", err)
-		fs, _ = virefs.NewLocalFS("data/files",
-			virefs.WithCreateRoot(),
-			virefs.WithAtomicWrite(),
-		)
-	}
-	return fs
-}
-
-func buildLocalURLResolver() storage.URLResolver {
-	return func(key string) string {
-		return "/api/files/" + key
-	}
-}
-
-func buildS3FS(cfg config.StorageConfig) virefs.FS {
-	provider := mapProvider(cfg.Provider)
-
-	var opts []virefs.ObjectOption
-	if cfg.PathPrefix != "" {
-		opts = append(opts, virefs.WithPrefix(strings.Trim(cfg.PathPrefix, "/")+"/"))
-	}
-
-	endpoint := normalizeEndpoint(cfg.Endpoint, cfg.UseSSL)
-
-	fs, err := virefs.NewObjectFSFromConfig(context.Background(), &virefs.S3Config{
-		Provider:  provider,
-		Endpoint:  endpoint,
-		Region:    cfg.Region,
-		Bucket:    cfg.BucketName,
-		AccessKey: cfg.AccessKey,
-		SecretKey: cfg.SecretKey,
-	}, opts...)
-	if err != nil {
-		log.Printf("[storage] failed to create S3 FS: %v, falling back to local", err)
-		return buildLocalFS(cfg)
-	}
-	return fs
-}
-
-func buildS3URLResolver(cfg config.StorageConfig) storage.URLResolver {
-	prefix := ""
-	if cfg.PathPrefix != "" {
-		prefix = strings.Trim(cfg.PathPrefix, "/") + "/"
-	}
-
-	cdnURL := strings.TrimSpace(cfg.CDNURL)
-	if cdnURL != "" {
-		if !strings.HasPrefix(strings.ToLower(cdnURL), "http://") &&
-			!strings.HasPrefix(strings.ToLower(cdnURL), "https://") {
-			protocol := "http"
-			if cfg.UseSSL {
-				protocol = "https"
-			}
-			cdnURL = protocol + "://" + cdnURL
-		}
-		cdnURL = strings.TrimRight(cdnURL, "/")
-		return func(key string) string {
-			return cdnURL + "/" + prefix + key
-		}
-	}
-
-	endpoint := normalizeEndpoint(cfg.Endpoint, cfg.UseSSL)
-	baseURL := strings.TrimRight(endpoint, "/") + "/" + cfg.BucketName
-	return func(key string) string {
-		return baseURL + "/" + prefix + key
-	}
-}
-
-func normalizeEndpoint(endpoint string, useSSL bool) string {
-	if endpoint == "" {
-		return endpoint
-	}
-	lower := strings.ToLower(endpoint)
-	if strings.HasPrefix(lower, "http://") || strings.HasPrefix(lower, "https://") {
-		return endpoint
-	}
-	if useSSL {
-		return "https://" + endpoint
-	}
-	return "http://" + endpoint
-}
-
-func mapProvider(raw string) virefs.Provider {
-	switch strings.ToLower(strings.TrimSpace(raw)) {
-	case "minio":
-		return virefs.ProviderMinIO
-	case "r2":
-		return virefs.ProviderR2
-	default:
-		return virefs.ProviderAWS
-	}
+	return storage.NewURLResolver(config.Config().Storage)
 }
 
 func ProvideTransactionManagerFactory(
