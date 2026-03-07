@@ -1,4 +1,4 @@
-package http
+package server
 
 import (
 	"github.com/gin-gonic/gin"
@@ -6,7 +6,6 @@ import (
 	"github.com/lin-snow/ech0/internal/config"
 	"github.com/lin-snow/ech0/internal/handler"
 	"github.com/lin-snow/ech0/internal/router"
-	"github.com/lin-snow/ech0/internal/server"
 )
 
 func ProvideGinEngine() *gin.Engine {
@@ -18,9 +17,9 @@ func ProvideGinEngine() *gin.Engine {
 	return gin.New()
 }
 
-func ProvideHTTPServer(engine *gin.Engine, handlers *handler.Bundle) *server.Server {
+func ProvideHTTPServer(engine *gin.Engine, handlers *handler.Bundle) *Server {
 	router.SetupRouter(engine, handlers)
-	return server.New(engine)
+	return New(engine)
 }
 
-var ProviderSet = wire.NewSet(ProvideGinEngine, ProvideHTTPServer, New)
+var ProviderSet = wire.NewSet(ProvideGinEngine, ProvideHTTPServer)

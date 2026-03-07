@@ -28,6 +28,10 @@ type Tasker struct {
 	started        bool
 }
 
+func (t *Tasker) Name() string {
+	return "tasker"
+}
+
 func NewTasker(
 	commonService *commonService.CommonService,
 	settingService *settingService.SettingService,
@@ -51,7 +55,7 @@ func NewTasker(
 	}
 }
 
-func (t *Tasker) Start() error {
+func (t *Tasker) Start(context.Context) error {
 	if t.started {
 		return nil
 	}
@@ -88,7 +92,7 @@ func (t *Tasker) Start() error {
 	return nil
 }
 
-func (t *Tasker) Stop() error {
+func (t *Tasker) Stop(context.Context) error {
 	if !t.started || t.scheduler == nil {
 		return nil
 	}

@@ -27,6 +27,10 @@ type Server struct {
 	listener   net.Listener
 }
 
+func (s *Server) Name() string {
+	return "server"
+}
+
 // New 创建一个新的 HTTP server 实例。
 func New(engine *gin.Engine) *Server {
 	return &Server{

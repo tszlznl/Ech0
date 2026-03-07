@@ -14,10 +14,7 @@ import (
 	"github.com/lin-snow/ech0/internal/metric"
 	"github.com/lin-snow/ech0/internal/monitor"
 	"github.com/lin-snow/ech0/internal/repository"
-	runtimeCache "github.com/lin-snow/ech0/internal/runtime/cache"
-	runtimeEvent "github.com/lin-snow/ech0/internal/runtime/event"
-	runtimeHTTP "github.com/lin-snow/ech0/internal/runtime/http"
-	runtimeTask "github.com/lin-snow/ech0/internal/runtime/task"
+	"github.com/lin-snow/ech0/internal/server"
 	"github.com/lin-snow/ech0/internal/service"
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/task"
@@ -31,6 +28,7 @@ var DomainSet = wire.NewSet(
 	BuildHandlers,
 	BuildTasker,
 	BuildEventRegistrar,
+	event.ProvideRegisteredRegistrar,
 )
 
 var InfraSet = wire.NewSet(
@@ -40,12 +38,7 @@ var InfraSet = wire.NewSet(
 	transaction.ProviderSet,
 )
 
-var RuntimeSet = wire.NewSet(
-	runtimeHTTP.ProviderSet,
-	runtimeEvent.ProviderSet,
-	runtimeTask.ProviderSet,
-	runtimeCache.ProviderSet,
-)
+var RuntimeSet = server.ProviderSet
 
 var EventGraphSet = wire.NewSet(
 	repository.EchoSet,
@@ -140,7 +133,7 @@ var TaskerGraphSet = wire.NewSet(
 	service.CommonSet,
 
 	repository.QueueSet,
-	task.NewTasker,
+	task.ProviderSet,
 )
 
 // BuildWebApp 构建 Web 生命周期应用。
@@ -180,14 +173,14 @@ func BuildHandlers(
 	return &handler.Bundle{}, nil
 }
 
-// BuildWebRuntime 构建 HTTP runtime（用于测试和独立启动场景）。
-func BuildWebRuntime() (*runtimeHTTP.Runtime, error) {
+// BuildWebRuntime 构建 HTTP server（用于测试和独立启动场景）。
+func BuildWebRuntime() (*server.Server, error) {
 	wire.Build(
 		InfraSet,
 		BuildHandlers,
-		runtimeHTTP.ProviderSet,
+		server.ProviderSet,
 	)
-	return &runtimeHTTP.Runtime{}, nil
+	return &server.Server{}, nil
 }
 
 func BuildTasker(
