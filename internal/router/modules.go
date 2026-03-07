@@ -68,7 +68,7 @@ func coreRouteModules() []RouteModule {
 	}
 }
 
-func businessRouteModules() []RouteModule {
+func featureRouteModules() []RouteModule {
 	return []RouteModule{
 		routeModule{
 			name: "resource",

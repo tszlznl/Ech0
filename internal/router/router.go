@@ -23,7 +23,7 @@ func SetupRouter(r *gin.Engine, h *handler.Bundle) {
 	for _, module := range coreRouteModules() {
 		module.Register(ctx)
 	}
-	for _, module := range businessRouteModules() {
+	for _, module := range featureRouteModules() {
 		module.Register(ctx)
 	}
 }
