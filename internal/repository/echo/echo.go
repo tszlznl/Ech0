@@ -9,6 +9,7 @@ import (
 	"github.com/lin-snow/ech0/internal/cache"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/echo"
+	fileModel "github.com/lin-snow/ech0/internal/model/file"
 	"github.com/lin-snow/ech0/internal/transaction"
 	timezoneUtil "github.com/lin-snow/ech0/internal/util/timezone"
 	"gorm.io/gorm"
@@ -26,7 +27,6 @@ func NewEchoRepository(
 	return &EchoRepository{db: dbProvider, cache: cache}
 }
 
-// getDB 从上下文中获取事务
 func (echoRepository *EchoRepository) getDB(ctx context.Context) *gorm.DB {
 	if tx, ok := ctx.Value(transaction.TxKey).(*gorm.DB); ok {
 		return tx
@@ -34,7 +34,6 @@ func (echoRepository *EchoRepository) getDB(ctx context.Context) *gorm.DB {
 	return echoRepository.db()
 }
 
-// CreateEcho 创建新的 Echo
 func (echoRepository *EchoRepository) CreateEcho(ctx context.Context, echo *model.Echo) error {
 	echo.Content = strings.TrimSpace(echo.Content)
 
@@ -43,14 +42,12 @@ func (echoRepository *EchoRepository) CreateEcho(ctx context.Context, echo *mode
 		return result.Error
 	}
 
-	// 清除相关缓存
 	ClearEchoPageCache(echoRepository.cache)
 	ClearTodayEchosCache(echoRepository.cache)
 
 	return nil
 }
 
-// GetEchosByPage 获取分页的 Echo 列表
 func (echoRepository *EchoRepository) GetEchosByPage(
 	page, pageSize int,
 	search string,
@@ -62,7 +59,6 @@ func (echoRepository *EchoRepository) GetEchosByPage(
 		cacheKey,
 		1,
 		func() (commonModel.PageQueryResult[[]model.Echo], error) {
-			// 计算偏移量
 			offset := (page - 1) * pageSize
 			var echos []model.Echo
 			var total int64
@@ -76,7 +72,10 @@ func (echoRepository *EchoRepository) GetEchosByPage(
 			}
 
 			if dbErr := query.Count(&total).
-				Preload("Images").
+				Preload("EchoFiles", func(db *gorm.DB) *gorm.DB {
+					return db.Order("echo_files.sort_order ASC")
+				}).
+				Preload("EchoFiles.File").
 				Preload("Tags").
 				Limit(pageSize).
 				Offset(offset).
@@ -98,12 +97,17 @@ func (echoRepository *EchoRepository) GetEchosByPage(
 	return pageResult.Items, pageResult.Total
 }
 
-// GetEchosById 根据 ID 获取 Echo
 func (echoRepository *EchoRepository) GetEchosById(id uint) (*model.Echo, error) {
 	cacheKey := GetEchoByIDCacheKey(id)
 	echo, err := cache.ReadThroughTyped[*model.Echo](echoRepository.cache, cacheKey, 1, func() (*model.Echo, error) {
 		var row model.Echo
-		result := echoRepository.db().Preload("Images").Preload("Tags").First(&row, id)
+		result := echoRepository.db().
+			Preload("EchoFiles", func(db *gorm.DB) *gorm.DB {
+				return db.Order("echo_files.sort_order ASC")
+			}).
+			Preload("EchoFiles.File").
+			Preload("Tags").
+			First(&row, id)
 		if result.Error != nil {
 			return nil, result.Error
 		}
@@ -118,31 +122,25 @@ func (echoRepository *EchoRepository) GetEchosById(id uint) (*model.Echo, error)
 	return echo, nil
 }
 
-// DeleteEchoById 删除 Echo
 func (echoRepository *EchoRepository) DeleteEchoById(ctx context.Context, id uint) error {
 	var echo model.Echo
-	// 删除外键images
-	echoRepository.getDB(ctx).Where("echo_id = ?", id).Delete(&model.Image{})
+	echoRepository.getDB(ctx).Where("echo_id = ?", id).Delete(&fileModel.EchoFile{})
 
 	result := echoRepository.getDB(ctx).Delete(&echo, id)
 	if result.Error != nil {
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return gorm.ErrRecordNotFound // 如果没有找到记录
+		return gorm.ErrRecordNotFound
 	}
 
-	// 清除缓存
-	echoRepository.cache.Delete(GetEchoByIDCacheKey(id)) // 删除具体 Echo 的缓存
+	echoRepository.cache.Delete(GetEchoByIDCacheKey(id))
 	ClearTodayEchosCache(echoRepository.cache)
-
-	// 清除相关缓存
 	ClearEchoPageCache(echoRepository.cache)
 
 	return nil
 }
 
-// GetTodayEchos 获取今天的 Echo 列表
 func (echoRepository *EchoRepository) GetTodayEchos(showPrivate bool, timezone string) []model.Echo {
 	normalizedTimezone := timezoneUtil.NormalizeTimezone(timezone)
 
@@ -165,7 +163,6 @@ func (echoRepository *EchoRepository) GetTodayEchos(showPrivate bool, timezone s
 		func() ([]model.Echo, error) {
 			var echos []model.Echo
 
-			// 先按用户时区计算日界，再转为 UTC 查询数据库。
 			loc := timezoneUtil.LoadLocationOrUTC(normalizedTimezone)
 			nowUser := time.Now().UTC().In(loc)
 			startOfDayUser := time.Date(nowUser.Year(), nowUser.Month(), nowUser.Day(), 0, 0, 0, 0, loc)
@@ -179,7 +176,10 @@ func (echoRepository *EchoRepository) GetTodayEchos(showPrivate bool, timezone s
 			}
 			query = query.Where("created_at >= ? AND created_at < ?", startOfDayUTC, endOfDayUTC)
 			if err := query.
-				Preload("Images").
+				Preload("EchoFiles", func(db *gorm.DB) *gorm.DB {
+					return db.Order("echo_files.sort_order ASC")
+				}).
+				Preload("EchoFiles.File").
 				Preload("Tags").
 				Order("created_at DESC").
 				Find(&echos).Error; err != nil {
@@ -194,19 +194,15 @@ func (echoRepository *EchoRepository) GetTodayEchos(showPrivate bool, timezone s
 	return todayEchos
 }
 
-// UpdateEcho 更新 Echo
 func (echoRepository *EchoRepository) UpdateEcho(ctx context.Context, echo *model.Echo) error {
-	// 清空缓存
 	ClearEchoPageCache(echoRepository.cache)
-	echoRepository.cache.Delete(GetEchoByIDCacheKey(echo.ID)) // 删除具体 Echo 的缓存
+	echoRepository.cache.Delete(GetEchoByIDCacheKey(echo.ID))
 	ClearTodayEchosCache(echoRepository.cache)
 
-	// 1. 先删除该 Echo 关联的所有旧图片
-	if err := echoRepository.getDB(ctx).Where("echo_id = ?", echo.ID).Delete(&model.Image{}).Error; err != nil {
+	if err := echoRepository.getDB(ctx).Where("echo_id = ?", echo.ID).Delete(&fileModel.EchoFile{}).Error; err != nil {
 		return err
 	}
 
-	// 2. 更新 Echo 内容（包括关联的新图片）
 	if err := echoRepository.getDB(ctx).Model(&model.Echo{}).
 		Where("id = ?", echo.ID).
 		Updates(map[string]interface{}{
@@ -219,21 +215,17 @@ func (echoRepository *EchoRepository) UpdateEcho(ctx context.Context, echo *mode
 		return err
 	}
 
-	// 3. 重新添加Images
-	if len(echo.Images) > 0 {
-		var images []model.Image
-		for _, img := range echo.Images {
-			// 确保每个图片都关联到正确的 Echo ID
-			img.EchoID = echo.ID
-			images = append(images, img)
+	if len(echo.EchoFiles) > 0 {
+		var echoFiles []fileModel.EchoFile
+		for _, ef := range echo.EchoFiles {
+			ef.EchoID = echo.ID
+			echoFiles = append(echoFiles, ef)
 		}
-		// 批量插入新图片
-		if err := echoRepository.getDB(ctx).Create(&images).Error; err != nil {
+		if err := echoRepository.getDB(ctx).Create(&echoFiles).Error; err != nil {
 			return err
 		}
 	}
 
-	// 4. 更新标签关联关系
 	if err := echoRepository.getDB(ctx).Model(echo).Association("Tags").Replace(echo.Tags); err != nil {
 		return err
 	}
@@ -241,9 +233,7 @@ func (echoRepository *EchoRepository) UpdateEcho(ctx context.Context, echo *mode
 	return nil
 }
 
-// LikeEcho 点赞 Echo
 func (echoRepository *EchoRepository) LikeEcho(ctx context.Context, id uint) error {
-	// 检查是否存在（可选，防止无效点赞）
 	var exists bool
 	if err := echoRepository.getDB(ctx).
 		Model(&model.Echo{}).
@@ -256,7 +246,6 @@ func (echoRepository *EchoRepository) LikeEcho(ctx context.Context, id uint) err
 		return errors.New(commonModel.ECHO_NOT_FOUND)
 	}
 
-	// 原子自增点赞数
 	if err := echoRepository.getDB(ctx).
 		Model(&model.Echo{}).
 		Where("id = ?", id).
@@ -264,15 +253,13 @@ func (echoRepository *EchoRepository) LikeEcho(ctx context.Context, id uint) err
 		return err
 	}
 
-	// 清除相关缓存
 	ClearEchoPageCache(echoRepository.cache)
-	echoRepository.cache.Delete(GetEchoByIDCacheKey(id)) // 删除具体 Echo 的缓存
+	echoRepository.cache.Delete(GetEchoByIDCacheKey(id))
 	ClearTodayEchosCache(echoRepository.cache)
 
 	return nil
 }
 
-// GetAllTags 获取所有标签
 func (echoRepository *EchoRepository) GetAllTags() ([]model.Tag, error) {
 	var tags []model.Tag
 	result := echoRepository.db().Order("usage_count DESC, created_at DESC").Find(&tags)
@@ -282,41 +269,36 @@ func (echoRepository *EchoRepository) GetAllTags() ([]model.Tag, error) {
 	return tags, nil
 }
 
-// DeleteTagById 删除标签
 func (echoRepository *EchoRepository) DeleteTagById(ctx context.Context, id uint) error {
 	var tag model.Tag
 
-	// 删除关联的 EchoTag 关系
 	if err := echoRepository.getDB(ctx).Where("tag_id = ?", id).Delete(&model.EchoTag{}).Error; err != nil {
 		return err
 	}
 
-	// 删除标签
 	result := echoRepository.getDB(ctx).Delete(&tag, id)
 	if result.Error != nil {
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return gorm.ErrRecordNotFound // 如果没有找到记录
+		return gorm.ErrRecordNotFound
 	}
 
 	return nil
 }
 
-// GetTagByName 根据名称获取标签
 func (echoRepository *EchoRepository) GetTagByName(name string) (*model.Tag, error) {
 	var tag model.Tag
 	result := echoRepository.db().Where("name = ?", name).First(&tag)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, nil // 如果未找到记录，则返回 nil
+			return nil, nil
 		}
-		return nil, result.Error // 其他错误返回
+		return nil, result.Error
 	}
 	return &tag, nil
 }
 
-// GetTagsByNames 根据名称列表获取标签
 func (echoRepository *EchoRepository) GetTagsByNames(names []string) ([]*model.Tag, error) {
 	var tags []*model.Tag
 	result := echoRepository.db().Where("name IN ?", names).Find(&tags)
@@ -326,7 +308,6 @@ func (echoRepository *EchoRepository) GetTagsByNames(names []string) ([]*model.T
 	return tags, nil
 }
 
-// CreateTag 创建标签
 func (echoRepository *EchoRepository) CreateTag(ctx context.Context, tag *model.Tag) error {
 	tag.Name = strings.TrimSpace(tag.Name)
 	if tag.Name == "" {
@@ -341,7 +322,6 @@ func (echoRepository *EchoRepository) CreateTag(ctx context.Context, tag *model.
 	return nil
 }
 
-// IncrementTagUsageCount 增加标签的使用计数
 func (echoRepository *EchoRepository) IncrementTagUsageCount(
 	ctx context.Context,
 	tagID uint,
@@ -351,7 +331,6 @@ func (echoRepository *EchoRepository) IncrementTagUsageCount(
 		UpdateColumn("usage_count", gorm.Expr("usage_count + ?", 1)).Error
 }
 
-// GetEchosByTagId 根据标签ID获取关联的 Echo 列表
 func (echoRepository *EchoRepository) GetEchosByTagId(
 	tagId uint,
 	page, pageSize int,
@@ -403,7 +382,10 @@ func (echoRepository *EchoRepository) GetEchosByTagId(
 
 	if err := echoRepository.db().
 		Where("id IN ?", echoIDs).
-		Preload("Images").
+		Preload("EchoFiles", func(db *gorm.DB) *gorm.DB {
+			return db.Order("echo_files.sort_order ASC")
+		}).
+		Preload("EchoFiles.File").
 		Preload("Tags").
 		Order("created_at DESC").
 		Find(&echos).Error; err != nil {

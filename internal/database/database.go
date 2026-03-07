@@ -12,6 +12,7 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	connectModel "github.com/lin-snow/ech0/internal/model/connect"
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
+	fileModel "github.com/lin-snow/ech0/internal/model/file"
 	inboxModel "github.com/lin-snow/ech0/internal/model/inbox"
 	queueModel "github.com/lin-snow/ech0/internal/model/queue"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
@@ -111,11 +112,11 @@ func MigrateDB() error {
 	models := []interface{}{
 		&userModel.User{},
 		&echoModel.Echo{},
-		&echoModel.Image{},
+		&fileModel.File{},
+		&fileModel.EchoFile{},
 		&commonModel.KeyValue{},
 		&todoModel.Todo{},
 		&connectModel.Connected{},
-		&commonModel.TempFile{},
 		&userModel.OAuthBinding{},
 		&echoModel.Tag{},
 		&echoModel.EchoTag{},

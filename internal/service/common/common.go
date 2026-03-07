@@ -5,24 +5,24 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"mime"
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/feeds"
+	virefs "github.com/lin-snow/VireFS"
 	"github.com/lin-snow/ech0/internal/config"
 	"github.com/lin-snow/ech0/internal/event"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
-	echoModel "github.com/lin-snow/ech0/internal/model/echo"
+	fileModel "github.com/lin-snow/ech0/internal/model/file"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
-	stgx "github.com/lin-snow/ech0/pkg/storagex"
 	repository "github.com/lin-snow/ech0/internal/repository/common"
 	echoRepository "github.com/lin-snow/ech0/internal/repository/echo"
+	fileRepository "github.com/lin-snow/ech0/internal/repository/file"
 	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
 	storageDomain "github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/transaction"
@@ -35,45 +35,53 @@ import (
 	"golang.org/x/net/html"
 )
 
+const globalMusicFileIDKey = "global_music_file_id"
+
 type CommonService struct {
 	txManager          transaction.TransactionManager
 	commonRepository   repository.CommonRepositoryInterface
-	storage            *storageDomain.StorageService
+	fs                 virefs.FS
+	resolveURL         storageDomain.URLResolver
 	echoRepository     echoRepository.EchoRepositoryInterface
 	keyvalueRepository keyvalueRepository.KeyValueRepositoryInterface
+	fileRepository     fileRepository.FileRepositoryInterface
 	eventBus           event.IEventBus
+	keyGen             storageDomain.KeyGenerator
 }
 
 func NewCommonService(
 	tm transaction.TransactionManager,
 	commonRepository repository.CommonRepositoryInterface,
-	echoRepository echoRepository.EchoRepositoryInterface,
-	keyvalueRepository keyvalueRepository.KeyValueRepositoryInterface,
-	storage *storageDomain.StorageService,
+	echoRepo echoRepository.EchoRepositoryInterface,
+	kvRepo keyvalueRepository.KeyValueRepositoryInterface,
+	fileRepo fileRepository.FileRepositoryInterface,
+	fs virefs.FS,
+	resolveURL storageDomain.URLResolver,
 	eventBusProvider func() event.IEventBus,
 ) *CommonService {
 	return &CommonService{
 		txManager:          tm,
 		commonRepository:   commonRepository,
-		echoRepository:     echoRepository,
-		keyvalueRepository: keyvalueRepository,
-		storage:            storage,
+		echoRepository:     echoRepo,
+		keyvalueRepository: kvRepo,
+		fileRepository:     fileRepo,
+		fs:                 fs,
+		resolveURL:         resolveURL,
 		eventBus:           eventBusProvider(),
+		keyGen:             storageDomain.NewRandomKeyGenerator(),
 	}
 }
 
-func (commonService *CommonService) CommonGetUserByUserId(userId uint) (userModel.User, error) {
-	return commonService.commonRepository.GetUserByUserId(userId)
+func (s *CommonService) CommonGetUserByUserId(userId uint) (userModel.User, error) {
+	return s.commonRepository.GetUserByUserId(userId)
 }
 
-func (commonService *CommonService) UploadFile(
+func (s *CommonService) UploadFile(
 	userId uint,
 	file *multipart.FileHeader,
-	source string,
 	category storageDomain.Category,
 ) (commonModel.FileDto, error) {
-	_ = source
-	user, err := commonService.commonRepository.GetUserByUserId(userId)
+	user, err := s.commonRepository.GetUserByUserId(userId)
 	if err != nil {
 		return commonModel.FileDto{}, err
 	}
@@ -81,10 +89,8 @@ func (commonService *CommonService) UploadFile(
 		return commonModel.FileDto{}, errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	if !isAllowedType(
-		file.Header.Get("Content-Type"),
-		config.Config().Upload.AllowedTypes,
-	) {
+	contentType := file.Header.Get("Content-Type")
+	if !isAllowedType(contentType, config.Config().Upload.AllowedTypes) {
 		return commonModel.FileDto{}, errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
 	}
 
@@ -96,9 +102,10 @@ func (commonService *CommonService) UploadFile(
 		return commonModel.FileDto{}, errors.New(commonModel.FILE_SIZE_EXCEED_LIMIT)
 	}
 
-	uploadType := commonModel.ImageType
-	if category == storageDomain.CategoryAudio {
-		uploadType = commonModel.AudioType
+	gen := s.keyGenForCategory(category, file.Filename)
+	key, err := gen.GenerateKey(category, user.ID, file.Filename)
+	if err != nil {
+		return commonModel.FileDto{}, err
 	}
 
 	reader, err := file.Open()
@@ -107,21 +114,15 @@ func (commonService *CommonService) UploadFile(
 	}
 	defer func() { _ = reader.Close() }()
 
-	contentType := file.Header.Get("Content-Type")
-	result, err := commonService.storage.Upload(
-		context.Background(),
-		stgx.Category(category),
-		user.ID,
-		file.Filename,
-		contentType,
-		reader,
-	)
-	if err != nil {
+	var opts []virefs.PutOption
+	if contentType != "" {
+		opts = append(opts, virefs.WithContentType(contentType))
+	}
+	if err := s.fs.Put(context.Background(), key, reader, opts...); err != nil {
 		return commonModel.FileDto{}, err
 	}
 
-	width := 0
-	height := 0
+	width, height := 0, 0
 	if category.IsImageLike() {
 		width, height, err = imgUtil.GetImageSizeFromFile(file)
 		if err != nil {
@@ -129,69 +130,56 @@ func (commonService *CommonService) UploadFile(
 		}
 	}
 
+	url := s.resolveURL(key)
+
+	fileRecord := &fileModel.File{
+		Key:         key,
+		URL:         url,
+		Name:        file.Filename,
+		ContentType: contentType,
+		Size:        file.Size,
+		Category:    string(category),
+		Width:       width,
+		Height:      height,
+		UserID:      user.ID,
+	}
+	if err := s.fileRepository.Create(context.Background(), fileRecord); err != nil {
+		return commonModel.FileDto{}, err
+	}
+
+	uploadType := commonModel.ImageType
+	if category == storageDomain.CategoryAudio {
+		uploadType = commonModel.AudioType
+	}
+
 	user.Password = ""
-	if err := commonService.eventBus.Publish(context.Background(), event.NewEvent(
+	if err := s.eventBus.Publish(context.Background(), event.NewEvent(
 		event.EventTypeResourceUploaded,
 		event.EventPayload{
 			event.EventPayloadUser: user,
 			event.EventPayloadFile: file.Filename,
-			event.EventPayloadURL:  result.URL,
+			event.EventPayloadURL:  url,
 			event.EventPayloadSize: file.Size,
 			event.EventPayloadType: uploadType,
 		},
 	)); err != nil {
-		logUtil.GetLogger().
-			Error("Failed to publish resource uploaded event", zap.String("error", err.Error()))
+		logUtil.GetLogger().Error("Failed to publish resource uploaded event", zap.String("error", err.Error()))
 	}
 
-	fileDto := commonModel.FileDto{
-		URL:         result.URL,
-		AccessURL:   ResolveAccessFileURL(result.URL, commonService.storage.Source()),
-		Source:      commonService.storage.Source(),
-		ObjectKey:   result.ObjectKey,
-		ContentType: result.ContentType,
+	return commonModel.FileDto{
+		ID:          fileRecord.ID,
+		Key:         key,
+		URL:         url,
+		ContentType: contentType,
 		Category:    string(category),
+		Size:        file.Size,
 		Width:       width,
 		Height:      height,
-	}
-	if category.IsImageLike() {
-		fileDto.Metadata.Image = &commonModel.ImageMetadataDto{
-			Width:  width,
-			Height: height,
-		}
-	}
-
-	return fileDto, nil
+	}, nil
 }
 
-func ResolveAccessFileURL(rawURL, source string) string {
-	cleanURL := strings.TrimSpace(rawURL)
-	if cleanURL == "" {
-		return ""
-	}
-	lowerURL := strings.ToLower(cleanURL)
-	if strings.HasPrefix(lowerURL, "http://") || strings.HasPrefix(lowerURL, "https://") {
-		return cleanURL
-	}
-
-	if source == echoModel.ImageSourceLocal {
-		if strings.HasPrefix(cleanURL, "/api/") {
-			return cleanURL
-		}
-		if strings.HasPrefix(cleanURL, "/") {
-			return "/api" + cleanURL
-		}
-		return "/api/" + strings.TrimLeft(cleanURL, "/")
-	}
-
-	if strings.HasPrefix(cleanURL, "/") {
-		return cleanURL
-	}
-	return "/" + strings.TrimLeft(cleanURL, "/")
-}
-
-func (commonService *CommonService) DeleteFile(userid uint, file commonModel.FileDto) error {
-	user, err := commonService.commonRepository.GetUserByUserId(userid)
+func (s *CommonService) DeleteFile(userid uint, dto commonModel.FileDeleteDto) error {
+	user, err := s.commonRepository.GetUserByUserId(userid)
 	if err != nil {
 		return err
 	}
@@ -199,36 +187,27 @@ func (commonService *CommonService) DeleteFile(userid uint, file commonModel.Fil
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	if file.URL == "" {
+	if dto.Key == "" {
 		return errors.New(commonModel.IMAGE_NOT_FOUND)
 	}
 
-	return commonService.deleteFileBySource(file.URL, normalizeFileSource(file.Source), file.ObjectKey)
+	ctx := context.Background()
+	_ = s.fs.Delete(ctx, dto.Key)
+	return s.fileRepository.DeleteByKey(ctx, dto.Key)
 }
 
-func (commonService *CommonService) deleteFileBySource(url, source, objectKey string) error {
-	if source == echoModel.ImageSourceURL {
-		return nil
-	}
-	vpath := objectKeyToVirtualPath(objectKey)
-	if vpath == "" {
-		return nil
-	}
-	return commonService.storage.Delete(context.Background(), vpath)
+func (s *CommonService) GetSysAdmin() (userModel.User, error) {
+	return s.commonRepository.GetSysAdmin()
 }
 
-func (commonService *CommonService) GetSysAdmin() (userModel.User, error) {
-	return commonService.commonRepository.GetSysAdmin()
-}
-
-func (commonService *CommonService) GetStatus() (commonModel.Status, error) {
-	sysuser, err := commonService.commonRepository.GetSysAdmin()
+func (s *CommonService) GetStatus() (commonModel.Status, error) {
+	sysuser, err := s.commonRepository.GetSysAdmin()
 	if err != nil {
 		return commonModel.Status{}, err
 	}
 
 	var users []commonModel.UserStatus
-	allusers, err := commonService.commonRepository.GetAllUsers()
+	allusers, err := s.commonRepository.GetAllUsers()
 	if err != nil {
 		return commonModel.Status{}, err
 	}
@@ -240,29 +219,27 @@ func (commonService *CommonService) GetStatus() (commonModel.Status, error) {
 		})
 	}
 
-	status := commonModel.Status{}
-
-	echos, err := commonService.commonRepository.GetAllEchos(true)
+	echos, err := s.commonRepository.GetAllEchos(true)
 	if err != nil {
-		return status, err
+		return commonModel.Status{}, err
 	}
 
-	status.SysAdminID = sysuser.ID
-	status.Username = sysuser.Username
-	status.Logo = sysuser.Avatar
-	status.Users = users
-	status.TotalEchos = len(echos)
-
-	return status, nil
+	return commonModel.Status{
+		SysAdminID: sysuser.ID,
+		Username:   sysuser.Username,
+		Logo:       sysuser.Avatar,
+		Users:      users,
+		TotalEchos: len(echos),
+	}, nil
 }
 
-func (commonService *CommonService) GetHeatMap(timezone string) ([]commonModel.Heatmap, error) {
+func (s *CommonService) GetHeatMap(timezone string) ([]commonModel.Heatmap, error) {
 	loc := timezoneUtil.LoadLocationOrUTC(timezone)
 	nowUser := time.Now().UTC().In(loc)
 	startUser := time.Date(nowUser.Year(), nowUser.Month(), nowUser.Day(), 0, 0, 0, 0, loc).AddDate(0, 0, -29)
 	endUserExclusive := startUser.AddDate(0, 0, 30)
 
-	createdAtList, err := commonService.commonRepository.GetHeatMap(startUser.UTC(), endUserExclusive.UTC())
+	createdAtList, err := s.commonRepository.GetHeatMap(startUser.UTC(), endUserExclusive.UTC())
 	if err != nil {
 		return nil, err
 	}
@@ -285,8 +262,8 @@ func (commonService *CommonService) GetHeatMap(timezone string) ([]commonModel.H
 	return results[:], nil
 }
 
-func (commonService *CommonService) GenerateRSS(ctx *gin.Context) (string, error) {
-	echos, err := commonService.commonRepository.GetAllEchos(false)
+func (s *CommonService) GenerateRSS(ctx *gin.Context) (string, error) {
+	echos, err := s.commonRepository.GetAllEchos(false)
 	if err != nil {
 		return "", err
 	}
@@ -297,39 +274,25 @@ func (commonService *CommonService) GenerateRSS(ctx *gin.Context) (string, error
 	}
 	host := ctx.Request.Host
 	feed := &feeds.Feed{
-		Title: "Ech0",
-		Link: &feeds.Link{
-			Href: fmt.Sprintf("%s://%s/", schema, host),
-		},
-		Image: &feeds.Image{
-			Url: fmt.Sprintf("%s://%s/Ech0.svg", schema, host),
-		},
+		Title:       "Ech0",
+		Link:        &feeds.Link{Href: fmt.Sprintf("%s://%s/", schema, host)},
+		Image:       &feeds.Image{Url: fmt.Sprintf("%s://%s/Ech0.svg", schema, host)},
 		Description: "Ech0",
-		Author: &feeds.Author{
-			Name: "Ech0",
-		},
-		Updated: time.Now().UTC(),
+		Author:      &feeds.Author{Name: "Ech0"},
+		Updated:     time.Now().UTC(),
 	}
 
 	for _, msg := range echos {
 		renderedContent := mdUtil.MdToHTML([]byte(msg.Content))
-
 		title := msg.Username + " - " + msg.CreatedAt.Format("2006-01-02")
 
-		if len(msg.Images) > 0 {
+		if len(msg.EchoFiles) > 0 {
 			var imageContent []byte
-			for _, image := range msg.Images {
-				var imageURL string
-				switch image.ImageSource {
-				case echoModel.ImageSourceLocal:
-					imageURL = fmt.Sprintf("%s://%s/api%s", schema, host, image.ImageURL)
-				case echoModel.ImageSourceS3:
-					imageURL = image.ImageURL
-				}
+			for _, ef := range msg.EchoFiles {
 				imageContent = fmt.Appendf(
 					imageContent,
 					"<img src=\"%s\" alt=\"Image\" style=\"max-width:100%%;height:auto;\" />",
-					imageURL,
+					ef.File.URL,
 				)
 			}
 			renderedContent = append(imageContent, renderedContent...)
@@ -337,48 +300,45 @@ func (commonService *CommonService) GenerateRSS(ctx *gin.Context) (string, error
 
 		if len(msg.Tags) > 0 {
 			for _, tag := range msg.Tags {
-				renderedContent = fmt.Appendf(
-					renderedContent,
-					"<br /><span class=\"tag\">#%s</span>",
-					tag.Name,
-				)
+				renderedContent = fmt.Appendf(renderedContent, "<br /><span class=\"tag\">#%s</span>", tag.Name)
 			}
 		}
 
-		item := &feeds.Item{
+		feed.Items = append(feed.Items, &feeds.Item{
 			Title:       title,
 			Link:        &feeds.Link{Href: fmt.Sprintf("%s://%s/echo/%d", schema, host, msg.ID)},
 			Description: string(renderedContent),
-			Author: &feeds.Author{
-				Name: msg.Username,
-			},
-			Created: msg.CreatedAt,
-		}
-		feed.Items = append(feed.Items, item)
+			Author:      &feeds.Author{Name: msg.Username},
+			Created:     msg.CreatedAt,
+		})
 	}
 
-	atom, err := feed.ToAtom()
-	if err != nil {
-		return "", err
-	}
-
-	return atom, nil
+	return feed.ToAtom()
 }
 
-func (commonService *CommonService) UploadMusic(
+func (s *CommonService) UploadMusic(
 	userId uint,
 	file *multipart.FileHeader,
 ) (string, error) {
-	fileDto, err := commonService.UploadFile(userId, file, string(echoModel.ImageSourceLocal), storageDomain.CategoryAudio)
+	fileDto, err := s.UploadFile(userId, file, storageDomain.CategoryAudio)
 	if err != nil {
 		return "", err
+	}
+
+	if err := s.txManager.Run(func(ctx context.Context) error {
+		return s.keyvalueRepository.AddOrUpdateKeyValue(
+			ctx, globalMusicFileIDKey,
+			strconv.FormatUint(uint64(fileDto.ID), 10),
+		)
+	}); err != nil {
+		logUtil.GetLogger().Error("Failed to save global music file ID", zap.String("error", err.Error()))
 	}
 
 	return fileDto.URL, nil
 }
 
-func (commonService *CommonService) DeleteMusic(userid uint) error {
-	user, err := commonService.commonRepository.GetUserByUserId(userid)
+func (s *CommonService) DeleteMusic(userid uint) error {
+	user, err := s.commonRepository.GetUserByUserId(userid)
 	if err != nil {
 		return err
 	}
@@ -386,62 +346,67 @@ func (commonService *CommonService) DeleteMusic(userid uint) error {
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	audioFiles := []string{"music.flac", "music.m4a", "music.mp3"}
 	ctx := context.Background()
-
-	for _, file := range audioFiles {
-		vpath := stgx.JoinPath("audios", file)
-		if exists, _ := commonService.storage.Exists(ctx, vpath); exists {
-			return commonService.storage.Delete(ctx, vpath)
-		}
+	val, err := s.keyvalueRepository.GetKeyValue(globalMusicFileIDKey)
+	if err != nil || val == "" {
+		return nil
 	}
+
+	fileID, err := strconv.ParseUint(val, 10, 64)
+	if err != nil {
+		return nil
+	}
+
+	fileRecord, err := s.fileRepository.GetByID(ctx, uint(fileID))
+	if err != nil {
+		return nil
+	}
+
+	_ = s.fs.Delete(ctx, fileRecord.Key)
+	_ = s.fileRepository.Delete(ctx, fileRecord.ID)
+
+	_ = s.txManager.Run(func(txCtx context.Context) error {
+		return s.keyvalueRepository.DeleteKeyValue(txCtx, globalMusicFileIDKey)
+	})
 
 	return nil
 }
 
-func (commonService *CommonService) GetPlayMusicUrl() string {
-	audioFiles := []string{"music.flac", "music.m4a", "music.mp3"}
-	ctx := context.Background()
-
-	for _, file := range audioFiles {
-		vpath := stgx.JoinPath("audios", file)
-		if exists, _ := commonService.storage.Exists(ctx, vpath); exists {
-			url, err := commonService.storage.ResolveURL(ctx, vpath)
-			if err == nil {
-				return url
-			}
-			return fmt.Sprintf("/files/audios/%s", file)
-		}
+func (s *CommonService) GetPlayMusicUrl() string {
+	val, err := s.keyvalueRepository.GetKeyValue(globalMusicFileIDKey)
+	if err != nil || val == "" {
+		return ""
 	}
 
-	return ""
+	fileID, err := strconv.ParseUint(val, 10, 64)
+	if err != nil {
+		return ""
+	}
+
+	fileRecord, err := s.fileRepository.GetByID(context.Background(), uint(fileID))
+	if err != nil {
+		return ""
+	}
+
+	return fileRecord.URL
 }
 
-func (commonService *CommonService) PlayMusic(ctx *gin.Context) {
-	musicURL := commonService.GetPlayMusicUrl()
-	if musicURL == "" {
+func (s *CommonService) PlayMusic(ctx *gin.Context) {
+	val, _ := s.keyvalueRepository.GetKeyValue(globalMusicFileIDKey)
+	if val == "" {
 		ctx.String(http.StatusNotFound, "音乐文件不存在")
 		return
 	}
-
-	musicName := filepath.Base(musicURL)
-	vpath := stgx.JoinPath("audios", musicName)
-
-	info, err := commonService.storage.Stat(context.Background(), vpath)
+	fileID, _ := strconv.ParseUint(val, 10, 64)
+	fileRecord, err := s.fileRepository.GetByID(context.Background(), uint(fileID))
 	if err != nil {
 		ctx.String(http.StatusNotFound, "音乐文件不存在")
 		return
 	}
 
-	contentType := "audio/mpeg"
-	lowerName := strings.ToLower(musicName)
-	switch {
-	case strings.HasSuffix(lowerName, ".flac"):
-		contentType = "audio/flac"
-	case strings.HasSuffix(lowerName, ".wav"):
-		contentType = "audio/wav"
-	case strings.HasSuffix(lowerName, ".m4a"):
-		contentType = "audio/mp4"
+	contentType := fileRecord.ContentType
+	if contentType == "" {
+		contentType = "audio/mpeg"
 	}
 
 	ctx.Header("Content-Type", contentType)
@@ -449,7 +414,7 @@ func (commonService *CommonService) PlayMusic(ctx *gin.Context) {
 	ctx.Header("Pragma", "no-cache")
 	ctx.Header("Expires", "0")
 
-	reader, err := commonService.storage.Open(context.Background(), vpath)
+	reader, err := s.fs.Get(context.Background(), fileRecord.Key)
 	if err != nil {
 		ctx.String(http.StatusNotFound, "音乐文件不存在")
 		return
@@ -462,17 +427,17 @@ func (commonService *CommonService) PlayMusic(ctx *gin.Context) {
 		return
 	}
 
-	http.ServeContent(ctx.Writer, ctx.Request, musicName, info.ModTime, readSeeker)
+	http.ServeContent(ctx.Writer, ctx.Request, fileRecord.Name, fileRecord.CreatedAt, readSeeker)
 }
 
-func (commonService *CommonService) GetFilePresignURL(
+func (s *CommonService) GetFilePresignURL(
 	userid uint,
 	s3Dto *commonModel.GetPresignURLDto,
 	method string,
 ) (commonModel.PresignDto, error) {
 	var result commonModel.PresignDto
 
-	user, err := commonService.commonRepository.GetUserByUserId(userid)
+	user, err := s.commonRepository.GetUserByUserId(userid)
 	if err != nil {
 		return result, err
 	}
@@ -483,135 +448,89 @@ func (commonService *CommonService) GetFilePresignURL(
 	if s3Dto.FileName == "" {
 		return result, errors.New(commonModel.INVALID_PARAMS)
 	}
-	ext := filepath.Ext(s3Dto.FileName)
-	contentType := mime.TypeByExtension(ext)
+
+	contentType := s3Dto.ContentType
 	if contentType == "" {
 		contentType = "application/octet-stream"
 	}
 
-	switch contentType[:5] {
-	case "image":
-		if !isAllowedType(contentType, config.Config().Upload.AllowedTypes) {
-			return result, errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
-		}
-	case "audio":
-		if !isAllowedType(contentType, config.Config().Upload.AllowedTypes) {
-			return result, errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
-		}
-	default:
+	category := storageDomain.CategoryImage
+	if strings.HasPrefix(contentType, "audio") {
+		category = storageDomain.CategoryAudio
+	}
+
+	if !isAllowedType(contentType, config.Config().Upload.AllowedTypes) {
 		return result, errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
+	}
+
+	key, err := s.keyGen.GenerateKey(category, userid, s3Dto.FileName)
+	if err != nil {
+		return result, err
+	}
+
+	p, ok := s.fs.(virefs.Presigner)
+	if !ok {
+		return result, fmt.Errorf("backend does not support presigned URLs")
+	}
+	req, err := p.PresignPut(context.Background(), key, 24*time.Hour)
+	if err != nil {
+		return result, err
+	}
+
+	url := s.resolveURL(key)
+
+	fileRecord := &fileModel.File{
+		Key:         key,
+		URL:         url,
+		Name:        s3Dto.FileName,
+		ContentType: contentType,
+		Category:    string(category),
+		UserID:      userid,
+	}
+	if err := s.fileRepository.Create(context.Background(), fileRecord); err != nil {
+		logUtil.GetLogger().Error("Failed to save presign file record", zap.String("error", err.Error()))
 	}
 
 	result.FileName = s3Dto.FileName
 	result.ContentType = contentType
-
-	presignResult, err := commonService.storage.Presign(
-		context.Background(),
-		stgx.CategoryImage,
-		userid,
-		s3Dto.FileName,
-		contentType,
-		method,
-		24*time.Hour,
-	)
-	if err != nil {
-		return result, err
-	}
-	result.ObjectKey = presignResult.ObjectKey
-	result.PresignURL = presignResult.PresignURL
-	result.FileURL = presignResult.FileURL
-
-	now := time.Now().UTC().Unix()
-	fileType := string(storageDomain.CategoryImage)
-	if strings.HasPrefix(contentType, "audio") {
-		fileType = string(storageDomain.CategoryAudio)
-	}
-	tempFile := commonModel.TempFile{
-		FileName:       result.FileName,
-		Storage:        string(commonModel.S3_FILE),
-		FileType:       fileType,
-		Bucket:         "",
-		ObjectKey:      result.ObjectKey,
-		Deleted:        false,
-		CreatedAt:      now,
-		LastAccessedAt: now,
-	}
-	if err := commonService.txManager.Run(func(ctx context.Context) error {
-		return commonService.commonRepository.SaveTempFile(ctx, tempFile)
-	}); err != nil {
-		logUtil.GetLogger().Error("Failed to save temp file", zap.String("error", err.Error()))
-	}
+	result.Key = key
+	result.PresignURL = req.URL
+	result.FileURL = url
 
 	return result, nil
 }
 
-func normalizeFileSource(source string) string {
-	switch source {
-	case echoModel.ImageSourceS3:
-		return echoModel.ImageSourceS3
-	case echoModel.ImageSourceURL:
-		return echoModel.ImageSourceURL
-	default:
-		return echoModel.ImageSourceLocal
-	}
-}
+func (s *CommonService) CleanupOrphanFiles() error {
+	ctx := context.Background()
+	threshold := time.Now().UTC().Add(-24 * time.Hour)
 
-func (commonService *CommonService) CleanupTempFiles() error {
-	files, err := commonService.commonRepository.GetAllTempFiles()
+	files, err := s.fileRepository.GetOrphanFiles(ctx, threshold)
 	if err != nil {
 		return err
 	}
 
-	now := time.Now().UTC().Unix()
-	ctx := context.Background()
+	musicFileIDStr, _ := s.keyvalueRepository.GetKeyValue(globalMusicFileIDKey)
+	musicFileID := uint(0)
+	if musicFileIDStr != "" {
+		if id, err := strconv.ParseUint(musicFileIDStr, 10, 64); err == nil {
+			musicFileID = uint(id)
+		}
+	}
 
 	for _, file := range files {
-		if now-file.LastAccessedAt > 24*3600 {
-			if file.ObjectKey != "" {
-				vpath := objectKeyToVirtualPath(file.ObjectKey)
-				if vpath != "" {
-					if err := commonService.storage.Delete(ctx, vpath); err != nil {
-						fmt.Printf("删除临时文件失败: %s, 错误: %v\n", file.ObjectKey, err)
-					}
-				}
-			}
-
-			_ = commonService.txManager.Run(func(ctx context.Context) error {
-				return commonService.commonRepository.DeleteTempFilePermanently(ctx, file.ID)
-			})
+		if file.ID == musicFileID {
+			continue
 		}
+		if file.Key != "" {
+			_ = s.fs.Delete(ctx, file.Key)
+		}
+		_ = s.fileRepository.Delete(ctx, file.ID)
 	}
 
 	return nil
 }
 
-func (commonService *CommonService) RefreshEchoImageURL(echo *echoModel.Echo) {
-	var wg sync.WaitGroup
-	mu := sync.Mutex{}
-
-	for i := range echo.Images {
-		if echo.Images[i].ImageSource == echoModel.ImageSourceS3 && echo.Images[i].ObjectKey != "" {
-			wg.Add(1)
-			go func(i int) {
-				defer wg.Done()
-				vpath := objectKeyToVirtualPath(echo.Images[i].ObjectKey)
-				if newURL, err := commonService.storage.ResolveURL(context.Background(), vpath); err == nil {
-					mu.Lock()
-					echo.Images[i].ImageURL = newURL
-					mu.Unlock()
-				}
-			}(i)
-		}
-	}
-
-	wg.Wait()
-
-	_ = commonService.txManager.Run(func(ctx context.Context) error {
-		return commonService.echoRepository.UpdateEcho(ctx, echo)
-	})
-}
-
-func (commonService *CommonService) GetWebsiteTitle(websiteURL string) (string, error) {
+func (s *CommonService) GetWebsiteTitle(websiteURL string) (string, error) {
 	websiteURL = httpUtil.TrimURL(websiteURL)
 
 	body, err := httpUtil.SendRequest(websiteURL, "GET", httpUtil.Header{}, 10*time.Second)
@@ -639,24 +558,26 @@ func extractTitle(n *html.Node) string {
 		}
 		return ""
 	}
-
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
 		if title := extractTitle(c); title != "" {
 			return title
 		}
 	}
-
 	return ""
 }
 
-// objectKeyToVirtualPath converts a stored object key (e.g. "images/a.png")
-// to a VFS virtual path (e.g. "/images/a.png").
-func objectKeyToVirtualPath(key string) string {
-	key = strings.TrimSpace(key)
-	if key == "" {
-		return ""
+func (s *CommonService) keyGenForCategory(category storageDomain.Category, fileName string) storageDomain.KeyGenerator {
+	if category == storageDomain.CategoryAudio {
+		ext := strings.ToLower(filepath.Ext(strings.TrimSpace(fileName)))
+		if ext == "" {
+			ext = ".bin"
+		}
+		return &storageDomain.StaticKeyGenerator{
+			Category: storageDomain.CategoryAudio,
+			Name:     "music" + ext,
+		}
 	}
-	return "/" + strings.TrimLeft(key, "/")
+	return s.keyGen
 }
 
 func isAllowedType(contentType string, allowedTypes []string) bool {

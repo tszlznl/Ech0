@@ -7,22 +7,14 @@ import (
 )
 
 type AppRouterGroup struct {
-	ResourceGroup     *gin.RouterGroup
+	ResourceGroup    *gin.RouterGroup
 	PublicRouterGroup *gin.RouterGroup
-	AuthRouterGroup   *gin.RouterGroup
-	WSRouterGroup     *gin.RouterGroup
+	AuthRouterGroup  *gin.RouterGroup
+	WSRouterGroup    *gin.RouterGroup
 }
 
 // SetupRouter 配置路由
 func SetupRouter(r *gin.Engine, h *handler.Bundle) {
-	// === 使用本地目录提供前端 ===)
-	// // Setup Frontend
-	// r.Use(static.Serve("/", static.LocalFile("./template", false)))
-	// // 由于Vue3 和SPA模式，所以处理匹配不到的路由(重定向到index.html)
-	// r.NoRoute(func(c *gin.Context) {
-	// 	c.File("./template/index.html")
-	// })
-
 	ctx := &RouterContext{
 		Engine:   r,
 		Handlers: h,
@@ -44,9 +36,9 @@ func setupRouterGroup(r *gin.Engine) *AppRouterGroup {
 	auth.Use(middleware.NoCache(), middleware.JWTAuthMiddleware())
 	ws := r.Group("/ws")
 	return &AppRouterGroup{
-		ResourceGroup:     resource,
+		ResourceGroup:    resource,
 		PublicRouterGroup: public,
-		AuthRouterGroup:   auth,
-		WSRouterGroup:     ws,
+		AuthRouterGroup:  auth,
+		WSRouterGroup:    ws,
 	}
 }

@@ -18,22 +18,14 @@ import (
 	"github.com/lin-snow/ech0/internal/config"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	"github.com/lin-snow/ech0/internal/tui"
-	"github.com/spf13/afero"
 )
 
 var runtimeApp *app.App
-var backupFS afero.Fs
 
-// SetApp 注入应用实例。
 func SetApp(a *app.App) {
 	runtimeApp = a
 }
 
-func SetBackupFS(fs afero.Fs) {
-	backupFS = fs
-}
-
-// isWebPortInUse 检查 Web 端口是否已被占用（通常表示已有实例在运行）
 func isWebPortInUse() bool {
 	port := config.Config().Server.Port
 	ln, err := net.Listen("tcp", ":"+port)
@@ -44,55 +36,45 @@ func isWebPortInUse() bool {
 	return false
 }
 
-// canStartWebServer 检查当前进程或系统端口是否允许启动 Web 服务
 func canStartWebServer() bool {
 	if runtimeApp == nil {
 		tui.PrintCLIInfo("⚠️ 启动服务", "应用未初始化")
 		return false
 	}
-
 	if runtimeApp.IsWebRunning() {
 		tui.PrintCLIInfo("⚠️ 启动服务", "Web 服务已在当前进程中运行")
 		return false
 	}
-
 	if isWebPortInUse() {
 		port := config.Config().Server.Port
 		tui.PrintCLIInfo("⚠️ 启动服务", "Web 端口 "+port+" 已被占用，可能已有实例在运行")
 		return false
 	}
-
 	return true
 }
 
-// DoServe 启动服务
 func DoServe() {
 	if !canStartWebServer() {
 		return
 	}
-
 	if err := runtimeApp.StartWeb(context.Background()); err != nil {
 		tui.PrintCLIInfo("😭 启动服务失败", err.Error())
 	}
 }
 
-// DoServeWithBlock 阻塞当前线程，直到服务器停止
 func DoServeWithBlock() {
 	if !canStartWebServer() {
 		return
 	}
-
 	if err := runtimeApp.StartWeb(context.Background()); err != nil {
 		tui.PrintCLIInfo("😭 启动服务失败", err.Error())
 		return
 	}
 
-	// 阻塞主线程，直到接收到终止信号
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	// 创建 context，最大等待 5 秒优雅关闭
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -103,14 +85,12 @@ func DoServeWithBlock() {
 	tui.PrintCLIInfo("🎉 停止服务成功", "Ech0 服务器已停止")
 }
 
-// DoStopServe 停止服务
 func DoStopServe() {
 	if runtimeApp == nil || !runtimeApp.IsWebRunning() {
 		tui.PrintCLIInfo("⚠️ 停止服务", "Ech0 服务器未启动")
 		return
 	}
 
-	// 创建 context，最大等待 5 秒优雅关闭
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -122,42 +102,27 @@ func DoStopServe() {
 	tui.PrintCLIInfo("🎉 停止服务成功", "Ech0 服务器已停止")
 }
 
-// DoBackup 执行备份
 func DoBackup() {
-	if backupFS == nil {
-		tui.PrintCLIInfo("😭 执行结果", "备份失败: 文件系统未初始化")
-		return
-	}
-	_, backupFileName, err := backup.ExecuteBackup(backupFS)
+	_, backupFileName, err := backup.ExecuteBackup()
 	if err != nil {
-		// 处理错误
 		tui.PrintCLIInfo("😭 执行结果", "备份失败: "+err.Error())
 		return
 	}
 
-	// 获取PWD环境变量
 	pwd, _ := os.Getwd()
 	fullPath := filepath.Join(pwd, "backup", backupFileName)
-
 	tui.PrintCLIInfo("🎉 备份成功", fullPath)
 }
 
-// DoRestore 执行恢复
 func DoRestore(backupFilePath string) {
-	if backupFS == nil {
-		tui.PrintCLIInfo("😭 执行结果", "恢复失败: 文件系统未初始化")
-		return
-	}
-	err := backup.ExecuteRestore(backupFS, backupFilePath)
+	err := backup.ExecuteRestore(backupFilePath)
 	if err != nil {
-		// 处理错误
 		tui.PrintCLIInfo("😭 执行结果", "恢复失败: "+err.Error())
 		return
 	}
 	tui.PrintCLIInfo("🎉 恢复成功", "已从备份文件 "+backupFilePath+" 中恢复数据")
 }
 
-// DoVersion 打印版本信息
 func DoVersion() {
 	item := struct{ Title, Msg string }{
 		Title: "📦 当前版本",
@@ -166,28 +131,22 @@ func DoVersion() {
 	tui.PrintCLIWithBox(item)
 }
 
-// DoEch0Info 打印 Ech0 信息
 func DoEch0Info() {
 	if _, err := fmt.Fprintln(os.Stdout, tui.GetEch0Info()); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to print ech0 info: %v\n", err)
 	}
 }
 
-// DoHello 打印 Ech0 Logo
 func DoHello() {
 	tui.ClearScreen()
 	tui.PrintCLIBanner()
 }
 
-// DoTui 执行 TUI
 func DoTui() {
-	// 清除屏幕当前字符
 	tui.ClearScreen()
-	// 打印 ASCII 风格 Banner
 	tui.PrintCLIBanner()
 
 	for {
-		// 换行
 		fmt.Println()
 
 		var action string
@@ -234,11 +193,9 @@ func DoTui() {
 		case "backup":
 			DoBackup()
 		case "restore":
-			// 如果服务器已经启动，则先停止服务器
 			if runtimeApp != nil && runtimeApp.IsWebRunning() {
 				tui.PrintCLIInfo("⚠️ 警告", "恢复数据前请先停止服务器")
 			} else {
-				// 获取备份文件路径
 				var path string
 				_ = huh.NewInput().
 					Title("请输入备份文件路径").

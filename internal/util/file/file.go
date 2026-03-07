@@ -10,8 +10,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	echoModel "github.com/lin-snow/ech0/internal/model/echo"
-	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	"github.com/spf13/afero"
 )
 
@@ -429,19 +427,6 @@ func CleanDir(fs afero.Fs, path string) error {
 	return nil
 }
 
-// GetImageURL 获取图片 URL 列表
-func GetImageURL(image echoModel.Image, serverURL string) string {
-	switch image.ImageSource {
-	case echoModel.ImageSourceLocal:
-		return fmt.Sprintf("%s/api/%s", serverURL, httpUtil.TrimURL(image.ImageURL))
-	case echoModel.ImageSourceURL:
-		return image.ImageURL
-	case echoModel.ImageSourceS3:
-		return image.ImageURL
-	default:
-		return fmt.Sprintf("%s/api/%s", serverURL, httpUtil.TrimURL(image.ImageURL))
-	}
-}
 
 // ValidateAndSanitizePath 验证并清理文件路径，防止路径遍历攻击
 // baseDir: 允许的基础目录（如 "data/files/images"）

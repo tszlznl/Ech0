@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/lin-snow/ech0/internal/config"
 	"github.com/lin-snow/ech0/internal/handler"
 )
 
@@ -40,10 +41,16 @@ func coreRouteModules() []RouteModule {
 			},
 		},
 		routeModule{
-			name: "static-assets",
+			name: "static-files",
 			register: func(ctx *RouterContext) {
-				ctx.Engine.Static("api/files/images", "./data/files/images")
-				ctx.Engine.Static("api/files/audios", "./data/files/audios")
+				cfg := config.Config().Storage
+				if cfg.Mode == "" || cfg.Mode == "local" {
+					root := cfg.DataRoot
+					if root == "" {
+						root = "data/files"
+					}
+					ctx.Engine.Static("api/files", root)
+				}
 			},
 		},
 		routeModule{

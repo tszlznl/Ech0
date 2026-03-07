@@ -14,7 +14,6 @@ import (
 	commonService "github.com/lin-snow/ech0/internal/service/common"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
-	"github.com/spf13/afero"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -25,7 +24,6 @@ type Tasker struct {
 	settingService *settingService.SettingService
 	eventBus       event.IEventBus
 	queueRepo      queueRepository.QueueRepositoryInterface
-	fs             afero.Fs
 }
 
 func NewTasker(
@@ -33,7 +31,6 @@ func NewTasker(
 	settingService *settingService.SettingService,
 	eventBusProvider func() event.IEventBus,
 	queueRepo queueRepository.QueueRepositoryInterface,
-	fs afero.Fs,
 ) *Tasker {
 	scheduler, err := gocron.NewScheduler()
 	if err != nil {
@@ -49,7 +46,6 @@ func NewTasker(
 		settingService: settingService,
 		eventBus:       eventBusProvider(),
 		queueRepo:      queueRepo,
-		fs:             fs,
 	}
 }
 
@@ -87,7 +83,7 @@ func (t *Tasker) CleanupTempFilesTask() {
 		gocron.DurationJob(72*time.Hour),
 		gocron.NewTask(
 			func() {
-				if err := t.commonService.CleanupTempFiles(); err != nil {
+				if err := t.commonService.CleanupOrphanFiles(); err != nil {
 					logUtil.GetLogger().
 						Error("Failed to clean up temporary files", zap.String("error", err.Error()))
 				}
@@ -156,7 +152,7 @@ func (t *Tasker) ScheduleBackupTask(cronExpression string) {
 		gocron.NewTask(
 			func() {
 				// 执行备份
-				if path, fileName, err := backup.ExecuteBackup(t.fs); err != nil {
+				if path, fileName, err := backup.ExecuteBackup(); err != nil {
 					logUtil.GetLogger().Error("Failed to execute scheduled backup",
 						zap.String("path", path),
 						zap.String("fileName", fileName),

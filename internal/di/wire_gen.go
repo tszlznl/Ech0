@@ -27,6 +27,7 @@ import (
 	repository7 "github.com/lin-snow/ech0/internal/repository/common"
 	repository9 "github.com/lin-snow/ech0/internal/repository/connect"
 	repository3 "github.com/lin-snow/ech0/internal/repository/echo"
+	fileRepo "github.com/lin-snow/ech0/internal/repository/file"
 	repository6 "github.com/lin-snow/ech0/internal/repository/inbox"
 	"github.com/lin-snow/ech0/internal/repository/keyvalue"
 	repository2 "github.com/lin-snow/ech0/internal/repository/queue"
@@ -107,18 +108,18 @@ func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() event.IEv
 
 // Injectors from handlers_injector.go:
 
-// BuildHandlers 使用wire生成的代码来构建Handlers实例
 func BuildHandlers(dbProvider func() *gorm.DB, cacheFactory *cache.CacheFactory, tmFactory *transaction.TransactionManagerFactory, ebProvider func() event.IEventBus) (*handler.Bundle, error) {
 	webHandler := handler2.NewWebHandler()
-	fs := ProvideAferoFs()
 	transactionManager := ProvideTransactionManager(tmFactory)
 	iCache := ProvideCache(cacheFactory)
 	userRepositoryInterface := repository5.NewUserRepository(dbProvider, iCache)
 	commonRepositoryInterface := repository7.NewCommonRepository(dbProvider)
 	echoRepositoryInterface := repository3.NewEchoRepository(dbProvider, iCache)
 	keyValueRepositoryInterface := keyvalue.NewKeyValueRepository(dbProvider, iCache)
-	storageService := ProvideStorageService()
-	commonService := service.NewCommonService(transactionManager, commonRepositoryInterface, echoRepositoryInterface, keyValueRepositoryInterface, storageService, ebProvider)
+	fileRepositoryInterface := fileRepo.NewFileRepository(dbProvider)
+	fs := ProvideVireFS()
+	urlResolver := ProvideURLResolver()
+	commonService := service.NewCommonService(transactionManager, commonRepositoryInterface, echoRepositoryInterface, keyValueRepositoryInterface, fileRepositoryInterface, fs, urlResolver, ebProvider)
 	settingRepositoryInterface := repository8.NewSettingRepository(dbProvider)
 	webhookRepositoryInterface := repository.NewWebhookRepository(dbProvider)
 	settingService := service2.NewSettingService(transactionManager, commonService, keyValueRepositoryInterface, settingRepositoryInterface, webhookRepositoryInterface, ebProvider)
@@ -137,7 +138,7 @@ func BuildHandlers(dbProvider func() *gorm.DB, cacheFactory *cache.CacheFactory,
 	connectRepositoryInterface := repository9.NewConnectRepository(dbProvider)
 	connectService := service7.NewConnectService(transactionManager, connectRepositoryInterface, echoRepositoryInterface, commonService, settingService)
 	connectHandler := handler9.NewConnectHandler(connectService)
-	backupService := service8.NewBackupService(commonService, fs, ebProvider)
+	backupService := service8.NewBackupService(commonService, ebProvider)
 	backupHandler := handler10.NewBackupHandler(backupService)
 	metricCollector := metric.NewSystemCollector()
 	monitorMonitor := monitor.NewMonitor(metricCollector)
@@ -151,7 +152,6 @@ func BuildHandlers(dbProvider func() *gorm.DB, cacheFactory *cache.CacheFactory,
 
 // Injectors from runtime_injector.go:
 
-// BuildWebRuntime 构建 HTTP runtime（用于测试和独立启动场景）。
 func BuildWebRuntime() (*http.Runtime, error) {
 	engine := ProvideGinEngine()
 	v := ProvideDBProvider()
@@ -170,18 +170,19 @@ func BuildWebRuntime() (*http.Runtime, error) {
 // Injectors from tasker_injector.go:
 
 func BuildTasker(dbProvider func() *gorm.DB, cacheFactory *cache.CacheFactory, tmFactory *transaction.TransactionManagerFactory, ebProvider func() event.IEventBus) (*task.Tasker, error) {
-	fs := ProvideAferoFs()
 	transactionManager := ProvideTransactionManager(tmFactory)
 	commonRepositoryInterface := repository7.NewCommonRepository(dbProvider)
 	iCache := ProvideCache(cacheFactory)
 	echoRepositoryInterface := repository3.NewEchoRepository(dbProvider, iCache)
 	keyValueRepositoryInterface := keyvalue.NewKeyValueRepository(dbProvider, iCache)
-	storageService := ProvideStorageService()
-	commonService := service.NewCommonService(transactionManager, commonRepositoryInterface, echoRepositoryInterface, keyValueRepositoryInterface, storageService, ebProvider)
+	fileRepositoryInterface := fileRepo.NewFileRepository(dbProvider)
+	fs := ProvideVireFS()
+	urlResolver := ProvideURLResolver()
+	commonService := service.NewCommonService(transactionManager, commonRepositoryInterface, echoRepositoryInterface, keyValueRepositoryInterface, fileRepositoryInterface, fs, urlResolver, ebProvider)
 	settingRepositoryInterface := repository8.NewSettingRepository(dbProvider)
 	webhookRepositoryInterface := repository.NewWebhookRepository(dbProvider)
 	settingService := service2.NewSettingService(transactionManager, commonService, keyValueRepositoryInterface, settingRepositoryInterface, webhookRepositoryInterface, ebProvider)
 	queueRepositoryInterface := repository2.NewQueueRepository(dbProvider)
-	tasker := task.NewTasker(commonService, settingService, ebProvider, queueRepositoryInterface, fs)
+	tasker := task.NewTasker(commonService, settingService, ebProvider, queueRepositoryInterface)
 	return tasker, nil
 }

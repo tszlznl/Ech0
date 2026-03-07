@@ -1,6 +1,10 @@
 package di
 
 import (
+	"context"
+	"log"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/lin-snow/ech0/internal/app"
 	"github.com/lin-snow/ech0/internal/cache"
@@ -15,86 +19,173 @@ import (
 	runtimeTask "github.com/lin-snow/ech0/internal/runtime/task"
 	"github.com/lin-snow/ech0/internal/server"
 	"github.com/lin-snow/ech0/internal/storage"
-	storageFactory "github.com/lin-snow/ech0/internal/storage/factory"
 	"github.com/lin-snow/ech0/internal/task"
-	stgx "github.com/lin-snow/ech0/pkg/storagex"
 	"github.com/lin-snow/ech0/internal/transaction"
-	"github.com/spf13/afero"
+
+	virefs "github.com/lin-snow/VireFS"
 	"gorm.io/gorm"
 )
 
-// ProvideCache 提供通用缓存实例给 wire 注入
 func ProvideCache(factory *cache.CacheFactory) cache.ICache[string, any] {
 	return factory.Cache()
 }
 
-// ProvideCacheCleanup 提供缓存清理函数给生命周期管理使用
 func ProvideCacheCleanup(factory *cache.CacheFactory) func() error {
 	return factory.Cleanup
 }
 
-// ProvideTransactionManager 提供事务管理器实例给 wire 注入
 func ProvideTransactionManager(
 	factory *transaction.TransactionManagerFactory,
 ) transaction.TransactionManager {
 	return factory.TransactionManager()
 }
 
-// ProvideDBProvider 提供数据库 Provider。
 func ProvideDBProvider() func() *gorm.DB {
 	database.InitDatabase()
 	return database.GetDB
 }
 
-// ProvideEventBusProvider 提供 EventBus Provider。
 func ProvideEventBusProvider() func() event.IEventBus {
 	event.InitEventBus()
 	return event.GetEventBus
 }
 
-// ProvideCacheFactory 创建缓存工厂。
 func ProvideCacheFactory() *cache.CacheFactory {
 	return cache.NewCacheFactory()
 }
 
-func ProvideAferoFs() afero.Fs {
-	return afero.NewOsFs()
+// ProvideVireFS builds a virefs.FS based on the storage config.
+func ProvideVireFS() virefs.FS {
+	cfg := config.Config().Storage
+	switch strings.ToLower(strings.TrimSpace(cfg.Mode)) {
+	case "s3":
+		return buildS3FS(cfg)
+	default:
+		return buildLocalFS(cfg)
+	}
 }
 
-func ProvideStorageService() *storage.StorageService {
+// ProvideURLResolver builds a URLResolver based on the storage config.
+func ProvideURLResolver() storage.URLResolver {
 	cfg := config.Config().Storage
-	input := storageFactory.BuildInput{
-		Mode:     storageFactory.Mode(cfg.Mode),
-		DataRoot: cfg.DataRoot,
+	switch strings.ToLower(strings.TrimSpace(cfg.Mode)) {
+	case "s3":
+		return buildS3URLResolver(cfg)
+	default:
+		return buildLocalURLResolver()
 	}
-	if storageFactory.Mode(cfg.Mode) == storageFactory.ModeS3 {
-		input.ObjectConfig = &stgx.ObjectStorageConfig{
-			Endpoint:   cfg.Endpoint,
-			AccessKey:  cfg.AccessKey,
-			SecretKey:  cfg.SecretKey,
-			BucketName: cfg.BucketName,
-			Region:     cfg.Region,
-			Provider:   cfg.Provider,
-			UseSSL:     cfg.UseSSL,
-			CDNURL:     cfg.CDNURL,
-			PathPrefix: cfg.PathPrefix,
+}
+
+func buildLocalFS(cfg config.StorageConfig) virefs.FS {
+	root := cfg.DataRoot
+	if root == "" {
+		root = "data/files"
+	}
+	fs, err := virefs.NewLocalFS(root,
+		virefs.WithCreateRoot(),
+		virefs.WithAtomicWrite(),
+	)
+	if err != nil {
+		log.Printf("[storage] failed to create local FS: %v, falling back to defaults", err)
+		fs, _ = virefs.NewLocalFS("data/files",
+			virefs.WithCreateRoot(),
+			virefs.WithAtomicWrite(),
+		)
+	}
+	return fs
+}
+
+func buildLocalURLResolver() storage.URLResolver {
+	return func(key string) string {
+		return "/api/files/" + key
+	}
+}
+
+func buildS3FS(cfg config.StorageConfig) virefs.FS {
+	provider := mapProvider(cfg.Provider)
+
+	var opts []virefs.ObjectOption
+	if cfg.PathPrefix != "" {
+		opts = append(opts, virefs.WithPrefix(strings.Trim(cfg.PathPrefix, "/")+"/"))
+	}
+
+	endpoint := normalizeEndpoint(cfg.Endpoint, cfg.UseSSL)
+
+	fs, err := virefs.NewObjectFSFromConfig(context.Background(), &virefs.S3Config{
+		Provider:  provider,
+		Endpoint:  endpoint,
+		Region:    cfg.Region,
+		Bucket:    cfg.BucketName,
+		AccessKey: cfg.AccessKey,
+		SecretKey: cfg.SecretKey,
+	}, opts...)
+	if err != nil {
+		log.Printf("[storage] failed to create S3 FS: %v, falling back to local", err)
+		return buildLocalFS(cfg)
+	}
+	return fs
+}
+
+func buildS3URLResolver(cfg config.StorageConfig) storage.URLResolver {
+	prefix := ""
+	if cfg.PathPrefix != "" {
+		prefix = strings.Trim(cfg.PathPrefix, "/") + "/"
+	}
+
+	cdnURL := strings.TrimSpace(cfg.CDNURL)
+	if cdnURL != "" {
+		if !strings.HasPrefix(strings.ToLower(cdnURL), "http://") &&
+			!strings.HasPrefix(strings.ToLower(cdnURL), "https://") {
+			protocol := "http"
+			if cfg.UseSSL {
+				protocol = "https"
+			}
+			cdnURL = protocol + "://" + cdnURL
+		}
+		cdnURL = strings.TrimRight(cdnURL, "/")
+		return func(key string) string {
+			return cdnURL + "/" + prefix + key
 		}
 	}
-	svc, err := storageFactory.Build(input)
-	if err != nil {
-		svc, _ = storageFactory.Build(storageFactory.BuildInput{Mode: storageFactory.ModeLocal, DataRoot: cfg.DataRoot})
+
+	endpoint := normalizeEndpoint(cfg.Endpoint, cfg.UseSSL)
+	baseURL := strings.TrimRight(endpoint, "/") + "/" + cfg.BucketName
+	return func(key string) string {
+		return baseURL + "/" + prefix + key
 	}
-	return svc
 }
 
-// ProvideTransactionManagerFactory 创建事务管理器工厂。
+func normalizeEndpoint(endpoint string, useSSL bool) string {
+	if endpoint == "" {
+		return endpoint
+	}
+	lower := strings.ToLower(endpoint)
+	if strings.HasPrefix(lower, "http://") || strings.HasPrefix(lower, "https://") {
+		return endpoint
+	}
+	if useSSL {
+		return "https://" + endpoint
+	}
+	return "http://" + endpoint
+}
+
+func mapProvider(raw string) virefs.Provider {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "minio":
+		return virefs.ProviderMinIO
+	case "r2":
+		return virefs.ProviderR2
+	default:
+		return virefs.ProviderAWS
+	}
+}
+
 func ProvideTransactionManagerFactory(
 	dbProvider func() *gorm.DB,
 ) *transaction.TransactionManagerFactory {
 	return transaction.NewTransactionManagerFactory(dbProvider)
 }
 
-// ProvideGinEngine 创建 Gin 引擎。
 func ProvideGinEngine() *gin.Engine {
 	if config.Config().Server.Mode == "debug" {
 		gin.SetMode(gin.DebugMode)
@@ -104,7 +195,6 @@ func ProvideGinEngine() *gin.Engine {
 	return gin.New()
 }
 
-// ProvideHTTPServer 创建并装配纯 HTTP runtime。
 func ProvideHTTPServer(engine *gin.Engine, handlers *handler.Bundle) *server.Server {
 	router.SetupRouter(engine, handlers)
 	return server.New(engine)
@@ -153,9 +243,6 @@ func ProvideEventRegistrar(
 	return BuildEventRegistrar(dbProvider, ebProvider, cacheFactory, tmFactory)
 }
 
-// ProvideWebComponents 组装 Web 组件启动顺序。
-// 启动顺序: cache(no-op) -> event -> task -> http
-// 停止顺序: http -> task -> event -> cache
 func ProvideWebComponents(
 	cacheRuntime *runtimeCache.Runtime,
 	eventRuntime *runtimeEvent.Runtime,
