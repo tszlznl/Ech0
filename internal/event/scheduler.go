@@ -10,7 +10,12 @@ func NewBackupScheduler() *BackupScheduler {
 	return &BackupScheduler{}
 }
 
-func (bs *BackupScheduler) Handle(ctx context.Context, e *Event) error {
-	// 处理更新备份计划事件
+func (bs *BackupScheduler) HandleBackupScheduleUpdated(
+	ctx context.Context,
+	e UpdateBackupScheduleEvent,
+) error {
+	_ = ctx
+	_ = e
+	// TODO: 这里可进一步接入 Tasker 的动态重载能力。
 	return nil
 }

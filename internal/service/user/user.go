@@ -38,7 +38,7 @@ type UserService struct {
 	transactor     transaction.Transactor             // 事务执行器
 	userRepository repository.UserRepositoryInterface // 用户数据层接口
 	settingService *settingService.SettingService     // 系统设置数据层接口
-	eventBus       event.IEventBus                    // 事件总线
+	publisher      *event.Publisher                   // 事件发布器
 }
 
 // NewUserService 创建并返回新的用户服务实例
@@ -53,13 +53,13 @@ func NewUserService(
 	tx transaction.Transactor,
 	userRepository repository.UserRepositoryInterface,
 	settingService *settingService.SettingService,
-	eventBusProvider func() event.IEventBus,
+	publisher *event.Publisher,
 ) *UserService {
 	return &UserService{
 		transactor:     tx,
 		userRepository: userRepository,
 		settingService: settingService,
-		eventBus:       eventBusProvider(),
+		publisher:      publisher,
 	}
 }
 
@@ -161,14 +161,9 @@ func (userService *UserService) Register(registerDto *authModel.RegisterDto) err
 
 	// 发布用户注册事件
 	newUser.Password = "" // 不包含密码信息
-	if err := userService.eventBus.Publish(
+	if err := userService.publisher.UserCreated(
 		context.Background(),
-		event.NewEvent(
-			event.EventTypeUserCreated,
-			event.EventPayload{
-				event.EventPayloadUser: newUser,
-			},
-		),
+		event.UserCreatedEvent{User: newUser},
 	); err != nil {
 		logUtil.GetLogger().
 			Error("Failed to publish user created event", zap.String("error", err.Error()))
@@ -230,14 +225,9 @@ func (userService *UserService) UpdateUser(userid uint, userdto model.UserInfoDt
 
 	// 发布用户更新事件
 	user.Password = "" // 不包含密码信息
-	if err := userService.eventBus.Publish(
+	if err := userService.publisher.UserUpdated(
 		context.Background(),
-		event.NewEvent(
-			event.EventTypeUserUpdated,
-			event.EventPayload{
-				event.EventPayloadUser: user,
-			},
-		),
+		event.UserUpdatedEvent{User: user},
 	); err != nil {
 		logUtil.GetLogger().
 			Error("Failed to publish user updated event", zap.String("error", err.Error()))
@@ -293,14 +283,9 @@ func (userService *UserService) UpdateUserAdmin(userid uint, id uint) error {
 
 	// 发布用户更新事件
 	user.Password = "" // 不包含密码信息
-	if err := userService.eventBus.Publish(
+	if err := userService.publisher.UserUpdated(
 		context.Background(),
-		event.NewEvent(
-			event.EventTypeUserUpdated,
-			event.EventPayload{
-				event.EventPayloadUser: user,
-			},
-		),
+		event.UserUpdatedEvent{User: user},
 	); err != nil {
 		logUtil.GetLogger().
 			Error("Failed to publish user updated event", zap.String("error", err.Error()))
@@ -366,7 +351,8 @@ func (userService *UserService) GetSysAdmin() (model.User, error) {
 // 返回:
 //   - error: 删除过程中的错误信息
 func (userService *UserService) DeleteUser(userid, id uint) error {
-	return userService.transactor.Run(context.Background(), func(ctx context.Context) error {
+	var deletedUser model.User
+	err := userService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		// 检查执行操作的用户是否为管理员
 		user, err := userService.userRepository.GetUserByID(ctx, int(userid))
 		if err != nil {
@@ -391,12 +377,26 @@ func (userService *UserService) DeleteUser(userid, id uint) error {
 			return errors.New(commonModel.INVALID_PARAMS_BODY)
 		}
 
+		deletedUser = user
 		if err := userService.userRepository.DeleteUser(ctx, id); err != nil {
 			return err
 		}
 
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	deletedUser.Password = ""
+	if err := userService.publisher.UserDeleted(
+		context.Background(),
+		event.UserDeletedEvent{User: deletedUser},
+	); err != nil {
+		logUtil.GetLogger().
+			Error("Failed to publish user deleted event", zap.String("error", err.Error()))
+	}
+	return nil
 }
 
 // GetUserByID 根据用户ID获取用户信息

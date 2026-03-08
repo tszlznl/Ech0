@@ -282,12 +282,14 @@ Run the binary directly (for example, on Windows double-click `Ech0.exe`).
 ![Architecture Diagram](./docs/imgs/Ech0技术架构图.svg)  
 > by ExcaliDraw
 
+- The backend event bus now uses [Busen](https://github.com/lin-snow/Busen), adopting a typed-first in-process model with explicit backpressure, hooks, and drain-style shutdown.
+
 ---
 
 ## Development Guide
 
 ### Backend Requirements
-- Go 1.25.3+  
+- Go 1.26.0+  
 - C Compiler for CGO (`go-sqlite3`):
   - Windows: [MinGW-w64](https://winlibs.com/)  
   - macOS: `brew install gcc`  
@@ -296,6 +298,12 @@ Run the binary directly (for example, on Windows double-click `Ech0.exe`).
 - Golangci-Lint: `golangci-lint run` / `golangci-lint fmt`  
 - Air (optional, backend hot reload): `make air-install` or `go install github.com/air-verse/air@latest`  
 - Swagger: `swag init -g internal/server/server.go -o internal/swagger`  
+- Event runtime tuning (Busen):
+  - `ECH0_EVENT_DEFAULT_BUFFER` / `ECH0_EVENT_DEFAULT_OVERFLOW`
+  - `ECH0_EVENT_DEADLETTER_BUFFER` / `ECH0_EVENT_SYSTEM_BUFFER`
+  - `ECH0_EVENT_AGENT_BUFFER` / `ECH0_EVENT_AGENT_PARALLELISM`
+  - `ECH0_EVENT_INBOX_BUFFER`
+  - `ECH0_EVENT_WEBHOOK_POOL_WORKERS` / `ECH0_EVENT_WEBHOOK_POOL_QUEUE`
 
 ### Frontend Requirements
 - NodeJS v25.5.0+, PNPM v10.30.0+  

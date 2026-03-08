@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/lin-snow/ech0/internal/async"
+	"github.com/lin-snow/ech0/internal/config"
 	queueModel "github.com/lin-snow/ech0/internal/model/queue"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 	queueRepository "github.com/lin-snow/ech0/internal/repository/queue"
@@ -19,13 +20,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type WebhookReplayPayload struct {
-	Webhook webhookModel.Webhook `json:"webhook"`
-	Event   Event                `json:"event"`
-}
-
 type WebhookDispatcher struct {
-	bus        IEventBus                                    // 事件总线
 	client     *http.Client                                 // HTTP 客户端
 	repo       webhookRepository.WebhookRepositoryInterface // Webhook 仓储层
 	pool       *async.WorkerPool                            // 任务池pool
@@ -34,13 +29,11 @@ type WebhookDispatcher struct {
 }
 
 func NewWebhookDispatcher(
-	ebp func() IEventBus,
 	repo webhookRepository.WebhookRepositoryInterface,
 	queueRepo queueRepository.QueueRepositoryInterface,
 	tx transaction.Transactor,
 ) *WebhookDispatcher {
 	return &WebhookDispatcher{
-		bus:       ebp(),     // 获取事件总线实例
 		repo:      repo,      // 注入仓储层
 		queueRepo: queueRepo, // 注入死信任务仓储
 		client: &http.Client{ // 配置 HTTP 客户端
@@ -51,27 +44,26 @@ func NewWebhookDispatcher(
 				IdleConnTimeout:     30 * time.Second, // 空闲连接超时时间
 			},
 		},
-		pool:       async.NewWorkerPool(6, 6), // 假设最大并发数为 6，任务队列大小为 6
-		transactor: tx,                        // 注入事务执行器
+		pool: async.NewWorkerPool(
+			config.Config().Event.WebhookPoolWorkers,
+			config.Config().Event.WebhookPoolQueue,
+		),
+		transactor: tx, // 注入事务执行器
 	}
 }
 
-// Handle 由事件总线调用，负责调度事件到每个活跃的 webhook
-func (wd *WebhookDispatcher) Handle(ctx context.Context, e *Event) error {
+// HandleObservation 由 observer 调用，负责调度事件到每个活跃的 webhook
+func (wd *WebhookDispatcher) HandleObservation(ctx context.Context, obs WebhookObservation) error {
 	// 获取所有开启的webhook
 	webhooks, err := wd.repo.ListActiveWebhooks(ctx)
 	if err != nil {
 		return err
 	}
 	for _, wh := range webhooks {
-		// 可以根据 event type 做过滤
-		// if !wh.ShouldHandle(e.Type) {
-		// 	continue
-		// }
 		wh := wh // 捕获变量
 		// 提交任务到池中异步处理
 		wd.pool.Submit(func() error {
-			wd.Dispatch(ctx, &wh, e)
+			wd.Dispatch(ctx, &wh, obs)
 			return nil
 		})
 	}
@@ -80,11 +72,11 @@ func (wd *WebhookDispatcher) Handle(ctx context.Context, e *Event) error {
 }
 
 // Dispatch 负责将事件发送到指定的 webhook
-func (wd *WebhookDispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webhook, e *Event) {
+func (wd *WebhookDispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webhook, obs WebhookObservation) {
 	// 发送请求，带重试机制
 	err := wd.retryWithBackoff(3, 500*time.Millisecond, func() error {
 		// 构建 HTTP 请求
-		req, err := wd.buildRequest(wh, e)
+		req, err := wd.buildRequest(wh, obs)
 		if err != nil {
 			return err
 		}
@@ -109,16 +101,11 @@ func (wd *WebhookDispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webh
 	if err != nil {
 		// 记录失败日志
 		logUtil.GetLogger().
-			Error("Webhook Handle Failed: ", zap.String("name", wh.Name), zap.String("url", wh.URL))
-
-		// 处理失败的事件
-		e.Meta = map[string]any{
-			queueModel.DeadLetterMetaKey: true, // 标记为死信任务
-		}
+			Error("Webhook Handle Failed", zap.String("name", wh.Name), zap.String("url", wh.URL))
 
 		payloadData := WebhookReplayPayload{
 			Webhook: *wh,
-			Event:   *e,
+			Event:   obs,
 		}
 		payload, _ := json.Marshal(payloadData)
 
@@ -146,17 +133,24 @@ func (wd *WebhookDispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webh
 // buildRequest 构建 HTTP 请求(POST)
 func (wd *WebhookDispatcher) buildRequest(
 	wh *webhookModel.Webhook,
-	e *Event,
+	obs WebhookObservation,
 ) (*http.Request, error) {
+	eventID := fmt.Sprintf("%d", time.Now().UTC().UnixNano())
 	// 构造 HTTP 请求头
 	headers := make(http.Header)
 	headers.Set("Content-Type", "application/json")  // 内容类型
-	headers.Set("X-Ech0-Event", string(e.Type))      // 事件类型
+	headers.Set("X-Ech0-Event", obs.Topic)           // 事件类型
 	headers.Set("User-Agent", "Ech0-Webhook-Client") // 自定义 User-Agent
-	headers.Set("E-Ech0-Event-ID", e.ID)             // 唯一事件 ID，便于接收方去重，保证幂等性
+	headers.Set("E-Ech0-Event-ID", eventID)          // 唯一事件 ID，便于接收方去重，保证幂等性
 
 	// 构造 HTTP 请求体
-	body, err := json.Marshal(e)
+	body, err := json.Marshal(map[string]any{
+		"topic":       obs.Topic,
+		"event_name":  obs.EventName,
+		"payload_raw": obs.Payload,
+		"metadata":    obs.Metadata,
+		"occurred_at": obs.OccurredAt,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -213,12 +207,12 @@ func (wd *WebhookDispatcher) HandleDeadLetter(
 		return fmt.Errorf("failed to unmarshal dead letter payload: %w", err)
 	}
 	webhook := payload.Webhook
-	event := payload.Event
+	obs := payload.Event
 
 	// 重新发送请求
 	err := wd.retryWithBackoff(3, 500*time.Millisecond, func() error {
 		// 构建 HTTP 请求
-		req, err := wd.buildRequest(&webhook, &event)
+		req, err := wd.buildRequest(&webhook, obs)
 		if err != nil {
 			return err
 		}

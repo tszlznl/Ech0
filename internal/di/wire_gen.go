@@ -8,6 +8,7 @@ package di
 
 import (
 	"github.com/google/wire"
+	"github.com/lin-snow/Busen"
 	"github.com/lin-snow/ech0/internal/app"
 	"github.com/lin-snow/ech0/internal/cache"
 	"github.com/lin-snow/ech0/internal/database"
@@ -75,6 +76,7 @@ func BuildWebApp() (*app.App, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	eventBus := event.NewEventBus(v2)
 	tasker, err := BuildTasker(v, iCache, gormTransactor, v2)
 	if err != nil {
 		cleanup()
@@ -87,17 +89,17 @@ func BuildWebApp() (*app.App, func(), error) {
 		return nil, nil, err
 	}
 	serverServer := server.ProvideHTTPServer(engine, bundle)
-	v3 := app.ProvideComponents(registeredRegistrar, tasker, serverServer)
+	v3 := app.ProvideComponents(registeredRegistrar, eventBus, tasker, serverServer)
 	appApp := app.NewApp(v3)
 	return appApp, func() {
 		cleanup()
 	}, nil
 }
 
-func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() event.IEventBus, appCache cache.ICache[string, any], tx transaction.Transactor) (*event.EventRegistrar, error) {
+func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() *busen.Bus, appCache cache.ICache[string, any], tx transaction.Transactor) (*event.EventRegistrar, error) {
 	webhookRepositoryInterface := repository.NewWebhookRepository(dbProvider)
 	queueRepositoryInterface := repository2.NewQueueRepository(dbProvider)
-	webhookDispatcher := event.NewWebhookDispatcher(ebProvider, webhookRepositoryInterface, queueRepositoryInterface, tx)
+	webhookDispatcher := event.NewWebhookDispatcher(webhookRepositoryInterface, queueRepositoryInterface, tx)
 	deadLetterResolver := event.NewDeadLetterResolver(queueRepositoryInterface, webhookDispatcher)
 	backupScheduler := event.NewBackupScheduler()
 	echoRepositoryInterface := repository3.NewEchoRepository(dbProvider, appCache)
@@ -113,7 +115,7 @@ func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() event.IEv
 }
 
 // BuildHandlers 使用 wire 生成的代码来构建 Handlers 实例。
-func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor, ebProvider func() event.IEventBus) (*handler.Bundle, error) {
+func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor, ebProvider func() *busen.Bus) (*handler.Bundle, error) {
 	webHandler := handler2.NewWebHandler()
 	userRepositoryInterface := repository5.NewUserRepository(dbProvider, appCache)
 	commonRepositoryInterface := repository7.NewCommonRepository(dbProvider)
@@ -122,13 +124,14 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 	fileRepositoryInterface := repository8.NewFileRepository(dbProvider)
 	fs := storage.ProvideFS()
 	urlResolver := storage.ProvideURLResolver()
-	commonService := service.NewCommonService(tx, commonRepositoryInterface, echoRepositoryInterface, keyValueRepositoryInterface, fileRepositoryInterface, fs, urlResolver, ebProvider)
+	publisher := event.NewPublisher(ebProvider)
+	commonService := service.NewCommonService(tx, commonRepositoryInterface, echoRepositoryInterface, keyValueRepositoryInterface, fileRepositoryInterface, fs, urlResolver, publisher)
 	settingRepositoryInterface := repository9.NewSettingRepository(dbProvider)
 	webhookRepositoryInterface := repository.NewWebhookRepository(dbProvider)
-	settingService := service2.NewSettingService(tx, commonService, keyValueRepositoryInterface, settingRepositoryInterface, webhookRepositoryInterface, ebProvider)
-	userService := service3.NewUserService(tx, userRepositoryInterface, settingService, ebProvider)
+	settingService := service2.NewSettingService(tx, commonService, keyValueRepositoryInterface, settingRepositoryInterface, webhookRepositoryInterface, publisher)
+	userService := service3.NewUserService(tx, userRepositoryInterface, settingService, publisher)
 	userHandler := handler3.NewUserHandler(userService)
-	echoService := service4.NewEchoService(tx, commonService, echoRepositoryInterface, commonRepositoryInterface, keyValueRepositoryInterface, ebProvider)
+	echoService := service4.NewEchoService(tx, commonService, echoRepositoryInterface, commonRepositoryInterface, keyValueRepositoryInterface, publisher)
 	echoHandler := handler4.NewEchoHandler(echoService)
 	commonHandler := handler5.NewCommonHandler(commonService)
 	settingHandler := handler6.NewSettingHandler(settingService)
@@ -141,7 +144,7 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 	connectRepositoryInterface := repository10.NewConnectRepository(dbProvider)
 	connectService := service7.NewConnectService(tx, connectRepositoryInterface, echoRepositoryInterface, commonService, settingService)
 	connectHandler := handler9.NewConnectHandler(connectService)
-	backupService := service8.NewBackupService(commonService, ebProvider)
+	backupService := service8.NewBackupService(commonService, publisher)
 	backupHandler := handler10.NewBackupHandler(backupService)
 	metricCollector := metric.NewSystemCollector()
 	monitorMonitor := monitor.NewMonitor(metricCollector)
@@ -171,19 +174,20 @@ func BuildWebRuntime() (*server.Server, error) {
 	return serverServer, nil
 }
 
-func BuildTasker(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor, ebProvider func() event.IEventBus) (*task.Tasker, error) {
+func BuildTasker(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor, ebProvider func() *busen.Bus) (*task.Tasker, error) {
 	commonRepositoryInterface := repository7.NewCommonRepository(dbProvider)
 	echoRepositoryInterface := repository3.NewEchoRepository(dbProvider, appCache)
 	keyValueRepositoryInterface := keyvalue.NewKeyValueRepository(dbProvider, appCache)
 	fileRepositoryInterface := repository8.NewFileRepository(dbProvider)
 	fs := storage.ProvideFS()
 	urlResolver := storage.ProvideURLResolver()
-	commonService := service.NewCommonService(tx, commonRepositoryInterface, echoRepositoryInterface, keyValueRepositoryInterface, fileRepositoryInterface, fs, urlResolver, ebProvider)
+	publisher := event.NewPublisher(ebProvider)
+	commonService := service.NewCommonService(tx, commonRepositoryInterface, echoRepositoryInterface, keyValueRepositoryInterface, fileRepositoryInterface, fs, urlResolver, publisher)
 	settingRepositoryInterface := repository9.NewSettingRepository(dbProvider)
 	webhookRepositoryInterface := repository.NewWebhookRepository(dbProvider)
-	settingService := service2.NewSettingService(tx, commonService, keyValueRepositoryInterface, settingRepositoryInterface, webhookRepositoryInterface, ebProvider)
+	settingService := service2.NewSettingService(tx, commonService, keyValueRepositoryInterface, settingRepositoryInterface, webhookRepositoryInterface, publisher)
 	queueRepositoryInterface := repository2.NewQueueRepository(dbProvider)
-	tasker := task.NewTasker(commonService, settingService, ebProvider, queueRepositoryInterface)
+	tasker := task.NewTasker(commonService, settingService, publisher, queueRepositoryInterface)
 	return tasker, nil
 }
 
@@ -203,9 +207,9 @@ var RuntimeSet = server.ProviderSet
 
 var EventGraphSet = wire.NewSet(repository11.EchoSet, service11.EchoSet, repository11.UserSet, service11.UserSet, repository11.TodoSet, service11.TodoSet, repository11.InboxSet, service11.InboxSet, repository11.KeyValueSet, repository11.QueueSet, repository11.WebhookSet, event.NewWebhookDispatcher, event.NewBackupScheduler, event.NewDeadLetterResolver, event.NewAgentProcessor, event.NewInboxDispatcher, event.NewEventHandlers, event.NewEventRegistry)
 
-var HandlerGraphSet = wire.NewSet(storage.ProviderSet, repository11.FileSet, handler.WebSet, repository11.UserSet, service11.UserSet, handler.UserSet, repository11.EchoSet, service11.EchoSet, handler.EchoSet, repository11.CommonSet, service11.CommonSet, handler.CommonSet, repository11.WebhookSet, repository11.KeyValueSet, repository11.SettingSet, service11.SettingSet, handler.SettingSet, repository11.InboxSet, service11.InboxSet, handler.InboxSet, repository11.TodoSet, service11.TodoSet, handler.TodoSet, repository11.ConnectSet, service11.ConnectSet, handler.ConnectSet, metric.NewSystemCollector, monitor.NewMonitor, service11.DashboardSet, handler.DashboardSet, service11.AgentSet, handler.AgentSet, service11.BackupSet, handler.BackupSet, handler.NewBundle)
+var HandlerGraphSet = wire.NewSet(event.NewPublisher, storage.ProviderSet, repository11.FileSet, handler.WebSet, repository11.UserSet, service11.UserSet, handler.UserSet, repository11.EchoSet, service11.EchoSet, handler.EchoSet, repository11.CommonSet, service11.CommonSet, handler.CommonSet, repository11.WebhookSet, repository11.KeyValueSet, repository11.SettingSet, service11.SettingSet, handler.SettingSet, repository11.InboxSet, service11.InboxSet, handler.InboxSet, repository11.TodoSet, service11.TodoSet, handler.TodoSet, repository11.ConnectSet, service11.ConnectSet, handler.ConnectSet, metric.NewSystemCollector, monitor.NewMonitor, service11.DashboardSet, handler.DashboardSet, service11.AgentSet, handler.AgentSet, service11.BackupSet, handler.BackupSet, handler.NewBundle)
 
-var TaskerGraphSet = wire.NewSet(storage.ProviderSet, repository11.FileSet, repository11.KeyValueSet, repository11.WebhookSet, repository11.SettingSet, service11.SettingSet, repository11.EchoSet, service11.EchoSet, repository11.CommonSet, service11.CommonSet, repository11.QueueSet, task.ProviderSet)
+var TaskerGraphSet = wire.NewSet(event.NewPublisher, storage.ProviderSet, repository11.FileSet, repository11.KeyValueSet, repository11.WebhookSet, repository11.SettingSet, service11.SettingSet, repository11.EchoSet, service11.EchoSet, repository11.CommonSet, service11.CommonSet, repository11.QueueSet, task.ProviderSet)
 
 // BuildApp 兼容旧入口，委托给 BuildWebApp。
 func BuildApp() (*app.App, func(), error) {

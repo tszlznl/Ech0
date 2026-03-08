@@ -9,11 +9,12 @@ import (
 
 func ProvideComponents(
 	_ *event.RegisteredRegistrar,
+	eventBus *event.EventBus,
 	tasker *task.Tasker,
 	httpServer *server.Server,
 ) []Component {
-	// 启动顺序保持为 task -> http，确保后台任务基础能力先就绪，再对外暴露服务。
-	return []Component{tasker, httpServer}
+	// 启动顺序：event bus -> task -> http；停止时 reverse，确保 bus 最后关闭。
+	return []Component{eventBus, tasker, httpServer}
 }
 
-var ProviderSet = wire.NewSet(ProvideComponents, NewApp)
+var ProviderSet = wire.NewSet(ProvideComponents, event.NewEventBus, NewApp)

@@ -45,7 +45,7 @@ type CommonService struct {
 	echoRepository     echoRepository.EchoRepositoryInterface
 	keyvalueRepository keyvalueRepository.KeyValueRepositoryInterface
 	fileRepository     fileRepository.FileRepositoryInterface
-	eventBus           event.IEventBus
+	publisher          *event.Publisher
 	keyGen             storageDomain.KeyGenerator
 }
 
@@ -57,7 +57,7 @@ func NewCommonService(
 	fileRepo fileRepository.FileRepositoryInterface,
 	fs virefs.FS,
 	resolveURL storageDomain.URLResolver,
-	eventBusProvider func() event.IEventBus,
+	publisher *event.Publisher,
 ) *CommonService {
 	return &CommonService{
 		transactor:         tx,
@@ -67,7 +67,7 @@ func NewCommonService(
 		fileRepository:     fileRepo,
 		fs:                 fs,
 		resolveURL:         resolveURL,
-		eventBus:           eventBusProvider(),
+		publisher:          publisher,
 		keyGen:             storageDomain.NewRandomKeyGenerator(),
 	}
 }
@@ -153,16 +153,17 @@ func (s *CommonService) UploadFile(
 	}
 
 	user.Password = ""
-	if err := s.eventBus.Publish(context.Background(), event.NewEvent(
-		event.EventTypeResourceUploaded,
-		event.EventPayload{
-			event.EventPayloadUser: user,
-			event.EventPayloadFile: file.Filename,
-			event.EventPayloadURL:  url,
-			event.EventPayloadSize: file.Size,
-			event.EventPayloadType: uploadType,
+	if err := s.publisher.ResourceUploaded(
+		context.Background(),
+		event.ResourceUploadedEvent{
+			User:     user,
+			FileName: file.Filename,
+			URL:      url,
+			Size:     file.Size,
+			Type:     string(uploadType),
 		},
-	)); err != nil {
+		key,
+	); err != nil {
 		logUtil.GetLogger().Error("Failed to publish resource uploaded event", zap.String("error", err.Error()))
 	}
 

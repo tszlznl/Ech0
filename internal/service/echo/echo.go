@@ -24,7 +24,7 @@ type EchoService struct {
 	echoRepository   repository.EchoRepositoryInterface
 	commonRepository commonRepository.CommonRepositoryInterface
 	kvRepository     keyvalueRepository.KeyValueRepositoryInterface
-	eventBus         event.IEventBus
+	publisher        *event.Publisher
 }
 
 func NewEchoService(
@@ -33,7 +33,7 @@ func NewEchoService(
 	echoRepository repository.EchoRepositoryInterface,
 	commonRepository commonRepository.CommonRepositoryInterface,
 	kvRepository keyvalueRepository.KeyValueRepositoryInterface,
-	eventBusProvider func() event.IEventBus,
+	publisher *event.Publisher,
 ) *EchoService {
 	return &EchoService{
 		transactor:       tx,
@@ -41,7 +41,7 @@ func NewEchoService(
 		echoRepository:   echoRepository,
 		commonRepository: commonRepository,
 		kvRepository:     kvRepository,
-		eventBus:         eventBusProvider(),
+		publisher:        publisher,
 	}
 }
 
@@ -96,15 +96,9 @@ func (echoService *EchoService) PostEcho(userid uint, newEcho *model.Echo) error
 		return fetchErr
 	}
 	if savedEcho != nil {
-		if pubErr := echoService.eventBus.Publish(
+		if pubErr := echoService.publisher.EchoCreated(
 			context.Background(),
-			event.NewEvent(
-				event.EventTypeEchoCreated,
-				event.EventPayload{
-					event.EventPayloadEcho: *savedEcho,
-					event.EventPayloadUser: user,
-				},
-			),
+			event.EchoCreatedEvent{Echo: *savedEcho, User: user},
 		); pubErr != nil {
 			logUtil.GetLogger().Error(pubErr.Error())
 		}
@@ -178,15 +172,9 @@ func (echoService *EchoService) DeleteEchoById(userid, id uint) error {
 		return err
 	}
 
-	if pubErr := echoService.eventBus.Publish(
+	if pubErr := echoService.publisher.EchoDeleted(
 		context.Background(),
-		event.NewEvent(
-			event.EventTypeEchoDeleted,
-			event.EventPayload{
-				event.EventPayloadEcho: model.Echo{ID: id},
-				event.EventPayloadUser: user,
-			},
-		),
+		event.EchoDeletedEvent{Echo: model.Echo{ID: id}, User: user},
 	); pubErr != nil {
 		logUtil.GetLogger().Error(pubErr.Error())
 	}
@@ -257,15 +245,9 @@ func (echoService *EchoService) UpdateEcho(userid uint, echo *model.Echo) error 
 		return err
 	}
 
-	if pubErr := echoService.eventBus.Publish(
+	if pubErr := echoService.publisher.EchoUpdated(
 		context.Background(),
-		event.NewEvent(
-			event.EventTypeEchoUpdated,
-			event.EventPayload{
-				event.EventPayloadEcho: *echo,
-				event.EventPayloadUser: user,
-			},
-		),
+		event.EchoUpdatedEvent{Echo: *echo, User: user},
 	); pubErr != nil {
 		logUtil.GetLogger().Error(pubErr.Error())
 	}

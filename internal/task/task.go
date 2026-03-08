@@ -23,7 +23,7 @@ type Tasker struct {
 	scheduler      gocron.Scheduler
 	commonService  *commonService.CommonService
 	settingService *settingService.SettingService
-	eventBus       event.IEventBus
+	publisher      *event.Publisher
 	queueRepo      queueRepository.QueueRepositoryInterface
 	started        bool
 }
@@ -35,7 +35,7 @@ func (t *Tasker) Name() string {
 func NewTasker(
 	commonService *commonService.CommonService,
 	settingService *settingService.SettingService,
-	eventBusProvider func() event.IEventBus,
+	publisher *event.Publisher,
 	queueRepo queueRepository.QueueRepositoryInterface,
 ) *Tasker {
 	scheduler, err := gocron.NewScheduler()
@@ -50,7 +50,7 @@ func NewTasker(
 		scheduler:      scheduler,
 		commonService:  commonService,
 		settingService: settingService,
-		eventBus:       eventBusProvider(),
+		publisher:      publisher,
 		queueRepo:      queueRepo,
 	}
 }
@@ -144,13 +144,9 @@ func (t *Tasker) DeadLetterConsumeTask() error {
 				// 遍历死信任务，重新发送事件
 				for _, dl := range deadLetters {
 					// 发布事件到事件总线，触发重试
-					if err := t.eventBus.Publish(context.Background(),
-						event.NewEvent(
-							event.EventTypeDeadLetterRetried,
-							event.EventPayload{
-								event.EventPayloadDeadLetter: dl,
-							},
-						),
+					if err := t.publisher.DeadLetterRetried(
+						context.Background(),
+						event.DeadLetterRetriedEvent{DeadLetter: dl},
 					); err != nil {
 						logUtil.GetLogger().
 							Error("Failed to publish dead letter retried event", zap.String("error", err.Error()))
@@ -192,14 +188,9 @@ func (t *Tasker) ScheduleBackupTask(cronExpression string) error {
 				}
 
 				// 发布备份完成事件
-				if err := t.eventBus.Publish(
+				if err := t.publisher.SystemBackup(
 					context.Background(),
-					event.NewEvent(
-						event.EventTypeSystemBackup,
-						event.EventPayload{
-							event.EventPayloadInfo: "System scheduled backup completed",
-						},
-					),
+					event.SystemBackupEvent{Info: "System scheduled backup completed"},
 				); err != nil {
 					logUtil.GetLogger().
 						Error("Failed to publish backup completed event", zap.String("error", err.Error()))
@@ -225,25 +216,17 @@ func (t *Tasker) InboxTask() error {
 		gocron.NewTask(
 			func() {
 				// 检查 Ech0 版本更新
-				if err := t.eventBus.Publish(context.Background(),
-					event.NewEvent(
-						event.EventTypeEch0UpdateCheck,
-						event.EventPayload{
-							event.EventPayloadInfo: "Ech0 update checked",
-						},
-					),
+				if err := t.publisher.Ech0UpdateChecked(
+					context.Background(),
+					event.Ech0UpdateCheckEvent{Info: "Ech0 update checked"},
 				); err != nil {
 					logUtil.GetLogger().Error("Failed to publish ech0 update checked event", zap.String("error", err.Error()))
 				}
 
 				// 清理已读的存在超过七天的消息
-				if err := t.eventBus.Publish(context.Background(),
-					event.NewEvent(
-						event.EventTypeInboxClear,
-						event.EventPayload{
-							event.EventPayloadInfo: "Inbox cleared",
-						},
-					),
+				if err := t.publisher.InboxCleared(
+					context.Background(),
+					event.InboxClearEvent{Info: "Inbox cleared"},
 				); err != nil {
 					logUtil.GetLogger().Error("Failed to publish inbox cleared event", zap.String("error", err.Error()))
 				}

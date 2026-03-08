@@ -6,6 +6,7 @@ package di
 
 import (
 	"github.com/google/wire"
+	busen "github.com/lin-snow/Busen"
 	"github.com/lin-snow/ech0/internal/app"
 	"github.com/lin-snow/ech0/internal/cache"
 	"github.com/lin-snow/ech0/internal/database"
@@ -67,6 +68,7 @@ var EventGraphSet = wire.NewSet(
 )
 
 var HandlerGraphSet = wire.NewSet(
+	event.NewPublisher,
 	storage.ProviderSet,
 	repository.FileSet,
 	handler.WebSet,
@@ -118,6 +120,7 @@ var HandlerGraphSet = wire.NewSet(
 )
 
 var TaskerGraphSet = wire.NewSet(
+	event.NewPublisher,
 	storage.ProviderSet,
 	repository.FileSet,
 	repository.KeyValueSet,
@@ -154,7 +157,7 @@ func BuildApp() (*app.App, func(), error) {
 
 func BuildEventRegistrar(
 	dbProvider func() *gorm.DB,
-	ebProvider func() event.IEventBus,
+	ebProvider func() *busen.Bus,
 	appCache cache.ICache[string, any],
 	tx transaction.Transactor,
 ) (*event.EventRegistrar, error) {
@@ -167,7 +170,7 @@ func BuildHandlers(
 	dbProvider func() *gorm.DB,
 	appCache cache.ICache[string, any],
 	tx transaction.Transactor,
-	ebProvider func() event.IEventBus,
+	ebProvider func() *busen.Bus,
 ) (*handler.Bundle, error) {
 	wire.Build(HandlerGraphSet)
 	return &handler.Bundle{}, nil
@@ -187,7 +190,7 @@ func BuildTasker(
 	dbProvider func() *gorm.DB,
 	appCache cache.ICache[string, any],
 	tx transaction.Transactor,
-	ebProvider func() event.IEventBus,
+	ebProvider func() *busen.Bus,
 ) (*task.Tasker, error) {
 	wire.Build(TaskerGraphSet)
 	return &task.Tasker{}, nil

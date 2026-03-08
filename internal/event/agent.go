@@ -38,7 +38,7 @@ func NewAgentProcessor(
 	}
 }
 
-func (ap *AgentProcessor) Handle(ctx context.Context, e *Event) error {
+func (ap *AgentProcessor) handle(ctx context.Context) error {
 	// 获取 Agent 设置
 	var agentSetting settingModel.AgentSetting
 	if agentSettingStr, err := ap.keyvalueRepo.GetKeyValue(ctx, commonModel.AgentSettingKey); err == nil {
@@ -61,6 +61,21 @@ func (ap *AgentProcessor) Handle(ctx context.Context, e *Event) error {
 	// }
 
 	return nil
+}
+
+func (ap *AgentProcessor) HandleEchoCreated(ctx context.Context, e EchoCreatedEvent) error {
+	_ = e
+	return ap.handle(ctx)
+}
+
+func (ap *AgentProcessor) HandleEchoUpdated(ctx context.Context, e EchoUpdatedEvent) error {
+	_ = e
+	return ap.handle(ctx)
+}
+
+func (ap *AgentProcessor) HandleUserDeleted(ctx context.Context, e UserDeletedEvent) error {
+	_ = e
+	return ap.handle(ctx)
 }
 
 func (ap *AgentProcessor) clearCache() error {

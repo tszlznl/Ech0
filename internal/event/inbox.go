@@ -26,15 +26,15 @@ func NewInboxDispatcher(inboxRepo inboxRepository.InboxRepositoryInterface, keyv
 	return &InboxDispatcher{inboxRepo: inboxRepo, keyvalueRepo: keyvalueRepo}
 }
 
-func (id *InboxDispatcher) Handle(ctx context.Context, e *Event) error {
-	switch e.Type {
-	case EventTypeEch0UpdateCheck:
-		return id.handleEch0UpdateCheck(ctx)
-	case EventTypeInboxClear:
-		return id.handleInboxClear(ctx)
-	}
+func (id *InboxDispatcher) HandleEch0UpdateCheck(
+	ctx context.Context,
+	_ Ech0UpdateCheckEvent,
+) error {
+	return id.handleEch0UpdateCheck(ctx)
+}
 
-	return nil
+func (id *InboxDispatcher) HandleInboxClear(ctx context.Context, _ InboxClearEvent) error {
+	return id.handleInboxClear(ctx)
 }
 
 func (id *InboxDispatcher) handleEch0UpdateCheck(ctx context.Context) error {

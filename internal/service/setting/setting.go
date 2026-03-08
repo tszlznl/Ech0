@@ -31,7 +31,7 @@ type SettingService struct {
 	keyvalueRepository keyvalueRepository.KeyValueRepositoryInterface
 	settingRepository  settingRepository.SettingRepositoryInterface
 	webhookRepository  webhookRepository.WebhookRepositoryInterface
-	eventBus           event.IEventBus
+	publisher          *event.Publisher
 }
 
 func NewSettingService(
@@ -40,7 +40,7 @@ func NewSettingService(
 	keyvalueRepository keyvalueRepository.KeyValueRepositoryInterface,
 	settingRepository settingRepository.SettingRepositoryInterface,
 	webhookRepository webhookRepository.WebhookRepositoryInterface,
-	ebProvider func() event.IEventBus,
+	publisher *event.Publisher,
 ) *SettingService {
 	return &SettingService{
 		transactor:         tx,
@@ -48,7 +48,7 @@ func NewSettingService(
 		keyvalueRepository: keyvalueRepository,
 		webhookRepository:  webhookRepository,
 		settingRepository:  settingRepository,
-		eventBus:           ebProvider(),
+		publisher:          publisher,
 	}
 }
 
@@ -756,17 +756,17 @@ func (settingService *SettingService) UpdateBackupScheduleSetting(
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
-		var setting model.BackupSchedule
-		setting.Enable = newSetting.Enable
-		setting.CronExpression = newSetting.CronExpression
+	var updated model.BackupSchedule
+	err = settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
+		updated.Enable = newSetting.Enable
+		updated.CronExpression = newSetting.CronExpression
 
 		// 验证 Cron 表达式是否合法
-		if err := fmtUtil.ValidateCrontabExpression(setting.CronExpression); err != nil {
+		if err := fmtUtil.ValidateCrontabExpression(updated.CronExpression); err != nil {
 			return errors.New(commonModel.INVALID_CRON_EXPRESSION)
 		}
 
-		settingToJSON, err := jsonUtil.JSONMarshal(setting)
+		settingToJSON, err := jsonUtil.JSONMarshal(updated)
 		if err != nil {
 			return err
 		}
@@ -777,22 +777,21 @@ func (settingService *SettingService) UpdateBackupScheduleSetting(
 			return err
 		}
 
-		// 发送更新备份计划的事件
-		if err := settingService.eventBus.Publish(
-			context.Background(),
-			event.NewEvent(
-				event.EventTypeUpdateBackupSchedule,
-				event.EventPayload{
-					event.EventPayloadSchedule: setting,
-				},
-			),
-		); err != nil {
-			logUtil.GetLogger().
-				Error("Failed to publish update backup schedule event", zap.String("error", err.Error()))
-		}
-
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	// 在事务提交后再发布事件，避免回滚时出现幽灵事件。
+	if err := settingService.publisher.BackupScheduleUpdated(
+		context.Background(),
+		event.UpdateBackupScheduleEvent{Schedule: updated},
+	); err != nil {
+		logUtil.GetLogger().
+			Error("Failed to publish update backup schedule event", zap.String("error", err.Error()))
+	}
+	return nil
 }
 
 // GetAgentInfo 获取 Agent 信息

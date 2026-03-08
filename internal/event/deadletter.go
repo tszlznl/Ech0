@@ -24,12 +24,8 @@ func NewDeadLetterResolver(
 	}
 }
 
-func (dlr *DeadLetterResolver) Handle(ctx context.Context, event *Event) error {
-	// 取出 dead letter
-	deadLetter, err := event.Payload[EventPayloadDeadLetter].(queueModel.DeadLetter)
-	if !err {
-		return fmt.Errorf("failed to extract dead letter: %v", err)
-	}
+func (dlr *DeadLetterResolver) Handle(ctx context.Context, event DeadLetterRetriedEvent) error {
+	deadLetter := event.DeadLetter
 
 	// 判断死信的状态
 	switch deadLetter.Status {

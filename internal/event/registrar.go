@@ -1,6 +1,11 @@
 package event
 
-import "sync/atomic"
+import (
+	"context"
+	"sync/atomic"
+
+	busen "github.com/lin-snow/Busen"
+)
 
 // EventHandlers 事件处理器集合
 type EventHandlers struct {
@@ -24,14 +29,15 @@ func NewEventHandlers(
 
 // EventRegistrar 事件注册器
 type EventRegistrar struct {
-	eb         IEventBus      // 事件总线
+	bus        *busen.Bus     // 事件总线
 	eh         *EventHandlers // 事件处理器集合
+	unsub      []func()
 	registered atomic.Bool
 }
 
 // NewEventRegistry 创建一个新的事件注册表
-func NewEventRegistry(ebp func() IEventBus, eh *EventHandlers) *EventRegistrar {
-	return &EventRegistrar{eb: ebp(), eh: eh}
+func NewEventRegistry(busProvider func() *busen.Bus, eh *EventHandlers) *EventRegistrar {
+	return &EventRegistrar{bus: busProvider(), eh: eh}
 }
 
 // Register 注册事件处理函数
@@ -40,55 +46,38 @@ func (er *EventRegistrar) Register() error {
 		return nil
 	}
 
-	var err error
-	// 订阅死信事件
-	err = er.eb.Subscribe(
-		er.eh.dlr.Handle,
-		EventTypeDeadLetterRetried,
-	) // 订阅死信事件，交给 DeadLetterResolver 处理
-	if err != nil {
+	if err := er.registerDeadLetter(); err != nil {
 		return err
 	}
-	err = er.eb.Subscribe(
-		er.eh.bs.Handle,
-		EventTypeUpdateBackupSchedule,
-	) // 订阅 UpdateBackupSchedule 事件，交给 BackupScheduler 处理
-	if err != nil {
+	if err := er.registerSystem(); err != nil {
+		return err
+	}
+	if err := er.registerAgent(); err != nil {
+		return err
+	}
+	if err := er.registerInbox(); err != nil {
 		return err
 	}
 
-	// 订阅事件组
-	err = er.eb.Subscribes(
-		er.eh.ap.Handle,
-		EventTypeEchoCreated,
-		EventTypeUserDeleted,
-		EventTypeEchoUpdated,
-	) // 订阅 Echo 事件组，交给 AgentProcessor 处理
-	if err != nil {
-		return err
-	}
-
-	// 订阅 Inbox 事件，交给 InboxDispatcher 处理
-	err = er.eb.Subscribes(
-		er.eh.id.Handle,
-		EventTypeEch0UpdateCheck,
-		EventTypeInboxClear,
-	) // 订阅 Inbox 事件，交给 InboxDispatcher 处理
-	if err != nil {
-		return err
-	}
-
-	// 订阅所有事件，交给 WebhookDispatcher 处理
-	err = er.eb.SubscribeAll(
-		er.eh.wbd.Handle,
-		EventTypeDeadLetterRetried,
-	) // 订阅所有事件，交给 WebhookDispatcher 处理,但是排除死信事件
+	err := er.bus.UseObserver(
+		func(ctx context.Context, obs busen.Observation) {
+			switch obs.Topic {
+			case TopicDeadLetterRetried:
+				return
+			}
+			evt, err := newWebhookObservation(obs.Topic, obs.Value, obs.Meta)
+			if err != nil {
+				return
+			}
+			_ = er.eh.wbd.HandleObservation(ctx, evt)
+		},
+	)
 	if err != nil {
 		return err
 	}
 
 	er.registered.Store(true)
-	return err
+	return nil
 }
 
 // Stop 等待已投递的异步处理任务完成。
@@ -96,6 +85,11 @@ func (er *EventRegistrar) Stop() error {
 	if !er.registered.Load() {
 		return nil
 	}
+	for i := len(er.unsub) - 1; i >= 0; i-- {
+		er.unsub[i]()
+	}
+	er.unsub = nil
+
 	er.eh.wbd.Wait()
 	return nil
 }

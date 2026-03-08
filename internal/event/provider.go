@@ -4,17 +4,21 @@ import (
 	"sync"
 
 	"github.com/google/wire"
+	busen "github.com/lin-snow/Busen"
 )
 
 type RegisteredRegistrar struct {
 	Registrar *EventRegistrar
 }
 
-func ProvideEventBusProvider() func() IEventBus {
+func ProvideEventBusProvider() func() *busen.Bus {
 	var once sync.Once
-	return func() IEventBus {
-		once.Do(InitEventBus)
-		return GetEventBus()
+	var bus *busen.Bus
+	return func() *busen.Bus {
+		once.Do(func() {
+			bus = NewBus()
+		})
+		return bus
 	}
 }
 
@@ -27,4 +31,4 @@ func ProvideRegisteredRegistrar(registrar *EventRegistrar) (*RegisteredRegistrar
 	}, nil
 }
 
-var ProviderSet = wire.NewSet(ProvideEventBusProvider)
+var ProviderSet = wire.NewSet(ProvideEventBusProvider, NewPublisher)

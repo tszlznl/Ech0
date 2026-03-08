@@ -22,6 +22,7 @@ type AppConfig struct {
 	Auth     AuthConfig
 	Upload   UploadConfig
 	Storage  StorageConfig
+	Event    EventConfig
 	Setting  SettingConfig
 	Comment  CommentConfig
 	Security SecurityConfig
@@ -93,6 +94,18 @@ type SecurityConfig struct {
 	JWTSecret []byte
 }
 
+type EventConfig struct {
+	DefaultBuffer      int
+	DefaultOverflow    string
+	DeadLetterBuffer   int
+	SystemBuffer       int
+	AgentBuffer        int
+	AgentParallelism   int
+	InboxBuffer        int
+	WebhookPoolWorkers int
+	WebhookPoolQueue   int
+}
+
 // Config 返回全局配置中心
 func Config() *AppConfig {
 	once.Do(func() {
@@ -146,6 +159,17 @@ func defaultConfig() *AppConfig {
 				"audio/wav",
 				"audio/mp4",
 			},
+		},
+		Event: EventConfig{
+			DefaultBuffer:      512,
+			DefaultOverflow:    "block",
+			DeadLetterBuffer:   64,
+			SystemBuffer:       64,
+			AgentBuffer:        128,
+			AgentParallelism:   2,
+			InboxBuffer:        64,
+			WebhookPoolWorkers: 6,
+			WebhookPoolQueue:   6,
 		},
 		Setting: SettingConfig{
 			SiteTitle:     "Ech0",
@@ -202,6 +226,17 @@ func applyEnvOverrides(cfg *AppConfig) {
 	setBoolEnv("ECH0_S3_USE_SSL", &cfg.Storage.UseSSL)
 	setStringEnv("ECH0_S3_CDN_URL", &cfg.Storage.CDNURL)
 	setStringEnv("ECH0_S3_PATH_PREFIX", &cfg.Storage.PathPrefix)
+
+	// Event
+	setIntEnv("ECH0_EVENT_DEFAULT_BUFFER", &cfg.Event.DefaultBuffer)
+	setStringEnv("ECH0_EVENT_DEFAULT_OVERFLOW", &cfg.Event.DefaultOverflow)
+	setIntEnv("ECH0_EVENT_DEADLETTER_BUFFER", &cfg.Event.DeadLetterBuffer)
+	setIntEnv("ECH0_EVENT_SYSTEM_BUFFER", &cfg.Event.SystemBuffer)
+	setIntEnv("ECH0_EVENT_AGENT_BUFFER", &cfg.Event.AgentBuffer)
+	setIntEnv("ECH0_EVENT_AGENT_PARALLELISM", &cfg.Event.AgentParallelism)
+	setIntEnv("ECH0_EVENT_INBOX_BUFFER", &cfg.Event.InboxBuffer)
+	setIntEnv("ECH0_EVENT_WEBHOOK_POOL_WORKERS", &cfg.Event.WebhookPoolWorkers)
+	setIntEnv("ECH0_EVENT_WEBHOOK_POOL_QUEUE", &cfg.Event.WebhookPoolQueue)
 
 	// Setting
 	setStringEnv("ECH0_SETTING_SITE_TITLE", &cfg.Setting.SiteTitle)

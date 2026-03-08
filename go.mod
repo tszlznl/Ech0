@@ -23,8 +23,8 @@ require (
 	github.com/gorilla/feeds v1.2.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/joho/godotenv v1.5.1
+	github.com/lin-snow/Busen v0.3.0
 	github.com/lin-snow/VireFS v0.1.3
-	github.com/oklog/ulid/v2 v2.1.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shirou/gopsutil/v4 v4.26.2
 	github.com/spf13/cobra v1.10.2

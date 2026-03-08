@@ -309,11 +309,13 @@ docker image prune -f
 
 ![技术架构图](./docs/imgs/Ech0技术架构图.svg)
 > by ExcaliDraw
+
+- 后端事件总线已切换为 [Busen](https://github.com/lin-snow/Busen)：采用 typed-first in-process 架构，并通过显式背压、hooks 与 drain shutdown 提升稳定性。
 ---
 
 ## 开发指南
 ### 后端环境要求
-📌 **Go 1.25.3+**
+📌 **Go 1.26.0+**
 
 📌 **C 编译器**
 使用 `go-sqlite3` 等需要 CGO 的库时，需安装：
@@ -340,6 +342,13 @@ docker image prune -f
 安装[Swagger](https://github.com/swaggo/gin-swagger)用于生成和使用符合OpenAPI规范的接口文档
 - 在项目根目录下执行`swag init -g internal/server/server.go -o internal/swagger`后生成或更新swagger文档
 - 打开浏览器访问`http://localhost:6277/swagger/index.html`查看和使用swagger文档
+
+📌 **Event 运行参数（Busen）**
+- `ECH0_EVENT_DEFAULT_BUFFER` / `ECH0_EVENT_DEFAULT_OVERFLOW`
+- `ECH0_EVENT_DEADLETTER_BUFFER` / `ECH0_EVENT_SYSTEM_BUFFER`
+- `ECH0_EVENT_AGENT_BUFFER` / `ECH0_EVENT_AGENT_PARALLELISM`
+- `ECH0_EVENT_INBOX_BUFFER`
+- `ECH0_EVENT_WEBHOOK_POOL_WORKERS` / `ECH0_EVENT_WEBHOOK_POOL_QUEUE`
 
 ### 前端环境要求
 📌  **NodeJS v25.5.0+, PNPM v10.30.0+**
