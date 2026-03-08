@@ -7,7 +7,6 @@ import (
 
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	publisher "github.com/lin-snow/ech0/internal/event/publisher"
-	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/echo"
 	"github.com/lin-snow/ech0/internal/transaction"
@@ -110,7 +109,7 @@ func (echoService *EchoService) GetEchosByPage(
 	}
 
 	showPrivate := false
-	if userid != authModel.NO_USER_LOGINED {
+	if userid != "" {
 		user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userid)
 		if err != nil {
 			return commonModel.PageQueryResult[[]model.Echo]{}, err
@@ -179,7 +178,7 @@ func (echoService *EchoService) DeleteEchoById(userid, id string) error {
 
 func (echoService *EchoService) GetTodayEchos(userid string, timezone string) ([]model.Echo, error) {
 	showPrivate := false
-	if userid != authModel.NO_USER_LOGINED {
+	if userid != "" {
 		user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userid)
 		if err != nil {
 			return nil, err
@@ -261,7 +260,7 @@ func (echoService *EchoService) GetEchoById(userId, id string) (*model.Echo, err
 		return nil, errors.New(commonModel.ECHO_NOT_FOUND)
 	}
 
-	if userId == authModel.NO_USER_LOGINED {
+	if userId == "" {
 		if echo.Private {
 			return nil, errors.New(commonModel.NO_PERMISSION_DENIED)
 		}
@@ -349,7 +348,7 @@ func (echoService *EchoService) GetEchosByTagId(
 	pageQueryDto.Search = strings.TrimSpace(pageQueryDto.Search)
 
 	showPrivate := false
-	if userId != authModel.NO_USER_LOGINED {
+	if userId != "" {
 		user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userId)
 		if err != nil {
 			return commonModel.PageQueryResult[[]model.Echo]{}, err

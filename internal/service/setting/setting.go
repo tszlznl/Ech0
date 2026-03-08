@@ -9,7 +9,6 @@ import (
 	"github.com/lin-snow/ech0/internal/config"
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	publisher "github.com/lin-snow/ech0/internal/event/publisher"
-	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
@@ -256,7 +255,7 @@ func (settingService *SettingService) GetS3Setting(userid string, setting *model
 		}
 
 		// 如果用户未登录且不为管理员,则屏蔽 S3 设置的敏感信息
-		if userid == authModel.NO_USER_LOGINED {
+		if userid == "" {
 			setting.AccessKey = "******"
 			setting.SecretKey = "******"
 			setting.BucketName = "******"
@@ -459,7 +458,7 @@ func (settingService *SettingService) UpdateOAuth2Setting(
 // GetOAuth2Status 获取 OAuth2 状态
 func (settingService *SettingService) GetOAuth2Status(status *model.OAuth2Status) error {
 	var oauthSetting model.OAuth2Setting
-	if err := settingService.GetOAuth2Setting(authModel.NO_USER_LOGINED, &oauthSetting, true); err != nil {
+	if err := settingService.GetOAuth2Setting("", &oauthSetting, true); err != nil {
 		return err
 	}
 

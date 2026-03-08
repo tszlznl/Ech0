@@ -459,7 +459,7 @@ func (userService *UserService) GetOAuthLoginURL(
 
 	state, nonce, err := jwtUtil.GenerateOAuthState(
 		string(authModel.OAuth2ActionLogin),
-		authModel.NO_USER_LOGINED,
+		"",
 		redirectURI,
 		provider,
 	)
@@ -601,7 +601,7 @@ func (userService *UserService) getOAuthSetting(
 	provider string,
 ) (*settingModel.OAuth2Setting, error) {
 	var setting settingModel.OAuth2Setting
-	if err := userService.settingService.GetOAuth2Setting(authModel.NO_USER_LOGINED, &setting, true); err != nil {
+	if err := userService.settingService.GetOAuth2Setting("", &setting, true); err != nil {
 		return nil, err
 	}
 
@@ -711,7 +711,7 @@ func (userService *UserService) resolveOAuthCallback(
 ) string {
 	switch oauthState.Action {
 	case string(authModel.OAuth2ActionLogin):
-		if oauthState.UserID != authModel.NO_USER_LOGINED {
+		if oauthState.UserID != "" {
 			return ""
 		}
 
@@ -756,7 +756,7 @@ func (userService *UserService) resolveOAuthCallback(
 		return redirectURL.String()
 
 	case string(authModel.OAuth2ActionBind):
-		if oauthState.UserID == authModel.NO_USER_LOGINED {
+		if oauthState.UserID == "" {
 			return ""
 		}
 

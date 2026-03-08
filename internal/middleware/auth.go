@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	errUtil "github.com/lin-snow/ech0/internal/util/err"
 	jwtUtil "github.com/lin-snow/ech0/internal/util/jwt"
@@ -14,6 +13,12 @@ import (
 // JWTAuthMiddleware JWT 拦截器中间件
 func JWTAuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		setAnonymous := func() {
+			ctx.Set("is_authenticated", false)
+			// 为了兼容现有 handler/service 读取路径，匿名请求显式置空。
+			ctx.Set("userid", "")
+		}
+
 		// 获取 Authorization 头部信息
 		auth := ctx.Request.Header.Get("Authorization")
 
@@ -25,16 +30,14 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			parts[1] == "undefined" {
 			// 如果只是分页获取首页Echo，则不需要鉴权
 			if strings.HasPrefix(ctx.Request.URL.Path, "/api/echo/page") {
-				// 设置 userid 为 NO_USER_LOGINED
-				ctx.Set("userid", authModel.NO_USER_LOGINED)
+				setAnonymous()
 				ctx.Next()
 				return
 			}
 
 			// 获取当日Echo
 			if strings.HasPrefix(ctx.Request.URL.Path, "/api/echo/today") {
-				// 设置 userid 为 NO_USER_LOGINED
-				ctx.Set("userid", authModel.NO_USER_LOGINED)
+				setAnonymous()
 				ctx.Next()
 				return
 			}
@@ -42,8 +45,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			// 查看Echo详情
 			if strings.HasPrefix(ctx.Request.URL.Path, "/api/echo") &&
 				ctx.Request.Method == http.MethodGet {
-				// 设置 userid 为 NO_USER_LOGINED
-				ctx.Set("userid", authModel.NO_USER_LOGINED)
+				setAnonymous()
 				ctx.Next()
 				return
 			}
@@ -51,8 +53,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			// 获取 S3 存储设置
 			if strings.HasPrefix(ctx.Request.URL.Path, "/api/s3/settings") &&
 				ctx.Request.Method == http.MethodGet {
-				// 设置 userid 为 NO_USER_LOGINED
-				ctx.Set("userid", authModel.NO_USER_LOGINED)
+				setAnonymous()
 				ctx.Next()
 				return
 			}
@@ -60,8 +61,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			// 根据 Tag ID 获取 Echo 列表
 			if strings.HasPrefix(ctx.Request.URL.Path, "/api/echo/tag/") &&
 				ctx.Request.Method == http.MethodGet {
-				// 设置 userid 为 NO_USER_LOGINED
-				ctx.Set("userid", authModel.NO_USER_LOGINED)
+				setAnonymous()
 				ctx.Next()
 				return
 			}
@@ -106,7 +106,8 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// 如果 token 解析成功，则将用户 ID 存入上下文
+		// 如果 token 解析成功，则将认证信息存入上下文
+		ctx.Set("is_authenticated", true)
 		ctx.Set("userid", mc.Userid)
 		ctx.Next()
 	}

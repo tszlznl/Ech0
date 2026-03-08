@@ -7,7 +7,6 @@ import (
 
 	"github.com/cloudwego/eino/schema"
 	"github.com/lin-snow/ech0/internal/agent"
-	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
@@ -83,7 +82,7 @@ func (agentService *AgentService) getRecentFromCache(cacheKey string) (string, b
 
 func (agentService *AgentService) buildRecentSummary(ctx context.Context) (string, error) {
 	echos, err := agentService.echoService.GetEchosByPage(
-		authModel.NO_USER_LOGINED,
+		"",
 		commonModel.PageQueryDto{
 			Page:     1,
 			PageSize: 10,
