@@ -115,7 +115,7 @@ const handleRefresh = () => {
 }
 
 // 刷新点赞数据
-const handleUpdateLikeCount = (echoId: number) => {
+const handleUpdateLikeCount = (echoId: string) => {
   echoStore.updateLikeCount(echoId, 1)
 }
 

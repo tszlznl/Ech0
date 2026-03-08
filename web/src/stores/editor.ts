@@ -6,6 +6,7 @@ import { Mode, ExtensionType, ImageSource, ImageLayout } from '@/enums/enums'
 import { useEchoStore, useTodoStore, useInboxStore } from '@/stores'
 import { localStg } from '@/utils/storage'
 import { getImageSize } from '@/utils/image'
+import { getImageToAddUrl } from '@/utils/other'
 
 export const useEditorStore = defineStore('editorStore', () => {
   const echoStore = useEchoStore()
@@ -133,6 +134,7 @@ export const useEditorStore = defineStore('editorStore', () => {
       tags: [],
     }
     imageToAdd.value = {
+      id: undefined,
       image_url: '',
       access_url: '',
       image_source: rememberedImageSource.value,
@@ -165,11 +167,17 @@ export const useEditorStore = defineStore('editorStore', () => {
     let width: number | undefined = imageToAdd.value.width
     let height: number | undefined = imageToAdd.value.height
     if (width === undefined || height === undefined) {
-      const size = await getImageSize(imageToAdd.value.image_url)
-      width = size.width
-      height = size.height
+      try {
+        const previewUrl = getImageToAddUrl(imageToAdd.value)
+        const size = await getImageSize(previewUrl || imageToAdd.value.image_url)
+        width = size.width
+        height = size.height
+      } catch {
+        // 图片尺寸探测失败不应阻断写入，否则会出现“上传成功但无预览”。
+      }
     }
     imagesToAdd.value.push({
+      id: imageToAdd.value.id,
       image_url: imageToAdd.value.image_url,
       access_url: imageToAdd.value.access_url,
       image_source: imageToAdd.value.image_source,
@@ -179,6 +187,7 @@ export const useEditorStore = defineStore('editorStore', () => {
     })
 
     imageToAdd.value = {
+      id: undefined,
       image_url: '',
       access_url: '',
       image_source: imageToAdd.value.image_source
@@ -190,7 +199,12 @@ export const useEditorStore = defineStore('editorStore', () => {
 
   const handleUppyUploaded = async (files: App.Api.Ech0.FileToAdd[]) => {
     for (const file of files) {
+      if (!file.image_url && !file.access_url) {
+        theToast.error('上传完成但未拿到可预览地址，请重试')
+        continue
+      }
       imageToAdd.value = {
+        id: file.id,
         image_url: file.image_url,
         access_url: file.access_url,
         image_source: file.image_source,
@@ -223,6 +237,17 @@ export const useEditorStore = defineStore('editorStore', () => {
 
     // 执行添加或更新
     try {
+      if (ImageUploading.value) {
+        theToast.error('图片仍在上传中，请等待上传完成后再发布')
+        return
+      }
+
+      const invalidFile = imagesToAdd.value.find((item) => !item.id)
+      if (invalidFile) {
+        theToast.error('存在未绑定 file_id 的图片，请重新上传后再发布')
+        return
+      }
+
       // ========== 添加或更新前的检查和处理 ==========
       // 处理扩展板块
       checkEchoExtension()

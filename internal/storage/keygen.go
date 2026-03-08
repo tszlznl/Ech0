@@ -10,7 +10,19 @@ import (
 	"time"
 )
 
-// RandomKeyGenerator creates keys like uid_1700000000_abc123.png.
+func compactUserID(userID string) string {
+	uid := strings.TrimSpace(userID)
+	if uid == "" {
+		return "anon"
+	}
+	uid = strings.ReplaceAll(uid, "-", "")
+	if len(uid) > 8 {
+		uid = uid[:8]
+	}
+	return strings.ToLower(uid)
+}
+
+// RandomKeyGenerator creates keys like uid8_1700000000_ab12cd34.png.
 type RandomKeyGenerator struct {
 	RandSource  io.Reader
 	SuffixBytes int
@@ -43,10 +55,7 @@ func (g *RandomKeyGenerator) GenerateKey(_ Category, userID string, originalFile
 		return "", err
 	}
 	now := g.Now()
-	uid := strings.TrimSpace(userID)
-	if uid == "" {
-		uid = "anon"
-	}
+	uid := compactUserID(userID)
 	return strings.ToLower(fmt.Sprintf("%s_%d_%s%s", uid, now.UTC().Unix(), hex.EncodeToString(randPart), ext)), nil
 }
 

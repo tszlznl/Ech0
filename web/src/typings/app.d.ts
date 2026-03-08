@@ -36,7 +36,7 @@ declare namespace App {
       }
 
       type PasskeyDevice = {
-        id: number
+        id: string
         device_name: string
         aaguid: string
         last_used_at: string
@@ -46,7 +46,7 @@ declare namespace App {
 
     namespace User {
       type User = {
-        id: number
+        id: string
         username: string
         password?: string
         is_admin: boolean
@@ -61,7 +61,7 @@ declare namespace App {
       }
 
       type UserStatus = {
-        user_id: number
+        user_id: string
         username: string
         is_admin: boolean
       }
@@ -76,6 +76,8 @@ declare namespace App {
         markdown?: { word_count?: number }
       }
       type FileDto = {
+        id?: string
+        key?: string
         url: string
         /** 可直接用于渲染的 URL（优先于 url） */
         access_url?: string
@@ -98,16 +100,17 @@ declare namespace App {
       }
 
       type Echo = {
-        id: number
+        id: string
         content: string
         username: string
+        echo_files?: EchoFile[]
         image_url: string
         image_source: string
         images: FileObject[]
         files?: FileObject[]
         layout?: string
         private: boolean
-        user_id: number
+        user_id: string
         extension: string
         extension_type: string
         tags?: Tag[]
@@ -116,8 +119,8 @@ declare namespace App {
       }
 
       type FileObject = {
-        id: number
-        echo_id: number
+        id: string
+        echo_id: string
         image_url: string
         /** 可直接用于渲染的 URL（优先于 image_url） */
         access_url?: string
@@ -129,13 +132,29 @@ declare namespace App {
       type Image = FileObject
 
       type Tag = {
-        id: number
+        id: string
         name: string
         usage_count: number
         created_at: string
       }
 
+      type EchoFile = {
+        id: string
+        echo_id: string
+        file_id: string
+        sort_order: number
+        file?: {
+          id: string
+          key: string
+          url: string
+          storage_type: string
+          width?: number
+          height?: number
+        }
+      }
+
       type FileToAdd = {
+        id?: string
         image_url: string
         /** 前端预览用的可直接访问地址，提交时仍使用 image_url */
         access_url?: string
@@ -147,7 +166,7 @@ declare namespace App {
       type ImageToAdd = FileToAdd
 
       type TagToAdd = {
-        id?: number
+        id?: string
         name: string
         usage_count?: number
         created_at?: string
@@ -165,7 +184,7 @@ declare namespace App {
       }
 
       type EchoToUpdate = {
-        id: number
+        id: string
         content: string
         username: string
         images?: FileToAdd[] | null
@@ -173,7 +192,7 @@ declare namespace App {
         tags?: TagToAdd[] | null
         layout?: string | null
         private: boolean
-        user_id: number
+        user_id: string
         extension?: string | null
         extension_type?: string | null
         created_at: string
@@ -185,7 +204,7 @@ declare namespace App {
       }
 
       type Status = {
-        sys_admin_id: number // 系统管理员ID
+        sys_admin_id: string // 系统管理员ID
         username: string // 系统管理员用户名
         logo: string // 系统管理员Logo
         users: App.Api.User.UserStatus[] // 用户列表
@@ -285,14 +304,14 @@ declare namespace App {
 
       type OAuthInfo = {
         provider: string
-        user_id: number
+        user_id: string
         oauth_id: string
         issuer: string
         auth_type: string
       }
 
       type Webhook = {
-        id: number
+        id: string
         name: string
         url: string
         secret: string
@@ -311,8 +330,8 @@ declare namespace App {
       }
 
       type AccessToken = {
-        id: number
-        user_id: number
+        id: string
+        user_id: string
         token: string
         name: string
         expiry: string
@@ -364,16 +383,16 @@ declare namespace App {
       }
 
       type Connected = {
-        id: number
+        id: string
         connect_url: string
       }
     }
 
     namespace Todo {
       type Todo = {
-        id: number
+        id: string
         content: string
-        user_id: number
+        user_id: string
         username: string
         status: number
         created_at: string
@@ -440,13 +459,13 @@ declare namespace App {
     }
 
     namespace Hub {
-      type HubItem = string | { id: number; connect_url: string }
+      type HubItem = string | { id: string; connect_url: string }
       type HubList = HubItem[]
       type HubItemInfo = Connect.Connect
       type HubInfoList = HubItemInfo[]
 
       type Echo = {
-        id: number
+        id: string
         content: string
         username: string
         image_url: string
@@ -455,7 +474,7 @@ declare namespace App {
         tags?: Tag[]
         layout?: string
         private: boolean
-        user_id: number
+        user_id: string
         extension: string
         extension_type: string
         fav_count: number
@@ -470,7 +489,7 @@ declare namespace App {
 
     namespace Inbox {
       type Inbox = {
-        id: number
+        id: string
         source: string
         content: string
         type: string

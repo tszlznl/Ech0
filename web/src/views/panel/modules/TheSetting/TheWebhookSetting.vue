@@ -172,7 +172,7 @@ const handleCancelAddWebhook = () => {
   webhookToAdd.value = { name: '', url: '', is_active: true }
 }
 
-const handleDeleteWebhook = (id: number) => {
+const handleDeleteWebhook = (id: string) => {
   openConfirm({
     title: '确认删除此 Webhook 吗？',
     description: '删除后将无法恢复，请谨慎操作！',

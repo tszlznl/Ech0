@@ -7,7 +7,7 @@ interface ZonePrintPayload {
 }
 
 interface PrintableEcho {
-  id: number | string
+  id: string
   content?: string | null
   created_at?: string | null
   tags?: Array<{ name?: string | null }> | null

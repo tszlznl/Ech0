@@ -2,6 +2,7 @@ import { MusicProvider } from '@/enums/enums'
 
 const ABSOLUTE_URL_REGEX = /^https?:\/\//i
 const joinBaseAndPath = (baseUrl: string, path: string) => `${baseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`
+const defaultServiceBaseUrl = String(import.meta.env.VITE_SERVICE_BASE_URL || '').trim()
 
 const normalizeLegacyMediaPath = (path: string) => {
   if (path.startsWith('/api/')) return path
@@ -16,7 +17,8 @@ const resolveImageUrlByPath = (rawUrl?: string, baseUrl?: string) => {
   if (!candidate) return ''
   if (ABSOLUTE_URL_REGEX.test(candidate)) return candidate
   const normalizedPath = normalizeLegacyMediaPath(candidate)
-  if (baseUrl) return joinBaseAndPath(baseUrl, normalizedPath)
+  const resolvedBaseUrl = String(baseUrl || defaultServiceBaseUrl).trim()
+  if (resolvedBaseUrl) return joinBaseAndPath(resolvedBaseUrl, normalizedPath)
   return normalizedPath
 }
 

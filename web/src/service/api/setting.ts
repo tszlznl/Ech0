@@ -102,7 +102,7 @@ export function fetchCreateWebhook(webhook: App.Api.Setting.WebhookDto) {
 }
 
 // 更新 Webhook
-export function fetchUpdateWebhook(webhookId: number, webhook: App.Api.Setting.WebhookDto) {
+export function fetchUpdateWebhook(webhookId: string, webhook: App.Api.Setting.WebhookDto) {
   return request({
     url: `/webhook/${webhookId}`,
     method: 'PUT',
@@ -111,7 +111,7 @@ export function fetchUpdateWebhook(webhookId: number, webhook: App.Api.Setting.W
 }
 
 // 删除 Webhook
-export function fetchDeleteWebhook(webhookId: number) {
+export function fetchDeleteWebhook(webhookId: string) {
   return request({
     url: `/webhook/${webhookId}`,
     method: 'DELETE',
@@ -136,7 +136,7 @@ export function fetchCreateAccessToken(dto: App.Api.Setting.AccessTokenDto) {
 }
 
 // 删除访问令牌
-export function fetchDeleteAccessToken(tokenId: number) {
+export function fetchDeleteAccessToken(tokenId: string) {
   return request({
     url: `/access-tokens/${tokenId}`,
     method: 'DELETE',

@@ -37,7 +37,7 @@ export function fetchAddConnect(connectUrl: string) {
 }
 
 // 删除Connect
-export function fetchDeleteConnect(id: number) {
+export function fetchDeleteConnect(id: string) {
   return request<App.Api.Connect.Connected>({
     url: `/delConnect/${id}`,
     method: 'DELETE',

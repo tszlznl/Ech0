@@ -125,7 +125,7 @@ const handleAddConnect = async () => {
   })
 }
 
-const handleDisconnect = async (connect_id: number) => {
+const handleDisconnect = async (connect_id: string) => {
   // 弹出确认框
   openConfirm({
     title: '确定要断开连接吗？',

@@ -58,14 +58,14 @@ export function fetchPasskeyDevices() {
   })
 }
 
-export function fetchDeletePasskeyDevice(id: number) {
+export function fetchDeletePasskeyDevice(id: string) {
   return request({
     url: `/passkeys/${id}`,
     method: 'DELETE',
   })
 }
 
-export function fetchUpdatePasskeyDeviceName(id: number, deviceName: string) {
+export function fetchUpdatePasskeyDeviceName(id: string, deviceName: string) {
   return request({
     url: `/passkeys/${id}`,
     method: 'PUT',

@@ -252,7 +252,7 @@ async function handleBind() {
 }
 
 // 删除设备
-async function handleDelete(id: number) {
+async function handleDelete(id: string) {
   openConfirm({
     title: '确定要删除该设备吗？',
     description: '删除后该设备将无法登录，请谨慎操作',

@@ -15,14 +15,14 @@ export function fetchAddTodo(todo: App.Api.Todo.TodoToAdd) {
   })
 }
 
-export function fetchUpdateTodo(id: number) {
+export function fetchUpdateTodo(id: string) {
   return request<App.Api.Todo.Todo>({
     url: `/todo/${id}`,
     method: 'PUT',
   })
 }
 
-export function fetchDeleteTodo(id: number) {
+export function fetchDeleteTodo(id: string) {
   return request<App.Api.Todo.Todo>({
     url: `/todo/${id}`,
     method: 'DELETE',

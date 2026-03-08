@@ -218,11 +218,11 @@ const isShareAnimating = ref(false)
 const isPrintAnimating = ref(false)
 
 const LIKE_LIST_KEY = 'likedEchoIds'
-const likedEchoIds: number[] = localStg.getItem(LIKE_LIST_KEY) || []
-const hasLikedEcho = (echoId: number): boolean => {
+const likedEchoIds: string[] = localStg.getItem(LIKE_LIST_KEY) || []
+const hasLikedEcho = (echoId: string): boolean => {
   return likedEchoIds.includes(echoId)
 }
-const handleLikeEcho = (echoId: number) => {
+const handleLikeEcho = (echoId: string) => {
   isLikeAnimating.value = true
   setTimeout(() => {
     isLikeAnimating.value = false
@@ -245,7 +245,7 @@ const handleLikeEcho = (echoId: number) => {
   })
 }
 
-const handleShareEcho = (echoId: number) => {
+const handleShareEcho = (echoId: string) => {
   isShareAnimating.value = true
   setTimeout(() => {
     isShareAnimating.value = false

@@ -232,7 +232,7 @@ const echoStore = useEchoStore()
 const editorStore = useEditorStore()
 const router = useRouter()
 
-const handleDeleteEcho = (echoId: number) => {
+const handleDeleteEcho = (echoId: string) => {
   openConfirm({
     title: '确定要删除吗？',
     description: '删除后将无法恢复，请谨慎操作',
@@ -267,11 +267,11 @@ const handleUpdateEcho = async () => {
 }
 
 const LIKE_LIST_KEY = 'likedEchoIds'
-const likedEchoIds: number[] = localStg.getItem(LIKE_LIST_KEY) || []
-const hasLikedEcho = (echoId: number): boolean => {
+const likedEchoIds: string[] = localStg.getItem(LIKE_LIST_KEY) || []
+const hasLikedEcho = (echoId: string): boolean => {
   return likedEchoIds.includes(echoId)
 }
-const handleLikeEcho = (echoId: number) => {
+const handleLikeEcho = (echoId: string) => {
   isLikeAnimating.value = true
   setTimeout(() => {
     isLikeAnimating.value = false
@@ -294,7 +294,7 @@ const handleLikeEcho = (echoId: number) => {
   })
 }
 
-const handleExpandEcho = (echoId: number) => {
+const handleExpandEcho = (echoId: string) => {
   // 跳转到Echo详情
   router.push({
     name: 'echo',

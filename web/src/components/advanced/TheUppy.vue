@@ -47,6 +47,32 @@ const backendURL = envURL.endsWith('/') ? envURL.slice(0, -1) : envURL
 
 const outputMimeType = isSafari() ? 'image/jpeg' : 'image/webp'
 
+function tryParseJSON(input: unknown): Record<string, unknown> | undefined {
+  if (!input) return undefined
+  if (typeof input === 'string') {
+    try {
+      const parsed = JSON.parse(input) as unknown
+      return typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : undefined
+    } catch {
+      return undefined
+    }
+  }
+  return typeof input === 'object' ? (input as Record<string, unknown>) : undefined
+}
+
+function extractUploadPayload(response: unknown): Record<string, unknown> {
+  const resp = (response || {}) as Record<string, unknown>
+  const body = tryParseJSON(resp.body)
+  const nestedBody = tryParseJSON((resp.response as Record<string, unknown> | undefined)?.body)
+  const responseText = tryParseJSON(resp.responseText)
+  const candidates = [body, nestedBody, responseText].filter(Boolean) as Record<string, unknown>[]
+  if (candidates.length === 0) return {}
+  const first = candidates[0]
+  const data = first.data
+  if (data && typeof data === 'object') return data as Record<string, unknown>
+  return first
+}
+
 // ✨ 监听粘贴事件
 const handlePaste = async (e: ClipboardEvent) => {
   if (!e.clipboardData) return
@@ -212,15 +238,29 @@ const initUppy = () => {
 
     // 分两种情况: Local 或者 S3
     if (memorySource.value === ImageSource.LOCAL) {
-      const res = response.body as unknown as App.Api.Response<App.Api.File.FileDto>
-      const fileUrl = String(res.data.url)
-      const accessUrl = String(res.data.access_url || fileUrl)
-      const { width, height } = res.data
+      const payload = extractUploadPayload(response) as App.Api.File.FileDto & Record<string, unknown>
+
+      const fileId = String(payload.id || payload.file_id || payload.ID || '')
+      const objectKey = String(payload.key || payload.object_key || '')
+      const fileUrl = String(
+        payload.url ||
+          payload.file_url ||
+          (response as Record<string, unknown>)?.uploadURL ||
+          '',
+      )
+      const accessUrl = String(payload.access_url || fileUrl)
+      const width = typeof payload.width === 'number' ? payload.width : undefined
+      const height = typeof payload.height === 'number' ? payload.height : undefined
+      if (!fileId || !fileUrl) {
+        theToast.error('上传响应缺少文件标识，无法绑定到 Echo，请重试')
+        return
+      }
       const item: App.Api.Ech0.FileToAdd = {
+        id: fileId,
         image_url: fileUrl,
         access_url: accessUrl,
         image_source: ImageSource.LOCAL,
-        object_key: '',
+        object_key: objectKey,
         width: width,
         height: height,
       }
@@ -239,13 +279,20 @@ const initUppy = () => {
     }
   })
   // 全部文件上传完成后，发射事件到父组件
-  uppy.on('complete', () => {
-    isUploading.value = false
-    editorStore.ImageUploading = false
+  uppy.on('complete', (result) => {
     const filesToAddResult = [...files.value]
-    editorStore.handleUppyUploaded(filesToAddResult)
-    files.value = []
-    tempFiles.value.clear()
+    if (result?.successful?.length && filesToAddResult.length === 0) {
+      theToast.error('上传成功但未解析到文件ID，请检查后端上传响应结构')
+    }
+    // 保持“上传中”直到写回编辑器状态完成，避免用户立即发布导致 echo_files 为空。
+    Promise.resolve(
+      filesToAddResult.length > 0 ? editorStore.handleUppyUploaded(filesToAddResult) : undefined,
+    ).finally(() => {
+      isUploading.value = false
+      editorStore.ImageUploading = false
+      files.value = []
+      tempFiles.value.clear()
+    })
   })
 }
 

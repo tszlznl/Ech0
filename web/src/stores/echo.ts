@@ -7,7 +7,7 @@ export const useEchoStore = defineStore('echoStore', () => {
    * state
    */
   const echoList = ref<App.Api.Ech0.Echo[]>([]) // 存储Echo列表
-  const echoIndexMap = ref(new Map<number, number>()) // id -> index
+  const echoIndexMap = ref(new Map<string, number>()) // id -> index
   const isLoading = ref<boolean>(true) // 是否正在加载数据
   const total = ref<number>(0) // 总数据量
   const pageSize = ref<number>(5) // 每页显示的数量
@@ -28,7 +28,7 @@ export const useEchoStore = defineStore('echoStore', () => {
 
   const isFilteringMode = ref<boolean>(false) // 是否正在通过标签过滤
   const filteredEchoList = ref<App.Api.Ech0.Echo[]>([]) // 过滤后的Echo列表
-  const filteredEchoIndexMap = ref(new Map<number, number>()) // 过滤后的id -> index
+  const filteredEchoIndexMap = ref(new Map<string, number>()) // 过滤后的id -> index
   const filteredTotal = ref<number>(0) // 过滤后的总数据量
   const filteredPageSize = ref<number>(5) // 过滤后的每页显示的数量
   const filteredPage = ref<number>(0) // 过滤后的当前页码，从0开始计数
@@ -131,7 +131,7 @@ export const useEchoStore = defineStore('echoStore', () => {
     }
   }
 
-  const updateLikeCount = (echoId: number, delta: number = 1) => {
+  const updateLikeCount = (echoId: string, delta: number = 1) => {
     const idx = echoIndexMap.value.get(echoId)
     if (idx !== undefined) {
       const targetEcho = echoList.value[idx]

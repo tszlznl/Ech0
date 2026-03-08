@@ -99,7 +99,7 @@ const handleFilterByTag = (tag: App.Api.Ech0.Tag) => {
 }
 
 // 删除标签
-const handleDeleteTag = (tagId: number) => {
+const handleDeleteTag = (tagId: string) => {
   openConfirm({
     title: '确认删除该标签吗？',
     description: '删除后，所有使用该标签的内容将不再关联此标签',

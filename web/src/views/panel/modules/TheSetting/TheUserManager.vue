@@ -90,7 +90,7 @@ import { fetchGetAllUsers, fetchUpdateUserPermission, fetchDeleteUser } from '@/
 const allusers = ref<App.Api.User.User[]>([])
 // const userEditMode = ref<boolean>(false)
 
-const handleDeleteUser = async (userId: number) => {
+const handleDeleteUser = async (userId: string) => {
   openConfirm({
     title: '确定要删除该用户吗？',
     description: '删除后将无法恢复，请谨慎操作',
@@ -104,7 +104,7 @@ const handleDeleteUser = async (userId: number) => {
   })
 }
 
-const handleUpdateUserPermission = async (userId: number) => {
+const handleUpdateUserPermission = async (userId: string) => {
   fetchUpdateUserPermission(userId)
     .then((res) => {
       if (res.code === 1) {
