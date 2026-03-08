@@ -71,7 +71,12 @@ func BuildWebApp() (*app.App, func(), error) {
 		return nil, nil, err
 	}
 	gormTransactor := transaction.NewGormTransactor(v)
-	eventRegistrar, err := BuildEventRegistrar(v, v2, iCache, gormTransactor)
+	tasker, err := BuildTasker(v, iCache, gormTransactor, v2)
+	if err != nil {
+		return nil, nil, err
+	}
+	backupScheduleApplier := ProvideBackupScheduleApplier(tasker)
+	eventRegistrar, err := BuildEventRegistrar(v, v2, iCache, gormTransactor, backupScheduleApplier)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -80,11 +85,6 @@ func BuildWebApp() (*app.App, func(), error) {
 		return nil, nil, err
 	}
 	component := bus.NewComponent(v2)
-	tasker, err := BuildTasker(v, iCache, gormTransactor, v2)
-	if err != nil {
-		cleanup()
-		return nil, nil, err
-	}
 	engine := server.ProvideGinEngine()
 	bundle, err := BuildHandlers(v, iCache, gormTransactor, v2)
 	if err != nil {
@@ -99,12 +99,12 @@ func BuildWebApp() (*app.App, func(), error) {
 	}, nil
 }
 
-func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() *busen.Bus, appCache cache.ICache[string, any], tx transaction.Transactor) (*registry.EventRegistrar, error) {
+func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() *busen.Bus, appCache cache.ICache[string, any], tx transaction.Transactor, backupScheduleApplier subscriber.BackupScheduleApplier) (*registry.EventRegistrar, error) {
 	webhookRepositoryInterface := repository.NewWebhookRepository(dbProvider)
 	queueRepositoryInterface := repository2.NewQueueRepository(dbProvider)
 	webhookDispatcher := subscriber.NewWebhookDispatcher(webhookRepositoryInterface, queueRepositoryInterface, tx)
 	deadLetterResolver := subscriber.NewDeadLetterResolver(queueRepositoryInterface, webhookDispatcher)
-	backupScheduler := subscriber.NewBackupScheduler()
+	backupScheduler := subscriber.NewBackupScheduler(backupScheduleApplier)
 	echoRepositoryInterface := repository3.NewEchoRepository(dbProvider, appCache)
 	todoRepositoryInterface := repository4.NewTodoRepository(dbProvider, appCache)
 	userRepositoryInterface := repository5.NewUserRepository(dbProvider, appCache)
@@ -201,6 +201,7 @@ var AppSet = app.ProviderSet
 var DomainSet = wire.NewSet(
 	BuildHandlers,
 	BuildTasker,
+	ProvideBackupScheduleApplier,
 	BuildEventRegistrar, registry.ProvideRegisteredRegistrar,
 )
 
@@ -217,4 +218,8 @@ var TaskerGraphSet = wire.NewSet(publisher.New, storage.ProviderSet, repository1
 // BuildApp 兼容旧入口，委托给 BuildWebApp。
 func BuildApp() (*app.App, func(), error) {
 	return BuildWebApp()
+}
+
+func ProvideBackupScheduleApplier(t *task.Tasker) subscriber.BackupScheduleApplier {
+	return t
 }

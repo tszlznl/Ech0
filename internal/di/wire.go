@@ -31,6 +31,7 @@ var AppSet = app.ProviderSet
 var DomainSet = wire.NewSet(
 	BuildHandlers,
 	BuildTasker,
+	ProvideBackupScheduleApplier,
 	BuildEventRegistrar,
 	eventregistry.ProvideRegisteredRegistrar,
 )
@@ -166,6 +167,7 @@ func BuildEventRegistrar(
 	ebProvider func() *busen.Bus,
 	appCache cache.ICache[string, any],
 	tx transaction.Transactor,
+	backupScheduleApplier eventsubscriber.BackupScheduleApplier,
 ) (*eventregistry.EventRegistrar, error) {
 	wire.Build(EventGraphSet)
 	return &eventregistry.EventRegistrar{}, nil
@@ -200,4 +202,8 @@ func BuildTasker(
 ) (*task.Tasker, error) {
 	wire.Build(TaskerGraphSet)
 	return &task.Tasker{}, nil
+}
+
+func ProvideBackupScheduleApplier(t *task.Tasker) eventsubscriber.BackupScheduleApplier {
+	return t
 }

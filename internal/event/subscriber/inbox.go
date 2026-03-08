@@ -76,17 +76,14 @@ func (id *InboxDispatcher) handleEch0UpdateCheck(ctx context.Context) error {
 }
 
 func (id *InboxDispatcher) handleInboxClear(ctx context.Context) error {
-	unreadInbox, err := id.inboxRepo.GetUnreadInbox(ctx)
+	const (
+		minReadCount      = 2
+		readExpireSeconds = 5 * 24 * 60 * 60
+	)
+	readBefore := time.Now().UTC().Unix() - readExpireSeconds
+	expiredReadInboxIDs, err := id.inboxRepo.GetExpiredReadInboxIDs(ctx, minReadCount, readBefore)
 	if err != nil {
 		return err
 	}
-
-	var unreadInboxIDs []uint
-	for _, inbox := range unreadInbox {
-		if inbox.Read && inbox.ReadCount > 2 && time.Now().UTC().Unix()-inbox.ReadAt > 5*24*60*60 {
-			unreadInboxIDs = append(unreadInboxIDs, inbox.ID)
-		}
-	}
-
-	return id.inboxRepo.ClearReadInboxByIds(ctx, unreadInboxIDs)
+	return id.inboxRepo.ClearReadInboxByIds(ctx, expiredReadInboxIDs)
 }

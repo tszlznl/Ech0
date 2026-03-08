@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	model "github.com/lin-snow/ech0/internal/model/queue"
 	"github.com/lin-snow/ech0/internal/transaction"
@@ -39,7 +40,16 @@ func (queueRepository *QueueRepository) DeleteDeadLetter(ctx context.Context, id
 // ListDeadLetters 列出所有死信任务
 func (queueRepository *QueueRepository) ListDeadLetters(ctx context.Context, limit int) ([]model.DeadLetter, error) {
 	var deadLetters []model.DeadLetter
-	err := queueRepository.getDB(ctx).Limit(limit).Find(&deadLetters).Error
+	now := time.Now().UTC()
+	err := queueRepository.getDB(ctx).
+		Where("status IN ? AND next_retry <= ?", []string{
+			model.DeadLetterStatusPending,
+			model.DeadLetterStatusFailed,
+		}, now).
+		Order("next_retry ASC").
+		Order("id ASC").
+		Limit(limit).
+		Find(&deadLetters).Error
 	if err != nil {
 		return []model.DeadLetter{}, err
 	}

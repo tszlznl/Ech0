@@ -4,12 +4,19 @@ import (
 	"context"
 
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
+	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 )
 
-type BackupScheduler struct{}
+type BackupScheduleApplier interface {
+	ApplyBackupSchedule(schedule settingModel.BackupSchedule) error
+}
 
-func NewBackupScheduler() *BackupScheduler {
-	return &BackupScheduler{}
+type BackupScheduler struct {
+	applier BackupScheduleApplier
+}
+
+func NewBackupScheduler(applier BackupScheduleApplier) *BackupScheduler {
+	return &BackupScheduler{applier: applier}
 }
 
 func (bs *BackupScheduler) HandleBackupScheduleUpdated(
@@ -17,6 +24,5 @@ func (bs *BackupScheduler) HandleBackupScheduleUpdated(
 	e contracts.UpdateBackupScheduleEvent,
 ) error {
 	_ = ctx
-	_ = e
-	return nil
+	return bs.applier.ApplyBackupSchedule(e.Schedule)
 }

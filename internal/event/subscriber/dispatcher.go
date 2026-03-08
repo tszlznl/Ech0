@@ -171,6 +171,10 @@ func (wd *WebhookDispatcher) Wait() {
 	wd.pool.Wait()
 }
 
+func (wd *WebhookDispatcher) Stop() {
+	wd.pool.Stop()
+}
+
 func (wd *WebhookDispatcher) HandleDeadLetter(
 	ctx context.Context,
 	deadLetter *queueModel.DeadLetter,

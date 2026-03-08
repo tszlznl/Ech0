@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-co-op/gocron/v2"
@@ -27,7 +28,10 @@ type Tasker struct {
 	publisher      *publisher.Publisher
 	queueRepo      queueRepository.QueueRepositoryInterface
 	started        bool
+	mu             sync.Mutex
 }
+
+const backupScheduleTag = "BackupSchedule"
 
 func (t *Tasker) Name() string {
 	return "tasker"
@@ -57,6 +61,9 @@ func NewTasker(
 }
 
 func (t *Tasker) Start(context.Context) error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
 	if t.started {
 		return nil
 	}
@@ -94,6 +101,9 @@ func (t *Tasker) Start(context.Context) error {
 }
 
 func (t *Tasker) Stop(context.Context) error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
 	if !t.started || t.scheduler == nil {
 		return nil
 	}
@@ -198,7 +208,7 @@ func (t *Tasker) ScheduleBackupTask(cronExpression string) error {
 				}
 			},
 		),
-		gocron.WithTags("BackupSchedule"),
+		gocron.WithTags(backupScheduleTag),
 	)
 	if err != nil {
 		logUtil.GetLogger().
@@ -206,6 +216,27 @@ func (t *Tasker) ScheduleBackupTask(cronExpression string) error {
 		return err
 	}
 	return nil
+}
+
+// ApplyBackupSchedule 在运行期动态更新备份任务。
+func (t *Tasker) ApplyBackupSchedule(schedule settingModel.BackupSchedule) error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if t.scheduler == nil {
+		return errors.New("scheduler is nil")
+	}
+	if !t.started {
+		return nil
+	}
+
+	// 先移除旧任务，避免重复触发。
+	t.scheduler.RemoveByTags(backupScheduleTag)
+	if !schedule.Enable {
+		return nil
+	}
+
+	return t.ScheduleBackupTask(schedule.CronExpression)
 }
 
 // InboxTask 定时处理Inbox任务

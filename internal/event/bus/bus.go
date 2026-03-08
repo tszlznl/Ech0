@@ -69,7 +69,7 @@ func New() *busen.Bus {
 
 	b := busen.New(
 		busen.WithDefaultBuffer(ec.DefaultBuffer),
-		busen.WithDefaultOverflow(mapOverflow(ec.DefaultOverflow)),
+		busen.WithDefaultOverflow(MapOverflow(ec.DefaultOverflow)),
 		busen.WithHooks(hooks),
 		busen.WithMetadataBuilder(func(input busen.PublishMetadataInput) map[string]string {
 			return map[string]string{"source": "ech0"}
@@ -90,7 +90,7 @@ func ProvideProvider() func() *busen.Bus {
 	}
 }
 
-func mapOverflow(policy string) busen.OverflowPolicy {
+func MapOverflow(policy string) busen.OverflowPolicy {
 	switch policy {
 	case "fail_fast":
 		return busen.OverflowFailFast

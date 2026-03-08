@@ -147,8 +147,26 @@ func (inboxRepository *InboxRepository) GetUnreadInbox(
 
 // ClearReadInboxByIds 清空已读消息
 func (inboxRepository *InboxRepository) ClearReadInboxByIds(ctx context.Context, inboxIDs []uint) error {
+	if len(inboxIDs) == 0 {
+		return nil
+	}
 	return inboxRepository.getDB(ctx).
 		Where("id IN (?)", inboxIDs).
-		Update("read", true).
+		Delete(&inboxModel.Inbox{}).
 		Error
+}
+
+func (inboxRepository *InboxRepository) GetExpiredReadInboxIDs(
+	ctx context.Context,
+	minReadCount int,
+	readBefore int64,
+) ([]uint, error) {
+	var ids []uint
+	if err := inboxRepository.getDB(ctx).
+		Model(&inboxModel.Inbox{}).
+		Where("read = ? AND read_count > ? AND read_at > 0 AND read_at <= ?", true, minReadCount, readBefore).
+		Pluck("id", &ids).Error; err != nil {
+		return nil, err
+	}
+	return ids, nil
 }

@@ -35,6 +35,9 @@ type InboxRepositoryInterface interface {
 	// 清空已读消息
 	ClearReadInboxByIds(ctx context.Context, inboxIDs []uint) error
 
+	// 获取已读次数超过阈值且超过截止时间的消息 ID
+	GetExpiredReadInboxIDs(ctx context.Context, minReadCount int, readBefore int64) ([]uint, error)
+
 	// 获取所有未读消息
 	GetUnreadInbox(ctx context.Context) ([]*inboxModel.Inbox, error)
 }
