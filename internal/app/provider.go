@@ -7,13 +7,13 @@ import (
 	"github.com/lin-snow/ech0/internal/task"
 )
 
-func ProvideLifecycles(
+func ProvideComponents(
 	_ *event.RegisteredRegistrar,
 	tasker *task.Tasker,
 	httpServer *server.Server,
-) []Lifecycle {
+) []Component {
 	// 启动顺序保持为 task -> http，确保后台任务基础能力先就绪，再对外暴露服务。
-	return []Lifecycle{tasker, httpServer}
+	return []Component{tasker, httpServer}
 }
 
-var ProviderSet = wire.NewSet(ProvideLifecycles, NewApp)
+var ProviderSet = wire.NewSet(ProvideComponents, NewApp)

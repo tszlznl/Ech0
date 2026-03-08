@@ -7,19 +7,19 @@ import (
 	"sync"
 )
 
-// App 是应用生命周期编排器。
+// App 是应用组件编排器。
 type App struct {
 	mu sync.Mutex
 
-	lifecycles []Lifecycle
+	components []Component
 
 	running bool
 }
 
-// NewApp 创建应用生命周期编排器。
-func NewApp(lifecycles []Lifecycle) *App {
+// NewApp 创建应用组件编排器。
+func NewApp(components []Component) *App {
 	return &App{
-		lifecycles: lifecycles,
+		components: components,
 	}
 }
 
@@ -35,40 +35,40 @@ func (a *App) Start(ctx context.Context) error {
 			Component: "app",
 		}
 	}
-	if len(a.lifecycles) == 0 {
+	if len(a.components) == 0 {
 		return &AppError{
 			Code:      CodeDependencyMissing,
 			Op:        "app.start",
-			Component: "lifecycles",
+			Component: "components",
 		}
 	}
 
-	started := make([]Lifecycle, 0, len(a.lifecycles))
-	for _, lifecycle := range a.lifecycles {
-		if lifecycle == nil {
+	started := make([]Component, 0, len(a.components))
+	for _, component := range a.components {
+		if component == nil {
 			return &AppError{
 				Code:      CodeDependencyMissing,
 				Op:        "app.start",
-				Component: "nil_lifecycle",
+				Component: "nil_component",
 			}
 		}
-		if err := lifecycle.Start(ctx); err != nil {
-			a.stopLifecyclesReverse(ctx, started)
+		if err := component.Start(ctx); err != nil {
+			a.stopComponentsReverse(ctx, started)
 			return &AppError{
 				Code:      CodeComponentStartFailed,
 				Op:        "app.start",
-				Component: lifecycleName(lifecycle),
+				Component: componentName(component),
 				Cause:     err,
 			}
 		}
-		started = append(started, lifecycle)
+		started = append(started, component)
 	}
 
 	a.running = true
 	return nil
 }
 
-// Stop 按反向顺序停止应用生命周期单元。
+// Stop 按反向顺序停止应用组件单元。
 func (a *App) Stop(ctx context.Context) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -82,16 +82,16 @@ func (a *App) Stop(ctx context.Context) error {
 	}
 
 	var errs []error
-	for i := len(a.lifecycles) - 1; i >= 0; i-- {
-		lifecycle := a.lifecycles[i]
-		if lifecycle == nil {
+	for i := len(a.components) - 1; i >= 0; i-- {
+		component := a.components[i]
+		if component == nil {
 			continue
 		}
-		if err := lifecycle.Stop(ctx); err != nil {
+		if err := component.Stop(ctx); err != nil {
 			errs = append(errs, &AppError{
 				Code:      CodeComponentStopFailed,
 				Op:        "app.stop",
-				Component: lifecycleName(lifecycle),
+				Component: componentName(component),
 				Cause:     err,
 			})
 		}
@@ -121,23 +121,23 @@ func (a *App) IsRunning() bool {
 	return a.running
 }
 
-func (a *App) stopLifecyclesReverse(ctx context.Context, lifecycles []Lifecycle) {
-	for i := len(lifecycles) - 1; i >= 0; i-- {
-		_ = lifecycles[i].Stop(ctx)
+func (a *App) stopComponentsReverse(ctx context.Context, components []Component) {
+	for i := len(components) - 1; i >= 0; i-- {
+		_ = components[i].Stop(ctx)
 	}
 }
 
-func lifecycleName(lifecycle Lifecycle) string {
-	if lifecycle == nil {
-		return "nil_lifecycle"
+func componentName(component Component) string {
+	if component == nil {
+		return "nil_component"
 	}
-	if namer, ok := lifecycle.(Namer); ok {
+	if namer, ok := component.(Namer); ok {
 		return namer.Name()
 	}
 
-	t := reflect.TypeOf(lifecycle)
+	t := reflect.TypeOf(component)
 	if t == nil {
-		return "unknown_lifecycle"
+		return "unknown_component"
 	}
 	if t.Kind() == reflect.Pointer {
 		t = t.Elem()
@@ -145,5 +145,5 @@ func lifecycleName(lifecycle Lifecycle) string {
 	if t.Name() != "" {
 		return t.Name()
 	}
-	return "unknown_lifecycle"
+	return "unknown_component"
 }

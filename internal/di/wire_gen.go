@@ -87,7 +87,7 @@ func BuildWebApp() (*app.App, func(), error) {
 		return nil, nil, err
 	}
 	serverServer := server.ProvideHTTPServer(engine, bundle)
-	v3 := app.ProvideLifecycles(registeredRegistrar, tasker, serverServer)
+	v3 := app.ProvideComponents(registeredRegistrar, tasker, serverServer)
 	appApp := app.NewApp(v3)
 	return appApp, func() {
 		cleanup()
