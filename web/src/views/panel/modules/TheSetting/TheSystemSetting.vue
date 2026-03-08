@@ -197,7 +197,7 @@ import Close from '@/components/icons/close.vue'
 import Saveupdate from '@/components/icons/saveupdate.vue'
 import { ref, onMounted } from 'vue'
 import { fetchUpdateSettings, fetchUploadFile } from '@/service/api'
-import { ImageSource } from '@/enums/enums'
+import { StorageType } from '@/enums/enums'
 import { theToast } from '@/utils/toast'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
@@ -236,7 +236,7 @@ const handleUploadImage = async (event: Event) => {
   if (!file) return
 
   try {
-    const res = await theToast.promise(fetchUploadFile(file, ImageSource.LOCAL, 'image'), {
+    const res = await theToast.promise(fetchUploadFile(file, StorageType.LOCAL, 'image'), {
       loading: '服务器 Logo 上传中...',
       success: '服务器 Logo 上传成功！',
       error: '上传失败，请稍后再试',

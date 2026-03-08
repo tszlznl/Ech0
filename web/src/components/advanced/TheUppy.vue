@@ -12,7 +12,7 @@ import { getAuthToken } from '@/service/request/shared'
 import { useUserStore, useEditorStore } from '@/stores'
 import { theToast } from '@/utils/toast'
 import { storeToRefs } from 'pinia'
-import { ImageSource } from '@/enums/enums'
+import { StorageType } from '@/enums/enums'
 import { fetchGetPresignedUrl } from '@/service/api'
 import { isSafari } from '@/utils/other'
 
@@ -29,12 +29,12 @@ import zh_CN from '@uppy/locales/lib/zh_CN'
 let uppy: Uppy | null = null
 
 const props = defineProps<{
-  TheImageSource: string
+  fileStorageType: App.Api.File.StorageType
   EnableCompressor: boolean
 }>()
 // const emit = defineEmits(['uppyUploaded'])
 
-const memorySource = ref<string>(props.TheImageSource) // 用于记住上传方式
+const memorySource = ref<string>(props.fileStorageType) // 用于记住上传方式
 const isUploading = ref<boolean>(false) // 是否正在上传
 const files = ref<App.Api.Ech0.FileToAdd[]>([]) // 已上传的文件列表
 const tempFiles = ref<Map<string, { url: string; key: string }>>(new Map()) // 用于S3临时存储文件回显地址的 Map(key: fileName, value: {url, key})
@@ -133,8 +133,8 @@ const initUppy = () => {
     })
   }
 
-  // 根据 props.TheImageSource 动态切换上传插件
-  if (memorySource.value == ImageSource.LOCAL) {
+  // 根据 props.fileStorageType 动态切换上传插件
+  if (memorySource.value == StorageType.LOCAL) {
     console.log('使用本地存储')
     uppy.use(XHRUpload, {
       endpoint: `${backendURL}/api/files/upload`, // 本地上传接口
@@ -144,7 +144,7 @@ const initUppy = () => {
         Authorization: `${getAuthToken()}`,
       },
     })
-  } else if (memorySource.value == ImageSource.S3) {
+  } else if (memorySource.value == StorageType.OBJECT) {
     console.log('使用 S3 存储')
     uppy.use(AwsS3, {
       endpoint: '', // 走自定义的签名接口
@@ -201,7 +201,7 @@ const initUppy = () => {
   })
   // 单个文件上传失败后，显示错误信息
   uppy.on('upload-error', (file, error, response) => {
-    if (props.TheImageSource === ImageSource.LOCAL) {
+    if (props.fileStorageType === StorageType.LOCAL) {
       type ResponseBody = {
         code: number
         msg: string
@@ -237,7 +237,7 @@ const initUppy = () => {
     theToast.success(`好耶,上传成功！🎉`)
 
     // 分两种情况: Local 或者 S3
-    if (memorySource.value === ImageSource.LOCAL) {
+    if (memorySource.value === StorageType.LOCAL) {
       const payload = extractUploadPayload(response) as App.Api.File.FileDto & Record<string, unknown>
 
       const fileId = String(payload.id || payload.file_id || payload.ID || '')
@@ -258,19 +258,19 @@ const initUppy = () => {
       const item: App.Api.Ech0.FileToAdd = {
         id: fileId,
         url: fileUrl,
-        image_source: ImageSource.LOCAL,
+        storage_type: StorageType.LOCAL,
         key: fileKey,
         width: width,
         height: height,
       }
       files.value.push(item)
-    } else if (memorySource.value === ImageSource.S3) {
+    } else if (memorySource.value === StorageType.OBJECT) {
       const uploadedFile = tempFiles.value.get(file?.name || '') || ''
       if (!uploadedFile) return
 
       const item: App.Api.Ech0.FileToAdd = {
         url: uploadedFile.url,
-        image_source: ImageSource.S3,
+        storage_type: StorageType.OBJECT,
         key: uploadedFile.key,
       }
       files.value.push(item)
@@ -294,12 +294,12 @@ const initUppy = () => {
   })
 }
 
-// 监听 props.TheImageSource 变化
+// 监听 props.fileStorageType 变化
 watch(
-  () => props.TheImageSource,
+  () => props.fileStorageType,
   (newSource, oldSource) => {
     if (newSource !== oldSource) {
-      console.log('TheImageSource changed:', newSource, oldSource)
+      console.log('fileStorageType changed:', newSource, oldSource)
       if (!isUploading.value) {
         memorySource.value = newSource
         console.log('当前没有上传任务，可以切换上传方式')
@@ -338,7 +338,7 @@ watch(
 )
 
 onMounted(() => {
-  console.log('TheImageSource:', props.TheImageSource)
+  console.log('fileStorageType:', props.fileStorageType)
   initUppy()
 })
 

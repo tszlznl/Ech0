@@ -35,7 +35,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const globalMusicFileIDKey = "global_music_file_id"
+const globalAudioFileIDKey = "global_audio_file_id"
 
 type CommonService struct {
 	transactor         transaction.Transactor
@@ -436,18 +436,18 @@ func (s *CommonService) GenerateRSS(ctx *gin.Context) (string, error) {
 	return feed.ToAtom()
 }
 
-func (s *CommonService) UploadMusic(
+func (s *CommonService) UploadAudioFile(
 	userId string,
 	file *multipart.FileHeader,
-) (string, error) {
+) (commonModel.FileDto, error) {
 	fileDto, err := s.UploadFile(userId, file, storageDomain.CategoryAudio)
 	if err != nil {
-		return "", err
+		return commonModel.FileDto{}, err
 	}
 
 	if err := s.transactor.Run(context.Background(), func(ctx context.Context) error {
 		return s.keyvalueRepository.AddOrUpdateKeyValue(
-			ctx, globalMusicFileIDKey,
+			ctx, globalAudioFileIDKey,
 			fileDto.ID,
 		)
 	}); err != nil {
@@ -455,13 +455,13 @@ func (s *CommonService) UploadMusic(
 			return s.DeleteFileRecord(ctx, fileDto.ID)
 		})
 		_ = s.DeleteStoredFile(fileDto.Key)
-		return "", err
+		return commonModel.FileDto{}, err
 	}
 
-	return fileDto.URL, nil
+	return fileDto, nil
 }
 
-func (s *CommonService) DeleteMusic(userid string) error {
+func (s *CommonService) DeleteAudioFile(userid string) error {
 	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
@@ -471,7 +471,7 @@ func (s *CommonService) DeleteMusic(userid string) error {
 	}
 
 	ctx := context.Background()
-	val, err := s.keyvalueRepository.GetKeyValue(ctx, globalMusicFileIDKey)
+	val, err := s.keyvalueRepository.GetKeyValue(ctx, globalAudioFileIDKey)
 	if err != nil || val == "" {
 		return nil
 	}
@@ -482,7 +482,7 @@ func (s *CommonService) DeleteMusic(userid string) error {
 	}
 
 	if err := s.transactor.Run(ctx, func(txCtx context.Context) error {
-		if err := s.keyvalueRepository.DeleteKeyValue(txCtx, globalMusicFileIDKey); err != nil {
+		if err := s.keyvalueRepository.DeleteKeyValue(txCtx, globalAudioFileIDKey); err != nil {
 			return err
 		}
 		return s.fileRepository.Delete(txCtx, fileRecord.ID)
@@ -496,8 +496,8 @@ func (s *CommonService) DeleteMusic(userid string) error {
 	return nil
 }
 
-func (s *CommonService) GetPlayMusicUrl() string {
-	val, err := s.keyvalueRepository.GetKeyValue(context.Background(), globalMusicFileIDKey)
+func (s *CommonService) GetCurrentAudioURL() string {
+	val, err := s.keyvalueRepository.GetKeyValue(context.Background(), globalAudioFileIDKey)
 	if err != nil || val == "" {
 		return ""
 	}
@@ -510,8 +510,8 @@ func (s *CommonService) GetPlayMusicUrl() string {
 	return fileRecord.URL
 }
 
-func (s *CommonService) PlayMusic(ctx *gin.Context) {
-	val, _ := s.keyvalueRepository.GetKeyValue(context.Background(), globalMusicFileIDKey)
+func (s *CommonService) StreamCurrentAudio(ctx *gin.Context) {
+	val, _ := s.keyvalueRepository.GetKeyValue(context.Background(), globalAudioFileIDKey)
 	if val == "" {
 		ctx.String(http.StatusNotFound, "音乐文件不存在")
 		return
@@ -631,9 +631,9 @@ func (s *CommonService) CleanupOrphanFiles() error {
 		return err
 	}
 
-	musicFileIDStr, _ := s.keyvalueRepository.GetKeyValue(ctx, globalMusicFileIDKey)
+	currentAudioFileIDStr, _ := s.keyvalueRepository.GetKeyValue(ctx, globalAudioFileIDKey)
 	for _, file := range files {
-		if musicFileIDStr != "" && file.ID == musicFileIDStr {
+		if currentAudioFileIDStr != "" && file.ID == currentAudioFileIDStr {
 			continue
 		}
 		if file.Key != "" && file.StorageType != string(commonModel.EXTERNAL_FILE) {

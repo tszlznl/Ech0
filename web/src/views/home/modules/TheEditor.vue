@@ -124,7 +124,7 @@ watch(
         imagesToAdd.value = existingImages.map((img) => ({
           id: String(img.id || ''),
           url: img.url || '',
-          image_source: img.image_source || '',
+          storage_type: img.storage_type || 'local',
           key: img.key || '',
         }))
       } else {

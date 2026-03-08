@@ -18,14 +18,17 @@ const resolveImageUrlByPath = (rawUrl?: string, baseUrl?: string) => {
   return base ? joinBaseAndPath(base, path) : path
 }
 
-const resolveImageUrl = (image: Pick<App.Api.Ech0.Image, 'url'> & { image_url?: string }, baseUrl?: string) =>
+const resolveImageUrl = (
+  image: Pick<App.Api.Ech0.FileObject | App.Api.Ech0.FileToAdd, 'url'> & { image_url?: string },
+  baseUrl?: string,
+) =>
   resolveImageUrlByPath(image.url || image.image_url, baseUrl)
 
 // 获取图片链接
-export const getImageUrl = (image: App.Api.Ech0.Image) => resolveImageUrl(image)
+export const getImageUrl = (image: App.Api.Ech0.FileObject) => resolveImageUrl(image)
 
 // 获取待添加图片链接
-export const getImageToAddUrl = (image: App.Api.Ech0.ImageToAdd) => resolveImageUrl(image)
+export const getImageToAddUrl = (image: App.Api.Ech0.FileToAdd) => resolveImageUrl(image)
 
 export const formatDate = (dateInput: string | number) => {
   // 当天则显示（时：分）
@@ -199,7 +202,7 @@ export const extractAndCleanMusicURL = (input: string): string | null => {
 }
 
 // 获取 HubEcho 的图片
-export const getHubImageUrl = (image: App.Api.Ech0.Image, baseurl: string) => {
+export const getHubImageUrl = (image: App.Api.Ech0.FileObject, baseurl: string) => {
   return resolveImageUrl(image, baseurl)
 }
 

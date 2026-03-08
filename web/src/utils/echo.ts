@@ -22,12 +22,13 @@ export function getEchoImages(echo?: EchoLike | null): App.Api.Ech0.FileObject[]
   return (echo.echo_files || []).map((item) => {
     const file = item.file
     const storageType = String(file?.storage_type || 'local')
-    const imageSource = storageType === 'object' ? 's3' : storageType === 'external' ? 'url' : 'local'
+    const normalizedStorageType =
+      storageType === 'object' || storageType === 'external' ? storageType : 'local'
     return {
       id: String(file?.id || item.file_id || ''),
       echo_id: String(echo.id || item.echo_id || ''),
       url: String(file?.url || ''),
-      image_source: imageSource,
+      storage_type: normalizedStorageType as App.Api.File.StorageType,
       key: String(file?.key || ''),
       width: file?.width,
       height: file?.height,

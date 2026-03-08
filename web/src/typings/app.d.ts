@@ -68,16 +68,18 @@ declare namespace App {
     }
 
     namespace File {
+      type Category = 'image' | 'audio' | 'video' | 'document' | 'file'
+      type StorageType = 'local' | 'object' | 'external'
+
       type FileDto = {
         id: string
         key: string
         url: string
         content_type?: string
-        category?: string
+        category?: Category
         width?: number
         height?: number
       }
-      type ImageDto = FileDto
       type FileDeleteDto = {
         key: string
       }
@@ -117,12 +119,11 @@ declare namespace App {
         id: string
         echo_id: string
         url: string
-        image_source: string
+        storage_type: File.StorageType
         key?: string // 对应后端 file.key
         width?: number // 图片宽度
         height?: number // 图片高度
       }
-      type Image = FileObject
 
       type Tag = {
         id: string
@@ -157,12 +158,11 @@ declare namespace App {
       type FileToAdd = {
         id?: string
         url: string
-        image_source: string
+        storage_type: File.StorageType
         key?: string // 对应后端 file.key
         width?: number // 图片宽度
         height?: number // 图片高度
       }
-      type ImageToAdd = FileToAdd
 
       type TagToAdd = {
         id?: string
@@ -216,7 +216,6 @@ declare namespace App {
       type FileToDelete = {
         key: string
       }
-      type ImageToDelete = FileToDelete
 
       type GithubCardData = {
         name: string

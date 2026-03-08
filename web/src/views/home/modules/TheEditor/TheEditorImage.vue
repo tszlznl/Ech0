@@ -60,7 +60,7 @@ import { useEchoStore, useEditorStore } from '@/stores'
 import { Mode } from '@/enums/enums'
 import { Fancybox } from '@fancyapps/ui'
 import '@fancyapps/ui/dist/fancybox/fancybox.css'
-import { ImageSource } from '@/enums/enums'
+import { StorageType } from '@/enums/enums'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 
 const { openConfirm } = useBaseDialog()
@@ -98,8 +98,8 @@ const handleRemoveImage = () => {
         key: String(imagesToAdd.value[index]?.key || ''),
       }
 
-      const source = String(imagesToAdd.value[index]?.image_source || '')
-      if ((source === ImageSource.LOCAL || source === ImageSource.S3) && imageToDel.key) {
+      const source = String(imagesToAdd.value[index]?.storage_type || '')
+      if ((source === StorageType.LOCAL || source === StorageType.OBJECT) && imageToDel.key) {
         fetchDeleteFile({
           key: imageToDel.key,
         }).then(() => {

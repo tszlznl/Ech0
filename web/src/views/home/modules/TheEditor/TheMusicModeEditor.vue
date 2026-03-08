@@ -35,7 +35,7 @@ import UploadMusic from '@/components/icons/musicupload.vue'
 import Delete from '@/components/icons/delete.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import { ref } from 'vue'
-import { fetchUploadMusic, fetchDeleteMusic } from '@/service/api'
+import { fetchUploadAudioFile, fetchDeleteAudioFile } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useEditorStore } from '@/stores'
@@ -57,7 +57,7 @@ const handleUploadMusic = async (event: Event) => {
   if (!file) return
 
   try {
-    const res = await theToast.promise(fetchUploadMusic(file), {
+    const res = await theToast.promise(fetchUploadAudioFile(file), {
       loading: '音乐上传中...',
       success: '音乐上传成功！',
       error: '音乐上传失败，请稍后再试',
@@ -78,7 +78,7 @@ const handleDeleteMusic = () => {
     title: '确定要删除音乐吗？',
     description: '删除后将无法恢复，请谨慎操作',
     onConfirm: () => {
-      fetchDeleteMusic().then((res) => {
+      fetchDeleteAudioFile().then((res) => {
         if (res.code === 1) {
           theToast.success('音乐删除成功！')
           editorStore.handleGetPlayingMusic()

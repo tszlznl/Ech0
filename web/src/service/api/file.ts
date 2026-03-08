@@ -35,3 +35,30 @@ export function fetchDeleteFile(file: App.Api.File.FileDeleteDto) {
   })
 }
 
+// 上传当前音频文件
+export function fetchUploadAudioFile(file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request<App.Api.File.FileDto>({
+    url: `/files/audio/upload`,
+    method: 'POST',
+    data: formData,
+  })
+}
+
+// 删除当前音频文件
+export function fetchDeleteAudioFile() {
+  return request({
+    url: `/files/audio`,
+    method: 'DELETE',
+  })
+}
+
+// 获取当前音频播放地址
+export function fetchGetCurrentAudio() {
+  return request<string>({
+    url: `/audio/current`,
+    method: 'GET',
+  })
+}
+

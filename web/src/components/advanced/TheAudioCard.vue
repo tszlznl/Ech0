@@ -59,7 +59,7 @@ import Pause from '../icons/pause.vue'
 import Play from '../icons/play.vue'
 import Repeat from '../icons/repeat.vue'
 
-const url = ref<string>(`${getApiUrl()}/playmusic?t=${Date.now()}`)
+const url = ref<string>(`${getApiUrl()}/audio/stream?t=${Date.now()}`)
 const isPlaying = ref<boolean>(false)
 const isLooping = ref<boolean>(false)
 const audioRef = ref<HTMLAudioElement | null>(null)
@@ -68,7 +68,7 @@ const { PlayingMusicURL, ShouldLoadMusic } = storeToRefs(editorStore)
 
 watch(ShouldLoadMusic, (newVal) => {
   if (newVal && audioRef.value) {
-    url.value = `${getApiUrl()}/playmusic?t=${Date.now()}` // 添加时间戳，绕过缓存
+    url.value = `${getApiUrl()}/audio/stream?t=${Date.now()}` // 添加时间戳，绕过缓存
     // 强制重新加载音频
     if (isPlaying.value) {
       audioRef.value.pause()

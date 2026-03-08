@@ -167,7 +167,7 @@ func (commonHandler *CommonHandler) GetRss(ctx *gin.Context) {
 	ctx.Data(http.StatusOK, "application/rss+xml; charset=utf-8", []byte(atom))
 }
 
-func (commonHandler *CommonHandler) UploadAudio() gin.HandlerFunc {
+func (commonHandler *CommonHandler) UploadAudioFile() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		userId := ctx.MustGet("userid").(string)
 
@@ -179,7 +179,7 @@ func (commonHandler *CommonHandler) UploadAudio() gin.HandlerFunc {
 			}
 		}
 
-		audioUrl, err := commonHandler.commonService.UploadMusic(userId, file)
+		audioFile, err := commonHandler.commonService.UploadAudioFile(userId, file)
 		if err != nil {
 			return res.Response{
 				Msg: "",
@@ -188,17 +188,17 @@ func (commonHandler *CommonHandler) UploadAudio() gin.HandlerFunc {
 		}
 
 		return res.Response{
-			Data: audioUrl,
+			Data: audioFile,
 			Msg:  commonModel.UPLOAD_SUCCESS,
 		}
 	})
 }
 
-func (commonHandler *CommonHandler) DeleteAudio() gin.HandlerFunc {
+func (commonHandler *CommonHandler) DeleteAudioFile() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		userId := ctx.MustGet("userid").(string)
 
-		if err := commonHandler.commonService.DeleteMusic(userId); err != nil {
+		if err := commonHandler.commonService.DeleteAudioFile(userId); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -211,19 +211,19 @@ func (commonHandler *CommonHandler) DeleteAudio() gin.HandlerFunc {
 	})
 }
 
-func (commonHandler *CommonHandler) GetPlayMusic() gin.HandlerFunc {
+func (commonHandler *CommonHandler) GetCurrentAudio() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		musicUrl := commonHandler.commonService.GetPlayMusicUrl()
+		audioURL := commonHandler.commonService.GetCurrentAudioURL()
 
 		return res.Response{
-			Data: musicUrl,
+			Data: audioURL,
 			Msg:  commonModel.GET_MUSIC_URL_SUCCESS,
 		}
 	})
 }
 
-func (commonHandler *CommonHandler) PlayMusic(ctx *gin.Context) {
-	commonHandler.commonService.PlayMusic(ctx)
+func (commonHandler *CommonHandler) StreamCurrentAudio(ctx *gin.Context) {
+	commonHandler.commonService.StreamCurrentAudio(ctx)
 }
 
 func (commonHandler *CommonHandler) HelloEch0() gin.HandlerFunc {

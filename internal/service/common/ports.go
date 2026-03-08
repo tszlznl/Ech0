@@ -22,10 +22,10 @@ type Service interface {
 	GetStatus() (commonModel.Status, error)
 	GetHeatMap(timezone string) ([]commonModel.Heatmap, error)
 	GenerateRSS(ctx *gin.Context) (string, error)
-	UploadMusic(userId string, file *multipart.FileHeader) (string, error)
-	DeleteMusic(userid string) error
-	GetPlayMusicUrl() string
-	PlayMusic(ctx *gin.Context)
+	UploadAudioFile(userId string, file *multipart.FileHeader) (commonModel.FileDto, error)
+	DeleteAudioFile(userid string) error
+	GetCurrentAudioURL() string
+	StreamCurrentAudio(ctx *gin.Context)
 	GetFilePresignURL(userid string, s3Dto *commonModel.GetPresignURLDto, method string) (commonModel.PresignDto, error)
 	CleanupOrphanFiles() error
 	GetWebsiteTitle(websiteURL string) (string, error)

@@ -95,7 +95,7 @@ import { theToast } from '@/utils/toast'
 import { storeToRefs } from 'pinia'
 import { useUserStore } from '@/stores'
 import { getApiUrl } from '@/service/request/shared'
-import { ImageSource } from '@/enums/enums'
+import { StorageType } from '@/enums/enums'
 
 const userStore = useUserStore()
 const { refreshCurrentUser } = userStore
@@ -139,7 +139,7 @@ const handleUploadImage = async (event: Event) => {
   if (!file) return
 
   try {
-    const res = await theToast.promise(fetchUploadFile(file, ImageSource.LOCAL, 'image'), {
+    const res = await theToast.promise(fetchUploadFile(file, StorageType.LOCAL, 'image'), {
       loading: '头像上传中...',
       success: '头像上传成功！',
       error: '上传失败，请稍后再试',

@@ -18,17 +18,10 @@ export enum ExtensionType {
   WEBSITE = 'WEBSITE',
 }
 
-// 图片来源
-export enum ImageSource {
+export enum StorageType {
   LOCAL = 'local',
-  URL = 'url',
-  S3 = 's3',
-}
-
-export enum FileSource {
-  LOCAL = 'local',
-  URL = 'url',
-  S3 = 's3',
+  OBJECT = 'object',
+  EXTERNAL = 'external',
 }
 
 // 图片布局
