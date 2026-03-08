@@ -6,6 +6,7 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/echo"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
+	fileService "github.com/lin-snow/ech0/internal/service/file"
 )
 
 type Service interface {
@@ -22,6 +23,7 @@ type Service interface {
 }
 
 type CommonService = commonService.Service
+type FileService = fileService.Service
 
 type Repository interface {
 	CreateEcho(ctx context.Context, newEcho *model.Echo) error

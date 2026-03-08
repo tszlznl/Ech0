@@ -35,6 +35,7 @@ type FileDeleteDto struct {
 //
 // swagger:model PresignDto
 type PresignDto struct {
+	ID          string `json:"id"`
 	FileName    string `json:"file_name"`
 	ContentType string `json:"content_type"`
 	Key         string `json:"key"`
@@ -46,8 +47,9 @@ type PresignDto struct {
 //
 // swagger:model GetPresignURLDto
 type GetPresignURLDto struct {
-	FileName    string `json:"file_name"    binding:"required"`
+	FileName    string `json:"file_name" binding:"required"`
 	ContentType string `json:"content_type"`
+	StorageType string `json:"storage_type,omitempty"`
 }
 
 // CreateExternalFileDto 用于直链文件入库请求

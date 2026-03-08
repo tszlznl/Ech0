@@ -12,7 +12,7 @@ import { getAuthToken } from '@/service/request/shared'
 import { useUserStore, useEditorStore } from '@/stores'
 import { theToast } from '@/utils/toast'
 import { storeToRefs } from 'pinia'
-import { StorageType } from '@/enums/enums'
+import { FileCategory, StorageType } from '@/enums/enums'
 import { fetchGetPresignedUrl } from '@/service/api'
 import { isSafari } from '@/utils/other'
 
@@ -37,7 +37,7 @@ const props = defineProps<{
 const memorySource = ref<string>(props.fileStorageType) // 用于记住上传方式
 const isUploading = ref<boolean>(false) // 是否正在上传
 const files = ref<App.Api.Ech0.FileToAdd[]>([]) // 已上传的文件列表
-const tempFiles = ref<Map<string, { url: string; key: string }>>(new Map()) // 用于S3临时存储文件回显地址的 Map(key: fileName, value: {url, key})
+const tempFiles = ref<Map<string, { id: string; url: string; key: string }>>(new Map()) // 用于S3临时存储文件回显地址的 Map(key: fileName, value: {id, url, key})
 
 const userStore = useUserStore()
 const editorStore = useEditorStore()
@@ -46,6 +46,17 @@ const envURL = import.meta.env.VITE_SERVICE_BASE_URL as string
 const backendURL = envURL.endsWith('/') ? envURL.slice(0, -1) : envURL
 
 const outputMimeType = isSafari() ? 'image/jpeg' : 'image/webp'
+
+function inferFileExtFromType(contentType: string): string {
+  const normalized = String(contentType || '').toLowerCase()
+  if (normalized.includes('png')) return '.png'
+  if (normalized.includes('webp')) return '.webp'
+  if (normalized.includes('gif')) return '.gif'
+  if (normalized.includes('bmp')) return '.bmp'
+  if (normalized.includes('avif')) return '.avif'
+  if (normalized.includes('jpeg') || normalized.includes('jpg')) return '.jpg'
+  return '.bin'
+}
 
 function tryParseJSON(input: unknown): Record<string, unknown> | undefined {
   if (!input) return undefined
@@ -136,6 +147,10 @@ const initUppy = () => {
   // 根据 props.fileStorageType 动态切换上传插件
   if (memorySource.value == StorageType.LOCAL) {
     console.log('使用本地存储')
+    uppy.setMeta({
+      category: FileCategory.IMAGE,
+      storage_type: StorageType.LOCAL,
+    })
     uppy.use(XHRUpload, {
       endpoint: `${backendURL}/api/files/upload`, // 本地上传接口
       fieldName: 'file',
@@ -152,17 +167,25 @@ const initUppy = () => {
       // 每来一个文件都调用一次该函数，获取签名参数
       async getUploadParameters(file) {
         // console.log("Uploading to S3:", file)
-        const fileName = file.name ? file.name : ''
-        const contentType = file.type ? file.type : ''
+        const contentType = String(file.type || 'application/octet-stream')
+        const rawName = String(file.name || '').trim()
+        const fileName = rawName || `upload_${Date.now()}${inferFileExtFromType(contentType)}`
         console.log('获取预签名fileName, contentType', fileName, contentType)
 
-        const res = await fetchGetPresignedUrl(fileName, contentType)
+        const res = await fetchGetPresignedUrl(fileName, contentType, StorageType.OBJECT)
         if (res.code !== 1) {
+          if (String(res.msg || '').includes('backend does not support presigned URLs')) {
+            theToast.error('后端当前未启用 S3 预签名能力，请切换到本地存储或检查后端存储配置')
+          }
           throw new Error(res.msg || '获取预签名 URL 失败')
         }
         console.log('获取预签名成功!')
         const data = res.data as App.Api.Ech0.PresignResult
-        tempFiles.value.set(data.file_name, { url: data.file_url, key: data.key || '' })
+        tempFiles.value.set(data.file_name, {
+          id: String(data.id || ''),
+          url: data.file_url,
+          key: data.key || '',
+        })
         return {
           method: 'PUT',
           url: data.presign_url, // 预签名 URL
@@ -228,6 +251,9 @@ const initUppy = () => {
         }
       }
       theToast.error(errorMsg)
+    } else {
+      const msg = String((error as Error | undefined)?.message || '').trim()
+      if (msg) theToast.error(msg)
     }
     isUploading.value = false
     editorStore.ImageUploading = false
@@ -267,8 +293,13 @@ const initUppy = () => {
     } else if (memorySource.value === StorageType.OBJECT) {
       const uploadedFile = tempFiles.value.get(file?.name || '') || ''
       if (!uploadedFile) return
+      if (!uploadedFile.id) {
+        theToast.error('上传响应缺少文件ID，无法绑定到 Echo，请重试')
+        return
+      }
 
       const item: App.Api.Ech0.FileToAdd = {
+        id: uploadedFile.id,
         url: uploadedFile.url,
         storage_type: StorageType.OBJECT,
         key: uploadedFile.key,

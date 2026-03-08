@@ -24,8 +24,6 @@ type Heatmap struct {
 
 type (
 	UploadFileType  string
-	FileStorageType string
-	FileCategory    string
 	CommentProvider string
 	S3Provider      string
 	OAuth2Provider  string
@@ -39,22 +37,6 @@ const (
 	ImageType UploadFileType = "image"
 	// AudioType  音频类型
 	AudioType UploadFileType = "audio"
-)
-
-const (
-	// FileCategoryImage 统一文件类别：图片
-	FileCategoryImage FileCategory = "image"
-	// FileCategoryAudio 统一文件类别：音频
-	FileCategoryAudio FileCategory = "audio"
-)
-
-const (
-	// LOCAL_FILE 本地存储类型
-	LOCAL_FILE FileStorageType = "local"
-	// S3_FILE   S3 存储类型
-	S3_FILE FileStorageType = "s3"
-	// EXTERNAL_FILE 直链外部存储类型
-	EXTERNAL_FILE FileStorageType = "external"
 )
 
 const (

@@ -8,7 +8,7 @@ import {
   fetchGetCurrentAudio,
   fetchCreateExternalFile,
 } from '@/service/api'
-import { Mode, ExtensionType, StorageType, ImageLayout } from '@/enums/enums'
+import { Mode, ExtensionType, StorageType, ImageLayout, FileCategory } from '@/enums/enums'
 import { useEchoStore, useTodoStore, useInboxStore } from '@/stores'
 import { localStg } from '@/utils/storage'
 import { getImageSize } from '@/utils/image'
@@ -191,7 +191,7 @@ export const useEditorStore = defineStore('editorStore', () => {
 
       const res = await fetchCreateExternalFile({
         url: externalUrl,
-        category: 'image',
+        category: FileCategory.IMAGE,
         width: width,
         height: height,
       })

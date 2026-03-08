@@ -13,6 +13,7 @@ import (
 	connectHandler "github.com/lin-snow/ech0/internal/handler/connect"
 	dashboardHandler "github.com/lin-snow/ech0/internal/handler/dashboard"
 	echoHandler "github.com/lin-snow/ech0/internal/handler/echo"
+	fileHandler "github.com/lin-snow/ech0/internal/handler/file"
 	inboxHandler "github.com/lin-snow/ech0/internal/handler/inbox"
 	settingHandler "github.com/lin-snow/ech0/internal/handler/setting"
 	todoHandler "github.com/lin-snow/ech0/internal/handler/todo"
@@ -75,6 +76,7 @@ func buildTestHandlers() *handler.Bundle {
 		webHandler.NewWebHandler(),
 		userHandler.NewUserHandler(nil),
 		echoHandler.NewEchoHandler(nil),
+		fileHandler.NewFileHandler(nil),
 		commonHandler.NewCommonHandler(nil),
 		settingHandler.NewSettingHandler(nil),
 		inboxHandler.NewInboxHandler(nil),

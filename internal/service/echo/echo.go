@@ -9,6 +9,7 @@ import (
 	publisher "github.com/lin-snow/ech0/internal/event/publisher"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/echo"
+	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/transaction"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
@@ -17,6 +18,7 @@ import (
 type EchoService struct {
 	transactor     transaction.Transactor
 	commonService  CommonService
+	fileService    FileService
 	echoRepository Repository
 	publisher      *publisher.Publisher
 }
@@ -24,12 +26,14 @@ type EchoService struct {
 func NewEchoService(
 	tx transaction.Transactor,
 	commonService CommonService,
+	fileService FileService,
 	echoRepository Repository,
 	publisher *publisher.Publisher,
 ) *EchoService {
 	return &EchoService{
 		transactor:     tx,
 		commonService:  commonService,
+		fileService:    fileService,
 		echoRepository: echoRepository,
 		publisher:      publisher,
 	}
@@ -138,7 +142,11 @@ func (echoService *EchoService) DeleteEchoById(userid, id string) error {
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	var deletableFileKeys []string
+	type deletableFileRef struct {
+		key         string
+		storageType string
+	}
+	var deletableFiles []deletableFileRef
 	if err := echoService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		echo, err := echoService.echoRepository.GetEchosById(ctx, id)
 		if err != nil {
@@ -149,11 +157,14 @@ func (echoService *EchoService) DeleteEchoById(userid, id string) error {
 		}
 
 		for _, ef := range echo.EchoFiles {
-			if ef.File.Key != "" && ef.File.StorageType != string(commonModel.EXTERNAL_FILE) {
-				deletableFileKeys = append(deletableFileKeys, ef.File.Key)
+			if ef.File.Key != "" && storage.NormalizeStorageType(ef.File.StorageType) != storage.StorageTypeExternal {
+				deletableFiles = append(deletableFiles, deletableFileRef{
+					key:         ef.File.Key,
+					storageType: ef.File.StorageType,
+				})
 			}
 			if ef.File.ID != "" {
-				if err := echoService.commonService.DeleteFileRecord(ctx, ef.File.ID); err != nil {
+				if err := echoService.fileService.DeleteFileRecord(ctx, ef.File.ID); err != nil {
 					return err
 				}
 			}
@@ -171,8 +182,8 @@ func (echoService *EchoService) DeleteEchoById(userid, id string) error {
 		logUtil.GetLogger().Error(pubErr.Error())
 	}
 
-	for _, fileKey := range deletableFileKeys {
-		_ = echoService.commonService.DeleteStoredFile(fileKey)
+	for _, file := range deletableFiles {
+		_ = echoService.fileService.DeleteStoredFile(file.storageType, file.key)
 	}
 
 	return nil

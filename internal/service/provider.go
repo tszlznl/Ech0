@@ -8,6 +8,7 @@ import (
 	connectService "github.com/lin-snow/ech0/internal/service/connect"
 	dashboardService "github.com/lin-snow/ech0/internal/service/dashboard"
 	echoService "github.com/lin-snow/ech0/internal/service/echo"
+	fileService "github.com/lin-snow/ech0/internal/service/file"
 	inboxService "github.com/lin-snow/ech0/internal/service/inbox"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	todoService "github.com/lin-snow/ech0/internal/service/todo"
@@ -22,6 +23,10 @@ var (
 	EchoSet = wire.NewSet(
 		echoService.NewEchoService,
 		wire.Bind(new(echoService.Service), new(*echoService.EchoService)),
+	)
+	FileSet = wire.NewSet(
+		fileService.NewFileService,
+		wire.Bind(new(fileService.Service), new(*fileService.FileService)),
 	)
 	CommonSet = wire.NewSet(
 		commonService.NewCommonService,

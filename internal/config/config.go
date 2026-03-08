@@ -29,17 +29,18 @@ type AppConfig struct {
 }
 
 type StorageConfig struct {
-	Mode       string // "local" or "s3", default "local"
-	DataRoot   string // local root directory, default "data/files"
-	Endpoint   string // S3-compatible endpoint
-	AccessKey  string
-	SecretKey  string
-	BucketName string
-	Region     string
-	Provider   string // "aws", "r2", "minio", "other"
-	UseSSL     bool
-	CDNURL     string
-	PathPrefix string
+	Mode          string // "local" or "object", default "local"
+	ObjectEnabled bool   // enable object storage alongside local
+	DataRoot      string // local root directory, default "data/files"
+	Endpoint      string // S3-compatible endpoint
+	AccessKey     string
+	SecretKey     string
+	BucketName    string
+	Region        string
+	Provider      string // "aws", "r2", "minio", "other"
+	UseSSL        bool
+	CDNURL        string
+	PathPrefix    string
 }
 
 type ServerConfig struct {
@@ -139,8 +140,9 @@ func defaultConfig() *AppConfig {
 			},
 		},
 		Storage: StorageConfig{
-			Mode:     "local",
-			DataRoot: "data/files",
+			Mode:          "local",
+			ObjectEnabled: false,
+			DataRoot:      "data/files",
 		},
 		Upload: UploadConfig{
 			ImageMaxSize: 20971520,
@@ -214,6 +216,7 @@ func applyEnvOverrides(cfg *AppConfig) {
 
 	// Storage (local)
 	setStringEnv("ECH0_STORAGE_MODE", &cfg.Storage.Mode)
+	setBoolEnv("ECH0_OBJECT_ENABLED", &cfg.Storage.ObjectEnabled)
 	setStringEnv("ECH0_STORAGE_DATA_ROOT", &cfg.Storage.DataRoot)
 
 	// Storage (S3-compatible)

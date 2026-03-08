@@ -18,6 +18,7 @@ import (
 	"github.com/lin-snow/ech0/internal/metric"
 	"github.com/lin-snow/ech0/internal/monitor"
 	"github.com/lin-snow/ech0/internal/repository"
+	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
 	"github.com/lin-snow/ech0/internal/server"
 	"github.com/lin-snow/ech0/internal/service"
 	"github.com/lin-snow/ech0/internal/storage"
@@ -77,6 +78,7 @@ var EventGraphSet = wire.NewSet(
 var HandlerGraphSet = wire.NewSet(
 	eventpublisher.New,
 	storage.ProviderSet,
+	wire.Bind(new(storage.S3SettingStore), new(*keyvalueRepository.KeyValueRepository)),
 	repository.FileSet,
 	handler.WebSet,
 
@@ -89,6 +91,8 @@ var HandlerGraphSet = wire.NewSet(
 	handler.EchoSet,
 
 	repository.CommonSet,
+	service.FileSet,
+	handler.FileSet,
 	service.CommonSet,
 	handler.CommonSet,
 
@@ -129,6 +133,7 @@ var HandlerGraphSet = wire.NewSet(
 var TaskerGraphSet = wire.NewSet(
 	eventpublisher.New,
 	storage.ProviderSet,
+	wire.Bind(new(storage.S3SettingStore), new(*keyvalueRepository.KeyValueRepository)),
 	repository.FileSet,
 	repository.KeyValueSet,
 	repository.WebhookSet,
@@ -140,6 +145,7 @@ var TaskerGraphSet = wire.NewSet(
 	service.EchoSet,
 
 	repository.CommonSet,
+	service.FileSet,
 	service.CommonSet,
 
 	repository.QueueSet,

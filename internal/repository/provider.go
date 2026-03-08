@@ -18,6 +18,7 @@ import (
 	commonService "github.com/lin-snow/ech0/internal/service/common"
 	connectService "github.com/lin-snow/ech0/internal/service/connect"
 	echoService "github.com/lin-snow/ech0/internal/service/echo"
+	fileService "github.com/lin-snow/ech0/internal/service/file"
 	inboxService "github.com/lin-snow/ech0/internal/service/inbox"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	todoService "github.com/lin-snow/ech0/internal/service/todo"
@@ -37,14 +38,15 @@ var (
 	CommonSet = wire.NewSet(
 		commonRepository.NewCommonRepository,
 		wire.Bind(new(commonService.CommonRepository), new(*commonRepository.CommonRepository)),
+		wire.Bind(new(fileService.CommonRepository), new(*commonRepository.CommonRepository)),
 	)
 	FileSet = wire.NewSet(
 		fileRepository.NewFileRepository,
-		wire.Bind(new(commonService.FileRepository), new(*fileRepository.FileRepository)),
+		wire.Bind(new(fileService.FileRepository), new(*fileRepository.FileRepository)),
 	)
 	KeyValueSet = wire.NewSet(
 		keyvalueRepository.NewKeyValueRepository,
-		wire.Bind(new(commonService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
+		wire.Bind(new(fileService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
 		wire.Bind(new(settingService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
 		wire.Bind(new(agentService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
 	)

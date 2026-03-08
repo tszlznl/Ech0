@@ -1,3 +1,5 @@
+import { StorageType } from '@/enums/enums'
+
 type EchoLike = {
   id?: string
   echo_files?:
@@ -21,18 +23,23 @@ export function getEchoImages(echo?: EchoLike | null): App.Api.Ech0.FileObject[]
 
   return (echo.echo_files || []).map((item) => {
     const file = item.file
-    const storageType = String(file?.storage_type || 'local')
-    const normalizedStorageType =
-      storageType === 'object' || storageType === 'external' ? storageType : 'local'
+    const storageType = normalizeStorageType(file?.storage_type)
     return {
       id: String(file?.id || item.file_id || ''),
       echo_id: String(echo.id || item.echo_id || ''),
       url: String(file?.url || ''),
-      storage_type: normalizedStorageType as App.Api.File.StorageType,
+      storage_type: storageType,
       key: String(file?.key || ''),
       width: file?.width,
       height: file?.height,
     }
   })
+}
+
+function normalizeStorageType(raw: unknown): App.Api.File.StorageType {
+  const value = String(raw || '').toLowerCase()
+  if (value === StorageType.OBJECT) return StorageType.OBJECT
+  if (value === StorageType.EXTERNAL) return StorageType.EXTERNAL
+  return StorageType.LOCAL
 }
 

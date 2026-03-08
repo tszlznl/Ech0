@@ -1,13 +1,15 @@
 import { request } from '../request'
+import { FileCategory, StorageType } from '@/enums/enums'
 
 // 上传文件
-export function fetchUploadFile(file: File, source?: string, category = 'image') {
+export function fetchUploadFile(
+  file: File,
+  storageType: App.Api.File.StorageType = StorageType.LOCAL,
+  category: App.Api.File.Category = FileCategory.IMAGE,
+) {
   const formData = new FormData()
   formData.append('file', file)
-
-  if (source) {
-    formData.append('source', source)
-  }
+  formData.append('storage_type', storageType)
   formData.append('category', category)
 
   return request<App.Api.File.FileDto>({
@@ -39,6 +41,8 @@ export function fetchDeleteFile(file: App.Api.File.FileDeleteDto) {
 export function fetchUploadAudioFile(file: File) {
   const formData = new FormData()
   formData.append('file', file)
+  formData.append('storage_type', StorageType.LOCAL)
+  formData.append('category', FileCategory.AUDIO)
   return request<App.Api.File.FileDto>({
     url: `/files/audio/upload`,
     method: 'POST',
@@ -59,6 +63,23 @@ export function fetchGetCurrentAudio() {
   return request<string>({
     url: `/audio/current`,
     method: 'GET',
+  })
+}
+
+// 获取预签名URL（对象存储）
+export function fetchGetPresignedUrl(
+  fileName: string,
+  contentType?: string,
+  storageType: App.Api.File.StorageType = StorageType.OBJECT,
+) {
+  return request<App.Api.Ech0.PresignResult>({
+    url: `/files/presign`,
+    method: 'PUT',
+    data: {
+      file_name: fileName,
+      content_type: contentType,
+      storage_type: storageType,
+    },
   })
 }
 

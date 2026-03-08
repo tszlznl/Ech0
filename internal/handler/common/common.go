@@ -7,7 +7,6 @@ import (
 	res "github.com/lin-snow/ech0/internal/handler/response"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	service "github.com/lin-snow/ech0/internal/service/common"
-	storageDomain "github.com/lin-snow/ech0/internal/storage"
 	errorUtil "github.com/lin-snow/ech0/internal/util/err"
 	timezoneUtil "github.com/lin-snow/ech0/internal/util/timezone"
 )
@@ -20,92 +19,6 @@ func NewCommonHandler(commonService service.Service) *CommonHandler {
 	return &CommonHandler{
 		commonService: commonService,
 	}
-}
-
-func (commonHandler *CommonHandler) UploadFile() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		file, err := ctx.FormFile("file")
-		if err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-
-		category := storageDomain.NormalizeCategory(ctx.PostForm("category"))
-		userId := ctx.MustGet("userid").(string)
-
-		fileDto, err := commonHandler.commonService.UploadFile(userId, file, category)
-		if err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: fileDto,
-			Msg:  commonModel.UPLOAD_SUCCESS,
-		}
-	})
-}
-
-func (commonHandler *CommonHandler) CreateExternalFile() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		userId := ctx.MustGet("userid").(string)
-		var dto commonModel.CreateExternalFileDto
-		if err := ctx.ShouldBindJSON(&dto); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-
-		fileDto, err := commonHandler.commonService.CreateExternalFile(userId, dto)
-		if err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: fileDto,
-			Msg:  commonModel.UPLOAD_SUCCESS,
-		}
-	})
-}
-
-func (commonHandler *CommonHandler) DeleteFile() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		userId := ctx.MustGet("userid").(string)
-
-		var dto commonModel.FileDeleteDto
-		if err := ctx.ShouldBindJSON(&dto); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-
-		if err := commonHandler.commonService.DeleteFile(userId, dto); err != nil {
-			ctx.JSON(
-				http.StatusOK,
-				commonModel.Fail[string](errorUtil.HandleError(&commonModel.ServerError{
-					Msg: "",
-					Err: err,
-				})),
-			)
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Msg: commonModel.DELETE_SUCCESS,
-		}
-	})
 }
 
 func (commonHandler *CommonHandler) GetStatus() gin.HandlerFunc {
@@ -167,65 +80,6 @@ func (commonHandler *CommonHandler) GetRss(ctx *gin.Context) {
 	ctx.Data(http.StatusOK, "application/rss+xml; charset=utf-8", []byte(atom))
 }
 
-func (commonHandler *CommonHandler) UploadAudioFile() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		userId := ctx.MustGet("userid").(string)
-
-		file, err := ctx.FormFile("file")
-		if err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-
-		audioFile, err := commonHandler.commonService.UploadAudioFile(userId, file)
-		if err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: audioFile,
-			Msg:  commonModel.UPLOAD_SUCCESS,
-		}
-	})
-}
-
-func (commonHandler *CommonHandler) DeleteAudioFile() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		userId := ctx.MustGet("userid").(string)
-
-		if err := commonHandler.commonService.DeleteAudioFile(userId); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Msg: commonModel.DELETE_SUCCESS,
-		}
-	})
-}
-
-func (commonHandler *CommonHandler) GetCurrentAudio() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		audioURL := commonHandler.commonService.GetCurrentAudioURL()
-
-		return res.Response{
-			Data: audioURL,
-			Msg:  commonModel.GET_MUSIC_URL_SUCCESS,
-		}
-	})
-}
-
-func (commonHandler *CommonHandler) StreamCurrentAudio(ctx *gin.Context) {
-	commonHandler.commonService.StreamCurrentAudio(ctx)
-}
-
 func (commonHandler *CommonHandler) HelloEch0() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		hello := struct {
@@ -254,32 +108,6 @@ func (commonHandler *CommonHandler) Healthz() gin.HandlerFunc {
 			}{
 				Status: "ok",
 			},
-		}
-	})
-}
-
-func (commonHandler *CommonHandler) GetFilePresignURL() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		userId := ctx.MustGet("userid").(string)
-		var s3Dto commonModel.GetPresignURLDto
-		if err := ctx.ShouldBindJSON(&s3Dto); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-
-		presignDto, err := commonHandler.commonService.GetFilePresignURL(userId, &s3Dto, "PUT")
-		if err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: presignDto,
-			Msg:  commonModel.GET_S3_PRESIGN_URL_SUCCESS,
 		}
 	})
 }

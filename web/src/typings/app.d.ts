@@ -86,7 +86,7 @@ declare namespace App {
       type CreateExternalFileDto = {
         url: string
         content_type?: string
-        category?: string
+        category?: Category
         width?: number
         height?: number
         name?: string
@@ -140,14 +140,14 @@ declare namespace App {
         file?: {
           id: string
           key: string
-          storage_type: string
+          storage_type: File.StorageType
           provider?: string
           bucket?: string
           url: string
           name?: string
           content_type?: string
           size?: number
-          category?: string
+          category?: File.Category
           user_id?: string
           width?: number
           height?: number
@@ -234,6 +234,7 @@ declare namespace App {
       }
 
       type PresignResult = {
+        id: string
         file_name: string
         content_type: string
         key: string

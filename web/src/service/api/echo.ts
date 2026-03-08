@@ -76,18 +76,6 @@ export function fetchGetGithubRepo(githubRepo: { owner: string; repo: string }) 
   })
 }
 
-// 获取预签名URL
-export function fetchGetPresignedUrl(fileName: string, contentType?: string) {
-  return request<App.Api.Ech0.PresignResult>({
-    url: `/files/presign`,
-    method: 'PUT',
-    data: {
-      file_name: fileName,
-      content_type: contentType,
-    },
-  })
-}
-
 // 获取标签列表
 export function fetchGetTags() {
   return request<App.Api.Ech0.Tag[]>({

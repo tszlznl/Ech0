@@ -10,26 +10,19 @@ import (
 	"github.com/lin-snow/ech0/internal/config"
 )
 
-func ProvideFS() virefs.FS {
-	return NewFS(config.Config().Storage)
-}
-
-func ProvideURLResolver() URLResolver {
-	return NewURLResolver(config.Config().Storage)
-}
+func ProvideStorageManager(store S3SettingStore) *Manager { return NewStorageManager(store) }
 
 var (
-	FSSet          = wire.NewSet(ProvideFS)
-	URLResolverSet = wire.NewSet(ProvideURLResolver)
-	ProviderSet    = wire.NewSet(FSSet, URLResolverSet)
+	ManagerSet  = wire.NewSet(ProvideStorageManager)
+	ProviderSet = wire.NewSet(ManagerSet)
 )
 
 // NewFS builds a virefs.FS based on the given StorageConfig.
 // File classification (images/, audios/, etc.) is handled by VireFS Schema.
 func NewFS(cfg config.StorageConfig) virefs.FS {
 	schema := NewFileSchema()
-	switch strings.ToLower(strings.TrimSpace(cfg.Mode)) {
-	case "s3":
+	switch NormalizeStorageMode(cfg.Mode) {
+	case StorageModeObject:
 		return buildS3FS(cfg, schema)
 	default:
 		return buildLocalFS(cfg, schema)
@@ -40,8 +33,8 @@ func NewFS(cfg config.StorageConfig) virefs.FS {
 // It applies schema.Resolve internally so callers just pass flat keys.
 func NewURLResolver(cfg config.StorageConfig) URLResolver {
 	schema := NewFileSchema()
-	switch strings.ToLower(strings.TrimSpace(cfg.Mode)) {
-	case "s3":
+	switch NormalizeStorageMode(cfg.Mode) {
+	case StorageModeObject:
 		return buildS3URLResolver(cfg, schema)
 	default:
 		return buildLocalURLResolver(schema)
@@ -77,6 +70,7 @@ func buildLocalURLResolver(schema *virefs.Schema) URLResolver {
 
 func buildS3FS(cfg config.StorageConfig, schema *virefs.Schema) virefs.FS {
 	provider := mapProvider(cfg.Provider)
+	region := resolveObjectRegion(cfg.Provider, cfg.Region)
 
 	var opts []virefs.ObjectOption
 	if cfg.PathPrefix != "" {
@@ -89,7 +83,7 @@ func buildS3FS(cfg config.StorageConfig, schema *virefs.Schema) virefs.FS {
 	fs, err := virefs.NewObjectFSFromConfig(context.Background(), &virefs.S3Config{
 		Provider:  provider,
 		Endpoint:  endpoint,
-		Region:    cfg.Region,
+		Region:    region,
 		Bucket:    cfg.BucketName,
 		AccessKey: cfg.AccessKey,
 		SecretKey: cfg.SecretKey,
@@ -152,5 +146,18 @@ func mapProvider(raw string) virefs.Provider {
 		return virefs.ProviderR2
 	default:
 		return virefs.ProviderAWS
+	}
+}
+
+func resolveObjectRegion(providerRaw string, regionRaw string) string {
+	region := strings.TrimSpace(regionRaw)
+	if region != "" {
+		return region
+	}
+	switch strings.ToLower(strings.TrimSpace(providerRaw)) {
+	case "r2", "other":
+		return "auto"
+	default:
+		return "us-east-1"
 	}
 }

@@ -8,6 +8,7 @@ import (
 	connectHandler "github.com/lin-snow/ech0/internal/handler/connect"
 	dashboardHandler "github.com/lin-snow/ech0/internal/handler/dashboard"
 	echoHandler "github.com/lin-snow/ech0/internal/handler/echo"
+	fileHandler "github.com/lin-snow/ech0/internal/handler/file"
 	inboxHandler "github.com/lin-snow/ech0/internal/handler/inbox"
 	settingHandler "github.com/lin-snow/ech0/internal/handler/setting"
 	todoHandler "github.com/lin-snow/ech0/internal/handler/todo"
@@ -19,6 +20,7 @@ var (
 	WebSet       = wire.NewSet(webHandler.NewWebHandler)
 	UserSet      = wire.NewSet(userHandler.NewUserHandler)
 	EchoSet      = wire.NewSet(echoHandler.NewEchoHandler)
+	FileSet      = wire.NewSet(fileHandler.NewFileHandler)
 	CommonSet    = wire.NewSet(commonHandler.NewCommonHandler)
 	SettingSet   = wire.NewSet(settingHandler.NewSettingHandler)
 	TodoSet      = wire.NewSet(todoHandler.NewTodoHandler)

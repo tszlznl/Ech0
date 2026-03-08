@@ -6,7 +6,7 @@ import (
 	"github.com/lin-snow/ech0/internal/cache"
 	model "github.com/lin-snow/ech0/internal/model/common"
 	agentService "github.com/lin-snow/ech0/internal/service/agent"
-	commonService "github.com/lin-snow/ech0/internal/service/common"
+	fileService "github.com/lin-snow/ech0/internal/service/file"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"gorm.io/gorm"
@@ -18,7 +18,7 @@ type KeyValueRepository struct {
 }
 
 var (
-	_ commonService.KeyValueRepository  = (*KeyValueRepository)(nil)
+	_ fileService.KeyValueRepository    = (*KeyValueRepository)(nil)
 	_ settingService.KeyValueRepository = (*KeyValueRepository)(nil)
 	_ agentService.KeyValueRepository   = (*KeyValueRepository)(nil)
 )

@@ -14,7 +14,7 @@ import (
 	publisher "github.com/lin-snow/ech0/internal/event/publisher"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	queueRepository "github.com/lin-snow/ech0/internal/repository/queue"
-	commonService "github.com/lin-snow/ech0/internal/service/common"
+	fileService "github.com/lin-snow/ech0/internal/service/file"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"go.uber.org/zap"
@@ -23,7 +23,7 @@ import (
 
 type Tasker struct {
 	scheduler      gocron.Scheduler
-	commonService  commonService.Service
+	fileService    fileService.Service
 	settingService settingService.Service
 	publisher      *publisher.Publisher
 	queueRepo      *queueRepository.QueueRepository
@@ -38,7 +38,7 @@ func (t *Tasker) Name() string {
 }
 
 func NewTasker(
-	commonService commonService.Service,
+	fileSvc fileService.Service,
 	settingService settingService.Service,
 	publisher *publisher.Publisher,
 	queueRepo *queueRepository.QueueRepository,
@@ -53,7 +53,7 @@ func NewTasker(
 
 	return &Tasker{
 		scheduler:      scheduler,
-		commonService:  commonService,
+		fileService:    fileSvc,
 		settingService: settingService,
 		publisher:      publisher,
 		queueRepo:      queueRepo,
@@ -122,7 +122,7 @@ func (t *Tasker) CleanupTempFilesTask() error {
 		gocron.DurationJob(72*time.Hour),
 		gocron.NewTask(
 			func() {
-				if err := t.commonService.CleanupOrphanFiles(); err != nil {
+				if err := t.fileService.CleanupOrphanFiles(); err != nil {
 					logUtil.GetLogger().
 						Error("Failed to clean up temporary files", zap.String("error", err.Error()))
 				}

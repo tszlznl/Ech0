@@ -24,6 +24,14 @@ export enum StorageType {
   EXTERNAL = 'external',
 }
 
+export enum FileCategory {
+  IMAGE = 'image',
+  AUDIO = 'audio',
+  VIDEO = 'video',
+  DOCUMENT = 'document',
+  FILE = 'file',
+}
+
 // 图片布局
 export enum ImageLayout {
   WATERFALL = 'waterfall', // 瀑布流布局

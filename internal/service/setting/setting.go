@@ -12,6 +12,7 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
+	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/transaction"
 	fmtUtil "github.com/lin-snow/ech0/internal/util/format"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
@@ -24,6 +25,7 @@ import (
 type SettingService struct {
 	transactor         transaction.Transactor
 	commonService      CommonService
+	storageManager     *storage.Manager
 	keyvalueRepository KeyValueRepository
 	settingRepository  SettingRepository
 	webhookRepository  WebhookRepository
@@ -33,6 +35,7 @@ type SettingService struct {
 func NewSettingService(
 	tx transaction.Transactor,
 	commonService CommonService,
+	storageManager *storage.Manager,
 	keyvalueRepository KeyValueRepository,
 	settingRepository SettingRepository,
 	webhookRepository WebhookRepository,
@@ -41,6 +44,7 @@ func NewSettingService(
 	return &SettingService{
 		transactor:         tx,
 		commonService:      commonService,
+		storageManager:     storageManager,
 		keyvalueRepository: keyvalueRepository,
 		webhookRepository:  webhookRepository,
 		settingRepository:  settingRepository,
@@ -225,17 +229,18 @@ func (settingService *SettingService) GetS3Setting(userid string, setting *model
 	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		s3Setting, err := settingService.keyvalueRepository.GetKeyValue(ctx, commonModel.S3SettingKey)
 		if err != nil {
-			// 数据库中不存在数据，手动添加初始数据
-			setting.Enable = false
-			setting.Provider = string(commonModel.MINIO)
-			setting.Endpoint = ""
-			setting.AccessKey = ""
-			setting.SecretKey = ""
-			setting.BucketName = ""
-			setting.Region = ""
-			setting.UseSSL = false
-			setting.CDNURL = ""
-			setting.PathPrefix = ""
+			// 数据库缺失时回退到 config 默认值
+			cfg := config.Config().Storage
+			setting.Enable = cfg.ObjectEnabled || storage.NormalizeStorageMode(cfg.Mode) == storage.StorageModeObject
+			setting.Provider = strings.TrimSpace(cfg.Provider)
+			setting.Endpoint = strings.TrimPrefix(strings.TrimPrefix(strings.TrimSpace(cfg.Endpoint), "http://"), "https://")
+			setting.AccessKey = cfg.AccessKey
+			setting.SecretKey = cfg.SecretKey
+			setting.BucketName = cfg.BucketName
+			setting.Region = strings.TrimSpace(cfg.Region)
+			setting.UseSSL = cfg.UseSSL
+			setting.CDNURL = strings.TrimRight(strings.TrimSpace(cfg.CDNURL), "/")
+			setting.PathPrefix = strings.Trim(strings.TrimSpace(cfg.PathPrefix), "/")
 			setting.PublicRead = true
 
 			// 序列化为 JSON
@@ -290,7 +295,10 @@ func (settingService *SettingService) UpdateS3Setting(
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
+	oldRaw, _ := settingService.keyvalueRepository.GetKeyValue(context.Background(), commonModel.S3SettingKey)
+	var appliedSetting *model.S3Setting
+
+	err = settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		// 检查endpoint是否为http(s)动态改变USE SSL
 		if strings.HasPrefix(strings.ToLower(strings.TrimSpace(newSetting.Endpoint)), "https://") {
 			newSetting.UseSSL = true
@@ -331,7 +339,13 @@ func (settingService *SettingService) UpdateS3Setting(
 			}
 			s3Setting.UseSSL = true
 		case string(commonModel.AWS):
+			if s3Setting.Region == "" {
+				s3Setting.Region = "us-east-1"
+			}
 		case string(commonModel.MINIO):
+			if s3Setting.Region == "" {
+				s3Setting.Region = "us-east-1"
+			}
 		case string(commonModel.OTHER):
 			// 其他 S3 兼容厂商（Backblaze、Wasabi、Ceph 等）
 			if s3Setting.Region == "" {
@@ -346,12 +360,31 @@ func (settingService *SettingService) UpdateS3Setting(
 			return err
 		}
 
-		if err := settingService.keyvalueRepository.UpdateKeyValue(ctx, commonModel.S3SettingKey, string(settingToJSON)); err != nil {
+		if err := settingService.keyvalueRepository.AddOrUpdateKeyValue(ctx, commonModel.S3SettingKey, string(settingToJSON)); err != nil {
 			return err
 		}
 
+		appliedSetting = s3Setting
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	if settingService.storageManager != nil && appliedSetting != nil {
+		if err := settingService.storageManager.ApplyS3Setting(*appliedSetting); err != nil {
+			_ = settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
+				if strings.TrimSpace(oldRaw) == "" {
+					return settingService.keyvalueRepository.DeleteKeyValue(ctx, commonModel.S3SettingKey)
+				}
+				return settingService.keyvalueRepository.AddOrUpdateKeyValue(ctx, commonModel.S3SettingKey, oldRaw)
+			})
+			_ = settingService.storageManager.ReloadFromConfigAndDB(context.Background())
+			return err
+		}
+	}
+
+	return nil
 }
 
 // GetOAuth2Setting 获取 OAuth2 设置

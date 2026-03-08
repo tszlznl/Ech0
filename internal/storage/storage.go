@@ -4,6 +4,8 @@ import "strings"
 
 // Category classifies uploaded files.
 type Category string
+type StorageType string
+type StorageMode string
 
 const (
 	CategoryImage    Category = "image"
@@ -12,6 +14,17 @@ const (
 	CategoryPDF      Category = "pdf"
 	CategoryMarkdown Category = "markdown"
 	CategoryFile     Category = "file"
+)
+
+const (
+	StorageTypeLocal    StorageType = "local"
+	StorageTypeObject   StorageType = "object"
+	StorageTypeExternal StorageType = "external"
+)
+
+const (
+	StorageModeLocal  StorageMode = "local"
+	StorageModeObject StorageMode = "object"
 )
 
 // NormalizeCategory maps an arbitrary string to a known Category.
@@ -35,6 +48,28 @@ func NormalizeCategory(raw string) Category {
 // IsImageLike reports whether the category represents visual media.
 func (c Category) IsImageLike() bool {
 	return c == CategoryImage
+}
+
+func NormalizeStorageType(raw string) StorageType {
+	switch StorageType(strings.ToLower(strings.TrimSpace(raw))) {
+	case "s3":
+		return StorageTypeObject
+	case StorageTypeObject:
+		return StorageTypeObject
+	case StorageTypeExternal:
+		return StorageTypeExternal
+	default:
+		return StorageTypeLocal
+	}
+}
+
+func NormalizeStorageMode(raw string) StorageMode {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case string(StorageModeObject), "s3":
+		return StorageModeObject
+	default:
+		return StorageModeLocal
+	}
 }
 
 // URLResolver maps a VireFS key to a publicly accessible URL.
