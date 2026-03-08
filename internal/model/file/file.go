@@ -34,8 +34,8 @@ type EchoFile struct {
 	ID        string `gorm:"type:char(36);primaryKey"                        json:"id"`
 	EchoID    string `gorm:"type:char(36);uniqueIndex:idx_echo_file;not null" json:"echo_id"`
 	FileID    string `gorm:"type:char(36);uniqueIndex:idx_echo_file;not null" json:"file_id"`
-	File      File `gorm:"foreignKey:FileID;constraint:OnDelete:CASCADE" json:"file,omitempty"`
-	SortOrder int  `gorm:"default:0"                                   json:"sort_order"`
+	File      File   `gorm:"foreignKey:FileID;constraint:OnDelete:CASCADE" json:"file,omitempty"`
+	SortOrder int    `gorm:"default:0"                                   json:"sort_order"`
 }
 
 func (f *File) BeforeCreate(_ *gorm.DB) error {
