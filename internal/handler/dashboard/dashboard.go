@@ -13,10 +13,10 @@ import (
 )
 
 type DashboardHandler struct {
-	dashboardService *service.DashboardService
+	dashboardService service.Service
 }
 
-func NewDashboardHandler(dashboardService *service.DashboardService) *DashboardHandler {
+func NewDashboardHandler(dashboardService service.Service) *DashboardHandler {
 	return &DashboardHandler{
 		dashboardService: dashboardService,
 	}

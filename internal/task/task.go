@@ -23,10 +23,10 @@ import (
 
 type Tasker struct {
 	scheduler      gocron.Scheduler
-	commonService  *commonService.CommonService
-	settingService *settingService.SettingService
+	commonService  commonService.Service
+	settingService settingService.Service
 	publisher      *publisher.Publisher
-	queueRepo      queueRepository.QueueRepositoryInterface
+	queueRepo      *queueRepository.QueueRepository
 	started        bool
 	mu             sync.Mutex
 }
@@ -38,10 +38,10 @@ func (t *Tasker) Name() string {
 }
 
 func NewTasker(
-	commonService *commonService.CommonService,
-	settingService *settingService.SettingService,
+	commonService commonService.Service,
+	settingService settingService.Service,
 	publisher *publisher.Publisher,
-	queueRepo queueRepository.QueueRepositoryInterface,
+	queueRepo *queueRepository.QueueRepository,
 ) *Tasker {
 	scheduler, err := gocron.NewScheduler()
 	if err != nil {

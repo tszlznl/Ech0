@@ -10,6 +10,7 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/echo"
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
+	echoService "github.com/lin-snow/ech0/internal/service/echo"
 	"github.com/lin-snow/ech0/internal/transaction"
 	timezoneUtil "github.com/lin-snow/ech0/internal/util/timezone"
 	"gorm.io/gorm"
@@ -20,10 +21,12 @@ type EchoRepository struct {
 	cache cache.ICache[string, any]
 }
 
+var _ echoService.Repository = (*EchoRepository)(nil)
+
 func NewEchoRepository(
 	dbProvider func() *gorm.DB,
 	cache cache.ICache[string, any],
-) EchoRepositoryInterface {
+) *EchoRepository {
 	return &EchoRepository{db: dbProvider, cache: cache}
 }
 

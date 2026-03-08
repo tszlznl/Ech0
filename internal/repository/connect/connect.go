@@ -4,6 +4,7 @@ import (
 	"context"
 
 	model "github.com/lin-snow/ech0/internal/model/connect"
+	connectService "github.com/lin-snow/ech0/internal/service/connect"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"gorm.io/gorm"
 )
@@ -12,7 +13,9 @@ type ConnectRepository struct {
 	db func() *gorm.DB
 }
 
-func NewConnectRepository(dbProvider func() *gorm.DB) ConnectRepositoryInterface {
+var _ connectService.Repository = (*ConnectRepository)(nil)
+
+func NewConnectRepository(dbProvider func() *gorm.DB) *ConnectRepository {
 	return &ConnectRepository{
 		db: dbProvider,
 	}

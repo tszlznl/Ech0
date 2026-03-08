@@ -7,6 +7,7 @@ import (
 	"github.com/lin-snow/ech0/internal/cache"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	model "github.com/lin-snow/ech0/internal/model/user"
+	userService "github.com/lin-snow/ech0/internal/service/user"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"gorm.io/gorm"
 )
@@ -16,10 +17,12 @@ type UserRepository struct {
 	cache cache.ICache[string, any]
 }
 
+var _ userService.Repository = (*UserRepository)(nil)
+
 func NewUserRepository(
 	dbProvider func() *gorm.DB,
 	cache cache.ICache[string, any],
-) UserRepositoryInterface {
+) *UserRepository {
 	return &UserRepository{
 		db:    dbProvider,
 		cache: cache,

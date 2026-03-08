@@ -7,21 +7,19 @@ import (
 
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/todo"
-	repository "github.com/lin-snow/ech0/internal/repository/todo"
-	commonService "github.com/lin-snow/ech0/internal/service/common"
 	"github.com/lin-snow/ech0/internal/transaction"
 )
 
 type TodoService struct {
-	transactor     transaction.Transactor             // 事务执行器
-	todoRepository repository.TodoRepositoryInterface // To do数据层接口
-	commonService  *commonService.CommonService       // 公共服务接口
+	transactor     transaction.Transactor // 事务执行器
+	todoRepository Repository             // To do数据层接口
+	commonService  CommonService          // 公共服务接口
 }
 
 func NewTodoService(
 	tx transaction.Transactor,
-	todoRepository repository.TodoRepositoryInterface,
-	commonService *commonService.CommonService,
+	todoRepository Repository,
+	commonService CommonService,
 ) *TodoService {
 	return &TodoService{
 		transactor:     tx,

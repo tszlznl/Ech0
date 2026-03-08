@@ -4,6 +4,7 @@ import (
 	"context"
 
 	model "github.com/lin-snow/ech0/internal/model/webhook"
+	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"gorm.io/gorm"
 )
@@ -12,7 +13,9 @@ type WebhookRepository struct {
 	db func() *gorm.DB
 }
 
-func NewWebhookRepository(dbProvider func() *gorm.DB) WebhookRepositoryInterface {
+var _ settingService.WebhookRepository = (*WebhookRepository)(nil)
+
+func NewWebhookRepository(dbProvider func() *gorm.DB) *WebhookRepository {
 	return &WebhookRepository{
 		db: dbProvider,
 	}

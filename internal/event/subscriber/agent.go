@@ -8,34 +8,18 @@ import (
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
-	echoRepository "github.com/lin-snow/ech0/internal/repository/echo"
-	inboxRepository "github.com/lin-snow/ech0/internal/repository/inbox"
-	keyvalue "github.com/lin-snow/ech0/internal/repository/keyvalue"
-	todoRepository "github.com/lin-snow/ech0/internal/repository/todo"
-	userRepository "github.com/lin-snow/ech0/internal/repository/user"
+	agentService "github.com/lin-snow/ech0/internal/service/agent"
 )
 
 type AgentProcessor struct {
-	echoRepo     echoRepository.EchoRepositoryInterface
-	todoRepo     todoRepository.TodoRepositoryInterface
-	userRepo     userRepository.UserRepositoryInterface
-	keyvalueRepo keyvalue.KeyValueRepositoryInterface
-	inboxRepo    inboxRepository.InboxRepositoryInterface
+	keyvalueRepo agentService.KeyValueRepository
 }
 
 func NewAgentProcessor(
-	echoRepo echoRepository.EchoRepositoryInterface,
-	todoRepo todoRepository.TodoRepositoryInterface,
-	userRepo userRepository.UserRepositoryInterface,
-	keyvalueRepo keyvalue.KeyValueRepositoryInterface,
-	inboxRepo inboxRepository.InboxRepositoryInterface,
+	keyvalueRepo agentService.KeyValueRepository,
 ) *AgentProcessor {
 	return &AgentProcessor{
-		echoRepo:     echoRepo,
-		todoRepo:     todoRepo,
-		userRepo:     userRepo,
 		keyvalueRepo: keyvalueRepo,
-		inboxRepo:    inboxRepo,
 	}
 }
 

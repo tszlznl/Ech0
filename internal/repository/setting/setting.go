@@ -4,6 +4,7 @@ import (
 	"context"
 
 	model "github.com/lin-snow/ech0/internal/model/setting"
+	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"gorm.io/gorm"
 )
@@ -12,7 +13,9 @@ type SettingRepository struct {
 	db func() *gorm.DB
 }
 
-func NewSettingRepository(dbProvider func() *gorm.DB) SettingRepositoryInterface {
+var _ settingService.SettingRepository = (*SettingRepository)(nil)
+
+func NewSettingRepository(dbProvider func() *gorm.DB) *SettingRepository {
 	return &SettingRepository{
 		db: dbProvider,
 	}

@@ -31,16 +31,16 @@ import (
 	"github.com/lin-snow/ech0/internal/metric"
 	"github.com/lin-snow/ech0/internal/monitor"
 	repository11 "github.com/lin-snow/ech0/internal/repository"
-	repository7 "github.com/lin-snow/ech0/internal/repository/common"
+	repository5 "github.com/lin-snow/ech0/internal/repository/common"
 	repository10 "github.com/lin-snow/ech0/internal/repository/connect"
-	repository3 "github.com/lin-snow/ech0/internal/repository/echo"
-	repository8 "github.com/lin-snow/ech0/internal/repository/file"
-	repository6 "github.com/lin-snow/ech0/internal/repository/inbox"
+	repository8 "github.com/lin-snow/ech0/internal/repository/echo"
+	repository6 "github.com/lin-snow/ech0/internal/repository/file"
+	repository3 "github.com/lin-snow/ech0/internal/repository/inbox"
 	"github.com/lin-snow/ech0/internal/repository/keyvalue"
 	repository2 "github.com/lin-snow/ech0/internal/repository/queue"
-	repository9 "github.com/lin-snow/ech0/internal/repository/setting"
-	repository4 "github.com/lin-snow/ech0/internal/repository/todo"
-	repository5 "github.com/lin-snow/ech0/internal/repository/user"
+	repository7 "github.com/lin-snow/ech0/internal/repository/setting"
+	repository9 "github.com/lin-snow/ech0/internal/repository/todo"
+	repository4 "github.com/lin-snow/ech0/internal/repository/user"
 	"github.com/lin-snow/ech0/internal/repository/webhook"
 	"github.com/lin-snow/ech0/internal/server"
 	service11 "github.com/lin-snow/ech0/internal/service"
@@ -100,18 +100,15 @@ func BuildWebApp() (*app.App, func(), error) {
 }
 
 func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() *busen.Bus, appCache cache.ICache[string, any], tx transaction.Transactor, backupScheduleApplier subscriber.BackupScheduleApplier) (*registry.EventRegistrar, error) {
-	webhookRepositoryInterface := repository.NewWebhookRepository(dbProvider)
-	queueRepositoryInterface := repository2.NewQueueRepository(dbProvider)
-	webhookDispatcher := subscriber.NewWebhookDispatcher(webhookRepositoryInterface, queueRepositoryInterface, tx)
-	deadLetterResolver := subscriber.NewDeadLetterResolver(queueRepositoryInterface, webhookDispatcher)
+	webhookRepository := repository.NewWebhookRepository(dbProvider)
+	queueRepository := repository2.NewQueueRepository(dbProvider)
+	webhookDispatcher := subscriber.NewWebhookDispatcher(webhookRepository, queueRepository, tx)
+	deadLetterResolver := subscriber.NewDeadLetterResolver(queueRepository, webhookDispatcher)
 	backupScheduler := subscriber.NewBackupScheduler(backupScheduleApplier)
-	echoRepositoryInterface := repository3.NewEchoRepository(dbProvider, appCache)
-	todoRepositoryInterface := repository4.NewTodoRepository(dbProvider, appCache)
-	userRepositoryInterface := repository5.NewUserRepository(dbProvider, appCache)
-	keyValueRepositoryInterface := keyvalue.NewKeyValueRepository(dbProvider, appCache)
-	inboxRepositoryInterface := repository6.NewInboxRepository(dbProvider)
-	agentProcessor := subscriber.NewAgentProcessor(echoRepositoryInterface, todoRepositoryInterface, userRepositoryInterface, keyValueRepositoryInterface, inboxRepositoryInterface)
-	inboxDispatcher := subscriber.NewInboxDispatcher(inboxRepositoryInterface, keyValueRepositoryInterface)
+	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
+	agentProcessor := subscriber.NewAgentProcessor(keyValueRepository)
+	inboxRepository := repository3.NewInboxRepository(dbProvider)
+	inboxDispatcher := subscriber.NewInboxDispatcher(inboxRepository, keyValueRepository)
 	eventHandlers := registry.NewEventHandlers(webhookDispatcher, deadLetterResolver, backupScheduler, agentProcessor, inboxDispatcher)
 	eventRegistrar := registry.NewEventRegistry(ebProvider, eventHandlers)
 	return eventRegistrar, nil
@@ -120,40 +117,40 @@ func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() *busen.Bu
 // BuildHandlers 使用 wire 生成的代码来构建 Handlers 实例。
 func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor, ebProvider func() *busen.Bus) (*handler.Bundle, error) {
 	webHandler := handler2.NewWebHandler()
-	userRepositoryInterface := repository5.NewUserRepository(dbProvider, appCache)
-	commonRepositoryInterface := repository7.NewCommonRepository(dbProvider)
-	echoRepositoryInterface := repository3.NewEchoRepository(dbProvider, appCache)
-	keyValueRepositoryInterface := keyvalue.NewKeyValueRepository(dbProvider, appCache)
-	fileRepositoryInterface := repository8.NewFileRepository(dbProvider)
+	userRepository := repository4.NewUserRepository(dbProvider, appCache)
+	commonRepository := repository5.NewCommonRepository(dbProvider)
+	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
+	fileRepository := repository6.NewFileRepository(dbProvider)
 	fs := storage.ProvideFS()
 	urlResolver := storage.ProvideURLResolver()
 	publisherPublisher := publisher.New(ebProvider)
-	commonService := service.NewCommonService(tx, commonRepositoryInterface, echoRepositoryInterface, keyValueRepositoryInterface, fileRepositoryInterface, fs, urlResolver, publisherPublisher)
-	settingRepositoryInterface := repository9.NewSettingRepository(dbProvider)
-	webhookRepositoryInterface := repository.NewWebhookRepository(dbProvider)
-	settingService := service2.NewSettingService(tx, commonService, keyValueRepositoryInterface, settingRepositoryInterface, webhookRepositoryInterface, publisherPublisher)
-	userService := service3.NewUserService(tx, userRepositoryInterface, settingService, publisherPublisher)
+	commonService := service.NewCommonService(tx, commonRepository, keyValueRepository, fileRepository, fs, urlResolver, publisherPublisher)
+	settingRepository := repository7.NewSettingRepository(dbProvider)
+	webhookRepository := repository.NewWebhookRepository(dbProvider)
+	settingService := service2.NewSettingService(tx, commonService, keyValueRepository, settingRepository, webhookRepository, publisherPublisher)
+	userService := service3.NewUserService(tx, userRepository, settingService, publisherPublisher)
 	userHandler := handler3.NewUserHandler(userService)
-	echoService := service4.NewEchoService(tx, commonService, echoRepositoryInterface, commonRepositoryInterface, keyValueRepositoryInterface, publisherPublisher)
+	echoRepository := repository8.NewEchoRepository(dbProvider, appCache)
+	echoService := service4.NewEchoService(tx, commonService, echoRepository, publisherPublisher)
 	echoHandler := handler4.NewEchoHandler(echoService)
 	commonHandler := handler5.NewCommonHandler(commonService)
 	settingHandler := handler6.NewSettingHandler(settingService)
-	inboxRepositoryInterface := repository6.NewInboxRepository(dbProvider)
-	inboxService := service5.NewInboxService(tx, commonService, inboxRepositoryInterface)
+	inboxRepository := repository3.NewInboxRepository(dbProvider)
+	inboxService := service5.NewInboxService(tx, commonService, inboxRepository)
 	inboxHandler := handler7.NewInboxHandler(inboxService)
-	todoRepositoryInterface := repository4.NewTodoRepository(dbProvider, appCache)
-	todoService := service6.NewTodoService(tx, todoRepositoryInterface, commonService)
+	todoRepository := repository9.NewTodoRepository(dbProvider, appCache)
+	todoService := service6.NewTodoService(tx, todoRepository, commonService)
 	todoHandler := handler8.NewTodoHandler(todoService)
-	connectRepositoryInterface := repository10.NewConnectRepository(dbProvider)
-	connectService := service7.NewConnectService(tx, connectRepositoryInterface, echoRepositoryInterface, commonService, settingService)
+	connectRepository := repository10.NewConnectRepository(dbProvider)
+	connectService := service7.NewConnectService(tx, connectRepository, echoRepository, commonService, settingService)
 	connectHandler := handler9.NewConnectHandler(connectService)
 	backupService := service8.NewBackupService(commonService, publisherPublisher)
 	backupHandler := handler10.NewBackupHandler(backupService)
 	metricCollector := metric.NewSystemCollector()
 	monitorMonitor := monitor.NewMonitor(metricCollector)
-	dashboardService := service9.NewDashboardService(monitorMonitor, commonService)
+	dashboardService := service9.NewDashboardService(monitorMonitor)
 	dashboardHandler := handler11.NewDashboardHandler(dashboardService)
-	agentService := service10.NewAgentService(settingService, echoService, todoService, keyValueRepositoryInterface)
+	agentService := service10.NewAgentService(settingService, echoService, todoService, keyValueRepository)
 	agentHandler := handler12.NewAgentHandler(agentService)
 	bundle := handler.NewBundle(webHandler, userHandler, echoHandler, commonHandler, settingHandler, inboxHandler, todoHandler, connectHandler, backupHandler, dashboardHandler, agentHandler)
 	return bundle, nil
@@ -178,19 +175,18 @@ func BuildServer() (*server.Server, error) {
 }
 
 func BuildTasker(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor, ebProvider func() *busen.Bus) (*task.Tasker, error) {
-	commonRepositoryInterface := repository7.NewCommonRepository(dbProvider)
-	echoRepositoryInterface := repository3.NewEchoRepository(dbProvider, appCache)
-	keyValueRepositoryInterface := keyvalue.NewKeyValueRepository(dbProvider, appCache)
-	fileRepositoryInterface := repository8.NewFileRepository(dbProvider)
+	commonRepository := repository5.NewCommonRepository(dbProvider)
+	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
+	fileRepository := repository6.NewFileRepository(dbProvider)
 	fs := storage.ProvideFS()
 	urlResolver := storage.ProvideURLResolver()
 	publisherPublisher := publisher.New(ebProvider)
-	commonService := service.NewCommonService(tx, commonRepositoryInterface, echoRepositoryInterface, keyValueRepositoryInterface, fileRepositoryInterface, fs, urlResolver, publisherPublisher)
-	settingRepositoryInterface := repository9.NewSettingRepository(dbProvider)
-	webhookRepositoryInterface := repository.NewWebhookRepository(dbProvider)
-	settingService := service2.NewSettingService(tx, commonService, keyValueRepositoryInterface, settingRepositoryInterface, webhookRepositoryInterface, publisherPublisher)
-	queueRepositoryInterface := repository2.NewQueueRepository(dbProvider)
-	tasker := task.NewTasker(commonService, settingService, publisherPublisher, queueRepositoryInterface)
+	commonService := service.NewCommonService(tx, commonRepository, keyValueRepository, fileRepository, fs, urlResolver, publisherPublisher)
+	settingRepository := repository7.NewSettingRepository(dbProvider)
+	webhookRepository := repository.NewWebhookRepository(dbProvider)
+	settingService := service2.NewSettingService(tx, commonService, keyValueRepository, settingRepository, webhookRepository, publisherPublisher)
+	queueRepository := repository2.NewQueueRepository(dbProvider)
+	tasker := task.NewTasker(commonService, settingService, publisherPublisher, queueRepository)
 	return tasker, nil
 }
 

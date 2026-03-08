@@ -10,10 +10,6 @@ import (
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/echo"
-	commonRepository "github.com/lin-snow/ech0/internal/repository/common"
-	repository "github.com/lin-snow/ech0/internal/repository/echo"
-	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
-	commonService "github.com/lin-snow/ech0/internal/service/common"
 	"github.com/lin-snow/ech0/internal/transaction"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
@@ -21,27 +17,21 @@ import (
 
 type EchoService struct {
 	transactor       transaction.Transactor
-	commonService    *commonService.CommonService
-	echoRepository   repository.EchoRepositoryInterface
-	commonRepository commonRepository.CommonRepositoryInterface
-	kvRepository     keyvalueRepository.KeyValueRepositoryInterface
+	commonService    CommonService
+	echoRepository   Repository
 	publisher        *publisher.Publisher
 }
 
 func NewEchoService(
 	tx transaction.Transactor,
-	commonService *commonService.CommonService,
-	echoRepository repository.EchoRepositoryInterface,
-	commonRepository commonRepository.CommonRepositoryInterface,
-	kvRepository keyvalueRepository.KeyValueRepositoryInterface,
+	commonService CommonService,
+	echoRepository Repository,
 	publisher *publisher.Publisher,
 ) *EchoService {
 	return &EchoService{
 		transactor:       tx,
 		commonService:    commonService,
 		echoRepository:   echoRepository,
-		commonRepository: commonRepository,
-		kvRepository:     kvRepository,
 		publisher:        publisher,
 	}
 }

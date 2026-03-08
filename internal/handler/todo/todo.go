@@ -11,11 +11,11 @@ import (
 )
 
 type TodoHandler struct {
-	todoService *service.TodoService
+	todoService service.Service
 }
 
 // NewTodoHandler TodoHandler 的构造函数
-func NewTodoHandler(todoService *service.TodoService) *TodoHandler {
+func NewTodoHandler(todoService service.Service) *TodoHandler {
 	return &TodoHandler{todoService: todoService}
 }
 

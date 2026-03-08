@@ -14,11 +14,11 @@ import (
 )
 
 type UserHandler struct {
-	userService *service.UserService
+	userService service.Service
 }
 
 // NewUserHandler UserHandler 的构造函数
-func NewUserHandler(userService *service.UserService) *UserHandler {
+func NewUserHandler(userService service.Service) *UserHandler {
 	return &UserHandler{
 		userService: userService,
 	}

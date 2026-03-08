@@ -5,6 +5,9 @@ import (
 
 	"github.com/lin-snow/ech0/internal/cache"
 	model "github.com/lin-snow/ech0/internal/model/common"
+	agentService "github.com/lin-snow/ech0/internal/service/agent"
+	commonService "github.com/lin-snow/ech0/internal/service/common"
+	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"gorm.io/gorm"
 )
@@ -14,10 +17,14 @@ type KeyValueRepository struct {
 	cache cache.ICache[string, any]
 }
 
+var _ commonService.KeyValueRepository = (*KeyValueRepository)(nil)
+var _ settingService.KeyValueRepository = (*KeyValueRepository)(nil)
+var _ agentService.KeyValueRepository = (*KeyValueRepository)(nil)
+
 func NewKeyValueRepository(
 	dbProvider func() *gorm.DB,
 	cache cache.ICache[string, any],
-) KeyValueRepositoryInterface {
+) *KeyValueRepository {
 	return &KeyValueRepository{
 		db:    dbProvider,
 		cache: cache,

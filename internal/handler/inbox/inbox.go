@@ -11,11 +11,11 @@ import (
 
 // InboxHandler 负责处理收件箱相关 HTTP 请求
 type InboxHandler struct {
-	inboxService *service.InboxService
+	inboxService service.Service
 }
 
 // NewInboxHandler 创建新的 InboxHandler 实例
-func NewInboxHandler(inboxService *service.InboxService) *InboxHandler {
+func NewInboxHandler(inboxService service.Service) *InboxHandler {
 	return &InboxHandler{inboxService: inboxService}
 }
 

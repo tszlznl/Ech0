@@ -21,10 +21,6 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
-	repository "github.com/lin-snow/ech0/internal/repository/common"
-	echoRepository "github.com/lin-snow/ech0/internal/repository/echo"
-	fileRepository "github.com/lin-snow/ech0/internal/repository/file"
-	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
 	storageDomain "github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/transaction"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
@@ -40,22 +36,20 @@ const globalMusicFileIDKey = "global_music_file_id"
 
 type CommonService struct {
 	transactor         transaction.Transactor
-	commonRepository   repository.CommonRepositoryInterface
+	commonRepository   CommonRepository
 	fs                 virefs.FS
 	resolveURL         storageDomain.URLResolver
-	echoRepository     echoRepository.EchoRepositoryInterface
-	keyvalueRepository keyvalueRepository.KeyValueRepositoryInterface
-	fileRepository     fileRepository.FileRepositoryInterface
+	keyvalueRepository KeyValueRepository
+	fileRepository     FileRepository
 	publisher          *publisher.Publisher
 	keyGen             storageDomain.KeyGenerator
 }
 
 func NewCommonService(
 	tx transaction.Transactor,
-	commonRepository repository.CommonRepositoryInterface,
-	echoRepo echoRepository.EchoRepositoryInterface,
-	kvRepo keyvalueRepository.KeyValueRepositoryInterface,
-	fileRepo fileRepository.FileRepositoryInterface,
+	commonRepository CommonRepository,
+	kvRepo KeyValueRepository,
+	fileRepo FileRepository,
 	fs virefs.FS,
 	resolveURL storageDomain.URLResolver,
 	publisher *publisher.Publisher,
@@ -63,7 +57,6 @@ func NewCommonService(
 	return &CommonService{
 		transactor:         tx,
 		commonRepository:   commonRepository,
-		echoRepository:     echoRepo,
 		keyvalueRepository: kvRepo,
 		fileRepository:     fileRepo,
 		fs:                 fs,

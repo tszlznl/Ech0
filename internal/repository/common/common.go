@@ -6,6 +6,7 @@ import (
 
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
+	commonService "github.com/lin-snow/ech0/internal/service/common"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"gorm.io/gorm"
 )
@@ -14,7 +15,9 @@ type CommonRepository struct {
 	db func() *gorm.DB
 }
 
-func NewCommonRepository(dbProvider func() *gorm.DB) CommonRepositoryInterface {
+var _ commonService.CommonRepository = (*CommonRepository)(nil)
+
+func NewCommonRepository(dbProvider func() *gorm.DB) *CommonRepository {
 	return &CommonRepository{
 		db: dbProvider,
 	}

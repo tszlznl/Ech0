@@ -11,19 +11,24 @@ import (
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	inboxModel "github.com/lin-snow/ech0/internal/model/inbox"
-	inboxRepository "github.com/lin-snow/ech0/internal/repository/inbox"
-	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
+	agentService "github.com/lin-snow/ech0/internal/service/agent"
 	githubUtil "github.com/lin-snow/ech0/internal/util/github"
 	"golang.org/x/mod/semver"
 	"gorm.io/gorm"
 )
 
-type InboxDispatcher struct {
-	inboxRepo    inboxRepository.InboxRepositoryInterface
-	keyvalueRepo keyvalueRepository.KeyValueRepositoryInterface
+type InboxStore interface {
+	PostInbox(ctx context.Context, inbox *inboxModel.Inbox) error
+	GetExpiredReadInboxIDs(ctx context.Context, minReadCount int, readBefore int64) ([]uint, error)
+	ClearReadInboxByIds(ctx context.Context, inboxIDs []uint) error
 }
 
-func NewInboxDispatcher(inboxRepo inboxRepository.InboxRepositoryInterface, keyvalueRepo keyvalueRepository.KeyValueRepositoryInterface) *InboxDispatcher {
+type InboxDispatcher struct {
+	inboxRepo    InboxStore
+	keyvalueRepo agentService.KeyValueRepository
+}
+
+func NewInboxDispatcher(inboxRepo InboxStore, keyvalueRepo agentService.KeyValueRepository) *InboxDispatcher {
 	return &InboxDispatcher{inboxRepo: inboxRepo, keyvalueRepo: keyvalueRepo}
 }
 

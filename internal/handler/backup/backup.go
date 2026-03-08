@@ -11,11 +11,11 @@ import (
 )
 
 type BackupHandler struct {
-	backupService *service.BackupService
+	backupService service.Service
 }
 
 // NewBackupHandler BackupHandler 的构造函数
-func NewBackupHandler(backupService *service.BackupService) *BackupHandler {
+func NewBackupHandler(backupService service.Service) *BackupHandler {
 	return &BackupHandler{
 		backupService: backupService,
 	}

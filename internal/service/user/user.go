@@ -25,8 +25,6 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	model "github.com/lin-snow/ech0/internal/model/user"
-	repository "github.com/lin-snow/ech0/internal/repository/user"
-	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	"github.com/lin-snow/ech0/internal/transaction"
 	cryptoUtil "github.com/lin-snow/ech0/internal/util/crypto"
 	jwtUtil "github.com/lin-snow/ech0/internal/util/jwt"
@@ -36,10 +34,10 @@ import (
 
 // UserService 用户服务结构体，提供用户相关的业务逻辑处理
 type UserService struct {
-	transactor     transaction.Transactor             // 事务执行器
-	userRepository repository.UserRepositoryInterface // 用户数据层接口
-	settingService *settingService.SettingService     // 系统设置数据层接口
-	publisher      *publisher.Publisher               // 事件发布器
+	transactor     transaction.Transactor // 事务执行器
+	userRepository Repository             // 用户数据层接口
+	settingService SettingService         // 系统设置数据层接口
+	publisher      *publisher.Publisher   // 事件发布器
 }
 
 // NewUserService 创建并返回新的用户服务实例
@@ -52,8 +50,8 @@ type UserService struct {
 //   - *UserService: 用户服务实现
 func NewUserService(
 	tx transaction.Transactor,
-	userRepository repository.UserRepositoryInterface,
-	settingService *settingService.SettingService,
+	userRepository Repository,
+	settingService SettingService,
 	publisher *publisher.Publisher,
 ) *UserService {
 	return &UserService{
@@ -1166,6 +1164,10 @@ func (userService *UserService) GetOAuthInfo(
 // -----------------------
 
 const passkeySessionTTL = 5 * time.Minute
+const (
+	passkeyRegKey   = "passkey:reg"
+	passkeyLoginKey = "passkey:login"
+)
 
 type passkeySessionCache struct {
 	Session    webauthn.SessionData
@@ -1201,6 +1203,14 @@ func newNonce() (string, error) {
 		return "", err
 	}
 	return base64.RawURLEncoding.EncodeToString(b), nil
+}
+
+func getPasskeyRegisterSessionKey(nonce string) string {
+	return fmt.Sprintf("%s:%s", passkeyRegKey, nonce)
+}
+
+func getPasskeyLoginSessionKey(nonce string) string {
+	return fmt.Sprintf("%s:%s", passkeyLoginKey, nonce)
 }
 
 func makeUserHandle(userID uint) []byte {
@@ -1296,7 +1306,7 @@ func (userService *UserService) PasskeyRegisterBegin(
 	}
 
 	userService.userRepository.CacheSetPasskeySession(
-		repository.GetPasskeyRegisterSessionKey(nonce),
+		getPasskeyRegisterSessionKey(nonce),
 		passkeySessionCache{
 			Session:    *session,
 			Origin:     origin,
@@ -1315,7 +1325,7 @@ func (userService *UserService) PasskeyRegisterFinish(
 	rpID, origin, nonce string,
 	credential json.RawMessage,
 ) error {
-	cacheKey := repository.GetPasskeyRegisterSessionKey(nonce)
+	cacheKey := getPasskeyRegisterSessionKey(nonce)
 	cached, err := userService.userRepository.CacheGetPasskeySession(cacheKey)
 	if err != nil {
 		return errors.New(commonModel.INVALID_PARAMS)
@@ -1397,7 +1407,7 @@ func (userService *UserService) PasskeyLoginBegin(
 	}
 
 	userService.userRepository.CacheSetPasskeySession(
-		repository.GetPasskeyLoginSessionKey(nonce),
+		getPasskeyLoginSessionKey(nonce),
 		passkeySessionCache{
 			Session: *session,
 			Origin:  origin,
@@ -1414,7 +1424,7 @@ func (userService *UserService) PasskeyLoginFinish(
 	rpID, origin, nonce string,
 	credential json.RawMessage,
 ) (string, error) {
-	cacheKey := repository.GetPasskeyLoginSessionKey(nonce)
+	cacheKey := getPasskeyLoginSessionKey(nonce)
 	cached, err := userService.userRepository.CacheGetPasskeySession(cacheKey)
 	if err != nil {
 		return "", errors.New(commonModel.INVALID_PARAMS)

@@ -5,6 +5,7 @@ import (
 
 	"github.com/lin-snow/ech0/internal/cache"
 	model "github.com/lin-snow/ech0/internal/model/todo"
+	todoService "github.com/lin-snow/ech0/internal/service/todo"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"gorm.io/gorm"
 )
@@ -14,10 +15,12 @@ type TodoRepository struct {
 	cache cache.ICache[string, any]
 }
 
+var _ todoService.Repository = (*TodoRepository)(nil)
+
 func NewTodoRepository(
 	dbProvider func() *gorm.DB,
 	cache cache.ICache[string, any],
-) TodoRepositoryInterface {
+) *TodoRepository {
 	return &TodoRepository{
 		db:    dbProvider,
 		cache: cache,

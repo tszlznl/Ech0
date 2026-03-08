@@ -7,20 +7,24 @@ import (
 
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	queueModel "github.com/lin-snow/ech0/internal/model/queue"
-	queueRepository "github.com/lin-snow/ech0/internal/repository/queue"
 )
 
 type DeadLetterProcessor interface {
 	HandleDeadLetter(ctx context.Context, deadLetter *queueModel.DeadLetter) error
 }
 
+type DeadLetterRepo interface {
+	UpdateDeadLetter(ctx context.Context, deadLetter *queueModel.DeadLetter) error
+	DeleteDeadLetter(ctx context.Context, id int64) error
+}
+
 type DeadLetterResolver struct {
-	queueRepo queueRepository.QueueRepositoryInterface
+	queueRepo DeadLetterRepo
 	processor DeadLetterProcessor
 }
 
 func NewDeadLetterResolver(
-	queueRepo queueRepository.QueueRepositoryInterface,
+	queueRepo DeadLetterRepo,
 	processor DeadLetterProcessor,
 ) *DeadLetterResolver {
 	return &DeadLetterResolver{

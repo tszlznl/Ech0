@@ -4,6 +4,7 @@ import (
 	"context"
 
 	inboxModel "github.com/lin-snow/ech0/internal/model/inbox"
+	inboxService "github.com/lin-snow/ech0/internal/service/inbox"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"gorm.io/gorm"
 )
@@ -12,7 +13,9 @@ type InboxRepository struct {
 	db func() *gorm.DB
 }
 
-func NewInboxRepository(dbProvider func() *gorm.DB) InboxRepositoryInterface {
+var _ inboxService.Repository = (*InboxRepository)(nil)
+
+func NewInboxRepository(dbProvider func() *gorm.DB) *InboxRepository {
 	return &InboxRepository{
 		db: dbProvider,
 	}

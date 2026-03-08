@@ -13,10 +13,10 @@ import (
 )
 
 type CommonHandler struct {
-	commonService *service.CommonService
+	commonService service.Service
 }
 
-func NewCommonHandler(commonService *service.CommonService) *CommonHandler {
+func NewCommonHandler(commonService service.Service) *CommonHandler {
 	return &CommonHandler{
 		commonService: commonService,
 	}

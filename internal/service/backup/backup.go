@@ -13,18 +13,17 @@ import (
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	publisher "github.com/lin-snow/ech0/internal/event/publisher"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
-	commonService "github.com/lin-snow/ech0/internal/service/common"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"go.uber.org/zap"
 )
 
 type BackupService struct {
-	commonService *commonService.CommonService
+	commonService CommonService
 	publisher     *publisher.Publisher
 }
 
 func NewBackupService(
-	commonService *commonService.CommonService,
+	commonService CommonService,
 	publisher *publisher.Publisher,
 ) *BackupService {
 	return &BackupService{

@@ -10,28 +10,24 @@ import (
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
-	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
-	echoService "github.com/lin-snow/ech0/internal/service/echo"
-	settingService "github.com/lin-snow/ech0/internal/service/setting"
-	todoService "github.com/lin-snow/ech0/internal/service/todo"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"go.uber.org/zap"
 	"golang.org/x/sync/singleflight"
 )
 
 type AgentService struct {
-	settingService *settingService.SettingService
-	echoService    *echoService.EchoService
-	todoService    *todoService.TodoService
-	kvRepository   keyvalueRepository.KeyValueRepositoryInterface
+	settingService SettingService
+	echoService    EchoService
+	todoService    TodoService
+	kvRepository   KeyValueRepository
 	recentGenGroup singleflight.Group
 }
 
 func NewAgentService(
-	settingService *settingService.SettingService,
-	echoService *echoService.EchoService,
-	todoService *todoService.TodoService,
-	kvRepository keyvalueRepository.KeyValueRepositoryInterface,
+	settingService SettingService,
+	echoService EchoService,
+	todoService TodoService,
+	kvRepository KeyValueRepository,
 ) *AgentService {
 	return &AgentService{
 		settingService: settingService,

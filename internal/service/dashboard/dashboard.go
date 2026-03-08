@@ -8,22 +8,18 @@ import (
 	"github.com/gorilla/websocket"
 	model "github.com/lin-snow/ech0/internal/model/metric"
 	"github.com/lin-snow/ech0/internal/monitor"
-	commonService "github.com/lin-snow/ech0/internal/service/common"
 	fmtUtil "github.com/lin-snow/ech0/internal/util/format"
 )
 
 type DashboardService struct {
-	monitor       *monitor.Monitor
-	commonService *commonService.CommonService
+	monitor *monitor.Monitor
 }
 
 func NewDashboardService(
 	monitor *monitor.Monitor,
-	commonService *commonService.CommonService,
 ) *DashboardService {
 	return &DashboardService{
-		monitor:       monitor,
-		commonService: commonService,
+		monitor: monitor,
 	}
 }
 

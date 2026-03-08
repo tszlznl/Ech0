@@ -5,6 +5,7 @@ import (
 	"time"
 
 	model "github.com/lin-snow/ech0/internal/model/file"
+	commonService "github.com/lin-snow/ech0/internal/service/common"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"gorm.io/gorm"
 )
@@ -13,7 +14,9 @@ type FileRepository struct {
 	db func() *gorm.DB
 }
 
-func NewFileRepository(dbProvider func() *gorm.DB) FileRepositoryInterface {
+var _ commonService.FileRepository = (*FileRepository)(nil)
+
+func NewFileRepository(dbProvider func() *gorm.DB) *FileRepository {
 	return &FileRepository{db: dbProvider}
 }
 

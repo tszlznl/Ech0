@@ -11,10 +11,6 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/connect"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
-	repository "github.com/lin-snow/ech0/internal/repository/connect"
-	echoRepository "github.com/lin-snow/ech0/internal/repository/echo"
-	commonService "github.com/lin-snow/ech0/internal/service/common"
-	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	"github.com/lin-snow/ech0/internal/transaction"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
@@ -23,18 +19,18 @@ import (
 
 type ConnectService struct {
 	transactor        transaction.Transactor
-	connectRepository repository.ConnectRepositoryInterface
-	echoRepository    echoRepository.EchoRepositoryInterface
-	commonService     *commonService.CommonService
-	settingService    *settingService.SettingService
+	connectRepository Repository
+	echoRepository    EchoRepository
+	commonService     CommonService
+	settingService    SettingService
 }
 
 func NewConnectService(
 	tx transaction.Transactor,
-	connectRepository repository.ConnectRepositoryInterface,
-	echoRepository echoRepository.EchoRepositoryInterface,
-	commonService *commonService.CommonService,
-	settingService *settingService.SettingService,
+	connectRepository Repository,
+	echoRepository EchoRepository,
+	commonService CommonService,
+	settingService SettingService,
 ) *ConnectService {
 	return &ConnectService{
 		transactor:        tx,

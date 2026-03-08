@@ -8,22 +8,20 @@ import (
 
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	inboxModel "github.com/lin-snow/ech0/internal/model/inbox"
-	inboxRepository "github.com/lin-snow/ech0/internal/repository/inbox"
-	commonService "github.com/lin-snow/ech0/internal/service/common"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"gorm.io/gorm"
 )
 
 type InboxService struct {
 	transactor      transaction.Transactor
-	commonService   *commonService.CommonService
-	inboxRepository inboxRepository.InboxRepositoryInterface
+	commonService   CommonService
+	inboxRepository Repository
 }
 
 func NewInboxService(
 	tx transaction.Transactor,
-	commonSvc *commonService.CommonService,
-	inboxRepo inboxRepository.InboxRepositoryInterface,
+	commonSvc CommonService,
+	inboxRepo Repository,
 ) *InboxService {
 	return &InboxService{
 		transactor:      tx,

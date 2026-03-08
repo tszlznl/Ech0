@@ -15,14 +15,44 @@ import (
 )
 
 var (
-	UserSet      = wire.NewSet(userService.NewUserService)
-	EchoSet      = wire.NewSet(echoService.NewEchoService)
-	CommonSet    = wire.NewSet(commonService.NewCommonService)
-	SettingSet   = wire.NewSet(settingService.NewSettingService)
-	TodoSet      = wire.NewSet(todoService.NewTodoService)
-	ConnectSet   = wire.NewSet(connectService.NewConnectService)
-	BackupSet    = wire.NewSet(backupService.NewBackupService)
-	DashboardSet = wire.NewSet(dashboardService.NewDashboardService)
-	AgentSet     = wire.NewSet(agentService.NewAgentService)
-	InboxSet     = wire.NewSet(inboxService.NewInboxService)
+	UserSet = wire.NewSet(
+		userService.NewUserService,
+		wire.Bind(new(userService.Service), new(*userService.UserService)),
+	)
+	EchoSet = wire.NewSet(
+		echoService.NewEchoService,
+		wire.Bind(new(echoService.Service), new(*echoService.EchoService)),
+	)
+	CommonSet = wire.NewSet(
+		commonService.NewCommonService,
+		wire.Bind(new(commonService.Service), new(*commonService.CommonService)),
+	)
+	SettingSet = wire.NewSet(
+		settingService.NewSettingService,
+		wire.Bind(new(settingService.Service), new(*settingService.SettingService)),
+	)
+	TodoSet = wire.NewSet(
+		todoService.NewTodoService,
+		wire.Bind(new(todoService.Service), new(*todoService.TodoService)),
+	)
+	ConnectSet = wire.NewSet(
+		connectService.NewConnectService,
+		wire.Bind(new(connectService.Service), new(*connectService.ConnectService)),
+	)
+	BackupSet = wire.NewSet(
+		backupService.NewBackupService,
+		wire.Bind(new(backupService.Service), new(*backupService.BackupService)),
+	)
+	DashboardSet = wire.NewSet(
+		dashboardService.NewDashboardService,
+		wire.Bind(new(dashboardService.Service), new(*dashboardService.DashboardService)),
+	)
+	AgentSet = wire.NewSet(
+		agentService.NewAgentService,
+		wire.Bind(new(agentService.Service), new(*agentService.AgentService)),
+	)
+	InboxSet = wire.NewSet(
+		inboxService.NewInboxService,
+		wire.Bind(new(inboxService.Service), new(*inboxService.InboxService)),
+	)
 )

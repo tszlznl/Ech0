@@ -11,11 +11,11 @@ import (
 )
 
 type ConnectHandler struct {
-	connectService *service.ConnectService
+	connectService service.Service
 }
 
 // NewConnectHandler ConnectHandler 的构造函数
-func NewConnectHandler(connectService *service.ConnectService) *ConnectHandler {
+func NewConnectHandler(connectService service.Service) *ConnectHandler {
 	return &ConnectHandler{
 		connectService: connectService,
 	}

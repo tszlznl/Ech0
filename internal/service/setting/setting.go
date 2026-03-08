@@ -13,10 +13,6 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
-	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
-	settingRepository "github.com/lin-snow/ech0/internal/repository/setting"
-	webhookRepository "github.com/lin-snow/ech0/internal/repository/webhook"
-	commonService "github.com/lin-snow/ech0/internal/service/common"
 	"github.com/lin-snow/ech0/internal/transaction"
 	fmtUtil "github.com/lin-snow/ech0/internal/util/format"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
@@ -28,19 +24,19 @@ import (
 
 type SettingService struct {
 	transactor         transaction.Transactor
-	commonService      *commonService.CommonService
-	keyvalueRepository keyvalueRepository.KeyValueRepositoryInterface
-	settingRepository  settingRepository.SettingRepositoryInterface
-	webhookRepository  webhookRepository.WebhookRepositoryInterface
+	commonService      CommonService
+	keyvalueRepository KeyValueRepository
+	settingRepository  SettingRepository
+	webhookRepository  WebhookRepository
 	publisher          *publisher.Publisher
 }
 
 func NewSettingService(
 	tx transaction.Transactor,
-	commonService *commonService.CommonService,
-	keyvalueRepository keyvalueRepository.KeyValueRepositoryInterface,
-	settingRepository settingRepository.SettingRepositoryInterface,
-	webhookRepository webhookRepository.WebhookRepositoryInterface,
+	commonService CommonService,
+	keyvalueRepository KeyValueRepository,
+	settingRepository SettingRepository,
+	webhookRepository WebhookRepository,
 	publisher *publisher.Publisher,
 ) *SettingService {
 	return &SettingService{

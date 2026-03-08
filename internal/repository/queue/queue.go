@@ -13,7 +13,7 @@ type QueueRepository struct {
 	db func() *gorm.DB
 }
 
-func NewQueueRepository(db func() *gorm.DB) QueueRepositoryInterface {
+func NewQueueRepository(db func() *gorm.DB) *QueueRepository {
 	return &QueueRepository{db: db}
 }
 

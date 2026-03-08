@@ -14,24 +14,30 @@ import (
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	queueModel "github.com/lin-snow/ech0/internal/model/queue"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
-	queueRepository "github.com/lin-snow/ech0/internal/repository/queue"
-	webhookRepository "github.com/lin-snow/ech0/internal/repository/webhook"
 	"github.com/lin-snow/ech0/internal/transaction"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"go.uber.org/zap"
 )
 
+type WebhookStore interface {
+	ListActiveWebhooks(ctx context.Context) ([]webhookModel.Webhook, error)
+}
+
+type DeadLetterStore interface {
+	SaveDeadLetter(ctx context.Context, deadLetter *queueModel.DeadLetter) error
+}
+
 type WebhookDispatcher struct {
 	client     *http.Client
-	repo       webhookRepository.WebhookRepositoryInterface
+	repo       WebhookStore
 	pool       *async.WorkerPool
-	queueRepo  queueRepository.QueueRepositoryInterface
+	queueRepo  DeadLetterStore
 	transactor transaction.Transactor
 }
 
 func NewWebhookDispatcher(
-	repo webhookRepository.WebhookRepositoryInterface,
-	queueRepo queueRepository.QueueRepositoryInterface,
+	repo WebhookStore,
+	queueRepo DeadLetterStore,
 	tx transaction.Transactor,
 ) *WebhookDispatcher {
 	return &WebhookDispatcher{
