@@ -95,7 +95,7 @@ const handleRemoveImage = () => {
     description: '',
     onConfirm: () => {
       const imageToDel: App.Api.Ech0.FileToDelete = {
-        url: String(imagesToAdd.value[index]?.image_url),
+        url: String(imagesToAdd.value[index]?.url),
         source: String(imagesToAdd.value[index]?.image_source),
         object_key: imagesToAdd.value[index]?.object_key,
       }

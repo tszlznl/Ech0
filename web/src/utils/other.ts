@@ -4,28 +4,22 @@ const ABSOLUTE_URL_REGEX = /^https?:\/\//i
 const joinBaseAndPath = (baseUrl: string, path: string) => `${baseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`
 const defaultServiceBaseUrl = String(import.meta.env.VITE_SERVICE_BASE_URL || '').trim()
 
-const normalizeLegacyMediaPath = (path: string) => {
-  if (path.startsWith('/api/')) return path
-  if (path.startsWith('/files/') || path.startsWith('files/')) {
-    return path.startsWith('/') ? `/api${path}` : `/api/${path}`
-  }
+const normalizeMediaPath = (path: string) => {
+  if (path.startsWith('/api/') || path.startsWith('api/')) return path
+  if (path.startsWith('/files/') || path.startsWith('files/')) return `/api/${path.replace(/^\/+/, '')}`
   return path
 }
 
 const resolveImageUrlByPath = (rawUrl?: string, baseUrl?: string) => {
   const candidate = String(rawUrl ?? '').trim()
-  if (!candidate) return ''
-  if (ABSOLUTE_URL_REGEX.test(candidate)) return candidate
-  const normalizedPath = normalizeLegacyMediaPath(candidate)
-  const resolvedBaseUrl = String(baseUrl || defaultServiceBaseUrl).trim()
-  if (resolvedBaseUrl) return joinBaseAndPath(resolvedBaseUrl, normalizedPath)
-  return normalizedPath
+  if (!candidate || ABSOLUTE_URL_REGEX.test(candidate)) return candidate
+  const base = String(baseUrl ?? defaultServiceBaseUrl).trim()
+  const path = normalizeMediaPath(candidate)
+  return base ? joinBaseAndPath(base, path) : path
 }
 
-const resolveImageUrl = (
-  image: Pick<App.Api.Ech0.Image, 'access_url' | 'image_url'>,
-  baseUrl?: string,
-) => resolveImageUrlByPath(image.access_url || image.image_url, baseUrl)
+const resolveImageUrl = (image: Pick<App.Api.Ech0.Image, 'url'> & { image_url?: string }, baseUrl?: string) =>
+  resolveImageUrlByPath(image.url || image.image_url, baseUrl)
 
 // 获取图片链接
 export const getImageUrl = (image: App.Api.Ech0.Image) => resolveImageUrl(image)

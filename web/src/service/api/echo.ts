@@ -20,12 +20,11 @@ type RawEcho = App.Api.Ech0.Echo & {
 function normalizeEcho(rawEcho: RawEcho): App.Api.Ech0.Echo {
   const images = (rawEcho.echo_files || []).map((item) => {
     const file: NonNullable<RawEchoFile['file']> = item.file || {}
-    const imageUrl = String(file.url || '')
+    const fileUrl = String(file.url || '')
     return {
       id: String(file.id || item.file_id || ''),
       echo_id: String(rawEcho.id || ''),
-      image_url: imageUrl,
-      access_url: imageUrl,
+      url: fileUrl,
       image_source: file.storage_type === 'object' ? 's3' : 'local',
       object_key: String(file.key || ''),
       width: file.width,

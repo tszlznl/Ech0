@@ -72,12 +72,12 @@
       <!-- 图片直链 -->
       <div v-if="imageToAdd.image_source === ImageSource.URL" class="flex items-center gap-2">
         <BaseInput
-          v-model="imageToAdd.image_url"
+          v-model="imageToAdd.url"
           class="rounded-lg h-auto flex-1"
           placeholder="请输入图片链接..."
         />
         <BaseButton
-          v-if="imageToAdd.image_url != ''"
+          v-if="imageToAdd.url != ''"
           :icon="Addmore"
           class="w-8 h-8 sm:w-8 sm:h-8 rounded-md shrink-0"
           @click="editorStore.handleAddMoreImage"

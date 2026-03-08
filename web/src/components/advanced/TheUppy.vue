@@ -245,10 +245,10 @@ const initUppy = () => {
       const fileUrl = String(
         payload.url ||
           payload.file_url ||
+          payload.access_url ||
           (response as Record<string, unknown>)?.uploadURL ||
           '',
       )
-      const accessUrl = String(payload.access_url || fileUrl)
       const width = typeof payload.width === 'number' ? payload.width : undefined
       const height = typeof payload.height === 'number' ? payload.height : undefined
       if (!fileId || !fileUrl) {
@@ -257,8 +257,7 @@ const initUppy = () => {
       }
       const item: App.Api.Ech0.FileToAdd = {
         id: fileId,
-        image_url: fileUrl,
-        access_url: accessUrl,
+        url: fileUrl,
         image_source: ImageSource.LOCAL,
         object_key: objectKey,
         width: width,
@@ -270,8 +269,7 @@ const initUppy = () => {
       if (!uploadedFile) return
 
       const item: App.Api.Ech0.FileToAdd = {
-        image_url: uploadedFile.url,
-        access_url: uploadedFile.url,
+        url: uploadedFile.url,
         image_source: ImageSource.S3,
         object_key: uploadedFile.objectKey,
       }
