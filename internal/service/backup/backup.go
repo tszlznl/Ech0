@@ -10,7 +10,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/lin-snow/ech0/internal/backup"
-	"github.com/lin-snow/ech0/internal/event"
+	contracts "github.com/lin-snow/ech0/internal/event/contracts"
+	publisher "github.com/lin-snow/ech0/internal/event/publisher"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
@@ -19,12 +20,12 @@ import (
 
 type BackupService struct {
 	commonService *commonService.CommonService
-	publisher     *event.Publisher
+	publisher     *publisher.Publisher
 }
 
 func NewBackupService(
 	commonService *commonService.CommonService,
-	publisher *event.Publisher,
+	publisher *publisher.Publisher,
 ) *BackupService {
 	return &BackupService{
 		commonService: commonService,
@@ -47,7 +48,7 @@ func (bs *BackupService) Backup(userid uint) error {
 
 	if err := bs.publisher.SystemBackup(
 		context.Background(),
-		event.SystemBackupEvent{Info: "System backup completed"},
+		contracts.SystemBackupEvent{Info: "System backup completed"},
 	); err != nil {
 		logUtil.GetLogger().Error("Failed to publish system backup completed event", zap.String("error", err.Error()))
 	}
@@ -86,7 +87,7 @@ func (bs *BackupService) ExportBackup(ctx *gin.Context, userid uint) error {
 
 	if err := bs.publisher.SystemExport(
 		context.Background(),
-		event.SystemExportEvent{
+		contracts.SystemExportEvent{
 			Info: "System export completed",
 			Size: fileInfo.Size(),
 		},
@@ -126,7 +127,7 @@ func (bs *BackupService) ImportBackup(
 
 	if err := bs.publisher.SystemRestore(
 		context.Background(),
-		event.SystemRestoreEvent{Info: "System restore completed"},
+		contracts.SystemRestoreEvent{Info: "System restore completed"},
 	); err != nil {
 		logUtil.GetLogger().Error("Failed to publish system restore completed event", zap.String("error", err.Error()))
 	}

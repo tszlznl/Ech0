@@ -2,14 +2,15 @@ package app
 
 import (
 	"github.com/google/wire"
-	"github.com/lin-snow/ech0/internal/event"
+	bus "github.com/lin-snow/ech0/internal/event/bus"
+	registry "github.com/lin-snow/ech0/internal/event/registry"
 	"github.com/lin-snow/ech0/internal/server"
 	"github.com/lin-snow/ech0/internal/task"
 )
 
 func ProvideComponents(
-	_ *event.RegisteredRegistrar,
-	eventBus *event.EventBus,
+	_ *registry.RegisteredRegistrar,
+	eventBus *bus.Component,
 	tasker *task.Tasker,
 	httpServer *server.Server,
 ) []Component {
@@ -17,4 +18,4 @@ func ProvideComponents(
 	return []Component{eventBus, tasker, httpServer}
 }
 
-var ProviderSet = wire.NewSet(ProvideComponents, event.NewEventBus, NewApp)
+var ProviderSet = wire.NewSet(ProvideComponents, bus.NewComponent, NewApp)

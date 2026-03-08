@@ -7,7 +7,8 @@ import (
 	"time"
 
 	"github.com/lin-snow/ech0/internal/config"
-	"github.com/lin-snow/ech0/internal/event"
+	contracts "github.com/lin-snow/ech0/internal/event/contracts"
+	publisher "github.com/lin-snow/ech0/internal/event/publisher"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
@@ -31,7 +32,7 @@ type SettingService struct {
 	keyvalueRepository keyvalueRepository.KeyValueRepositoryInterface
 	settingRepository  settingRepository.SettingRepositoryInterface
 	webhookRepository  webhookRepository.WebhookRepositoryInterface
-	publisher          *event.Publisher
+	publisher          *publisher.Publisher
 }
 
 func NewSettingService(
@@ -40,7 +41,7 @@ func NewSettingService(
 	keyvalueRepository keyvalueRepository.KeyValueRepositoryInterface,
 	settingRepository settingRepository.SettingRepositoryInterface,
 	webhookRepository webhookRepository.WebhookRepositoryInterface,
-	publisher *event.Publisher,
+	publisher *publisher.Publisher,
 ) *SettingService {
 	return &SettingService{
 		transactor:         tx,
@@ -786,7 +787,7 @@ func (settingService *SettingService) UpdateBackupScheduleSetting(
 	// 在事务提交后再发布事件，避免回滚时出现幽灵事件。
 	if err := settingService.publisher.BackupScheduleUpdated(
 		context.Background(),
-		event.UpdateBackupScheduleEvent{Schedule: updated},
+		contracts.UpdateBackupScheduleEvent{Schedule: updated},
 	); err != nil {
 		logUtil.GetLogger().
 			Error("Failed to publish update backup schedule event", zap.String("error", err.Error()))

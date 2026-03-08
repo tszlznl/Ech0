@@ -1,4 +1,4 @@
-package event
+package subscriber
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	inboxModel "github.com/lin-snow/ech0/internal/model/inbox"
 	inboxRepository "github.com/lin-snow/ech0/internal/repository/inbox"
@@ -26,46 +27,32 @@ func NewInboxDispatcher(inboxRepo inboxRepository.InboxRepositoryInterface, keyv
 	return &InboxDispatcher{inboxRepo: inboxRepo, keyvalueRepo: keyvalueRepo}
 }
 
-func (id *InboxDispatcher) HandleEch0UpdateCheck(
-	ctx context.Context,
-	_ Ech0UpdateCheckEvent,
-) error {
+func (id *InboxDispatcher) HandleEch0UpdateCheck(ctx context.Context, _ contracts.Ech0UpdateCheckEvent) error {
 	return id.handleEch0UpdateCheck(ctx)
 }
 
-func (id *InboxDispatcher) HandleInboxClear(ctx context.Context, _ InboxClearEvent) error {
+func (id *InboxDispatcher) HandleInboxClear(ctx context.Context, _ contracts.InboxClearEvent) error {
 	return id.handleInboxClear(ctx)
 }
 
 func (id *InboxDispatcher) handleEch0UpdateCheck(ctx context.Context) error {
-	// 检查 Ech0 版本更新
 	currentVersion := commonModel.Version
-
-	// 获取最新版本
 	latestVersion, err := githubUtil.GetLatestVersion()
 	if err != nil {
 		return err
 	}
 
-	// 检查是否已发送过更新通知
 	releaseVersion, err := id.keyvalueRepo.GetKeyValue(ctx, commonModel.ReleaseVersionKey)
-	if err != nil {
-		// 首次运行时该 key 可能不存在，视为“未通知过”
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
 	}
-
 	if releaseVersion != "" && releaseVersion == latestVersion {
 		return nil
 	}
 
-	// 语义化版本比较
 	cur := semver.Canonical("v" + strings.TrimPrefix(strings.TrimSpace(currentVersion), "v"))
 	lat := semver.Canonical("v" + strings.TrimPrefix(strings.TrimSpace(latestVersion), "v"))
-	// 任意一方不是合法 semver，则跳过比较（避免误报/漏报）
 	if cur != "" && lat != "" && semver.Compare(lat, cur) > 0 {
-		// 有新版本，发送更新通知
 		meta, _ := json.Marshal(map[string]string{
 			"latest_version":  latestVersion,
 			"current_version": currentVersion,
@@ -76,7 +63,7 @@ func (id *InboxDispatcher) handleEch0UpdateCheck(ctx context.Context) error {
 			Type:      string(commonModel.NotificationInboxType),
 			Read:      false,
 			ReadCount: 0,
-			ReadAt:    0, // 首次发送时未读
+			ReadAt:    0,
 			Meta:      string(meta),
 			CreatedAt: time.Now().UTC().Unix(),
 		})
@@ -85,35 +72,21 @@ func (id *InboxDispatcher) handleEch0UpdateCheck(ctx context.Context) error {
 		}
 	}
 
-	// 更新存储键 ReleaseVersionKey 值
-	err = id.keyvalueRepo.AddOrUpdateKeyValue(ctx, commonModel.ReleaseVersionKey, latestVersion)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return id.keyvalueRepo.AddOrUpdateKeyValue(ctx, commonModel.ReleaseVersionKey, latestVersion)
 }
 
 func (id *InboxDispatcher) handleInboxClear(ctx context.Context) error {
-	// 获取所有未读消息
 	unreadInbox, err := id.inboxRepo.GetUnreadInbox(ctx)
 	if err != nil {
 		return err
 	}
 
-	// 清理已读的存在超过五天的消息
 	var unreadInboxIDs []uint
 	for _, inbox := range unreadInbox {
-		// 如果消息已读并且创建时间超过七天，则清理
 		if inbox.Read && inbox.ReadCount > 2 && time.Now().UTC().Unix()-inbox.ReadAt > 5*24*60*60 {
 			unreadInboxIDs = append(unreadInboxIDs, inbox.ID)
 		}
 	}
 
-	// 清理掉
-	if err := id.inboxRepo.ClearReadInboxByIds(ctx, unreadInboxIDs); err != nil {
-		return err
-	}
-
-	return nil
+	return id.inboxRepo.ClearReadInboxByIds(ctx, unreadInboxIDs)
 }

@@ -1,4 +1,4 @@
-package event
+package registry
 
 import (
 	busen "github.com/lin-snow/Busen"

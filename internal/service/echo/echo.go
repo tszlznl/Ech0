@@ -5,7 +5,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/lin-snow/ech0/internal/event"
+	contracts "github.com/lin-snow/ech0/internal/event/contracts"
+	publisher "github.com/lin-snow/ech0/internal/event/publisher"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/echo"
@@ -24,7 +25,7 @@ type EchoService struct {
 	echoRepository   repository.EchoRepositoryInterface
 	commonRepository commonRepository.CommonRepositoryInterface
 	kvRepository     keyvalueRepository.KeyValueRepositoryInterface
-	publisher        *event.Publisher
+	publisher        *publisher.Publisher
 }
 
 func NewEchoService(
@@ -33,7 +34,7 @@ func NewEchoService(
 	echoRepository repository.EchoRepositoryInterface,
 	commonRepository commonRepository.CommonRepositoryInterface,
 	kvRepository keyvalueRepository.KeyValueRepositoryInterface,
-	publisher *event.Publisher,
+	publisher *publisher.Publisher,
 ) *EchoService {
 	return &EchoService{
 		transactor:       tx,
@@ -98,7 +99,7 @@ func (echoService *EchoService) PostEcho(userid uint, newEcho *model.Echo) error
 	if savedEcho != nil {
 		if pubErr := echoService.publisher.EchoCreated(
 			context.Background(),
-			event.EchoCreatedEvent{Echo: *savedEcho, User: user},
+			contracts.EchoCreatedEvent{Echo: *savedEcho, User: user},
 		); pubErr != nil {
 			logUtil.GetLogger().Error(pubErr.Error())
 		}
@@ -174,7 +175,7 @@ func (echoService *EchoService) DeleteEchoById(userid, id uint) error {
 
 	if pubErr := echoService.publisher.EchoDeleted(
 		context.Background(),
-		event.EchoDeletedEvent{Echo: model.Echo{ID: id}, User: user},
+		contracts.EchoDeletedEvent{Echo: model.Echo{ID: id}, User: user},
 	); pubErr != nil {
 		logUtil.GetLogger().Error(pubErr.Error())
 	}
@@ -247,7 +248,7 @@ func (echoService *EchoService) UpdateEcho(userid uint, echo *model.Echo) error 
 
 	if pubErr := echoService.publisher.EchoUpdated(
 		context.Background(),
-		event.EchoUpdatedEvent{Echo: *echo, User: user},
+		contracts.EchoUpdatedEvent{Echo: *echo, User: user},
 	); pubErr != nil {
 		logUtil.GetLogger().Error(pubErr.Error())
 	}

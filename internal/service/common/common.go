@@ -16,7 +16,8 @@ import (
 	"github.com/gorilla/feeds"
 	virefs "github.com/lin-snow/VireFS"
 	"github.com/lin-snow/ech0/internal/config"
-	"github.com/lin-snow/ech0/internal/event"
+	contracts "github.com/lin-snow/ech0/internal/event/contracts"
+	publisher "github.com/lin-snow/ech0/internal/event/publisher"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
@@ -45,7 +46,7 @@ type CommonService struct {
 	echoRepository     echoRepository.EchoRepositoryInterface
 	keyvalueRepository keyvalueRepository.KeyValueRepositoryInterface
 	fileRepository     fileRepository.FileRepositoryInterface
-	publisher          *event.Publisher
+	publisher          *publisher.Publisher
 	keyGen             storageDomain.KeyGenerator
 }
 
@@ -57,7 +58,7 @@ func NewCommonService(
 	fileRepo fileRepository.FileRepositoryInterface,
 	fs virefs.FS,
 	resolveURL storageDomain.URLResolver,
-	publisher *event.Publisher,
+	publisher *publisher.Publisher,
 ) *CommonService {
 	return &CommonService{
 		transactor:         tx,
@@ -155,7 +156,7 @@ func (s *CommonService) UploadFile(
 	user.Password = ""
 	if err := s.publisher.ResourceUploaded(
 		context.Background(),
-		event.ResourceUploadedEvent{
+		contracts.ResourceUploadedEvent{
 			User:     user,
 			FileName: file.Filename,
 			URL:      url,

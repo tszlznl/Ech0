@@ -1,7 +1,8 @@
-package event
+package contracts
 
 import (
 	"encoding/json"
+	"reflect"
 	"time"
 
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
@@ -88,7 +89,7 @@ type (
 	}
 )
 
-func newWebhookObservation(topic string, payload any, metadata map[string]string) (WebhookObservation, error) {
+func NewWebhookObservation(topic string, payload any, metadata map[string]string) (WebhookObservation, error) {
 	raw, err := json.Marshal(payload)
 	if err != nil {
 		return WebhookObservation{}, err
@@ -100,4 +101,18 @@ func newWebhookObservation(topic string, payload any, metadata map[string]string
 		Metadata:   metadata,
 		OccurredAt: time.Now().UTC().Unix(),
 	}, nil
+}
+
+func eventNameOf(payload any) string {
+	if payload == nil {
+		return ""
+	}
+	t := reflect.TypeOf(payload)
+	if t.Kind() == reflect.Pointer {
+		t = t.Elem()
+	}
+	if t.Name() != "" {
+		return t.Name()
+	}
+	return t.String()
 }

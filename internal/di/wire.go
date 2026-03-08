@@ -10,7 +10,10 @@ import (
 	"github.com/lin-snow/ech0/internal/app"
 	"github.com/lin-snow/ech0/internal/cache"
 	"github.com/lin-snow/ech0/internal/database"
-	"github.com/lin-snow/ech0/internal/event"
+	eventbus "github.com/lin-snow/ech0/internal/event/bus"
+	eventpublisher "github.com/lin-snow/ech0/internal/event/publisher"
+	eventregistry "github.com/lin-snow/ech0/internal/event/registry"
+	eventsubscriber "github.com/lin-snow/ech0/internal/event/subscriber"
 	"github.com/lin-snow/ech0/internal/handler"
 	"github.com/lin-snow/ech0/internal/metric"
 	"github.com/lin-snow/ech0/internal/monitor"
@@ -29,12 +32,12 @@ var DomainSet = wire.NewSet(
 	BuildHandlers,
 	BuildTasker,
 	BuildEventRegistrar,
-	event.ProvideRegisteredRegistrar,
+	eventregistry.ProvideRegisteredRegistrar,
 )
 
 var InfraSet = wire.NewSet(
 	database.ProviderSet,
-	event.ProviderSet,
+	eventbus.ProvideProvider,
 	cache.ProviderSet,
 	transaction.ProviderSet,
 )
@@ -43,32 +46,35 @@ var RuntimeSet = server.ProviderSet
 
 var EventGraphSet = wire.NewSet(
 	repository.EchoSet,
-	service.EchoSet,
 
 	repository.UserSet,
-	service.UserSet,
 
 	repository.TodoSet,
-	service.TodoSet,
 
 	repository.InboxSet,
-	service.InboxSet,
 
 	repository.KeyValueSet,
 	repository.QueueSet,
 	repository.WebhookSet,
 
-	event.NewWebhookDispatcher,
-	event.NewBackupScheduler,
-	event.NewDeadLetterResolver,
-	event.NewAgentProcessor,
-	event.NewInboxDispatcher,
-	event.NewEventHandlers,
-	event.NewEventRegistry,
+	wire.Bind(new(eventregistry.WebhookObserver), new(*eventsubscriber.WebhookDispatcher)),
+	wire.Bind(new(eventsubscriber.DeadLetterProcessor), new(*eventsubscriber.WebhookDispatcher)),
+	wire.Bind(new(eventregistry.DeadLetterHandler), new(*eventsubscriber.DeadLetterResolver)),
+	wire.Bind(new(eventregistry.BackupScheduleHandler), new(*eventsubscriber.BackupScheduler)),
+	wire.Bind(new(eventregistry.AgentEventHandler), new(*eventsubscriber.AgentProcessor)),
+	wire.Bind(new(eventregistry.InboxEventHandler), new(*eventsubscriber.InboxDispatcher)),
+
+	eventsubscriber.NewWebhookDispatcher,
+	eventsubscriber.NewBackupScheduler,
+	eventsubscriber.NewDeadLetterResolver,
+	eventsubscriber.NewAgentProcessor,
+	eventsubscriber.NewInboxDispatcher,
+	eventregistry.NewEventHandlers,
+	eventregistry.NewEventRegistry,
 )
 
 var HandlerGraphSet = wire.NewSet(
-	event.NewPublisher,
+	eventpublisher.New,
 	storage.ProviderSet,
 	repository.FileSet,
 	handler.WebSet,
@@ -120,7 +126,7 @@ var HandlerGraphSet = wire.NewSet(
 )
 
 var TaskerGraphSet = wire.NewSet(
-	event.NewPublisher,
+	eventpublisher.New,
 	storage.ProviderSet,
 	repository.FileSet,
 	repository.KeyValueSet,
@@ -160,9 +166,9 @@ func BuildEventRegistrar(
 	ebProvider func() *busen.Bus,
 	appCache cache.ICache[string, any],
 	tx transaction.Transactor,
-) (*event.EventRegistrar, error) {
+) (*eventregistry.EventRegistrar, error) {
 	wire.Build(EventGraphSet)
-	return &event.EventRegistrar{}, nil
+	return &eventregistry.EventRegistrar{}, nil
 }
 
 // BuildHandlers 使用 wire 生成的代码来构建 Handlers 实例。

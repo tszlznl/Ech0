@@ -1,4 +1,4 @@
-package event
+package subscriber
 
 import (
 	"bytes"
@@ -11,6 +11,7 @@ import (
 
 	"github.com/lin-snow/ech0/internal/async"
 	"github.com/lin-snow/ech0/internal/config"
+	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	queueModel "github.com/lin-snow/ech0/internal/model/queue"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 	queueRepository "github.com/lin-snow/ech0/internal/repository/queue"
@@ -21,11 +22,11 @@ import (
 )
 
 type WebhookDispatcher struct {
-	client     *http.Client                                 // HTTP 客户端
-	repo       webhookRepository.WebhookRepositoryInterface // Webhook 仓储层
-	pool       *async.WorkerPool                            // 任务池pool
-	queueRepo  queueRepository.QueueRepositoryInterface     // 死信任务仓储
-	transactor transaction.Transactor                       // 事务执行器
+	client     *http.Client
+	repo       webhookRepository.WebhookRepositoryInterface
+	pool       *async.WorkerPool
+	queueRepo  queueRepository.QueueRepositoryInterface
+	transactor transaction.Transactor
 }
 
 func NewWebhookDispatcher(
@@ -34,34 +35,31 @@ func NewWebhookDispatcher(
 	tx transaction.Transactor,
 ) *WebhookDispatcher {
 	return &WebhookDispatcher{
-		repo:      repo,      // 注入仓储层
-		queueRepo: queueRepo, // 注入死信任务仓储
-		client: &http.Client{ // 配置 HTTP 客户端
-			Timeout: 5 * time.Second, // 请求超时时间
-			Transport: &http.Transport{ // 自定义传输设置（使用连接池）
-				MaxIdleConns:        10,               // 最大空闲连接数
-				MaxIdleConnsPerHost: 10,               // 每个主机的最大空闲连接数
-				IdleConnTimeout:     30 * time.Second, // 空闲连接超时时间
+		repo:      repo,
+		queueRepo: queueRepo,
+		client: &http.Client{
+			Timeout: 5 * time.Second,
+			Transport: &http.Transport{
+				MaxIdleConns:        10,
+				MaxIdleConnsPerHost: 10,
+				IdleConnTimeout:     30 * time.Second,
 			},
 		},
 		pool: async.NewWorkerPool(
 			config.Config().Event.WebhookPoolWorkers,
 			config.Config().Event.WebhookPoolQueue,
 		),
-		transactor: tx, // 注入事务执行器
+		transactor: tx,
 	}
 }
 
-// HandleObservation 由 observer 调用，负责调度事件到每个活跃的 webhook
-func (wd *WebhookDispatcher) HandleObservation(ctx context.Context, obs WebhookObservation) error {
-	// 获取所有开启的webhook
+func (wd *WebhookDispatcher) HandleObservation(ctx context.Context, obs contracts.WebhookObservation) error {
 	webhooks, err := wd.repo.ListActiveWebhooks(ctx)
 	if err != nil {
 		return err
 	}
 	for _, wh := range webhooks {
-		wh := wh // 捕获变量
-		// 提交任务到池中异步处理
+		wh := wh
 		wd.pool.Submit(func() error {
 			wd.Dispatch(ctx, &wh, obs)
 			return nil
@@ -71,79 +69,62 @@ func (wd *WebhookDispatcher) HandleObservation(ctx context.Context, obs WebhookO
 	return nil
 }
 
-// Dispatch 负责将事件发送到指定的 webhook
-func (wd *WebhookDispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webhook, obs WebhookObservation) {
-	// 发送请求，带重试机制
+func (wd *WebhookDispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webhook, obs contracts.WebhookObservation) {
 	err := wd.retryWithBackoff(3, 500*time.Millisecond, func() error {
-		// 构建 HTTP 请求
 		req, err := wd.buildRequest(wh, obs)
 		if err != nil {
 			return err
 		}
 
-		// 发送 HTTP 请求
 		resp, err := wd.client.Do(req)
 		if err != nil {
 			return err
 		}
 		defer func() { _ = resp.Body.Close() }()
 
-		// 处理响应
 		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-			// 成功处理
 			return nil
 		}
-
-		// 非成功状态码，视为失败
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	})
-	// 如果最终失败，记录到死信队列
 	if err != nil {
-		// 记录失败日志
-		logUtil.GetLogger().
-			Error("Webhook Handle Failed", zap.String("name", wh.Name), zap.String("url", wh.URL))
+		logUtil.GetLogger().Error("Webhook Handle Failed", zap.String("name", wh.Name), zap.String("url", wh.URL))
 
-		payloadData := WebhookReplayPayload{
+		payloadData := contracts.WebhookReplayPayload{
 			Webhook: *wh,
 			Event:   obs,
 		}
 		payload, _ := json.Marshal(payloadData)
 
-		// 保存到死信队列
 		var deadLetter queueModel.DeadLetter
 		deadLetter.SetType(queueModel.DeadLetterTypeWebhook)
 		deadLetter.Payload = payload
 		deadLetter.ErrorMsg = err.Error()
 		deadLetter.RetryCount = 0
-		deadLetter.NextRetry = time.Now().UTC().Add(6 * time.Hour) // 初始重试时间为 6 小时后
+		deadLetter.NextRetry = time.Now().UTC().Add(6 * time.Hour)
 		deadLetter.CreatedAt = time.Now().UTC()
 		deadLetter.UpdatedAt = time.Now().UTC()
-		deadLetter.Status = queueModel.DeadLetterStatusPending // 初始状态为待处理
+		deadLetter.Status = queueModel.DeadLetterStatusPending
 
-		// 使用事务保存死信任务
 		if err := wd.transactor.Run(ctx, func(ctx context.Context) error {
 			return wd.queueRepo.SaveDeadLetter(ctx, &deadLetter)
 		}); err != nil {
-			logUtil.GetLogger().
-				Error("Failed to save dead letter", zap.String("error", err.Error()))
+			logUtil.GetLogger().Error("Failed to save dead letter", zap.String("error", err.Error()))
 		}
 	}
 }
 
-// buildRequest 构建 HTTP 请求(POST)
 func (wd *WebhookDispatcher) buildRequest(
 	wh *webhookModel.Webhook,
-	obs WebhookObservation,
+	obs contracts.WebhookObservation,
 ) (*http.Request, error) {
 	eventID := fmt.Sprintf("%d", time.Now().UTC().UnixNano())
-	// 构造 HTTP 请求头
 	headers := make(http.Header)
-	headers.Set("Content-Type", "application/json")  // 内容类型
-	headers.Set("X-Ech0-Event", obs.Topic)           // 事件类型
-	headers.Set("User-Agent", "Ech0-Webhook-Client") // 自定义 User-Agent
-	headers.Set("E-Ech0-Event-ID", eventID)          // 唯一事件 ID，便于接收方去重，保证幂等性
+	headers.Set("Content-Type", "application/json")
+	headers.Set("X-Ech0-Event", obs.Topic)
+	headers.Set("User-Agent", "Ech0-Webhook-Client")
+	headers.Set("E-Ech0-Event-ID", eventID)
 
-	// 构造 HTTP 请求体
 	body, err := json.Marshal(map[string]any{
 		"topic":       obs.Topic,
 		"event_name":  obs.EventName,
@@ -156,23 +137,18 @@ func (wd *WebhookDispatcher) buildRequest(
 	}
 	bodyReader := io.NopCloser(bytes.NewReader(body))
 
-	// 构造 HTTP 请求
 	req, err := http.NewRequest("POST", wh.URL, bodyReader)
 	if err != nil {
 		return nil, err
 	}
 	req.Header = headers
-
-	// 设置 GetBody 以支持重试
-	req.GetBody = func() (bodyReader io.ReadCloser, err error) {
+	req.GetBody = func() (io.ReadCloser, error) {
 		return io.NopCloser(bytes.NewReader(body)), nil
 	}
 
-	// 返回请求对象
 	return req, nil
 }
 
-// retryWithBackoff 带指数退避的重试机制
 func (wd *WebhookDispatcher) retryWithBackoff(
 	maxRetries int,
 	initialBackoff time.Duration,
@@ -183,60 +159,48 @@ func (wd *WebhookDispatcher) retryWithBackoff(
 	for i := 0; i < maxRetries; i++ {
 		err = fn()
 		if err == nil {
-			return nil // 成功
+			return nil
 		}
 		time.Sleep(delay)
-		delay *= 2 // 指数退避
+		delay *= 2
 	}
-	return err // 返回最后一次的错误
+	return err
 }
 
-// Wait 等待所有事件处理完成
 func (wd *WebhookDispatcher) Wait() {
 	wd.pool.Wait()
 }
 
-// HandleDeadLetter 处理死信任务
 func (wd *WebhookDispatcher) HandleDeadLetter(
 	ctx context.Context,
 	deadLetter *queueModel.DeadLetter,
 ) error {
-	// 解析负载
-	var payload WebhookReplayPayload
+	var payload contracts.WebhookReplayPayload
 	if err := json.Unmarshal(deadLetter.Payload, &payload); err != nil {
 		return fmt.Errorf("failed to unmarshal dead letter payload: %w", err)
 	}
 	webhook := payload.Webhook
 	obs := payload.Event
 
-	// 重新发送请求
 	err := wd.retryWithBackoff(3, 500*time.Millisecond, func() error {
-		// 构建 HTTP 请求
 		req, err := wd.buildRequest(&webhook, obs)
 		if err != nil {
 			return err
 		}
 
-		// 发送 HTTP 请求
 		resp, err := wd.client.Do(req)
 		if err != nil {
 			return err
 		}
 		defer func() { _ = resp.Body.Close() }()
 
-		// 处理响应
 		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-			// 成功处理
 			return nil
 		}
-
-		// 非成功状态码，视为失败
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	})
 	if err != nil {
 		return err
 	}
-
-	// 成功处理，返回 nil
 	return nil
 }

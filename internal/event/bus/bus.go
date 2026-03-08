@@ -1,7 +1,7 @@
-package event
+package bus
 
 import (
-	"reflect"
+	"sync"
 
 	busen "github.com/lin-snow/Busen"
 	"github.com/lin-snow/ech0/internal/config"
@@ -16,7 +16,7 @@ const (
 	MetaKeyRequestID = "request_id"
 )
 
-func NewBus() *busen.Bus {
+func New() *busen.Bus {
 	ec := config.Config().Event
 	hooks := busen.Hooks{
 		OnHandlerError: func(info busen.HandlerError) {
@@ -72,32 +72,33 @@ func NewBus() *busen.Bus {
 		busen.WithDefaultOverflow(mapOverflow(ec.DefaultOverflow)),
 		busen.WithHooks(hooks),
 		busen.WithMetadataBuilder(func(input busen.PublishMetadataInput) map[string]string {
-			return map[string]string{
-				"source": "ech0",
-			}
+			return map[string]string{"source": "ech0"}
 		}),
 	)
 
 	return b
 }
 
-func safeTypeString(t reflect.Type) string {
-	if t == nil {
-		return ""
+func ProvideProvider() func() *busen.Bus {
+	var once sync.Once
+	var b *busen.Bus
+	return func() *busen.Bus {
+		once.Do(func() {
+			b = New()
+		})
+		return b
 	}
-	return t.String()
 }
 
-func eventNameOf(payload any) string {
-	if payload == nil {
-		return ""
+func mapOverflow(policy string) busen.OverflowPolicy {
+	switch policy {
+	case "fail_fast":
+		return busen.OverflowFailFast
+	case "drop_newest":
+		return busen.OverflowDropNewest
+	case "drop_oldest":
+		return busen.OverflowDropOldest
+	default:
+		return busen.OverflowBlock
 	}
-	t := reflect.TypeOf(payload)
-	if t.Kind() == reflect.Pointer {
-		t = t.Elem()
-	}
-	if t.Name() != "" {
-		return t.Name()
-	}
-	return t.String()
 }

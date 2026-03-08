@@ -1,4 +1,4 @@
-package event
+package bus
 
 import (
 	"context"
@@ -9,23 +9,23 @@ import (
 	"go.uber.org/zap"
 )
 
-type EventBus struct {
+type Component struct {
 	bus *busen.Bus
 }
 
-func NewEventBus(busProvider func() *busen.Bus) *EventBus {
-	return &EventBus{bus: busProvider()}
+func NewComponent(busProvider func() *busen.Bus) *Component {
+	return &Component{bus: busProvider()}
 }
 
-func (c *EventBus) Name() string {
+func (c *Component) Name() string {
 	return "event_bus"
 }
 
-func (c *EventBus) Start(context.Context) error {
+func (c *Component) Start(context.Context) error {
 	return nil
 }
 
-func (c *EventBus) Stop(ctx context.Context) error {
+func (c *Component) Stop(ctx context.Context) error {
 	if c.bus == nil {
 		return errors.New("event bus is nil")
 	}

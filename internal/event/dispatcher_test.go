@@ -4,21 +4,23 @@ import (
 	"encoding/json"
 	"testing"
 
+	bus "github.com/lin-snow/ech0/internal/event/bus"
+	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 )
 
 func TestWebhookReplayPayload_RoundTripKeepsPayloadRaw(t *testing.T) {
 	raw := json.RawMessage(`{"id":1,"name":"echo"}`)
-	in := WebhookReplayPayload{
+	in := contracts.WebhookReplayPayload{
 		Webhook: webhookModel.Webhook{
 			Name: "hook",
 			URL:  "https://example.com/hook",
 		},
-		Event: WebhookObservation{
-			Topic:      TopicEchoCreated,
+		Event: contracts.WebhookObservation{
+			Topic:      contracts.TopicEchoCreated,
 			EventName:  "EchoCreatedEvent",
 			Payload:    raw,
-			Metadata:   map[string]string{MetaKeySource: "test"},
+			Metadata:   map[string]string{bus.MetaKeySource: "test"},
 			OccurredAt: 123,
 		},
 	}
@@ -28,7 +30,7 @@ func TestWebhookReplayPayload_RoundTripKeepsPayloadRaw(t *testing.T) {
 		t.Fatalf("marshal payload failed: %v", err)
 	}
 
-	var out WebhookReplayPayload
+	var out contracts.WebhookReplayPayload
 	if err := json.Unmarshal(buf, &out); err != nil {
 		t.Fatalf("unmarshal payload failed: %v", err)
 	}

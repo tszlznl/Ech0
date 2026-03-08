@@ -5,11 +5,12 @@ import (
 	"testing"
 
 	busen "github.com/lin-snow/Busen"
+	bus "github.com/lin-snow/ech0/internal/event/bus"
 )
 
 func TestEventBus_StopDrain(t *testing.T) {
-	b := NewBus()
-	component := NewEventBus(func() *busen.Bus { return b })
+	b := bus.New()
+	component := bus.NewComponent(func() *busen.Bus { return b })
 
 	if err := component.Start(context.Background()); err != nil {
 		t.Fatalf("start failed: %v", err)

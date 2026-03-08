@@ -19,7 +19,8 @@ import (
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
-	"github.com/lin-snow/ech0/internal/event"
+	contracts "github.com/lin-snow/ech0/internal/event/contracts"
+	publisher "github.com/lin-snow/ech0/internal/event/publisher"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
@@ -38,7 +39,7 @@ type UserService struct {
 	transactor     transaction.Transactor             // 事务执行器
 	userRepository repository.UserRepositoryInterface // 用户数据层接口
 	settingService *settingService.SettingService     // 系统设置数据层接口
-	publisher      *event.Publisher                   // 事件发布器
+	publisher      *publisher.Publisher               // 事件发布器
 }
 
 // NewUserService 创建并返回新的用户服务实例
@@ -53,7 +54,7 @@ func NewUserService(
 	tx transaction.Transactor,
 	userRepository repository.UserRepositoryInterface,
 	settingService *settingService.SettingService,
-	publisher *event.Publisher,
+	publisher *publisher.Publisher,
 ) *UserService {
 	return &UserService{
 		transactor:     tx,
@@ -163,7 +164,7 @@ func (userService *UserService) Register(registerDto *authModel.RegisterDto) err
 	newUser.Password = "" // 不包含密码信息
 	if err := userService.publisher.UserCreated(
 		context.Background(),
-		event.UserCreatedEvent{User: newUser},
+		contracts.UserCreatedEvent{User: newUser},
 	); err != nil {
 		logUtil.GetLogger().
 			Error("Failed to publish user created event", zap.String("error", err.Error()))
@@ -227,7 +228,7 @@ func (userService *UserService) UpdateUser(userid uint, userdto model.UserInfoDt
 	user.Password = "" // 不包含密码信息
 	if err := userService.publisher.UserUpdated(
 		context.Background(),
-		event.UserUpdatedEvent{User: user},
+		contracts.UserUpdatedEvent{User: user},
 	); err != nil {
 		logUtil.GetLogger().
 			Error("Failed to publish user updated event", zap.String("error", err.Error()))
@@ -285,7 +286,7 @@ func (userService *UserService) UpdateUserAdmin(userid uint, id uint) error {
 	user.Password = "" // 不包含密码信息
 	if err := userService.publisher.UserUpdated(
 		context.Background(),
-		event.UserUpdatedEvent{User: user},
+		contracts.UserUpdatedEvent{User: user},
 	); err != nil {
 		logUtil.GetLogger().
 			Error("Failed to publish user updated event", zap.String("error", err.Error()))
@@ -391,7 +392,7 @@ func (userService *UserService) DeleteUser(userid, id uint) error {
 	deletedUser.Password = ""
 	if err := userService.publisher.UserDeleted(
 		context.Background(),
-		event.UserDeletedEvent{User: deletedUser},
+		contracts.UserDeletedEvent{User: deletedUser},
 	); err != nil {
 		logUtil.GetLogger().
 			Error("Failed to publish user deleted event", zap.String("error", err.Error()))

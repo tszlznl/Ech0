@@ -1,7 +1,9 @@
-package event
+package subscriber
 
 import (
 	"context"
+
+	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 )
 
 type BackupScheduler struct{}
@@ -12,10 +14,9 @@ func NewBackupScheduler() *BackupScheduler {
 
 func (bs *BackupScheduler) HandleBackupScheduleUpdated(
 	ctx context.Context,
-	e UpdateBackupScheduleEvent,
+	e contracts.UpdateBackupScheduleEvent,
 ) error {
 	_ = ctx
 	_ = e
-	// TODO: 这里可进一步接入 Tasker 的动态重载能力。
 	return nil
 }

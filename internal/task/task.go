@@ -9,7 +9,8 @@ import (
 
 	"github.com/go-co-op/gocron/v2"
 	"github.com/lin-snow/ech0/internal/backup"
-	"github.com/lin-snow/ech0/internal/event"
+	contracts "github.com/lin-snow/ech0/internal/event/contracts"
+	publisher "github.com/lin-snow/ech0/internal/event/publisher"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	queueRepository "github.com/lin-snow/ech0/internal/repository/queue"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
@@ -23,7 +24,7 @@ type Tasker struct {
 	scheduler      gocron.Scheduler
 	commonService  *commonService.CommonService
 	settingService *settingService.SettingService
-	publisher      *event.Publisher
+	publisher      *publisher.Publisher
 	queueRepo      queueRepository.QueueRepositoryInterface
 	started        bool
 }
@@ -35,7 +36,7 @@ func (t *Tasker) Name() string {
 func NewTasker(
 	commonService *commonService.CommonService,
 	settingService *settingService.SettingService,
-	publisher *event.Publisher,
+	publisher *publisher.Publisher,
 	queueRepo queueRepository.QueueRepositoryInterface,
 ) *Tasker {
 	scheduler, err := gocron.NewScheduler()
@@ -146,7 +147,7 @@ func (t *Tasker) DeadLetterConsumeTask() error {
 					// 发布事件到事件总线，触发重试
 					if err := t.publisher.DeadLetterRetried(
 						context.Background(),
-						event.DeadLetterRetriedEvent{DeadLetter: dl},
+						contracts.DeadLetterRetriedEvent{DeadLetter: dl},
 					); err != nil {
 						logUtil.GetLogger().
 							Error("Failed to publish dead letter retried event", zap.String("error", err.Error()))
@@ -190,7 +191,7 @@ func (t *Tasker) ScheduleBackupTask(cronExpression string) error {
 				// 发布备份完成事件
 				if err := t.publisher.SystemBackup(
 					context.Background(),
-					event.SystemBackupEvent{Info: "System scheduled backup completed"},
+					contracts.SystemBackupEvent{Info: "System scheduled backup completed"},
 				); err != nil {
 					logUtil.GetLogger().
 						Error("Failed to publish backup completed event", zap.String("error", err.Error()))
@@ -218,7 +219,7 @@ func (t *Tasker) InboxTask() error {
 				// 检查 Ech0 版本更新
 				if err := t.publisher.Ech0UpdateChecked(
 					context.Background(),
-					event.Ech0UpdateCheckEvent{Info: "Ech0 update checked"},
+					contracts.Ech0UpdateCheckEvent{Info: "Ech0 update checked"},
 				); err != nil {
 					logUtil.GetLogger().Error("Failed to publish ech0 update checked event", zap.String("error", err.Error()))
 				}
@@ -226,7 +227,7 @@ func (t *Tasker) InboxTask() error {
 				// 清理已读的存在超过七天的消息
 				if err := t.publisher.InboxCleared(
 					context.Background(),
-					event.InboxClearEvent{Info: "Inbox cleared"},
+					contracts.InboxClearEvent{Info: "Inbox cleared"},
 				); err != nil {
 					logUtil.GetLogger().Error("Failed to publish inbox cleared event", zap.String("error", err.Error()))
 				}
