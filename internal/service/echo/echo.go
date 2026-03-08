@@ -138,7 +138,7 @@ func (echoService *EchoService) DeleteEchoById(userid, id string) error {
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	var fileKeys []string
+	var deletableFileKeys []string
 	if err := echoService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		echo, err := echoService.echoRepository.GetEchosById(ctx, id)
 		if err != nil {
@@ -149,8 +149,10 @@ func (echoService *EchoService) DeleteEchoById(userid, id string) error {
 		}
 
 		for _, ef := range echo.EchoFiles {
-			if ef.File.Key != "" {
-				fileKeys = append(fileKeys, ef.File.Key)
+			if ef.File.Key != "" && ef.File.StorageType != string(commonModel.EXTERNAL_FILE) {
+				deletableFileKeys = append(deletableFileKeys, ef.File.Key)
+			}
+			if ef.File.ID != "" {
 				if err := echoService.commonService.DeleteFileRecord(ctx, ef.File.ID); err != nil {
 					return err
 				}
@@ -169,7 +171,7 @@ func (echoService *EchoService) DeleteEchoById(userid, id string) error {
 		logUtil.GetLogger().Error(pubErr.Error())
 	}
 
-	for _, fileKey := range fileKeys {
+	for _, fileKey := range deletableFileKeys {
 		_ = echoService.commonService.DeleteStoredFile(fileKey)
 	}
 

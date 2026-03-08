@@ -1,7 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { theToast } from '@/utils/toast'
-import { fetchAddEcho, fetchUpdateEcho, fetchAddTodo, fetchGetMusic } from '@/service/api'
+import {
+  fetchAddEcho,
+  fetchUpdateEcho,
+  fetchAddTodo,
+  fetchGetMusic,
+  fetchCreateExternalFile,
+} from '@/service/api'
 import { Mode, ExtensionType, ImageSource, ImageLayout } from '@/enums/enums'
 import { useEchoStore, useTodoStore, useInboxStore } from '@/stores'
 import { localStg } from '@/utils/storage'
@@ -36,7 +42,7 @@ export const useEditorStore = defineStore('editorStore', () => {
   //================================================================
   const echoToAdd = ref<App.Api.Ech0.EchoToAdd>({
     content: '', // 文字板块
-    images: [], // 图片板块
+    echo_files: [], // 仅提交给后端的文件引用
     private: false, // 是否私密
     layout: ImageLayout.WATERFALL, // 图片布局方式，默认为 waterfall
     extension: null, // 拓展内容（对于扩展类型所需的数据）
@@ -70,7 +76,7 @@ export const useEditorStore = defineStore('editorStore', () => {
   const imageToAdd = ref<App.Api.Ech0.FileToAdd>({
     url: '', // 图片地址(依据存储方式不同而不同)
     image_source: ImageSource.LOCAL, // 图片存储方式（本地/直链/S3）
-    object_key: '', // 对象存储的Key (如果是本地存储或直链则为空)
+    key: '', // 对应后端 file.key (如果是直链则为空)
   })
   const imagesToAdd = ref<App.Api.Ech0.FileToAdd[]>([]) // 最终要添加的图片列表
   const imageIndex = ref<number>(0) // 当前图片索引（用于编辑图片时定位）
@@ -125,7 +131,7 @@ export const useEditorStore = defineStore('editorStore', () => {
 
     echoToAdd.value = {
       content: '',
-      images: [],
+      echo_files: [],
       private: false,
       layout: ImageLayout.WATERFALL,
       extension: null,
@@ -136,7 +142,7 @@ export const useEditorStore = defineStore('editorStore', () => {
       id: undefined,
       url: '',
       image_source: rememberedImageSource.value,
-      object_key: '',
+      key: '',
     }
     imagesToAdd.value = []
     videoURL.value = ''
@@ -174,11 +180,36 @@ export const useEditorStore = defineStore('editorStore', () => {
         // 图片尺寸探测失败不应阻断写入，否则会出现“上传成功但无预览”。
       }
     }
+
+    // URL 模式先在后端落一条 external file，拿到 file_id 后才能发布。
+    if (imageToAdd.value.image_source === ImageSource.URL && !imageToAdd.value.id) {
+      const externalUrl = String(imageToAdd.value.url || '').trim()
+      if (!externalUrl) {
+        theToast.error('图片链接不能为空')
+        return
+      }
+
+      const res = await fetchCreateExternalFile({
+        url: externalUrl,
+        category: 'image',
+        width: width,
+        height: height,
+      })
+      if (res.code !== 1 || !res.data?.id) {
+        theToast.error(res.msg || '直链入库失败，请重试')
+        return
+      }
+
+      imageToAdd.value.id = res.data.id
+      imageToAdd.value.key = res.data.key
+      imageToAdd.value.url = res.data.url || externalUrl
+    }
+
     imagesToAdd.value.push({
       id: imageToAdd.value.id,
       url: imageToAdd.value.url,
       image_source: imageToAdd.value.image_source,
-      object_key: imageToAdd.value.object_key ? imageToAdd.value.object_key : '',
+      key: imageToAdd.value.key ? imageToAdd.value.key : '',
       width,
       height,
     })
@@ -189,7 +220,7 @@ export const useEditorStore = defineStore('editorStore', () => {
       image_source: imageToAdd.value.image_source
         ? imageToAdd.value.image_source
         : ImageSource.LOCAL, // 记忆存储方式
-      object_key: '',
+      key: '',
     }
   }
 
@@ -203,7 +234,7 @@ export const useEditorStore = defineStore('editorStore', () => {
         id: file.id,
         url: file.url,
         image_source: file.image_source,
-        object_key: file.object_key ? file.object_key : '',
+        key: file.key ? file.key : '',
         width: file.width,
         height: file.height,
       }
@@ -247,8 +278,13 @@ export const useEditorStore = defineStore('editorStore', () => {
       // 处理扩展板块
       checkEchoExtension()
 
-      // 回填图片板块
-      echoToAdd.value.images = imagesToAdd.value
+      // 回填图片板块（后端只认 echo_files）
+      echoToAdd.value.echo_files = imagesToAdd.value
+        .filter((img) => img.id)
+        .map((img, index) => ({
+          file_id: String(img.id),
+          sort_order: index,
+        }))
 
       // 回填标签板块
       echoToAdd.value.tags = tagToAdd.value?.trim() ? [{ name: tagToAdd.value.trim() }] : []
@@ -294,7 +330,7 @@ export const useEditorStore = defineStore('editorStore', () => {
         echoStore.echoToUpdate.content = echoToAdd.value.content
         echoStore.echoToUpdate.private = echoToAdd.value.private
         echoStore.echoToUpdate.layout = echoToAdd.value.layout
-        echoStore.echoToUpdate.images = echoToAdd.value.images
+        echoStore.echoToUpdate.echo_files = echoToAdd.value.echo_files
         echoStore.echoToUpdate.extension = echoToAdd.value.extension
         echoStore.echoToUpdate.extension_type = echoToAdd.value.extension_type
         echoStore.echoToUpdate.tags = echoToAdd.value.tags
@@ -328,7 +364,7 @@ export const useEditorStore = defineStore('editorStore', () => {
   function checkIsEmptyEcho(echo: App.Api.Ech0.EchoToAdd): boolean {
     return (
       !echo.content &&
-      (!echo.images || echo.images.length === 0) &&
+      (!echo.echo_files || echo.echo_files.length === 0) &&
       !echo.extension &&
       !echo.extension_type
     )

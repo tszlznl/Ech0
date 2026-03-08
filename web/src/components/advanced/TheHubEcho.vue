@@ -52,7 +52,7 @@
           </div>
 
           <TheImageGallery
-            :images="props.echo.images"
+            :images="echoImages"
             :baseUrl="echo.server_url"
             :layout="props.echo.layout"
           />
@@ -61,7 +61,7 @@
         <template v-else>
           <!-- 图片在上，文字在下（瀑布流 / 单图轮播 等） -->
           <TheImageGallery
-            :images="props.echo.images"
+            :images="echoImages"
             :baseUrl="echo.server_url"
             :layout="props.echo.layout"
           />
@@ -181,6 +181,7 @@ import { MdPreview } from 'md-editor-v3'
 import { computed, ref, watch } from 'vue'
 import { ExtensionType, ImageLayout } from '@/enums/enums'
 import { formatDate } from '@/utils/other'
+import { getEchoImages } from '@/utils/echo'
 import { useThemeStore, useZoneStore } from '@/stores'
 import { useFetch } from '@vueuse/core'
 import { theToast } from '@/utils/toast'
@@ -209,6 +210,7 @@ const previewOptions = {
 }
 
 const fav_count = ref<number>(props.echo.fav_count)
+const echoImages = computed(() => getEchoImages(props.echo))
 const server_url = computed(() => props.echo.server_url)
 const echo_id = computed(() => props.echo.id)
 const isLikeAnimating = ref(false)
@@ -229,7 +231,7 @@ const handleLikeEcho = async () => {
   }, 250)
 
   // 如果已经点赞过，不再重复点赞
-  const likedEchoIds: number[] = localStg.getItem(LIKE_LIST_KEY.value) || []
+  const likedEchoIds: string[] = localStg.getItem(LIKE_LIST_KEY.value) || []
   if (likedEchoIds.includes(echo_id.value)) {
     theToast.info('你已经点赞过')
     return
@@ -268,7 +270,7 @@ const handlePrintEcho = () => {
     content: props.echo.content,
     created_at: props.echo.created_at,
     tags: props.echo.tags,
-    images: props.echo.images,
+    echo_files: props.echo.echo_files,
     extension: props.echo.extension,
     extension_type: props.echo.extension_type,
   })

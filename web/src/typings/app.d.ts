@@ -68,26 +68,27 @@ declare namespace App {
     }
 
     namespace File {
-      type FileMetadata = {
-        image?: { width?: number; height?: number }
-        video?: { width?: number; height?: number; duration_ms?: number }
-        audio?: { duration_ms?: number }
-        pdf?: { pages?: number }
-        markdown?: { word_count?: number }
-      }
       type FileDto = {
-        id?: string
-        key?: string
+        id: string
+        key: string
         url: string
-        source: string
-        object_key?: string
         content_type?: string
-        category?: 'image' | 'video' | 'audio' | 'pdf' | 'markdown' | 'file'
-        metadata?: FileMetadata
+        category?: string
         width?: number
         height?: number
       }
       type ImageDto = FileDto
+      type FileDeleteDto = {
+        key: string
+      }
+      type CreateExternalFileDto = {
+        url: string
+        content_type?: string
+        category?: string
+        width?: number
+        height?: number
+        name?: string
+      }
     }
 
     namespace Ech0 {
@@ -102,15 +103,11 @@ declare namespace App {
         content: string
         username: string
         echo_files?: EchoFile[]
-        image_url: string
-        image_source: string
-        images: FileObject[]
-        files?: FileObject[]
         layout?: string
         private: boolean
         user_id: string
-        extension: string
-        extension_type: string
+        extension?: string
+        extension_type?: string
         tags?: Tag[]
         fav_count: number
         created_at: string
@@ -121,7 +118,7 @@ declare namespace App {
         echo_id: string
         url: string
         image_source: string
-        object_key?: string // 对象存储的Key (如果是本地存储则为空)
+        key?: string // 对应后端 file.key
         width?: number // 图片宽度
         height?: number // 图片高度
       }
@@ -142,10 +139,18 @@ declare namespace App {
         file?: {
           id: string
           key: string
-          url: string
           storage_type: string
+          provider?: string
+          bucket?: string
+          url: string
+          name?: string
+          content_type?: string
+          size?: number
+          category?: string
+          user_id?: string
           width?: number
           height?: number
+          created_at?: string
         }
       }
 
@@ -153,7 +158,7 @@ declare namespace App {
         id?: string
         url: string
         image_source: string
-        object_key?: string // 对象存储的Key (如果是本地存储则为空)
+        key?: string // 对应后端 file.key
         width?: number // 图片宽度
         height?: number // 图片高度
       }
@@ -168,8 +173,7 @@ declare namespace App {
 
       type EchoToAdd = {
         content: string
-        images?: FileToAdd[] | null
-        files?: FileToAdd[] | null
+        echo_files?: Array<{ file_id: string; sort_order: number }> | null
         tags?: TagToAdd[] | null
         layout?: string | null
         extension?: string | null
@@ -181,8 +185,7 @@ declare namespace App {
         id: string
         content: string
         username: string
-        images?: FileToAdd[] | null
-        files?: FileToAdd[] | null
+        echo_files?: Array<{ file_id: string; sort_order: number }> | null
         tags?: TagToAdd[] | null
         layout?: string | null
         private: boolean
@@ -211,9 +214,7 @@ declare namespace App {
       }[]
 
       type FileToDelete = {
-        url: string
-        source: string
-        object_key?: string // 对象存储的 Key, 用于删除 S3/R2 上的图片
+        key: string
       }
       type ImageToDelete = FileToDelete
 
@@ -236,7 +237,7 @@ declare namespace App {
       type PresignResult = {
         file_name: string
         content_type: string
-        object_key: string
+        key: string
         presign_url: string
         file_url: string
       }
@@ -308,7 +309,6 @@ declare namespace App {
         id: string
         name: string
         url: string
-        secret: string
         is_active: boolean
         last_status: string
         last_trigger: string
@@ -326,9 +326,8 @@ declare namespace App {
       type AccessToken = {
         id: string
         user_id: string
-        token: string
         name: string
-        expiry: string
+        expiry: string | null
         created_at: string
       }
 
@@ -462,9 +461,7 @@ declare namespace App {
         id: string
         content: string
         username: string
-        image_url: string
-        image_source: string
-        images: Image[]
+        echo_files?: Ech0.EchoFile[]
         tags?: Tag[]
         layout?: string
         private: boolean

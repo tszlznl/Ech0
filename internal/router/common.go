@@ -15,6 +15,7 @@ func setupCommonRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 
 	// Auth
 	appRouterGroup.AuthRouterGroup.POST("/files/upload", h.CommonHandler.UploadFile())
+	appRouterGroup.AuthRouterGroup.POST("/files/external", h.CommonHandler.CreateExternalFile())
 	appRouterGroup.AuthRouterGroup.DELETE("/files/delete", h.CommonHandler.DeleteFile())
 	appRouterGroup.AuthRouterGroup.PUT("/files/presign", h.CommonHandler.GetFilePresignURL())
 	appRouterGroup.AuthRouterGroup.POST("/audios/upload", h.CommonHandler.UploadAudio())

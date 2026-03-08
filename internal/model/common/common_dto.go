@@ -50,6 +50,18 @@ type GetPresignURLDto struct {
 	ContentType string `json:"content_type"`
 }
 
+// CreateExternalFileDto 用于直链文件入库请求
+//
+// swagger:model CreateExternalFileDto
+type CreateExternalFileDto struct {
+	URL         string `json:"url" binding:"required"`
+	ContentType string `json:"content_type"`
+	Category    string `json:"category"`
+	Width       int    `json:"width"`
+	Height      int    `json:"height"`
+	Name        string `json:"name"`
+}
+
 // GetWebsiteTitleDto 用于请求网站标题的请求数据传输对象
 //
 // swagger:model GetWebsiteTitleDto

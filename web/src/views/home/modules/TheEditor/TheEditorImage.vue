@@ -95,16 +95,13 @@ const handleRemoveImage = () => {
     description: '',
     onConfirm: () => {
       const imageToDel: App.Api.Ech0.FileToDelete = {
-        url: String(imagesToAdd.value[index]?.url),
-        source: String(imagesToAdd.value[index]?.image_source),
-        object_key: imagesToAdd.value[index]?.object_key,
+        key: String(imagesToAdd.value[index]?.key || ''),
       }
 
-      if (imageToDel.source === ImageSource.LOCAL || imageToDel.source === ImageSource.S3) {
+      const source = String(imagesToAdd.value[index]?.image_source || '')
+      if ((source === ImageSource.LOCAL || source === ImageSource.S3) && imageToDel.key) {
         fetchDeleteFile({
-          url: imageToDel.url,
-          source: imageToDel.source,
-          object_key: imageToDel.object_key,
+          key: imageToDel.key,
         }).then(() => {
           // 这里不管图片是否远程删除成功都强制删除图片
           // 从数组中删除图片

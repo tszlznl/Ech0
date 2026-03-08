@@ -16,6 +16,7 @@ import (
 type Service interface {
 	CommonGetUserByUserId(ctx context.Context, userId string) (userModel.User, error)
 	UploadFile(userId string, file *multipart.FileHeader, category storageDomain.Category) (commonModel.FileDto, error)
+	CreateExternalFile(userid string, dto commonModel.CreateExternalFileDto) (commonModel.FileDto, error)
 	DeleteFile(userid string, dto commonModel.FileDeleteDto) error
 	GetSysAdmin() (userModel.User, error)
 	GetStatus() (commonModel.Status, error)

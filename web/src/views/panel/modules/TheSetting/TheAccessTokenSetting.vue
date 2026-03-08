@@ -56,13 +56,7 @@
               <td
                 class="px-3 py-2 flex items-center gap-x-1 font-mono text-sm text-[var(--text-color-next-700)]"
               >
-                {{ formatToken(t.token) }}
-                <button
-                  class="p-1 hover:bg-[var(--bg-color-100)] rounded"
-                  @click="handleCopyToken(t.token)"
-                >
-                  <Clipboard class="w-5 h-5 text-[var(--text-color-500)]" />
-                </button>
+                （隐藏）
               </td>
               <td class="px-3 py-2 text-sm text-[var(--text-color-next-700)]">
                 <span :title="t.name" class="truncate block max-w-xs">{{ t.name }}</span>
@@ -141,7 +135,6 @@ import { storeToRefs } from 'pinia'
 import { fetchCreateAccessToken, fetchDeleteAccessToken } from '@/service/api'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { theToast } from '@/utils/toast'
-import Clipboard from '@/components/icons/clipboard.vue'
 import { AccessTokenExpiration } from '@/enums/enums'
 
 const { openConfirm } = useBaseDialog()
@@ -174,7 +167,12 @@ const handleAddAccessToken = async () => {
     expiry: accessTokenToAdd.value.expiry || AccessTokenExpiration.NEVER_EXPIRY,
   })
   if (res.code === 1) {
+    const createdToken = String(res.data || '')
     theToast.success('Access Token 创建成功')
+    if (createdToken) {
+      navigator.clipboard.writeText(createdToken)
+      theToast.info('新 Token 已自动复制到剪贴板（仅显示一次）')
+    }
     accessTokenToAdd.value = {
       name: '',
       expiry: AccessTokenExpiration.EIGHT_HOUR_EXPIRY,
@@ -210,15 +208,6 @@ const handleDeleteAccessToken = async (item: App.Api.Setting.AccessToken) => {
 onMounted(async () => {
   await useSetting.getAllAccessTokens()
 })
-
-// 复制 Token
-const handleCopyToken = (token: string) => {
-  navigator.clipboard.writeText(token)
-  theToast.success('Access Token 已复制到剪贴板')
-}
-
-// 显示格式化的 Token
-const formatToken = (token: string) => `${token.slice(0, 4)}****${token.slice(-4)}`
 </script>
 
 <style scoped></style>

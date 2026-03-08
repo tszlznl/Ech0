@@ -17,8 +17,17 @@ export function fetchUploadFile(file: File, source?: string, category = 'image')
   })
 }
 
+// 创建外链文件记录（不上传二进制）
+export function fetchCreateExternalFile(dto: App.Api.File.CreateExternalFileDto) {
+  return request<App.Api.File.FileDto>({
+    url: `/files/external`,
+    method: 'POST',
+    data: dto,
+  })
+}
+
 // 删除文件
-export function fetchDeleteFile(file: App.Api.Ech0.FileToDelete) {
+export function fetchDeleteFile(file: App.Api.File.FileDeleteDto) {
   return request({
     url: `/files/delete`,
     method: 'DELETE',

@@ -61,6 +61,7 @@ import { watch } from 'vue'
 import { useEchoStore, useEditorStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { Mode, ExtensionType, ImageLayout } from '@/enums/enums'
+import { getEchoImages } from '@/utils/echo'
 
 /* --------------- 与Pinia相关 ---------------- */
 const echoStore = useEchoStore()
@@ -118,12 +119,13 @@ watch(
       echoToAdd.value.content = echoToUpdate.value?.content || ''
 
       // 2. 填充图片
-      if (echoToUpdate.value?.images && echoToUpdate.value.images.length > 0) {
-        imagesToAdd.value = echoToUpdate.value.images.map((img) => ({
+      const existingImages = getEchoImages(echoToUpdate.value)
+      if (existingImages.length > 0) {
+        imagesToAdd.value = existingImages.map((img) => ({
           id: String(img.id || ''),
           url: img.url || '',
           image_source: img.image_source || '',
-          object_key: img.object_key || '',
+          key: img.key || '',
         }))
       } else {
         imagesToAdd.value = []

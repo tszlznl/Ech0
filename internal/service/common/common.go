@@ -2,11 +2,14 @@ package service
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strings"
 	"time"
@@ -29,6 +32,7 @@ import (
 	timezoneUtil "github.com/lin-snow/ech0/internal/util/timezone"
 	"go.uber.org/zap"
 	"golang.org/x/net/html"
+	"gorm.io/gorm"
 )
 
 const globalMusicFileIDKey = "global_music_file_id"
@@ -176,6 +180,109 @@ func (s *CommonService) UploadFile(
 	}, nil
 }
 
+func (s *CommonService) CreateExternalFile(
+	userid string,
+	dto commonModel.CreateExternalFileDto,
+) (commonModel.FileDto, error) {
+	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
+	if err != nil {
+		return commonModel.FileDto{}, err
+	}
+	if !user.IsAdmin {
+		return commonModel.FileDto{}, errors.New(commonModel.NO_PERMISSION_DENIED)
+	}
+
+	rawURL := httpUtil.TrimURL(dto.URL)
+	if rawURL == "" {
+		return commonModel.FileDto{}, errors.New(commonModel.INVALID_PARAMS)
+	}
+	parsed, err := url.Parse(rawURL)
+	if err != nil || parsed == nil {
+		return commonModel.FileDto{}, errors.New(commonModel.INVALID_PARAMS)
+	}
+	scheme := strings.ToLower(strings.TrimSpace(parsed.Scheme))
+	if scheme != "http" && scheme != "https" {
+		return commonModel.FileDto{}, errors.New(commonModel.INVALID_PARAMS)
+	}
+
+	contentType := strings.TrimSpace(dto.ContentType)
+	if contentType == "" {
+		contentType = httpUtil.GetMIMETypeFromFilenameOrURL(rawURL)
+	}
+
+	category := storageDomain.NormalizeCategory(dto.Category)
+	if category == "" {
+		if strings.HasPrefix(contentType, "audio/") {
+			category = storageDomain.CategoryAudio
+		} else {
+			category = storageDomain.CategoryImage
+		}
+	}
+
+	normalizedURL := parsed.String()
+	hash := sha256.Sum256([]byte(normalizedURL))
+	key := "external/" + string(category) + "/" + hex.EncodeToString(hash[:])
+
+	const (
+		storageType = string(commonModel.EXTERNAL_FILE)
+		provider    = string(commonModel.EXTERNAL_FILE)
+		bucket      = ""
+	)
+	existing, err := s.fileRepository.GetByRoute(context.Background(), storageType, provider, bucket, key)
+	if err == nil && existing != nil {
+		return commonModel.FileDto{
+			ID:          existing.ID,
+			Key:         existing.Key,
+			URL:         existing.URL,
+			ContentType: existing.ContentType,
+			Category:    existing.Category,
+			Size:        existing.Size,
+			Width:       existing.Width,
+			Height:      existing.Height,
+		}, nil
+	}
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return commonModel.FileDto{}, err
+	}
+
+	name := strings.TrimSpace(dto.Name)
+	if name == "" {
+		name = filepath.Base(parsed.Path)
+		if name == "" || name == "." || name == "/" {
+			name = "external"
+		}
+	}
+
+	fileRecord := &fileModel.File{
+		Key:         key,
+		StorageType: storageType,
+		Provider:    provider,
+		Bucket:      bucket,
+		URL:         normalizedURL,
+		Name:        name,
+		ContentType: contentType,
+		Size:        0,
+		Category:    string(category),
+		Width:       dto.Width,
+		Height:      dto.Height,
+		UserID:      user.ID,
+	}
+	if err := s.fileRepository.Create(context.Background(), fileRecord); err != nil {
+		return commonModel.FileDto{}, err
+	}
+
+	return commonModel.FileDto{
+		ID:          fileRecord.ID,
+		Key:         key,
+		URL:         normalizedURL,
+		ContentType: contentType,
+		Category:    string(category),
+		Size:        0,
+		Width:       fileRecord.Width,
+		Height:      fileRecord.Height,
+	}, nil
+}
+
 func (s *CommonService) DeleteFile(userid string, dto commonModel.FileDeleteDto) error {
 	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
 	if err != nil {
@@ -200,7 +307,9 @@ func (s *CommonService) DeleteFile(userid string, dto commonModel.FileDeleteDto)
 		return err
 	}
 
-	_ = s.DeleteStoredFile(dto.Key)
+	if fileRecord.StorageType != string(commonModel.EXTERNAL_FILE) {
+		_ = s.DeleteStoredFile(dto.Key)
+	}
 	return nil
 }
 
@@ -381,7 +490,9 @@ func (s *CommonService) DeleteMusic(userid string) error {
 		return err
 	}
 
-	_ = s.DeleteStoredFile(fileRecord.Key)
+	if fileRecord.StorageType != string(commonModel.EXTERNAL_FILE) {
+		_ = s.DeleteStoredFile(fileRecord.Key)
+	}
 	return nil
 }
 
@@ -525,8 +636,8 @@ func (s *CommonService) CleanupOrphanFiles() error {
 		if musicFileIDStr != "" && file.ID == musicFileIDStr {
 			continue
 		}
-		if file.Key != "" {
-			_ = s.fs.Delete(ctx, file.Key)
+		if file.Key != "" && file.StorageType != string(commonModel.EXTERNAL_FILE) {
+			_ = s.DeleteStoredFile(file.Key)
 		}
 		_ = s.fileRepository.Delete(ctx, file.ID)
 	}

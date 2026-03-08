@@ -11,7 +11,7 @@ interface PrintableEcho {
   content?: string | null
   created_at?: string | null
   tags?: Array<{ name?: string | null }> | null
-  images?: unknown[] | null
+  echo_files?: unknown[] | null
   extension?: string | null
   extension_type?: string | null
 }
@@ -26,7 +26,7 @@ const EXTENSION_LABEL_MAP: Record<string, string> = {
 
 const buildPrintableEchoText = (echo: PrintableEcho): string => {
   const content = echo.content?.trim() || ''
-  const imageCount = Array.isArray(echo.images) ? echo.images.length : 0
+  const imageCount = Array.isArray(echo.echo_files) ? echo.echo_files.length : 0
   const hasExtension = Boolean(echo.extension)
   const hasMedia = imageCount > 0 || hasExtension
 

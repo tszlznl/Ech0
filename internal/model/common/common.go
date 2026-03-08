@@ -53,6 +53,8 @@ const (
 	LOCAL_FILE FileStorageType = "local"
 	// S3_FILE   S3 存储类型
 	S3_FILE FileStorageType = "s3"
+	// EXTERNAL_FILE 直链外部存储类型
+	EXTERNAL_FILE FileStorageType = "external"
 )
 
 const (

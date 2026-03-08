@@ -50,6 +50,32 @@ func (commonHandler *CommonHandler) UploadFile() gin.HandlerFunc {
 	})
 }
 
+func (commonHandler *CommonHandler) CreateExternalFile() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		userId := ctx.MustGet("userid").(string)
+		var dto commonModel.CreateExternalFileDto
+		if err := ctx.ShouldBindJSON(&dto); err != nil {
+			return res.Response{
+				Msg: commonModel.INVALID_REQUEST_BODY,
+				Err: err,
+			}
+		}
+
+		fileDto, err := commonHandler.commonService.CreateExternalFile(userId, dto)
+		if err != nil {
+			return res.Response{
+				Msg: "",
+				Err: err,
+			}
+		}
+
+		return res.Response{
+			Data: fileDto,
+			Msg:  commonModel.UPLOAD_SUCCESS,
+		}
+	})
+}
+
 func (commonHandler *CommonHandler) DeleteFile() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		userId := ctx.MustGet("userid").(string)

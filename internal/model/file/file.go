@@ -13,9 +13,9 @@ type File struct {
 	// 存储键（本地文件名或对象存储 object key）
 	Key string `gorm:"type:varchar(500);not null;uniqueIndex:idx_file_route,priority:4" json:"key"`
 
-	StorageType string `gorm:"type:varchar(20);not null;uniqueIndex:idx_file_route,priority:1" json:"storage_type"` // local|object
-	Provider    string `gorm:"type:varchar(50);uniqueIndex:idx_file_route,priority:2" json:"provider,omitempty"`    // object 存储提供商，如 aws/r2/minio
-	Bucket      string `gorm:"type:varchar(120);uniqueIndex:idx_file_route,priority:3" json:"bucket,omitempty"`     // local 可空
+	StorageType string `gorm:"type:varchar(20);not null;uniqueIndex:idx_file_route,priority:1" json:"storage_type"` // local|object|external
+	Provider    string `gorm:"type:varchar(50);uniqueIndex:idx_file_route,priority:2" json:"provider,omitempty"`    // object 提供商，如 aws/r2/minio/external
+	Bucket      string `gorm:"type:varchar(120);uniqueIndex:idx_file_route,priority:3" json:"bucket,omitempty"`     // local/external 可空
 
 	URL         string `gorm:"type:text" json:"url"` // 前端直链快照
 	Name        string `gorm:"type:varchar(255)" json:"name"`

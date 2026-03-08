@@ -37,7 +37,7 @@ const props = defineProps<{
 const memorySource = ref<string>(props.TheImageSource) // 用于记住上传方式
 const isUploading = ref<boolean>(false) // 是否正在上传
 const files = ref<App.Api.Ech0.FileToAdd[]>([]) // 已上传的文件列表
-const tempFiles = ref<Map<string, { url: string; objectKey: string }>>(new Map()) // 用于S3临时存储文件回显地址的 Map(key: fileName, value: {url, objectKey})
+const tempFiles = ref<Map<string, { url: string; key: string }>>(new Map()) // 用于S3临时存储文件回显地址的 Map(key: fileName, value: {url, key})
 
 const userStore = useUserStore()
 const editorStore = useEditorStore()
@@ -162,7 +162,7 @@ const initUppy = () => {
         }
         console.log('获取预签名成功!')
         const data = res.data as App.Api.Ech0.PresignResult
-        tempFiles.value.set(data.file_name, { url: data.file_url, objectKey: data.object_key })
+        tempFiles.value.set(data.file_name, { url: data.file_url, key: data.key || '' })
         return {
           method: 'PUT',
           url: data.presign_url, // 预签名 URL
@@ -241,7 +241,7 @@ const initUppy = () => {
       const payload = extractUploadPayload(response) as App.Api.File.FileDto & Record<string, unknown>
 
       const fileId = String(payload.id || payload.file_id || payload.ID || '')
-      const objectKey = String(payload.key || payload.object_key || '')
+      const fileKey = String(payload.key || payload.object_key || '')
       const fileUrl = String(
         payload.url ||
           payload.file_url ||
@@ -259,7 +259,7 @@ const initUppy = () => {
         id: fileId,
         url: fileUrl,
         image_source: ImageSource.LOCAL,
-        object_key: objectKey,
+        key: fileKey,
         width: width,
         height: height,
       }
@@ -271,7 +271,7 @@ const initUppy = () => {
       const item: App.Api.Ech0.FileToAdd = {
         url: uploadedFile.url,
         image_source: ImageSource.S3,
-        object_key: uploadedFile.objectKey,
+        key: uploadedFile.key,
       }
       files.value.push(item)
     }

@@ -124,7 +124,7 @@ import Prev from '@/components/icons/prev.vue'
 import Next from '@/components/icons/next.vue'
 
 const props = defineProps<{
-  images: App.Api.Ech0.Echo['images']
+  images?: App.Api.Ech0.FileObject[]
   baseUrl?: string
   layout?: ImageLayout | string | undefined
 }>()
