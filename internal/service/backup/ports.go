@@ -8,9 +8,9 @@ import (
 )
 
 type Service interface {
-	Backup(userid uint) error
-	ExportBackup(ctx *gin.Context, userid uint) error
-	ImportBackup(ctx *gin.Context, userid uint, file *multipart.FileHeader) error
+	Backup(userid string) error
+	ExportBackup(ctx *gin.Context, userid string) error
+	ImportBackup(ctx *gin.Context, userid string, file *multipart.FileHeader) error
 }
 
 type CommonService = commonService.Service

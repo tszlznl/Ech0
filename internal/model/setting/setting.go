@@ -1,6 +1,11 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
+	"gorm.io/gorm"
+)
 
 const (
 	EIGHT_HOUR_EXPIRY string = "8_hours"
@@ -63,12 +68,19 @@ type OAuth2Setting struct {
 
 // AccessTokenSetting 定义访问令牌设置实体
 type AccessTokenSetting struct {
-	ID        int        `json:"id"`         // 访问令牌 ID
-	UserID    uint       `json:"user_id"`    // 创建该访问令牌的用户 ID
-	Token     string     `json:"token"`      // 访问令牌
+	ID        string     `gorm:"type:char(36);primaryKey" json:"id"` // 访问令牌 ID
+	UserID    string     `gorm:"type:char(36);index" json:"user_id"` // 创建该访问令牌的用户 ID
+	Token     string     `gorm:"type:varchar(255);uniqueIndex" json:"-"` // 访问令牌
 	Name      string     `json:"name"`       // 访问令牌名称
 	Expiry    *time.Time `json:"expiry"`     // 指针类型，NULL 表示永不过期
 	CreatedAt time.Time  `json:"created_at"` // 访问令牌创建时间，RFC3339 时间字符串
+}
+
+func (a *AccessTokenSetting) BeforeCreate(_ *gorm.DB) error {
+	if a.ID == "" {
+		a.ID = uuidUtil.MustNewV7()
+	}
+	return nil
 }
 
 // AgentSetting 定义 LLM Agent 设置实体

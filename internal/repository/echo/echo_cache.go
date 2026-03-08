@@ -79,8 +79,8 @@ func ClearTodayEchosCache(cache cache.ICache[string, any]) {
 	}
 }
 
-func GetEchoByIDCacheKey(id uint) string {
-	return "echo_id:" + strconv.Itoa(int(id))
+func GetEchoByIDCacheKey(id string) string {
+	return "echo_id:" + id
 }
 
 func GetTodayEchosCacheKey(showPrivate bool, timezone string) string {

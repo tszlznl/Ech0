@@ -99,7 +99,7 @@ func (settingService *SettingService) GetSetting(setting *model.SystemSetting) e
 
 // UpdateSetting 更新设置
 func (settingService *SettingService) UpdateSetting(
-	userid uint,
+	userid string,
 	newSetting *model.SystemSettingDto,
 ) error {
 	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
@@ -181,7 +181,7 @@ func (settingService *SettingService) GetCommentSetting(setting *model.CommentSe
 
 // UpdateCommentSetting 更新评论设置
 func (settingService *SettingService) UpdateCommentSetting(
-	userid uint,
+	userid string,
 	newSetting *model.CommentSettingDto,
 ) error {
 	user, err := settingService.commonService.CommonGetUserByUserId(context.Background(), userid)
@@ -222,7 +222,7 @@ func (settingService *SettingService) UpdateCommentSetting(
 }
 
 // GetS3Setting 获取 S3 存储设置
-func (settingService *SettingService) GetS3Setting(userid uint, setting *model.S3Setting) error {
+func (settingService *SettingService) GetS3Setting(userid string, setting *model.S3Setting) error {
 	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		s3Setting, err := settingService.keyvalueRepository.GetKeyValue(ctx, commonModel.S3SettingKey)
 		if err != nil {
@@ -280,7 +280,7 @@ func (settingService *SettingService) GetS3Setting(userid uint, setting *model.S
 
 // UpdateS3Setting 更新 S3 存储设置
 func (settingService *SettingService) UpdateS3Setting(
-	userid uint,
+	userid string,
 	newSetting *model.S3SettingDto,
 ) error {
 	user, err := settingService.commonService.CommonGetUserByUserId(context.Background(), userid)
@@ -357,7 +357,7 @@ func (settingService *SettingService) UpdateS3Setting(
 
 // GetOAuth2Setting 获取 OAuth2 设置
 func (settingService *SettingService) GetOAuth2Setting(
-	userid uint,
+	userid string,
 	setting *model.OAuth2Setting,
 	forInternal bool,
 ) error {
@@ -415,7 +415,7 @@ func (settingService *SettingService) GetOAuth2Setting(
 
 // UpdateOAuth2Setting 更新 OAuth2 设置
 func (settingService *SettingService) UpdateOAuth2Setting(
-	userid uint,
+	userid string,
 	newSetting *model.OAuth2SettingDto,
 ) error {
 	user, err := settingService.commonService.CommonGetUserByUserId(context.Background(), userid)
@@ -470,7 +470,7 @@ func (settingService *SettingService) GetOAuth2Status(status *model.OAuth2Status
 }
 
 // GetAllWebhooks 获取所有 Webhook
-func (settingService *SettingService) GetAllWebhooks(userid uint) ([]webhookModel.Webhook, error) {
+func (settingService *SettingService) GetAllWebhooks(userid string) ([]webhookModel.Webhook, error) {
 	// 鉴权
 	user, err := settingService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
@@ -489,7 +489,7 @@ func (settingService *SettingService) GetAllWebhooks(userid uint) ([]webhookMode
 }
 
 // DeleteWebhook 删除 Webhook
-func (settingService *SettingService) DeleteWebhook(userid, id uint) error {
+func (settingService *SettingService) DeleteWebhook(userid, id string) error {
 	// 鉴权
 	user, err := settingService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
@@ -506,7 +506,7 @@ func (settingService *SettingService) DeleteWebhook(userid, id uint) error {
 
 // UpdateWebhook 更新 Webhook
 func (settingService *SettingService) UpdateWebhook(
-	userid, id uint,
+	userid, id string,
 	newWebhook *model.WebhookDto,
 ) error {
 	// 鉴权
@@ -546,7 +546,7 @@ func (settingService *SettingService) UpdateWebhook(
 
 // CreateWebhook 创建 Webhook
 func (settingService *SettingService) CreateWebhook(
-	userid uint,
+	userid string,
 	newWebhook *model.WebhookDto,
 ) error {
 	// 鉴权
@@ -581,7 +581,7 @@ func (settingService *SettingService) CreateWebhook(
 
 // ListAccessTokens 列出访问令牌
 func (settingService *SettingService) ListAccessTokens(
-	userid uint,
+	userid string,
 ) ([]model.AccessTokenSetting, error) {
 	// 鉴权
 	user, err := settingService.commonService.CommonGetUserByUserId(context.Background(), userid)
@@ -608,7 +608,7 @@ func (settingService *SettingService) ListAccessTokens(
 		} else {
 			// 删除过期 token
 			_ = settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
-				return settingService.settingRepository.DeleteAccessTokenByID(ctx, uint(token.ID))
+				return settingService.settingRepository.DeleteAccessTokenByID(ctx, token.ID)
 			})
 		}
 	}
@@ -618,7 +618,7 @@ func (settingService *SettingService) ListAccessTokens(
 
 // CreateAccessToken 创建访问令牌
 func (settingService *SettingService) CreateAccessToken(
-	userid uint,
+	userid string,
 	newToken *model.AccessTokenSettingDto,
 ) (string, error) {
 	// 鉴权
@@ -680,7 +680,7 @@ func (settingService *SettingService) CreateAccessToken(
 }
 
 // DeleteAccessToken 删除访问令牌
-func (settingService *SettingService) DeleteAccessToken(userid, id uint) error {
+func (settingService *SettingService) DeleteAccessToken(userid, id string) error {
 	// 鉴权
 	user, err := settingService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
@@ -741,7 +741,7 @@ func (settingService *SettingService) GetBackupScheduleSetting(
 
 // UpdateBackupScheduleSetting 更新备份计划
 func (settingService *SettingService) UpdateBackupScheduleSetting(
-	userid uint,
+	userid string,
 	newSetting *model.BackupScheduleDto,
 ) error {
 	// 鉴权
@@ -828,7 +828,7 @@ func (settingService *SettingService) GetAgentInfo(setting *model.AgentSetting) 
 
 // GetAgentSettings 获取 Agent 设置
 func (settingService *SettingService) GetAgentSettings(
-	userid uint,
+	userid string,
 	setting *model.AgentSetting,
 ) error {
 	// 检查用户权限
@@ -876,7 +876,7 @@ func (settingService *SettingService) GetAgentSettings(
 
 // UpdateAgentSettings 更新 Agent 设置
 func (settingService *SettingService) UpdateAgentSettings(
-	userid uint,
+	userid string,
 	newSetting *model.AgentSettingDto,
 ) error {
 	// 检查用户权限

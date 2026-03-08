@@ -51,8 +51,8 @@ func (webhookRepository *WebhookRepository) GetAllWebhooks(ctx context.Context) 
 }
 
 // DeleteWebhookByID 根据ID删除webhook
-func (webhookRepository *WebhookRepository) DeleteWebhookByID(ctx context.Context, id uint) error {
-	if err := webhookRepository.getDB(ctx).Delete(&model.Webhook{}, id).Error; err != nil {
+func (webhookRepository *WebhookRepository) DeleteWebhookByID(ctx context.Context, id string) error {
+	if err := webhookRepository.getDB(ctx).Where("id = ?", id).Delete(&model.Webhook{}).Error; err != nil {
 		return err
 	}
 

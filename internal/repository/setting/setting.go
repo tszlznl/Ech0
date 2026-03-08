@@ -31,7 +31,7 @@ func (settingRepository *SettingRepository) getDB(ctx context.Context) *gorm.DB 
 // ListAccessTokens 列出访问令牌
 func (settingRepository *SettingRepository) ListAccessTokens(
 	ctx context.Context,
-	userID uint,
+	userID string,
 ) ([]model.AccessTokenSetting, error) {
 	var tokens []model.AccessTokenSetting
 	// 查询所有访问令牌
@@ -53,8 +53,8 @@ func (settingRepository *SettingRepository) CreateAccessToken(
 // DeleteAccessTokenByID 删除访问令牌
 func (settingRepository *SettingRepository) DeleteAccessTokenByID(
 	ctx context.Context,
-	id uint,
+	id string,
 ) error {
 	db := settingRepository.getDB(ctx)
-	return db.Delete(&model.AccessTokenSetting{}, id).Error
+	return db.Where("id = ?", id).Delete(&model.AccessTokenSetting{}).Error
 }

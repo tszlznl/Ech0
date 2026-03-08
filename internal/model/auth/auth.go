@@ -6,11 +6,13 @@ import (
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/golang-jwt/jwt/v5"
+	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
+	"gorm.io/gorm"
 )
 
 // MyClaims 是自定义的 JWT 声明结构体
 type MyClaims struct {
-	Userid   uint   `json:"user_id"`
+	Userid   string `json:"user_id"`
 	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
@@ -19,7 +21,7 @@ const (
 	// MAX_USER_COUNT 定义最大用户数量
 	MAX_USER_COUNT = 5
 	// NO_USER_LOGINED 定义未登录用户的 ID
-	NO_USER_LOGINED = uint(0)
+	NO_USER_LOGINED = ""
 )
 
 type (
@@ -41,7 +43,7 @@ const (
 
 type OAuthState struct {
 	Action   string `json:"action"`
-	UserID   uint   `json:"user_id,omitempty"`
+	UserID   string `json:"user_id,omitempty"`
 	Nonce    string `json:"nonce"`
 	Redirect string `json:"redirect,omitempty"`
 	Exp      int64  `json:"exp"`
@@ -111,8 +113,8 @@ type QQUser struct {
 
 // Passkey/WebAuthn 定义 Passkey/WebAuthn 实体，用于存储 Passkey/WebAuthn 凭证信息和绑定已有用户
 type Passkey struct {
-	ID           uint   `gorm:"primaryKey"`
-	UserID       uint   `gorm:"not null;index"`
+	ID           string `gorm:"type:char(36);primaryKey"`
+	UserID       string `gorm:"type:char(36);not null;index"`
 	CredentialID string `gorm:"size:255;not null;uniqueIndex:uid_cred"`
 	// CredentialJSON 存储 go-webauthn 的 webauthn.Credential 序列化结果，用于后续校验
 	CredentialJSON string `gorm:"type:text;not null"`
@@ -153,7 +155,7 @@ type PasskeyLoginBeginResp struct {
 
 // PasskeyDeviceDto 用于多设备展示
 type PasskeyDeviceDto struct {
-	ID         uint      `json:"id"`
+	ID         string    `json:"id"`
 	DeviceName string    `json:"device_name"`
 	AAGUID     string    `json:"aaguid"`
 	LastUsedAt time.Time `json:"last_used_at"`
@@ -162,4 +164,11 @@ type PasskeyDeviceDto struct {
 
 type PasskeyUpdateDeviceNameReq struct {
 	DeviceName string `json:"device_name" binding:"required"`
+}
+
+func (p *Passkey) BeforeCreate(_ *gorm.DB) error {
+	if p.ID == "" {
+		p.ID = uuidUtil.MustNewV7()
+	}
+	return nil
 }

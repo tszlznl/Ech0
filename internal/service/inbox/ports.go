@@ -9,11 +9,11 @@ import (
 )
 
 type Service interface {
-	GetInboxList(userid uint, pageQueryDto commonModel.PageQueryDto) (commonModel.PageQueryResult[[]*inboxModel.Inbox], error)
-	GetUnreadInbox(userid uint) ([]*inboxModel.Inbox, error)
-	MarkAsRead(userid, inboxID uint) error
-	DeleteInbox(userid, inboxID uint) error
-	ClearInbox(userid uint) error
+	GetInboxList(userid string, pageQueryDto commonModel.PageQueryDto) (commonModel.PageQueryResult[[]*inboxModel.Inbox], error)
+	GetUnreadInbox(userid string) ([]*inboxModel.Inbox, error)
+	MarkAsRead(userid, inboxID string) error
+	DeleteInbox(userid, inboxID string) error
+	ClearInbox(userid string) error
 }
 
 type CommonService = commonService.Service
@@ -21,8 +21,8 @@ type CommonService = commonService.Service
 type Repository interface {
 	GetInboxList(ctx context.Context, offset, limit int, search string) ([]*inboxModel.Inbox, int64, error)
 	GetUnreadInbox(ctx context.Context) ([]*inboxModel.Inbox, error)
-	GetInboxById(ctx context.Context, id uint) (*inboxModel.Inbox, error)
+	GetInboxById(ctx context.Context, id string) (*inboxModel.Inbox, error)
 	UpdateInbox(ctx context.Context, inbox *inboxModel.Inbox) error
-	DeleteInbox(ctx context.Context, id uint) error
+	DeleteInbox(ctx context.Context, id string) error
 	ClearInbox(ctx context.Context) error
 }

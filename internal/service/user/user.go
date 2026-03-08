@@ -6,7 +6,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -180,9 +179,9 @@ func (userService *UserService) Register(registerDto *authModel.RegisterDto) err
 //
 // 返回:
 //   - error: 更新过程中的错误信息
-func (userService *UserService) UpdateUser(userid uint, userdto model.UserInfoDto) error {
+func (userService *UserService) UpdateUser(userid string, userdto model.UserInfoDto) error {
 	// 检查执行操作的用户是否为管理员
-	user, err := userService.userRepository.GetUserByID(context.Background(), int(userid))
+	user, err := userService.userRepository.GetUserByID(context.Background(), userid)
 	if err != nil {
 		return err
 	}
@@ -244,9 +243,9 @@ func (userService *UserService) UpdateUser(userid uint, userdto model.UserInfoDt
 //
 // 返回:
 //   - error: 更新过程中的错误信息
-func (userService *UserService) UpdateUserAdmin(userid uint, id uint) error {
+func (userService *UserService) UpdateUserAdmin(userid string, id string) error {
 	// 检查执行操作的用户是否为管理员
-	user, err := userService.userRepository.GetUserByID(context.Background(), int(userid))
+	user, err := userService.userRepository.GetUserByID(context.Background(), userid)
 	if err != nil {
 		return err
 	}
@@ -255,7 +254,7 @@ func (userService *UserService) UpdateUserAdmin(userid uint, id uint) error {
 	}
 
 	// 检查要修改权限的用户是否存在
-	user, err = userService.userRepository.GetUserByID(context.Background(), int(id))
+	user, err = userService.userRepository.GetUserByID(context.Background(), id)
 	if err != nil {
 		return err
 	}
@@ -349,11 +348,11 @@ func (userService *UserService) GetSysAdmin() (model.User, error) {
 //
 // 返回:
 //   - error: 删除过程中的错误信息
-func (userService *UserService) DeleteUser(userid, id uint) error {
+func (userService *UserService) DeleteUser(userid, id string) error {
 	var deletedUser model.User
 	err := userService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		// 检查执行操作的用户是否为管理员
-		user, err := userService.userRepository.GetUserByID(ctx, int(userid))
+		user, err := userService.userRepository.GetUserByID(ctx, userid)
 		if err != nil {
 			return err
 		}
@@ -362,7 +361,7 @@ func (userService *UserService) DeleteUser(userid, id uint) error {
 		}
 
 		// 检查要删除的用户是否存在
-		user, err = userService.userRepository.GetUserByID(ctx, int(id))
+		user, err = userService.userRepository.GetUserByID(ctx, id)
 		if err != nil {
 			return err
 		}
@@ -406,17 +405,17 @@ func (userService *UserService) DeleteUser(userid, id uint) error {
 // 返回:
 //   - model.User: 用户信息
 //   - error: 获取过程中的错误信息
-func (userService *UserService) GetUserByID(userId int) (model.User, error) {
+func (userService *UserService) GetUserByID(userId string) (model.User, error) {
 	return userService.userRepository.GetUserByID(context.Background(), userId)
 }
 
 // BindOAuth 绑定 OAuth2 账号(支持 OAuth2 和 OIDC)
 func (userService *UserService) BindOAuth(
-	userID uint,
+	userID string,
 	provider string,
 	redirectURI string,
 ) (string, error) {
-	user, err := userService.userRepository.GetUserByID(context.Background(), int(userID))
+	user, err := userService.userRepository.GetUserByID(context.Background(), userID)
 	if err != nil {
 		return "", err
 	}
@@ -602,7 +601,7 @@ func (userService *UserService) getOAuthSetting(
 	provider string,
 ) (*settingModel.OAuth2Setting, error) {
 	var setting settingModel.OAuth2Setting
-	if err := userService.settingService.GetOAuth2Setting(0, &setting, true); err != nil {
+	if err := userService.settingService.GetOAuth2Setting(authModel.NO_USER_LOGINED, &setting, true); err != nil {
 		return nil, err
 	}
 
@@ -1102,13 +1101,13 @@ func fetchCustomUserInfo(
 
 // GetOAuthInfo 获取 OAuth2 信息
 func (userService *UserService) GetOAuthInfo(
-	userId uint,
+	userId string,
 	provider string,
 ) (model.OAuthInfoDto, error) {
 	var oauthInfo model.OAuthInfoDto
 
 	// 检查当前用户是否存在
-	user, err := userService.userRepository.GetUserByID(context.Background(), int(userId))
+	user, err := userService.userRepository.GetUserByID(context.Background(), userId)
 	if err != nil {
 		return oauthInfo, err
 	}
@@ -1214,17 +1213,12 @@ func getPasskeyLoginSessionKey(nonce string) string {
 	return fmt.Sprintf("%s:%s", passkeyLoginKey, nonce)
 }
 
-func makeUserHandle(userID uint) []byte {
-	buf := make([]byte, 8)
-	binary.BigEndian.PutUint64(buf, uint64(userID))
-	return buf
+func makeUserHandle(userID string) []byte {
+	return []byte(userID)
 }
 
-func userIDFromHandle(handle []byte) uint {
-	if len(handle) < 8 {
-		return 0
-	}
-	return uint(binary.BigEndian.Uint64(handle[:8]))
+func userIDFromHandle(handle []byte) string {
+	return string(handle)
 }
 
 func (userService *UserService) newWebAuthn(rpID, origin string) (*webauthn.WebAuthn, error) {
@@ -1236,9 +1230,9 @@ func (userService *UserService) newWebAuthn(rpID, origin string) (*webauthn.WebA
 }
 
 func (userService *UserService) getWebauthnUserByID(
-	userID uint,
+	userID string,
 ) (*webauthnUser, model.User, error) {
-	u, err := userService.userRepository.GetUserByID(context.Background(), int(userID))
+	u, err := userService.userRepository.GetUserByID(context.Background(), userID)
 	if err != nil {
 		return nil, model.User{}, err
 	}
@@ -1267,7 +1261,7 @@ func (userService *UserService) getWebauthnUserByID(
 }
 
 func (userService *UserService) PasskeyRegisterBegin(
-	userID uint,
+	userID string,
 	rpID, origin, deviceName string,
 ) (authModel.PasskeyRegisterBeginResp, error) {
 	var resp authModel.PasskeyRegisterBeginResp
@@ -1322,7 +1316,7 @@ func (userService *UserService) PasskeyRegisterBegin(
 }
 
 func (userService *UserService) PasskeyRegisterFinish(
-	userID uint,
+	userID string,
 	rpID, origin, nonce string,
 	credential json.RawMessage,
 ) error {
@@ -1478,7 +1472,7 @@ func (userService *UserService) PasskeyLoginFinish(
 	}
 
 	uid := userIDFromHandle(user.WebAuthnID())
-	if uid == 0 {
+	if uid == "" {
 		// fallback：根据 credentialID 再查一次
 		credID := base64.RawURLEncoding.EncodeToString(credentialObj.ID)
 		pk, err2 := userService.userRepository.GetPasskeyByCredentialID(credID)
@@ -1502,7 +1496,7 @@ func (userService *UserService) PasskeyLoginFinish(
 		})
 	}
 
-	u, err := userService.userRepository.GetUserByID(context.Background(), int(uid))
+	u, err := userService.userRepository.GetUserByID(context.Background(), uid)
 	if err != nil {
 		return "", err
 	}
@@ -1515,7 +1509,7 @@ func (userService *UserService) PasskeyLoginFinish(
 	return token, nil
 }
 
-func (userService *UserService) ListPasskeys(userID uint) ([]authModel.PasskeyDeviceDto, error) {
+func (userService *UserService) ListPasskeys(userID string) ([]authModel.PasskeyDeviceDto, error) {
 	passkeys, err := userService.userRepository.ListPasskeysByUserID(userID)
 	if err != nil {
 		return nil, err
@@ -1534,14 +1528,14 @@ func (userService *UserService) ListPasskeys(userID uint) ([]authModel.PasskeyDe
 	return devs, nil
 }
 
-func (userService *UserService) DeletePasskey(userID, passkeyID uint) error {
+func (userService *UserService) DeletePasskey(userID, passkeyID string) error {
 	return userService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		return userService.userRepository.DeletePasskeyByID(ctx, userID, passkeyID)
 	})
 }
 
 func (userService *UserService) UpdatePasskeyDeviceName(
-	userID, passkeyID uint,
+	userID, passkeyID string,
 	deviceName string,
 ) error {
 	if strings.TrimSpace(deviceName) == "" {

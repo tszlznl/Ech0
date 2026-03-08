@@ -56,9 +56,9 @@ func (connectRepository *ConnectRepository) CreateConnect(
 }
 
 // DeleteConnect 删除连接
-func (connectRepository *ConnectRepository) DeleteConnect(ctx context.Context, id uint) error {
+func (connectRepository *ConnectRepository) DeleteConnect(ctx context.Context, id string) error {
 	// 根据 ID 删除 Connect
-	if err := connectRepository.getDB(ctx).Delete(&model.Connected{}, id).Error; err != nil {
+	if err := connectRepository.getDB(ctx).Where("id = ?", id).Delete(&model.Connected{}).Error; err != nil {
 		return err
 	}
 

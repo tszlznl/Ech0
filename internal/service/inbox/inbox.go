@@ -32,7 +32,7 @@ func NewInboxService(
 
 // GetInboxList 获取收件箱消息列表
 func (inboxService *InboxService) GetInboxList(
-	userid uint,
+	userid string,
 	pageQueryDto commonModel.PageQueryDto,
 ) (commonModel.PageQueryResult[[]*inboxModel.Inbox], error) {
 	if err := inboxService.ensureAdmin(context.Background(), userid); err != nil {
@@ -66,7 +66,7 @@ func (inboxService *InboxService) GetInboxList(
 }
 
 // GetUnreadInbox 获取所有未读消息
-func (inboxService *InboxService) GetUnreadInbox(userid uint) ([]*inboxModel.Inbox, error) {
+func (inboxService *InboxService) GetUnreadInbox(userid string) ([]*inboxModel.Inbox, error) {
 	if err := inboxService.ensureAdmin(context.Background(), userid); err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (inboxService *InboxService) GetUnreadInbox(userid uint) ([]*inboxModel.Inb
 }
 
 // MarkAsRead 将消息标记为已读
-func (inboxService *InboxService) MarkAsRead(userid, inboxID uint) error {
+func (inboxService *InboxService) MarkAsRead(userid, inboxID string) error {
 	if err := inboxService.ensureAdmin(context.Background(), userid); err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func (inboxService *InboxService) MarkAsRead(userid, inboxID uint) error {
 }
 
 // DeleteInbox 删除指定的收件箱消息
-func (inboxService *InboxService) DeleteInbox(userid, inboxID uint) error {
+func (inboxService *InboxService) DeleteInbox(userid, inboxID string) error {
 	if err := inboxService.ensureAdmin(context.Background(), userid); err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (inboxService *InboxService) DeleteInbox(userid, inboxID uint) error {
 }
 
 // ClearInbox 清空收件箱
-func (inboxService *InboxService) ClearInbox(userid uint) error {
+func (inboxService *InboxService) ClearInbox(userid string) error {
 	if err := inboxService.ensureAdmin(context.Background(), userid); err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (inboxService *InboxService) ClearInbox(userid uint) error {
 	})
 }
 
-func (inboxService *InboxService) ensureAdmin(ctx context.Context, userid uint) error {
+func (inboxService *InboxService) ensureAdmin(ctx context.Context, userid string) error {
 	user, err := inboxService.commonService.CommonGetUserByUserId(ctx, userid)
 	if err != nil {
 		return err

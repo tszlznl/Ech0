@@ -2,14 +2,14 @@ package model
 
 // UserStatus 用于存储用户状态信息
 type UserStatus struct {
-	UserID   uint   `json:"user_id"`  // 用户ID
+	UserID   string `json:"user_id"`  // 用户ID
 	UserName string `json:"username"` // 用户名
 	IsAdmin  bool   `json:"is_admin"` // 是否是管理员
 }
 
 // Status 用于存储Echo状态信息
 type Status struct {
-	SysAdminID uint         `json:"sys_admin_id"` // 系统管理员ID
+	SysAdminID string       `json:"sys_admin_id"` // 系统管理员ID
 	Username   string       `json:"username"`     // 系统管理员用户名
 	Users      []UserStatus `json:"users"`        // 所有用户
 	Logo       string       `json:"logo"`         // 站点logo

@@ -19,8 +19,8 @@ import (
 
 type InboxStore interface {
 	PostInbox(ctx context.Context, inbox *inboxModel.Inbox) error
-	GetExpiredReadInboxIDs(ctx context.Context, minReadCount int, readBefore int64) ([]uint, error)
-	ClearReadInboxByIds(ctx context.Context, inboxIDs []uint) error
+	GetExpiredReadInboxIDs(ctx context.Context, minReadCount int, readBefore int64) ([]string, error)
+	ClearReadInboxByIds(ctx context.Context, inboxIDs []string) error
 }
 
 type InboxDispatcher struct {

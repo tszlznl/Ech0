@@ -31,9 +31,9 @@ func (r *FileRepository) Create(ctx context.Context, file *model.File) error {
 	return r.getDB(ctx).Create(file).Error
 }
 
-func (r *FileRepository) GetByID(ctx context.Context, id uint) (*model.File, error) {
+func (r *FileRepository) GetByID(ctx context.Context, id string) (*model.File, error) {
 	var f model.File
-	if err := r.getDB(ctx).First(&f, id).Error; err != nil {
+	if err := r.getDB(ctx).Where("id = ?", id).First(&f).Error; err != nil {
 		return nil, err
 	}
 	return &f, nil
@@ -47,12 +47,32 @@ func (r *FileRepository) GetByKey(ctx context.Context, key string) (*model.File,
 	return &f, nil
 }
 
-func (r *FileRepository) Delete(ctx context.Context, id uint) error {
-	return r.getDB(ctx).Delete(&model.File{}, id).Error
+func (r *FileRepository) GetByRoute(
+	ctx context.Context,
+	storageType, provider, bucket, key string,
+) (*model.File, error) {
+	var f model.File
+	if err := r.getDB(ctx).
+		Where("storage_type = ? AND provider = ? AND bucket = ? AND key = ?",
+			storageType, provider, bucket, key).
+		First(&f).Error; err != nil {
+		return nil, err
+	}
+	return &f, nil
 }
 
-func (r *FileRepository) DeleteByKey(ctx context.Context, key string) error {
-	return r.getDB(ctx).Where("key = ?", key).Delete(&model.File{}).Error
+func (r *FileRepository) Delete(ctx context.Context, id string) error {
+	return r.getDB(ctx).Where("id = ?", id).Delete(&model.File{}).Error
+}
+
+func (r *FileRepository) DeleteByRoute(
+	ctx context.Context,
+	storageType, provider, bucket, key string,
+) error {
+	return r.getDB(ctx).
+		Where("storage_type = ? AND provider = ? AND bucket = ? AND key = ?",
+			storageType, provider, bucket, key).
+		Delete(&model.File{}).Error
 }
 
 func (r *FileRepository) GetOrphanFiles(ctx context.Context, olderThan time.Time) ([]model.File, error) {

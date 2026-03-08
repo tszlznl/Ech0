@@ -1,9 +1,8 @@
 package handler
 
 import (
-	"strconv"
-
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	res "github.com/lin-snow/ech0/internal/handler/response"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/todo"
@@ -33,7 +32,7 @@ func NewTodoHandler(todoService service.Service) *TodoHandler {
 func (todoHandler *TodoHandler) AddTodo() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
 		var todo model.Todo
 		if err := ctx.ShouldBindJSON(&todo); err != nil {
@@ -70,19 +69,18 @@ func (todoHandler *TodoHandler) AddTodo() gin.HandlerFunc {
 func (todoHandler *TodoHandler) UpdateTodo() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
 		// 从 URL 参数获取Echo ID
-		idStr := ctx.Param("id")
-		id, err := strconv.ParseUint(idStr, 10, 64)
-		if err != nil {
+		id := ctx.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS_BODY,
 				Err: err,
 			}
 		}
 
-		if err := todoHandler.todoService.UpdateTodo(userid, int64(id)); err != nil {
+		if err := todoHandler.todoService.UpdateTodo(userid, id); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -109,19 +107,18 @@ func (todoHandler *TodoHandler) UpdateTodo() gin.HandlerFunc {
 func (todoHandler *TodoHandler) DeleteTodo() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
 		// 从 URL 参数获取Echo ID
-		idStr := ctx.Param("id")
-		id, err := strconv.ParseUint(idStr, 10, 64)
-		if err != nil {
+		id := ctx.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS_BODY,
 				Err: err,
 			}
 		}
 
-		if err := todoHandler.todoService.DeleteTodo(userid, int64(id)); err != nil {
+		if err := todoHandler.todoService.DeleteTodo(userid, id); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -147,7 +144,7 @@ func (todoHandler *TodoHandler) DeleteTodo() gin.HandlerFunc {
 func (todoHandler *TodoHandler) GetTodoList() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
 		todos, err := todoHandler.todoService.GetTodoList(userid)
 		if err != nil {

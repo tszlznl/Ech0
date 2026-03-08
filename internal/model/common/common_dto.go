@@ -14,7 +14,7 @@ type PageQueryDto struct {
 //
 // swagger:model FileDto
 type FileDto struct {
-	ID          uint   `json:"id"`
+	ID          string `json:"id"`
 	Key         string `json:"key"`
 	URL         string `json:"url"`
 	ContentType string `json:"content_type,omitempty"`

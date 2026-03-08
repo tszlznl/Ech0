@@ -96,7 +96,7 @@ func ParseToken(tokenString string) (*authModel.MyClaims, error) {
 // GenerateOAuthState 生成 OAuth2 state token
 func GenerateOAuthState(
 	action string,
-	userID uint,
+	userID string,
 	redirect, provider string,
 ) (string, string, error) {
 	now := time.Now().UTC()
@@ -136,7 +136,7 @@ func ParseOAuthState(stateStr string) (*authModel.OAuthState, error) {
 
 	return &authModel.OAuthState{
 		Action:   claims["action"].(string),
-		UserID:   uint(claims["user_id"].(float64)),
+		UserID:   fmt.Sprint(claims["user_id"]),
 		Nonce:    claims["nonce"].(string),
 		Redirect: claims["redirect"].(string),
 		Exp:      int64(claims["exp"].(float64)),

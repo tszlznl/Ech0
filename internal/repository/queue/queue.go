@@ -34,7 +34,7 @@ func (queueRepository *QueueRepository) SaveDeadLetter(
 
 // DeleteDeadLetter 删除死信任务
 func (queueRepository *QueueRepository) DeleteDeadLetter(ctx context.Context, id int64) error {
-	return queueRepository.getDB(ctx).Delete(&model.DeadLetter{}, id).Error
+	return queueRepository.getDB(ctx).Where("id = ?", id).Delete(&model.DeadLetter{}).Error
 }
 
 // ListDeadLetters 列出所有死信任务

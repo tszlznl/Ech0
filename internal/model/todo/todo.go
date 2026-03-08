@@ -1,15 +1,27 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
+	"gorm.io/gorm"
+)
 
 // Todo 定义待办事项实体
 type Todo struct {
-	ID        uint      `gorm:"primaryKey"         json:"id"`
+	ID        string    `gorm:"type:char(36);primaryKey" json:"id"`
 	Content   string    `gorm:"type:text;not null" json:"content"`
-	UserID    uint      `gorm:"not null;index"     json:"user_id"`
+	UserID    string    `gorm:"type:char(36);not null;index" json:"user_id"`
 	Username  string    `gorm:"type:varchar(100)"  json:"username,omitempty"`
 	Status    uint      `gorm:"default:0"          json:"status"` // 0:未完成 1:已完成
 	CreatedAt time.Time `                          json:"created_at"`
+}
+
+func (t *Todo) BeforeCreate(_ *gorm.DB) error {
+	if t.ID == "" {
+		t.ID = uuidUtil.MustNewV7()
+	}
+	return nil
 }
 
 // Todo 相关状态常量

@@ -100,7 +100,7 @@ func (echoRepository *EchoRepository) GetEchosByPage(
 	return pageResult.Items, pageResult.Total
 }
 
-func (echoRepository *EchoRepository) GetEchosById(ctx context.Context, id uint) (*model.Echo, error) {
+func (echoRepository *EchoRepository) GetEchosById(ctx context.Context, id string) (*model.Echo, error) {
 	cacheKey := GetEchoByIDCacheKey(id)
 	echo, err := cache.ReadThroughTypedUnlessTx[*model.Echo](
 		ctx,
@@ -115,7 +115,8 @@ func (echoRepository *EchoRepository) GetEchosById(ctx context.Context, id uint)
 				}).
 				Preload("EchoFiles.File").
 				Preload("Tags").
-				First(&row, id)
+				Where("id = ?", id).
+				First(&row)
 			if result.Error != nil {
 				return nil, result.Error
 			}
@@ -129,7 +130,8 @@ func (echoRepository *EchoRepository) GetEchosById(ctx context.Context, id uint)
 				}).
 				Preload("EchoFiles.File").
 				Preload("Tags").
-				First(&row, id)
+				Where("id = ?", id).
+				First(&row)
 			if result.Error != nil {
 				return nil, result.Error
 			}
@@ -144,11 +146,11 @@ func (echoRepository *EchoRepository) GetEchosById(ctx context.Context, id uint)
 	return echo, nil
 }
 
-func (echoRepository *EchoRepository) DeleteEchoById(ctx context.Context, id uint) error {
+func (echoRepository *EchoRepository) DeleteEchoById(ctx context.Context, id string) error {
 	var echo model.Echo
 	echoRepository.getDB(ctx).Where("echo_id = ?", id).Delete(&fileModel.EchoFile{})
 
-	result := echoRepository.getDB(ctx).Delete(&echo, id)
+	result := echoRepository.getDB(ctx).Where("id = ?", id).Delete(&echo)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -255,7 +257,7 @@ func (echoRepository *EchoRepository) UpdateEcho(ctx context.Context, echo *mode
 	return nil
 }
 
-func (echoRepository *EchoRepository) LikeEcho(ctx context.Context, id uint) error {
+func (echoRepository *EchoRepository) LikeEcho(ctx context.Context, id string) error {
 	var exists bool
 	if err := echoRepository.getDB(ctx).
 		Model(&model.Echo{}).
@@ -291,14 +293,14 @@ func (echoRepository *EchoRepository) GetAllTags() ([]model.Tag, error) {
 	return tags, nil
 }
 
-func (echoRepository *EchoRepository) DeleteTagById(ctx context.Context, id uint) error {
+func (echoRepository *EchoRepository) DeleteTagById(ctx context.Context, id string) error {
 	var tag model.Tag
 
 	if err := echoRepository.getDB(ctx).Where("tag_id = ?", id).Delete(&model.EchoTag{}).Error; err != nil {
 		return err
 	}
 
-	result := echoRepository.getDB(ctx).Delete(&tag, id)
+	result := echoRepository.getDB(ctx).Where("id = ?", id).Delete(&tag)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -346,7 +348,7 @@ func (echoRepository *EchoRepository) CreateTag(ctx context.Context, tag *model.
 
 func (echoRepository *EchoRepository) IncrementTagUsageCount(
 	ctx context.Context,
-	tagID uint,
+	tagID string,
 ) error {
 	return echoRepository.getDB(ctx).Model(&model.Tag{}).
 		Where("id = ?", tagID).
@@ -354,7 +356,7 @@ func (echoRepository *EchoRepository) IncrementTagUsageCount(
 }
 
 func (echoRepository *EchoRepository) GetEchosByTagId(
-	tagId uint,
+	tagId string,
 	page, pageSize int,
 	search string,
 	showPrivate bool,
@@ -387,7 +389,7 @@ func (echoRepository *EchoRepository) GetEchosByTagId(
 
 	offset := (page - 1) * pageSize
 
-	var echoIDs []uint
+	var echoIDs []string
 	idsQuery := applyFilters(echoRepository.db().Model(&model.Echo{}))
 	if err := idsQuery.
 		Distinct("echos.id").

@@ -32,7 +32,7 @@ func NewBackupService(
 	}
 }
 
-func (bs *BackupService) Backup(userid uint) error {
+func (bs *BackupService) Backup(userid string) error {
 	user, err := bs.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
@@ -55,7 +55,7 @@ func (bs *BackupService) Backup(userid uint) error {
 	return nil
 }
 
-func (bs *BackupService) ExportBackup(ctx *gin.Context, userid uint) error {
+func (bs *BackupService) ExportBackup(ctx *gin.Context, userid string) error {
 	user, err := bs.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
@@ -99,7 +99,7 @@ func (bs *BackupService) ExportBackup(ctx *gin.Context, userid uint) error {
 
 func (bs *BackupService) ImportBackup(
 	ctx *gin.Context,
-	userid uint,
+	userid string,
 	file *multipart.FileHeader,
 ) error {
 	user, err := bs.commonService.CommonGetUserByUserId(context.Background(), userid)

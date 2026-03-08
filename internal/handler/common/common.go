@@ -33,7 +33,7 @@ func (commonHandler *CommonHandler) UploadFile() gin.HandlerFunc {
 		}
 
 		category := storageDomain.NormalizeCategory(ctx.PostForm("category"))
-		userId := ctx.MustGet("userid").(uint)
+		userId := ctx.MustGet("userid").(string)
 
 		fileDto, err := commonHandler.commonService.UploadFile(userId, file, category)
 		if err != nil {
@@ -52,7 +52,7 @@ func (commonHandler *CommonHandler) UploadFile() gin.HandlerFunc {
 
 func (commonHandler *CommonHandler) DeleteFile() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userId := ctx.MustGet("userid").(uint)
+		userId := ctx.MustGet("userid").(string)
 
 		var dto commonModel.FileDeleteDto
 		if err := ctx.ShouldBindJSON(&dto); err != nil {
@@ -143,7 +143,7 @@ func (commonHandler *CommonHandler) GetRss(ctx *gin.Context) {
 
 func (commonHandler *CommonHandler) UploadAudio() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userId := ctx.MustGet("userid").(uint)
+		userId := ctx.MustGet("userid").(string)
 
 		file, err := ctx.FormFile("file")
 		if err != nil {
@@ -170,7 +170,7 @@ func (commonHandler *CommonHandler) UploadAudio() gin.HandlerFunc {
 
 func (commonHandler *CommonHandler) DeleteAudio() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userId := ctx.MustGet("userid").(uint)
+		userId := ctx.MustGet("userid").(string)
 
 		if err := commonHandler.commonService.DeleteMusic(userId); err != nil {
 			return res.Response{
@@ -234,7 +234,7 @@ func (commonHandler *CommonHandler) Healthz() gin.HandlerFunc {
 
 func (commonHandler *CommonHandler) GetFilePresignURL() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userId := ctx.MustGet("userid").(uint)
+		userId := ctx.MustGet("userid").(string)
 		var s3Dto commonModel.GetPresignURLDto
 		if err := ctx.ShouldBindJSON(&s3Dto); err != nil {
 			return res.Response{

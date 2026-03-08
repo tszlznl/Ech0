@@ -1,5 +1,10 @@
 package model
 
+import (
+	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
+	"gorm.io/gorm"
+)
+
 // Connect 定义可读取的连接信息
 type Connect struct {
 	ServerName  string `json:"server_name"`  // 服务器名称
@@ -12,6 +17,13 @@ type Connect struct {
 
 // Connected 定义添加的连接信息
 type Connected struct {
-	ID         uint   `gorm:"primaryKey" json:"id"`
+	ID         string `gorm:"type:char(36);primaryKey" json:"id"`
 	ConnectURL string `                  json:"connect_url"` // 连接地址
+}
+
+func (c *Connected) BeforeCreate(_ *gorm.DB) error {
+	if c.ID == "" {
+		c.ID = uuidUtil.MustNewV7()
+	}
+	return nil
 }

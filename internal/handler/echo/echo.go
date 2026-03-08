@@ -2,9 +2,9 @@ package handler
 
 import (
 	"errors"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	res "github.com/lin-snow/ech0/internal/handler/response"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/echo"
@@ -44,7 +44,7 @@ func (echoHandler *EchoHandler) PostEcho() gin.HandlerFunc {
 			}
 		}
 
-		userId := ctx.MustGet("userid").(uint)
+		userId := ctx.MustGet("userid").(string)
 		if err := echoHandler.echoService.PostEcho(userId, &newEcho); err != nil {
 			return res.Response{
 				Msg: "",
@@ -107,7 +107,7 @@ func (echoHandler *EchoHandler) GetEchosByPage() gin.HandlerFunc {
 		}
 
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 		result, err := echoHandler.echoService.GetEchosByPage(userid, pageRequest)
 		if err != nil {
 			return res.Response{
@@ -137,18 +137,17 @@ func (echoHandler *EchoHandler) GetEchosByPage() gin.HandlerFunc {
 func (echoHandler *EchoHandler) DeleteEcho() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
 		// 从 URL 参数获取Echo ID
-		idStr := ctx.Param("id")
-		id, err := strconv.ParseUint(idStr, 10, 64)
-		if err != nil {
+		id := ctx.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS,
 			}
 		}
 
-		if err := echoHandler.echoService.DeleteEchoById(userid, uint(id)); err != nil {
+		if err := echoHandler.echoService.DeleteEchoById(userid, id); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -174,7 +173,7 @@ func (echoHandler *EchoHandler) DeleteEcho() gin.HandlerFunc {
 func (echoHandler *EchoHandler) GetTodayEchos() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 		timezone := timezoneUtil.NormalizeTimezone(ctx.GetHeader(timezoneUtil.DefaultTimezoneHeader))
 		result, err := echoHandler.echoService.GetTodayEchos(userid, timezone)
 		if err != nil {
@@ -212,7 +211,7 @@ func (echoHandler *EchoHandler) UpdateEcho() gin.HandlerFunc {
 			}
 		}
 
-		userId := ctx.MustGet("userid").(uint)
+		userId := ctx.MustGet("userid").(string)
 		if err := echoHandler.echoService.UpdateEcho(userId, &updateEcho); err != nil {
 			return res.Response{
 				Msg: "",
@@ -240,15 +239,14 @@ func (echoHandler *EchoHandler) UpdateEcho() gin.HandlerFunc {
 func (echoHandler *EchoHandler) LikeEcho() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 从 URL 参数获取Echo ID
-		idStr := ctx.Param("id")
-		id, err := strconv.ParseUint(idStr, 10, 64)
-		if err != nil {
+		id := ctx.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS,
 			}
 		}
 
-		if err := echoHandler.echoService.LikeEcho(uint(id)); err != nil {
+		if err := echoHandler.echoService.LikeEcho(id); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -275,17 +273,16 @@ func (echoHandler *EchoHandler) LikeEcho() gin.HandlerFunc {
 func (echoHandler *EchoHandler) GetEchoById() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 从 URL 参数获取Echo ID
-		idStr := ctx.Param("id")
-		id, err := strconv.ParseUint(idStr, 10, 64)
-		if err != nil {
+		id := ctx.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS,
 			}
 		}
 
-		userId := ctx.MustGet("userid").(uint)
+		userId := ctx.MustGet("userid").(string)
 
-		echo, err := echoHandler.echoService.GetEchoById(userId, uint(id))
+		echo, err := echoHandler.echoService.GetEchoById(userId, id)
 		if err != nil {
 			return res.Response{
 				Msg: "",
@@ -341,17 +338,16 @@ func (echoHandler *EchoHandler) GetAllTags() gin.HandlerFunc {
 func (echoHandler *EchoHandler) DeleteTag() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 从 URL 参数获取标签 ID
-		idStr := ctx.Param("id")
-		id, err := strconv.ParseUint(idStr, 10, 64)
-		if err != nil {
+		id := ctx.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS,
 			}
 		}
 
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
-		if err := echoHandler.echoService.DeleteTag(userid, uint(id)); err != nil {
+		if err := echoHandler.echoService.DeleteTag(userid, id); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -381,9 +377,8 @@ func (echoHandler *EchoHandler) DeleteTag() gin.HandlerFunc {
 func (echoHandler *EchoHandler) GetEchosByTagId() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 从 URL 参数获取标签 ID
-		tagIdStr := ctx.Param("tagid")
-		tagId, err := strconv.ParseUint(tagIdStr, 10, 64)
-		if err != nil {
+		tagId := ctx.Param("tagid")
+		if _, err := uuid.Parse(tagId); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS,
 			}
@@ -398,9 +393,9 @@ func (echoHandler *EchoHandler) GetEchosByTagId() gin.HandlerFunc {
 			}
 		}
 
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
-		result, err := echoHandler.echoService.GetEchosByTagId(userid, uint(tagId), pageRequest)
+		result, err := echoHandler.echoService.GetEchosByTagId(userid, tagId, pageRequest)
 		if err != nil {
 			return res.Response{
 				Msg: "",

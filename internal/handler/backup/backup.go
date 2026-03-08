@@ -33,7 +33,7 @@ func NewBackupHandler(backupService service.Service) *BackupHandler {
 //	@Router			/backup [get]
 func (backupHandler *BackupHandler) Backup() gin.HandlerFunc {
 	return response.Execute(func(ctx *gin.Context) response.Response {
-		userId := ctx.MustGet("userid").(uint)
+		userId := ctx.MustGet("userid").(string)
 		if err := backupHandler.backupService.Backup(userId); err != nil {
 			return response.Response{
 				Msg: "",
@@ -78,7 +78,7 @@ func (backupHandler *BackupHandler) ExportBackup() gin.HandlerFunc {
 		}
 
 		// 从 Claims中提取 UserID
-		userId := uint(claims.Userid)
+		userId := claims.Userid
 		if err := backupHandler.backupService.ExportBackup(ctx, userId); err != nil {
 			return response.Response{
 				Msg: "",
@@ -106,7 +106,7 @@ func (backupHandler *BackupHandler) ExportBackup() gin.HandlerFunc {
 func (backupHandler *BackupHandler) ImportBackup() gin.HandlerFunc {
 	return response.Execute(func(ctx *gin.Context) response.Response {
 		// 提取userid
-		userId := ctx.MustGet("userid").(uint)
+		userId := ctx.MustGet("userid").(string)
 
 		// 提取上传的 File数据
 		file, err := ctx.FormFile("file")

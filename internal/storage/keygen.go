@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// RandomKeyGenerator creates keys like 1_1700000000_abc123.png.
+// RandomKeyGenerator creates keys like uid_1700000000_abc123.png.
 type RandomKeyGenerator struct {
 	RandSource  io.Reader
 	SuffixBytes int
@@ -25,7 +25,7 @@ func NewRandomKeyGenerator() *RandomKeyGenerator {
 	}
 }
 
-func (g *RandomKeyGenerator) GenerateKey(_ Category, userID uint, originalFilename string) (string, error) {
+func (g *RandomKeyGenerator) GenerateKey(_ Category, userID string, originalFilename string) (string, error) {
 	ext := strings.ToLower(filepath.Ext(strings.TrimSpace(originalFilename)))
 	if ext == "" {
 		ext = ".bin"
@@ -43,7 +43,11 @@ func (g *RandomKeyGenerator) GenerateKey(_ Category, userID uint, originalFilena
 		return "", err
 	}
 	now := g.Now()
-	return strings.ToLower(fmt.Sprintf("%d_%d_%s%s", userID, now.UTC().Unix(), hex.EncodeToString(randPart), ext)), nil
+	uid := strings.TrimSpace(userID)
+	if uid == "" {
+		uid = "anon"
+	}
+	return strings.ToLower(fmt.Sprintf("%s_%d_%s%s", uid, now.UTC().Unix(), hex.EncodeToString(randPart), ext)), nil
 }
 
 // StaticKeyGenerator produces a fixed key, useful for singleton files
@@ -52,7 +56,7 @@ type StaticKeyGenerator struct {
 	Name string
 }
 
-func (g *StaticKeyGenerator) GenerateKey(_ Category, _ uint, _ string) (string, error) {
+func (g *StaticKeyGenerator) GenerateKey(_ Category, _ string, _ string) (string, error) {
 	name := strings.TrimSpace(g.Name)
 	if name == "" {
 		return "", fmt.Errorf("static key name is empty")

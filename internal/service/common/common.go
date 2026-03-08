@@ -8,7 +8,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -66,12 +65,12 @@ func NewCommonService(
 	}
 }
 
-func (s *CommonService) CommonGetUserByUserId(ctx context.Context, userId uint) (userModel.User, error) {
+func (s *CommonService) CommonGetUserByUserId(ctx context.Context, userId string) (userModel.User, error) {
 	return s.commonRepository.GetUserByUserId(ctx, userId)
 }
 
 func (s *CommonService) UploadFile(
-	userId uint,
+	userId string,
 	file *multipart.FileHeader,
 	category storageDomain.Category,
 ) (commonModel.FileDto, error) {
@@ -125,9 +124,13 @@ func (s *CommonService) UploadFile(
 	}
 
 	url := s.resolveURL(key)
+	storageType, provider, bucket := currentStorageRoute()
 
 	fileRecord := &fileModel.File{
 		Key:         key,
+		StorageType: storageType,
+		Provider:    provider,
+		Bucket:      bucket,
 		URL:         url,
 		Name:        file.Filename,
 		ContentType: contentType,
@@ -173,7 +176,7 @@ func (s *CommonService) UploadFile(
 	}, nil
 }
 
-func (s *CommonService) DeleteFile(userid uint, dto commonModel.FileDeleteDto) error {
+func (s *CommonService) DeleteFile(userid string, dto commonModel.FileDeleteDto) error {
 	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
@@ -186,8 +189,13 @@ func (s *CommonService) DeleteFile(userid uint, dto commonModel.FileDeleteDto) e
 		return errors.New(commonModel.IMAGE_NOT_FOUND)
 	}
 
+	fileRecord, err := s.fileRepository.GetByKey(context.Background(), dto.Key)
+	if err != nil {
+		return err
+	}
+
 	if err := s.transactor.Run(context.Background(), func(ctx context.Context) error {
-		return s.DeleteFileRecord(ctx, dto.Key)
+		return s.DeleteFileRecord(ctx, fileRecord.ID)
 	}); err != nil {
 		return err
 	}
@@ -309,7 +317,7 @@ func (s *CommonService) GenerateRSS(ctx *gin.Context) (string, error) {
 
 		feed.Items = append(feed.Items, &feeds.Item{
 			Title:       title,
-			Link:        &feeds.Link{Href: fmt.Sprintf("%s://%s/echo/%d", schema, host, msg.ID)},
+			Link:        &feeds.Link{Href: fmt.Sprintf("%s://%s/echo/%s", schema, host, msg.ID)},
 			Description: string(renderedContent),
 			Author:      &feeds.Author{Name: msg.Username},
 			Created:     msg.CreatedAt,
@@ -320,7 +328,7 @@ func (s *CommonService) GenerateRSS(ctx *gin.Context) (string, error) {
 }
 
 func (s *CommonService) UploadMusic(
-	userId uint,
+	userId string,
 	file *multipart.FileHeader,
 ) (string, error) {
 	fileDto, err := s.UploadFile(userId, file, storageDomain.CategoryAudio)
@@ -331,11 +339,11 @@ func (s *CommonService) UploadMusic(
 	if err := s.transactor.Run(context.Background(), func(ctx context.Context) error {
 		return s.keyvalueRepository.AddOrUpdateKeyValue(
 			ctx, globalMusicFileIDKey,
-			strconv.FormatUint(uint64(fileDto.ID), 10),
+			fileDto.ID,
 		)
 	}); err != nil {
 		_ = s.transactor.Run(context.Background(), func(ctx context.Context) error {
-			return s.DeleteFileRecord(ctx, fileDto.Key)
+			return s.DeleteFileRecord(ctx, fileDto.ID)
 		})
 		_ = s.DeleteStoredFile(fileDto.Key)
 		return "", err
@@ -344,7 +352,7 @@ func (s *CommonService) UploadMusic(
 	return fileDto.URL, nil
 }
 
-func (s *CommonService) DeleteMusic(userid uint) error {
+func (s *CommonService) DeleteMusic(userid string) error {
 	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
@@ -359,12 +367,7 @@ func (s *CommonService) DeleteMusic(userid uint) error {
 		return nil
 	}
 
-	fileID, err := strconv.ParseUint(val, 10, 64)
-	if err != nil {
-		return nil
-	}
-
-	fileRecord, err := s.fileRepository.GetByID(ctx, uint(fileID))
+	fileRecord, err := s.fileRepository.GetByID(ctx, val)
 	if err != nil {
 		return nil
 	}
@@ -388,12 +391,7 @@ func (s *CommonService) GetPlayMusicUrl() string {
 		return ""
 	}
 
-	fileID, err := strconv.ParseUint(val, 10, 64)
-	if err != nil {
-		return ""
-	}
-
-	fileRecord, err := s.fileRepository.GetByID(context.Background(), uint(fileID))
+	fileRecord, err := s.fileRepository.GetByID(context.Background(), val)
 	if err != nil {
 		return ""
 	}
@@ -407,8 +405,7 @@ func (s *CommonService) PlayMusic(ctx *gin.Context) {
 		ctx.String(http.StatusNotFound, "音乐文件不存在")
 		return
 	}
-	fileID, _ := strconv.ParseUint(val, 10, 64)
-	fileRecord, err := s.fileRepository.GetByID(context.Background(), uint(fileID))
+	fileRecord, err := s.fileRepository.GetByID(context.Background(), val)
 	if err != nil {
 		ctx.String(http.StatusNotFound, "音乐文件不存在")
 		return
@@ -441,7 +438,7 @@ func (s *CommonService) PlayMusic(ctx *gin.Context) {
 }
 
 func (s *CommonService) GetFilePresignURL(
-	userid uint,
+	userid string,
 	s3Dto *commonModel.GetPresignURLDto,
 	method string,
 ) (commonModel.PresignDto, error) {
@@ -488,9 +485,13 @@ func (s *CommonService) GetFilePresignURL(
 	}
 
 	url := s.resolveURL(key)
+	storageType, provider, bucket := currentStorageRoute()
 
 	fileRecord := &fileModel.File{
 		Key:         key,
+		StorageType: storageType,
+		Provider:    provider,
+		Bucket:      bucket,
 		URL:         url,
 		Name:        s3Dto.FileName,
 		ContentType: contentType,
@@ -520,15 +521,8 @@ func (s *CommonService) CleanupOrphanFiles() error {
 	}
 
 	musicFileIDStr, _ := s.keyvalueRepository.GetKeyValue(ctx, globalMusicFileIDKey)
-	musicFileID := uint(0)
-	if musicFileIDStr != "" {
-		if id, err := strconv.ParseUint(musicFileIDStr, 10, 64); err == nil {
-			musicFileID = uint(id)
-		}
-	}
-
 	for _, file := range files {
-		if file.ID == musicFileID {
+		if musicFileIDStr != "" && file.ID == musicFileIDStr {
 			continue
 		}
 		if file.Key != "" {
@@ -598,8 +592,8 @@ func isAllowedType(contentType string, allowedTypes []string) bool {
 	return false
 }
 
-func (s *CommonService) DeleteFileRecord(ctx context.Context, key string) error {
-	return s.fileRepository.DeleteByKey(ctx, key)
+func (s *CommonService) DeleteFileRecord(ctx context.Context, id string) error {
+	return s.fileRepository.Delete(ctx, id)
 }
 
 func (s *CommonService) DeleteStoredFile(key string) error {
@@ -607,4 +601,15 @@ func (s *CommonService) DeleteStoredFile(key string) error {
 		return nil
 	}
 	return s.fs.Delete(context.Background(), key)
+}
+
+func currentStorageRoute() (storageType, provider, bucket string) {
+	cfg := config.Config().Storage
+	mode := strings.ToLower(strings.TrimSpace(cfg.Mode))
+	switch mode {
+	case "s3":
+		return "object", strings.ToLower(strings.TrimSpace(cfg.Provider)), strings.TrimSpace(cfg.BucketName)
+	default:
+		return "local", "", ""
+	}
 }

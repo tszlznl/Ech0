@@ -8,18 +8,18 @@ import (
 )
 
 type Service interface {
-	GetTodoList(userid uint) ([]model.Todo, error)
-	AddTodo(userid uint, todo *model.Todo) error
-	UpdateTodo(userid uint, id int64) error
-	DeleteTodo(userid uint, id int64) error
+	GetTodoList(userid string) ([]model.Todo, error)
+	AddTodo(userid string, todo *model.Todo) error
+	UpdateTodo(userid string, id string) error
+	DeleteTodo(userid string, id string) error
 }
 
 type CommonService = commonService.Service
 
 type Repository interface {
-	GetTodosByUserID(ctx context.Context, userid uint) ([]model.Todo, error)
+	GetTodosByUserID(ctx context.Context, userid string) ([]model.Todo, error)
 	CreateTodo(ctx context.Context, todo *model.Todo) error
-	GetTodoByID(ctx context.Context, id int64) (*model.Todo, error)
+	GetTodoByID(ctx context.Context, id string) (*model.Todo, error)
 	UpdateTodo(ctx context.Context, todo *model.Todo) error
-	DeleteTodo(ctx context.Context, id int64) error
+	DeleteTodo(ctx context.Context, id string) error
 }

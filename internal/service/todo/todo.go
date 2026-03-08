@@ -29,7 +29,7 @@ func NewTodoService(
 }
 
 // GetTodoList 获取当前用户的 To do列表
-func (todoService *TodoService) GetTodoList(userid uint) ([]model.Todo, error) {
+func (todoService *TodoService) GetTodoList(userid string) ([]model.Todo, error) {
 	// 检查执行操作的用户是否为管理员
 	user, err := todoService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
@@ -54,7 +54,7 @@ func (todoService *TodoService) GetTodoList(userid uint) ([]model.Todo, error) {
 }
 
 // AddTodo 创建新的 To do
-func (todoService *TodoService) AddTodo(userid uint, todo *model.Todo) error {
+func (todoService *TodoService) AddTodo(userid string, todo *model.Todo) error {
 	return todoService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		// 检查执行操作的用户是否为管理员
 		user, err := todoService.commonService.CommonGetUserByUserId(ctx, userid)
@@ -94,7 +94,7 @@ func (todoService *TodoService) AddTodo(userid uint, todo *model.Todo) error {
 }
 
 // UpdateTodo 更新指定ID的 To do
-func (todoService *TodoService) UpdateTodo(userid uint, id int64) error {
+func (todoService *TodoService) UpdateTodo(userid string, id string) error {
 	return todoService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		// 检查执行操作的用户是否为管理员
 		user, err := todoService.commonService.CommonGetUserByUserId(ctx, userid)
@@ -130,7 +130,7 @@ func (todoService *TodoService) UpdateTodo(userid uint, id int64) error {
 }
 
 // DeleteTodo 删除指定ID的 To do
-func (todoService *TodoService) DeleteTodo(userid uint, id int64) error {
+func (todoService *TodoService) DeleteTodo(userid string, id string) error {
 	return todoService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		// 检查执行操作的用户是否为管理员
 		user, err := todoService.commonService.CommonGetUserByUserId(ctx, userid)

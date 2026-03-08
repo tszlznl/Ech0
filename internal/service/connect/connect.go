@@ -42,7 +42,7 @@ func NewConnectService(
 }
 
 // AddConnect 添加连接
-func (connectService *ConnectService) AddConnect(userid uint, connected model.Connected) error {
+func (connectService *ConnectService) AddConnect(userid string, connected model.Connected) error {
 	return connectService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		user, err := connectService.commonService.CommonGetUserByUserId(ctx, userid)
 		if err != nil {
@@ -84,7 +84,7 @@ func (connectService *ConnectService) AddConnect(userid uint, connected model.Co
 }
 
 // DeleteConnect 删除连接
-func (connectService *ConnectService) DeleteConnect(userid, id uint) error {
+func (connectService *ConnectService) DeleteConnect(userid, id string) error {
 	return connectService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		user, err := connectService.commonService.CommonGetUserByUserId(ctx, userid)
 		if err != nil {

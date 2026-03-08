@@ -46,7 +46,7 @@ type URLResolver func(key string) string
 // KeyGenerator produces a flat filename key (no directory prefix).
 // VireFS Schema handles the directory routing transparently.
 type KeyGenerator interface {
-	GenerateKey(category Category, userID uint, originalFilename string) (string, error)
+	GenerateKey(category Category, userID string, originalFilename string) (string, error)
 }
 
 // TrimLeadingSlash removes a leading "/" to convert a virtual path to a

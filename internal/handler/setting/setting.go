@@ -1,9 +1,8 @@
 package handler
 
 import (
-	"strconv"
-
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	res "github.com/lin-snow/ech0/internal/handler/response"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
@@ -62,7 +61,7 @@ func (settingHandler *SettingHandler) GetSettings() gin.HandlerFunc {
 func (settingHandler *SettingHandler) UpdateSettings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
 		// 解析请求体中的参数
 		var newSettings model.SystemSettingDto
@@ -127,7 +126,7 @@ func (settingHandler *SettingHandler) GetCommentSettings() gin.HandlerFunc {
 func (settingHandler *SettingHandler) UpdateCommentSettings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
 		// 解析请求体中的参数
 		var newCommentSettings model.CommentSettingDto
@@ -164,7 +163,7 @@ func (settingHandler *SettingHandler) UpdateCommentSettings() gin.HandlerFunc {
 func (settingHandler *SettingHandler) GetS3Settings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
 		var s3Setting model.S3Setting
 		if err := settingHandler.settingService.GetS3Setting(userid, &s3Setting); err != nil {
@@ -195,7 +194,7 @@ func (settingHandler *SettingHandler) GetS3Settings() gin.HandlerFunc {
 func (settingHandler *SettingHandler) UpdateS3Settings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
 		// 解析请求体中的参数
 		var newS3Settings model.S3SettingDto
@@ -232,7 +231,7 @@ func (settingHandler *SettingHandler) UpdateS3Settings() gin.HandlerFunc {
 func (settingHandler *SettingHandler) GetOAuth2Settings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
 		var oauthSetting model.OAuth2Setting
 		if err := settingHandler.settingService.GetOAuth2Setting(userid, &oauthSetting, false); err != nil {
@@ -263,7 +262,7 @@ func (settingHandler *SettingHandler) GetOAuth2Settings() gin.HandlerFunc {
 func (settingHandler *SettingHandler) UpdateOAuth2Settings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
 		// 解析请求体中的参数
 		var newOAuthSettings model.OAuth2SettingDto
@@ -327,7 +326,7 @@ func (settingHandler *SettingHandler) GetOAuth2Status() gin.HandlerFunc {
 func (settingHandler *SettingHandler) GetWebhook() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
 		result, err := settingHandler.settingService.GetAllWebhooks(userid)
 		if err != nil {
@@ -358,18 +357,17 @@ func (settingHandler *SettingHandler) GetWebhook() gin.HandlerFunc {
 func (settingHandler *SettingHandler) DeleteWebhook() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
 		// 从路径参数中获取 Webhook ID
-		idStr := ctx.Param("id")
-		id, err := strconv.ParseUint(idStr, 10, 64)
-		if err != nil {
+		id := ctx.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS,
 			}
 		}
 
-		if err := settingHandler.settingService.DeleteWebhook(userid, uint(id)); err != nil {
+		if err := settingHandler.settingService.DeleteWebhook(userid, id); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -397,12 +395,11 @@ func (settingHandler *SettingHandler) DeleteWebhook() gin.HandlerFunc {
 func (settingHandler *SettingHandler) UpdateWebhook() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
 		// 从路径参数中获取 Webhook ID
-		idStr := ctx.Param("id")
-		id, err := strconv.ParseUint(idStr, 10, 64)
-		if err != nil {
+		id := ctx.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS,
 			}
@@ -417,7 +414,7 @@ func (settingHandler *SettingHandler) UpdateWebhook() gin.HandlerFunc {
 			}
 		}
 
-		if err := settingHandler.settingService.UpdateWebhook(userid, uint(id), &updatedWebhook); err != nil {
+		if err := settingHandler.settingService.UpdateWebhook(userid, id, &updatedWebhook); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -444,7 +441,7 @@ func (settingHandler *SettingHandler) UpdateWebhook() gin.HandlerFunc {
 func (settingHandler *SettingHandler) CreateWebhook() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
 		// 解析请求体中的参数
 		var newWebhook model.WebhookDto
@@ -481,7 +478,7 @@ func (settingHandler *SettingHandler) CreateWebhook() gin.HandlerFunc {
 func (settingHandler *SettingHandler) ListAccessTokens() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
 		result, err := settingHandler.settingService.ListAccessTokens(userid)
 		if err != nil {
@@ -512,7 +509,7 @@ func (settingHandler *SettingHandler) ListAccessTokens() gin.HandlerFunc {
 func (settingHandler *SettingHandler) CreateAccessToken() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
 		// 解析请求体中的参数
 		var newAccessToken model.AccessTokenSettingDto
@@ -555,18 +552,17 @@ func (settingHandler *SettingHandler) CreateAccessToken() gin.HandlerFunc {
 func (settingHandler *SettingHandler) DeleteAccessToken() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
 		// 从路径参数中获取 访问令牌 ID
-		idStr := ctx.Param("id")
-		id, err := strconv.ParseUint(idStr, 10, 64)
-		if err != nil {
+		id := ctx.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS,
 			}
 		}
 
-		if err := settingHandler.settingService.DeleteAccessToken(userid, uint(id)); err != nil {
+		if err := settingHandler.settingService.DeleteAccessToken(userid, id); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -592,7 +588,7 @@ func (settingHandler *SettingHandler) DeleteAccessToken() gin.HandlerFunc {
 func (settingHandler *SettingHandler) GetBackupScheduleSetting() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		// userid := ctx.MustGet("userid").(uint)
+		// userid := ctx.MustGet("userid").(string)
 
 		var backupSchedule model.BackupSchedule
 		if err := settingHandler.settingService.GetBackupScheduleSetting(&backupSchedule); err != nil {
@@ -623,7 +619,7 @@ func (settingHandler *SettingHandler) GetBackupScheduleSetting() gin.HandlerFunc
 func (settingHandler *SettingHandler) UpdateBackupScheduleSetting() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 		// 解析请求体中的参数
 		var backupSchedule model.BackupScheduleDto
 		if err := ctx.ShouldBindJSON(&backupSchedule); err != nil {
@@ -690,7 +686,7 @@ func (settingHandler *SettingHandler) GetAgentInfo() gin.HandlerFunc {
 func (settingHandler *SettingHandler) GetAgentSettings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
 		var settings model.AgentSetting
 		if err := settingHandler.settingService.GetAgentSettings(userid, &settings); err != nil {
@@ -721,7 +717,7 @@ func (settingHandler *SettingHandler) GetAgentSettings() gin.HandlerFunc {
 func (settingHandler *SettingHandler) UpdateAgentSettings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
+		userid := ctx.MustGet("userid").(string)
 
 		// 解析请求体中的参数
 		var newSettings model.AgentSettingDto

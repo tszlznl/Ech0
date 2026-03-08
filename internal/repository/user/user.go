@@ -89,8 +89,8 @@ func (userRepository *UserRepository) CreateUser(ctx context.Context, user *mode
 }
 
 // GetUserByID 根据用户ID获取用户
-func (userRepository *UserRepository) GetUserByID(ctx context.Context, id int) (model.User, error) {
-	cacheKey := GetUserIDKey(uint(id))
+func (userRepository *UserRepository) GetUserByID(ctx context.Context, id string) (model.User, error) {
+	cacheKey := GetUserIDKey(id)
 	return cache.ReadThroughTypedUnlessTx[model.User](
 		ctx,
 		userRepository.cache,
@@ -98,14 +98,14 @@ func (userRepository *UserRepository) GetUserByID(ctx context.Context, id int) (
 		1,
 		func(ctx context.Context) (model.User, error) {
 			var user model.User
-			if err := userRepository.getDB(ctx).First(&user, id).Error; err != nil {
+			if err := userRepository.getDB(ctx).Where("id = ?", id).First(&user).Error; err != nil {
 				return user, err
 			}
 			return user, nil
 		},
 		func() (model.User, error) {
 			var user model.User
-			if err := userRepository.db().First(&user, id).Error; err != nil {
+			if err := userRepository.db().Where("id = ?", id).First(&user).Error; err != nil {
 				return user, err
 			}
 			return user, nil
@@ -155,14 +155,14 @@ func (userRepository *UserRepository) UpdateUser(ctx context.Context, user *mode
 }
 
 // DeleteUser 删除用户
-func (userRepository *UserRepository) DeleteUser(ctx context.Context, id uint) error {
+func (userRepository *UserRepository) DeleteUser(ctx context.Context, id string) error {
 	// 先查找待删除的用户
-	userToDel, err := userRepository.GetUserByID(ctx, int(id))
+	userToDel, err := userRepository.GetUserByID(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	err = userRepository.getDB(ctx).Delete(&model.User{}, id).Error
+	err = userRepository.getDB(ctx).Where("id = ?", id).Delete(&model.User{}).Error
 	if err != nil {
 		return err
 	}
@@ -180,7 +180,7 @@ func (userRepository *UserRepository) DeleteUser(ctx context.Context, id uint) e
 // BindOAuth 绑定 OAuth 或 OIDC 账号
 func (userRepository *UserRepository) BindOAuth(
 	ctx context.Context,
-	userID uint,
+	userID string,
 	provider, oauthID, issuer, authType string,
 ) error {
 	// 检查是否已绑定(可能是 OAuth2 或 OIDC)
@@ -242,7 +242,7 @@ func (userRepository *UserRepository) GetUserByOAuthID(
 		return model.User{}, err
 	}
 
-	return userRepository.GetUserByID(ctx, int(binding.UserID))
+	return userRepository.GetUserByID(ctx, binding.UserID)
 }
 
 // GetUserByOIDC 根据 OIDC 提供商、issuer 与 sub 获取用户
@@ -264,12 +264,12 @@ func (userRepository *UserRepository) GetUserByOIDC(
 		return model.User{}, err
 	}
 
-	return userRepository.GetUserByID(ctx, int(binding.UserID))
+	return userRepository.GetUserByID(ctx, binding.UserID)
 }
 
 // GetOAuthInfo 获取 OAuth2 信息
 func (userRepository *UserRepository) GetOAuthInfo(
-	userId uint,
+	userId string,
 	provider string,
 ) (model.OAuthBinding, error) {
 	var oauthInfo model.OAuthBinding
@@ -285,7 +285,7 @@ func (userRepository *UserRepository) GetOAuthInfo(
 
 // GetOAuthOIDCInfo 获取 OIDC 信息
 func (userRepository *UserRepository) GetOAuthOIDCInfo(
-	userId uint,
+	userId string,
 	provider string,
 	issuer string,
 ) (model.OAuthBinding, error) {
@@ -312,7 +312,7 @@ func (userRepository *UserRepository) CreatePasskey(
 }
 
 func (userRepository *UserRepository) ListPasskeysByUserID(
-	userID uint,
+	userID string,
 ) ([]authModel.Passkey, error) {
 	var passkeys []authModel.Passkey
 	if err := userRepository.db().
@@ -338,7 +338,7 @@ func (userRepository *UserRepository) GetPasskeyByCredentialID(
 
 func (userRepository *UserRepository) UpdatePasskeyUsage(
 	ctx context.Context,
-	passkeyID uint,
+	passkeyID string,
 	signCount uint32,
 	lastUsedAt time.Time,
 ) error {
@@ -353,7 +353,7 @@ func (userRepository *UserRepository) UpdatePasskeyUsage(
 
 func (userRepository *UserRepository) UpdatePasskeyDeviceName(
 	ctx context.Context,
-	userID, passkeyID uint,
+	userID, passkeyID string,
 	deviceName string,
 ) error {
 	return userRepository.getDB(ctx).
@@ -364,7 +364,7 @@ func (userRepository *UserRepository) UpdatePasskeyDeviceName(
 
 func (userRepository *UserRepository) DeletePasskeyByID(
 	ctx context.Context,
-	userID, passkeyID uint,
+	userID, passkeyID string,
 ) error {
 	return userRepository.getDB(ctx).
 		Where("id = ? AND user_id = ?", passkeyID, userID).

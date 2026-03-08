@@ -1,9 +1,8 @@
 package handler
 
 import (
-	"strconv"
-
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	res "github.com/lin-snow/ech0/internal/handler/response"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	connectModel "github.com/lin-snow/ech0/internal/model/connect"
@@ -34,7 +33,7 @@ func NewConnectHandler(connectService service.Service) *ConnectHandler {
 //	@Router			/addConnect [post]
 func (connectHandler *ConnectHandler) AddConnect() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userId := ctx.MustGet("userid").(uint)
+		userId := ctx.MustGet("userid").(string)
 
 		var connected connectModel.Connected
 		if err := ctx.ShouldBindJSON(&connected); err != nil {
@@ -69,18 +68,17 @@ func (connectHandler *ConnectHandler) AddConnect() gin.HandlerFunc {
 //	@Router			/delConnect/{id} [delete]
 func (connectHandler *ConnectHandler) DeleteConnect() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userId := ctx.MustGet("userid").(uint)
+		userId := ctx.MustGet("userid").(string)
 
 		// 从 URL 参数获取 ID
-		idStr := ctx.Param("id")
-		id, err := strconv.ParseUint(idStr, 10, 64)
-		if err != nil {
+		id := ctx.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS,
 			}
 		}
 
-		if err := connectHandler.connectService.DeleteConnect(userId, uint(id)); err != nil {
+		if err := connectHandler.connectService.DeleteConnect(userId, id); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,

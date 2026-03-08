@@ -11,16 +11,16 @@ const (
 	PasskeyLoginKey   = "passkey:login" // passkey:login:nonce
 )
 
-func GetUserIDKey(id uint) string {
-	return fmt.Sprintf("%s:%d", IDKeyPrefix, id)
+func GetUserIDKey(id string) string {
+	return fmt.Sprintf("%s:%s", IDKeyPrefix, id)
 }
 
 func GetUsernameKey(username string) string {
 	return fmt.Sprintf("%s:%s", UsernameKeyPrefix, username)
 }
 
-func GetAdminKey(id uint) string {
-	return fmt.Sprintf("%s:%d", AdminKey, id)
+func GetAdminKey(id string) string {
+	return fmt.Sprintf("%s:%s", AdminKey, id)
 }
 
 func GetSysAdminKey() string {

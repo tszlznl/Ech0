@@ -36,7 +36,7 @@ func NewEchoService(
 	}
 }
 
-func (echoService *EchoService) PostEcho(userid uint, newEcho *model.Echo) error {
+func (echoService *EchoService) PostEcho(userid string, newEcho *model.Echo) error {
 	newEcho.UserID = userid
 
 	user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userid)
@@ -99,7 +99,7 @@ func (echoService *EchoService) PostEcho(userid uint, newEcho *model.Echo) error
 }
 
 func (echoService *EchoService) GetEchosByPage(
-	userid uint,
+	userid string,
 	pageQueryDto commonModel.PageQueryDto,
 ) (commonModel.PageQueryResult[[]model.Echo], error) {
 	if pageQueryDto.Page < 1 {
@@ -130,7 +130,7 @@ func (echoService *EchoService) GetEchosByPage(
 	}, nil
 }
 
-func (echoService *EchoService) DeleteEchoById(userid, id uint) error {
+func (echoService *EchoService) DeleteEchoById(userid, id string) error {
 	user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
@@ -152,7 +152,7 @@ func (echoService *EchoService) DeleteEchoById(userid, id uint) error {
 		for _, ef := range echo.EchoFiles {
 			if ef.File.Key != "" {
 				fileKeys = append(fileKeys, ef.File.Key)
-				if err := echoService.commonService.DeleteFileRecord(ctx, ef.File.Key); err != nil {
+				if err := echoService.commonService.DeleteFileRecord(ctx, ef.File.ID); err != nil {
 					return err
 				}
 			}
@@ -177,7 +177,7 @@ func (echoService *EchoService) DeleteEchoById(userid, id uint) error {
 	return nil
 }
 
-func (echoService *EchoService) GetTodayEchos(userid uint, timezone string) ([]model.Echo, error) {
+func (echoService *EchoService) GetTodayEchos(userid string, timezone string) ([]model.Echo, error) {
 	showPrivate := false
 	if userid != authModel.NO_USER_LOGINED {
 		user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userid)
@@ -191,7 +191,7 @@ func (echoService *EchoService) GetTodayEchos(userid uint, timezone string) ([]m
 	return todayEchos, nil
 }
 
-func (echoService *EchoService) UpdateEcho(userid uint, echo *model.Echo) error {
+func (echoService *EchoService) UpdateEcho(userid string, echo *model.Echo) error {
 	user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
@@ -246,13 +246,13 @@ func (echoService *EchoService) UpdateEcho(userid uint, echo *model.Echo) error 
 	return nil
 }
 
-func (echoService *EchoService) LikeEcho(id uint) error {
+func (echoService *EchoService) LikeEcho(id string) error {
 	return echoService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		return echoService.echoRepository.LikeEcho(ctx, id)
 	})
 }
 
-func (echoService *EchoService) GetEchoById(userId, id uint) (*model.Echo, error) {
+func (echoService *EchoService) GetEchoById(userId, id string) (*model.Echo, error) {
 	echo, err := echoService.echoRepository.GetEchosById(context.Background(), id)
 	if err != nil {
 		return nil, err
@@ -282,7 +282,7 @@ func (echoService *EchoService) GetAllTags() ([]model.Tag, error) {
 	return echoService.echoRepository.GetAllTags()
 }
 
-func (echoService *EchoService) DeleteTag(userid, id uint) error {
+func (echoService *EchoService) DeleteTag(userid, id string) error {
 	user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
@@ -337,7 +337,7 @@ func (echoService *EchoService) ProcessEchoTags(ctx context.Context, echo *model
 }
 
 func (echoService *EchoService) GetEchosByTagId(
-	userId, tagId uint,
+	userId, tagId string,
 	pageQueryDto commonModel.PageQueryDto,
 ) (commonModel.PageQueryResult[[]model.Echo], error) {
 	if pageQueryDto.Page < 1 {
