@@ -27,5 +27,7 @@ type EchoRepository interface {
 	GetTodayEchos(showPrivate bool, timezone string) []echoModel.Echo
 }
 
-type CommonService = commonService.Service
-type SettingService = settingService.Service
+type (
+	CommonService  = commonService.Service
+	SettingService = settingService.Service
+)

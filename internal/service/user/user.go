@@ -1164,6 +1164,7 @@ func (userService *UserService) GetOAuthInfo(
 // -----------------------
 
 const passkeySessionTTL = 5 * time.Minute
+
 const (
 	passkeyRegKey   = "passkey:reg"
 	passkeyLoginKey = "passkey:login"

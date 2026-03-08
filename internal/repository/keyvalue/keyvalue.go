@@ -17,9 +17,11 @@ type KeyValueRepository struct {
 	cache cache.ICache[string, any]
 }
 
-var _ commonService.KeyValueRepository = (*KeyValueRepository)(nil)
-var _ settingService.KeyValueRepository = (*KeyValueRepository)(nil)
-var _ agentService.KeyValueRepository = (*KeyValueRepository)(nil)
+var (
+	_ commonService.KeyValueRepository  = (*KeyValueRepository)(nil)
+	_ settingService.KeyValueRepository = (*KeyValueRepository)(nil)
+	_ agentService.KeyValueRepository   = (*KeyValueRepository)(nil)
+)
 
 func NewKeyValueRepository(
 	dbProvider func() *gorm.DB,

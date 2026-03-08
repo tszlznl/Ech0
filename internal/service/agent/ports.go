@@ -12,9 +12,11 @@ type Service interface {
 	GetRecent(ctx context.Context) (string, error)
 }
 
-type SettingService = settingService.Service
-type EchoService = echoService.Service
-type TodoService = todoService.Service
+type (
+	SettingService = settingService.Service
+	EchoService    = echoService.Service
+	TodoService    = todoService.Service
+)
 
 type KeyValueRepository interface {
 	GetKeyValue(ctx context.Context, key string) (string, error)

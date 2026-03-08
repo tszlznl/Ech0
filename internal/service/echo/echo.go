@@ -16,10 +16,10 @@ import (
 )
 
 type EchoService struct {
-	transactor       transaction.Transactor
-	commonService    CommonService
-	echoRepository   Repository
-	publisher        *publisher.Publisher
+	transactor     transaction.Transactor
+	commonService  CommonService
+	echoRepository Repository
+	publisher      *publisher.Publisher
 }
 
 func NewEchoService(
@@ -29,10 +29,10 @@ func NewEchoService(
 	publisher *publisher.Publisher,
 ) *EchoService {
 	return &EchoService{
-		transactor:       tx,
-		commonService:    commonService,
-		echoRepository:   echoRepository,
-		publisher:        publisher,
+		transactor:     tx,
+		commonService:  commonService,
+		echoRepository: echoRepository,
+		publisher:      publisher,
 	}
 }
 

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"github.com/google/wire"
+	eventsubscriber "github.com/lin-snow/ech0/internal/event/subscriber"
 	commonRepository "github.com/lin-snow/ech0/internal/repository/common"
 	connectRepository "github.com/lin-snow/ech0/internal/repository/connect"
 	echoRepository "github.com/lin-snow/ech0/internal/repository/echo"
@@ -13,7 +14,6 @@ import (
 	todoRepository "github.com/lin-snow/ech0/internal/repository/todo"
 	userRepository "github.com/lin-snow/ech0/internal/repository/user"
 	webhookRepository "github.com/lin-snow/ech0/internal/repository/webhook"
-	eventsubscriber "github.com/lin-snow/ech0/internal/event/subscriber"
 	agentService "github.com/lin-snow/ech0/internal/service/agent"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
 	connectService "github.com/lin-snow/ech0/internal/service/connect"
