@@ -182,8 +182,8 @@ func BuildHandlers(
 	return &handler.Bundle{}, nil
 }
 
-// BuildWebRuntime 构建 HTTP server（用于测试和独立启动场景）。
-func BuildWebRuntime() (*server.Server, error) {
+// BuildServer 构建 HTTP server
+func BuildServer() (*server.Server, error) {
 	wire.Build(
 		InfraSet,
 		BuildHandlers,

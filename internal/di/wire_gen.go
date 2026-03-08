@@ -159,8 +159,8 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 	return bundle, nil
 }
 
-// BuildWebRuntime 构建 HTTP server（用于测试和独立启动场景）。
-func BuildWebRuntime() (*server.Server, error) {
+// BuildServer 构建 HTTP server
+func BuildServer() (*server.Server, error) {
 	engine := server.ProvideGinEngine()
 	v := database.ProvideDBProvider()
 	iCache, err := cache.ProvideCache()
