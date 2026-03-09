@@ -114,8 +114,8 @@ func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() *busen.Bu
 	agentProcessor := subscriber.NewAgentProcessor(keyValueRepository)
 	inboxRepository := repository3.NewInboxRepository(dbProvider)
 	inboxDispatcher := subscriber.NewInboxDispatcher(inboxRepository, keyValueRepository)
-	eventHandlers := registry.NewEventHandlers(webhookDispatcher, deadLetterResolver, backupScheduler, agentProcessor, inboxDispatcher)
-	eventRegistrar := registry.NewEventRegistry(ebProvider, eventHandlers)
+	v := ProvideSubscriptionProviders(deadLetterResolver, backupScheduler, agentProcessor, inboxDispatcher)
+	eventRegistrar := registry.NewEventRegistry(ebProvider, webhookDispatcher, v)
 	return eventRegistrar, nil
 }
 
@@ -214,7 +214,7 @@ var InfraSet = wire.NewSet(database.ProviderSet, bus.ProvideProvider, cache.Prov
 
 var RuntimeSet = server.ProviderSet
 
-var EventGraphSet = wire.NewSet(repository12.EchoSet, repository12.UserSet, repository12.TodoSet, repository12.InboxSet, repository12.KeyValueSet, repository12.QueueSet, repository12.WebhookSet, wire.Bind(new(registry.WebhookObserver), new(*subscriber.WebhookDispatcher)), wire.Bind(new(subscriber.DeadLetterProcessor), new(*subscriber.WebhookDispatcher)), wire.Bind(new(registry.DeadLetterHandler), new(*subscriber.DeadLetterResolver)), wire.Bind(new(registry.BackupScheduleHandler), new(*subscriber.BackupScheduler)), wire.Bind(new(registry.AgentEventHandler), new(*subscriber.AgentProcessor)), wire.Bind(new(registry.InboxEventHandler), new(*subscriber.InboxDispatcher)), subscriber.NewWebhookDispatcher, subscriber.NewBackupScheduler, subscriber.NewDeadLetterResolver, subscriber.NewAgentProcessor, subscriber.NewInboxDispatcher, registry.NewEventHandlers, registry.NewEventRegistry)
+var EventGraphSet = wire.NewSet(repository12.EchoSet, repository12.UserSet, repository12.TodoSet, repository12.InboxSet, repository12.KeyValueSet, repository12.QueueSet, repository12.WebhookSet, wire.Bind(new(registry.WebhookObserver), new(*subscriber.WebhookDispatcher)), wire.Bind(new(subscriber.DeadLetterProcessor), new(*subscriber.WebhookDispatcher)), subscriber.NewWebhookDispatcher, subscriber.NewBackupScheduler, subscriber.NewDeadLetterResolver, subscriber.NewAgentProcessor, subscriber.NewInboxDispatcher, ProvideSubscriptionProviders, registry.NewEventRegistry)
 
 var HandlerGraphSet = wire.NewSet(publisher.New, storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository12.FileSet, handler.WebSet, repository12.UserSet, service13.UserSet, handler.UserSet, repository12.EchoSet, service13.EchoSet, handler.EchoSet, repository12.CommonSet, service13.FileSet, handler.FileSet, repository12.InitSet, service13.InitSet, handler.InitSet, service13.CommonSet, handler.CommonSet, repository12.WebhookSet, repository12.KeyValueSet, repository12.SettingSet, service13.SettingSet, handler.SettingSet, repository12.InboxSet, service13.InboxSet, handler.InboxSet, repository12.TodoSet, service13.TodoSet, handler.TodoSet, repository12.ConnectSet, service13.ConnectSet, handler.ConnectSet, metric.NewSystemCollector, monitor.NewMonitor, service13.DashboardSet, handler.DashboardSet, service13.AgentSet, handler.AgentSet, service13.BackupSet, handler.BackupSet, handler.NewBundle)
 
@@ -222,4 +222,13 @@ var TaskerGraphSet = wire.NewSet(publisher.New, storage.ProviderSet, wire.Bind(n
 
 func ProvideBackupScheduleApplier(t *task.Tasker) subscriber.BackupScheduleApplier {
 	return t
+}
+
+func ProvideSubscriptionProviders(
+	dlr *subscriber.DeadLetterResolver,
+	bs *subscriber.BackupScheduler,
+	ap *subscriber.AgentProcessor,
+	id *subscriber.InboxDispatcher,
+) []registry.SubscriptionProvider {
+	return []registry.SubscriptionProvider{dlr, bs, ap, id}
 }

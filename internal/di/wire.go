@@ -61,17 +61,13 @@ var EventGraphSet = wire.NewSet(
 
 	wire.Bind(new(eventregistry.WebhookObserver), new(*eventsubscriber.WebhookDispatcher)),
 	wire.Bind(new(eventsubscriber.DeadLetterProcessor), new(*eventsubscriber.WebhookDispatcher)),
-	wire.Bind(new(eventregistry.DeadLetterHandler), new(*eventsubscriber.DeadLetterResolver)),
-	wire.Bind(new(eventregistry.BackupScheduleHandler), new(*eventsubscriber.BackupScheduler)),
-	wire.Bind(new(eventregistry.AgentEventHandler), new(*eventsubscriber.AgentProcessor)),
-	wire.Bind(new(eventregistry.InboxEventHandler), new(*eventsubscriber.InboxDispatcher)),
 
 	eventsubscriber.NewWebhookDispatcher,
 	eventsubscriber.NewBackupScheduler,
 	eventsubscriber.NewDeadLetterResolver,
 	eventsubscriber.NewAgentProcessor,
 	eventsubscriber.NewInboxDispatcher,
-	eventregistry.NewEventHandlers,
+	ProvideSubscriptionProviders,
 	eventregistry.NewEventRegistry,
 )
 
@@ -210,4 +206,13 @@ func BuildTasker(
 
 func ProvideBackupScheduleApplier(t *task.Tasker) eventsubscriber.BackupScheduleApplier {
 	return t
+}
+
+func ProvideSubscriptionProviders(
+	dlr *eventsubscriber.DeadLetterResolver,
+	bs *eventsubscriber.BackupScheduler,
+	ap *eventsubscriber.AgentProcessor,
+	id *eventsubscriber.InboxDispatcher,
+) []eventregistry.SubscriptionProvider {
+	return []eventregistry.SubscriptionProvider{dlr, bs, ap, id}
 }

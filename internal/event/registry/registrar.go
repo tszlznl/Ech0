@@ -16,52 +16,24 @@ type WebhookObserver interface {
 	Wait()
 }
 
-type DeadLetterHandler interface {
-	Handle(ctx context.Context, event contracts.DeadLetterRetriedEvent) error
-}
-
-type BackupScheduleHandler interface {
-	HandleBackupScheduleUpdated(ctx context.Context, e contracts.UpdateBackupScheduleEvent) error
-}
-
-type AgentEventHandler interface {
-	HandleEchoCreated(ctx context.Context, e contracts.EchoCreatedEvent) error
-	HandleEchoUpdated(ctx context.Context, e contracts.EchoUpdatedEvent) error
-	HandleUserDeleted(ctx context.Context, e contracts.UserDeletedEvent) error
-}
-
-type InboxEventHandler interface {
-	HandleEch0UpdateCheck(ctx context.Context, e contracts.Ech0UpdateCheckEvent) error
-	HandleInboxClear(ctx context.Context, e contracts.InboxClearEvent) error
-}
-
-type EventHandlers struct {
-	wbd WebhookObserver
-	dlr DeadLetterHandler
-	bs  BackupScheduleHandler
-	ap  AgentEventHandler
-	id  InboxEventHandler
-}
-
-func NewEventHandlers(
-	wbd WebhookObserver,
-	dlr DeadLetterHandler,
-	bs BackupScheduleHandler,
-	ap AgentEventHandler,
-	id InboxEventHandler,
-) *EventHandlers {
-	return &EventHandlers{wbd: wbd, dlr: dlr, bs: bs, ap: ap, id: id}
-}
-
 type EventRegistrar struct {
 	bus        *busen.Bus
-	eh         *EventHandlers
+	observer   WebhookObserver
+	providers  []SubscriptionProvider
 	unsub      []func()
 	registered atomic.Bool
 }
 
-func NewEventRegistry(busProvider func() *busen.Bus, eh *EventHandlers) *EventRegistrar {
-	return &EventRegistrar{bus: busProvider(), eh: eh}
+func NewEventRegistry(
+	busProvider func() *busen.Bus,
+	observer WebhookObserver,
+	providers []SubscriptionProvider,
+) *EventRegistrar {
+	return &EventRegistrar{
+		bus:       busProvider(),
+		observer:  observer,
+		providers: providers,
+	}
 }
 
 func (er *EventRegistrar) Register() error {
@@ -69,17 +41,18 @@ func (er *EventRegistrar) Register() error {
 		return nil
 	}
 
-	if err := er.registerDeadLetter(); err != nil {
-		return err
-	}
-	if err := er.registerSystem(); err != nil {
-		return err
-	}
-	if err := er.registerAgent(); err != nil {
-		return err
-	}
-	if err := er.registerInbox(); err != nil {
-		return err
+	for _, provider := range er.providers {
+		if provider == nil {
+			continue
+		}
+		for _, subscription := range provider.Subscriptions() {
+			unsub, err := subscription.Register(er.bus)
+			if err != nil {
+				er.stopSubscriptions()
+				return err
+			}
+			er.unsub = append(er.unsub, unsub)
+		}
 	}
 
 	err := er.bus.UseObserver(
@@ -94,7 +67,7 @@ func (er *EventRegistrar) Register() error {
 					zap.Error(err))
 				return
 			}
-			if err := er.eh.wbd.HandleObservation(ctx, evt); err != nil {
+			if err := er.observer.HandleObservation(ctx, evt); err != nil {
 				logUtil.GetLogger().Warn("dispatch webhook observation failed",
 					zap.String("topic", obs.Topic),
 					zap.Error(err))
@@ -102,6 +75,7 @@ func (er *EventRegistrar) Register() error {
 		},
 	)
 	if err != nil {
+		er.stopSubscriptions()
 		return err
 	}
 
@@ -113,11 +87,15 @@ func (er *EventRegistrar) Stop() error {
 	if !er.registered.Load() {
 		return nil
 	}
+	er.stopSubscriptions()
+	er.observer.Stop()
+	er.observer.Wait()
+	return nil
+}
+
+func (er *EventRegistrar) stopSubscriptions() {
 	for i := len(er.unsub) - 1; i >= 0; i-- {
 		er.unsub[i]()
 	}
 	er.unsub = nil
-	er.eh.wbd.Stop()
-	er.eh.wbd.Wait()
-	return nil
 }

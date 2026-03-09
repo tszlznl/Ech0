@@ -6,6 +6,7 @@ import (
 
 	"github.com/lin-snow/ech0/internal/agent"
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
+	registry "github.com/lin-snow/ech0/internal/event/registry"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	agentService "github.com/lin-snow/ech0/internal/service/agent"
@@ -51,4 +52,24 @@ func (ap *AgentProcessor) HandleUserDeleted(ctx context.Context, e contracts.Use
 
 func (ap *AgentProcessor) clearCache() error {
 	return ap.keyvalueRepo.DeleteKeyValue(context.Background(), string(agent.GEN_RECENT))
+}
+
+func (ap *AgentProcessor) Subscriptions() []registry.Subscription {
+	return []registry.Subscription{
+		registry.TopicSubscription(
+			contracts.TopicEchoCreated,
+			ap.HandleEchoCreated,
+			registry.AgentSubscribeOptions()...,
+		),
+		registry.TopicSubscription(
+			contracts.TopicEchoUpdated,
+			ap.HandleEchoUpdated,
+			registry.AgentSubscribeOptions()...,
+		),
+		registry.TopicSubscription(
+			contracts.TopicUserDeleted,
+			ap.HandleUserDeleted,
+			registry.AgentSubscribeOptions()...,
+		),
+	}
 }

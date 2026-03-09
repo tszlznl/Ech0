@@ -4,6 +4,7 @@ import (
 	"context"
 
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
+	registry "github.com/lin-snow/ech0/internal/event/registry"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 )
 
@@ -25,4 +26,14 @@ func (bs *BackupScheduler) HandleBackupScheduleUpdated(
 ) error {
 	_ = ctx
 	return bs.applier.ApplyBackupSchedule(e.Schedule)
+}
+
+func (bs *BackupScheduler) Subscriptions() []registry.Subscription {
+	return []registry.Subscription{
+		registry.TopicSubscription(
+			contracts.TopicBackupScheduleUpdate,
+			bs.HandleBackupScheduleUpdated,
+			registry.SystemSubscribeOptions()...,
+		),
+	}
 }

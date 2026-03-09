@@ -9,6 +9,7 @@ import (
 	"time"
 
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
+	registry "github.com/lin-snow/ech0/internal/event/registry"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	inboxModel "github.com/lin-snow/ech0/internal/model/inbox"
 	agentService "github.com/lin-snow/ech0/internal/service/agent"
@@ -91,4 +92,19 @@ func (id *InboxDispatcher) handleInboxClear(ctx context.Context) error {
 		return err
 	}
 	return id.inboxRepo.ClearReadInboxByIds(ctx, expiredReadInboxIDs)
+}
+
+func (id *InboxDispatcher) Subscriptions() []registry.Subscription {
+	return []registry.Subscription{
+		registry.TopicSubscription(
+			contracts.TopicEch0UpdateCheck,
+			id.HandleEch0UpdateCheck,
+			registry.InboxSubscribeOptions()...,
+		),
+		registry.TopicSubscription(
+			contracts.TopicInboxClear,
+			id.HandleInboxClear,
+			registry.InboxSubscribeOptions()...,
+		),
+	}
 }

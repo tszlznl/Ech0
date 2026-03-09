@@ -6,7 +6,7 @@ import (
 	eventbus "github.com/lin-snow/ech0/internal/event/bus"
 )
 
-func (er *EventRegistrar) deadLetterOptions() []busen.SubscribeOption {
+func DeadLetterSubscribeOptions() []busen.SubscribeOption {
 	ec := config.Config().Event
 	return []busen.SubscribeOption{
 		busen.Async(),
@@ -16,7 +16,7 @@ func (er *EventRegistrar) deadLetterOptions() []busen.SubscribeOption {
 	}
 }
 
-func (er *EventRegistrar) systemOptions() []busen.SubscribeOption {
+func SystemSubscribeOptions() []busen.SubscribeOption {
 	ec := config.Config().Event
 	return []busen.SubscribeOption{
 		busen.Async(),
@@ -26,7 +26,7 @@ func (er *EventRegistrar) systemOptions() []busen.SubscribeOption {
 	}
 }
 
-func (er *EventRegistrar) agentOptions() []busen.SubscribeOption {
+func AgentSubscribeOptions() []busen.SubscribeOption {
 	ec := config.Config().Event
 	return []busen.SubscribeOption{
 		busen.Async(),
@@ -36,7 +36,7 @@ func (er *EventRegistrar) agentOptions() []busen.SubscribeOption {
 	}
 }
 
-func (er *EventRegistrar) inboxOptions() []busen.SubscribeOption {
+func InboxSubscribeOptions() []busen.SubscribeOption {
 	ec := config.Config().Event
 	return []busen.SubscribeOption{
 		busen.Async(),

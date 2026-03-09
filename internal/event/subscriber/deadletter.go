@@ -6,6 +6,7 @@ import (
 	"time"
 
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
+	registry "github.com/lin-snow/ech0/internal/event/registry"
 	queueModel "github.com/lin-snow/ech0/internal/model/queue"
 )
 
@@ -109,5 +110,15 @@ func (dlr *DeadLetterResolver) processDeadLetter(
 		return dlr.processor.HandleDeadLetter(ctx, deadLetter)
 	default:
 		return fmt.Errorf("unknown dead letter type: %s", deadLetter.Type)
+	}
+}
+
+func (dlr *DeadLetterResolver) Subscriptions() []registry.Subscription {
+	return []registry.Subscription{
+		registry.TopicSubscription(
+			contracts.TopicDeadLetterRetried,
+			dlr.Handle,
+			registry.DeadLetterSubscribeOptions()...,
+		),
 	}
 }
