@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import {
   fetchGetSettings,
-  fetchGetStatus,
   fetchGetCommentSettings,
   fetchGetS3Settings,
   fetchGetOAuth2Settings,
@@ -13,16 +12,12 @@ import {
   fetchGetAgentInfo,
   fetchHelloEch0,
 } from '@/service/api'
-import { localStg } from '@/utils/storage'
-import { theToast } from '@/utils/toast'
-import router from '@/router'
 import { CommentProvider, S3Provider, OAuth2Provider, AgentProvider } from '@/enums/enums'
 
 export const useSettingStore = defineStore('settingStore', () => {
   /**
    * State
    */
-  const isSystemReady = ref<boolean>(false)
   const SystemSetting = ref<App.Api.Setting.SystemSetting>({
     site_title: import.meta.env.VITE_APP_TITLE,
     server_logo: '/Ech0.svg',
@@ -87,36 +82,6 @@ export const useSettingStore = defineStore('settingStore', () => {
   /**
    * Actions
    */
-  const getSystemReady = async () => {
-    // 检查localStorage中是否有系统状态
-    const systemStatus = localStg.getItem<boolean>('systemStatus')
-    if (systemStatus !== null) {
-      // 如果有，直接使用localStorage中的值
-      isSystemReady.value = systemStatus
-    } else {
-      // 如果没有，默认设置为false
-      isSystemReady.value = false
-    }
-
-    // 检查系统是否准备好
-    if (!isSystemReady.value) {
-      // 如果系统未准备好，调用接口获取系统状态
-      const res = await fetchGetStatus()
-      if (res.code === 666) {
-        isSystemReady.value = false
-        theToast.info(res.msg)
-        // 跳转到注册页面
-        router.push({ name: 'auth' })
-      } else {
-        isSystemReady.value = true
-        console.log('系统已准备好')
-      }
-
-      // 保存系统状态到localStorage
-      localStg.setItem('systemStatus', isSystemReady.value)
-    }
-  }
-
   const getSystemSetting = async () => {
     await fetchGetSettings().then((res) => {
       if (res.code === 1) {
@@ -186,10 +151,6 @@ export const useSettingStore = defineStore('settingStore', () => {
     }
   }
 
-  const setSystemReady = (status: boolean) => {
-    isSystemReady.value = status
-  }
-
   const getAgentSetting = async () => {
     const res = await fetchGetAgentSettings()
     if (res.code === 1) {
@@ -207,9 +168,6 @@ export const useSettingStore = defineStore('settingStore', () => {
   }
 
   const init = async () => {
-    if (!isSystemReady.value) {
-      await getSystemReady()
-    }
     await getSystemSetting()
     getCommentSetting()
     getS3Setting()
@@ -218,7 +176,6 @@ export const useSettingStore = defineStore('settingStore', () => {
   }
 
   return {
-    isSystemReady,
     SystemSetting,
     CommentSetting,
     S3Setting,
@@ -231,13 +188,11 @@ export const useSettingStore = defineStore('settingStore', () => {
     loading,
 
     getAllAccessTokens,
-    getSystemReady,
     getSystemSetting,
     getCommentSetting,
     getS3Setting,
     getOAuth2Setting,
     getAllWebhooks,
-    setSystemReady,
     getHelloEch0,
     getBackupSchedule,
     getAgentSetting,

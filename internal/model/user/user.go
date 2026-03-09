@@ -15,6 +15,7 @@ type User struct {
 	Username string `gorm:"size:255;not null;unique" json:"username"`
 	Password string `gorm:"size:255;not null"        json:"-"`
 	IsAdmin  bool   `gorm:"bool"                     json:"is_admin"`
+	IsOwner  bool   `gorm:"bool"                     json:"is_owner"`
 	Avatar   string `gorm:"size:255"                 json:"avatar"`
 }
 

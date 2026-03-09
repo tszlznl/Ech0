@@ -6,6 +6,7 @@ import { useEchoStore } from './echo'
 import { useZoneStore } from './zone'
 import { useEditorStore } from './editor'
 import { useInboxStore } from './inbox'
+import { useInitStore } from './init'
 
 export async function initStores() {
   const themeStore = useThemeStore()
@@ -16,10 +17,14 @@ export async function initStores() {
   const zoneStore = useZoneStore()
   const editorStore = useEditorStore()
   const inboxStore = useInboxStore()
+  const initStore = useInitStore()
 
   themeStore.init()
+  await initStore.init()
   await userStore.init()
-  await settingStore.init()
+  if (initStore.initialized) {
+    await settingStore.init()
+  }
   todoStore.init()
   editorStore.init()
   echoStore.init()

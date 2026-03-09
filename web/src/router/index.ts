@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useUserStore } from '@/stores'
+import { useInitStore, useUserStore } from '@/stores'
 
 // 所有路由组件使用懒加载，优化首屏加载性能
 const router = createRouter({
@@ -84,6 +84,11 @@ const router = createRouter({
       component: () => import('../views/auth/AuthView.vue'),
     },
     {
+      path: '/init',
+      name: 'init',
+      component: () => import('../views/init/InitView.vue'),
+    },
+    {
       path: '/connect',
       name: 'connect',
       component: () => import('../views/connect/ConnectView.vue'),
@@ -113,7 +118,20 @@ const router = createRouter({
 
 // 全局路由守卫
 router.beforeEach(async (to, from, next) => {
+  const initStore = useInitStore()
   const userStore = useUserStore()
+
+  if (!initStore.ready) {
+    await initStore.init()
+  }
+
+  if (!initStore.initialized && to.name !== 'init') {
+    return next({ name: 'init' })
+  }
+
+  if (initStore.initialized && to.name === 'init') {
+    return next({ name: 'auth' })
+  }
 
   // 等待用户信息初始化完成
   if (!userStore.initialized) {

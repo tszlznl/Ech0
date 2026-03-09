@@ -8,6 +8,7 @@ import (
 	echoRepository "github.com/lin-snow/ech0/internal/repository/echo"
 	fileRepository "github.com/lin-snow/ech0/internal/repository/file"
 	inboxRepository "github.com/lin-snow/ech0/internal/repository/inbox"
+	initRepository "github.com/lin-snow/ech0/internal/repository/init"
 	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
 	queueRepository "github.com/lin-snow/ech0/internal/repository/queue"
 	settingRepository "github.com/lin-snow/ech0/internal/repository/setting"
@@ -20,6 +21,7 @@ import (
 	echoService "github.com/lin-snow/ech0/internal/service/echo"
 	fileService "github.com/lin-snow/ech0/internal/service/file"
 	inboxService "github.com/lin-snow/ech0/internal/service/inbox"
+	initService "github.com/lin-snow/ech0/internal/service/init"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	todoService "github.com/lin-snow/ech0/internal/service/todo"
 	userService "github.com/lin-snow/ech0/internal/service/user"
@@ -43,6 +45,10 @@ var (
 	FileSet = wire.NewSet(
 		fileRepository.NewFileRepository,
 		wire.Bind(new(fileService.FileRepository), new(*fileRepository.FileRepository)),
+	)
+	InitSet = wire.NewSet(
+		initRepository.NewInitRepository,
+		wire.Bind(new(initService.Repository), new(*initRepository.InitRepository)),
 	)
 	KeyValueSet = wire.NewSet(
 		keyvalueRepository.NewKeyValueRepository,

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -21,6 +22,9 @@ type Response struct {
 	// Msg 返回信息，通常是状态描述
 	Msg string `json:"msg"`
 
+	// ErrorCode 业务错误码，可选
+	ErrorCode string `json:"error_code,omitempty"`
+
 	// Err 错误信息，序列化时忽略（仅供内部日志使用）
 	// swagger:ignore
 	Err error `json:"-"`
@@ -31,12 +35,23 @@ func Execute(fn func(ctx *gin.Context) Response) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		res := fn(ctx)
 		if res.Err != nil {
-			ctx.JSON(http.StatusBadRequest, commonModel.Fail[string](
-				errorUtil.HandleError(&commonModel.ServerError{
-					Msg: res.Msg,
-					Err: res.Err,
-				}),
-			))
+			msg := errorUtil.HandleError(&commonModel.ServerError{
+				Msg: res.Msg,
+				Err: res.Err,
+			})
+
+			var bizErr *commonModel.BizError
+			if errors.As(res.Err, &bizErr) {
+				ctx.JSON(http.StatusBadRequest, commonModel.FailWithErrorCode[string](msg, bizErr.Code))
+				return
+			}
+
+			if res.ErrorCode != "" {
+				ctx.JSON(http.StatusBadRequest, commonModel.FailWithErrorCode[string](msg, res.ErrorCode))
+				return
+			}
+
+			ctx.JSON(http.StatusBadRequest, commonModel.Fail[string](msg))
 			return
 		}
 

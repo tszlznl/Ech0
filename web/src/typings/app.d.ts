@@ -6,6 +6,7 @@ declare namespace App {
     type Response<T> = {
       code: number
       msg: string
+      error_code?: string
       data: T
     }
 
@@ -50,6 +51,7 @@ declare namespace App {
         username: string
         password?: string
         is_admin: boolean
+        is_owner?: boolean
         avatar?: string
       }
 
@@ -57,6 +59,7 @@ declare namespace App {
         username: string
         password: string
         is_admin: boolean
+        is_owner?: boolean
         avatar: string
       }
 
@@ -64,6 +67,7 @@ declare namespace App {
         user_id: string
         username: string
         is_admin: boolean
+        is_owner?: boolean
       }
     }
 
@@ -201,7 +205,7 @@ declare namespace App {
       }
 
       type Status = {
-        sys_admin_id: string // 系统管理员ID
+        owner_id: string // Owner ID
         username: string // 系统管理员用户名
         logo: string // 系统管理员Logo
         users: App.Api.User.UserStatus[] // 用户列表
@@ -362,6 +366,13 @@ declare namespace App {
         api_key: string
         prompt: string
         base_url: string
+      }
+    }
+
+    namespace Init {
+      type Status = {
+        initialized: boolean
+        owner_exists: boolean
       }
     }
 

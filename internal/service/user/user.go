@@ -100,9 +100,73 @@ func (userService *UserService) Login(loginDto *authModel.LoginDto) (string, err
 	return token, nil
 }
 
+// InitOwner 初始化 Owner 账号
+//
+// 参数:
+//   - registerDto: 注册数据传输对象，包含用户名和密码
+//
+// 返回:
+//   - error: 初始化过程中的错误信息
+func (userService *UserService) InitOwner(registerDto *authModel.RegisterDto) error {
+	if registerDto.Username == "" || registerDto.Password == "" {
+		return errors.New(commonModel.USERNAME_OR_PASSWORD_NOT_BE_EMPTY)
+	}
+
+	var owner model.User
+	if err := userService.transactor.Run(context.Background(), func(ctx context.Context) error {
+		initialized, err := userService.userRepository.IsInitialized(ctx)
+		if err != nil {
+			return err
+		}
+		if initialized {
+			return commonModel.NewBizError(commonModel.ErrCodeInitAlreadyDone, commonModel.SYSTEM_ALREADY_INITED)
+		}
+
+		users, err := userService.userRepository.GetAllUsers(ctx)
+		if err != nil {
+			return err
+		}
+		if len(users) > 0 {
+			return commonModel.NewBizError(commonModel.ErrCodeInitOwnerExists, commonModel.OWNER_ALREADY_EXISTS)
+		}
+
+		// 检查用户是否已经存在
+		existingUser, err := userService.userRepository.GetUserByUsername(ctx, registerDto.Username)
+		if err == nil && existingUser.ID != model.USER_NOT_EXISTS_ID {
+			return errors.New(commonModel.USERNAME_HAS_EXISTS)
+		}
+
+		owner = model.User{
+			Username: registerDto.Username,
+			Password: cryptoUtil.MD5Encrypt(registerDto.Password),
+			IsAdmin:  true,
+			IsOwner:  true,
+		}
+
+		if err := userService.userRepository.CreateUser(ctx, &owner); err != nil {
+			return err
+		}
+
+		return userService.userRepository.MarkInitialized(ctx)
+	}); err != nil {
+		return err
+	}
+
+	// 发布用户注册事件
+	owner.Password = "" // 不包含密码信息
+	if err := userService.publisher.UserCreated(
+		context.Background(),
+		contracts.UserCreatedEvent{User: owner},
+	); err != nil {
+		logUtil.GetLogger().
+			Error("Failed to publish owner created event", zap.String("error", err.Error()))
+	}
+
+	return nil
+}
+
 // Register 用户注册
-// 注册新用户，包括用户数量限制检查、注册权限检查等
-// 第一个注册的用户自动设置为系统管理员
+// 注册普通用户，包括用户数量限制检查、注册权限检查等
 //
 // 参数:
 //   - registerDto: 注册数据传输对象，包含用户名和密码
@@ -110,6 +174,14 @@ func (userService *UserService) Login(loginDto *authModel.LoginDto) (string, err
 // 返回:
 //   - error: 注册过程中的错误信息
 func (userService *UserService) Register(registerDto *authModel.RegisterDto) error {
+	initialized, err := userService.userRepository.IsInitialized(context.Background())
+	if err != nil {
+		return err
+	}
+	if !initialized {
+		return commonModel.NewBizError(commonModel.ErrCodeInitInvalidState, commonModel.SIGNUP_FIRST)
+	}
+
 	// 检查用户数量是否超过限制
 	users, err := userService.userRepository.GetAllUsers(context.Background())
 	if err != nil {
@@ -126,6 +198,7 @@ func (userService *UserService) Register(registerDto *authModel.RegisterDto) err
 		Username: registerDto.Username,
 		Password: registerDto.Password,
 		IsAdmin:  false,
+		IsOwner:  false,
 	}
 
 	// 检查用户是否已经存在
@@ -134,18 +207,12 @@ func (userService *UserService) Register(registerDto *authModel.RegisterDto) err
 		return errors.New(commonModel.USERNAME_HAS_EXISTS)
 	}
 
-	// 检查是否该系统第一次注册用户
-	if len(users) == 0 {
-		// 第一个注册的用户为系统管理员
-		newUser.IsAdmin = true
-	}
-
 	// 检查是否开放注册
 	var setting settingModel.SystemSetting
 	if err := userService.settingService.GetSetting(&setting); err != nil {
 		return err
 	}
-	if len(users) != 0 && !setting.AllowRegister {
+	if !setting.AllowRegister {
 		return errors.New(commonModel.USER_REGISTER_NOT_ALLOW)
 	}
 	if err := userService.transactor.Run(context.Background(), func(ctx context.Context) error {
@@ -237,7 +304,7 @@ func (userService *UserService) UpdateUser(ctx context.Context, userdto model.Us
 }
 
 // UpdateUserAdmin 更新用户的管理员权限
-// 只有系统管理员、管理员可以修改其他用户的管理员权限，不能修改自己和系统管理员的权限
+// 只有 Owner 可以修改其他用户的管理员权限，不能修改自己和 Owner 的权限
 //
 // 参数:
 //   - userid: 执行操作的用户ID（必须为管理员）
@@ -247,29 +314,23 @@ func (userService *UserService) UpdateUser(ctx context.Context, userdto model.Us
 //   - error: 更新过程中的错误信息
 func (userService *UserService) UpdateUserAdmin(ctx context.Context, id string) error {
 	userid := viewer.MustFromContext(ctx).UserID()
-	// 检查执行操作的用户是否为管理员
-	user, err := userService.userRepository.GetUserByID(ctx, userid)
+	// 检查执行操作的用户是否为 Owner
+	operator, err := userService.userRepository.GetUserByID(ctx, userid)
 	if err != nil {
 		return err
 	}
-	if !user.IsAdmin {
-		return errors.New(commonModel.NO_PERMISSION_DENIED)
+	if !operator.IsOwner {
+		return errors.New(commonModel.ONLY_OWNER_CAN_MANAGE)
 	}
 
 	// 检查要修改权限的用户是否存在
-	user, err = userService.userRepository.GetUserByID(ctx, id)
+	user, err := userService.userRepository.GetUserByID(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	// 检查系统管理员信息
-	sysadmin, err := userService.GetSysAdmin()
-	if err != nil {
-		return err
-	}
-
-	// 检查是否尝试修改自己或系统管理员的权限
-	if userid == user.ID || id == sysadmin.ID {
+	// 检查是否尝试修改自己或 Owner 的权限
+	if userid == user.ID || user.IsOwner {
 		return errors.New(commonModel.INVALID_PARAMS_BODY)
 	}
 
@@ -296,7 +357,7 @@ func (userService *UserService) UpdateUserAdmin(ctx context.Context, id string) 
 }
 
 // GetAllUsers 获取所有用户列表
-// 返回除系统管理员外的所有用户，并移除密码信息
+// 返回除 Owner 外的所有用户，并移除密码信息
 //
 // 返回:
 //   - []model.User: 用户列表（不包含密码信息）
@@ -307,14 +368,14 @@ func (userService *UserService) GetAllUsers() ([]model.User, error) {
 		return nil, err
 	}
 
-	sysadmin, err := userService.GetSysAdmin()
+	owner, err := userService.GetOwner()
 	if err != nil {
 		return nil, err
 	}
 
-	// 处理用户信息(去掉管理员用户)
+	// 处理用户信息(去掉Owner用户)
 	for i := range allures {
-		if allures[i].ID == sysadmin.ID {
+		if allures[i].ID == owner.ID {
 			allures = append(allures[:i], allures[i+1:]...)
 			break
 		}
@@ -328,22 +389,22 @@ func (userService *UserService) GetAllUsers() ([]model.User, error) {
 	return allures, nil
 }
 
-// GetSysAdmin 获取系统管理员信息
+// GetOwner 获取 Owner 信息
 //
 // 返回:
-//   - model.User: 系统管理员用户信息
+//   - model.User: Owner 用户信息
 //   - error: 获取过程中的错误信息
-func (userService *UserService) GetSysAdmin() (model.User, error) {
-	sysadmin, err := userService.userRepository.GetSysAdmin(context.Background())
+func (userService *UserService) GetOwner() (model.User, error) {
+	owner, err := userService.userRepository.GetOwner(context.Background())
 	if err != nil {
 		return model.User{}, err
 	}
 
-	return sysadmin, nil
+	return owner, nil
 }
 
 // DeleteUser 删除用户
-// 只有管理员可以删除用户，不能删除自己和系统管理员
+// 只有 Owner 可以删除用户，不能删除自己和 Owner
 //
 // 参数:
 //   - userid: 执行删除操作的用户ID（必须为管理员）
@@ -355,27 +416,22 @@ func (userService *UserService) DeleteUser(ctx context.Context, id string) error
 	userid := viewer.MustFromContext(ctx).UserID()
 	var deletedUser model.User
 	err := userService.transactor.Run(ctx, func(txCtx context.Context) error {
-		// 检查执行操作的用户是否为管理员
-		user, err := userService.userRepository.GetUserByID(txCtx, userid)
+		// 检查执行操作的用户是否为 Owner
+		operator, err := userService.userRepository.GetUserByID(txCtx, userid)
 		if err != nil {
 			return err
 		}
-		if !user.IsAdmin {
-			return errors.New(commonModel.NO_PERMISSION_DENIED)
+		if !operator.IsOwner {
+			return errors.New(commonModel.ONLY_OWNER_CAN_MANAGE)
 		}
 
 		// 检查要删除的用户是否存在
-		user, err = userService.userRepository.GetUserByID(txCtx, id)
+		user, err := userService.userRepository.GetUserByID(txCtx, id)
 		if err != nil {
 			return err
 		}
 
-		sysadmin, err := userService.userRepository.GetSysAdmin(txCtx)
-		if err != nil {
-			return err
-		}
-
-		if userid == user.ID || id == sysadmin.ID {
+		if userid == user.ID || user.IsOwner {
 			return errors.New(commonModel.INVALID_PARAMS_BODY)
 		}
 

@@ -27,16 +27,12 @@ export const getApiUrl = () => {
   return resolvedBaseUrl
 }
 
-export const getSystemReadyStatus = () => {
-  // 检查localStorage中是否有系统状态
-  const systemStatus = localStg.getItem<boolean>('systemStatus')
-  if (systemStatus !== null) {
-    // 如果有，直接使用localStorage中的值
-    return systemStatus
-  } else {
-    // 如果没有，默认设置为false
-    return false
+export const getInitReadyStatus = () => {
+  const initStatus = localStg.getItem<boolean>('initialized')
+  if (initStatus !== null) {
+    return initStatus
   }
+  return false
 }
 
 // src/utils/ws.ts

@@ -6,6 +6,7 @@ import (
 
 	"github.com/lin-snow/ech0/internal/cache"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
+	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/user"
 	userService "github.com/lin-snow/ech0/internal/service/user"
 	"github.com/lin-snow/ech0/internal/transaction"
@@ -84,6 +85,9 @@ func (userRepository *UserRepository) CreateUser(ctx context.Context, user *mode
 	// 加入缓存
 	userRepository.cache.Set(GetUserIDKey(user.ID), *user, 1)
 	userRepository.cache.Set(GetUsernameKey(user.Username), *user, 1)
+	if user.IsOwner {
+		userRepository.cache.Set(GetOwnerKey(), *user, 1)
+	}
 
 	return nil
 }
@@ -112,9 +116,9 @@ func (userRepository *UserRepository) GetUserByID(ctx context.Context, id string
 		})
 }
 
-// GetSysAdmin 获取系统管理员
-func (userRepository *UserRepository) GetSysAdmin(ctx context.Context) (model.User, error) {
-	cacheKey := GetSysAdminKey()
+// GetOwner 获取Owner
+func (userRepository *UserRepository) GetOwner(ctx context.Context) (model.User, error) {
+	cacheKey := GetOwnerKey()
 	return cache.ReadThroughTypedUnlessTx[model.User](
 		ctx,
 		userRepository.cache,
@@ -122,7 +126,7 @@ func (userRepository *UserRepository) GetSysAdmin(ctx context.Context) (model.Us
 		1,
 		func(ctx context.Context) (model.User, error) {
 			user := model.User{}
-			err := userRepository.getDB(ctx).Where("is_admin = ?", true).First(&user).Error
+			err := userRepository.getDB(ctx).Where("is_owner = ?", true).First(&user).Error
 			if err != nil {
 				return model.User{}, err
 			}
@@ -130,12 +134,41 @@ func (userRepository *UserRepository) GetSysAdmin(ctx context.Context) (model.Us
 		},
 		func() (model.User, error) {
 			user := model.User{}
-			err := userRepository.db().Where("is_admin = ?", true).First(&user).Error
+			err := userRepository.db().Where("is_owner = ?", true).First(&user).Error
 			if err != nil {
 				return model.User{}, err
 			}
 			return user, nil
 		})
+}
+
+func (userRepository *UserRepository) IsInitialized(ctx context.Context) (bool, error) {
+	var kv commonModel.KeyValue
+	err := userRepository.getDB(ctx).Where("key = ?", commonModel.InstallInitializedKey).First(&kv).Error
+	if err == gorm.ErrRecordNotFound {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return kv.Value == "true", nil
+}
+
+func (userRepository *UserRepository) MarkInitialized(ctx context.Context) error {
+	result := userRepository.getDB(ctx).
+		Model(&commonModel.KeyValue{}).
+		Where("key = ?", commonModel.InstallInitializedKey).
+		Update("value", "true")
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected > 0 {
+		return nil
+	}
+	return userRepository.getDB(ctx).Create(&commonModel.KeyValue{
+		Key:   commonModel.InstallInitializedKey,
+		Value: "true",
+	}).Error
 }
 
 // UpdateUser 更新用户信息
@@ -149,6 +182,9 @@ func (userRepository *UserRepository) UpdateUser(ctx context.Context, user *mode
 	userRepository.cache.Set(GetUsernameKey(user.Username), *user, 1)
 	if user.IsAdmin {
 		userRepository.cache.Set(GetAdminKey(user.ID), *user, 1)
+	}
+	if user.IsOwner {
+		userRepository.cache.Set(GetOwnerKey(), *user, 1)
 	}
 
 	return nil
@@ -172,6 +208,9 @@ func (userRepository *UserRepository) DeleteUser(ctx context.Context, id string)
 	userRepository.cache.Delete(GetUsernameKey(userToDel.Username))
 	if userToDel.IsAdmin {
 		userRepository.cache.Delete(GetAdminKey(userToDel.ID))
+	}
+	if userToDel.IsOwner {
+		userRepository.cache.Delete(GetOwnerKey())
 	}
 
 	return nil

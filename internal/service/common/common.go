@@ -31,17 +31,14 @@ func (s *CommonService) CommonGetUserByUserId(ctx context.Context, userId string
 	return s.commonRepository.GetUserByUserId(ctx, userId)
 }
 
-func (s *CommonService) GetSysAdmin() (userModel.User, error) {
-	return s.commonRepository.GetSysAdmin(context.Background())
+func (s *CommonService) GetOwner() (userModel.User, error) {
+	return s.commonRepository.GetOwner(context.Background())
 }
 
 func (s *CommonService) GetStatus() (commonModel.Status, error) {
 	ctx := context.Background()
 
-	sysuser, err := s.commonRepository.GetSysAdmin(ctx)
-	if err != nil {
-		return commonModel.Status{}, err
-	}
+	owner, _ := s.commonRepository.GetOwner(ctx)
 
 	var users []commonModel.UserStatus
 	allusers, err := s.commonRepository.GetAllUsers(ctx)
@@ -53,6 +50,7 @@ func (s *CommonService) GetStatus() (commonModel.Status, error) {
 			UserID:   user.ID,
 			UserName: user.Username,
 			IsAdmin:  user.IsAdmin,
+			IsOwner:  user.IsOwner,
 		})
 	}
 
@@ -62,9 +60,9 @@ func (s *CommonService) GetStatus() (commonModel.Status, error) {
 	}
 
 	return commonModel.Status{
-		SysAdminID: sysuser.ID,
-		Username:   sysuser.Username,
-		Logo:       sysuser.Avatar,
+		OwnerID:    owner.ID,
+		Username:   owner.Username,
+		Logo:       owner.Avatar,
 		Users:      users,
 		TotalEchos: len(echos),
 	}, nil

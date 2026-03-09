@@ -5,15 +5,16 @@ type UserStatus struct {
 	UserID   string `json:"user_id"`  // 用户ID
 	UserName string `json:"username"` // 用户名
 	IsAdmin  bool   `json:"is_admin"` // 是否是管理员
+	IsOwner  bool   `json:"is_owner"` // 是否是Owner
 }
 
 // Status 用于存储Echo状态信息
 type Status struct {
-	SysAdminID string       `json:"sys_admin_id"` // 系统管理员ID
-	Username   string       `json:"username"`     // 系统管理员用户名
-	Users      []UserStatus `json:"users"`        // 所有用户
-	Logo       string       `json:"logo"`         // 站点logo
-	TotalEchos int          `json:"total_echos"`  // 总共发布数量
+	OwnerID    string       `json:"owner_id"`    // Owner ID
+	Username   string       `json:"username"`    // Owner 用户名
+	Users      []UserStatus `json:"users"`       // 所有用户
+	Logo       string       `json:"logo"`        // 站点logo
+	TotalEchos int          `json:"total_echos"` // 总共发布数量
 }
 
 // Heatmap 用于存储热力图数据
@@ -113,6 +114,8 @@ const (
 	ReleaseVersionKey = "release_version"
 	// MigrationKey 是数据库迁移的标记键
 	MigrationKey = "db_migration:message_to_echo:v1"
+	// InstallInitializedKey 是安装流程完成状态键
+	InstallInitializedKey = "install_initialized"
 )
 
 // PageQueryResult 用于分页查询的结果数据传输对象
@@ -120,11 +123,6 @@ type PageQueryResult[T any] struct {
 	Total int64 `json:"total"`
 	Items T     `json:"items"`
 }
-
-const (
-	// InitInstallCode 是初始化安装的标志
-	InitInstallCode = 666
-)
 
 const (
 	// Version 是当前版本号

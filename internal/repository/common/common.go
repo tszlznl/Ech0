@@ -38,9 +38,9 @@ func (commonRepository *CommonRepository) GetUserByUserId(ctx context.Context, u
 	return user, nil
 }
 
-func (commonRepository *CommonRepository) GetSysAdmin(ctx context.Context) (userModel.User, error) {
+func (commonRepository *CommonRepository) GetOwner(ctx context.Context) (userModel.User, error) {
 	user := userModel.User{}
-	err := commonRepository.getDB(ctx).Where("is_admin = ?", true).First(&user).Error
+	err := commonRepository.getDB(ctx).Where("is_owner = ?", true).First(&user).Error
 	if err != nil {
 		return userModel.User{}, err
 	}

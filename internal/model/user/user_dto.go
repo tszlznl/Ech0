@@ -16,6 +16,10 @@ type UserInfoDto struct {
 	// example: false
 	IsAdmin bool `json:"is_admin"`
 
+	// 是否为Owner
+	// example: false
+	IsOwner bool `json:"is_owner"`
+
 	// 头像地址
 	// example: https://example.com/avatar.png
 	Avatar string `json:"avatar"`

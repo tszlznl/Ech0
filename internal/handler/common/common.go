@@ -23,14 +23,6 @@ func NewCommonHandler(commonService service.Service) *CommonHandler {
 
 func (commonHandler *CommonHandler) GetStatus() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		_, err := commonHandler.commonService.GetSysAdmin()
-		if err != nil {
-			return res.Response{
-				Code: commonModel.InitInstallCode,
-				Msg:  commonModel.SIGNUP_FIRST,
-			}
-		}
-
 		status, err := commonHandler.commonService.GetStatus()
 		if err != nil {
 			return res.Response{

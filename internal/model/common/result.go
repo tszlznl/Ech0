@@ -2,9 +2,10 @@ package model
 
 // Result 定义统一的API响应格式
 type Result[T any] struct {
-	Code    int    `json:"code"`
-	Message string `json:"msg"`
-	Data    T      `json:"data"`
+	Code      int    `json:"code"`
+	Message   string `json:"msg"`
+	ErrorCode string `json:"error_code,omitempty"`
+	Data      T      `json:"data"`
 }
 
 const (
@@ -31,10 +32,17 @@ func OK[T any](data T, messages ...string) Result[T] {
 func Fail[T any](message string) Result[T] {
 	var zero T
 	return Result[T]{
-		Code:    DEFAULT_FAILED_CODE,
-		Message: message,
-		Data:    zero,
+		Code:      DEFAULT_FAILED_CODE,
+		Message:   message,
+		ErrorCode: "",
+		Data:      zero,
 	}
+}
+
+func FailWithErrorCode[T any](message, errorCode string) Result[T] {
+	res := Fail[T](message)
+	res.ErrorCode = errorCode
+	return res
 }
 
 // OKWithCode 返回成功的结果，并允许自定义状态码

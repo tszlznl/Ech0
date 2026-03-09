@@ -12,11 +12,12 @@ import (
 
 type Service interface {
 	Login(loginDto *authModel.LoginDto) (string, error)
+	InitOwner(registerDto *authModel.RegisterDto) error
 	Register(registerDto *authModel.RegisterDto) error
 	UpdateUser(ctx context.Context, userdto model.UserInfoDto) error
 	UpdateUserAdmin(ctx context.Context, id string) error
 	GetAllUsers() ([]model.User, error)
-	GetSysAdmin() (model.User, error)
+	GetOwner() (model.User, error)
 	DeleteUser(ctx context.Context, id string) error
 	GetUserByID(userId string) (model.User, error)
 	BindOAuth(ctx context.Context, provider string, redirectURI string) (string, error)
@@ -39,7 +40,9 @@ type Repository interface {
 	GetUserByUsername(ctx context.Context, username string) (model.User, error)
 	GetAllUsers(ctx context.Context) ([]model.User, error)
 	CreateUser(ctx context.Context, newUser *model.User) error
-	GetSysAdmin(ctx context.Context) (model.User, error)
+	GetOwner(ctx context.Context) (model.User, error)
+	IsInitialized(ctx context.Context) (bool, error)
+	MarkInitialized(ctx context.Context) error
 	UpdateUser(ctx context.Context, user *model.User) error
 	DeleteUser(ctx context.Context, id string) error
 	BindOAuth(ctx context.Context, userID string, provider, oauthID, issuer, authType string) error

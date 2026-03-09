@@ -7,8 +7,9 @@ const (
 
 // Auth 成功相关常量
 const (
-	LOGIN_SUCCESS    = "登陆成功"
-	REGISTER_SUCCESS = "注册成功"
+	LOGIN_SUCCESS      = "登陆成功"
+	REGISTER_SUCCESS   = "注册成功"
+	INIT_OWNER_SUCCESS = "Owner初始化成功"
 )
 
 // Echo 成功相关常量

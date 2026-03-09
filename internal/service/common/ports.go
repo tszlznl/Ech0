@@ -12,7 +12,7 @@ import (
 
 type Service interface {
 	CommonGetUserByUserId(ctx context.Context, userId string) (userModel.User, error)
-	GetSysAdmin() (userModel.User, error)
+	GetOwner() (userModel.User, error)
 	GetStatus() (commonModel.Status, error)
 	GetHeatMap(timezone string) ([]commonModel.Heatmap, error)
 	GenerateRSS(ctx *gin.Context) (string, error)
@@ -21,7 +21,7 @@ type Service interface {
 
 type CommonRepository interface {
 	GetUserByUserId(ctx context.Context, id string) (userModel.User, error)
-	GetSysAdmin(ctx context.Context) (userModel.User, error)
+	GetOwner(ctx context.Context) (userModel.User, error)
 	GetAllUsers(ctx context.Context) ([]userModel.User, error)
 	GetAllEchos(ctx context.Context, showPrivate bool) ([]echoModel.Echo, error)
 	GetHeatMap(ctx context.Context, startTime, endTime time.Time) ([]time.Time, error)
