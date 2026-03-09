@@ -39,3 +39,16 @@ func TestWithRequest(t *testing.T) {
 		t.Fatalf("unexpected user id: %s", got.UserID())
 	}
 }
+
+func TestAttachToRequest(t *testing.T) {
+	req, err := http.NewRequest(http.MethodGet, "/api/ping", nil)
+	if err != nil {
+		t.Fatalf("new request failed: %v", err)
+	}
+	AttachToRequest(&req, NewUserViewer("u2"))
+
+	got := MustFromContext(req.Context())
+	if got.UserID() != "u2" {
+		t.Fatalf("unexpected user id: %s", got.UserID())
+	}
+}

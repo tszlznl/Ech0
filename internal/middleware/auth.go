@@ -14,12 +14,8 @@ import (
 // JWTAuthMiddleware JWT 拦截器中间件
 func JWTAuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		attachViewer := func(v viewer.Context) {
-			ctx.Request = viewer.WithRequest(ctx.Request, v)
-		}
-
 		setAnonymous := func() {
-			attachViewer(viewer.NewNoopViewer())
+			viewer.AttachToRequest(&ctx.Request, viewer.NewNoopViewer())
 		}
 
 		// 获取 Authorization 头部信息
@@ -110,7 +106,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		}
 
 		// 如果 token 解析成功，则将 viewer 写入 request context
-		attachViewer(viewer.NewUserViewer(mc.Userid))
+		viewer.AttachToRequest(&ctx.Request, viewer.NewUserViewer(mc.Userid))
 		ctx.Next()
 	}
 }

@@ -49,3 +49,11 @@ func WithRequest(req *http.Request, v Context) *http.Request {
 	}
 	return req.WithContext(WithContext(reqCtx, v))
 }
+
+// AttachToRequest updates request pointer with viewer-attached request context.
+func AttachToRequest(req **http.Request, v Context) {
+	if req == nil || *req == nil {
+		return
+	}
+	*req = WithRequest(*req, v)
+}
