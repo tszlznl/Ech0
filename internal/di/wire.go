@@ -34,7 +34,6 @@ var DomainSet = wire.NewSet(
 	BuildTasker,
 	ProvideBackupScheduleApplier,
 	BuildEventRegistrar,
-	eventregistry.ProvideRegisteredRegistrar,
 )
 
 var InfraSet = wire.NewSet(
@@ -152,14 +151,14 @@ var TaskerGraphSet = wire.NewSet(
 )
 
 // BuildApp 构建 Web 生命周期应用。
-func BuildApp() (*app.App, func(), error) {
+func BuildApp() (*app.App, error) {
 	wire.Build(
 		InfraSet,
 		DomainSet,
 		RuntimeSet,
 		AppSet,
 	)
-	return &app.App{}, nil, nil
+	return &app.App{}, nil
 }
 
 func BuildEventRegistrar(

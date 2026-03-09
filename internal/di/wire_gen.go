@@ -68,40 +68,33 @@ import (
 // Injectors from wire.go:
 
 // BuildApp 构建 Web 生命周期应用。
-func BuildApp() (*app.App, func(), error) {
+func BuildApp() (*app.App, error) {
 	v := database.ProvideDBProvider()
 	v2 := bus.ProvideProvider()
 	iCache, err := cache.ProvideCache()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	gormTransactor := transaction.NewGormTransactor(v)
 	tasker, err := BuildTasker(v, iCache, gormTransactor, v2)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	backupScheduleApplier := ProvideBackupScheduleApplier(tasker)
 	eventRegistrar, err := BuildEventRegistrar(v, v2, iCache, gormTransactor, backupScheduleApplier)
 	if err != nil {
-		return nil, nil, err
-	}
-	registeredRegistrar, cleanup, err := registry.ProvideRegisteredRegistrar(eventRegistrar)
-	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	eventBus := bus.NewEventBus(v2)
 	engine := server.ProvideGinEngine()
 	bundle, err := BuildHandlers(v, iCache, gormTransactor, v2)
 	if err != nil {
-		cleanup()
-		return nil, nil, err
+		return nil, err
 	}
 	serverServer := server.ProvideHTTPServer(engine, bundle)
-	v3 := app.ProvideComponents(registeredRegistrar, eventBus, tasker, serverServer)
+	v3 := app.ProvideOptions(eventRegistrar, eventBus, tasker, serverServer)
 	appApp := app.NewApp(v3)
-	return appApp, func() {
-		cleanup()
-	}, nil
+	return appApp, nil
 }
 
 func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() *busen.Bus, appCache cache.ICache[string, any], tx transaction.Transactor, backupScheduleApplier subscriber.BackupScheduleApplier) (*registry.EventRegistrar, error) {
@@ -207,7 +200,7 @@ var DomainSet = wire.NewSet(
 	BuildHandlers,
 	BuildTasker,
 	ProvideBackupScheduleApplier,
-	BuildEventRegistrar, registry.ProvideRegisteredRegistrar,
+	BuildEventRegistrar,
 )
 
 var InfraSet = wire.NewSet(database.ProviderSet, bus.ProvideProvider, cache.ProviderSet, transaction.ProviderSet)

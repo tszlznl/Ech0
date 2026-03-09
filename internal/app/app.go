@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 	"errors"
+	"os"
+	"os/signal"
 	"reflect"
 	"sync"
 )
@@ -11,79 +13,215 @@ import (
 type App struct {
 	mu sync.Mutex
 
-	components []Component
+	opts options
 
-	running bool
+	ctx    context.Context
+	cancel context.CancelFunc
+
+	running    bool
+	stopping   bool
+	stopErr    error
+	stoppedCh  chan struct{}
+	startedSet []Component
 }
 
-// NewApp 创建应用组件编排器。
-func NewApp(components []Component) *App {
+// New 创建应用组件编排器。
+func New(opts ...Option) *App {
+	o := defaultOptions()
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&o)
+		}
+	}
+	ctx, cancel := context.WithCancel(o.ctx)
 	return &App{
-		components: components,
+		opts:      o,
+		ctx:       ctx,
+		cancel:    cancel,
+		stoppedCh: make(chan struct{}),
 	}
 }
 
-// Start 按顺序启动应用组件链。
-func (a *App) Start(ctx context.Context) error {
+// Run 启动并阻塞，直到收到退出信号或外部调用 Stop。
+func (a *App) Run() error {
 	a.mu.Lock()
-	defer a.mu.Unlock()
-
 	if a.running {
+		a.mu.Unlock()
 		return &AppError{
 			Code:      CodeInvalidState,
-			Op:        "app.start",
+			Op:        "app.run",
 			Component: "app",
 		}
 	}
-	if len(a.components) == 0 {
+	if len(a.opts.components) == 0 {
+		a.mu.Unlock()
 		return &AppError{
 			Code:      CodeDependencyMissing,
-			Op:        "app.start",
+			Op:        "app.run",
 			Component: "components",
 		}
 	}
+	a.running = true
+	a.stopping = false
+	a.stopErr = nil
+	a.startedSet = nil
+	a.stoppedCh = make(chan struct{})
+	a.mu.Unlock()
 
-	started := make([]Component, 0, len(a.components))
-	for _, component := range a.components {
+	if err := a.runHooks(a.ctx, "app.before_start", a.opts.beforeStart); err != nil {
+		a.mu.Lock()
+		a.running = false
+		close(a.stoppedCh)
+		a.mu.Unlock()
+		return err
+	}
+
+	started := make([]Component, 0, len(a.opts.components))
+	for _, component := range a.opts.components {
 		if component == nil {
+			a.rollbackStart(started)
+			a.mu.Lock()
+			a.running = false
+			close(a.stoppedCh)
+			a.mu.Unlock()
 			return &AppError{
 				Code:      CodeDependencyMissing,
-				Op:        "app.start",
+				Op:        "app.run",
 				Component: "nil_component",
 			}
 		}
-		if err := component.Start(ctx); err != nil {
-			a.stopComponentsReverse(ctx, started)
+		if err := component.Start(a.ctx); err != nil {
+			a.rollbackStart(started)
+			a.mu.Lock()
+			a.running = false
+			close(a.stoppedCh)
+			a.mu.Unlock()
 			return &AppError{
 				Code:      CodeComponentStartFailed,
-				Op:        "app.start",
+				Op:        "app.run",
 				Component: componentName(component),
 				Cause:     err,
 			}
 		}
 		started = append(started, component)
 	}
-
-	a.running = true
-	return nil
-}
-
-// Stop 按反向顺序停止应用组件单元。
-func (a *App) Stop(ctx context.Context) error {
 	a.mu.Lock()
-	defer a.mu.Unlock()
+	a.startedSet = append([]Component(nil), started...)
+	a.mu.Unlock()
 
-	if !a.running {
-		return &AppError{
-			Code:      CodeInvalidState,
-			Op:        "app.stop",
-			Component: "app",
+	if err := a.runHooks(a.ctx, "app.after_start", a.opts.afterStart); err != nil {
+		_ = a.Stop()
+		return err
+	}
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, a.opts.sigs...)
+	defer signal.Stop(c)
+
+	select {
+	case <-a.ctx.Done():
+	case <-c:
+		if err := a.Stop(); err != nil {
+			return err
 		}
 	}
 
+	<-a.stoppedCh
+	return a.stopErr
+}
+
+// Stop 优雅停止应用，支持幂等调用。
+func (a *App) Stop() error {
+	a.mu.Lock()
+	if !a.running {
+		a.mu.Unlock()
+		return nil
+	}
+	if a.stopping {
+		ch := a.stoppedCh
+		a.mu.Unlock()
+		<-ch
+		return a.stopErr
+	}
+	a.stopping = true
+	stoppedCh := a.stoppedCh
+	components := append([]Component(nil), a.startedSet...)
+	beforeStop := append([]Hook(nil), a.opts.beforeStop...)
+	afterStop := append([]Hook(nil), a.opts.afterStop...)
+	stopTimeout := a.opts.stopTimeout
+	baseCtx := context.WithoutCancel(a.ctx)
+	cancel := a.cancel
+	a.mu.Unlock()
+
+	stopCtx := baseCtx
+	var stopCancel context.CancelFunc
+	if stopTimeout > 0 {
+		stopCtx, stopCancel = context.WithTimeout(stopCtx, stopTimeout)
+		defer stopCancel()
+	}
+
 	var errs []error
-	for i := len(a.components) - 1; i >= 0; i-- {
-		component := a.components[i]
+	if err := a.runHooks(stopCtx, "app.before_stop", beforeStop); err != nil {
+		errs = append(errs, err)
+	}
+	errs = append(errs, a.stopComponentsReverse(stopCtx, components)...)
+	if err := a.runHooks(stopCtx, "app.after_stop", afterStop); err != nil {
+		errs = append(errs, err)
+	}
+
+	if cancel != nil {
+		cancel()
+	}
+	stopErr := errors.Join(errs...)
+
+	a.mu.Lock()
+	a.running = false
+	a.stopping = false
+	a.startedSet = nil
+	a.stopErr = stopErr
+	close(stoppedCh)
+	a.mu.Unlock()
+	return stopErr
+}
+
+// IsRunning 返回应用组件链是否运行中。
+func (a *App) IsRunning() bool {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.running
+}
+
+func (a *App) rollbackStart(started []Component) {
+	stopCtx := context.WithoutCancel(a.ctx)
+	if a.opts.stopTimeout > 0 {
+		var cancel context.CancelFunc
+		stopCtx, cancel = context.WithTimeout(stopCtx, a.opts.stopTimeout)
+		defer cancel()
+	}
+	_ = errors.Join(a.stopComponentsReverse(stopCtx, started)...)
+}
+
+func (a *App) runHooks(ctx context.Context, op string, hooks []Hook) error {
+	for _, hook := range hooks {
+		if hook == nil {
+			continue
+		}
+		if err := hook(ctx); err != nil {
+			return &AppError{
+				Code:      CodeHookFailed,
+				Op:        op,
+				Component: "hook",
+				Cause:     err,
+			}
+		}
+	}
+	return nil
+}
+
+func (a *App) stopComponentsReverse(ctx context.Context, components []Component) []error {
+	errs := make([]error, 0)
+	for i := len(components) - 1; i >= 0; i-- {
+		component := components[i]
 		if component == nil {
 			continue
 		}
@@ -96,35 +234,12 @@ func (a *App) Stop(ctx context.Context) error {
 			})
 		}
 	}
-
-	a.running = false
-	return errors.Join(errs...)
+	return errs
 }
 
 // StopAll 停止所有已运行组件。
-func (a *App) StopAll(ctx context.Context) error {
-	var errs []error
-
-	if a.IsRunning() {
-		if err := a.Stop(ctx); err != nil {
-			errs = append(errs, err)
-		}
-	}
-
-	return errors.Join(errs...)
-}
-
-// IsRunning 返回应用组件链是否运行中。
-func (a *App) IsRunning() bool {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	return a.running
-}
-
-func (a *App) stopComponentsReverse(ctx context.Context, components []Component) {
-	for i := len(components) - 1; i >= 0; i-- {
-		_ = components[i].Stop(ctx)
-	}
+func (a *App) StopAll(context.Context) error {
+	return a.Stop()
 }
 
 func componentName(component Component) string {

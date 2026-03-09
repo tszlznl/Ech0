@@ -1,16 +1,12 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"strings"
-	"syscall"
-	"time"
 
 	"github.com/charmbracelet/huh"
 	"github.com/lin-snow/ech0/internal/backup"
@@ -40,52 +36,21 @@ func canStartWebServer() bool {
 }
 
 func DoServe() {
-	if !canStartWebServer() {
-		return
-	}
-	runtimeApp, cleanup, err := di.BuildApp()
-	if err != nil {
-		tui.PrintCLIInfo("😭 启动服务失败", err.Error())
-		return
-	}
-	if err := runtimeApp.Start(context.Background()); err != nil {
-		if cleanup != nil {
-			cleanup()
-		}
-		tui.PrintCLIInfo("😭 启动服务失败", err.Error())
-	}
+	DoServeWithBlock()
 }
 
 func DoServeWithBlock() {
 	if !canStartWebServer() {
 		return
 	}
-	runtimeApp, cleanup, err := di.BuildApp()
+	runtimeApp, err := di.BuildApp()
 	if err != nil {
 		tui.PrintCLIInfo("😭 启动服务失败", err.Error())
 		return
 	}
-	if err := runtimeApp.Start(context.Background()); err != nil {
-		if cleanup != nil {
-			cleanup()
-		}
+	if err := runtimeApp.Run(); err != nil {
 		tui.PrintCLIInfo("😭 启动服务失败", err.Error())
 		return
-	}
-
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := runtimeApp.Stop(ctx); err != nil {
-		tui.PrintCLIInfo("❌ 服务停止", "服务器强制关闭")
-		os.Exit(1)
-	}
-	if cleanup != nil {
-		cleanup()
 	}
 	tui.PrintCLIInfo("🎉 停止服务成功", "Ech0 服务器已停止")
 }

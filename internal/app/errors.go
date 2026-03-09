@@ -6,6 +6,7 @@ const (
 	CodeComponentStartFailed = "COMPONENT_START_FAILED"
 	CodeComponentStopFailed  = "COMPONENT_STOP_FAILED"
 	CodeDependencyMissing    = "DEPENDENCY_MISSING"
+	CodeHookFailed           = "HOOK_FAILED"
 	CodeInvalidState         = "INVALID_STATE"
 )
 
