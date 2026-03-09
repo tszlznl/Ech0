@@ -14,6 +14,7 @@ import (
 	"github.com/lin-snow/ech0/internal/transaction"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
 )
 
@@ -42,9 +43,10 @@ func NewConnectService(
 }
 
 // AddConnect 添加连接
-func (connectService *ConnectService) AddConnect(userid string, connected model.Connected) error {
-	return connectService.transactor.Run(context.Background(), func(ctx context.Context) error {
-		user, err := connectService.commonService.CommonGetUserByUserId(ctx, userid)
+func (connectService *ConnectService) AddConnect(ctx context.Context, connected model.Connected) error {
+	userid := viewer.MustFromContext(ctx).UserID()
+	return connectService.transactor.Run(ctx, func(txCtx context.Context) error {
+		user, err := connectService.commonService.CommonGetUserByUserId(txCtx, userid)
 		if err != nil {
 			return err
 		}
@@ -62,7 +64,7 @@ func (connectService *ConnectService) AddConnect(userid string, connected model.
 		connected.ConnectURL = httpUtil.TrimURL(connected.ConnectURL)
 
 		// 检查连接地址是否已存在
-		connectedList, err := connectService.connectRepository.GetAllConnects(ctx)
+		connectedList, err := connectService.connectRepository.GetAllConnects(txCtx)
 		if err != nil {
 			return err
 		}
@@ -75,7 +77,7 @@ func (connectService *ConnectService) AddConnect(userid string, connected model.
 		}
 
 		// 添加连接地址
-		if err := connectService.connectRepository.CreateConnect(ctx, &connected); err != nil {
+		if err := connectService.connectRepository.CreateConnect(txCtx, &connected); err != nil {
 			return err
 		}
 
@@ -84,9 +86,10 @@ func (connectService *ConnectService) AddConnect(userid string, connected model.
 }
 
 // DeleteConnect 删除连接
-func (connectService *ConnectService) DeleteConnect(userid, id string) error {
-	return connectService.transactor.Run(context.Background(), func(ctx context.Context) error {
-		user, err := connectService.commonService.CommonGetUserByUserId(ctx, userid)
+func (connectService *ConnectService) DeleteConnect(ctx context.Context, id string) error {
+	userid := viewer.MustFromContext(ctx).UserID()
+	return connectService.transactor.Run(ctx, func(txCtx context.Context) error {
+		user, err := connectService.commonService.CommonGetUserByUserId(txCtx, userid)
 		if err != nil {
 			return err
 		}
@@ -96,7 +99,7 @@ func (connectService *ConnectService) DeleteConnect(userid, id string) error {
 		}
 
 		// 删除连接地址
-		if err := connectService.connectRepository.DeleteConnect(ctx, id); err != nil {
+		if err := connectService.connectRepository.DeleteConnect(txCtx, id); err != nil {
 			return err
 		}
 

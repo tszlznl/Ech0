@@ -10,6 +10,7 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
 	"golang.org/x/sync/singleflight"
 )
@@ -81,8 +82,9 @@ func (agentService *AgentService) getRecentFromCache(cacheKey string) (string, b
 }
 
 func (agentService *AgentService) buildRecentSummary(ctx context.Context) (string, error) {
+	systemCtx := viewer.WithContext(ctx, viewer.NewSystemViewer("agent-service"))
 	echos, err := agentService.echoService.GetEchosByPage(
-		"",
+		systemCtx,
 		commonModel.PageQueryDto{
 			Page:     1,
 			PageSize: 10,

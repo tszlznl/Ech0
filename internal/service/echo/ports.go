@@ -10,16 +10,16 @@ import (
 )
 
 type Service interface {
-	PostEcho(userid string, newEcho *model.Echo) error
-	GetEchosByPage(userid string, pageQueryDto commonModel.PageQueryDto) (commonModel.PageQueryResult[[]model.Echo], error)
-	DeleteEchoById(userid, id string) error
-	GetTodayEchos(userid string, timezone string) ([]model.Echo, error)
-	UpdateEcho(userid string, echo *model.Echo) error
-	LikeEcho(id string) error
-	GetEchoById(userId, id string) (*model.Echo, error)
+	PostEcho(ctx context.Context, newEcho *model.Echo) error
+	GetEchosByPage(ctx context.Context, pageQueryDto commonModel.PageQueryDto) (commonModel.PageQueryResult[[]model.Echo], error)
+	DeleteEchoById(ctx context.Context, id string) error
+	GetTodayEchos(ctx context.Context, timezone string) ([]model.Echo, error)
+	UpdateEcho(ctx context.Context, echo *model.Echo) error
+	LikeEcho(ctx context.Context, id string) error
+	GetEchoById(ctx context.Context, id string) (*model.Echo, error)
 	GetAllTags() ([]model.Tag, error)
-	DeleteTag(userid, id string) error
-	GetEchosByTagId(userId, tagId string, pageQueryDto commonModel.PageQueryDto) (commonModel.PageQueryResult[[]model.Echo], error)
+	DeleteTag(ctx context.Context, id string) error
+	GetEchosByTagId(ctx context.Context, tagId string, pageQueryDto commonModel.PageQueryDto) (commonModel.PageQueryResult[[]model.Echo], error)
 }
 
 type CommonService = commonService.Service

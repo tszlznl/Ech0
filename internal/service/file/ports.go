@@ -14,18 +14,18 @@ import (
 
 type Service interface {
 	UploadFile(
-		userID string,
+		ctx context.Context,
 		file *multipart.FileHeader,
 		category storage.Category,
 		storageType storage.StorageType,
 	) (commonModel.FileDto, error)
-	CreateExternalFile(userid string, dto commonModel.CreateExternalFileDto) (commonModel.FileDto, error)
-	DeleteFile(userid string, dto commonModel.FileDeleteDto) error
-	UploadAudioFile(userID string, file *multipart.FileHeader) (commonModel.FileDto, error)
-	DeleteAudioFile(userid string) error
+	CreateExternalFile(ctx context.Context, dto commonModel.CreateExternalFileDto) (commonModel.FileDto, error)
+	DeleteFile(ctx context.Context, dto commonModel.FileDeleteDto) error
+	UploadAudioFile(ctx context.Context, file *multipart.FileHeader) (commonModel.FileDto, error)
+	DeleteAudioFile(ctx context.Context) error
 	GetCurrentAudioURL() string
 	StreamCurrentAudio(ctx *gin.Context)
-	GetFilePresignURL(userid string, dto *commonModel.GetPresignURLDto) (commonModel.PresignDto, error)
+	GetFilePresignURL(ctx context.Context, dto *commonModel.GetPresignURLDto) (commonModel.PresignDto, error)
 	CleanupOrphanFiles() error
 	DeleteFileRecord(ctx context.Context, id string) error
 	DeleteStoredFile(storageType string, key string) error

@@ -27,9 +27,7 @@ func (fileHandler *FileHandler) UploadFile() gin.HandlerFunc {
 		}
 		category := storage.NormalizeCategory(ctx.PostForm("category"))
 		storageType := storage.NormalizeStorageType(ctx.PostForm("storage_type"))
-		userID := ctx.MustGet("userid").(string)
-
-		fileDto, err := fileHandler.fileService.UploadFile(userID, file, category, storageType)
+		fileDto, err := fileHandler.fileService.UploadFile(ctx.Request.Context(), file, category, storageType)
 		if err != nil {
 			return res.Response{Msg: "", Err: err}
 		}
@@ -39,13 +37,12 @@ func (fileHandler *FileHandler) UploadFile() gin.HandlerFunc {
 
 func (fileHandler *FileHandler) CreateExternalFile() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userID := ctx.MustGet("userid").(string)
 		var dto commonModel.CreateExternalFileDto
 		if err := ctx.ShouldBindJSON(&dto); err != nil {
 			return res.Response{Msg: commonModel.INVALID_REQUEST_BODY, Err: err}
 		}
 
-		fileDto, err := fileHandler.fileService.CreateExternalFile(userID, dto)
+		fileDto, err := fileHandler.fileService.CreateExternalFile(ctx.Request.Context(), dto)
 		if err != nil {
 			return res.Response{Msg: "", Err: err}
 		}
@@ -55,13 +52,12 @@ func (fileHandler *FileHandler) CreateExternalFile() gin.HandlerFunc {
 
 func (fileHandler *FileHandler) DeleteFile() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userID := ctx.MustGet("userid").(string)
 		var dto commonModel.FileDeleteDto
 		if err := ctx.ShouldBindJSON(&dto); err != nil {
 			return res.Response{Msg: commonModel.INVALID_REQUEST_BODY, Err: err}
 		}
 
-		if err := fileHandler.fileService.DeleteFile(userID, dto); err != nil {
+		if err := fileHandler.fileService.DeleteFile(ctx.Request.Context(), dto); err != nil {
 			ctx.JSON(
 				http.StatusOK,
 				commonModel.Fail[string](errorUtil.HandleError(&commonModel.ServerError{
@@ -77,13 +73,12 @@ func (fileHandler *FileHandler) DeleteFile() gin.HandlerFunc {
 
 func (fileHandler *FileHandler) UploadAudioFile() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userID := ctx.MustGet("userid").(string)
 		file, err := ctx.FormFile("file")
 		if err != nil {
 			return res.Response{Msg: commonModel.INVALID_REQUEST_BODY, Err: err}
 		}
 
-		audioFile, err := fileHandler.fileService.UploadAudioFile(userID, file)
+		audioFile, err := fileHandler.fileService.UploadAudioFile(ctx.Request.Context(), file)
 		if err != nil {
 			return res.Response{Msg: "", Err: err}
 		}
@@ -93,8 +88,7 @@ func (fileHandler *FileHandler) UploadAudioFile() gin.HandlerFunc {
 
 func (fileHandler *FileHandler) DeleteAudioFile() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userID := ctx.MustGet("userid").(string)
-		if err := fileHandler.fileService.DeleteAudioFile(userID); err != nil {
+		if err := fileHandler.fileService.DeleteAudioFile(ctx.Request.Context()); err != nil {
 			return res.Response{Msg: "", Err: err}
 		}
 		return res.Response{Msg: commonModel.DELETE_SUCCESS}
@@ -114,13 +108,12 @@ func (fileHandler *FileHandler) StreamCurrentAudio(ctx *gin.Context) {
 
 func (fileHandler *FileHandler) GetFilePresignURL() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userID := ctx.MustGet("userid").(string)
 		var dto commonModel.GetPresignURLDto
 		if err := ctx.ShouldBindJSON(&dto); err != nil {
 			return res.Response{Msg: commonModel.INVALID_REQUEST_BODY, Err: err}
 		}
 
-		presignDto, err := fileHandler.fileService.GetFilePresignURL(userID, &dto)
+		presignDto, err := fileHandler.fileService.GetFilePresignURL(ctx.Request.Context(), &dto)
 		if err != nil {
 			return res.Response{Msg: "", Err: err}
 		}

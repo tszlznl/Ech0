@@ -11,6 +11,7 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/user"
 	service "github.com/lin-snow/ech0/internal/service/user"
+	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
 type UserHandler struct {
@@ -121,9 +122,7 @@ func (userHandler *UserHandler) UpdateUser() gin.HandlerFunc {
 			}
 		}
 
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(string)
-		if err := userHandler.userService.UpdateUser(userid, userdto); err != nil {
+		if err := userHandler.userService.UpdateUser(ctx.Request.Context(), userdto); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -150,9 +149,6 @@ func (userHandler *UserHandler) UpdateUser() gin.HandlerFunc {
 //	@Router			/user/admin/{id} [put]
 func (userHandler *UserHandler) UpdateUserAdmin() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(string)
-
 		idStr := ctx.Param("id")
 		if _, err := uuid.Parse(idStr); err != nil {
 			return res.Response{
@@ -161,7 +157,7 @@ func (userHandler *UserHandler) UpdateUserAdmin() gin.HandlerFunc {
 			}
 		}
 
-		if err := userHandler.userService.UpdateUserAdmin(userid, idStr); err != nil {
+		if err := userHandler.userService.UpdateUserAdmin(ctx.Request.Context(), idStr); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -216,9 +212,6 @@ func (userHandler *UserHandler) GetAllUsers() gin.HandlerFunc {
 //	@Router			/user/{id} [delete]
 func (userHandler *UserHandler) DeleteUser() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(string)
-
 		idStr := ctx.Param("id")
 		if _, err := uuid.Parse(idStr); err != nil {
 			return res.Response{
@@ -227,7 +220,7 @@ func (userHandler *UserHandler) DeleteUser() gin.HandlerFunc {
 			}
 		}
 
-		if err := userHandler.userService.DeleteUser(userid, idStr); err != nil {
+		if err := userHandler.userService.DeleteUser(ctx.Request.Context(), idStr); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -253,8 +246,7 @@ func (userHandler *UserHandler) DeleteUser() gin.HandlerFunc {
 //	@Router			/user [get]
 func (userHandler *UserHandler) GetUserInfo() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(string)
+		userid := viewer.MustFromContext(ctx.Request.Context()).UserID()
 
 		// 调用 Service 层获取用户信息
 		user, err := userHandler.userService.GetUserByID(userid)
@@ -277,9 +269,6 @@ func (userHandler *UserHandler) GetUserInfo() gin.HandlerFunc {
 // BindGitHub 绑定 GitHub 账号
 func (userHandler *UserHandler) BindGitHub() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(string)
-
 		type Req struct {
 			RedirectURI string `json:"redirect_uri"`
 		}
@@ -292,7 +281,7 @@ func (userHandler *UserHandler) BindGitHub() gin.HandlerFunc {
 		}
 
 		bindURL, err := userHandler.userService.BindOAuth(
-			userid,
+			ctx.Request.Context(),
 			string(commonModel.OAuth2GITHUB),
 			req.RedirectURI,
 		)
@@ -358,9 +347,6 @@ func (userHandler *UserHandler) GitHubCallback() gin.HandlerFunc {
 // BindGoogle 绑定 Google 账号
 func (userHandler *UserHandler) BindGoogle() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(string)
-
 		type Req struct {
 			RedirectURI string `json:"redirect_uri"`
 		}
@@ -373,7 +359,7 @@ func (userHandler *UserHandler) BindGoogle() gin.HandlerFunc {
 		}
 
 		bindURL, err := userHandler.userService.BindOAuth(
-			userid,
+			ctx.Request.Context(),
 			string(commonModel.OAuth2GOOGLE),
 			req.RedirectURI,
 		)
@@ -484,9 +470,6 @@ func (userHandler *UserHandler) QQCallback() gin.HandlerFunc {
 // BindQQ 绑定 QQ 账号
 func (userHandler *UserHandler) BindQQ() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(string)
-
 		type Req struct {
 			RedirectURI string `json:"redirect_uri"`
 		}
@@ -499,7 +482,7 @@ func (userHandler *UserHandler) BindQQ() gin.HandlerFunc {
 		}
 
 		bindURL, err := userHandler.userService.BindOAuth(
-			userid,
+			ctx.Request.Context(),
 			string(commonModel.OAuth2QQ),
 			req.RedirectURI,
 		)
@@ -565,9 +548,6 @@ func (userHandler *UserHandler) CustomOAuthCallback() gin.HandlerFunc {
 // BindCustomOAuth 绑定自定义 OAuth2 账号
 func (userHandler *UserHandler) BindCustomOAuth() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(string)
-
 		type Req struct {
 			RedirectURI string `json:"redirect_uri"`
 		}
@@ -580,7 +560,7 @@ func (userHandler *UserHandler) BindCustomOAuth() gin.HandlerFunc {
 		}
 
 		bindURL, err := userHandler.userService.BindOAuth(
-			userid,
+			ctx.Request.Context(),
 			string(commonModel.OAuth2CUSTOM),
 			req.RedirectURI,
 		)
@@ -601,9 +581,6 @@ func (userHandler *UserHandler) BindCustomOAuth() gin.HandlerFunc {
 // GetOAuthInfo 获取 OAuth2 配置信息
 func (userHandler *UserHandler) GetOAuthInfo() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(string)
-
 		// 获取 provider 参数
 		provider := ctx.Query("provider")
 		switch provider {
@@ -617,7 +594,7 @@ func (userHandler *UserHandler) GetOAuthInfo() gin.HandlerFunc {
 		}
 
 		// 调用 Service 层获取 OAuth2 信息
-		oauthInfo, _ := userHandler.userService.GetOAuthInfo(userid, provider)
+		oauthInfo, _ := userHandler.userService.GetOAuthInfo(ctx.Request.Context(), provider)
 
 		return res.Response{
 			Data: oauthInfo,
@@ -698,14 +675,12 @@ func (userHandler *UserHandler) PasskeyLoginFinish() gin.HandlerFunc {
 // PasskeyRegisterBegin 开始 Passkey 绑定（仅已登录用户）
 func (userHandler *UserHandler) PasskeyRegisterBegin() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userid := ctx.MustGet("userid").(string)
-
 		var req authModel.PasskeyRegisterBeginReq
 		_ = ctx.ShouldBindJSON(&req) // device_name 可选
 
 		origin, rpID := getOriginAndRPID(ctx)
 		data, err := userHandler.userService.PasskeyRegisterBegin(
-			userid,
+			ctx.Request.Context(),
 			rpID,
 			origin,
 			req.DeviceName,
@@ -720,15 +695,13 @@ func (userHandler *UserHandler) PasskeyRegisterBegin() gin.HandlerFunc {
 // PasskeyRegisterFinish 完成 Passkey 绑定
 func (userHandler *UserHandler) PasskeyRegisterFinish() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userid := ctx.MustGet("userid").(string)
-
 		var req authModel.PasskeyFinishReq
 		if err := ctx.ShouldBindJSON(&req); err != nil {
 			return res.Response{Msg: commonModel.INVALID_REQUEST_BODY, Err: err}
 		}
 
 		origin, rpID := getOriginAndRPID(ctx)
-		if err := userHandler.userService.PasskeyRegisterFinish(userid, rpID, origin, req.Nonce, req.Credential); err != nil {
+		if err := userHandler.userService.PasskeyRegisterFinish(ctx.Request.Context(), rpID, origin, req.Nonce, req.Credential); err != nil {
 			return res.Response{Err: err}
 		}
 
@@ -739,8 +712,7 @@ func (userHandler *UserHandler) PasskeyRegisterFinish() gin.HandlerFunc {
 // ListPasskeys 获取当前用户已绑定的 Passkey 设备列表
 func (userHandler *UserHandler) ListPasskeys() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userid := ctx.MustGet("userid").(string)
-		devs, err := userHandler.userService.ListPasskeys(userid)
+		devs, err := userHandler.userService.ListPasskeys(ctx.Request.Context())
 		if err != nil {
 			return res.Response{Err: err}
 		}
@@ -751,14 +723,12 @@ func (userHandler *UserHandler) ListPasskeys() gin.HandlerFunc {
 // DeletePasskey 删除当前用户某个 Passkey 设备
 func (userHandler *UserHandler) DeletePasskey() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userid := ctx.MustGet("userid").(string)
-
 		idStr := ctx.Param("id")
 		if _, err := uuid.Parse(idStr); err != nil {
 			return res.Response{Msg: commonModel.INVALID_PARAMS, Err: err}
 		}
 
-		if err := userHandler.userService.DeletePasskey(userid, idStr); err != nil {
+		if err := userHandler.userService.DeletePasskey(ctx.Request.Context(), idStr); err != nil {
 			return res.Response{Err: err}
 		}
 		return res.Response{}
@@ -768,8 +738,6 @@ func (userHandler *UserHandler) DeletePasskey() gin.HandlerFunc {
 // UpdatePasskeyDeviceName 更新 Passkey 设备名称
 func (userHandler *UserHandler) UpdatePasskeyDeviceName() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userid := ctx.MustGet("userid").(string)
-
 		idStr := ctx.Param("id")
 		if _, err := uuid.Parse(idStr); err != nil {
 			return res.Response{Msg: commonModel.INVALID_PARAMS, Err: err}
@@ -780,7 +748,7 @@ func (userHandler *UserHandler) UpdatePasskeyDeviceName() gin.HandlerFunc {
 			return res.Response{Msg: commonModel.INVALID_REQUEST_BODY, Err: err}
 		}
 
-		if err := userHandler.userService.UpdatePasskeyDeviceName(userid, idStr, req.DeviceName); err != nil {
+		if err := userHandler.userService.UpdatePasskeyDeviceName(ctx.Request.Context(), idStr, req.DeviceName); err != nil {
 			return res.Response{Err: err}
 		}
 		return res.Response{}

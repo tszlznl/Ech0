@@ -10,8 +10,8 @@ import (
 )
 
 type Service interface {
-	AddConnect(userid string, connected model.Connected) error
-	DeleteConnect(userid, id string) error
+	AddConnect(ctx context.Context, connected model.Connected) error
+	DeleteConnect(ctx context.Context, id string) error
 	GetConnect() (model.Connect, error)
 	GetConnectsInfo() ([]model.Connect, error)
 	GetConnects() ([]model.Connected, error)

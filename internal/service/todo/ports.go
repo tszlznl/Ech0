@@ -8,10 +8,10 @@ import (
 )
 
 type Service interface {
-	GetTodoList(userid string) ([]model.Todo, error)
-	AddTodo(userid string, todo *model.Todo) error
-	UpdateTodo(userid string, id string) error
-	DeleteTodo(userid string, id string) error
+	GetTodoList(ctx context.Context) ([]model.Todo, error)
+	AddTodo(ctx context.Context, todo *model.Todo) error
+	UpdateTodo(ctx context.Context, id string) error
+	DeleteTodo(ctx context.Context, id string) error
 }
 
 type CommonService = commonService.Service

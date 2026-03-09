@@ -25,6 +25,7 @@ import (
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	imgUtil "github.com/lin-snow/ech0/internal/util/img"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -65,11 +66,12 @@ func NewFileService(
 }
 
 func (s *FileService) UploadFile(
-	userID string,
+	ctx context.Context,
 	file *multipart.FileHeader,
 	category storage.Category,
 	storageType storage.StorageType,
 ) (commonModel.FileDto, error) {
+	userID := viewer.MustFromContext(ctx).UserID()
 	user, err := s.commonRepository.GetUserByUserId(context.Background(), userID)
 	if err != nil {
 		return commonModel.FileDto{}, err
@@ -179,9 +181,10 @@ func (s *FileService) UploadFile(
 }
 
 func (s *FileService) CreateExternalFile(
-	userid string,
+	ctx context.Context,
 	dto commonModel.CreateExternalFileDto,
 ) (commonModel.FileDto, error) {
+	userid := viewer.MustFromContext(ctx).UserID()
 	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return commonModel.FileDto{}, err
@@ -287,7 +290,8 @@ func (s *FileService) CreateExternalFile(
 	}, nil
 }
 
-func (s *FileService) DeleteFile(userid string, dto commonModel.FileDeleteDto) error {
+func (s *FileService) DeleteFile(ctx context.Context, dto commonModel.FileDeleteDto) error {
+	userid := viewer.MustFromContext(ctx).UserID()
 	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
@@ -316,10 +320,10 @@ func (s *FileService) DeleteFile(userid string, dto commonModel.FileDeleteDto) e
 }
 
 func (s *FileService) UploadAudioFile(
-	userID string,
+	ctx context.Context,
 	file *multipart.FileHeader,
 ) (commonModel.FileDto, error) {
-	fileDto, err := s.UploadFile(userID, file, storage.CategoryAudio, storage.StorageTypeLocal)
+	fileDto, err := s.UploadFile(ctx, file, storage.CategoryAudio, storage.StorageTypeLocal)
 	if err != nil {
 		return commonModel.FileDto{}, err
 	}
@@ -340,7 +344,8 @@ func (s *FileService) UploadAudioFile(
 	return fileDto, nil
 }
 
-func (s *FileService) DeleteAudioFile(userid string) error {
+func (s *FileService) DeleteAudioFile(ctx context.Context) error {
+	userid := viewer.MustFromContext(ctx).UserID()
 	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
 	if err != nil {
 		return err
@@ -349,18 +354,18 @@ func (s *FileService) DeleteAudioFile(userid string) error {
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	ctx := context.Background()
-	val, err := s.keyvalueRepository.GetKeyValue(ctx, globalAudioFileIDKey)
+	baseCtx := context.Background()
+	val, err := s.keyvalueRepository.GetKeyValue(baseCtx, globalAudioFileIDKey)
 	if err != nil || val == "" {
 		return nil
 	}
 
-	fileRecord, err := s.fileRepository.GetByID(ctx, val)
+	fileRecord, err := s.fileRepository.GetByID(baseCtx, val)
 	if err != nil {
 		return nil
 	}
 
-	if err := s.transactor.Run(ctx, func(txCtx context.Context) error {
+	if err := s.transactor.Run(baseCtx, func(txCtx context.Context) error {
 		if err := s.keyvalueRepository.DeleteKeyValue(txCtx, globalAudioFileIDKey); err != nil {
 			return err
 		}
@@ -428,10 +433,11 @@ func (s *FileService) StreamCurrentAudio(ctx *gin.Context) {
 }
 
 func (s *FileService) GetFilePresignURL(
-	userid string,
+	ctx context.Context,
 	dto *commonModel.GetPresignURLDto,
 ) (commonModel.PresignDto, error) {
 	var result commonModel.PresignDto
+	userid := viewer.MustFromContext(ctx).UserID()
 
 	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
 	if err != nil {

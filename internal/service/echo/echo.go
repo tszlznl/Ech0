@@ -13,6 +13,7 @@ import (
 	"github.com/lin-snow/ech0/internal/transaction"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
 type EchoService struct {
@@ -39,10 +40,11 @@ func NewEchoService(
 	}
 }
 
-func (echoService *EchoService) PostEcho(userid string, newEcho *model.Echo) error {
+func (echoService *EchoService) PostEcho(ctx context.Context, newEcho *model.Echo) error {
+	userid := viewer.MustFromContext(ctx).UserID()
 	newEcho.UserID = userid
 
-	user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userid)
+	user, err := echoService.commonService.CommonGetUserByUserId(ctx, userid)
 	if err != nil {
 		return err
 	}
@@ -76,16 +78,16 @@ func (echoService *EchoService) PostEcho(userid string, newEcho *model.Echo) err
 		return errors.New(commonModel.ECHO_CAN_NOT_BE_EMPTY)
 	}
 
-	if err := echoService.transactor.Run(context.Background(), func(ctx context.Context) error {
-		if err := echoService.ProcessEchoTags(ctx, newEcho); err != nil {
+	if err := echoService.transactor.Run(ctx, func(txCtx context.Context) error {
+		if err := echoService.ProcessEchoTags(txCtx, newEcho); err != nil {
 			return err
 		}
-		return echoService.echoRepository.CreateEcho(ctx, newEcho)
+		return echoService.echoRepository.CreateEcho(txCtx, newEcho)
 	}); err != nil {
 		return err
 	}
 
-	savedEcho, fetchErr := echoService.echoRepository.GetEchosById(context.Background(), newEcho.ID)
+	savedEcho, fetchErr := echoService.echoRepository.GetEchosById(ctx, newEcho.ID)
 	if fetchErr != nil {
 		return fetchErr
 	}
@@ -102,7 +104,7 @@ func (echoService *EchoService) PostEcho(userid string, newEcho *model.Echo) err
 }
 
 func (echoService *EchoService) GetEchosByPage(
-	userid string,
+	ctx context.Context,
 	pageQueryDto commonModel.PageQueryDto,
 ) (commonModel.PageQueryResult[[]model.Echo], error) {
 	if pageQueryDto.Page < 1 {
@@ -112,9 +114,10 @@ func (echoService *EchoService) GetEchosByPage(
 		pageQueryDto.PageSize = 10
 	}
 
+	userid := viewer.MustFromContext(ctx).UserID()
 	showPrivate := false
 	if userid != "" {
-		user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userid)
+		user, err := echoService.commonService.CommonGetUserByUserId(ctx, userid)
 		if err != nil {
 			return commonModel.PageQueryResult[[]model.Echo]{}, err
 		}
@@ -133,8 +136,9 @@ func (echoService *EchoService) GetEchosByPage(
 	}, nil
 }
 
-func (echoService *EchoService) DeleteEchoById(userid, id string) error {
-	user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userid)
+func (echoService *EchoService) DeleteEchoById(ctx context.Context, id string) error {
+	userid := viewer.MustFromContext(ctx).UserID()
+	user, err := echoService.commonService.CommonGetUserByUserId(ctx, userid)
 	if err != nil {
 		return err
 	}
@@ -147,8 +151,8 @@ func (echoService *EchoService) DeleteEchoById(userid, id string) error {
 		storageType string
 	}
 	var deletableFiles []deletableFileRef
-	if err := echoService.transactor.Run(context.Background(), func(ctx context.Context) error {
-		echo, err := echoService.echoRepository.GetEchosById(ctx, id)
+	if err := echoService.transactor.Run(ctx, func(txCtx context.Context) error {
+		echo, err := echoService.echoRepository.GetEchosById(txCtx, id)
 		if err != nil {
 			return err
 		}
@@ -164,13 +168,13 @@ func (echoService *EchoService) DeleteEchoById(userid, id string) error {
 				})
 			}
 			if ef.File.ID != "" {
-				if err := echoService.fileService.DeleteFileRecord(ctx, ef.File.ID); err != nil {
+				if err := echoService.fileService.DeleteFileRecord(txCtx, ef.File.ID); err != nil {
 					return err
 				}
 			}
 		}
 
-		return echoService.echoRepository.DeleteEchoById(ctx, id)
+		return echoService.echoRepository.DeleteEchoById(txCtx, id)
 	}); err != nil {
 		return err
 	}
@@ -189,10 +193,11 @@ func (echoService *EchoService) DeleteEchoById(userid, id string) error {
 	return nil
 }
 
-func (echoService *EchoService) GetTodayEchos(userid string, timezone string) ([]model.Echo, error) {
+func (echoService *EchoService) GetTodayEchos(ctx context.Context, timezone string) ([]model.Echo, error) {
+	userid := viewer.MustFromContext(ctx).UserID()
 	showPrivate := false
 	if userid != "" {
-		user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userid)
+		user, err := echoService.commonService.CommonGetUserByUserId(ctx, userid)
 		if err != nil {
 			return nil, err
 		}
@@ -203,8 +208,9 @@ func (echoService *EchoService) GetTodayEchos(userid string, timezone string) ([
 	return todayEchos, nil
 }
 
-func (echoService *EchoService) UpdateEcho(userid string, echo *model.Echo) error {
-	user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userid)
+func (echoService *EchoService) UpdateEcho(ctx context.Context, echo *model.Echo) error {
+	userid := viewer.MustFromContext(ctx).UserID()
+	user, err := echoService.commonService.CommonGetUserByUserId(ctx, userid)
 	if err != nil {
 		return err
 	}
@@ -239,11 +245,11 @@ func (echoService *EchoService) UpdateEcho(userid string, echo *model.Echo) erro
 		return errors.New(commonModel.ECHO_CAN_NOT_BE_EMPTY)
 	}
 
-	if err := echoService.transactor.Run(context.Background(), func(ctx context.Context) error {
-		if err := echoService.ProcessEchoTags(ctx, echo); err != nil {
+	if err := echoService.transactor.Run(ctx, func(txCtx context.Context) error {
+		if err := echoService.ProcessEchoTags(txCtx, echo); err != nil {
 			return err
 		}
-		return echoService.echoRepository.UpdateEcho(ctx, echo)
+		return echoService.echoRepository.UpdateEcho(txCtx, echo)
 	}); err != nil {
 		return err
 	}
@@ -258,14 +264,15 @@ func (echoService *EchoService) UpdateEcho(userid string, echo *model.Echo) erro
 	return nil
 }
 
-func (echoService *EchoService) LikeEcho(id string) error {
-	return echoService.transactor.Run(context.Background(), func(ctx context.Context) error {
-		return echoService.echoRepository.LikeEcho(ctx, id)
+func (echoService *EchoService) LikeEcho(ctx context.Context, id string) error {
+	return echoService.transactor.Run(ctx, func(txCtx context.Context) error {
+		return echoService.echoRepository.LikeEcho(txCtx, id)
 	})
 }
 
-func (echoService *EchoService) GetEchoById(userId, id string) (*model.Echo, error) {
-	echo, err := echoService.echoRepository.GetEchosById(context.Background(), id)
+func (echoService *EchoService) GetEchoById(ctx context.Context, id string) (*model.Echo, error) {
+	userId := viewer.MustFromContext(ctx).UserID()
+	echo, err := echoService.echoRepository.GetEchosById(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +285,7 @@ func (echoService *EchoService) GetEchoById(userId, id string) (*model.Echo, err
 			return nil, errors.New(commonModel.NO_PERMISSION_DENIED)
 		}
 	} else {
-		user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userId)
+		user, err := echoService.commonService.CommonGetUserByUserId(ctx, userId)
 		if err != nil {
 			return nil, err
 		}
@@ -294,8 +301,9 @@ func (echoService *EchoService) GetAllTags() ([]model.Tag, error) {
 	return echoService.echoRepository.GetAllTags()
 }
 
-func (echoService *EchoService) DeleteTag(userid, id string) error {
-	user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userid)
+func (echoService *EchoService) DeleteTag(ctx context.Context, id string) error {
+	userid := viewer.MustFromContext(ctx).UserID()
+	user, err := echoService.commonService.CommonGetUserByUserId(ctx, userid)
 	if err != nil {
 		return err
 	}
@@ -303,8 +311,8 @@ func (echoService *EchoService) DeleteTag(userid, id string) error {
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	return echoService.transactor.Run(context.Background(), func(ctx context.Context) error {
-		return echoService.echoRepository.DeleteTagById(ctx, id)
+	return echoService.transactor.Run(ctx, func(txCtx context.Context) error {
+		return echoService.echoRepository.DeleteTagById(txCtx, id)
 	})
 }
 
@@ -349,7 +357,8 @@ func (echoService *EchoService) ProcessEchoTags(ctx context.Context, echo *model
 }
 
 func (echoService *EchoService) GetEchosByTagId(
-	userId, tagId string,
+	ctx context.Context,
+	tagId string,
 	pageQueryDto commonModel.PageQueryDto,
 ) (commonModel.PageQueryResult[[]model.Echo], error) {
 	if pageQueryDto.Page < 1 {
@@ -360,9 +369,10 @@ func (echoService *EchoService) GetEchosByTagId(
 	}
 	pageQueryDto.Search = strings.TrimSpace(pageQueryDto.Search)
 
+	userId := viewer.MustFromContext(ctx).UserID()
 	showPrivate := false
 	if userId != "" {
-		user, err := echoService.commonService.CommonGetUserByUserId(context.Background(), userId)
+		user, err := echoService.commonService.CommonGetUserByUserId(ctx, userId)
 		if err != nil {
 			return commonModel.PageQueryResult[[]model.Echo]{}, err
 		}

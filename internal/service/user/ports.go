@@ -13,23 +13,23 @@ import (
 type Service interface {
 	Login(loginDto *authModel.LoginDto) (string, error)
 	Register(registerDto *authModel.RegisterDto) error
-	UpdateUser(userid string, userdto model.UserInfoDto) error
-	UpdateUserAdmin(userid string, id string) error
+	UpdateUser(ctx context.Context, userdto model.UserInfoDto) error
+	UpdateUserAdmin(ctx context.Context, id string) error
 	GetAllUsers() ([]model.User, error)
 	GetSysAdmin() (model.User, error)
-	DeleteUser(userid, id string) error
+	DeleteUser(ctx context.Context, id string) error
 	GetUserByID(userId string) (model.User, error)
-	BindOAuth(userID string, provider string, redirectURI string) (string, error)
+	BindOAuth(ctx context.Context, provider string, redirectURI string) (string, error)
 	GetOAuthLoginURL(provider string, redirectURI string) (string, error)
 	HandleOAuthCallback(provider string, code string, state string) string
-	GetOAuthInfo(userId string, provider string) (model.OAuthInfoDto, error)
-	PasskeyRegisterBegin(userID string, rpID, origin, deviceName string) (authModel.PasskeyRegisterBeginResp, error)
-	PasskeyRegisterFinish(userID string, rpID, origin, nonce string, credential json.RawMessage) error
+	GetOAuthInfo(ctx context.Context, provider string) (model.OAuthInfoDto, error)
+	PasskeyRegisterBegin(ctx context.Context, rpID, origin, deviceName string) (authModel.PasskeyRegisterBeginResp, error)
+	PasskeyRegisterFinish(ctx context.Context, rpID, origin, nonce string, credential json.RawMessage) error
 	PasskeyLoginBegin(rpID, origin string) (authModel.PasskeyLoginBeginResp, error)
 	PasskeyLoginFinish(rpID, origin, nonce string, credential json.RawMessage) (string, error)
-	ListPasskeys(userID string) ([]authModel.PasskeyDeviceDto, error)
-	DeletePasskey(userID, passkeyID string) error
-	UpdatePasskeyDeviceName(userID, passkeyID string, deviceName string) error
+	ListPasskeys(ctx context.Context) ([]authModel.PasskeyDeviceDto, error)
+	DeletePasskey(ctx context.Context, passkeyID string) error
+	UpdatePasskeyDeviceName(ctx context.Context, passkeyID string, deviceName string) error
 }
 
 type SettingService = settingService.Service

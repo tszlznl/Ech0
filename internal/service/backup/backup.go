@@ -14,6 +14,7 @@ import (
 	publisher "github.com/lin-snow/ech0/internal/event/publisher"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
 )
 
@@ -32,8 +33,9 @@ func NewBackupService(
 	}
 }
 
-func (bs *BackupService) Backup(userid string) error {
-	user, err := bs.commonService.CommonGetUserByUserId(context.Background(), userid)
+func (bs *BackupService) Backup(ctx context.Context) error {
+	userid := viewer.MustFromContext(ctx).UserID()
+	user, err := bs.commonService.CommonGetUserByUserId(ctx, userid)
 	if err != nil {
 		return err
 	}
@@ -55,8 +57,9 @@ func (bs *BackupService) Backup(userid string) error {
 	return nil
 }
 
-func (bs *BackupService) ExportBackup(ctx *gin.Context, userid string) error {
-	user, err := bs.commonService.CommonGetUserByUserId(context.Background(), userid)
+func (bs *BackupService) ExportBackup(ctx *gin.Context, reqCtx context.Context) error {
+	userid := viewer.MustFromContext(reqCtx).UserID()
+	user, err := bs.commonService.CommonGetUserByUserId(reqCtx, userid)
 	if err != nil {
 		return err
 	}
@@ -99,10 +102,11 @@ func (bs *BackupService) ExportBackup(ctx *gin.Context, userid string) error {
 
 func (bs *BackupService) ImportBackup(
 	ctx *gin.Context,
-	userid string,
+	reqCtx context.Context,
 	file *multipart.FileHeader,
 ) error {
-	user, err := bs.commonService.CommonGetUserByUserId(context.Background(), userid)
+	userid := viewer.MustFromContext(reqCtx).UserID()
+	user, err := bs.commonService.CommonGetUserByUserId(reqCtx, userid)
 	if err != nil {
 		return err
 	}

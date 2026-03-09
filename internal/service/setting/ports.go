@@ -10,26 +10,26 @@ import (
 
 type Service interface {
 	GetSetting(setting *model.SystemSetting) error
-	UpdateSetting(userid string, newSetting *model.SystemSettingDto) error
+	UpdateSetting(ctx context.Context, newSetting *model.SystemSettingDto) error
 	GetCommentSetting(setting *model.CommentSetting) error
-	UpdateCommentSetting(userid string, newSetting *model.CommentSettingDto) error
-	GetS3Setting(userid string, setting *model.S3Setting) error
-	UpdateS3Setting(userid string, newSetting *model.S3SettingDto) error
-	GetOAuth2Setting(userid string, setting *model.OAuth2Setting, forInternal bool) error
-	UpdateOAuth2Setting(userid string, newSetting *model.OAuth2SettingDto) error
+	UpdateCommentSetting(ctx context.Context, newSetting *model.CommentSettingDto) error
+	GetS3Setting(ctx context.Context, setting *model.S3Setting) error
+	UpdateS3Setting(ctx context.Context, newSetting *model.S3SettingDto) error
+	GetOAuth2Setting(ctx context.Context, setting *model.OAuth2Setting, forInternal bool) error
+	UpdateOAuth2Setting(ctx context.Context, newSetting *model.OAuth2SettingDto) error
 	GetOAuth2Status(status *model.OAuth2Status) error
-	GetAllWebhooks(userid string) ([]webhookModel.Webhook, error)
-	DeleteWebhook(userid, id string) error
-	UpdateWebhook(userid, id string, newWebhook *model.WebhookDto) error
-	CreateWebhook(userid string, newWebhook *model.WebhookDto) error
-	ListAccessTokens(userid string) ([]model.AccessTokenSetting, error)
-	CreateAccessToken(userid string, newToken *model.AccessTokenSettingDto) (string, error)
-	DeleteAccessToken(userid, id string) error
+	GetAllWebhooks(ctx context.Context) ([]webhookModel.Webhook, error)
+	DeleteWebhook(ctx context.Context, id string) error
+	UpdateWebhook(ctx context.Context, id string, newWebhook *model.WebhookDto) error
+	CreateWebhook(ctx context.Context, newWebhook *model.WebhookDto) error
+	ListAccessTokens(ctx context.Context) ([]model.AccessTokenSetting, error)
+	CreateAccessToken(ctx context.Context, newToken *model.AccessTokenSettingDto) (string, error)
+	DeleteAccessToken(ctx context.Context, id string) error
 	GetBackupScheduleSetting(setting *model.BackupSchedule) error
-	UpdateBackupScheduleSetting(userid string, newSetting *model.BackupScheduleDto) error
+	UpdateBackupScheduleSetting(ctx context.Context, newSetting *model.BackupScheduleDto) error
 	GetAgentInfo(setting *model.AgentSetting) error
-	GetAgentSettings(userid string, setting *model.AgentSetting) error
-	UpdateAgentSettings(userid string, newSetting *model.AgentSettingDto) error
+	GetAgentSettings(ctx context.Context, setting *model.AgentSetting) error
+	UpdateAgentSettings(ctx context.Context, newSetting *model.AgentSettingDto) error
 }
 
 type CommonService = commonService.Service

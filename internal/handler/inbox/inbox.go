@@ -33,8 +33,6 @@ func NewInboxHandler(inboxService service.Service) *InboxHandler {
 //	@Router			/inbox [get]
 func (inboxHandler *InboxHandler) GetInboxList() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userid := ctx.MustGet("userid").(string)
-
 		var pageQuery commonModel.PageQueryDto
 		if err := ctx.ShouldBindQuery(&pageQuery); err != nil {
 			return res.Response{
@@ -43,7 +41,7 @@ func (inboxHandler *InboxHandler) GetInboxList() gin.HandlerFunc {
 			}
 		}
 
-		result, err := inboxHandler.inboxService.GetInboxList(userid, pageQuery)
+		result, err := inboxHandler.inboxService.GetInboxList(ctx.Request.Context(), pageQuery)
 		if err != nil {
 			return res.Response{Err: err}
 		}
@@ -67,9 +65,7 @@ func (inboxHandler *InboxHandler) GetInboxList() gin.HandlerFunc {
 //	@Router			/inbox/unread [get]
 func (inboxHandler *InboxHandler) GetUnreadInbox() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userid := ctx.MustGet("userid").(string)
-
-		inboxes, err := inboxHandler.inboxService.GetUnreadInbox(userid)
+		inboxes, err := inboxHandler.inboxService.GetUnreadInbox(ctx.Request.Context())
 		if err != nil {
 			return res.Response{Err: err}
 		}
@@ -94,8 +90,6 @@ func (inboxHandler *InboxHandler) GetUnreadInbox() gin.HandlerFunc {
 //	@Router			/inbox/{id}/read [put]
 func (inboxHandler *InboxHandler) MarkInboxAsRead() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userid := ctx.MustGet("userid").(string)
-
 		inboxID, err := parseUUIDParam(ctx.Param("id"))
 		if err != nil {
 			return res.Response{
@@ -104,7 +98,7 @@ func (inboxHandler *InboxHandler) MarkInboxAsRead() gin.HandlerFunc {
 			}
 		}
 
-		if err := inboxHandler.inboxService.MarkAsRead(userid, inboxID); err != nil {
+		if err := inboxHandler.inboxService.MarkAsRead(ctx.Request.Context(), inboxID); err != nil {
 			return res.Response{Err: err}
 		}
 
@@ -125,8 +119,6 @@ func (inboxHandler *InboxHandler) MarkInboxAsRead() gin.HandlerFunc {
 //	@Router			/inbox/{id} [delete]
 func (inboxHandler *InboxHandler) DeleteInbox() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userid := ctx.MustGet("userid").(string)
-
 		inboxID, err := parseUUIDParam(ctx.Param("id"))
 		if err != nil {
 			return res.Response{
@@ -135,7 +127,7 @@ func (inboxHandler *InboxHandler) DeleteInbox() gin.HandlerFunc {
 			}
 		}
 
-		if err := inboxHandler.inboxService.DeleteInbox(userid, inboxID); err != nil {
+		if err := inboxHandler.inboxService.DeleteInbox(ctx.Request.Context(), inboxID); err != nil {
 			return res.Response{Err: err}
 		}
 
@@ -155,9 +147,7 @@ func (inboxHandler *InboxHandler) DeleteInbox() gin.HandlerFunc {
 //	@Router			/inbox [delete]
 func (inboxHandler *InboxHandler) ClearInbox() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userid := ctx.MustGet("userid").(string)
-
-		if err := inboxHandler.inboxService.ClearInbox(userid); err != nil {
+		if err := inboxHandler.inboxService.ClearInbox(ctx.Request.Context()); err != nil {
 			return res.Response{Err: err}
 		}
 

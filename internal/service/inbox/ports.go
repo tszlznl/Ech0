@@ -9,11 +9,11 @@ import (
 )
 
 type Service interface {
-	GetInboxList(userid string, pageQueryDto commonModel.PageQueryDto) (commonModel.PageQueryResult[[]*inboxModel.Inbox], error)
-	GetUnreadInbox(userid string) ([]*inboxModel.Inbox, error)
-	MarkAsRead(userid, inboxID string) error
-	DeleteInbox(userid, inboxID string) error
-	ClearInbox(userid string) error
+	GetInboxList(ctx context.Context, pageQueryDto commonModel.PageQueryDto) (commonModel.PageQueryResult[[]*inboxModel.Inbox], error)
+	GetUnreadInbox(ctx context.Context) ([]*inboxModel.Inbox, error)
+	MarkAsRead(ctx context.Context, inboxID string) error
+	DeleteInbox(ctx context.Context, inboxID string) error
+	ClearInbox(ctx context.Context) error
 }
 
 type CommonService = commonService.Service

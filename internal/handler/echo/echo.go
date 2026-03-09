@@ -44,8 +44,7 @@ func (echoHandler *EchoHandler) PostEcho() gin.HandlerFunc {
 			}
 		}
 
-		userId := ctx.MustGet("userid").(string)
-		if err := echoHandler.echoService.PostEcho(userId, &newEcho); err != nil {
+		if err := echoHandler.echoService.PostEcho(ctx.Request.Context(), &newEcho); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -106,9 +105,7 @@ func (echoHandler *EchoHandler) GetEchosByPage() gin.HandlerFunc {
 			}
 		}
 
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(string)
-		result, err := echoHandler.echoService.GetEchosByPage(userid, pageRequest)
+		result, err := echoHandler.echoService.GetEchosByPage(ctx.Request.Context(), pageRequest)
 		if err != nil {
 			return res.Response{
 				Msg: "",
@@ -136,9 +133,6 @@ func (echoHandler *EchoHandler) GetEchosByPage() gin.HandlerFunc {
 //	@Router			/echo/{id} [delete]
 func (echoHandler *EchoHandler) DeleteEcho() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(string)
-
 		// 从 URL 参数获取Echo ID
 		id := ctx.Param("id")
 		if _, err := uuid.Parse(id); err != nil {
@@ -147,7 +141,7 @@ func (echoHandler *EchoHandler) DeleteEcho() gin.HandlerFunc {
 			}
 		}
 
-		if err := echoHandler.echoService.DeleteEchoById(userid, id); err != nil {
+		if err := echoHandler.echoService.DeleteEchoById(ctx.Request.Context(), id); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -172,10 +166,8 @@ func (echoHandler *EchoHandler) DeleteEcho() gin.HandlerFunc {
 //	@Router			/echo/today [get]
 func (echoHandler *EchoHandler) GetTodayEchos() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(string)
 		timezone := timezoneUtil.NormalizeTimezone(ctx.GetHeader(timezoneUtil.DefaultTimezoneHeader))
-		result, err := echoHandler.echoService.GetTodayEchos(userid, timezone)
+		result, err := echoHandler.echoService.GetTodayEchos(ctx.Request.Context(), timezone)
 		if err != nil {
 			return res.Response{
 				Msg: "",
@@ -211,8 +203,7 @@ func (echoHandler *EchoHandler) UpdateEcho() gin.HandlerFunc {
 			}
 		}
 
-		userId := ctx.MustGet("userid").(string)
-		if err := echoHandler.echoService.UpdateEcho(userId, &updateEcho); err != nil {
+		if err := echoHandler.echoService.UpdateEcho(ctx.Request.Context(), &updateEcho); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -246,7 +237,7 @@ func (echoHandler *EchoHandler) LikeEcho() gin.HandlerFunc {
 			}
 		}
 
-		if err := echoHandler.echoService.LikeEcho(id); err != nil {
+		if err := echoHandler.echoService.LikeEcho(ctx.Request.Context(), id); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -280,9 +271,7 @@ func (echoHandler *EchoHandler) GetEchoById() gin.HandlerFunc {
 			}
 		}
 
-		userId := ctx.MustGet("userid").(string)
-
-		echo, err := echoHandler.echoService.GetEchoById(userId, id)
+		echo, err := echoHandler.echoService.GetEchoById(ctx.Request.Context(), id)
 		if err != nil {
 			return res.Response{
 				Msg: "",
@@ -345,9 +334,7 @@ func (echoHandler *EchoHandler) DeleteTag() gin.HandlerFunc {
 			}
 		}
 
-		userid := ctx.MustGet("userid").(string)
-
-		if err := echoHandler.echoService.DeleteTag(userid, id); err != nil {
+		if err := echoHandler.echoService.DeleteTag(ctx.Request.Context(), id); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -393,9 +380,7 @@ func (echoHandler *EchoHandler) GetEchosByTagId() gin.HandlerFunc {
 			}
 		}
 
-		userid := ctx.MustGet("userid").(string)
-
-		result, err := echoHandler.echoService.GetEchosByTagId(userid, tagId, pageRequest)
+		result, err := echoHandler.echoService.GetEchosByTagId(ctx.Request.Context(), tagId, pageRequest)
 		if err != nil {
 			return res.Response{
 				Msg: "",

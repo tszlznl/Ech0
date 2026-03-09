@@ -31,9 +31,6 @@ func NewTodoHandler(todoService service.Service) *TodoHandler {
 //	@Router			/todo [post]
 func (todoHandler *TodoHandler) AddTodo() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(string)
-
 		var todo model.Todo
 		if err := ctx.ShouldBindJSON(&todo); err != nil {
 			return res.Response{
@@ -42,7 +39,7 @@ func (todoHandler *TodoHandler) AddTodo() gin.HandlerFunc {
 			}
 		}
 
-		if err := todoHandler.todoService.AddTodo(userid, &todo); err != nil {
+		if err := todoHandler.todoService.AddTodo(ctx.Request.Context(), &todo); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -68,9 +65,6 @@ func (todoHandler *TodoHandler) AddTodo() gin.HandlerFunc {
 //	@Router			/todo/{id} [put]
 func (todoHandler *TodoHandler) UpdateTodo() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(string)
-
 		// 从 URL 参数获取Echo ID
 		id := ctx.Param("id")
 		if _, err := uuid.Parse(id); err != nil {
@@ -80,7 +74,7 @@ func (todoHandler *TodoHandler) UpdateTodo() gin.HandlerFunc {
 			}
 		}
 
-		if err := todoHandler.todoService.UpdateTodo(userid, id); err != nil {
+		if err := todoHandler.todoService.UpdateTodo(ctx.Request.Context(), id); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -106,9 +100,6 @@ func (todoHandler *TodoHandler) UpdateTodo() gin.HandlerFunc {
 //	@Router			/todo/{id} [delete]
 func (todoHandler *TodoHandler) DeleteTodo() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(string)
-
 		// 从 URL 参数获取Echo ID
 		id := ctx.Param("id")
 		if _, err := uuid.Parse(id); err != nil {
@@ -118,7 +109,7 @@ func (todoHandler *TodoHandler) DeleteTodo() gin.HandlerFunc {
 			}
 		}
 
-		if err := todoHandler.todoService.DeleteTodo(userid, id); err != nil {
+		if err := todoHandler.todoService.DeleteTodo(ctx.Request.Context(), id); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -143,10 +134,7 @@ func (todoHandler *TodoHandler) DeleteTodo() gin.HandlerFunc {
 //	@Router			/todo [get]
 func (todoHandler *TodoHandler) GetTodoList() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(string)
-
-		todos, err := todoHandler.todoService.GetTodoList(userid)
+		todos, err := todoHandler.todoService.GetTodoList(ctx.Request.Context())
 		if err != nil {
 			return res.Response{
 				Msg: "",

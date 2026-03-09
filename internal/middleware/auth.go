@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
@@ -8,15 +9,22 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	errUtil "github.com/lin-snow/ech0/internal/util/err"
 	jwtUtil "github.com/lin-snow/ech0/internal/util/jwt"
+	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
 // JWTAuthMiddleware JWT 拦截器中间件
 func JWTAuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		attachViewer := func(v viewer.Context) {
+			reqCtx := context.Background()
+			if ctx.Request != nil && ctx.Request.Context() != nil {
+				reqCtx = ctx.Request.Context()
+			}
+			ctx.Request = ctx.Request.WithContext(viewer.WithContext(reqCtx, v))
+		}
+
 		setAnonymous := func() {
-			ctx.Set("is_authenticated", false)
-			// 为了兼容现有 handler/service 读取路径，匿名请求显式置空。
-			ctx.Set("userid", "")
+			attachViewer(viewer.NewNoopViewer())
 		}
 
 		// 获取 Authorization 头部信息
@@ -106,9 +114,8 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// 如果 token 解析成功，则将认证信息存入上下文
-		ctx.Set("is_authenticated", true)
-		ctx.Set("userid", mc.Userid)
+		// 如果 token 解析成功，则将 viewer 写入 request context
+		attachViewer(viewer.NewUserViewer(mc.Userid))
 		ctx.Next()
 	}
 }

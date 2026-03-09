@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -8,6 +9,7 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	service "github.com/lin-snow/ech0/internal/service/backup"
 	jwtUtil "github.com/lin-snow/ech0/internal/util/jwt"
+	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
 type BackupHandler struct {
@@ -33,8 +35,7 @@ func NewBackupHandler(backupService service.Service) *BackupHandler {
 //	@Router			/backup [get]
 func (backupHandler *BackupHandler) Backup() gin.HandlerFunc {
 	return response.Execute(func(ctx *gin.Context) response.Response {
-		userId := ctx.MustGet("userid").(string)
-		if err := backupHandler.backupService.Backup(userId); err != nil {
+		if err := backupHandler.backupService.Backup(ctx.Request.Context()); err != nil {
 			return response.Response{
 				Msg: "",
 				Err: err,
@@ -77,9 +78,9 @@ func (backupHandler *BackupHandler) ExportBackup() gin.HandlerFunc {
 			}
 		}
 
-		// 从 Claims中提取 UserID
-		userId := claims.Userid
-		if err := backupHandler.backupService.ExportBackup(ctx, userId); err != nil {
+		// 从 Claims中提取 UserID，注入 viewer 上下文供 service 鉴权。
+		reqCtx := viewer.WithContext(context.Background(), viewer.NewUserViewer(claims.Userid))
+		if err := backupHandler.backupService.ExportBackup(ctx, reqCtx); err != nil {
 			return response.Response{
 				Msg: "",
 				Err: err,
@@ -105,9 +106,6 @@ func (backupHandler *BackupHandler) ExportBackup() gin.HandlerFunc {
 //	@Router			/backup/import [post]
 func (backupHandler *BackupHandler) ImportBackup() gin.HandlerFunc {
 	return response.Execute(func(ctx *gin.Context) response.Response {
-		// 提取userid
-		userId := ctx.MustGet("userid").(string)
-
 		// 提取上传的 File数据
 		file, err := ctx.FormFile("file")
 		if err != nil {
@@ -117,7 +115,7 @@ func (backupHandler *BackupHandler) ImportBackup() gin.HandlerFunc {
 			}
 		}
 
-		if err := backupHandler.backupService.ImportBackup(ctx, userId, file); err != nil {
+		if err := backupHandler.backupService.ImportBackup(ctx, ctx.Request.Context(), file); err != nil {
 			return response.Response{
 				Msg: "",
 				Err: err,

@@ -33,8 +33,6 @@ func NewConnectHandler(connectService service.Service) *ConnectHandler {
 //	@Router			/addConnect [post]
 func (connectHandler *ConnectHandler) AddConnect() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userId := ctx.MustGet("userid").(string)
-
 		var connected connectModel.Connected
 		if err := ctx.ShouldBindJSON(&connected); err != nil {
 			return res.Response{
@@ -42,7 +40,7 @@ func (connectHandler *ConnectHandler) AddConnect() gin.HandlerFunc {
 			}
 		}
 
-		if err := connectHandler.connectService.AddConnect(userId, connected); err != nil {
+		if err := connectHandler.connectService.AddConnect(ctx.Request.Context(), connected); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -68,8 +66,6 @@ func (connectHandler *ConnectHandler) AddConnect() gin.HandlerFunc {
 //	@Router			/delConnect/{id} [delete]
 func (connectHandler *ConnectHandler) DeleteConnect() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userId := ctx.MustGet("userid").(string)
-
 		// 从 URL 参数获取 ID
 		id := ctx.Param("id")
 		if _, err := uuid.Parse(id); err != nil {
@@ -78,7 +74,7 @@ func (connectHandler *ConnectHandler) DeleteConnect() gin.HandlerFunc {
 			}
 		}
 
-		if err := connectHandler.connectService.DeleteConnect(userId, id); err != nil {
+		if err := connectHandler.connectService.DeleteConnect(ctx.Request.Context(), id); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
