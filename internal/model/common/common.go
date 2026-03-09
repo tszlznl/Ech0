@@ -112,8 +112,6 @@ const (
 	AgentSettingKey = "agent_setting"
 	// ReleaseVersionKey 是发布版本号的键
 	ReleaseVersionKey = "release_version"
-	// MigrationKey 是数据库迁移的标记键
-	MigrationKey = "db_migration:message_to_echo:v1"
 	// InstallInitializedKey 是安装流程完成状态键
 	InstallInitializedKey = "install_initialized"
 )

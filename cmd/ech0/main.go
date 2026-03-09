@@ -13,6 +13,6 @@ func main() {
 	logUtil.InitLogger()
 	config.Config()
 
-	cmd.Bootstrap(di.BuildWebApp)
+	cmd.Bootstrap(di.BuildApp)
 	cmd.Execute()
 }

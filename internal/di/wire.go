@@ -155,8 +155,8 @@ var TaskerGraphSet = wire.NewSet(
 	task.ProviderSet,
 )
 
-// BuildWebApp 构建 Web 生命周期应用。
-func BuildWebApp() (*app.App, func(), error) {
+// BuildApp 构建 Web 生命周期应用。
+func BuildApp() (*app.App, func(), error) {
 	wire.Build(
 		InfraSet,
 		DomainSet,
@@ -164,11 +164,6 @@ func BuildWebApp() (*app.App, func(), error) {
 		AppSet,
 	)
 	return &app.App{}, nil, nil
-}
-
-// BuildApp 兼容旧入口，委托给 BuildWebApp。
-func BuildApp() (*app.App, func(), error) {
-	return BuildWebApp()
 }
 
 func BuildEventRegistrar(

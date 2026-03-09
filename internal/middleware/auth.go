@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"context"
 	"net/http"
 	"strings"
 
@@ -16,11 +15,7 @@ import (
 func JWTAuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		attachViewer := func(v viewer.Context) {
-			reqCtx := context.Background()
-			if ctx.Request != nil && ctx.Request.Context() != nil {
-				reqCtx = ctx.Request.Context()
-			}
-			ctx.Request = ctx.Request.WithContext(viewer.WithContext(reqCtx, v))
+			ctx.Request = viewer.WithRequest(ctx.Request, v)
 		}
 
 		setAnonymous := func() {

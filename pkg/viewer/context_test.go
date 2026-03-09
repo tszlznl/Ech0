@@ -2,6 +2,7 @@ package viewer
 
 import (
 	"context"
+	"net/http"
 	"testing"
 )
 
@@ -21,19 +22,20 @@ func TestWithAndFromContext(t *testing.T) {
 
 func TestMustFromContextFallback(t *testing.T) {
 	got := MustFromContext(context.Background())
-	if got.IsAuthenticated() {
-		t.Fatalf("expected unauthenticated fallback viewer")
+	if got.UserID() != "" {
+		t.Fatalf("expected empty user id fallback viewer")
 	}
 }
 
-func TestIsAdminByRole(t *testing.T) {
-	user := NewUserViewer("u1", WithRoles([]string{"admin"}))
-	if !user.IsAdmin() {
-		t.Fatalf("expected admin viewer")
+func TestWithRequest(t *testing.T) {
+	req, err := http.NewRequest(http.MethodGet, "/api/ping", nil)
+	if err != nil {
+		t.Fatalf("new request failed: %v", err)
 	}
+	req = WithRequest(req, NewUserViewer("u1"))
 
-	guest := NewUserViewer("u2", WithRoles([]string{"user"}))
-	if guest.IsAdmin() {
-		t.Fatalf("expected non-admin viewer")
+	got := MustFromContext(req.Context())
+	if got.UserID() != "u1" {
+		t.Fatalf("unexpected user id: %s", got.UserID())
 	}
 }

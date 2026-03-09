@@ -660,7 +660,7 @@ func (userService *UserService) HandleOAuthCallback(
 
 func (userService *UserService) getOAuthSetting(provider string) (*settingModel.OAuth2Setting, error) {
 	var setting settingModel.OAuth2Setting
-	systemCtx := viewer.WithContext(context.Background(), viewer.NewSystemViewer("user-service"))
+	systemCtx := viewer.WithContext(context.Background(), viewer.NewSystemViewer())
 	if err := userService.settingService.GetOAuth2Setting(systemCtx, &setting, true); err != nil {
 		return nil, err
 	}

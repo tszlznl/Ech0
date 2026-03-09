@@ -82,7 +82,7 @@ func (agentService *AgentService) getRecentFromCache(cacheKey string) (string, b
 }
 
 func (agentService *AgentService) buildRecentSummary(ctx context.Context) (string, error) {
-	systemCtx := viewer.WithContext(ctx, viewer.NewSystemViewer("agent-service"))
+	systemCtx := viewer.WithContext(ctx, viewer.NewSystemViewer())
 	echos, err := agentService.echoService.GetEchosByPage(
 		systemCtx,
 		commonModel.PageQueryDto{

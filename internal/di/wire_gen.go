@@ -67,8 +67,8 @@ import (
 
 // Injectors from wire.go:
 
-// BuildWebApp 构建 Web 生命周期应用。
-func BuildWebApp() (*app.App, func(), error) {
+// BuildApp 构建 Web 生命周期应用。
+func BuildApp() (*app.App, func(), error) {
 	v := database.ProvideDBProvider()
 	v2 := bus.ProvideProvider()
 	iCache, err := cache.ProvideCache()
@@ -219,11 +219,6 @@ var EventGraphSet = wire.NewSet(repository12.EchoSet, repository12.UserSet, repo
 var HandlerGraphSet = wire.NewSet(publisher.New, storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository12.FileSet, handler.WebSet, repository12.UserSet, service13.UserSet, handler.UserSet, repository12.EchoSet, service13.EchoSet, handler.EchoSet, repository12.CommonSet, service13.FileSet, handler.FileSet, repository12.InitSet, service13.InitSet, handler.InitSet, service13.CommonSet, handler.CommonSet, repository12.WebhookSet, repository12.KeyValueSet, repository12.SettingSet, service13.SettingSet, handler.SettingSet, repository12.InboxSet, service13.InboxSet, handler.InboxSet, repository12.TodoSet, service13.TodoSet, handler.TodoSet, repository12.ConnectSet, service13.ConnectSet, handler.ConnectSet, metric.NewSystemCollector, monitor.NewMonitor, service13.DashboardSet, handler.DashboardSet, service13.AgentSet, handler.AgentSet, service13.BackupSet, handler.BackupSet, handler.NewBundle)
 
 var TaskerGraphSet = wire.NewSet(publisher.New, storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository12.FileSet, repository12.KeyValueSet, repository12.WebhookSet, repository12.SettingSet, service13.SettingSet, repository12.EchoSet, service13.EchoSet, repository12.CommonSet, service13.FileSet, service13.CommonSet, repository12.QueueSet, task.ProviderSet)
-
-// BuildApp 兼容旧入口，委托给 BuildWebApp。
-func BuildApp() (*app.App, func(), error) {
-	return BuildWebApp()
-}
 
 func ProvideBackupScheduleApplier(t *task.Tasker) subscriber.BackupScheduleApplier {
 	return t

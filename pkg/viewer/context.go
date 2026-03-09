@@ -1,6 +1,9 @@
 package viewer
 
-import "context"
+import (
+	"context"
+	"net/http"
+)
 
 type contextKey struct{}
 
@@ -33,4 +36,16 @@ func MustFromContext(ctx context.Context) Context {
 		}
 	}
 	return NewNoopViewer()
+}
+
+// WithRequest returns a new request with the viewer attached to context.
+func WithRequest(req *http.Request, v Context) *http.Request {
+	if req == nil {
+		return nil
+	}
+	reqCtx := req.Context()
+	if reqCtx == nil {
+		reqCtx = context.Background()
+	}
+	return req.WithContext(WithContext(reqCtx, v))
 }

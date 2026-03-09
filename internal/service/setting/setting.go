@@ -498,7 +498,7 @@ func (settingService *SettingService) UpdateOAuth2Setting(
 // GetOAuth2Status 获取 OAuth2 状态
 func (settingService *SettingService) GetOAuth2Status(status *model.OAuth2Status) error {
 	var oauthSetting model.OAuth2Setting
-	systemCtx := viewer.WithContext(context.Background(), viewer.NewSystemViewer("setting-service"))
+	systemCtx := viewer.WithContext(context.Background(), viewer.NewSystemViewer())
 	if err := settingService.GetOAuth2Setting(systemCtx, &oauthSetting, true); err != nil {
 		return err
 	}
