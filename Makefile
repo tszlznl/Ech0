@@ -15,6 +15,8 @@ ARCH?=$(if $(GOHOSTARCH),$(GOHOSTARCH),amd64)
 
 .PHONY: help air-install run dev web-dev lint fmt test wire wire-check build-image push-image
 
+AIR_BIN := $(shell command -v air 2>/dev/null || echo "$(GOPATH)/bin/air")
+
 help:
 	@echo "Available targets:"
 	@echo "  make run         - Run backend in serve mode"
@@ -36,7 +38,11 @@ run:
 	go run ./cmd/ech0 serve
 
 dev:
-	air -c .air.toml
+	@if [ ! -x "$(AIR_BIN)" ]; then \
+		echo "air not found, installing..."; \
+		$(MAKE) air-install; \
+	fi
+	"$(AIR_BIN)" -c .air.toml
 
 web-dev:
 	cd web && pnpm dev
