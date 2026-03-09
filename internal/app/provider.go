@@ -9,8 +9,9 @@ import (
 )
 
 func ProvideComponents(
+	// 初始化哨兵依赖：强制触发事件订阅注册与对应 cleanup 挂载。
 	_ *registry.RegisteredRegistrar,
-	eventBus *bus.Component,
+	eventBus *bus.EventBus,
 	tasker *task.Tasker,
 	httpServer *server.Server,
 ) []Component {
@@ -18,4 +19,4 @@ func ProvideComponents(
 	return []Component{eventBus, tasker, httpServer}
 }
 
-var ProviderSet = wire.NewSet(ProvideComponents, bus.NewComponent, NewApp)
+var ProviderSet = wire.NewSet(ProvideComponents, bus.NewEventBus, NewApp)

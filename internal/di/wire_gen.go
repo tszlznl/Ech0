@@ -89,7 +89,7 @@ func BuildApp() (*app.App, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	component := bus.NewComponent(v2)
+	eventBus := bus.NewEventBus(v2)
 	engine := server.ProvideGinEngine()
 	bundle, err := BuildHandlers(v, iCache, gormTransactor, v2)
 	if err != nil {
@@ -97,7 +97,7 @@ func BuildApp() (*app.App, func(), error) {
 		return nil, nil, err
 	}
 	serverServer := server.ProvideHTTPServer(engine, bundle)
-	v3 := app.ProvideComponents(registeredRegistrar, component, tasker, serverServer)
+	v3 := app.ProvideComponents(registeredRegistrar, eventBus, tasker, serverServer)
 	appApp := app.NewApp(v3)
 	return appApp, func() {
 		cleanup()

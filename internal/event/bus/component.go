@@ -9,23 +9,23 @@ import (
 	"go.uber.org/zap"
 )
 
-type Component struct {
+type EventBus struct {
 	bus *busen.Bus
 }
 
-func NewComponent(busProvider func() *busen.Bus) *Component {
-	return &Component{bus: busProvider()}
+func NewEventBus(busProvider func() *busen.Bus) *EventBus {
+	return &EventBus{bus: busProvider()}
 }
 
-func (c *Component) Name() string {
+func (c *EventBus) Name() string {
 	return "event_bus"
 }
 
-func (c *Component) Start(context.Context) error {
+func (c *EventBus) Start(context.Context) error {
 	return nil
 }
 
-func (c *Component) Stop(ctx context.Context) error {
+func (c *EventBus) Stop(ctx context.Context) error {
 	if c.bus == nil {
 		return errors.New("event bus is nil")
 	}
