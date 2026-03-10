@@ -107,6 +107,21 @@ func (r *FileRepository) ListByStorageTypeAndURLs(
 	return files, err
 }
 
+func (r *FileRepository) ListByStorageTypeAndKeys(
+	ctx context.Context,
+	storageType string,
+	keys []string,
+) ([]model.File, error) {
+	if len(keys) == 0 {
+		return []model.File{}, nil
+	}
+	var files []model.File
+	err := r.getDB(ctx).
+		Where("storage_type = ? AND key IN ?", storageType, keys).
+		Find(&files).Error
+	return files, err
+}
+
 func (r *FileRepository) UpdateMetaByID(
 	ctx context.Context,
 	id string,

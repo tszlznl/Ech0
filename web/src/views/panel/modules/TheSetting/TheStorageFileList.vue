@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import PanelCard from '@/layout/PanelCard.vue'
 import { FILE_STORAGE_TYPE } from '@/constants/file'
-import { fetchDownloadFileById, fetchFileTree } from '@/service/api'
+import { fetchDownloadFileById, fetchDownloadFileByPath, fetchFileTree } from '@/service/api'
 import { nextTick, reactive, ref } from 'vue'
 import { theToast } from '@/utils/toast'
 import DownloadIcon from '@/components/icons/download.vue'
@@ -260,14 +260,25 @@ const refreshCurrentRoot = async () => {
   refreshingRoot.value = ''
 }
 
-const triggerDownload = async (node: TreeNode) => {
-  if (!node.file_id) {
-    theToast.error('该文件暂不可下载')
-    return
-  }
+const actionKeyOf = (storageType: RootStorageType, node: TreeNode) =>
+  node.file_id || `path:${storageType}:${node.path}`
+
+const triggerDownload = async (storageType: RootStorageType, node: TreeNode) => {
   try {
-    downloadingId.value = node.file_id
-    const blob = await fetchDownloadFileById(node.file_id)
+    const actionKey = actionKeyOf(storageType, node)
+    downloadingId.value = actionKey
+    const blob = node.file_id
+      ? await fetchDownloadFileById(node.file_id)
+      : await fetchDownloadFileByPath({
+          storage_type: storageType,
+          path: node.path,
+          name: node.name,
+          content_type: node.content_type,
+        })
+    if (await isErrorLikeBlob(blob)) {
+      theToast.error('下载失败：服务端返回异常内容')
+      return
+    }
     const objectUrl = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = objectUrl
@@ -283,14 +294,22 @@ const triggerDownload = async (node: TreeNode) => {
   }
 }
 
-const triggerPreview = async (node: TreeNode) => {
-  if (!node.file_id) {
-    theToast.error('该文件暂不可预览')
-    return
-  }
+const triggerPreview = async (storageType: RootStorageType, node: TreeNode) => {
   try {
-    previewingId.value = node.file_id
-    const blob = await fetchDownloadFileById(node.file_id)
+    const actionKey = actionKeyOf(storageType, node)
+    previewingId.value = actionKey
+    const blob = node.file_id
+      ? await fetchDownloadFileById(node.file_id)
+      : await fetchDownloadFileByPath({
+          storage_type: storageType,
+          path: node.path,
+          name: node.name,
+          content_type: node.content_type,
+        })
+    if (await isErrorLikeBlob(blob)) {
+      theToast.error('预览失败：服务端返回异常内容')
+      return
+    }
     const objectUrl = window.URL.createObjectURL(blob)
     window.open(objectUrl, '_blank', 'noopener,noreferrer')
     window.setTimeout(() => {
@@ -301,6 +320,15 @@ const triggerPreview = async (node: TreeNode) => {
   } finally {
     previewingId.value = ''
   }
+}
+
+const isErrorLikeBlob = async (blob: Blob) => {
+  const mime = (blob.type || '').toLowerCase()
+  if (!mime.includes('text') && !mime.includes('json') && !mime.includes('xml')) {
+    return false
+  }
+  const text = (await blob.text()).trim().toLowerCase()
+  return text.includes('文件不存在') || text.includes('error') || text.includes('not found')
 }
 
 const onBeforeEnter = (el: Element) => {
@@ -452,34 +480,44 @@ const setRootContentRef = (storageType: RootStorageType, el: unknown) => {
                         >
                           重试
                         </button>
-                        <button
+                        <div
                           v-else-if="row.node.node_type === 'file'"
-                          class="download-btn icon-btn"
-                          :disabled="
-                            !row.node.file_id ||
-                            downloadingId === row.node.file_id ||
-                            previewingId === row.node.file_id
-                          "
-                          :title="previewingId === row.node.file_id ? '预览中' : '预览'"
-                          @click.stop="triggerPreview(row.node)"
+                          class="file-actions"
+                          :class="{
+                            'is-busy':
+                              downloadingId === actionKeyOf(storageType, row.node) ||
+                              previewingId === actionKeyOf(storageType, row.node),
+                          }"
                         >
-                          <span v-if="previewingId === row.node.file_id">◌</span>
-                          <ViewIcon v-else class="preview-icon" />
-                        </button>
-                        <button
-                          v-if="row.node.node_type === 'file'"
-                          class="download-btn icon-btn"
-                          :disabled="
-                            !row.node.file_id ||
-                            downloadingId === row.node.file_id ||
-                            previewingId === row.node.file_id
-                          "
-                          :title="downloadingId === row.node.file_id ? '下载中' : '下载'"
-                          @click.stop="triggerDownload(row.node)"
-                        >
-                          <span v-if="downloadingId === row.node.file_id">◌</span>
-                          <DownloadIcon v-else class="download-icon" />
-                        </button>
+                          <button
+                            class="download-btn icon-btn"
+                            :disabled="
+                              downloadingId === actionKeyOf(storageType, row.node) ||
+                              previewingId === actionKeyOf(storageType, row.node)
+                            "
+                            :title="
+                              previewingId === actionKeyOf(storageType, row.node) ? '预览中' : '预览'
+                            "
+                            @click.stop="triggerPreview(storageType, row.node)"
+                          >
+                            <span v-if="previewingId === actionKeyOf(storageType, row.node)">◌</span>
+                            <ViewIcon v-else class="preview-icon" />
+                          </button>
+                          <button
+                            class="download-btn icon-btn"
+                            :disabled="
+                              downloadingId === actionKeyOf(storageType, row.node) ||
+                              previewingId === actionKeyOf(storageType, row.node)
+                            "
+                            :title="
+                              downloadingId === actionKeyOf(storageType, row.node) ? '下载中' : '下载'
+                            "
+                            @click.stop="triggerDownload(storageType, row.node)"
+                          >
+                            <span v-if="downloadingId === actionKeyOf(storageType, row.node)">◌</span>
+                            <DownloadIcon v-else class="download-icon" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -662,6 +700,24 @@ const setRootContentRef = (storageType: RootStorageType, el: unknown) => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.file-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(4px);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.tree-row.is-file:hover .file-actions,
+.tree-row.is-selected .file-actions,
+.file-actions.is-busy {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
 }
 
 .download-icon {

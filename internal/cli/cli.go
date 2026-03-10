@@ -62,7 +62,7 @@ func DoBackup() {
 	}
 
 	pwd, _ := os.Getwd()
-	fullPath := filepath.Join(pwd, "backup", backupFileName)
+	fullPath := filepath.Join(pwd, "data", "files", "backups", backupFileName)
 	tui.PrintCLIInfo("🎉 备份成功", fullPath)
 }
 

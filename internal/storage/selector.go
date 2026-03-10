@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -24,6 +26,8 @@ type StorageSelector struct {
 	objectEnabled  bool
 	objectProvider string
 	objectBucket   string
+	objectPrefix   string
+	localRoot      string
 }
 
 type ListNode struct {
@@ -37,6 +41,10 @@ type ListNode struct {
 
 func NewStorageSelector(cfg config.StorageConfig) *StorageSelector {
 	schema := NewFileSchema()
+	localRoot := strings.TrimSpace(cfg.DataRoot)
+	if localRoot == "" {
+		localRoot = "data/files"
+	}
 
 	localFS := buildLocalFS(cfg, schema)
 	localResolve := buildLocalURLResolver(schema)
@@ -54,6 +62,8 @@ func NewStorageSelector(cfg config.StorageConfig) *StorageSelector {
 		objectEnabled:  objectEnabled,
 		objectProvider: strings.ToLower(strings.TrimSpace(cfg.Provider)),
 		objectBucket:   strings.TrimSpace(cfg.BucketName),
+		objectPrefix:   strings.Trim(strings.TrimSpace(cfg.PathPrefix), "/"),
+		localRoot:      localRoot,
 	}
 }
 
@@ -98,6 +108,35 @@ func (r *StorageSelector) Delete(ctx context.Context, storageType StorageType, k
 	return fs.Delete(ctx, key)
 }
 
+func (r *StorageSelector) GetByStoragePath(
+	ctx context.Context,
+	storageType StorageType,
+	filePath string,
+) (io.ReadCloser, error) {
+	if r == nil {
+		return nil, errors.New("storage selector is not initialized")
+	}
+	cleanPath := strings.Trim(strings.TrimSpace(filePath), "/")
+	if cleanPath == "" {
+		return nil, errors.New("file path is empty")
+	}
+	switch NormalizeStorageType(string(storageType)) {
+	case StorageTypeObject:
+		if !r.ObjectEnabled() {
+			return nil, errors.New("object storage is not enabled")
+		}
+		return r.objectFS.Get(ctx, cleanPath)
+	case StorageTypeExternal:
+		return nil, errors.New("external storage does not support filesystem operations")
+	default:
+		cleanRel := filepath.Clean(filepath.FromSlash(cleanPath))
+		if cleanRel == "." || cleanRel == "" || strings.HasPrefix(cleanRel, "..") || filepath.IsAbs(cleanRel) {
+			return nil, errors.New("invalid file path")
+		}
+		return os.Open(filepath.Join(r.localRoot, cleanRel))
+	}
+}
+
 func (r *StorageSelector) ResolveURL(storageType StorageType, key string) string {
 	if r == nil {
 		return ""
@@ -136,6 +175,62 @@ func (r *StorageSelector) ResolveURLByPath(storageType StorageType, filePath str
 		}
 		return ""
 	}
+}
+
+// ResolveKeyByPath converts a listed storage path to business key.
+// Current upload strategy stores flat keys, while schema/prefix adds
+// directory layers in storage path. For tree listing, basename maps
+// back to the stable DB file.key.
+func (r *StorageSelector) ResolveKeyByPath(storageType StorageType, filePath string) string {
+	candidates := r.ResolveKeyCandidatesByPath(storageType, filePath)
+	if len(candidates) == 0 {
+		return ""
+	}
+	return candidates[0]
+}
+
+func (r *StorageSelector) ResolveKeyCandidatesByPath(storageType StorageType, filePath string) []string {
+	cleanPath := strings.Trim(strings.TrimSpace(filePath), "/")
+	if cleanPath == "" {
+		return nil
+	}
+	appendUnique := func(dst []string, seen map[string]struct{}, candidate string) []string {
+		c := strings.Trim(strings.TrimSpace(candidate), "/")
+		if c == "" {
+			return dst
+		}
+		if _, ok := seen[c]; ok {
+			return dst
+		}
+		seen[c] = struct{}{}
+		return append(dst, c)
+	}
+	seen := make(map[string]struct{}, 8)
+	candidates := make([]string, 0, 8)
+	candidates = appendUnique(candidates, seen, cleanPath)
+
+	if NormalizeStorageType(string(storageType)) == StorageTypeObject && r != nil && r.objectPrefix != "" {
+		prefix := r.objectPrefix + "/"
+		if strings.HasPrefix(cleanPath, prefix) {
+			candidates = appendUnique(candidates, seen, strings.TrimPrefix(cleanPath, prefix))
+		}
+	}
+
+	routePrefixes := []string{"images/", "audios/", "videos/", "documents/", "files/"}
+	baseSnapshot := append([]string(nil), candidates...)
+	for _, base := range baseSnapshot {
+		for _, route := range routePrefixes {
+			if strings.HasPrefix(base, route) {
+				candidates = appendUnique(candidates, seen, strings.TrimPrefix(base, route))
+			}
+		}
+	}
+
+	candidates = appendUnique(candidates, seen, path.Base(cleanPath))
+	for _, c := range append([]string(nil), candidates...) {
+		candidates = appendUnique(candidates, seen, path.Base(c))
+	}
+	return candidates
 }
 
 func (r *StorageSelector) ListNodes(

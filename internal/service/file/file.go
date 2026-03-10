@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -511,6 +512,38 @@ func (s *FileService) ListFileTree(
 		return result, err
 	}
 
+	keyCandidatesByPath := make(map[string][]string, len(nodes))
+	keySet := make(map[string]struct{}, len(nodes)*2)
+	for _, node := range nodes {
+		if node.IsDir {
+			continue
+		}
+		candidates := selector.ResolveKeyCandidatesByPath(storageType, node.Path)
+		if len(candidates) == 0 {
+			continue
+		}
+		keyCandidatesByPath[node.Path] = candidates
+		for _, key := range candidates {
+			keySet[key] = struct{}{}
+		}
+	}
+	fileKeys := make([]string, 0, len(keySet))
+	for key := range keySet {
+		fileKeys = append(fileKeys, key)
+	}
+	idByKey := map[string]string{}
+	if len(fileKeys) > 0 {
+		dbFiles, err := s.fileRepository.ListByStorageTypeAndKeys(context.Background(), string(storageType), fileKeys)
+		if err != nil {
+			return result, err
+		}
+		idByKey = make(map[string]string, len(dbFiles))
+		for _, f := range dbFiles {
+			idByKey[f.Key] = f.ID
+		}
+	}
+	// Compatibility fallback: keep URL mapping as last resort.
+	idByURL := map[string]string{}
 	urlByPath := make(map[string]string, len(nodes))
 	fileURLs := make([]string, 0, len(nodes))
 	for _, node := range nodes {
@@ -524,7 +557,6 @@ func (s *FileService) ListFileTree(
 		urlByPath[node.Path] = url
 		fileURLs = append(fileURLs, url)
 	}
-	idByURL := map[string]string{}
 	if len(fileURLs) > 0 {
 		dbFiles, err := s.fileRepository.ListByStorageTypeAndURLs(context.Background(), string(storageType), fileURLs)
 		if err != nil {
@@ -552,6 +584,24 @@ func (s *FileService) ListFileTree(
 			item.HasChildren = true
 			item.Size = 0
 			item.ContentType = ""
+		} else if candidates, ok := keyCandidatesByPath[node.Path]; ok {
+			for _, key := range candidates {
+				if id := idByKey[key]; id != "" {
+					item.FileID = id
+					break
+				}
+			}
+			if item.FileID == "" {
+				logUtil.GetLogger().Warn(
+					"Tree key mapping missing file id, fallback to url mapping",
+					zap.String("path", node.Path),
+					zap.Strings("key_candidates", candidates),
+					zap.String("storage_type", string(storageType)),
+				)
+				if url, ok := urlByPath[node.Path]; ok {
+					item.FileID = idByURL[url]
+				}
+			}
 		} else if url, ok := urlByPath[node.Path]; ok {
 			item.FileID = idByURL[url]
 		}
@@ -586,14 +636,88 @@ func (s *FileService) StreamFileByID(ctx *gin.Context, id string) {
 		ctx.String(http.StatusNotFound, "文件不存在")
 		return
 	}
-	defer func() { _ = reader.Close() }()
+	s.streamReader(ctx, reader, fileRecord.Name, contentType, fileRecord.CreatedAt, fileRecord.ID, string(normalizedStorageType))
+}
 
-	readSeeker, ok := reader.(io.ReadSeeker)
-	if !ok {
-		ctx.String(http.StatusInternalServerError, "文件读取失败")
+func (s *FileService) StreamFileByPath(ctx *gin.Context, query commonModel.FilePathStreamQueryDto) {
+	userid := viewer.MustFromContext(ctx.Request.Context()).UserID()
+	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
+	if err != nil || !user.IsAdmin {
+		ctx.String(http.StatusForbidden, "无权限")
 		return
 	}
-	http.ServeContent(ctx.Writer, ctx.Request, fileRecord.Name, fileRecord.CreatedAt, readSeeker)
+	storageType := storage.NormalizeStorageType(query.StorageType)
+	if storageType != storage.StorageTypeLocal && storageType != storage.StorageTypeObject {
+		ctx.String(http.StatusBadRequest, "非法存储类型")
+		return
+	}
+	filePath := strings.Trim(strings.TrimSpace(query.Path), "/")
+	if filePath == "" {
+		ctx.String(http.StatusBadRequest, "非法文件路径")
+		return
+	}
+	contentType := strings.TrimSpace(query.ContentType)
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+	fileName := strings.TrimSpace(query.Name)
+	if fileName == "" {
+		fileName = path.Base(filePath)
+	}
+	if fileName == "" {
+		fileName = "file"
+	}
+	selector := s.getSelector()
+	if reader, pathErr := selector.GetByStoragePath(context.Background(), storageType, filePath); pathErr == nil {
+		s.streamReader(ctx, reader, fileName, contentType, time.Now(), "", string(storageType)+":path:"+filePath)
+		return
+	}
+	candidates := selector.ResolveKeyCandidatesByPath(storageType, filePath)
+	if len(candidates) == 0 {
+		ctx.String(http.StatusNotFound, "文件不存在")
+		return
+	}
+	var reader io.ReadCloser
+	var resolvedKey string
+	for _, key := range candidates {
+		reader, err = selector.Get(context.Background(), storageType, key)
+		if err == nil {
+			resolvedKey = key
+			break
+		}
+	}
+	if reader == nil {
+		ctx.String(http.StatusNotFound, "文件不存在")
+		return
+	}
+	s.streamReader(ctx, reader, fileName, contentType, time.Now(), "", string(storageType)+":"+resolvedKey)
+}
+
+func (s *FileService) streamReader(
+	ctx *gin.Context,
+	reader io.ReadCloser,
+	fileName string,
+	contentType string,
+	modTime time.Time,
+	fileID string,
+	storageType string,
+) {
+	defer func() { _ = reader.Close() }()
+	ctx.Header("Content-Type", contentType)
+
+	readSeeker, ok := reader.(io.ReadSeeker)
+	if ok {
+		http.ServeContent(ctx.Writer, ctx.Request, fileName, modTime, readSeeker)
+		return
+	}
+	if _, err := io.Copy(ctx.Writer, reader); err != nil {
+		logUtil.GetLogger().Warn(
+			"stream file copy failed",
+			zap.String("file_id", fileID),
+			zap.String("storage_type", storageType),
+			zap.Error(err),
+		)
+	}
 }
 
 func (s *FileService) GetFilePresignURL(

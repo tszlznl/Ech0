@@ -129,15 +129,15 @@ export const downloadFile = async (requestOptions: RequestOptions): Promise<Blob
     requestOptions.url = `${proxyUrl}${requestOptions.url}`
   }
 
-  return ofetchInstance<Blob>(requestOptions.url, {
+  return (ofetchInstance as any)(requestOptions.url, {
     method: requestOptions.method,
     body: requestOptions.data,
-  }).then((res) => {
+    responseType: 'blob',
+  }).then((res: unknown) => {
     if (res instanceof Blob) {
       return res
-    } else {
-      theToast.error('下载失败')
-      throw new Error('下载失败')
     }
+    theToast.error('下载失败')
+    throw new Error('下载失败')
   })
 }

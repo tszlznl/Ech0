@@ -118,6 +118,16 @@ type FileTreeQueryDto struct {
 	Prefix      string `json:"prefix" form:"prefix"`
 }
 
+// FilePathStreamQueryDto 按存储路径直接流式读取文件
+//
+// swagger:model FilePathStreamQueryDto
+type FilePathStreamQueryDto struct {
+	StorageType string `json:"storage_type" form:"storage_type" binding:"required"`
+	Path        string `json:"path" form:"path" binding:"required"`
+	Name        string `json:"name" form:"name"`
+	ContentType string `json:"content_type" form:"content_type"`
+}
+
 // FileTreeNodeDto 文件树节点
 //
 // swagger:model FileTreeNodeDto

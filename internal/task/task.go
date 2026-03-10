@@ -187,11 +187,13 @@ func (t *Tasker) ScheduleBackupTask(cronExpression string) error {
 		gocron.NewTask(
 			func() {
 				// 执行备份
-				if path, fileName, err := backup.ExecuteBackup(); err != nil {
+				path, fileName, err := backup.ExecuteBackup()
+				if err != nil {
 					logUtil.GetLogger().Error("Failed to execute scheduled backup",
 						zap.String("path", path),
 						zap.String("fileName", fileName),
 						zap.Error(err))
+					return
 				}
 
 				// 发布备份完成事件
@@ -226,13 +228,24 @@ func (t *Tasker) ApplyBackupSchedule(schedule settingModel.BackupSchedule) error
 		return nil
 	}
 
+	logUtil.GetLogger().Info("Applying backup schedule",
+		zap.Bool("enable", schedule.Enable),
+		zap.String("cron", schedule.CronExpression),
+	)
+
 	// 先移除旧任务，避免重复触发。
 	t.scheduler.RemoveByTags(backupScheduleTag)
 	if !schedule.Enable {
+		logUtil.GetLogger().Info("Backup schedule disabled, jobs removed")
 		return nil
 	}
 
-	return t.ScheduleBackupTask(schedule.CronExpression)
+	if err := t.ScheduleBackupTask(schedule.CronExpression); err != nil {
+		logUtil.GetLogger().Error("Failed to apply backup schedule", zap.Error(err))
+		return err
+	}
+	logUtil.GetLogger().Info("Backup schedule applied successfully")
+	return nil
 }
 
 // InboxTask 定时处理Inbox任务

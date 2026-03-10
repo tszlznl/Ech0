@@ -149,6 +149,15 @@ func (fileHandler *FileHandler) StreamFileByID(ctx *gin.Context) {
 	fileHandler.fileService.StreamFileByID(ctx, id)
 }
 
+func (fileHandler *FileHandler) StreamFileByPath(ctx *gin.Context) {
+	var query commonModel.FilePathStreamQueryDto
+	if err := ctx.ShouldBindQuery(&query); err != nil {
+		ctx.String(400, commonModel.INVALID_QUERY_PARAMS)
+		return
+	}
+	fileHandler.fileService.StreamFileByPath(ctx, query)
+}
+
 func (fileHandler *FileHandler) GetFilePresignURL() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		var dto commonModel.GetPresignURLDto

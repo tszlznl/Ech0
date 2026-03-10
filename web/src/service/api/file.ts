@@ -108,3 +108,21 @@ export function fetchDownloadFileById(id: string) {
   })
 }
 
+// 按路径下载文件（当 file_id 缺失时兜底）
+export function fetchDownloadFileByPath(query: App.Api.File.FilePathStreamQuery) {
+  const searchParams = new URLSearchParams({
+    storage_type: query.storage_type,
+    path: query.path,
+  })
+  if (query.name) {
+    searchParams.set('name', query.name)
+  }
+  if (query.content_type) {
+    searchParams.set('content_type', query.content_type)
+  }
+  return downloadFile({
+    url: `/file/stream?${searchParams.toString()}`,
+    method: 'GET',
+  })
+}
+

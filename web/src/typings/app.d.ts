@@ -105,6 +105,12 @@ declare namespace App {
         storage_type: StorageType
         prefix?: string
       }
+      type FilePathStreamQuery = {
+        storage_type: StorageType
+        path: string
+        name?: string
+        content_type?: string
+      }
       type FileTreeNode = {
         name: string
         path: string
