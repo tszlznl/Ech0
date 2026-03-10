@@ -12,7 +12,6 @@ import (
 	inboxHandler "github.com/lin-snow/ech0/internal/handler/inbox"
 	initHandler "github.com/lin-snow/ech0/internal/handler/init"
 	settingHandler "github.com/lin-snow/ech0/internal/handler/setting"
-	todoHandler "github.com/lin-snow/ech0/internal/handler/todo"
 	userHandler "github.com/lin-snow/ech0/internal/handler/user"
 	webHandler "github.com/lin-snow/ech0/internal/handler/web"
 )
@@ -25,7 +24,6 @@ var (
 	InitSet      = wire.NewSet(initHandler.NewInitHandler)
 	CommonSet    = wire.NewSet(commonHandler.NewCommonHandler)
 	SettingSet   = wire.NewSet(settingHandler.NewSettingHandler)
-	TodoSet      = wire.NewSet(todoHandler.NewTodoHandler)
 	ConnectSet   = wire.NewSet(connectHandler.NewConnectHandler)
 	BackupSet    = wire.NewSet(backupHandler.NewBackupHandler)
 	DashboardSet = wire.NewSet(dashboardHandler.NewDashboardHandler)

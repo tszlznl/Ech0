@@ -50,13 +50,6 @@
             <HubIcon class="w-8 h-8 text-[var(--text-color-400)]" />
           </RouterLink>
         </div>
-        <!-- Ech0 Widget -->
-        <div class="block xl:hidden">
-          <RouterLink to="/Widget" title="Ech0 Widget">
-            <!-- icon -->
-            <Widget class="w-8 h-8 text-[var(--text-color-400)]" />
-          </RouterLink>
-        </div>
         <!-- PanelPage -->
         <div>
           <RouterLink to="/panel" title="面板">
@@ -80,7 +73,6 @@ import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import Close from '@/components/icons/close.vue'
 import Filter from '@/components/icons/filter.vue'
-import Widget from '@/components/icons/widget.vue'
 const echoStore = useEchoStore()
 const zenStore = useZenStore()
 const { refreshForSearch, getEchosByPage } = echoStore

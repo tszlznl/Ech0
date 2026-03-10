@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
+	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
 )
 
@@ -20,5 +21,6 @@ type Service interface {
 type CommonRepository interface {
 	GetUserByUserId(ctx context.Context, id string) (userModel.User, error)
 	GetOwner(ctx context.Context) (userModel.User, error)
+	GetAllEchos(ctx context.Context, showPrivate bool) ([]echoModel.Echo, error)
 	GetHeatMap(ctx context.Context, startTime, endTime time.Time) ([]time.Time, error)
 }

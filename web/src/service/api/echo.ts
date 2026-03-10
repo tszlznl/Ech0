@@ -51,14 +51,6 @@ export async function fetchGetEchoById(echoId: string) {
   })
 }
 
-// 获取status
-export function fetchGetStatus() {
-  return request<App.Api.Ech0.Status>({
-    url: `/status`,
-    method: 'GET',
-  })
-}
-
 // 获取一个月内的热力图
 export function fetchGetHeatMap() {
   return request<App.Api.Ech0.HeatMap>({

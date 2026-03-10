@@ -111,12 +111,6 @@ func featureRouteModules() []RouteModule {
 			},
 		},
 		routeModule{
-			name: "todo",
-			register: func(ctx *RouterContext) {
-				setupTodoRoutes(ctx.Groups, ctx.Handlers)
-			},
-		},
-		routeModule{
 			name: "connect",
 			register: func(ctx *RouterContext) {
 				setupConnectRoutes(ctx.Groups, ctx.Handlers)

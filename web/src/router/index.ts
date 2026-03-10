@@ -15,11 +15,6 @@ const router = createRouter({
       },
     },
     {
-      path: '/widget',
-      name: 'widget',
-      component: () => import('../views/widget/WidgetView.vue'),
-    },
-    {
       path: '/panel',
       name: 'panel',
       component: () => import('../views/panel/PanelView.vue'),

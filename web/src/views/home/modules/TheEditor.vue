@@ -15,14 +15,8 @@
         <!-- ImageMode : TheImageEditor -->
         <TheImageEditor v-if="currentMode === Mode.Image" />
 
-        <!-- TodoMode : TheTodoModeEditor -->
-        <TheTodoModeEditor v-if="currentMode === Mode.TODO" />
-
         <!-- InboxMode : TheInboxModeEditor -->
         <TheInboxModeEditor v-if="currentMode === Mode.INBOX" />
-
-        <!-- MusicMode : TheMusicModeEditor -->
-        <TheMusicModeEditor v-if="currentMode === Mode.PlayMusic" />
 
         <!-- The Mode Panel -->
         <TheModePanel v-if="currentMode === Mode.Panel" />
@@ -50,9 +44,7 @@ import TheTitleAndNav from './TheEditor/TheTitleAndNav.vue'
 import TheImageEditor from './TheEditor/TheImageEditor.vue'
 import TheEditorImage from './TheEditor/TheEditorImage.vue'
 import TheEditorButtons from './TheEditor/TheEditorButtons.vue'
-import TheTodoModeEditor from './TheEditor/TheTodoModeEditor.vue'
 import TheInboxModeEditor from './TheEditor/TheInboxModeEditor.vue'
-import TheMusicModeEditor from './TheEditor/TheMusicModeEditor.vue'
 import TheExtensionEditor from './TheEditor/TheExtensionEditor.vue'
 import TheTagsManager from './TheEditor/TheTagsManager.vue'
 

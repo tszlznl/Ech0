@@ -48,8 +48,6 @@ var EventGraphSet = wire.NewSet(
 
 	repository.UserSet,
 
-	repository.TodoSet,
-
 	repository.InboxSet,
 
 	repository.KeyValueSet,
@@ -102,10 +100,6 @@ var HandlerGraphSet = wire.NewSet(
 	repository.InboxSet,
 	service.InboxSet,
 	handler.InboxSet,
-
-	repository.TodoSet,
-	service.TodoSet,
-	handler.TodoSet,
 
 	repository.ConnectSet,
 	service.ConnectSet,

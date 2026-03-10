@@ -4,11 +4,10 @@ import { theToast } from '@/utils/toast'
 import {
   fetchAddEcho,
   fetchUpdateEcho,
-  fetchAddTodo,
 } from '@/service/api'
 import { Mode, ExtensionType, ImageLayout } from '@/enums/enums'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
-import { useEchoStore, useTodoStore, useInboxStore } from '@/stores'
+import { useEchoStore, useInboxStore } from '@/stores'
 import { localStg } from '@/utils/storage'
 import { getImageSize } from '@/utils/image'
 import { getFileToAddUrl } from '@/utils/other'
@@ -16,12 +15,10 @@ import {
   createExternalFile,
   globalFileRegistry,
   useFileAttachments,
-  useFilePlayer,
 } from '@/lib/file'
 
 export const useEditorStore = defineStore('editorStore', () => {
   const echoStore = useEchoStore()
-  const todoStore = useTodoStore()
   const inboxStore = useInboxStore()
 
   //================================================================
@@ -71,11 +68,6 @@ export const useEditorStore = defineStore('editorStore', () => {
   })
 
   //================================================================
-  // 编辑器数据状态管理(待添加的Todo)
-  //================================================================
-  const todoToAdd = ref<App.Api.Todo.TodoToAdd>({ content: '' })
-
-  //================================================================
   // 辅助Echo的添加变量（文件板块）
   //================================================================
   const fileToAdd = ref<App.Api.Ech0.FileToAdd>({
@@ -103,13 +95,6 @@ export const useEditorStore = defineStore('editorStore', () => {
   const tagToAdd = ref<string>('')
 
   //================================================================
-  // 其它状态变量
-  //================================================================
-  const filePlayer = useFilePlayer()
-  const playingFileURL = filePlayer.playingFileUrl // 当前正在播放的文件URL
-  const shouldLoadMusic = filePlayer.shouldReload // 是否应该加载音乐（用于控制音乐播放器的加载）
-
-  //================================================================
   // 编辑器功能函数
   //================================================================
   // 设置当前编辑模式
@@ -117,7 +102,6 @@ export const useEditorStore = defineStore('editorStore', () => {
     currentMode.value = mode
 
     if (mode === Mode.Panel) {
-      todoStore.setTodoMode(false)
       inboxStore.setInboxMode(false)
     }
   }
@@ -125,13 +109,8 @@ export const useEditorStore = defineStore('editorStore', () => {
   const toggleMode = () => {
     if (currentMode.value === Mode.ECH0)
       setMode(Mode.Panel) // 切换到面板模式
-    else if (
-      currentMode.value === Mode.TODO ||
-      currentMode.value === Mode.INBOX ||
-      currentMode.value === Mode.PlayMusic ||
-      currentMode.value === Mode.EXTEN
-    )
-      setMode(Mode.Panel) // 扩展模式/TODO模式/音乐播放器模式均切换到面板模式
+    else if (currentMode.value === Mode.INBOX || currentMode.value === Mode.EXTEN)
+      setMode(Mode.Panel) // 扩展模式/收件箱模式切换到面板模式
     else setMode(Mode.ECH0) // 其他模式均切换到Echo编辑模式
   }
 
@@ -162,19 +141,6 @@ export const useEditorStore = defineStore('editorStore', () => {
     githubRepo.value = ''
     extensionToAdd.value = { extension: '', extension_type: '' }
     tagToAdd.value = ''
-    todoToAdd.value = { content: '' }
-  }
-
-  const handleRefreshPlayingFile = async () => {
-    await filePlayer.refreshPlayingFile()
-  }
-
-  const setCurrentPlayingFile = async (fileId: string) => {
-    await filePlayer.setPlayingFile(fileId)
-  }
-
-  const clearCurrentPlayingFile = () => {
-    filePlayer.clearPlayingFile()
   }
 
   //===============================================================
@@ -472,35 +438,6 @@ export const useEditorStore = defineStore('editorStore', () => {
   }
 
   //===============================================================
-  // 添加Todo
-  //===============================================================
-  const handleAddTodo = async () => {
-    // 防止重复提交
-    if (isSubmitting.value) return
-    isSubmitting.value = true
-
-    // 执行添加
-    try {
-      // 检查待办事项是否为空
-      console.log('todo content:', todoToAdd.value.content)
-      if (todoToAdd.value.content.trim() === '') {
-        theToast.error('待办事项不能为空！')
-        return
-      }
-
-      // 执行添加
-      const res = await fetchAddTodo(todoToAdd.value)
-      if (res.code === 1) {
-        theToast.success('🎉添加成功！')
-        todoToAdd.value = { content: '' }
-        todoStore.getTodos()
-      }
-    } finally {
-      isSubmitting.value = false
-    }
-  }
-
-  //===============================================================
   // 退出更新模式
   //===============================================================
   const handleExitUpdateMode = () => {
@@ -515,13 +452,11 @@ export const useEditorStore = defineStore('editorStore', () => {
   // 处理不同模式下的添加或更新
   //===============================================================
   const handleAddOrUpdate = () => {
-    if (todoStore.todoMode) handleAddTodo()
-    else handleAddOrUpdateEcho(false)
+    handleAddOrUpdateEcho(false)
   }
 
   const init = () => {
-    filePlayer.restoreFromStorage()
-    handleRefreshPlayingFile()
+    // 预留初始化入口，当前无播放器状态需要恢复
   }
 
   const setFilesToAdd = (files: App.Api.Ech0.FileToAdd[]) => {
@@ -556,7 +491,6 @@ export const useEditorStore = defineStore('editorStore', () => {
     fileUploading,
 
     echoToAdd,
-    todoToAdd,
 
     hasContent,
     hasFile,
@@ -573,20 +507,13 @@ export const useEditorStore = defineStore('editorStore', () => {
     extensionToAdd,
     tagToAdd,
 
-    playingFileURL,
-    shouldLoadMusic,
-
     // 方法
     init,
     setMode,
     toggleMode,
     clearEditor,
-    handleRefreshPlayingFile,
-    setCurrentPlayingFile,
-    clearCurrentPlayingFile,
     handleAddMoreFile,
     togglePrivate,
-    handleAddTodo,
     handleAddOrUpdateEcho,
     handleAddOrUpdate,
     handleExitUpdateMode,

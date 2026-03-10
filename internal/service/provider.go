@@ -12,7 +12,6 @@ import (
 	inboxService "github.com/lin-snow/ech0/internal/service/inbox"
 	initService "github.com/lin-snow/ech0/internal/service/init"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
-	todoService "github.com/lin-snow/ech0/internal/service/todo"
 	userService "github.com/lin-snow/ech0/internal/service/user"
 )
 
@@ -40,10 +39,6 @@ var (
 	SettingSet = wire.NewSet(
 		settingService.NewSettingService,
 		wire.Bind(new(settingService.Service), new(*settingService.SettingService)),
-	)
-	TodoSet = wire.NewSet(
-		todoService.NewTodoService,
-		wire.Bind(new(todoService.Service), new(*todoService.TodoService)),
 	)
 	ConnectSet = wire.NewSet(
 		connectService.NewConnectService,

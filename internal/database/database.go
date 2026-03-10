@@ -16,7 +16,6 @@ import (
 	inboxModel "github.com/lin-snow/ech0/internal/model/inbox"
 	queueModel "github.com/lin-snow/ech0/internal/model/queue"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
-	todoModel "github.com/lin-snow/ech0/internal/model/todo"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 	util "github.com/lin-snow/ech0/internal/util/err"
@@ -114,7 +113,6 @@ func MigrateDB() error {
 		&fileModel.File{},
 		&fileModel.EchoFile{},
 		&commonModel.KeyValue{},
-		&todoModel.Todo{},
 		&connectModel.Connected{},
 		&userModel.OAuthBinding{},
 		&echoModel.Tag{},

@@ -901,29 +901,6 @@
                 }
             }
         },
-        "/getmusic": {
-            "get": {
-                "description": "获取当前可供播放的音乐文件URL",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "通用功能"
-                ],
-                "summary": "获取可播放的音乐",
-                "responses": {
-                    "200": {
-                        "description": "获取音乐URL失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/heatmap": {
             "get": {
                 "description": "获取系统活动热力图数据，用于展示用户活动分布情况",
@@ -1311,29 +1288,6 @@
                 }
             }
         },
-        "/playmusic": {
-            "get": {
-                "description": "以流的方式播放当前可用的音乐文件",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "audio/mpeg"
-                ],
-                "tags": [
-                    "通用功能"
-                ],
-                "summary": "播放音乐",
-                "responses": {
-                    "200": {
-                        "description": "播放失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/register": {
             "post": {
                 "description": "通过提交用户名、密码等信息完成注册",
@@ -1535,29 +1489,6 @@
                 }
             }
         },
-        "/status": {
-            "get": {
-                "description": "查询系统当前运行状态及初始化安装状态",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "通用功能"
-                ],
-                "summary": "获取 Echo 系统状态",
-                "responses": {
-                    "200": {
-                        "description": "获取状态失败或未初始化",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/tag/{id}": {
             "delete": {
                 "description": "根据ID删除指定的标签",
@@ -1606,123 +1537,6 @@
                 "responses": {
                     "200": {
                         "description": "获取失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/todo": {
-            "get": {
-                "description": "获取当前用户的所有待办事项",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "待办事项"
-                ],
-                "summary": "获取待办事项列表",
-                "responses": {
-                    "200": {
-                        "description": "获取失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "用户添加一条新的待办事项",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "待办事项"
-                ],
-                "summary": "添加新的待办事项",
-                "parameters": [
-                    {
-                        "description": "待办事项内容",
-                        "name": "todo",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.Todo"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "添加失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/todo/{id}": {
-            "put": {
-                "description": "根据ID更新指定的待办事项",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "待办事项"
-                ],
-                "summary": "更新待办事项",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "待办事项ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "更新失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "根据ID删除指定的待办事项",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "待办事项"
-                ],
-                "summary": "删除待办事项",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "待办事项ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "删除失败",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
@@ -2667,30 +2481,6 @@
                 "usage_count": {
                     "description": "使用计数",
                     "type": "integer"
-                }
-            }
-        },
-        "model.Todo": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "status": {
-                    "description": "0:未完成 1:已完成",
-                    "type": "integer"
-                },
-                "user_id": {
-                    "type": "integer"
-                },
-                "username": {
-                    "type": "string"
                 }
             }
         },

@@ -11,7 +11,6 @@ import (
 	inboxHandler "github.com/lin-snow/ech0/internal/handler/inbox"
 	initHandler "github.com/lin-snow/ech0/internal/handler/init"
 	settingHandler "github.com/lin-snow/ech0/internal/handler/setting"
-	todoHandler "github.com/lin-snow/ech0/internal/handler/todo"
 	userHandler "github.com/lin-snow/ech0/internal/handler/user"
 	webHandler "github.com/lin-snow/ech0/internal/handler/web"
 )
@@ -26,7 +25,6 @@ type Bundle struct {
 	CommonHandler    *commonHandler.CommonHandler
 	SettingHandler   *settingHandler.SettingHandler
 	InboxHandler     *inboxHandler.InboxHandler
-	TodoHandler      *todoHandler.TodoHandler
 	ConnectHandler   *connectHandler.ConnectHandler
 	BackupHandler    *backupHandler.BackupHandler
 	DashboardHandler *dashboardHandler.DashboardHandler
@@ -43,7 +41,6 @@ func NewBundle(
 	commonHandler *commonHandler.CommonHandler,
 	settingHandler *settingHandler.SettingHandler,
 	inboxHandler *inboxHandler.InboxHandler,
-	todoHandler *todoHandler.TodoHandler,
 	connectHandler *connectHandler.ConnectHandler,
 	backupHandler *backupHandler.BackupHandler,
 	dashboardHandler *dashboardHandler.DashboardHandler,
@@ -58,7 +55,6 @@ func NewBundle(
 		CommonHandler:    commonHandler,
 		SettingHandler:   settingHandler,
 		InboxHandler:     inboxHandler,
-		TodoHandler:      todoHandler,
 		ConnectHandler:   connectHandler,
 		BackupHandler:    backupHandler,
 		DashboardHandler: dashboardHandler,

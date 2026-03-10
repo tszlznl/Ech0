@@ -454,22 +454,6 @@ definitions:
         description: 使用计数
         type: integer
     type: object
-  model.Todo:
-    properties:
-      content:
-        type: string
-      created_at:
-        type: string
-      id:
-        type: integer
-      status:
-        description: 0:未完成 1:已完成
-        type: integer
-      user_id:
-        type: integer
-      username:
-        type: string
-    type: object
   model.UserInfoDto:
     properties:
       avatar:
@@ -1127,21 +1111,6 @@ paths:
       summary: 获取今天的Echo列表
       tags:
       - Echo
-  /getmusic:
-    get:
-      consumes:
-      - application/json
-      description: 获取当前可供播放的音乐文件URL
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 获取音乐URL失败
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 获取可播放的音乐
-      tags:
-      - 通用功能
   /heatmap:
     get:
       consumes:
@@ -1392,21 +1361,6 @@ paths:
       summary: 获取 OAuth2 状态
       tags:
       - 系统设置
-  /playmusic:
-    get:
-      consumes:
-      - application/json
-      description: 以流的方式播放当前可用的音乐文件
-      produces:
-      - audio/mpeg
-      responses:
-        "200":
-          description: 播放失败
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 播放音乐
-      tags:
-      - 通用功能
   /register:
     post:
       consumes:
@@ -1538,21 +1492,6 @@ paths:
       summary: 更新设置
       tags:
       - 系统设置
-  /status:
-    get:
-      consumes:
-      - application/json
-      description: 查询系统当前运行状态及初始化安装状态
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 获取状态失败或未初始化
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 获取 Echo 系统状态
-      tags:
-      - 通用功能
   /tag/{id}:
     delete:
       consumes:
@@ -1589,83 +1528,6 @@ paths:
       summary: 获取所有标签
       tags:
       - Tag
-  /todo:
-    get:
-      consumes:
-      - application/json
-      description: 获取当前用户的所有待办事项
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 获取失败
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 获取待办事项列表
-      tags:
-      - 待办事项
-    post:
-      consumes:
-      - application/json
-      description: 用户添加一条新的待办事项
-      parameters:
-      - description: 待办事项内容
-        in: body
-        name: todo
-        required: true
-        schema:
-          $ref: '#/definitions/model.Todo'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 添加失败
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 添加新的待办事项
-      tags:
-      - 待办事项
-  /todo/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: 根据ID删除指定的待办事项
-      parameters:
-      - description: 待办事项ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 删除失败
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 删除待办事项
-      tags:
-      - 待办事项
-    put:
-      consumes:
-      - application/json
-      description: 根据ID更新指定的待办事项
-      parameters:
-      - description: 待办事项ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 更新失败
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 更新待办事项
-      tags:
-      - 待办事项
   /user:
     get:
       consumes:

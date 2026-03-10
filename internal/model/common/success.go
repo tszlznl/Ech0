@@ -31,7 +31,6 @@ const (
 	UPLOAD_SUCCESS             = "上传成功"
 	DELETE_SUCCESS             = "删除成功"
 	GET_HEATMAP_SUCCESS        = "获取热力图成功"
-	GET_MUSIC_URL_SUCCESS      = "获取音乐播放链接成功"
 	GET_HELLO_SUCCESS          = "获取Hello成功"
 	GET_HEALTHZ_SUCCESS        = "健康检查"
 	GET_S3_PRESIGN_URL_SUCCESS = "获取 S3 预签名 URL 成功"
@@ -66,14 +65,6 @@ const (
 	CREATE_ACCESS_TOKEN_SUCCESS     = "创建访问令牌成功"
 	DELETE_ACCESS_TOKEN_SUCCESS     = "删除访问令牌成功"
 	SCHEDULE_BACKUP_SUCCESS         = "设置备份计划成功"
-)
-
-// To do 成功相关常量
-const (
-	GET_TODO_LIST_SUCCESS = "获取Todo list 成功"
-	ADD_TODO_SUCCESS      = "添加Todo成功"
-	UPDATE_TODO_SUCCESS   = "更新Todo成功"
-	DELETE_TODO_SUCCESS   = "删除Todo成功"
 )
 
 // User 成功相关常量

@@ -12,7 +12,6 @@ import (
 	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
 	queueRepository "github.com/lin-snow/ech0/internal/repository/queue"
 	settingRepository "github.com/lin-snow/ech0/internal/repository/setting"
-	todoRepository "github.com/lin-snow/ech0/internal/repository/todo"
 	userRepository "github.com/lin-snow/ech0/internal/repository/user"
 	webhookRepository "github.com/lin-snow/ech0/internal/repository/webhook"
 	agentService "github.com/lin-snow/ech0/internal/service/agent"
@@ -23,7 +22,6 @@ import (
 	inboxService "github.com/lin-snow/ech0/internal/service/inbox"
 	initService "github.com/lin-snow/ech0/internal/service/init"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
-	todoService "github.com/lin-snow/ech0/internal/service/todo"
 	userService "github.com/lin-snow/ech0/internal/service/user"
 )
 
@@ -59,10 +57,6 @@ var (
 	SettingSet = wire.NewSet(
 		settingRepository.NewSettingRepository,
 		wire.Bind(new(settingService.SettingRepository), new(*settingRepository.SettingRepository)),
-	)
-	TodoSet = wire.NewSet(
-		todoRepository.NewTodoRepository,
-		wire.Bind(new(todoService.Repository), new(*todoRepository.TodoRepository)),
 	)
 	ConnectSet = wire.NewSet(
 		connectRepository.NewConnectRepository,

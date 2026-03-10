@@ -74,7 +74,6 @@
         v-if="
           currentMode !== Mode.Panel &&
           currentMode !== Mode.TagManage &&
-          currentMode !== Mode.PlayMusic &&
           currentMode !== Mode.INBOX &&
           isUpdateMode === false
         "
@@ -83,15 +82,13 @@
           :icon="Publish"
           @click="handleAddorUpdate"
           class="w-8 h-8 sm:w-9 sm:h-9 rounded-md"
-          title="发布Echo / Todo"
+          title="发布Echo"
         />
       </div>
       <!-- Exit Update -->
       <div
         v-if="
           currentMode !== Mode.Panel &&
-          currentMode !== Mode.TODO &&
-          currentMode !== Mode.PlayMusic &&
           currentMode !== Mode.INBOX &&
           isUpdateMode === true
         "
@@ -107,8 +104,6 @@
       <div
         v-if="
           currentMode !== Mode.Panel &&
-          currentMode !== Mode.TODO &&
-          currentMode !== Mode.PlayMusic &&
           isUpdateMode === true
         "
       >

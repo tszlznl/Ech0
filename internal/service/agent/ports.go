@@ -5,7 +5,6 @@ import (
 
 	echoService "github.com/lin-snow/ech0/internal/service/echo"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
-	todoService "github.com/lin-snow/ech0/internal/service/todo"
 )
 
 type Service interface {
@@ -15,7 +14,6 @@ type Service interface {
 type (
 	SettingService = settingService.Service
 	EchoService    = echoService.Service
-	TodoService    = todoService.Service
 )
 
 type KeyValueRepository interface {

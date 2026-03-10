@@ -17,7 +17,6 @@ import (
 	inboxHandler "github.com/lin-snow/ech0/internal/handler/inbox"
 	initHandler "github.com/lin-snow/ech0/internal/handler/init"
 	settingHandler "github.com/lin-snow/ech0/internal/handler/setting"
-	todoHandler "github.com/lin-snow/ech0/internal/handler/todo"
 	userHandler "github.com/lin-snow/ech0/internal/handler/user"
 	webHandler "github.com/lin-snow/ech0/internal/handler/web"
 )
@@ -34,7 +33,6 @@ func TestSetupRouter_RegistersKeyRoutes(t *testing.T) {
 		{method: http.MethodGet, path: "/swagger/*any"},
 		{method: http.MethodPost, path: "/api/login"},
 		{method: http.MethodPost, path: "/api/echo"},
-		{method: http.MethodGet, path: "/api/status"},
 		{method: http.MethodGet, path: "/api/init/status"},
 		{method: http.MethodGet, path: "/api/settings"},
 		{method: http.MethodGet, path: "/api/agent/recent"},
@@ -85,7 +83,6 @@ func buildTestHandlers() *handler.Bundle {
 		commonHandler.NewCommonHandler(nil),
 		settingHandler.NewSettingHandler(nil),
 		inboxHandler.NewInboxHandler(nil),
-		todoHandler.NewTodoHandler(nil),
 		connectHandler.NewConnectHandler(nil),
 		backupHandler.NewBackupHandler(nil),
 		dashboardHandler.NewDashboardHandler(nil),

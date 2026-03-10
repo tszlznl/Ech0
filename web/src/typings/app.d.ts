@@ -63,12 +63,6 @@ declare namespace App {
         avatar: string
       }
 
-      type UserStatus = {
-        user_id: string
-        username: string
-        is_admin: boolean
-        is_owner?: boolean
-      }
     }
 
     namespace File {
@@ -216,14 +210,6 @@ declare namespace App {
       type PaginationResult = {
         items: Echo[]
         total: number
-      }
-
-      type Status = {
-        owner_id: string // Owner ID
-        username: string // 系统管理员用户名
-        logo: string // 系统管理员Logo
-        users: App.Api.User.UserStatus[] // 用户列表
-        total_echos: number // Echo总数
       }
 
       type HeatMap = {
@@ -403,21 +389,6 @@ declare namespace App {
       type Connected = {
         id: string
         connect_url: string
-      }
-    }
-
-    namespace Todo {
-      type Todo = {
-        id: string
-        content: string
-        user_id: string
-        username: string
-        status: number
-        created_at: string
-      }
-
-      type TodoToAdd = {
-        content: string
       }
     }
 

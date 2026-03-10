@@ -103,11 +103,6 @@ const (
 	NO_PERMISSION_BINDING_CUSTOM   = "没有权限绑定自定义 OAuth2 账号"
 )
 
-// TO DO 错误相关常量
-const (
-	TODO_EXCEED_LIMIT = "待办事项数量已达上限"
-)
-
 // Connect 错误相关常量
 const (
 	INVALID_CONNECTION_URL = "connect url不能为空"
