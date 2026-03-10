@@ -476,6 +476,25 @@ declare namespace App {
       }
     }
 
+    namespace SystemLog {
+      type Entry = {
+        time: string
+        level: string
+        msg: string
+        module?: string
+        caller?: string
+        error?: string
+        raw?: string
+        fields?: Record<string, unknown>
+      }
+
+      type QueryParams = {
+        tail?: number
+        level?: string
+        keyword?: string
+      }
+    }
+
     namespace Hub {
       type HubItem = string | { id: string; connect_url: string }
       type HubList = HubItem[]

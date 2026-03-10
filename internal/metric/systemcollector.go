@@ -1,17 +1,18 @@
 package metric
 
 import (
-	"fmt"
 	"runtime"
 	"strings"
 	"time"
 
 	model "github.com/lin-snow/ech0/internal/model/metric"
+	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/disk"
 	"github.com/shirou/gopsutil/v4/host"
 	"github.com/shirou/gopsutil/v4/mem"
 	"github.com/shirou/gopsutil/v4/net"
+	"go.uber.org/zap"
 )
 
 type SystemCollector struct {
@@ -32,7 +33,7 @@ func (sc *SystemCollector) Collect() (model.Metrics, error) {
 	// Windows 第一次采样会返回 0，所以使用短暂采样间隔
 	cpuPercent, err := cpu.Percent(200*time.Millisecond, false)
 	if err != nil {
-		fmt.Println("[WARN] cpu.Percent error:", err)
+		logUtil.Warn("collect cpu metrics failed", zap.String("module", "metric"), zap.Error(err))
 	} else if len(cpuPercent) > 0 {
 		m.CPU.UsagePercent = cpuPercent[0]
 	}
@@ -46,7 +47,7 @@ func (sc *SystemCollector) Collect() (model.Metrics, error) {
 	// ---------- Memory ----------
 	vmStat, err := mem.VirtualMemory()
 	if err != nil {
-		fmt.Println("[WARN] mem.VirtualMemory error:", err)
+		logUtil.Warn("collect memory metrics failed", zap.String("module", "metric"), zap.Error(err))
 	} else {
 		m.Memory.Total = vmStat.Total
 		m.Memory.Used = vmStat.Used
@@ -58,7 +59,12 @@ func (sc *SystemCollector) Collect() (model.Metrics, error) {
 	rootPath := getRootPath()
 	diskStat, err := disk.Usage(rootPath)
 	if err != nil {
-		fmt.Println("[WARN] disk.Usage error:", err)
+		logUtil.Warn(
+			"collect disk metrics failed",
+			zap.String("module", "metric"),
+			zap.String("path", rootPath),
+			zap.Error(err),
+		)
 	} else {
 		m.Disk.Total = diskStat.Total
 		m.Disk.Used = diskStat.Used
@@ -69,7 +75,7 @@ func (sc *SystemCollector) Collect() (model.Metrics, error) {
 	// ---------- Network ----------
 	netIOs, err := net.IOCounters(true) // true = 所有网卡
 	if err != nil {
-		fmt.Println("[WARN] net.IOCounters error:", err)
+		logUtil.Warn("collect network metrics failed", zap.String("module", "metric"), zap.Error(err))
 	} else if len(netIOs) > 0 {
 		var sent, recv uint64
 		for _, nic := range netIOs {
@@ -100,7 +106,7 @@ func (sc *SystemCollector) Collect() (model.Metrics, error) {
 	// ---------- System ----------
 	hostInfo, err := host.Info()
 	if err != nil {
-		fmt.Println("[WARN] host.Info error:", err)
+		logUtil.Warn("collect host metrics failed", zap.String("module", "metric"), zap.Error(err))
 	} else {
 		m.System.Hostname = hostInfo.Hostname
 		m.System.OsName = hostInfo.Platform

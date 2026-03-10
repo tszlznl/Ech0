@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -126,7 +125,8 @@ func DoTui() {
 			WithTheme(huh.ThemeCatppuccin()).
 			Run()
 		if err != nil {
-			log.Fatal(err)
+			tui.PrintCLIInfo("😭 操作失败", err.Error())
+			return
 		}
 
 		switch action {

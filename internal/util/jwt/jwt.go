@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"math/big"
 	"net/http"
 	"time"
@@ -19,6 +18,8 @@ import (
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
 	cryptoUtil "github.com/lin-snow/ech0/internal/util/crypto"
+	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	"go.uber.org/zap"
 )
 
 // CreateClaims 创建Claims
@@ -89,7 +90,7 @@ func ParseToken(tokenString string) (*authModel.MyClaims, error) {
 		return claims, nil
 	}
 
-	log.Println("unknown claims type, cannot proceed")
+	logUtil.Warn("parse token claims type mismatch", zap.String("module", "jwt"))
 	return nil, errors.New("unknown claims type, cannot proceed")
 }
 
@@ -343,7 +344,7 @@ func fetchJWKSPublicKeys(jwksURL string) (map[string]any, error) {
 		}
 
 		if parseErr != nil {
-			log.Printf("解析 JWKS 公钥失败: %v", parseErr)
+			logUtil.Warn("parse jwks public key failed", zap.String("module", "jwt"), zap.Error(parseErr))
 			continue
 		}
 

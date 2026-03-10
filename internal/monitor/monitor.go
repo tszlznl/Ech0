@@ -1,13 +1,14 @@
 package monitor
 
 import (
-	"log"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/lin-snow/ech0/internal/metric"
 	model "github.com/lin-snow/ech0/internal/model/metric"
+	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	"go.uber.org/zap"
 )
 
 var (
@@ -46,7 +47,7 @@ func (m *Monitor) Start() {
 
 	// 首次采样
 	if err := m.collect(); err != nil {
-		log.Printf("[Monitor] initial collect error: %v", err)
+		logUtil.Warn("monitor initial collect failed", zap.String("module", "monitor"), zap.Error(err))
 	}
 
 	go func() {
@@ -57,10 +58,10 @@ func (m *Monitor) Start() {
 			select {
 			case <-ticker.C:
 				if err := m.collect(); err != nil {
-					log.Printf("[Monitor] collect error: %v", err)
+					logUtil.Warn("monitor collect failed", zap.String("module", "monitor"), zap.Error(err))
 				}
 			case <-m.stopChan:
-				log.Println("[Monitor] stopped")
+				logUtil.Info("monitor stopped", zap.String("module", "monitor"))
 				m.running.Store(false)
 				return
 			}

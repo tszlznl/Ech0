@@ -3,12 +3,13 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/todo"
 	"github.com/lin-snow/ech0/internal/transaction"
+	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
+	"go.uber.org/zap"
 )
 
 type TodoService struct {
@@ -79,7 +80,12 @@ func (todoService *TodoService) AddTodo(ctx context.Context, todo *model.Todo) e
 			}
 		}
 		if len(todos) >= model.MaxTodoCount {
-			fmt.Println("Current todo count:", todos)
+			logUtil.Warn(
+				"todo exceed limit",
+				zap.String("module", "todo"),
+				zap.Int("todo_count", len(todos)),
+				zap.Int("max_count", model.MaxTodoCount),
+			)
 			return errors.New(commonModel.TODO_EXCEED_LIMIT)
 		}
 

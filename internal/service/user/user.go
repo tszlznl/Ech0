@@ -560,13 +560,13 @@ func (userService *UserService) HandleOAuthCallback(
 	case string(commonModel.OAuth2GITHUB):
 		tokenResp, err := exchangeGithubCodeForToken(setting, code)
 		if err != nil {
-			fmt.Printf("Error exchanging %s code for token: %v\n", provider, err)
+			logUtil.Error("exchange oauth code for token failed", zap.String("provider", provider), zap.Error(err))
 			return ""
 		}
 
 		githubUser, err := fetchGitHubUserInfo(setting, tokenResp.AccessToken)
 		if err != nil {
-			fmt.Printf("Error fetching %s user info: %v\n", provider, err)
+			logUtil.Error("fetch oauth user info failed", zap.String("provider", provider), zap.Error(err))
 			return ""
 		}
 
@@ -581,13 +581,13 @@ func (userService *UserService) HandleOAuthCallback(
 	case string(commonModel.OAuth2GOOGLE):
 		tokenResp, err := exchangeGoogleCodeForToken(setting, code)
 		if err != nil {
-			fmt.Printf("Error exchanging %s code for token: %v\n", provider, err)
+			logUtil.Error("exchange oauth code for token failed", zap.String("provider", provider), zap.Error(err))
 			return ""
 		}
 
 		googleUser, err := fetchGoogleUserInfo(setting, tokenResp.AccessToken)
 		if err != nil {
-			fmt.Printf("Error fetching %s user info: %v\n", provider, err)
+			logUtil.Error("fetch oauth user info failed", zap.String("provider", provider), zap.Error(err))
 			return ""
 		}
 
@@ -602,13 +602,13 @@ func (userService *UserService) HandleOAuthCallback(
 	case string(commonModel.OAuth2QQ):
 		tokenResp, err := exchangeQQCodeForToken(setting, code)
 		if err != nil {
-			fmt.Printf("Error exchanging %s code for token: %v\n", provider, err)
+			logUtil.Error("exchange oauth code for token failed", zap.String("provider", provider), zap.Error(err))
 			return ""
 		}
 
 		qqOpenIDResp, err := fetchQQUserInfo(tokenResp.AccessToken)
 		if err != nil {
-			fmt.Printf("Error fetching %s user info: %v\n", provider, err)
+			logUtil.Error("fetch oauth user info failed", zap.String("provider", provider), zap.Error(err))
 			return ""
 		}
 
@@ -624,7 +624,7 @@ func (userService *UserService) HandleOAuthCallback(
 		// 使用 code 换取 access_token
 		accessToken, idToken, err := exchangeCustomCodeForToken(setting, code)
 		if err != nil {
-			fmt.Printf("Error exchanging %s code for token: %v\n", provider, err)
+			logUtil.Error("exchange oauth code for token failed", zap.String("provider", provider), zap.Error(err))
 			return ""
 		}
 
@@ -635,7 +635,7 @@ func (userService *UserService) HandleOAuthCallback(
 		if setting.IsOIDC {
 			oauthId, err = fetchCustomUserInfo(setting, accessToken, idToken)
 			if err != nil {
-				fmt.Printf("Error fetching %s user info: %v\n", provider, err)
+				logUtil.Error("fetch oauth user info failed", zap.String("provider", provider), zap.Error(err))
 				return ""
 			}
 			issuer = setting.Issuer
@@ -643,7 +643,7 @@ func (userService *UserService) HandleOAuthCallback(
 		} else {
 			oauthId, err = fetchCustomUserInfo(setting, accessToken, "")
 			if err != nil {
-				fmt.Printf("Error fetching %s user info: %v\n", provider, err)
+				logUtil.Error("fetch oauth user info failed", zap.String("provider", provider), zap.Error(err))
 				return ""
 			}
 			issuer = ""
@@ -795,13 +795,13 @@ func (userService *UserService) resolveOAuthCallback(
 			)
 		}
 		if err != nil {
-			fmt.Printf("Error fetching user by %s OAuth ID: %v\n", provider, err)
+			logUtil.Error("fetch user by oauth id failed", zap.String("provider", provider), zap.Error(err))
 			return ""
 		}
 
 		token, err := jwtUtil.GenerateToken(jwtUtil.CreateClaims(user))
 		if err != nil {
-			fmt.Printf("Error generating token: %v\n", err)
+			logUtil.Error("generate oauth login token failed", zap.String("provider", provider), zap.Error(err))
 			return ""
 		}
 

@@ -2,12 +2,13 @@ package storage
 
 import (
 	"context"
-	"log"
 	"strings"
 
 	"github.com/google/wire"
 	virefs "github.com/lin-snow/VireFS"
 	"github.com/lin-snow/ech0/internal/config"
+	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	"go.uber.org/zap"
 )
 
 func ProvideStorageManager(store S3SettingStore) *Manager { return NewStorageManager(store) }
@@ -48,7 +49,7 @@ func buildLocalFS(cfg config.StorageConfig, schema *virefs.Schema) virefs.FS {
 		virefs.WithLocalKeyFunc(schema.Resolve),
 	)
 	if err != nil {
-		log.Printf("[storage] failed to create local FS: %v, falling back to defaults", err)
+		logUtil.Warn("create local fs failed, fallback to defaults", zap.String("module", "storage"), zap.Error(err))
 		fs, _ = virefs.NewLocalFS("data/files",
 			virefs.WithCreateRoot(),
 			virefs.WithAtomicWrite(),
@@ -85,7 +86,7 @@ func buildS3FS(cfg config.StorageConfig, schema *virefs.Schema) virefs.FS {
 		SecretKey: cfg.SecretKey,
 	}, opts...)
 	if err != nil {
-		log.Printf("[storage] failed to create S3 FS: %v, falling back to local", err)
+		logUtil.Warn("create s3 fs failed, fallback to local", zap.String("module", "storage"), zap.Error(err))
 		return buildLocalFS(cfg, schema)
 	}
 	return fs

@@ -143,6 +143,16 @@
           外部集成
         </BaseButton>
 
+        <!-- 系统日志 -->
+        <BaseButton
+          :icon="System"
+          @click="router.push('/panel/system-log')"
+          :class="getButtonClasses('panel-system-log')"
+          title="系统日志"
+        >
+          系统日志
+        </BaseButton>
+
         <div class="h-px bg-[var(--bg-color-300)] mx-2" />
 
         <!-- 退出登录 -->
@@ -193,6 +203,7 @@ import Storage from '@/components/icons/storage.vue'
 import Data from '@/components/icons/data.vue'
 import Sso from '@/components/icons/sso.vue'
 import Logout from '@/components/icons/logout.vue'
+import System from '@/components/icons/system.vue'
 import { computed, ref, watch } from 'vue'
 import { useUserStore, useSettingStore } from '@/stores'
 import { useRouter, useRoute } from 'vue-router'
@@ -238,6 +249,7 @@ const routeOptions = [
   { label: '单点登录', value: '/panel/sso' },
   { label: '功能扩展', value: '/panel/extension' },
   { label: '外部集成', value: '/panel/advance' },
+  { label: '系统日志', value: '/panel/system-log' },
 ]
 
 // 监听路由变化，更新选择器

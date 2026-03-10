@@ -3,7 +3,7 @@ package config
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"log"
+	"fmt"
 	"os"
 	"strconv"
 	"sync"
@@ -19,6 +19,7 @@ var (
 type AppConfig struct {
 	Server   ServerConfig
 	Database DatabaseConfig
+	Log      LogConfig
 	Auth     AuthConfig
 	Upload   UploadConfig
 	Storage  StorageConfig
@@ -52,6 +53,23 @@ type DatabaseConfig struct {
 	Type    string // 数据库类型
 	Path    string // 数据库文件路径
 	LogMode string // 数据库日志模式
+}
+
+type LogConfig struct {
+	Level           string
+	Format          string
+	Console         bool
+	FileEnable      bool
+	FilePath        string
+	FileMaxSize     int
+	FileMaxBackups  int
+	FileMaxAge      int
+	FileCompress    bool
+	BufferSize      int
+	RecentSize      int
+	DropPolicy      string
+	FlushBatch      int
+	FlushIntervalMs int
 }
 
 type AuthConfig struct {
@@ -110,7 +128,7 @@ type EventConfig struct {
 func Config() *AppConfig {
 	once.Do(func() {
 		if err := godotenv.Load(); err != nil {
-			log.Println("No .env file found, using system environment variables")
+			_, _ = fmt.Fprintln(os.Stderr, "No .env file found, using system environment variables")
 		}
 		cfg = defaultConfig()
 		applyEnvOverrides(cfg)
@@ -130,6 +148,22 @@ func defaultConfig() *AppConfig {
 			Type:    "sqlite",
 			Path:    "data/ech0.db",
 			LogMode: "release",
+		},
+		Log: LogConfig{
+			Level:           "info",
+			Format:          "json",
+			Console:         false,
+			FileEnable:      true,
+			FilePath:        "data/app.log",
+			FileMaxSize:     100,
+			FileMaxBackups:  5,
+			FileMaxAge:      30,
+			FileCompress:    true,
+			BufferSize:      2048,
+			RecentSize:      2000,
+			DropPolicy:      "drop_oldest",
+			FlushBatch:      128,
+			FlushIntervalMs: 500,
 		},
 		Auth: AuthConfig{
 			Jwt: JWTConfig{
@@ -200,6 +234,22 @@ func applyEnvOverrides(cfg *AppConfig) {
 	setStringEnv("ECH0_DB_TYPE", &cfg.Database.Type)
 	setStringEnv("ECH0_DB_PATH", &cfg.Database.Path)
 	setStringEnv("ECH0_DB_LOGMODE", &cfg.Database.LogMode)
+
+	// Log
+	setStringEnv("ECH0_LOG_LEVEL", &cfg.Log.Level)
+	setStringEnv("ECH0_LOG_FORMAT", &cfg.Log.Format)
+	setBoolEnv("ECH0_LOG_CONSOLE", &cfg.Log.Console)
+	setBoolEnv("ECH0_LOG_FILE_ENABLE", &cfg.Log.FileEnable)
+	setStringEnv("ECH0_LOG_FILE_PATH", &cfg.Log.FilePath)
+	setIntEnv("ECH0_LOG_FILE_MAX_SIZE", &cfg.Log.FileMaxSize)
+	setIntEnv("ECH0_LOG_FILE_MAX_BACKUPS", &cfg.Log.FileMaxBackups)
+	setIntEnv("ECH0_LOG_FILE_MAX_AGE", &cfg.Log.FileMaxAge)
+	setBoolEnv("ECH0_LOG_FILE_COMPRESS", &cfg.Log.FileCompress)
+	setIntEnv("ECH0_LOG_BUFFER_SIZE", &cfg.Log.BufferSize)
+	setIntEnv("ECH0_LOG_RECENT_SIZE", &cfg.Log.RecentSize)
+	setStringEnv("ECH0_LOG_DROP_POLICY", &cfg.Log.DropPolicy)
+	setIntEnv("ECH0_LOG_FLUSH_BATCH", &cfg.Log.FlushBatch)
+	setIntEnv("ECH0_LOG_FLUSH_INTERVAL_MS", &cfg.Log.FlushIntervalMs)
 
 	// Auth / JWT
 	setIntEnv("ECH0_JWT_EXPIRES", &cfg.Auth.Jwt.Expires)
@@ -291,7 +341,7 @@ func getJWTSecret() []byte {
 		b := make([]byte, 16)
 		_, err := rand.Read(b)
 		if err != nil {
-			log.Fatal("failed to generate random JWT secret:", err)
+			panic(fmt.Sprintf("failed to generate random JWT secret: %v", err))
 		}
 		secret = hex.EncodeToString(b)
 	}

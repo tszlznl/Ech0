@@ -4,10 +4,12 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 	"time"
+
+	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	"go.uber.org/zap"
 )
 
 // TrimURL 去除 URL 前后的空格和斜杠
@@ -85,7 +87,11 @@ func SendRequest(
 	}
 	defer func() {
 		if closeErr := resp.Body.Close(); closeErr != nil {
-			log.Println("Failed to close response body:", closeErr)
+			logUtil.Warn(
+				"close response body failed",
+				zap.String("module", "http_util"),
+				zap.Error(closeErr),
+			)
 		}
 	}()
 

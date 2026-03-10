@@ -1,10 +1,23 @@
 import { useWebSocket } from '@vueuse/core'
 import { reactive, watch } from 'vue'
 
+type ReconnectOptions = {
+  retries?: number
+  delay?: number
+  onFailed?: () => void
+}
+
+type HeartbeatOptions = {
+  message?: string
+  responseMessage?: string
+  interval?: number
+  pongTimeout?: number
+}
+
 interface WSOptions {
   url: string
-  autoReconnect?: boolean
-  heartbeat?: boolean
+  autoReconnect?: boolean | ReconnectOptions
+  heartbeat?: boolean | HeartbeatOptions
   protocols?: string[]
 }
 
@@ -25,12 +38,6 @@ export function useOWebSocket<T = unknown>(options: WSOptions) {
     heartbeat,
     protocols,
     immediate: false, // 可手动 open
-    onConnected: () => {
-      console.log('WebSocket 已连接')
-    },
-    onDisconnected: () => {
-      console.log('WebSocket 已断开')
-    },
   })
 
   // 消息回调表

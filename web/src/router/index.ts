@@ -68,6 +68,11 @@ const router = createRouter({
           name: 'panel-advance',
           component: () => import('../views/panel/modules/TheAdvance.vue'),
         },
+        {
+          path: 'system-log',
+          name: 'panel-system-log',
+          component: () => import('../views/panel/modules/TheSystemLog.vue'),
+        },
       ],
       // beforeEnter: (to, from, next) => {
       //   const userStore = useUserStore()
