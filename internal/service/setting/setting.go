@@ -835,7 +835,7 @@ func (settingService *SettingService) UpdateBackupScheduleSetting(
 		contracts.UpdateBackupScheduleEvent{Schedule: updated},
 	); err != nil {
 		logUtil.GetLogger().
-			Error("Failed to publish update backup schedule event", zap.String("error", err.Error()))
+			Error("Failed to publish update backup schedule event", zap.Error(err))
 	}
 	return nil
 }

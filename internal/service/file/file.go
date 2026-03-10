@@ -164,7 +164,7 @@ func (s *FileService) UploadFile(
 		},
 		key,
 	); err != nil {
-		logUtil.GetLogger().Error("Failed to publish resource uploaded event", zap.String("error", err.Error()))
+		logUtil.GetLogger().Error("Failed to publish resource uploaded event", zap.Error(err))
 	}
 
 	return commonModel.FileDto{

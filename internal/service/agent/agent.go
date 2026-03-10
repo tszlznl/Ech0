@@ -56,7 +56,7 @@ func (agentService *AgentService) GetRecent(ctx context.Context) (string, error)
 
 		if err := agentService.kvRepository.AddOrUpdateKeyValue(ctx, cacheKey, output); err != nil {
 			logUtil.GetLogger().
-				Error("Failed to add or update key value", zap.String("error", err.Error()))
+				Error("Failed to add or update key value", zap.Error(err))
 		}
 
 		return output, nil

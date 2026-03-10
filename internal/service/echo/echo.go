@@ -14,6 +14,7 @@ import (
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
+	"go.uber.org/zap"
 )
 
 type EchoService struct {
@@ -96,7 +97,7 @@ func (echoService *EchoService) PostEcho(ctx context.Context, newEcho *model.Ech
 			context.Background(),
 			contracts.EchoCreatedEvent{Echo: *savedEcho, User: user},
 		); pubErr != nil {
-			logUtil.GetLogger().Error(pubErr.Error())
+			logUtil.GetLogger().Error("publish echo created event failed", zap.Error(pubErr))
 		}
 	}
 
@@ -183,7 +184,7 @@ func (echoService *EchoService) DeleteEchoById(ctx context.Context, id string) e
 		context.Background(),
 		contracts.EchoDeletedEvent{Echo: model.Echo{ID: id}, User: user},
 	); pubErr != nil {
-		logUtil.GetLogger().Error(pubErr.Error())
+		logUtil.GetLogger().Error("publish echo deleted event failed", zap.Error(pubErr))
 	}
 
 	for _, file := range deletableFiles {
@@ -258,7 +259,7 @@ func (echoService *EchoService) UpdateEcho(ctx context.Context, echo *model.Echo
 		context.Background(),
 		contracts.EchoUpdatedEvent{Echo: *echo, User: user},
 	); pubErr != nil {
-		logUtil.GetLogger().Error(pubErr.Error())
+		logUtil.GetLogger().Error("publish echo updated event failed", zap.Error(pubErr))
 	}
 
 	return nil

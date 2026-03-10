@@ -51,7 +51,7 @@ func (bs *BackupService) Backup(ctx context.Context) error {
 		context.Background(),
 		contracts.SystemBackupEvent{Info: "System backup completed"},
 	); err != nil {
-		logUtil.GetLogger().Error("Failed to publish system backup completed event", zap.String("error", err.Error()))
+		logUtil.GetLogger().Error("Failed to publish system backup completed event", zap.Error(err))
 	}
 
 	return nil
@@ -94,7 +94,7 @@ func (bs *BackupService) ExportBackup(ctx *gin.Context, reqCtx context.Context) 
 			Size: fileInfo.Size(),
 		},
 	); err != nil {
-		logUtil.GetLogger().Error("Failed to publish system export completed event", zap.String("error", err.Error()))
+		logUtil.GetLogger().Error("Failed to publish system export completed event", zap.Error(err))
 	}
 
 	return nil
@@ -132,7 +132,7 @@ func (bs *BackupService) ImportBackup(
 		context.Background(),
 		contracts.SystemRestoreEvent{Info: "System restore completed"},
 	); err != nil {
-		logUtil.GetLogger().Error("Failed to publish system restore completed event", zap.String("error", err.Error()))
+		logUtil.GetLogger().Error("Failed to publish system restore completed event", zap.Error(err))
 	}
 
 	return nil

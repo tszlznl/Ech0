@@ -36,7 +36,7 @@ func (p *WorkerPool) start() {
 					defer p.wg.Done()
 					if err := job(); err != nil {
 						logUtil.GetLogger().
-							Error("worker job failed", zap.String("err", err.Error()))
+							Error("worker job failed", zap.Error(err))
 					}
 				}()
 			}

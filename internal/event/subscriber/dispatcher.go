@@ -94,7 +94,7 @@ func (wd *WebhookDispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webh
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	})
 	if err != nil {
-		logUtil.GetLogger().Error("Webhook Handle Failed", zap.String("name", wh.Name), zap.String("url", wh.URL))
+		logUtil.GetLogger().Error("Webhook Handle Failed", zap.String("name", wh.Name), zap.String("url", wh.URL), zap.Error(err))
 
 		payloadData := contracts.WebhookReplayPayload{
 			Webhook: *wh,
@@ -115,7 +115,7 @@ func (wd *WebhookDispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webh
 		if err := wd.transactor.Run(ctx, func(ctx context.Context) error {
 			return wd.queueRepo.SaveDeadLetter(ctx, &deadLetter)
 		}); err != nil {
-			logUtil.GetLogger().Error("Failed to save dead letter", zap.String("error", err.Error()))
+			logUtil.GetLogger().Error("Failed to save dead letter", zap.Error(err))
 		}
 	}
 }

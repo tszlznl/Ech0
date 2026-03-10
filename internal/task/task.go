@@ -18,7 +18,6 @@ import (
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 type Tasker struct {
@@ -45,10 +44,7 @@ func NewTasker(
 ) *Tasker {
 	scheduler, err := gocron.NewScheduler()
 	if err != nil {
-		logUtil.GetLogger().Error("Failed to create scheduler", zapcore.Field{
-			Key:    "error",
-			String: err.Error(),
-		})
+		logUtil.GetLogger().Error("Failed to create scheduler", zap.Error(err))
 	}
 
 	return &Tasker{
@@ -84,7 +80,7 @@ func (t *Tasker) Start(context.Context) error {
 	var backupScheduleSetting settingModel.BackupSchedule
 	if err := t.settingService.GetBackupScheduleSetting(&backupScheduleSetting); err != nil {
 		logUtil.GetLogger().
-			Error("Failed to get backup schedule setting", zap.String("error", err.Error()))
+			Error("Failed to get backup schedule setting", zap.Error(err))
 		// 默认启用定时备份任务
 		backupScheduleSetting.Enable = false
 		backupScheduleSetting.CronExpression = "0 2 * * 0" // 每周日2点执行一次
@@ -108,7 +104,7 @@ func (t *Tasker) Stop(context.Context) error {
 		return nil
 	}
 	if err := t.scheduler.Shutdown(); err != nil {
-		logUtil.GetLogger().Error("Failed to shutdown scheduler", zap.String("error", err.Error()))
+		logUtil.GetLogger().Error("Failed to shutdown scheduler", zap.Error(err))
 		return err
 	}
 	t.started = false
@@ -124,14 +120,14 @@ func (t *Tasker) CleanupTempFilesTask() error {
 			func() {
 				if err := t.fileService.CleanupOrphanFiles(); err != nil {
 					logUtil.GetLogger().
-						Error("Failed to clean up temporary files", zap.String("error", err.Error()))
+						Error("Failed to clean up temporary files", zap.Error(err))
 				}
 			},
 		),
 	)
 	if err != nil {
 		logUtil.GetLogger().
-			Error("Failed to schedule CleanupTempFilesTask", zap.String("error", err.Error()))
+			Error("Failed to schedule CleanupTempFilesTask", zap.Error(err))
 		return err
 	}
 	return nil
@@ -149,7 +145,7 @@ func (t *Tasker) DeadLetterConsumeTask() error {
 				deadLetters, err := t.queueRepo.ListDeadLetters(context.Background(), 10)
 				if err != nil {
 					logUtil.GetLogger().
-						Error("Failed To Get DeadLetters!", zap.String("error", err.Error()))
+						Error("Failed To Get DeadLetters!", zap.Error(err))
 				}
 
 				// 遍历死信任务，重新发送事件
@@ -160,7 +156,7 @@ func (t *Tasker) DeadLetterConsumeTask() error {
 						contracts.DeadLetterRetriedEvent{DeadLetter: dl},
 					); err != nil {
 						logUtil.GetLogger().
-							Error("Failed to publish dead letter retried event", zap.String("error", err.Error()))
+							Error("Failed to publish dead letter retried event", zap.Error(err))
 					}
 				}
 			},
@@ -168,7 +164,7 @@ func (t *Tasker) DeadLetterConsumeTask() error {
 	)
 	if err != nil {
 		logUtil.GetLogger().
-			Error("Failed to schedule WebhookRetryTask", zap.String("error", err.Error()))
+			Error("Failed to schedule WebhookRetryTask", zap.Error(err))
 		return err
 	}
 	return nil
@@ -195,7 +191,7 @@ func (t *Tasker) ScheduleBackupTask(cronExpression string) error {
 					logUtil.GetLogger().Error("Failed to execute scheduled backup",
 						zap.String("path", path),
 						zap.String("fileName", fileName),
-						zap.String("error", err.Error()))
+						zap.Error(err))
 				}
 
 				// 发布备份完成事件
@@ -204,7 +200,7 @@ func (t *Tasker) ScheduleBackupTask(cronExpression string) error {
 					contracts.SystemBackupEvent{Info: "System scheduled backup completed"},
 				); err != nil {
 					logUtil.GetLogger().
-						Error("Failed to publish backup completed event", zap.String("error", err.Error()))
+						Error("Failed to publish backup completed event", zap.Error(err))
 				}
 			},
 		),
@@ -212,7 +208,7 @@ func (t *Tasker) ScheduleBackupTask(cronExpression string) error {
 	)
 	if err != nil {
 		logUtil.GetLogger().
-			Error("Failed to schedule ScheduleBackupTask", zap.String("error", err.Error()))
+			Error("Failed to schedule ScheduleBackupTask", zap.Error(err))
 		return err
 	}
 	return nil
@@ -252,7 +248,7 @@ func (t *Tasker) InboxTask() error {
 					context.Background(),
 					contracts.Ech0UpdateCheckEvent{Info: "Ech0 update checked"},
 				); err != nil {
-					logUtil.GetLogger().Error("Failed to publish ech0 update checked event", zap.String("error", err.Error()))
+					logUtil.GetLogger().Error("Failed to publish ech0 update checked event", zap.Error(err))
 				}
 
 				// 清理已读的存在超过七天的消息
@@ -260,14 +256,14 @@ func (t *Tasker) InboxTask() error {
 					context.Background(),
 					contracts.InboxClearEvent{Info: "Inbox cleared"},
 				); err != nil {
-					logUtil.GetLogger().Error("Failed to publish inbox cleared event", zap.String("error", err.Error()))
+					logUtil.GetLogger().Error("Failed to publish inbox cleared event", zap.Error(err))
 				}
 			},
 		),
 	)
 	if err != nil {
 		logUtil.GetLogger().
-			Error("Failed to schedule InboxTask", zap.String("error", err.Error()))
+			Error("Failed to schedule InboxTask", zap.Error(err))
 		return err
 	}
 	return nil
