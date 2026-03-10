@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full max-w-sm bg-[var(--card-color)] h-auto p-5 shadow rounded-lg mx-auto">
+  <div class="w-full max-w-sm bg-[var(--color-bg-surface)] h-auto p-5 shadow rounded-lg mx-auto">
     <!-- 顶部Logo 和 用户名 -->
     <div class="flex flex-row items-center gap-2 mt-2 mb-4">
       <!-- <div class="text-xl">👾</div> -->
@@ -7,13 +7,13 @@
         <img
           :src="echo.logo"
           alt="logo"
-          class="w-10 h-10 sm:w-12 sm:h-12 rounded-full ring-1 ring-gray-200 shadow-sm object-cover"
+          class="w-10 h-10 sm:w-12 sm:h-12 rounded-full ring-1 ring-[var(--color-border-subtle)] shadow-[var(--shadow-sm)] object-cover"
         />
       </div>
       <div class="flex flex-col">
         <div class="flex items-center gap-1">
           <h2
-            class="text-[var(--text-color-700)] font-bold overflow-hidden whitespace-nowrap text-center"
+            class="text-[var(--color-text-primary)] font-bold overflow-hidden whitespace-nowrap text-center"
           >
             <a :href="echo.server_url" target="_blank">{{ echo.server_name }}</a>
           </h2>
@@ -22,7 +22,7 @@
             <Verified class="text-sky-500 w-5 h-5" />
           </div>
         </div>
-        <span class="text-[#5b7083] font-serif">@ {{ echo.username }} </span>
+        <span class="hub-echo-username text-[var(--color-text-secondary)]">@ {{ echo.username }} </span>
       </div>
     </div>
 
@@ -112,7 +112,7 @@
         </div>
         <div
           v-if="props.echo.tags?.[0]?.name"
-          class="hidden min-w-0 flex-shrink truncate whitespace-nowrap text-xs text-[var(--text-color-300)] sm:block sm:ml-1"
+          class="hidden min-w-0 flex-shrink truncate whitespace-nowrap text-xs text-[var(--color-text-muted)] sm:block sm:ml-1"
         >
           #{{ props.echo.tags[0]?.name }}
         </div>
@@ -155,7 +155,7 @@
             </button>
 
             <!-- 点赞数量   -->
-            <span class="text-sm text-[var(--text-color-400)]">
+            <span class="text-sm text-[var(--color-text-muted)]">
               <!-- 如果点赞数不超过99，则显示数字，否则显示99+ -->
               {{ fav_count > 99 ? '99+' : fav_count }}
             </span>
@@ -281,12 +281,16 @@ const handlePrintEcho = () => {
 </script>
 
 <style scoped lang="css">
+.hub-echo-username {
+  font-family: var(--font-family-display);
+}
+
 #preview-only {
   background-color: inherit;
 }
 
 .md-editor {
-  font-family: var(--font-sans);
+  font-family: var(--font-family-sans);
   /* font-family: 'LXGW WenKai Screen'; */
 }
 

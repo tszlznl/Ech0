@@ -1,6 +1,6 @@
 <template>
   <div
-    class="max-w-sm flex justify-center items-center bg-[var(--card-color)] rounded-lg shadow-sm ring-1 ring-inset ring-[var(--ring-color-100)] p-2 gap-2"
+    class="max-w-sm flex justify-center items-center bg-[var(--color-bg-surface)] rounded-lg shadow-sm ring-1 ring-inset ring-[var(--color-border-subtle)] p-2 gap-2"
   >
     <a :href="props.GithubURL" target="_blank">
       <div class="flex justify-between items-center">
@@ -15,16 +15,16 @@
         </div>
 
         <div v-if="CardData" class="py-1">
-          <span class="text-lg font-bold text-[var(--text-color-600)]">{{
+          <span class="text-lg font-bold text-[var(--color-text-secondary)]">{{
             CardData?.name || repo
           }}</span>
           <p
-            class="text-sm text-[var(--text-color-400)] font-mono line-clamp-2"
+            class="text-sm text-[var(--color-text-muted)] font-mono line-clamp-2"
             :title="CardData?.description"
           >
             {{ CardData?.description }}
           </p>
-          <div class="flex justify-start items-center h-auto text-[var(--text-color-500)]">
+          <div class="flex justify-start items-center h-auto text-[var(--color-text-muted)]">
             <!-- star -->
             <Star class="w-4 h-4 mr-1" /> <span> {{ CardData?.stargazers_count }} </span>
             <!-- fork -->

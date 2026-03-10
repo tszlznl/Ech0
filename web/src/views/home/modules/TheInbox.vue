@@ -8,23 +8,23 @@
     <div v-if="hasMore && !loading" class="my-4 ml-1 flex items-center justify-start">
       <BaseButton
         @click="loadMore"
-        class="rounded-full bg-[var(--timeline-load-more-bg-color)] !active:bg-[var(--timeline-load-more-active-bg-color)] mr-2"
+        class="rounded-full bg-[var(--btn-bg-color)] !active:bg-[var(--btn-hover-bg-color)] mr-2"
       >
         <span
-          class="text-[var(--timeline-load-more-text-color)] text-md font-serif text-center px-2 py-1"
+          class="text-[var(--btn-text-color)] text-md inbox-load-more-text text-center px-2 py-1"
           >加载更多</span
         >
       </BaseButton>
     </div>
     <!-- 没有更多 -->
     <div v-if="!hasMore && !loading" class="mx-auto my-5 text-center">
-      <p class="text-xl text-[var(--text-color-400)] flex items-center justify-center">
+      <p class="text-xl text-[var(--color-text-muted)] flex items-center justify-center">
         没有啦！<Flowers />
       </p>
     </div>
     <!-- 加载中 -->
     <div v-if="loading" class="mx-auto my-5 text-center">
-      <span class="text-xl text-[var(--text-color-400)]">加载中...</span>
+      <span class="text-xl text-[var(--color-text-muted)]">加载中...</span>
     </div>
   </div>
 </template>
@@ -62,4 +62,8 @@ onUnmounted(() => {
   clearInterval(timer)
 })
 </script>
-<style scoped></style>
+<style scoped>
+.inbox-load-more-text {
+  font-family: var(--font-family-display);
+}
+</style>

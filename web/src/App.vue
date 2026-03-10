@@ -69,6 +69,8 @@ const { SystemSetting } = storeToRefs(settingStore)
 
 const DEFAULT_FAVICON = '/favicon.ico'
 const API_URL = getApiUrl()
+const CUSTOM_STYLE_ID = 'ech0-custom-style'
+const CUSTOM_SCRIPT_ID = 'ech0-custom-script'
 
 const updateFavicon = (logo?: string) => {
   const head = document.head
@@ -106,35 +108,65 @@ watch(
   { immediate: true },
 )
 
-const injectCustomContent = () => {
-  // 注入自定义 CSS
-  if (SystemSetting.value.custom_css && SystemSetting.value.custom_css.length > 0) {
-    const styleTag = document.createElement('style')
-    styleTag.textContent = SystemSetting.value.custom_css
-    document.head.appendChild(styleTag)
+const upsertCustomStyle = (css: string) => {
+  const head = document.head
+  if (!head) return
+
+  const normalized = css.trim()
+  const existing = document.getElementById(CUSTOM_STYLE_ID) as HTMLStyleElement | null
+
+  if (!normalized) {
+    existing?.remove()
+    return
   }
 
-  // 注入自定义 JS
-  if (SystemSetting.value.custom_js && SystemSetting.value.custom_js.length > 0) {
-    const scriptTag = document.createElement('script')
-    scriptTag.textContent = SystemSetting.value.custom_js
-    document.body.appendChild(scriptTag)
+  if (existing) {
+    existing.textContent = normalized
+    return
   }
+
+  const styleTag = document.createElement('style')
+  styleTag.id = CUSTOM_STYLE_ID
+  styleTag.textContent = normalized
+  head.appendChild(styleTag)
 }
 
-onMounted(() => {
-  // 注入自定义CSS 和 JS
-  watch(
-    () => SystemSetting.value.custom_css || SystemSetting.value.custom_js,
-    (newSetting) => {
-      if (newSetting) {
-        injectCustomContent()
-      }
-    },
-    { immediate: true },
-  )
+const upsertCustomScript = (script: string) => {
+  const body = document.body
+  if (!body) return
 
-  // 初始注入
+  const normalized = script.trim()
+  const existing = document.getElementById(CUSTOM_SCRIPT_ID)
+  existing?.remove()
+
+  if (!normalized) {
+    return
+  }
+
+  // 重新创建 script 节点可确保内容被重新执行
+  const scriptTag = document.createElement('script')
+  scriptTag.id = CUSTOM_SCRIPT_ID
+  scriptTag.textContent = normalized
+  body.appendChild(scriptTag)
+}
+
+watch(
+  () => SystemSetting.value.custom_css,
+  (css) => {
+    upsertCustomStyle(css || '')
+  },
+  { immediate: true },
+)
+
+watch(
+  () => SystemSetting.value.custom_js,
+  (script) => {
+    upsertCustomScript(script || '')
+  },
+  { immediate: true },
+)
+
+onMounted(() => {
   register(dialogRef.value) // 全局注册弹窗对话框
 })
 </script>

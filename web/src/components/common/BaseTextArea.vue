@@ -4,7 +4,7 @@
     <label
       v-if="label"
       :for="id"
-      class="block text-sm font-medium text-[var(--text-color-700)] mb-1"
+      class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1"
     >
       {{ label }}
     </label>
@@ -19,10 +19,10 @@
         :readonly="readonly"
         :rows="rows"
         :class="[
-          'block w-full px-3 py-2 rounded-lg border border-[var(--input-border-color)] focus:outline-none focus:ring-1 focus:ring-orange-300 focus:border-orange-300 transition duration-150 ease-in-out sm:text-sm',
+          'block w-full px-3 py-2 rounded-[var(--radius-md)] border border-[var(--input-border-color)] text-[var(--input-text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--input-focus-ring-color)] transition duration-150 ease-in-out shadow-[var(--shadow-sm)] sm:text-sm',
           disabled
-            ? 'bg-[var(--bg-color-100)] cursor-not-allowed opacity-70'
-            : 'bg-[var(--textarea-bg-color)] hover:border-orange-400',
+            ? 'bg-[var(--select-disabled-bg-color)] cursor-not-allowed opacity-70'
+            : 'bg-[var(--textarea-bg-color)] hover:border-[var(--input-hover-border-color)]',
           customClass,
         ]"
         :maxlength="maxLength"

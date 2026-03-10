@@ -13,10 +13,10 @@
           :src="logo"
           alt="logo"
           loading="lazy"
-          class="w-6 sm:w-7 h-6 sm:h-7 rounded-full ring-1 ring-[var(--ring-color)] shadow-sm object-cover"
+          class="w-6 sm:w-7 h-6 sm:h-7 rounded-full ring-1 ring-[var(--color-border-subtle)] shadow-sm object-cover"
         />
       </button>
-      <h1 class="text-[var(--editor-title-color)] font-bold sm:text-xl">
+      <h1 class="text-[var(--color-text-primary)] font-bold sm:text-xl">
         {{ SystemSetting.server_name }}
       </h1>
     </div>
@@ -24,7 +24,7 @@
     <div class="flex flex-row items-center gap-2">
       <!-- Hello -->
       <div
-        class="p-1 ring-1 ring-inset ring-[var(--ring-color)] rounded-full transition-colors duration-200 cursor-pointer"
+        class="p-1 ring-1 ring-inset ring-[var(--color-border-subtle)] rounded-full transition-colors duration-200 cursor-pointer"
       >
         <Hello @click="handleHello" class="w-6 h-6" />
       </div>
@@ -32,7 +32,7 @@
       <!--
       <div>
         <a href="https://github.com/lin-snow/Ech0" target="_blank" title="Github">
-          <Github class="w-6 sm:w-7 h-6 sm:h-7 text-[var(--text-color-400)]" />
+          <Github class="w-6 sm:w-7 h-6 sm:h-7 text-[var(--color-text-muted)]" />
         </a>
       </div>
       -->

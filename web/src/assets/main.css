@@ -3,8 +3,12 @@ html,
 body {
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
-  color: #eabc88cf;
-  background: linear-gradient(135deg, #292a3ac9, #e5a863cf);
+  color: var(--color-text-secondary, #d4b184);
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--color-bg-canvas, #2a2b38) 55%, black),
+    color-mix(in oklab, var(--color-accent, #d89657) 72%, white)
+  );
 }
 
 /* App 加载启动动画 */
@@ -15,8 +19,8 @@ body {
   justify-content: center;
   height: 100vh;
   width: 100vw;
-  color: #ffb1a0;
-  font-family: sans-serif;
+  color: var(--color-accent, #ffb1a0);
+  font-family: var(--font-family-display, sans-serif);
   transition:
     opacity 0.4s ease,
     transform 0.4s ease;
@@ -44,7 +48,7 @@ body {
   inset: 0;
   border-radius: 50%;
   border: 4px solid transparent;
-  border-top-color: #ffaa90;
+  border-top-color: var(--color-accent, #ffaa90);
   animation: spin 1s linear infinite;
   transform-origin: center;
   will-change: transform;

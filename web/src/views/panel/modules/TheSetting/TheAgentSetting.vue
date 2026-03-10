@@ -3,30 +3,30 @@
     <!-- Agent 设置 -->
     <div class="w-full">
       <div class="flex flex-row items-center justify-between mb-3">
-        <h1 class="text-[var(--text-color-600)] font-bold text-lg">Agent 设置</h1>
+        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">Agent 设置</h1>
         <div class="flex flex-row items-center justify-end gap-2 w-14">
           <button v-if="agentEditMode" @click="handleUpdateAgentSetting" title="保存">
-            <Saveupdate class="w-5 h-5 text-[var(--text-color-400)] hover:w-6 hover:h-6" />
+            <Saveupdate class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
           </button>
           <button @click="agentEditMode = !agentEditMode" title="编辑">
             <Edit
               v-if="!agentEditMode"
-              class="w-5 h-5 text-[var(--text-color-400)] hover:w-6 hover:h-6"
+              class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6"
             />
-            <Close v-else class="w-5 h-5 text-[var(--text-color-400)] hover:w-6 hover:h-6" />
+            <Close v-else class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
           </button>
         </div>
       </div>
 
       <!-- 启用 Agent -->
-      <div class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] h-10">
+      <div class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] h-10">
         <h2 class="font-semibold w-24 shrink-0">启用 Agent:</h2>
         <BaseSwitch v-model="AgentSetting.enable" :disabled="!agentEditMode" />
       </div>
 
       <!-- LLM 提供商 -->
       <div
-        class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] gap-2 h-10"
+        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
         <h2 class="font-semibold w-24 shrink-0">提供商:</h2>
         <BaseSelect
@@ -39,7 +39,7 @@
 
       <!-- 模型名称 -->
       <div
-        class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] gap-2 h-10"
+        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
         <h2 class="font-semibold w-24 shrink-0">模型名称:</h2>
         <span
@@ -61,7 +61,7 @@
 
       <!-- API Key -->
       <div
-        class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] gap-2 h-10"
+        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
         <h2 class="font-semibold w-24 shrink-0">API Key:</h2>
         <span v-if="!agentEditMode" class="truncate max-w-60 inline-block align-middle">
@@ -77,7 +77,7 @@
       </div>
 
       <!-- 自定义 Base URL -->
-      <div class="flex justify-start text-[var(--text-color-next-500)] gap-2 mt-2">
+      <div class="flex justify-start text-[var(--color-text-secondary)] gap-2 mt-2">
         <h2 class="font-semibold w-24 shrink-0">Base URL:</h2>
         <span v-if="!agentEditMode" class="truncate max-w-60 inline-block align-middle">
           {{ AgentSetting.base_url.length == 0 ? '暂无' : AgentSetting.base_url }}
@@ -91,7 +91,7 @@
       </div>
 
       <!-- Prompt -->
-      <div class="flex justify-start text-[var(--text-color-next-500)] gap-2 mt-2">
+      <div class="flex justify-start text-[var(--color-text-secondary)] gap-2 mt-2">
         <h2 class="font-semibold w-24 shrink-0">Prompt:</h2>
         <span v-if="!agentEditMode" class="truncate max-w-60 inline-block align-middle">
           {{ AgentSetting.prompt.length == 0 ? '暂无' : '' }}

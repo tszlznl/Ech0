@@ -70,14 +70,14 @@
 
       <div
         v-if="images.length > 1"
-        class="carousel-nav mt-3 flex items-center justify-center gap-3 text-[var(--text-color-500)]"
+        class="carousel-nav mt-3 flex items-center justify-center gap-3 text-[var(--color-text-muted)]"
       >
         <button
           class="nav-btn flex items-center justify-center w-8 h-8 rounded-full transition disabled:opacity-40 disabled:cursor-not-allowed"
           @click="prevCarousel"
           :disabled="carouselIndex === 0"
         >
-          <Prev class="w-5 h-5 text-[var(--text-color-600)]" />
+          <Prev class="w-5 h-5 text-[var(--color-text-secondary)]" />
         </button>
         <span class="text-sm"> {{ carouselIndex + 1 }} / {{ images.length }} </span>
         <button
@@ -85,7 +85,7 @@
           @click="nextCarousel"
           :disabled="carouselIndex === images.length - 1"
         >
-          <Next class="w-5 h-5 text-[var(--text-color-600)]" />
+          <Next class="w-5 h-5 text-[var(--color-text-secondary)]" />
         </button>
       </div>
     </div>

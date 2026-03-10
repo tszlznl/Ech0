@@ -26,13 +26,13 @@
     <Transition name="fade">
       <div
         v-if="echoStore.hasMore && !echoStore.isLoading"
-        class="mb-4 mt-1 -ml-2 flex items-center justify-between font-serif"
+        class="mb-4 mt-1 -ml-2 flex items-center justify-between echos-toolbar"
       >
         <BaseButton
           @click="handleLoadMore"
-          class="rounded-full bg-[var(--timeline-load-more-bg-color)] !active:bg-[var(--timeline-load-more-active-bg-color)] mr-2"
+          class="rounded-full bg-[var(--btn-bg-color)] !active:bg-[var(--btn-hover-bg-color)] mr-2"
         >
-          <span class="text-[var(--timeline-load-more-text-color)] text-md text-center px-2 py-1"
+          <span class="text-[var(--btn-text-color)] text-md text-center px-2 py-1"
             >继续装填</span
           >
         </BaseButton>
@@ -43,23 +43,23 @@
     <Transition name="fade">
       <div
         v-if="!echoStore.hasMore && !echoStore.isLoading"
-        class="mx-auto my-5 text-center font-serif"
+        class="mx-auto my-5 text-center echos-toolbar"
       >
-        <p class="text-xl text-[var(--text-color-400)] flex items-center justify-center">
+        <p class="text-xl text-[var(--color-text-muted)] flex items-center justify-center">
           没有啦！<Flowers />
         </p>
       </div>
     </Transition>
     <!-- 加载中 -->
     <Transition name="fade">
-      <div v-if="echoStore.isLoading" class="mx-auto my-5 text-center font-serif">
-        <span class="text-xl text-[var(--text-color-400)]">加载中...</span>
+      <div v-if="echoStore.isLoading" class="mx-auto my-5 text-center echos-toolbar">
+        <span class="text-xl text-[var(--color-text-muted)]">加载中...</span>
       </div>
     </Transition>
     <!-- 备案号 -->
     <div class="text-center">
       <a href="https://beian.miit.gov.cn/" target="_blank">
-        <span class="text-[var(--text-color-400)] text-sm">
+        <span class="text-[var(--color-text-muted)] text-sm">
           {{ SystemSetting.ICP_number }}
         </span>
       </a>
@@ -129,6 +129,10 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.echos-toolbar {
+  font-family: var(--font-family-display);
+}
+
 /* 列表项移动动画 */
 .list-move {
   transition: transform 0.3s ease;

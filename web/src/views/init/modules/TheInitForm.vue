@@ -1,10 +1,10 @@
 <template>
   <section
-    class="w-full rounded-xl border border-[var(--border-color-300)] bg-[var(--bg-color-200)]/70 backdrop-blur-sm p-5 sm:p-6"
+    class="w-full rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-muted)]/70 backdrop-blur-sm p-5 sm:p-6"
   >
     <div class="mb-5">
-      <h2 class="text-lg font-bold text-[var(--text-color-next-300)]">Owner 账号</h2>
-      <p class="text-sm text-[var(--text-color-next-500)] mt-1">请输入一个用于首次登录后台的管理员账号。</p>
+      <h2 class="text-lg font-bold text-[var(--color-text-muted)]">Owner 账号</h2>
+      <p class="text-sm text-[var(--color-text-secondary)] mt-1">请输入一个用于首次登录后台的管理员账号。</p>
     </div>
 
     <form class="space-y-4" @submit.prevent="emit('submit')">
@@ -29,7 +29,7 @@
       <BaseButton
         type="submit"
         :disabled="submitting"
-        class="w-full h-10 rounded-lg text-white bg-[var(--button-primary-color)]! border-none! ring-0! hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+        class="w-full h-10 rounded-lg text-white bg-[var(--color-accent)]! border-none! ring-0! hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {{ submitting ? '初始化中...' : '创建 Owner' }}
       </BaseButton>

@@ -4,24 +4,24 @@
       <!-- OAuth2 设置 -->
       <div class="w-full">
         <div class="flex flex-row items-center justify-between mb-3">
-          <h1 class="text-[var(--text-color-600)] font-bold text-lg">OAuth2设置</h1>
+          <h1 class="text-[var(--color-text-primary)] font-bold text-lg">OAuth2设置</h1>
           <div class="flex flex-row items-center justify-end gap-2 w-14">
             <button v-if="oauth2EditMode" @click="handleUpdateOAuth2Setting" title="编辑">
-              <Saveupdate class="w-5 h-5 text-[var(--text-color-400)] hover:w-6 hover:h-6" />
+              <Saveupdate class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
             </button>
             <button @click="oauth2EditMode = !oauth2EditMode" title="编辑">
               <Edit
                 v-if="!oauth2EditMode"
-                class="w-5 h-5 text-[var(--text-color-400)] hover:w-6 hover:h-6"
+                class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6"
               />
-              <Close v-else class="w-5 h-5 text-[var(--text-color-400)] hover:w-6 hover:h-6" />
+              <Close v-else class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
             </button>
           </div>
         </div>
 
         <!-- 开启OAuth2 -->
         <div
-          class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] h-10"
+          class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] h-10"
         >
           <h2 class="font-semibold w-30 shrink-0">启用OAuth2:</h2>
           <BaseSwitch v-model="OAuth2Setting.enable" :disabled="!oauth2EditMode" />
@@ -29,7 +29,7 @@
 
         <!-- OAuth2 Provider -->
         <div
-          class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] gap-2 h-10"
+          class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
           <h2 class="font-semibold w-30 shrink-0">OAuth2 模板:</h2>
           <BaseSelect
@@ -42,7 +42,7 @@
 
         <!-- Client ID -->
         <div
-          class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] gap-2 h-10"
+          class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
           <h2 class="font-semibold w-30 shrink-0">Client ID:</h2>
           <span
@@ -64,7 +64,7 @@
 
         <!-- Client Secret -->
         <div
-          class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] gap-2 h-10"
+          class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
           <h2 class="font-semibold w-30 shrink-0">Client Secret:</h2>
           <span
@@ -86,7 +86,7 @@
 
         <!-- Callback URL -->
         <div
-          class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] gap-2 h-10"
+          class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
           <h2 class="font-semibold w-30 shrink-0">Callback URL:</h2>
           <span
@@ -108,7 +108,7 @@
 
         <!-- Auth URL -->
         <div
-          class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] gap-2 h-10"
+          class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
           <h2 class="font-semibold w-30 shrink-0">Auth URL:</h2>
           <span
@@ -130,7 +130,7 @@
 
         <!-- Token URL -->
         <div
-          class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] gap-2 h-10"
+          class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
           <h2 class="font-semibold w-30 shrink-0">Token URL:</h2>
           <span
@@ -152,7 +152,7 @@
 
         <!-- User Info URL -->
         <div
-          class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] gap-2 h-10"
+          class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
           <h2 class="font-semibold w-30 shrink-0">UserInfo URL:</h2>
           <span
@@ -174,7 +174,7 @@
 
         <!-- Scopes -->
         <div
-          class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] gap-2 h-10"
+          class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
           <h2 class="font-semibold w-30 shrink-0">Scopes:</h2>
           <span
@@ -198,7 +198,7 @@
         <!-- Is OIDC -->
         <div
           v-if="OAuth2Setting.enable"
-          class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] h-10"
+          class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] h-10"
         >
           <h2 class="font-semibold w-30 shrink-0">启用OIDC:</h2>
           <BaseSwitch v-model="OAuth2Setting.is_oidc" :disabled="!oauth2EditMode" />
@@ -207,7 +207,7 @@
         <!-- Issuer -->
         <div
           v-if="OAuth2Setting.is_oidc"
-          class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] gap-2 h-10"
+          class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
           <h2 class="font-semibold w-30 shrink-0">Issuer:</h2>
           <span
@@ -230,7 +230,7 @@
         <!-- JWKS URL -->
         <div
           v-if="OAuth2Setting.is_oidc"
-          class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] gap-2 h-10"
+          class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
           <h2 class="font-semibold w-30 shrink-0">JWKS URL:</h2>
           <span
@@ -254,18 +254,18 @@
 
     <div
       v-if="OAuth2Setting.enable && OAuth2Setting.provider"
-      class="rounded-md border border-dashed border-[var(--border-color-400)] p-4 mb-3"
+      class="rounded-md border border-dashed border-[var(--color-border-strong)] p-4 mb-3"
     >
       <!-- OAuth2 账号绑定 -->
       <div class="w-full">
         <div class="mb-3">
-          <h1 class="text-[var(--text-color-600)] font-bold text-lg">账号绑定</h1>
-          <p class="text-[var(--text-color-next-400)] text-sm">注意：需先配置OAuth2信息</p>
+          <h1 class="text-[var(--color-text-primary)] font-bold text-lg">账号绑定</h1>
+          <p class="text-[var(--color-text-muted)] text-sm">注意：需先配置OAuth2信息</p>
           <div
             v-if="oauthInfo && isBound"
-            class="mt-2 border border-dashed border-[var(--border-color-400)] rounded-md p-3 flex items-center justify-center"
+            class="mt-2 border border-dashed border-[var(--color-border-strong)] rounded-md p-3 flex items-center justify-center"
           >
-            <p class="text-[var(--text-color-next-500)] font-bold flex items-center">
+            <p class="text-[var(--color-text-secondary)] font-bold flex items-center">
               <component
                 :is="
                   oauthInfo.provider === OAuth2Provider.GITHUB
@@ -469,14 +469,14 @@ onMounted(async () => {
         oauthInfo.value.auth_type === 'oidc' &&
         oauthInfo.value.issuer &&
         oauthInfo.value.oauth_id &&
-        oauthInfo.value.user_id != 0
+        String(oauthInfo.value.user_id || '') !== '0'
       ) {
         isBound.value = true
       } else if (
         (oauthInfo.value.auth_type === '' || oauthInfo.value.auth_type === 'oauth2') &&
         oauthInfo.value.provider &&
         oauthInfo.value.oauth_id &&
-        oauthInfo.value.user_id != 0
+        String(oauthInfo.value.user_id || '') !== '0'
       ) {
         isBound.value = true
       } else {

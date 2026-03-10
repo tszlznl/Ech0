@@ -3,14 +3,14 @@
     <!-- Webhook 设置 -->
     <div class="w-full">
       <div class="flex flex-row items-center justify-between mb-4">
-        <h1 class="text-[var(--text-color-600)] font-bold text-lg">Webhook</h1>
+        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">Webhook</h1>
         <div class="flex flex-row items-center justify-end gap-2 w-14">
           <button @click="webhookEdit = !webhookEdit" title="编辑">
             <Edit
               v-if="!webhookEdit"
-              class="w-5 h-5 text-[var(--text-color-400)] hover:w-6 hover:h-6"
+              class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6"
             />
-            <Close v-else class="w-5 h-5 text-[var(--text-color-400)] hover:w-6 hover:h-6" />
+            <Close v-else class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
           </button>
         </div>
       </div>
@@ -18,7 +18,7 @@
       <!-- 添加 Webhook -->
       <div
         v-if="webhookEdit"
-        class="mb-2 border border-[var(--panel-border-soft)] border-dashed rounded-[var(--panel-radius-md)] flex flex-col gap-2 p-2 text-[var(--text-color-400)]"
+        class="mb-2 border border-[var(--color-border-subtle)] border-dashed rounded-[var(--radius-md)] flex flex-col gap-2 p-2 text-[var(--color-text-muted)]"
       >
         <div>
           <span>Webhook 名称：</span>
@@ -50,7 +50,7 @@
             class="w-1/3 h-8 rounded-md flex justify-center"
             title="添加 Webhook"
           >
-            <span class="text-[var(--text-color-600)]">添加</span>
+            <span class="text-[var(--color-text-primary)]">添加</span>
           </BaseButton>
         </div>
       </div>
@@ -58,50 +58,50 @@
       <!-- Webhook 列表 -->
       <div v-else>
         <div v-if="Webhooks.length === 0" class="flex flex-col items-center justify-center mt-2">
-          <span class="text-[var(--text-color-next-400)]">暂无 Webhook...</span>
+          <span class="text-[var(--color-text-muted)]">暂无 Webhook...</span>
         </div>
 
-        <div v-else class="mt-2 overflow-x-auto border border-[var(--border-color-300)] rounded-lg">
-          <table class="min-w-full divide-y divide-[var(--divide-color-200)]">
+        <div v-else class="mt-2 overflow-x-auto border border-[var(--color-border-subtle)] rounded-lg">
+          <table class="min-w-full divide-y divide-[var(--color-border-subtle)]">
             <thead>
-              <tr class="bg-[var(--bg-color-50)] opacity-70">
+              <tr class="bg-[var(--color-bg-surface)] opacity-70">
                 <th
-                  class="px-3 py-2 text-left text-sm font-semibold text-[var(--text-color-next-600)]"
+                  class="px-3 py-2 text-left text-sm font-semibold text-[var(--color-text-primary)]"
                 >
                   名称
                 </th>
                 <th
-                  class="px-3 py-2 text-left text-sm font-semibold text-[var(--text-color-next-600)]"
+                  class="px-3 py-2 text-left text-sm font-semibold text-[var(--color-text-primary)]"
                 >
                   URL
                 </th>
                 <th
-                  class="px-3 py-2 text-right text-sm font-semibold text-[var(--text-color-next-600)]"
+                  class="px-3 py-2 text-right text-sm font-semibold text-[var(--color-text-primary)]"
                 >
                   操作
                 </th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-[var(--divide-color-100)] text-nowrap">
+            <tbody class="divide-y divide-[var(--color-border-subtle)] text-nowrap">
               <tr v-for="webhook in Webhooks" :key="webhook.id">
-                <td class="px-3 py-2 text-sm text-[var(--text-color-next-700)]">
+                <td class="px-3 py-2 text-sm text-[var(--color-text-primary)]">
                   <span :title="webhook.name" class="truncate block max-w-xs">{{
                     webhook.name
                   }}</span>
                 </td>
                 <td
-                  class="px-3 py-2 text-sm text-[var(--text-color-next-700)] font-mono truncate max-w-xs"
+                  class="px-3 py-2 text-sm text-[var(--color-text-primary)] font-mono truncate max-w-xs"
                   :title="webhook.url"
                 >
                   {{ webhook.url }}
                 </td>
                 <td class="px-3 py-2 text-right">
                   <button
-                    class="p-1 hover:bg-[var(--bg-color-100)] rounded"
+                    class="p-1 hover:bg-[var(--color-bg-surface)] rounded"
                     @click="handleDeleteWebhook(webhook.id)"
                     title="删除 Webhook"
                   >
-                    <Trashbin class="w-5 h-5 text-[var(--panel-danger-color)]" />
+                    <Trashbin class="w-5 h-5 text-[var(--color-danger)]" />
                   </button>
                 </td>
               </tr>

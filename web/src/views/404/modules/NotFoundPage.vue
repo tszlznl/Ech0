@@ -2,7 +2,7 @@
   <div class="flex justify-center items-center h-screen relative">
     <div>
       <div
-        class="text-7xl italic font-bold text-center text-[var(--text-color-300)] mb-4 flex-wrap"
+        class="text-7xl italic font-bold text-center text-[var(--color-text-muted)] mb-4 flex-wrap"
       >
         <span> 404 </span>
         <span class="text-nowrap"> 页面不存在 </span>

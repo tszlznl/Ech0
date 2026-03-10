@@ -18,7 +18,7 @@
         <div
           v-if="isFilteringMode && filteredTag"
           @click="handleCancelFilter"
-          class="w-34 text-nowrap flex items-center justify-between px-1 py-0.5 text-[var(--text-color-300)] border border-dashed border-[var(--border-color-400)] rounded-md hover:cursor-pointer hover:line-through hover:text-[var(--text-color-500)]"
+          class="w-34 text-nowrap flex items-center justify-between px-1 py-0.5 text-[var(--color-text-muted)] border border-dashed border-[var(--color-border-strong)] rounded-md hover:cursor-pointer hover:line-through hover:text-[var(--color-text-secondary)]"
         >
           <p class="text-nowrap truncate">{{ filteredTag.name }}</p>
           <Close class="inline w-4 h-4 ml-1" />
@@ -27,7 +27,7 @@
           v-if="isZenMode"
           type="button"
           title="退出 Zen Mode"
-          class="h-8 px-2 text-xs text-[var(--text-color-400)] border border-[var(--border-color-300)] rounded-md hover:line-through hover:text-[var(--text-color-500)] hover:border-[var(--text-color-300)] transition-colors duration-200"
+          class="h-8 px-2 text-xs text-[var(--color-text-muted)] border border-[var(--color-border-subtle)] rounded-md hover:line-through hover:text-[var(--color-text-secondary)] hover:border-[var(--color-text-muted)] transition-colors duration-200"
           @click="handleExitZenMode"
         >
           Zen
@@ -40,21 +40,21 @@
         <div>
           <a href="/rss" title="RSS">
             <!-- icon -->
-            <Rss class="w-8 h-8 text-[var(--text-color-400)]" />
+            <Rss class="w-8 h-8 text-[var(--color-text-muted)]" />
           </a>
         </div>
         <!-- Ech0 Hub -->
         <div>
           <RouterLink to="/hub" title="Ech0 Hub">
             <!-- icon -->
-            <HubIcon class="w-8 h-8 text-[var(--text-color-400)]" />
+            <HubIcon class="w-8 h-8 text-[var(--color-text-muted)]" />
           </RouterLink>
         </div>
         <!-- PanelPage -->
         <div>
           <RouterLink to="/panel" title="面板">
             <!-- icon -->
-            <Panel class="w-8 h-8 text-[var(--text-color-400)]" />
+            <Panel class="w-8 h-8 text-[var(--color-text-muted)]" />
           </RouterLink>
         </div>
       </div>

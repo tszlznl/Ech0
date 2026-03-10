@@ -61,7 +61,7 @@
           />
         </BaseButton>
 
-        <div class="h-px bg-[var(--panel-border-soft)] mx-2" />
+        <div class="h-px bg-[var(--color-border-subtle)] mx-2" />
 
         <!-- Dashboard -->
         <BaseButton
@@ -153,7 +153,7 @@
           系统日志
         </BaseButton>
 
-        <div class="h-px bg-[var(--panel-border-soft)] mx-2" />
+        <div class="h-px bg-[var(--color-border-subtle)] mx-2" />
 
         <!-- 退出登录 -->
         <BaseButton
@@ -223,20 +223,20 @@ const selectedRoute = ref(route.path)
 // 统一的按钮样式计算函数
 const getButtonClasses = (routeName: string, isBackButton = false) => {
   const baseClasses = isBackButton
-    ? 'text-[var(--panel-text-secondary)] rounded-[var(--panel-radius-md)] transition-all duration-200 border-none !shadow-none !ring-0 hover:bg-[var(--panel-surface-2)] p-2 group bg-transparent'
-    : 'flex items-center gap-2 pl-3 py-1.5 rounded-[var(--panel-radius-md)] transition-all duration-200 border-none !shadow-none !ring-0 justify-start bg-transparent hover:bg-[var(--panel-surface-2)]'
+    ? 'text-[var(--color-text-secondary)] rounded-[var(--radius-md)] transition-all duration-200 border-none !shadow-none !ring-0 hover:bg-[var(--color-bg-muted)] p-2 group bg-transparent'
+    : 'flex items-center gap-2 pl-3 py-1.5 rounded-[var(--radius-md)] transition-all duration-200 border-none !shadow-none !ring-0 justify-start bg-transparent hover:bg-[var(--color-bg-muted)]'
 
   const activeClasses =
     currentRoute.value === routeName
-      ? 'text-[var(--active-panel-tab-text-color)]! bg-[var(--active-panel-tab-bg-color)]!'
-      : 'text-[var(--panel-text-secondary)]'
+      ? 'text-[var(--color-nav-active-text)]! bg-[var(--color-nav-active-bg)]!'
+      : 'text-[var(--color-text-secondary)]'
 
   return `${baseClasses} ${activeClasses}`
 }
 
 // 底部按钮样式
 const getBottomButtonClasses = () => {
-  return 'flex items-center gap-2 pl-3 py-1.5 rounded-[var(--panel-radius-md)] transition-all duration-200 border-none !shadow-none !ring-0 text-[var(--panel-text-secondary)] hover:bg-[var(--panel-surface-2)] justify-start bg-transparent'
+  return 'flex items-center gap-2 pl-3 py-1.5 rounded-[var(--radius-md)] transition-all duration-200 border-none !shadow-none !ring-0 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)] justify-start bg-transparent'
 }
 
 // 路由选项
@@ -289,22 +289,22 @@ const handleLogout = () => {
 
 <style scoped>
 .panel-shell {
-  border-color: var(--panel-border-soft);
-  border-radius: var(--panel-radius-lg);
-  background: var(--panel-bg);
+  border-color: var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-canvas);
 }
 
 .panel-title {
-  font-family: var(--font-display);
-  color: var(--panel-text-primary);
+  font-family: var(--font-family-display);
+  color: var(--color-text-primary);
 }
 
 .panel-nav {
-  color: var(--panel-text-secondary);
+  color: var(--color-text-secondary);
 }
 
 .panel-version {
-  color: var(--panel-text-muted);
-  font-family: var(--font-display);
+  color: var(--color-text-muted);
+  font-family: var(--font-family-display);
 }
 </style>

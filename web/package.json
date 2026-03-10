@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
+    "token:check": "node ./scripts/check-token-usage.mjs",
     "lint": "eslint . --fix",
     "format": "prettier --write src/"
   },

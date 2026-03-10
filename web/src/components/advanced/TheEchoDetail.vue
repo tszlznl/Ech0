@@ -1,6 +1,6 @@
 <template>
   <div
-    class="w-full max-w-sm bg-[var(--echo-detail-bg-color)] h-auto p-5 shadow rounded-lg mx-auto"
+    class="w-full max-w-sm bg-[var(--color-bg-surface)] h-auto p-5 shadow rounded-lg mx-auto"
   >
     <!-- 顶部Logo 和 用户名 -->
     <div class="flex flex-row items-center gap-2 mt-2 mb-4">
@@ -9,13 +9,13 @@
         <img
           :src="logo"
           alt="logo"
-          class="w-10 h-10 sm:w-12 sm:h-12 rounded-full ring-1 ring-gray-200 shadow-sm object-cover"
+          class="w-10 h-10 sm:w-12 sm:h-12 rounded-full ring-1 ring-[var(--color-border-subtle)] shadow-[var(--shadow-sm)] object-cover"
         />
       </div>
       <div class="flex flex-col">
         <div class="flex items-center gap-1">
           <h2
-            class="text-[var(--text-color-700)] font-bold overflow-hidden whitespace-nowrap text-center"
+            class="text-[var(--color-text-primary)] font-bold overflow-hidden whitespace-nowrap text-center"
           >
             {{ SystemSetting.server_name }}
           </h2>
@@ -24,7 +24,7 @@
             <Verified class="text-sky-500 w-5 h-5" />
           </div>
         </div>
-        <span class="text-[var(--echo-detail-username-color)] font-serif"
+        <span class="echo-username text-[var(--color-text-secondary)]"
           >@ {{ echo.username }}
         </span>
       </div>
@@ -105,11 +105,11 @@
     <div class="flex justify-between items-center">
       <!-- 日期时间 -->
       <div class="flex justify-start items-center h-auto">
-        <div class="flex justify-start text-sm text-[var(--echo-detail-datetime-color)] mr-1">
+        <div class="flex justify-start text-sm text-[var(--color-text-muted)] mr-1">
           {{ formatDate(props.echo.created_at) }}
         </div>
         <!-- 标签 -->
-        <div class="text-sm text-[var(--text-color-300)] w-18 truncate text-nowrap">
+        <div class="text-sm text-[var(--color-text-muted)] w-18 truncate text-nowrap">
           <span>{{ props.echo.tags ? `#${props.echo.tags[0]?.name}` : '' }}</span>
         </div>
       </div>
@@ -160,7 +160,7 @@
             </button>
 
             <!-- 点赞数量   -->
-            <span class="text-sm text-[var(--text-color-400)]">
+            <span class="text-sm text-[var(--color-text-muted)]">
               <!-- 如果点赞数不超过99，则显示数字，否则显示99+ -->
               {{ props.echo.fav_count > 99 ? '99+' : props.echo.fav_count }}
             </span>
@@ -291,12 +291,16 @@ if (
 </script>
 
 <style scoped lang="css">
+.echo-username {
+  font-family: var(--font-family-display);
+}
+
 #preview-only {
   background-color: inherit;
 }
 
 .md-editor {
-  font-family: var(--font-sans);
+  font-family: var(--font-family-sans);
   /* font-family: 'LXGW WenKai Screen'; */
 }
 

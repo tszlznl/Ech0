@@ -3,17 +3,17 @@
     <!-- 用户设置 -->
     <div class="w-full">
       <div class="flex flex-row items-center justify-between mb-3">
-        <h1 class="text-[var(--text-color-600)] font-bold text-lg">用户中心</h1>
+        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">用户中心</h1>
         <div class="flex flex-row items-center justify-end gap-2 w-14">
           <button v-if="editMode" @click="handleUpdateUser" title="编辑">
-            <Saveupdate class="w-5 h-5 text-[var(--text-color-400)] hover:w-6 hover:h-6" />
+            <Saveupdate class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
           </button>
           <button @click="editMode = !editMode" title="编辑">
             <Edit
               v-if="!editMode"
-              class="w-5 h-5 text-[var(--text-color-400)] hover:w-6 hover:h-6"
+              class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6"
             />
-            <Close v-else class="w-5 h-5 text-[var(--text-color-400)] hover:w-6 hover:h-6" />
+            <Close v-else class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
           </button>
         </div>
       </div>
@@ -23,7 +23,7 @@
         <img
           :src="avatarSrc"
           alt="头像"
-          class="w-12 h-12 rounded-full ml-2 mr-9 ring-1 ring-[var(--panel-border-soft)] shadow-[var(--panel-shadow-sm)]"
+          class="w-12 h-12 rounded-full ml-2 mr-9 ring-1 ring-[var(--color-border-subtle)] shadow-[var(--shadow-sm)]"
         />
         <div>
           <!-- 点击上传头像 -->
@@ -47,7 +47,7 @@
 
       <!-- 用户名 -->
       <div
-        class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] gap-2 h-10"
+        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
         <h2 class="font-semibold w-30">用户名:</h2>
         <span v-if="!editMode">{{ user?.username }}</span>
@@ -62,7 +62,7 @@
 
       <!-- 密码 -->
       <div
-        class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] gap-2 h-10"
+        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
         <h2 class="font-semibold w-30">密码:</h2>
         <span v-if="!editMode">******</span>

@@ -3,30 +3,30 @@
     <!-- 评论设置 -->
     <div class="w-full">
       <div class="flex flex-row items-center justify-between mb-3">
-        <h1 class="text-[var(--text-color-600)] font-bold text-lg">评论设置</h1>
+        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">评论设置</h1>
         <div class="flex flex-row items-center justify-end gap-2 w-14">
           <button v-if="commentEditMode" @click="handleUpdateCommentSetting" title="编辑">
-            <Saveupdate class="w-5 h-5 text-[var(--text-color-400)] hover:w-6 hover:h-6" />
+            <Saveupdate class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
           </button>
           <button @click="commentEditMode = !commentEditMode" title="编辑">
             <Edit
               v-if="!commentEditMode"
-              class="w-5 h-5 text-[var(--text-color-400)] hover:w-6 hover:h-6"
+              class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6"
             />
-            <Close v-else class="w-5 h-5 text-[var(--text-color-400)] hover:w-6 hover:h-6" />
+            <Close v-else class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
           </button>
         </div>
       </div>
 
       <!-- 开启评论 -->
-      <div class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] h-10">
+      <div class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] h-10">
         <h2 class="font-semibold w-24 shrink-0">启用评论:</h2>
         <BaseSwitch v-model="CommentSetting.enable_comment" :disabled="!commentEditMode" />
       </div>
 
       <!-- 评论服务 -->
       <div
-        class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] gap-2 h-10"
+        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
         <h2 class="font-semibold w-24 shrink-0">评论服务:</h2>
         <BaseSelect
@@ -39,7 +39,7 @@
 
       <!-- 评论 API -->
       <div
-        class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] gap-2 h-10"
+        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
         <h2 class="font-semibold w-24 shrink-0">评论 API:</h2>
         <span

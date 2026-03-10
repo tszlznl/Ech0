@@ -222,23 +222,21 @@ onMounted(() => {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&family=VT323&display=swap');
-
 .zone-root {
   user-select: none;
 }
 
 .zone-bg {
-  background-color: #cfd6e0;
+  background-color: var(--zone-bg-color);
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.35) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.35) 1px, transparent 1px),
+    linear-gradient(var(--zone-grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--zone-grid-color) 1px, transparent 1px),
     radial-gradient(
       circle at 50% 45%,
-      rgba(255, 255, 255, 0.5) 0%,
-      rgba(230, 236, 244, 0.35) 35%,
-      rgba(192, 201, 214, 0.5) 72%,
-      rgba(154, 166, 184, 0.7) 100%
+      var(--zone-grid-color) 0%,
+      color-mix(in oklab, var(--zone-bg-color) 72%, white) 35%,
+      color-mix(in oklab, var(--zone-bg-color) 84%, black) 72%,
+      var(--zone-glow-color) 100%
     );
   background-size:
     40px 40px,
@@ -251,15 +249,15 @@ onMounted(() => {
 }
 
 .zone-title {
-  color: rgba(30, 41, 59, 0.7);
-  font-family: 'VT323', 'Courier Prime', 'Courier New', monospace;
+  color: var(--zone-title-color);
+  font-family: var(--font-family-display);
   text-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.5),
-    0 0 12px rgba(148, 163, 184, 0.35);
+    0 1px 0 color-mix(in oklab, var(--zone-grid-color) 75%, white),
+    0 0 12px var(--zone-glow-color);
 }
 
 .zone-subtitle {
-  color: rgba(71, 85, 105, 0.68);
-  font-family: 'Courier Prime', 'Courier New', monospace;
+  color: var(--zone-subtitle-color);
+  font-family: var(--font-family-mono);
 }
 </style>

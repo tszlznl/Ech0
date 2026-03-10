@@ -16,10 +16,10 @@
         type="button"
         :disabled="disabled"
         :class="[
-          'inline-flex items-center justify-between px-3 py-2 rounded-[var(--panel-radius-md)] border border-[var(--select-border-color)] focus:outline-none focus:ring-2 focus:ring-[var(--select-focus-ring-color)] transition duration-150 ease-in-out shadow-[var(--panel-shadow-sm)] sm:text-sm text-left',
+          'inline-flex items-center justify-between px-3 py-2 rounded-[var(--radius-md)] border border-[var(--select-border-color)] focus:outline-none focus:ring-2 focus:ring-[var(--select-focus-ring-color)] transition duration-150 ease-in-out shadow-[var(--shadow-sm)] sm:text-sm text-left',
           disabled
             ? 'bg-[var(--select-disabled-bg-color)] cursor-not-allowed opacity-70'
-            : 'bg-[var(--select-bg-color)] hover:border-[var(--panel-border-strong)] cursor-pointer',
+            : 'bg-[var(--select-bg-color)] hover:border-[var(--color-border-strong)] cursor-pointer',
           customClass,
         ]"
         @click="onToggle"
@@ -34,8 +34,8 @@
           :class="[
             'truncate',
             !selectedOption && placeholder
-              ? 'text-[var(--text-color-500)]'
-              : 'text-[var(--text-color-600)]',
+              ? 'text-[var(--color-text-muted)]'
+              : 'text-[var(--color-text-secondary)]',
           ]"
         >
           {{ displayValue }}
@@ -68,7 +68,7 @@
       >
         <div
           v-show="isOpen"
-          class="absolute z-5000 mt-1 min-w-full bg-[var(--select-bg-color)] shadow-[var(--panel-shadow-md)] max-h-70 rounded-[var(--panel-radius-md)] border border-[var(--select-border-color)] overflow-auto focus:outline-none"
+          class="absolute z-5000 mt-1 min-w-full bg-[var(--select-bg-color)] shadow-[var(--shadow-md)] max-h-70 rounded-[var(--radius-md)] border border-[var(--select-border-color)] overflow-auto focus:outline-none"
         >
           <div
             v-for="(option, index) in normalizedOptions"
@@ -77,20 +77,20 @@
               'cursor-pointer select-none relative px-3 py-2 text-sm',
               index === highlightedIndex
                 ? 'bg-[var(--select-label-hover-bg-color)] text-[var(--select-option-active-color)]'
-                : 'text-[var(--text-color-900)] hover:bg-[var(--select-label-clicked-bg-color)]',
+                : 'text-[var(--color-text-primary)] hover:bg-[var(--select-label-clicked-bg-color)]',
               isSelected(option) ? 'font-medium' : 'font-normal',
             ]"
             @click="onSelect(option)"
             @mouseenter="highlightedIndex = index"
           >
             <div class="flex items-center justify-between">
-              <span class="truncate text-[var(--text-color-500)] font-bold">{{
+              <span class="truncate text-[var(--color-text-muted)] font-bold">{{
                 getOptionLabel(option)
               }}</span>
               <!-- Check Icon for Selected -->
               <svg
                 v-if="isSelected(option)"
-                class="text-[var(--panel-accent)]"
+                class="text-[var(--color-accent)]"
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
                 height="24"
@@ -108,7 +108,7 @@
           <!-- Empty State -->
           <div
             v-if="normalizedOptions.length === 0"
-            class="px-3 py-2 text-sm text-[var(--text-color-500)] text-center"
+            class="px-3 py-2 text-sm text-[var(--color-text-muted)] text-center"
           >
             {{ emptyText }}
           </div>

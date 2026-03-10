@@ -10,7 +10,7 @@
   >
     <button
       @click="handleRemoveImage"
-      class="absolute -top-3 -right-4 bg-red-100 hover:bg-red-300 text-[var(--text-color-600)] rounded-lg w-7 h-7 flex items-center justify-center shadow"
+      class="absolute -top-3 -right-4 bg-[var(--color-accent-soft)] hover:bg-[var(--color-danger)]/30 text-[var(--color-text-secondary)] rounded-lg w-7 h-7 flex items-center justify-center shadow-[var(--shadow-sm)]"
       title="移除图片"
     >
       <Close class="w-4 h-4" />
@@ -38,7 +38,7 @@
     <button @click="fileIndex = Math.max(fileIndex - 1, 0)">
       <Prev class="w-7 h-7" />
     </button>
-    <span class="text-[var(--text-color-500)] text-sm mx-2">
+    <span class="text-[var(--color-text-secondary)] text-sm mx-2">
       {{ fileIndex + 1 }} / {{ filesToAdd.length }}
     </span>
     <button @click="fileIndex = Math.min(fileIndex + 1, filesToAdd.length - 1)">

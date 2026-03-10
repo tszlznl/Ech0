@@ -31,9 +31,9 @@
       <!-- Tag Add or Select -->
       <div v-if="currentMode === Mode.ECH0">
         <div
-          class="flex items-center justify-between rounded-sm border border-[var(--tag-editor-border-color)] border-dashed px-1"
+          class="flex items-center justify-between rounded-sm border border-[var(--color-border-subtle)] border-dashed px-1"
         >
-          <span class="text-[var(--text-color-300)]">#</span>
+          <span class="text-[var(--color-text-muted)]">#</span>
           <BaseCombobox
             :key="tagOptions.length"
             v-model="tagToAdd"
@@ -41,7 +41,7 @@
             :options="tagOptions"
             placeholder="标签"
             class="rounded-sm border-none w-auto"
-            input-class="w-16 h-7 text-[var(--text-color-500)]"
+            input-class="w-16 h-7 text-[var(--color-text-secondary)]"
           />
         </div>
       </div>
@@ -50,22 +50,22 @@
     <div class="flex flex-row items-center gap-2">
       <!-- Published Info -->
       <div v-if="hasContent || hasFile || hasExtension" class="relative group">
-        <Info class="w-6 h-6 text-[var(--text-color-300)] hover:text-[var(--text-color-400)]" />
+        <Info class="w-6 h-6 text-[var(--color-text-muted)] hover:text-[var(--color-text-muted)]" />
         <div
-          class="absolute right-0 top-full z-10 mt-2 whitespace-nowrap rounded-md border border-[var(--border-color-300)] border-dashed bg-[var(--editor-bg-color)] px-2 py-1 text-xs shadow-md opacity-0 translate-y-1 scale-95 pointer-events-none transition-all duration-200 ease-out group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100 group-hover:pointer-events-auto"
+          class="absolute right-0 top-full z-10 mt-2 whitespace-nowrap rounded-md border border-[var(--color-border-subtle)] border-dashed bg-[var(--color-bg-surface)] px-2 py-1 text-xs shadow-md opacity-0 translate-y-1 scale-95 pointer-events-none transition-all duration-200 ease-out group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100 group-hover:pointer-events-auto"
         >
           <div v-if="infoTooltipLines.length > 0">
-            <div class="mb-1 font-medium text-[var(--text-color-500)]">已添加：</div>
+            <div class="mb-1 font-medium text-[var(--color-text-secondary)]">已添加：</div>
             <div
               v-for="line in infoTooltipLines"
               :key="line.label"
-              class="flex items-center gap-1 text-[var(--text-color-400)]"
+              class="flex items-center gap-1 text-[var(--color-text-muted)]"
             >
               <component v-if="line.icon" :is="line.icon" class="w-3.5 h-3.5" />
               <span>{{ line.label }}</span>
             </div>
           </div>
-          <div v-else class="text-[var(--text-color-300)]">尚未添加内容</div>
+          <div v-else class="text-[var(--color-text-muted)]">尚未添加内容</div>
         </div>
       </div>
 

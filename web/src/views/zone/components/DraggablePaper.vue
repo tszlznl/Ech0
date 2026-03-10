@@ -35,7 +35,7 @@
 
           <button
             v-if="!data.isTyping"
-            class="absolute top-2 right-2 text-gray-400 hover:text-red-600 transition-colors z-10"
+            class="paper-close absolute top-2 right-2 transition-colors z-10"
             :class="useSafeRender ? '' : 'mix-blend-multiply'"
             @mousedown.stop
             @pointerdown.stop
@@ -52,9 +52,9 @@
           </button>
 
           <div
-            class="flex flex-col items-center border-b border-dashed border-gray-400/50 pb-3 mb-4 opacity-70 font-mono text-[10px] text-gray-600"
+            class="paper-meta flex flex-col items-center border-b border-dashed pb-3 mb-4 opacity-70 font-mono text-[10px]"
           >
-            <span class="uppercase tracking-widest font-bold text-[11px] text-gray-800">
+            <span class="paper-meta-title uppercase tracking-widest font-bold text-[11px]">
               Echo Print
             </span>
             <div class="flex justify-between w-full mt-1.5 px-1 text-[9px] tracking-tight">
@@ -64,34 +64,28 @@
           </div>
 
           <div
-            class="font-serif text-lg leading-relaxed text-gray-900 break-words whitespace-pre-wrap min-h-[2.5rem]"
-            style="
-              text-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
-              font-family:
-                'Special Elite', 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', 'STSong',
-                'Times New Roman', serif;
-            "
+            class="paper-main-text text-lg leading-relaxed break-words whitespace-pre-wrap min-h-[2.5rem]"
           >
             {{ printableMainText }}
             <span
               v-if="data.isTyping && !hasMetadataBlock"
-              class="inline-block w-2.5 h-4 bg-gray-800 ml-0.5 animate-pulse align-middle opacity-80"
+              class="paper-caret-main inline-block w-2.5 h-4 ml-0.5 animate-pulse align-middle opacity-80"
             ></span>
           </div>
 
           <div
             v-if="hasMetadataBlock"
-            class="mt-3 pt-2 border-t border-dashed border-gray-300/20 text-[8px] leading-[1.3] text-gray-400 whitespace-pre-wrap break-words font-mono"
+            class="paper-metadata mt-3 pt-2 border-t border-dashed text-[8px] leading-[1.3] whitespace-pre-wrap break-words font-mono"
           >
             {{ printableMetadataText }}
             <span
               v-if="data.isTyping"
-              class="inline-block w-2 h-3 bg-gray-400 ml-0.5 animate-pulse align-middle opacity-45"
+              class="paper-caret-meta inline-block w-2 h-3 ml-0.5 animate-pulse align-middle opacity-45"
             ></span>
           </div>
 
           <div
-            class="mt-5 pt-3 border-t border-gray-400/30 flex justify-between items-end opacity-50 text-gray-700"
+            class="paper-footer mt-5 pt-3 border-t flex justify-between items-end opacity-50"
           >
             <div
               class="h-3 w-20 opacity-30"
@@ -114,7 +108,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import type { Coordinates, PaperCardData } from '../types'
 
-const PAPER_COLOR = '#ffffff'
+const PAPER_COLOR = 'var(--color-bg-surface)'
 
 const props = defineProps<{
   data: PaperCardData
@@ -367,7 +361,7 @@ onBeforeUnmount(() => {
 }
 
 .serrated-top {
-  background-color: #fff;
+  background-color: var(--color-bg-surface);
   mask-image: radial-gradient(circle at 5px 0, transparent 5px, black 5.5px);
   mask-size: 10px 10px;
   mask-repeat: repeat-x;
@@ -379,7 +373,7 @@ onBeforeUnmount(() => {
 }
 
 .serrated-bottom {
-  background-color: #fff;
+  background-color: var(--color-bg-surface);
   mask-image: radial-gradient(circle at 5px 10px, transparent 5px, black 5.5px);
   mask-size: 10px 10px;
   mask-repeat: repeat-x;
@@ -415,5 +409,46 @@ onBeforeUnmount(() => {
   backface-visibility: hidden;
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
+}
+
+.paper-close {
+  color: var(--color-text-muted);
+}
+
+.paper-close:hover {
+  color: var(--color-danger);
+}
+
+.paper-meta {
+  border-color: color-mix(in oklab, var(--color-text-muted) 50%, transparent);
+  color: var(--color-text-muted);
+}
+
+.paper-meta-title {
+  color: var(--color-text-secondary);
+}
+
+.paper-main-text {
+  color: var(--color-text-primary);
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  font-family: var(--font-family-display);
+}
+
+.paper-caret-main {
+  background: var(--color-text-secondary);
+}
+
+.paper-metadata {
+  border-color: color-mix(in oklab, var(--color-text-muted) 25%, transparent);
+  color: var(--color-text-muted);
+}
+
+.paper-caret-meta {
+  background: var(--color-text-muted);
+}
+
+.paper-footer {
+  border-color: color-mix(in oklab, var(--color-text-muted) 40%, transparent);
+  color: var(--color-text-secondary);
 }
 </style>

@@ -25,7 +25,7 @@
           leave-to="opacity-0 scale-95"
         >
           <DialogPanel
-            class="w-full max-w-sm rounded-lg bg-[var(--dialog-bg-color)] p-6 shadow-sm ring-1 ring-inset ring-[var(--ring-color)]"
+            class="w-full max-w-sm rounded-[var(--radius-lg)] bg-[var(--dialog-bg-color)] p-6 shadow-[var(--shadow-md)] ring-1 ring-inset ring-[var(--color-border-subtle)]"
           >
             <DialogTitle class="text-base font-semibold text-[var(--dialog-title-color)]">
               {{ title }}
@@ -37,13 +37,13 @@
             <div class="mt-6 flex justify-end gap-3">
               <button
                 @click="cancel"
-                class="cursor-pointer px-3 py-2 rounded-lg bg-[var(--dialog-cancel-btn-bg-color)] shadow-xs ring-1 ring-inset ring-[var(--ring-color)] text-[var(--dialog-btn-text-color)] hover:text-orange-400"
+                class="cursor-pointer px-3 py-2 rounded-[var(--radius-md)] bg-[var(--dialog-cancel-btn-bg-color)] shadow-[var(--shadow-sm)] ring-1 ring-inset ring-[var(--color-border-subtle)] text-[var(--dialog-btn-text-color)] hover:text-[var(--dialog-hover-text-color)]"
               >
                 取消
               </button>
               <button
                 @click="confirm"
-                class="cursor-pointer px-3 py-2 rounded-lg bg-[var(--dialog-confirm-btn-bg-color)] text-white shadow-xs hover:bg-orange-500"
+                class="cursor-pointer px-3 py-2 rounded-[var(--radius-md)] bg-[var(--dialog-confirm-btn-bg-color)] text-[var(--dialog-confirm-text-color)] shadow-[var(--shadow-sm)] hover:opacity-90"
               >
                 确认
               </button>

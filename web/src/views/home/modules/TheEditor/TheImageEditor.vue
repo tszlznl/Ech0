@@ -1,9 +1,9 @@
 <template>
   <div>
-    <h2 class="text-[var(--text-color-500)] font-bold my-2">插入图片（支持直链、本地、S3存储）</h2>
+    <h2 class="text-[var(--color-text-secondary)] font-bold my-2">插入图片（支持直链、本地、S3存储）</h2>
     <div v-if="!fileUploading" class="flex items-center gap-2 mb-3">
       <div class="flex items-center gap-2">
-        <span class="text-[var(--text-color-500)]">选择添加方式：</span>
+        <span class="text-[var(--color-text-secondary)]">选择添加方式：</span>
         <!-- 直链 -->
         <BaseButton
           :icon="Url"
@@ -31,7 +31,7 @@
 
     <!-- 布局方式选择 -->
     <div class="mb-2 flex items-center gap-2">
-      <span class="text-[var(--text-color-500)]">选择布局方式：</span>
+      <span class="text-[var(--color-text-secondary)]">选择布局方式：</span>
       <BaseSelect
         v-model="echoToAdd.layout"
         :options="layoutOptions"
@@ -42,12 +42,12 @@
 
     <!-- 智能压缩 -->
     <div v-if="fileToAdd.storage_type !== FILE_STORAGE_TYPE.EXTERNAL" class="mb-3 flex items-center">
-      <span class="text-[var(--text-color-500)]">智能压缩：</span>
+      <span class="text-[var(--color-text-secondary)]">智能压缩：</span>
       <BaseSwitch v-model="enableCompressor" />
     </div>
 
     <!-- 当前上传方式与状态 -->
-    <div class="text-[var(--text-color-300)] text-sm mb-2">
+    <div class="text-[var(--color-text-muted)] text-sm mb-2">
       当前上传方式为
       <span class="font-bold">
         {{

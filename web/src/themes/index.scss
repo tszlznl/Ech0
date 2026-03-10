@@ -1,4 +1,5 @@
 // File: src/themes/index.scss
+@use './tokens/foundation.scss';
 @use './light.scss';
 @use './dark.scss';
 @use './custom.scss';
@@ -11,14 +12,14 @@
 }
 
 .md-editor div.github-theme {
-  color: var(--text-color) !important;
+  color: var(--color-text-primary) !important;
 }
 
 // widget
 .widget {
-  background-color: var(--widget-bg-color);
-  color: var(--widget-text-color);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 .widget-title {
-  color: var(--widget-title-color);
+  color: var(--color-text-primary);
 }

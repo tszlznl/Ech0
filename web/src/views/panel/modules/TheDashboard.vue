@@ -7,7 +7,6 @@ type StatCard = {
   key: string
   label: string
   value: string
-  desc: string
 }
 
 const userStore = useUserStore()
@@ -42,25 +41,21 @@ const dashboardStats = computed<StatCard[]>(() => {
       key: 'echos',
       label: 'Echo 总数',
       value: echoTotal.value === null ? '--' : String(echoTotal.value),
-      desc: '当前站点累计内容数量',
     },
     {
       key: 'inbox',
       label: '未读收件箱',
       value: unreadInboxCount.value === null ? '--' : String(unreadInboxCount.value),
-      desc: '等待处理的系统消息',
     },
     {
       key: 'connect',
       label: '已连接节点',
       value: connectCount.value === null ? '--' : String(connectCount.value),
-      desc: 'Connect 中已配置的远端',
     },
     {
       key: 'version',
       label: '当前版本',
       value: settingStore.hello?.version || '--',
-      desc: '来自服务端 hello 信息',
     },
   ]
 })
@@ -105,7 +100,6 @@ onMounted(() => {
       <article v-for="item in dashboardStats" :key="item.key" class="stat-card">
         <p class="stat-label">{{ item.label }}</p>
         <p class="stat-value" :class="{ 'is-loading': loading && item.value === '--' }">{{ item.value }}</p>
-        <p class="stat-desc">{{ item.desc }}</p>
       </article>
     </section>
 
@@ -123,10 +117,10 @@ onMounted(() => {
 
 .welcome-card,
 .stat-card {
-  border: 1px solid var(--panel-border-soft);
-  border-radius: var(--panel-radius-lg);
-  background: var(--panel-surface-1);
-  box-shadow: var(--panel-shadow-sm);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .welcome-card {
@@ -136,9 +130,9 @@ onMounted(() => {
 .welcome-badge {
   display: inline-block;
   padding: 0.2rem 0.65rem;
-  border-radius: var(--panel-radius-sm);
-  background: var(--panel-accent-weak);
-  color: var(--panel-text-secondary);
+  border-radius: var(--radius-sm);
+  background: var(--color-accent-soft);
+  color: var(--color-text-secondary);
   font-size: 0.95rem;
   font-weight: 700;
 }
@@ -147,14 +141,14 @@ onMounted(() => {
   margin-top: 0.65rem;
   font-size: 1.55rem;
   line-height: 1.3;
-  color: var(--panel-text-primary);
+  color: var(--color-text-primary);
   font-weight: 800;
-  font-family: var(--font-display);
+  font-family: var(--font-family-display);
 }
 
 .welcome-subtitle {
   margin-top: 0.35rem;
-  color: var(--panel-text-muted);
+  color: var(--color-text-muted);
   font-size: 0.95rem;
 }
 
@@ -171,32 +165,26 @@ onMounted(() => {
 
 .stat-card:hover {
   transform: translateY(-1px);
-  border-color: var(--panel-border-strong);
-  background: var(--panel-surface-2);
+  border-color: var(--color-border-strong);
+  background: var(--color-bg-muted);
 }
 
 .stat-label {
   font-size: 0.88rem;
-  color: var(--panel-text-muted);
+  color: var(--color-text-muted);
 }
 
 .stat-value {
   margin-top: 0.25rem;
   font-size: 1.5rem;
   line-height: 1.2;
-  color: var(--panel-accent);
+  color: var(--color-accent);
   font-weight: 800;
-  font-family: var(--font-display);
+  font-family: var(--font-family-display);
 }
 
 .stat-value.is-loading {
   opacity: 0.7;
-}
-
-.stat-desc {
-  margin-top: 0.28rem;
-  font-size: 0.86rem;
-  color: var(--panel-text-muted);
 }
 
 @media (min-width: 768px) {

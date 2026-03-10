@@ -3,7 +3,7 @@
     <div
       class="h-3/5 sm:h-1/2 max-w-sm sm:max-w-md md:max-w-lg px-2 sm:px-4 md:px-6 my-4 sm:my-5 md:my-6"
     >
-      <h1 class="text-5xl italic font-bold text-center text-[var(--text-color-300)] mb-5">
+      <h1 class="text-5xl italic font-bold text-center text-[var(--color-text-muted)] mb-5">
         Ech0 Connect
       </h1>
       <div class="mb-5">
@@ -11,7 +11,7 @@
         <div class="mb-2">
           <BaseButton
             @click="$router.push('/')"
-            class="text-[var(--text-color-600)] rounded-md shadow-none! border-none! ring-0! bg-transparent! group"
+            class="text-[var(--color-text-primary)] rounded-md shadow-none! border-none! ring-0! bg-transparent! group"
             title="返回首页"
           >
             <Arrow
