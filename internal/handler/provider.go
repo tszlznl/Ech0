@@ -11,6 +11,7 @@ import (
 	fileHandler "github.com/lin-snow/ech0/internal/handler/file"
 	inboxHandler "github.com/lin-snow/ech0/internal/handler/inbox"
 	initHandler "github.com/lin-snow/ech0/internal/handler/init"
+	migrationHandler "github.com/lin-snow/ech0/internal/handler/migration"
 	settingHandler "github.com/lin-snow/ech0/internal/handler/setting"
 	userHandler "github.com/lin-snow/ech0/internal/handler/user"
 	webHandler "github.com/lin-snow/ech0/internal/handler/web"
@@ -29,4 +30,5 @@ var (
 	DashboardSet = wire.NewSet(dashboardHandler.NewDashboardHandler)
 	AgentSet     = wire.NewSet(agentHandler.NewAgentHandler)
 	InboxSet     = wire.NewSet(inboxHandler.NewInboxHandler)
+	MigrationSet = wire.NewSet(migrationHandler.NewMigrationHandler)
 )

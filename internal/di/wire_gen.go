@@ -26,9 +26,11 @@ import (
 	handler5 "github.com/lin-snow/ech0/internal/handler/file"
 	handler9 "github.com/lin-snow/ech0/internal/handler/inbox"
 	handler6 "github.com/lin-snow/ech0/internal/handler/init"
+	handler14 "github.com/lin-snow/ech0/internal/handler/migration"
 	handler8 "github.com/lin-snow/ech0/internal/handler/setting"
 	handler3 "github.com/lin-snow/ech0/internal/handler/user"
 	handler2 "github.com/lin-snow/ech0/internal/handler/web"
+	"github.com/lin-snow/ech0/internal/migrator"
 	repository11 "github.com/lin-snow/ech0/internal/repository"
 	repository5 "github.com/lin-snow/ech0/internal/repository/common"
 	repository10 "github.com/lin-snow/ech0/internal/repository/connect"
@@ -37,6 +39,7 @@ import (
 	repository3 "github.com/lin-snow/ech0/internal/repository/inbox"
 	repository9 "github.com/lin-snow/ech0/internal/repository/init"
 	"github.com/lin-snow/ech0/internal/repository/keyvalue"
+	repository12 "github.com/lin-snow/ech0/internal/repository/migration"
 	repository2 "github.com/lin-snow/ech0/internal/repository/queue"
 	repository6 "github.com/lin-snow/ech0/internal/repository/setting"
 	repository4 "github.com/lin-snow/ech0/internal/repository/user"
@@ -52,6 +55,7 @@ import (
 	service4 "github.com/lin-snow/ech0/internal/service/file"
 	service7 "github.com/lin-snow/ech0/internal/service/inbox"
 	service6 "github.com/lin-snow/ech0/internal/service/init"
+	service13 "github.com/lin-snow/ech0/internal/service/migrator"
 	service2 "github.com/lin-snow/ech0/internal/service/setting"
 	service3 "github.com/lin-snow/ech0/internal/service/user"
 	"github.com/lin-snow/ech0/internal/storage"
@@ -75,6 +79,10 @@ func BuildApp() (*app.App, error) {
 	if err != nil {
 		return nil, err
 	}
+	worker, err := BuildMigrator(v, iCache, gormTransactor)
+	if err != nil {
+		return nil, err
+	}
 	backupScheduleApplier := ProvideBackupScheduleApplier(tasker)
 	eventRegistrar, err := BuildEventRegistrar(v, v2, iCache, gormTransactor, backupScheduleApplier)
 	if err != nil {
@@ -87,7 +95,7 @@ func BuildApp() (*app.App, error) {
 		return nil, err
 	}
 	serverServer := server.ProvideHTTPServer(engine, bundle)
-	v3 := app.ProvideOptions(eventRegistrar, eventBus, tasker, serverServer)
+	v3 := app.ProvideOptions(eventRegistrar, eventBus, tasker, worker, serverServer)
 	appApp := app.NewApp(v3)
 	return appApp, nil
 }
@@ -140,11 +148,14 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 	connectHandler := handler10.NewConnectHandler(connectService)
 	backupService := service9.NewBackupService(commonService, publisherPublisher)
 	backupHandler := handler11.NewBackupHandler(backupService)
+	migrationRepository := repository12.NewMigrationRepository(dbProvider)
+	migratorService := service13.NewMigratorService(commonService, migrationRepository)
+	migrationHandler := handler14.NewMigrationHandler(migratorService)
 	dashboardService := service10.NewDashboardService()
 	dashboardHandler := handler12.NewDashboardHandler(dashboardService)
 	agentService := service11.NewAgentService(settingService, echoService, keyValueRepository)
 	agentHandler := handler13.NewAgentHandler(agentService)
-	bundle := handler.NewBundle(webHandler, userHandler, echoHandler, fileHandler, initHandler, commonHandler, settingHandler, inboxHandler, connectHandler, backupHandler, dashboardHandler, agentHandler)
+	bundle := handler.NewBundle(webHandler, userHandler, echoHandler, fileHandler, initHandler, commonHandler, settingHandler, inboxHandler, connectHandler, backupHandler, migrationHandler, dashboardHandler, agentHandler)
 	return bundle, nil
 }
 
@@ -180,6 +191,15 @@ func BuildTasker(dbProvider func() *gorm.DB, appCache cache.ICache[string, any],
 	queueRepository := repository2.NewQueueRepository(dbProvider)
 	tasker := task.NewTasker(fileService, settingService, publisherPublisher, queueRepository)
 	return tasker, nil
+}
+
+func BuildMigrator(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor) (*migrator.Worker, error) {
+	commonRepository := repository5.NewCommonRepository(dbProvider)
+	commonService := service.NewCommonService(commonRepository)
+	migrationRepository := repository12.NewMigrationRepository(dbProvider)
+	migratorService := service13.NewMigratorService(commonService, migrationRepository)
+	worker := migrator.NewWorker(migratorService)
+	return worker, nil
 }
 
 // wire.go:

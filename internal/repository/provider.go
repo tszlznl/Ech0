@@ -10,6 +10,7 @@ import (
 	inboxRepository "github.com/lin-snow/ech0/internal/repository/inbox"
 	initRepository "github.com/lin-snow/ech0/internal/repository/init"
 	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
+	migrationRepository "github.com/lin-snow/ech0/internal/repository/migration"
 	queueRepository "github.com/lin-snow/ech0/internal/repository/queue"
 	settingRepository "github.com/lin-snow/ech0/internal/repository/setting"
 	userRepository "github.com/lin-snow/ech0/internal/repository/user"
@@ -76,5 +77,8 @@ var (
 		queueRepository.NewQueueRepository,
 		wire.Bind(new(eventsubscriber.DeadLetterStore), new(*queueRepository.QueueRepository)),
 		wire.Bind(new(eventsubscriber.DeadLetterRepo), new(*queueRepository.QueueRepository)),
+	)
+	MigrationSet = wire.NewSet(
+		migrationRepository.NewMigrationRepository,
 	)
 )

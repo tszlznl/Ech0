@@ -14,6 +14,7 @@ import (
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
 	inboxModel "github.com/lin-snow/ech0/internal/model/inbox"
+	migrationModel "github.com/lin-snow/ech0/internal/model/migration"
 	queueModel "github.com/lin-snow/ech0/internal/model/queue"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
@@ -120,6 +121,7 @@ func MigrateDB() error {
 		&echoModel.EchoTag{},
 		&webhookModel.Webhook{},
 		&queueModel.DeadLetter{},
+		&migrationModel.MigrationJob{},
 		&settingModel.AccessTokenSetting{},
 		&inboxModel.Inbox{},
 		&authModel.Passkey{},

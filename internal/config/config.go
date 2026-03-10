@@ -17,16 +17,17 @@ var (
 )
 
 type AppConfig struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	Log      LogConfig
-	Auth     AuthConfig
-	Upload   UploadConfig
-	Storage  StorageConfig
-	Event    EventConfig
-	Setting  SettingConfig
-	Comment  CommentConfig
-	Security SecurityConfig
+	Server    ServerConfig
+	Database  DatabaseConfig
+	Log       LogConfig
+	Auth      AuthConfig
+	Upload    UploadConfig
+	Storage   StorageConfig
+	Event     EventConfig
+	Migration MigrationConfig
+	Setting   SettingConfig
+	Comment   CommentConfig
+	Security  SecurityConfig
 }
 
 type StorageConfig struct {
@@ -124,6 +125,13 @@ type EventConfig struct {
 	WebhookPoolQueue   int
 }
 
+type MigrationConfig struct {
+	WorkerEnabled   bool
+	MaxConcurrency  int
+	BatchSize       int
+	RateLimitPerSec int
+}
+
 // Config 返回全局配置中心
 func Config() *AppConfig {
 	once.Do(func() {
@@ -204,6 +212,12 @@ func defaultConfig() *AppConfig {
 			InboxBuffer:        64,
 			WebhookPoolWorkers: 6,
 			WebhookPoolQueue:   6,
+		},
+		Migration: MigrationConfig{
+			WorkerEnabled:   false,
+			MaxConcurrency:  1,
+			BatchSize:       100,
+			RateLimitPerSec: 20,
 		},
 		Setting: SettingConfig{
 			SiteTitle:     "Ech0",
@@ -287,6 +301,12 @@ func applyEnvOverrides(cfg *AppConfig) {
 	setIntEnv("ECH0_EVENT_INBOX_BUFFER", &cfg.Event.InboxBuffer)
 	setIntEnv("ECH0_EVENT_WEBHOOK_POOL_WORKERS", &cfg.Event.WebhookPoolWorkers)
 	setIntEnv("ECH0_EVENT_WEBHOOK_POOL_QUEUE", &cfg.Event.WebhookPoolQueue)
+
+	// Migration
+	setBoolEnv("ECH0_MIGRATION_WORKER_ENABLED", &cfg.Migration.WorkerEnabled)
+	setIntEnv("ECH0_MIGRATION_MAX_CONCURRENCY", &cfg.Migration.MaxConcurrency)
+	setIntEnv("ECH0_MIGRATION_BATCH_SIZE", &cfg.Migration.BatchSize)
+	setIntEnv("ECH0_MIGRATION_RATE_LIMIT_PER_SEC", &cfg.Migration.RateLimitPerSec)
 
 	// Setting
 	setStringEnv("ECH0_SETTING_SITE_TITLE", &cfg.Setting.SiteTitle)

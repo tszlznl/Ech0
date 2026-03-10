@@ -42,3 +42,38 @@ export function fetchGetWebsiteTitle(websiteURL: string) {
     method: 'GET',
   })
 }
+
+export interface CreateMigrationJobPayload {
+  source_type: 'memos' | 'ech0_v3'
+  source_version?: string
+  source_payload: Record<string, any>
+}
+
+export function fetchCreateMigrationJob(data: CreateMigrationJobPayload) {
+  return request({
+    url: '/migration/jobs',
+    method: 'POST',
+    data,
+  })
+}
+
+export function fetchGetMigrationJob(id: string) {
+  return request({
+    url: `/migration/jobs/${id}`,
+    method: 'GET',
+  })
+}
+
+export function fetchCancelMigrationJob(id: string) {
+  return request({
+    url: `/migration/jobs/${id}/cancel`,
+    method: 'POST',
+  })
+}
+
+export function fetchRetryFailedMigrationJob(id: string) {
+  return request({
+    url: `/migration/jobs/${id}/retry-failed`,
+    method: 'POST',
+  })
+}

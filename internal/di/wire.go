@@ -15,6 +15,7 @@ import (
 	eventregistry "github.com/lin-snow/ech0/internal/event/registry"
 	eventsubscriber "github.com/lin-snow/ech0/internal/event/subscriber"
 	"github.com/lin-snow/ech0/internal/handler"
+	"github.com/lin-snow/ech0/internal/migrator"
 	"github.com/lin-snow/ech0/internal/repository"
 	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
 	"github.com/lin-snow/ech0/internal/server"
@@ -30,6 +31,7 @@ var AppSet = app.ProviderSet
 var DomainSet = wire.NewSet(
 	BuildHandlers,
 	BuildTasker,
+	BuildMigrator,
 	ProvideBackupScheduleApplier,
 	BuildEventRegistrar,
 )
@@ -113,6 +115,9 @@ var HandlerGraphSet = wire.NewSet(
 
 	service.BackupSet,
 	handler.BackupSet,
+	repository.MigrationSet,
+	service.MigratorSet,
+	handler.MigrationSet,
 
 	handler.NewBundle,
 )
@@ -137,6 +142,14 @@ var TaskerGraphSet = wire.NewSet(
 
 	repository.QueueSet,
 	task.ProviderSet,
+)
+
+var MigratorGraphSet = wire.NewSet(
+	repository.CommonSet,
+	service.CommonSet,
+	repository.MigrationSet,
+	service.MigratorSet,
+	migrator.ProviderSet,
 )
 
 // BuildApp 构建 Web 生命周期应用。
@@ -190,6 +203,15 @@ func BuildTasker(
 ) (*task.Tasker, error) {
 	wire.Build(TaskerGraphSet)
 	return &task.Tasker{}, nil
+}
+
+func BuildMigrator(
+	dbProvider func() *gorm.DB,
+	appCache cache.ICache[string, any],
+	tx transaction.Transactor,
+) (*migrator.Worker, error) {
+	wire.Build(MigratorGraphSet)
+	return &migrator.Worker{}, nil
 }
 
 func ProvideBackupScheduleApplier(t *task.Tasker) eventsubscriber.BackupScheduleApplier {

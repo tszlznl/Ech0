@@ -11,6 +11,7 @@ import (
 	fileService "github.com/lin-snow/ech0/internal/service/file"
 	inboxService "github.com/lin-snow/ech0/internal/service/inbox"
 	initService "github.com/lin-snow/ech0/internal/service/init"
+	migratorService "github.com/lin-snow/ech0/internal/service/migrator"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	userService "github.com/lin-snow/ech0/internal/service/user"
 )
@@ -59,5 +60,9 @@ var (
 	InboxSet = wire.NewSet(
 		inboxService.NewInboxService,
 		wire.Bind(new(inboxService.Service), new(*inboxService.InboxService)),
+	)
+	MigratorSet = wire.NewSet(
+		migratorService.NewMigratorService,
+		wire.Bind(new(migratorService.Service), new(*migratorService.MigratorService)),
 	)
 )

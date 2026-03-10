@@ -123,6 +123,11 @@ const (
 	DATABASE_CLOSE_FAILED   = "数据库关闭失败"
 )
 
+// Migration 错误相关常量
+const (
+	MIGRATION_JOB_NOT_FOUND = "迁移任务不存在"
+)
+
 // Agent 错误相关常量
 const (
 	AGENT_NOT_ENABLED        = "未启用 Agent "

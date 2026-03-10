@@ -10,6 +10,7 @@ import (
 	fileHandler "github.com/lin-snow/ech0/internal/handler/file"
 	inboxHandler "github.com/lin-snow/ech0/internal/handler/inbox"
 	initHandler "github.com/lin-snow/ech0/internal/handler/init"
+	migrationHandler "github.com/lin-snow/ech0/internal/handler/migration"
 	settingHandler "github.com/lin-snow/ech0/internal/handler/setting"
 	userHandler "github.com/lin-snow/ech0/internal/handler/user"
 	webHandler "github.com/lin-snow/ech0/internal/handler/web"
@@ -27,6 +28,7 @@ type Bundle struct {
 	InboxHandler     *inboxHandler.InboxHandler
 	ConnectHandler   *connectHandler.ConnectHandler
 	BackupHandler    *backupHandler.BackupHandler
+	MigrationHandler *migrationHandler.MigrationHandler
 	DashboardHandler *dashboardHandler.DashboardHandler
 	AgentHandler     *agentHandler.AgentHandler
 }
@@ -43,6 +45,7 @@ func NewBundle(
 	inboxHandler *inboxHandler.InboxHandler,
 	connectHandler *connectHandler.ConnectHandler,
 	backupHandler *backupHandler.BackupHandler,
+	migrationHandler *migrationHandler.MigrationHandler,
 	dashboardHandler *dashboardHandler.DashboardHandler,
 	agentHandler *agentHandler.AgentHandler,
 ) *Bundle {
@@ -57,6 +60,7 @@ func NewBundle(
 		InboxHandler:     inboxHandler,
 		ConnectHandler:   connectHandler,
 		BackupHandler:    backupHandler,
+		MigrationHandler: migrationHandler,
 		DashboardHandler: dashboardHandler,
 		AgentHandler:     agentHandler,
 	}
