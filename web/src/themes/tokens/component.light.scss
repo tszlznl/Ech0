@@ -72,4 +72,24 @@
   --zone-console-print-button: oklch(66.8% 0.175 49.8);
   --zone-console-print-text: oklch(29.7% 0.08 42.5);
   --zone-console-alert: var(--color-danger);
+
+  --md-editor-bg-color: var(--color-bg-surface);
+  --md-editor-border-color: var(--color-border-subtle);
+  --md-editor-divider-color: var(--color-border-subtle);
+  --md-editor-toolbar-btn-bg: var(--color-bg-surface);
+  --md-editor-toolbar-btn-text: var(--color-text-secondary);
+  --md-editor-toolbar-btn-hover-bg: var(--color-bg-muted);
+  --md-editor-toolbar-btn-hover-text: var(--color-text-primary);
+  --md-editor-toolbar-btn-hover-border: var(--color-border-strong);
+  --md-editor-input-text: var(--color-text-primary);
+  --md-editor-placeholder: var(--placeholder-color);
+  --md-editor-full-bg: var(--color-bg-surface);
+  --md-editor-full-border: var(--color-border-strong);
+  --md-editor-full-shadow: 0 14px 42px oklch(23% 0.01 58 / 0.24);
+  --md-editor-backdrop-color: oklch(20% 0.01 60 / 0.22);
+
+  --md-link-color: var(--color-accent);
+  --md-inline-code-bg: oklch(94.8% 0.013 68.9);
+  --md-inline-code-text: oklch(33.1% 0.054 40.8);
+  --md-blockquote-border: var(--color-border-strong);
 }

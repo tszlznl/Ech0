@@ -1,38 +1,69 @@
 <template>
-  <div class="markdown-editor">
-    <div class="toolbar">
-      <button
-        v-for="item in toolbarItems"
-        :key="item.action"
-        type="button"
-        class="toolbar-btn"
-        @click="onToolbarClick(item.action)"
-      >
-        {{ item.label }}
+  <div class="markdown-editor-root">
+    <div v-if="isFullMode" class="markdown-editor-backdrop" @click="exitFullMode"></div>
+
+    <div v-if="!isFullMode" class="markdown-editor">
+      <button type="button" class="mode-toggle-btn" @click="enterFullMode">
+        全屏编辑
       </button>
-      <button type="button" class="toolbar-btn ml-auto" @click="showPreview = !showPreview">
-        {{ showPreview ? '隐藏预览' : '显示预览' }}
-      </button>
+      <div class="editor-content">
+        <textarea
+          ref="textareaRef"
+          class="editor-input"
+          :placeholder="placeholder"
+          :value="modelValue"
+          @input="onInput"
+        />
+      </div>
     </div>
 
-    <div class="editor-layout" :class="{ 'preview-hidden': !showPreview }">
-      <textarea
-        ref="textareaRef"
-        class="editor-input"
-        :placeholder="placeholder"
-        :value="modelValue"
-        @input="onInput"
-      />
-      <div v-if="showPreview" class="preview-pane">
-        <MarkdownRenderer :content="modelValue" />
+    <div
+      v-else
+      class="markdown-full-shell"
+      :class="{ 'no-preview': isPreviewMode }"
+    >
+      <div class="markdown-editor is-full">
+        <div class="toolbar">
+        <button
+          v-for="item in toolbarItems"
+          :key="item.action"
+          type="button"
+          class="toolbar-btn"
+          @click="onToolbarClick(item.action)"
+        >
+          {{ item.label }}
+        </button>
+        <div class="toolbar-actions">
+          <button type="button" class="toolbar-btn" @click="isPreviewMode = !isPreviewMode">
+            {{ isPreviewMode ? '显示预览' : '隐藏预览' }}
+          </button>
+          <button type="button" class="toolbar-btn mode-toggle-btn-inline" @click="exitFullMode">
+            退出全屏
+          </button>
+        </div>
+        </div>
+
+        <div class="editor-content">
+        <textarea
+          ref="textareaRef"
+          class="editor-input"
+          :placeholder="placeholder"
+          :value="modelValue"
+          @input="onInput"
+        />
+        </div>
+      </div>
+
+      <div v-if="!isPreviewMode" class="markdown-preview-dock">
+        <MarkdownPreviewCard :content="modelValue" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import MarkdownRenderer from './MarkdownRenderer.vue'
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import MarkdownPreviewCard from './MarkdownPreviewCard.vue'
 import { applyMarkdownAction } from '../composables/useMarkdownEditorActions'
 import type { MarkdownEditorAction } from '../types'
 
@@ -46,7 +77,8 @@ const emit = defineEmits<{
 }>()
 
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
-const showPreview = ref(true)
+const isFullMode = ref(false)
+const isPreviewMode = ref(false)
 
 const toolbarItems: Array<{ label: string; action: MarkdownEditorAction }> = [
   { label: '粗体', action: 'bold' },
@@ -65,7 +97,40 @@ function onInput(event: Event) {
 }
 
 function onToolbarClick(action: MarkdownEditorAction) {
+  if (isPreviewMode.value) {
+    isPreviewMode.value = false
+    nextTick(() => {
+      if (!textareaRef.value) return
+      applyMarkdownAction(textareaRef.value, action)
+    })
+    return
+  }
+
   if (!textareaRef.value) return
   applyMarkdownAction(textareaRef.value, action)
 }
+
+function enterFullMode() {
+  isFullMode.value = true
+  isPreviewMode.value = false
+}
+
+function exitFullMode() {
+  isFullMode.value = false
+  isPreviewMode.value = false
+}
+
+function onWindowKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && isFullMode.value) {
+    exitFullMode()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', onWindowKeydown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onWindowKeydown)
+})
 </script>

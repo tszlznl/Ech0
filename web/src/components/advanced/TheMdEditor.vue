@@ -1,5 +1,5 @@
 <template>
-  <MarkdownEditor class="h-auto sm:min-h-[8rem] md:min-h-[13rem]" v-model="content" placeholder="一吐为快~" />
+  <MarkdownEditor class="h-auto" v-model="content" placeholder="一吐为快~" />
 </template>
 
 <script setup lang="ts">

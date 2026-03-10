@@ -60,7 +60,7 @@
 }
 
 .echo-markdown a {
-  color: var(--color-link, #409eff);
+  color: var(--md-link-color);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -74,5 +74,10 @@
 .echo-markdown :not(pre) > code {
   padding: 0.1rem 0.35rem;
   border-radius: 0.35rem;
-  background-color: var(--color-bg-surface-hover, rgba(127, 127, 127, 0.16));
+  background-color: var(--md-inline-code-bg);
+  color: var(--md-inline-code-text);
+}
+
+.echo-markdown blockquote {
+  border-left-color: var(--md-blockquote-border);
 }
