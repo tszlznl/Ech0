@@ -135,20 +135,23 @@
 
         <!-- 扩展内容 -->
         <div v-if="props.echo.extension" class="my-2">
-          <div v-if="props.echo.extension_type === ExtensionType.MUSIC">
+          <div v-if="props.echo.extension.type === ExtensionType.MUSIC">
             <TheAPlayerCard :echo="props.echo" />
           </div>
-          <div v-if="props.echo.extension_type === ExtensionType.VIDEO">
-            <TheVideoCard :videoId="props.echo.extension" class="px-2 mx-auto hover:shadow-md" />
+          <div v-if="props.echo.extension.type === ExtensionType.VIDEO">
+            <TheVideoCard
+              :videoId="props.echo.extension.payload.videoId"
+              class="px-2 mx-auto hover:shadow-md"
+            />
           </div>
           <TheGithubCard
-            v-if="props.echo.extension_type === ExtensionType.GITHUBPROJ"
-            :GithubURL="props.echo.extension"
+            v-if="props.echo.extension.type === ExtensionType.GITHUBPROJ"
+            :GithubURL="props.echo.extension.payload.repoUrl"
             class="px-2 mx-auto hover:shadow-md"
           />
           <TheWebsiteCard
-            v-if="props.echo.extension_type === ExtensionType.WEBSITE"
-            :website="props.echo.extension"
+            v-if="props.echo.extension.type === ExtensionType.WEBSITE"
+            :website="props.echo.extension.payload"
             class="px-2 mx-auto hover:shadow-md"
           />
         </div>

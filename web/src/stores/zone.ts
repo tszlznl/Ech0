@@ -12,8 +12,7 @@ interface PrintableEcho {
   created_at?: string | null
   tags?: Array<{ name?: string | null }> | null
   echo_files?: unknown[] | null
-  extension?: string | null
-  extension_type?: string | null
+  extension?: App.Api.Ech0.EchoExtension | null
 }
 
 const MAX_PRINT_LENGTH = 2000
@@ -51,8 +50,8 @@ const buildPrintableEchoText = (echo: PrintableEcho): string => {
   }
 
   if (hasExtension) {
-    const rawType = String(echo.extension_type || 'Unknown').toUpperCase()
-    const extensionLabel = EXTENSION_LABEL_MAP[rawType] || String(echo.extension_type || 'Unknown')
+    const rawType = String(echo.extension?.type || 'Unknown').toUpperCase()
+    const extensionLabel = EXTENSION_LABEL_MAP[rawType] || String(echo.extension?.type || 'Unknown')
     lines.push(`Extension: ${extensionLabel}`)
   }
 

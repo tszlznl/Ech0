@@ -48,7 +48,6 @@ export const useEditorStore = defineStore('editorStore', () => {
     private: false, // 是否私密
     layout: ImageLayout.WATERFALL, // 图片布局方式，默认为 waterfall
     extension: null, // 拓展内容（对于扩展类型所需的数据）
-    extension_type: null, // 拓展内容类型（音乐/视频/链接/GITHUB项目）
   })
 
   const hasContent = computed(() => !!echoToAdd.value.content?.trim()) // 是否已填写内容
@@ -126,7 +125,6 @@ export const useEditorStore = defineStore('editorStore', () => {
       private: false,
       layout: ImageLayout.WATERFALL,
       extension: null,
-      extension_type: null,
       tags: [],
     }
     fileToAdd.value = {
@@ -332,7 +330,6 @@ export const useEditorStore = defineStore('editorStore', () => {
         echoStore.echoToUpdate.layout = echoToAdd.value.layout
         echoStore.echoToUpdate.echo_files = echoToAdd.value.echo_files
         echoStore.echoToUpdate.extension = echoToAdd.value.extension
-        echoStore.echoToUpdate.extension_type = echoToAdd.value.extension_type
         echoStore.echoToUpdate.tags = echoToAdd.value.tags
 
         // 更新 Echo
@@ -365,8 +362,7 @@ export const useEditorStore = defineStore('editorStore', () => {
     return (
       !echo.content &&
       (!echo.echo_files || echo.echo_files.length === 0) &&
-      !echo.extension &&
-      !echo.extension_type
+      !echo.extension
     )
   }
 
@@ -410,8 +406,8 @@ export const useEditorStore = defineStore('editorStore', () => {
       return true
     }
 
-    // 构建扩展内容
-    extensionToAdd.value.extension = JSON.stringify({ title: finalTitle, site })
+    // 构建扩展内容（不再使用 JSON 字符串）
+    extensionToAdd.value.extension = site
     extensionToAdd.value.extension_type = ExtensionType.WEBSITE
 
     return true
@@ -422,18 +418,61 @@ export const useEditorStore = defineStore('editorStore', () => {
     extensionToAdd.value.extension = ''
     extensionToAdd.value.extension_type = ''
     echoToAdd.value.extension = null
-    echoToAdd.value.extension_type = null
   }
 
   // 同步Echo的扩展内容
   function syncEchoExtension() {
     const { extension, extension_type } = extensionToAdd.value
-    if (extension && extension_type) {
-      echoToAdd.value.extension = extension
-      echoToAdd.value.extension_type = extension_type
-    } else {
+    if (!extension_type) {
       echoToAdd.value.extension = null
-      echoToAdd.value.extension_type = null
+      return
+    }
+
+    switch (extension_type) {
+      case ExtensionType.MUSIC:
+        if (!extension) {
+          echoToAdd.value.extension = null
+          return
+        }
+        echoToAdd.value.extension = {
+          type: ExtensionType.MUSIC,
+          payload: { url: extension },
+        }
+        return
+      case ExtensionType.VIDEO:
+        if (!extension) {
+          echoToAdd.value.extension = null
+          return
+        }
+        echoToAdd.value.extension = {
+          type: ExtensionType.VIDEO,
+          payload: { videoId: extension },
+        }
+        return
+      case ExtensionType.GITHUBPROJ:
+        if (!extension) {
+          echoToAdd.value.extension = null
+          return
+        }
+        echoToAdd.value.extension = {
+          type: ExtensionType.GITHUBPROJ,
+          payload: { repoUrl: extension },
+        }
+        return
+      case ExtensionType.WEBSITE: {
+        const { title, site } = websiteToAdd.value
+        if (!title || !site) {
+          echoToAdd.value.extension = null
+          return
+        }
+        echoToAdd.value.extension = {
+          type: ExtensionType.WEBSITE,
+          payload: { title, site },
+        }
+        return
+      }
+      default:
+        echoToAdd.value.extension = null
     }
   }
 

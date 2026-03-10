@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
@@ -62,20 +63,16 @@ func (echoService *EchoService) PostEcho(ctx context.Context, newEcho *model.Ech
 		newEcho.Layout = model.LayoutWaterfall
 	}
 
-	if newEcho.Extension != "" && newEcho.ExtensionType != "" {
-		switch newEcho.ExtensionType {
-		case model.Extension_GITHUBPROJ:
-			newEcho.Extension = httpUtil.TrimURL(newEcho.Extension)
-		}
-	} else {
-		newEcho.Extension = ""
-		newEcho.ExtensionType = ""
+	normalizedExt, err := normalizeEchoExtension(newEcho.Extension)
+	if err != nil {
+		return err
 	}
+	newEcho.Extension = normalizedExt
 
 	newEcho.Username = user.Username
 
 	if newEcho.Content == "" && len(newEcho.EchoFiles) == 0 &&
-		(newEcho.Extension == "" || newEcho.ExtensionType == "") {
+		newEcho.Extension == nil {
 		return errors.New(commonModel.ECHO_CAN_NOT_BE_EMPTY)
 	}
 
@@ -227,22 +224,18 @@ func (echoService *EchoService) UpdateEcho(ctx context.Context, echo *model.Echo
 		echo.Layout = model.LayoutWaterfall
 	}
 
-	if echo.Extension != "" && echo.ExtensionType != "" {
-		switch echo.ExtensionType {
-		case model.Extension_GITHUBPROJ:
-			echo.Extension = httpUtil.TrimURL(echo.Extension)
-		}
-	} else {
-		echo.Extension = ""
-		echo.ExtensionType = ""
+	normalizedExt, err := normalizeEchoExtension(echo.Extension)
+	if err != nil {
+		return err
 	}
+	echo.Extension = normalizedExt
 
 	for i := range echo.EchoFiles {
 		echo.EchoFiles[i].EchoID = echo.ID
 	}
 
 	if echo.Content == "" && len(echo.EchoFiles) == 0 &&
-		(echo.Extension == "" || echo.ExtensionType == "") {
+		echo.Extension == nil {
 		return errors.New(commonModel.ECHO_CAN_NOT_BE_EMPTY)
 	}
 
@@ -395,4 +388,66 @@ func (echoService *EchoService) GetEchosByTagId(
 		Items: echos,
 		Total: total,
 	}, nil
+}
+
+func normalizeEchoExtension(ext *model.EchoExtension) (*model.EchoExtension, error) {
+	if ext == nil {
+		return nil, nil
+	}
+
+	extType := strings.TrimSpace(ext.Type)
+	if extType == "" {
+		return nil, nil
+	}
+	ext.Type = extType
+	if ext.Payload == nil {
+		return nil, fmt.Errorf("extension payload is required")
+	}
+
+	switch ext.Type {
+	case model.Extension_MUSIC:
+		url := strings.TrimSpace(getPayloadString(ext.Payload, "url"))
+		if url == "" {
+			return nil, fmt.Errorf("extension payload.url is required for MUSIC")
+		}
+		ext.Payload = map[string]interface{}{"url": httpUtil.TrimURL(url)}
+	case model.Extension_VIDEO:
+		videoID := strings.TrimSpace(getPayloadString(ext.Payload, "videoId"))
+		if videoID == "" {
+			return nil, fmt.Errorf("extension payload.videoId is required for VIDEO")
+		}
+		ext.Payload = map[string]interface{}{"videoId": videoID}
+	case model.Extension_GITHUBPROJ:
+		repoURL := strings.TrimSpace(getPayloadString(ext.Payload, "repoUrl"))
+		if repoURL == "" {
+			return nil, fmt.Errorf("extension payload.repoUrl is required for GITHUBPROJ")
+		}
+		ext.Payload = map[string]interface{}{"repoUrl": httpUtil.TrimURL(repoURL)}
+	case model.Extension_WEBSITE:
+		title := strings.TrimSpace(getPayloadString(ext.Payload, "title"))
+		site := strings.TrimSpace(getPayloadString(ext.Payload, "site"))
+		if title == "" || site == "" {
+			return nil, fmt.Errorf("extension payload.title and payload.site are required for WEBSITE")
+		}
+		ext.Payload = map[string]interface{}{
+			"title": title,
+			"site":  httpUtil.TrimURL(site),
+		}
+	default:
+		return nil, fmt.Errorf("unsupported extension type: %s", ext.Type)
+	}
+
+	return ext, nil
+}
+
+func getPayloadString(payload map[string]interface{}, key string) string {
+	raw, ok := payload[key]
+	if !ok || raw == nil {
+		return ""
+	}
+	value, ok := raw.(string)
+	if !ok {
+		return ""
+	}
+	return value
 }

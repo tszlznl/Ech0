@@ -140,9 +140,7 @@ definitions:
       created_at:
         type: string
       extension:
-        type: string
-      extension_type:
-        type: string
+        $ref: '#/definitions/model.EchoExtension'
       fav_count:
         type: integer
       id:
@@ -162,6 +160,39 @@ definitions:
       user_id:
         type: integer
       username:
+        type: string
+    type: object
+  model.EchoUpsertDto:
+    properties:
+      content:
+        type: string
+      echo_files:
+        items:
+          type: object
+        type: array
+      extension:
+        $ref: '#/definitions/model.EchoExtension'
+      id:
+        type: string
+      layout:
+        type: string
+      private:
+        type: boolean
+      tags:
+        items:
+          $ref: '#/definitions/model.Tag'
+        type: array
+    type: object
+  model.EchoExtension:
+    properties:
+      echo_id:
+        type: string
+      id:
+        type: string
+      payload:
+        additionalProperties: true
+        type: object
+      type:
         type: string
     type: object
   model.GetPresignURLDto:
@@ -912,7 +943,7 @@ paths:
         name: echo
         required: true
         schema:
-          $ref: '#/definitions/model.Echo'
+          $ref: '#/definitions/model.EchoUpsertDto'
       produces:
       - application/json
       responses:
@@ -933,7 +964,7 @@ paths:
         name: echo
         required: true
         schema:
-          $ref: '#/definitions/model.Echo'
+          $ref: '#/definitions/model.EchoUpsertDto'
       produces:
       - application/json
       responses:

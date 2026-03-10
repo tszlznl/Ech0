@@ -19,8 +19,7 @@
 import Link from '../icons/link.vue'
 
 const props = defineProps<{
-  website: string
+  website: { title: string; site: string }
 }>()
-
-const websiteInfo = JSON.parse(props.website) as { title: string; site: string }
+const websiteInfo = props.website
 </script>

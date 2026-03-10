@@ -8,7 +8,7 @@
       :server="musicInfo.server"
       :type="musicInfo.type"
       :id="musicInfo.id"
-      :auto="props.echo.extension"
+      :auto="musicAuto"
     >
     </meting-js>
   </div>
@@ -51,8 +51,12 @@ const props = defineProps<{
 }>()
 
 const musicInfo = computed(() => {
-  if (props.echo.extension_type !== ExtensionType.MUSIC || !props.echo.extension) return null
-  return parseMusicURL(props.echo.extension)
+  if (props.echo.extension?.type !== ExtensionType.MUSIC) return null
+  return parseMusicURL(props.echo.extension.payload.url)
+})
+const musicAuto = computed(() => {
+  if (props.echo.extension?.type !== ExtensionType.MUSIC) return ''
+  return props.echo.extension.payload.url
 })
 const metingAPI = computed(() => {
   if (!loading.value && SystemSetting.value && SystemSetting.value.meting_api.length > 0) {

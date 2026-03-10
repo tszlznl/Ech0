@@ -79,6 +79,7 @@ func (echoRepository *EchoRepository) GetEchosByPage(
 					return db.Order("echo_files.sort_order ASC")
 				}).
 				Preload("EchoFiles.File").
+				Preload("Extension").
 				Preload("Tags").
 				Limit(pageSize).
 				Offset(offset).
@@ -114,6 +115,7 @@ func (echoRepository *EchoRepository) GetEchosById(ctx context.Context, id strin
 					return db.Order("echo_files.sort_order ASC")
 				}).
 				Preload("EchoFiles.File").
+				Preload("Extension").
 				Preload("Tags").
 				Where("id = ?", id).
 				First(&row)
@@ -129,6 +131,7 @@ func (echoRepository *EchoRepository) GetEchosById(ctx context.Context, id strin
 					return db.Order("echo_files.sort_order ASC")
 				}).
 				Preload("EchoFiles.File").
+				Preload("Extension").
 				Preload("Tags").
 				Where("id = ?", id).
 				First(&row)
@@ -204,6 +207,7 @@ func (echoRepository *EchoRepository) GetTodayEchos(showPrivate bool, timezone s
 					return db.Order("echo_files.sort_order ASC")
 				}).
 				Preload("EchoFiles.File").
+				Preload("Extension").
 				Preload("Tags").
 				Order("created_at DESC").
 				Find(&echos).Error; err != nil {
@@ -230,13 +234,21 @@ func (echoRepository *EchoRepository) UpdateEcho(ctx context.Context, echo *mode
 	if err := echoRepository.getDB(ctx).Model(&model.Echo{}).
 		Where("id = ?", echo.ID).
 		Updates(map[string]interface{}{
-			"content":        echo.Content,
-			"private":        echo.Private,
-			"layout":         echo.Layout,
-			"extension":      echo.Extension,
-			"extension_type": echo.ExtensionType,
+			"content": echo.Content,
+			"private": echo.Private,
+			"layout":  echo.Layout,
 		}).Error; err != nil {
 		return err
+	}
+
+	if err := echoRepository.getDB(ctx).Where("echo_id = ?", echo.ID).Delete(&model.EchoExtension{}).Error; err != nil {
+		return err
+	}
+	if echo.Extension != nil {
+		echo.Extension.EchoID = echo.ID
+		if err := echoRepository.getDB(ctx).Create(echo.Extension).Error; err != nil {
+			return err
+		}
 	}
 
 	if len(echo.EchoFiles) > 0 {
@@ -410,6 +422,7 @@ func (echoRepository *EchoRepository) GetEchosByTagId(
 			return db.Order("echo_files.sort_order ASC")
 		}).
 		Preload("EchoFiles.File").
+		Preload("Extension").
 		Preload("Tags").
 		Order("created_at DESC").
 		Find(&echos).Error; err != nil {

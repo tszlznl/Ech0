@@ -125,30 +125,27 @@ watch(
       }
 
       // 3. 填充扩展
-      if (echoToUpdate.value?.extension && echoToUpdate.value.extension_type) {
-        currentExtensionType.value = echoToUpdate.value.extension_type as ExtensionType
-        extensionToAdd.value.extension = echoToUpdate.value.extension
-        extensionToAdd.value.extension_type = echoToUpdate.value.extension_type
+      if (echoToUpdate.value?.extension) {
+        currentExtensionType.value = echoToUpdate.value.extension.type as ExtensionType
+        extensionToAdd.value.extension_type = echoToUpdate.value.extension.type
         // 根据扩展类型填充
-        switch (echoToUpdate.value.extension_type) {
+        switch (echoToUpdate.value.extension.type) {
           case ExtensionType.MUSIC:
+            extensionToAdd.value.extension = echoToUpdate.value.extension.payload.url || ''
             break
 
           case ExtensionType.VIDEO:
-            videoURL.value = echoToUpdate.value.extension // 直接使用extension填充B站链接
+            extensionToAdd.value.extension = echoToUpdate.value.extension.payload.videoId || ''
+            videoURL.value = echoToUpdate.value.extension.payload.videoId || ''
             break
 
           case ExtensionType.GITHUBPROJ:
+            extensionToAdd.value.extension = echoToUpdate.value.extension.payload.repoUrl || ''
             break
 
           case ExtensionType.WEBSITE:
-            // 反序列化网站链接
-            const websiteData = JSON.parse(echoToUpdate.value.extension) as {
-              title?: string
-              site?: string
-            }
-            websiteToAdd.value.title = websiteData.title || ''
-            websiteToAdd.value.site = websiteData.site || ''
+            websiteToAdd.value.title = echoToUpdate.value.extension.payload.title || ''
+            websiteToAdd.value.site = echoToUpdate.value.extension.payload.site || ''
             break
         }
       }

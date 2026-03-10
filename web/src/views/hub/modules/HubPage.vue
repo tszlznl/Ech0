@@ -36,7 +36,7 @@
             :size-dependencies="[
               item.content?.length ?? 0,
               getEchoFilesBy(item, { categories: ['image'], dedupeBy: 'id' }).length,
-              item.extension_type ?? '',
+              item.extension?.type ?? '',
               item.layout ?? '',
             ]"
             :data-index="index"

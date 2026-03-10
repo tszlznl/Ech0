@@ -30,21 +30,22 @@ func NewEchoHandler(echoService service.Service) *EchoHandler {
 //	@Tags			Echo
 //	@Accept			json
 //	@Produce		json
-//	@Param			echo	body		model.Echo		true	"Echo内容"
+//	@Param			echo	body		model.EchoUpsertDto	true	"Echo内容"
 //	@Success		200		{object}	res.Response	"创建成功"
 //	@Failure		200		{object}	res.Response	"创建失败"
 //	@Router			/echo [post]
 func (echoHandler *EchoHandler) PostEcho() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		var newEcho model.Echo
-		if err := ctx.ShouldBindJSON(&newEcho); err != nil {
+		var request model.EchoUpsertDto
+		if err := ctx.ShouldBindJSON(&request); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_REQUEST_BODY,
 				Err: err,
 			}
 		}
+		newEcho := request.ToModel()
 
-		if err := echoHandler.echoService.PostEcho(ctx.Request.Context(), &newEcho); err != nil {
+		if err := echoHandler.echoService.PostEcho(ctx.Request.Context(), newEcho); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -189,21 +190,22 @@ func (echoHandler *EchoHandler) GetTodayEchos() gin.HandlerFunc {
 //	@Tags			Echo
 //	@Accept			json
 //	@Produce		json
-//	@Param			echo	body		model.Echo		true	"要更新的Echo内容"
+//	@Param			echo	body		model.EchoUpsertDto	true	"要更新的Echo内容"
 //	@Success		200		{object}	res.Response	"更新成功"
 //	@Failure		200		{object}	res.Response	"更新失败"
 //	@Router			/echo [put]
 func (echoHandler *EchoHandler) UpdateEcho() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		var updateEcho model.Echo
-		if err := ctx.ShouldBindJSON(&updateEcho); err != nil {
+		var request model.EchoUpsertDto
+		if err := ctx.ShouldBindJSON(&request); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_REQUEST_BODY,
 				Err: err,
 			}
 		}
+		updateEcho := request.ToModel()
 
-		if err := echoHandler.echoService.UpdateEcho(ctx.Request.Context(), &updateEcho); err != nil {
+		if err := echoHandler.echoService.UpdateEcho(ctx.Request.Context(), updateEcho); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,

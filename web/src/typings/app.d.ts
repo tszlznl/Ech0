@@ -144,6 +144,13 @@ declare namespace App {
     }
 
     namespace Ech0 {
+      type EchoExtensionType = 'MUSIC' | 'VIDEO' | 'GITHUBPROJ' | 'WEBSITE'
+      type EchoExtension =
+        | { type: 'MUSIC'; payload: { url: string } }
+        | { type: 'VIDEO'; payload: { videoId: string } }
+        | { type: 'GITHUBPROJ'; payload: { repoUrl: string } }
+        | { type: 'WEBSITE'; payload: { title: string; site: string } }
+
       type ParamsByPagination = {
         page: number
         pageSize: number
@@ -158,8 +165,7 @@ declare namespace App {
         layout?: string
         private: boolean
         user_id: string
-        extension?: string
-        extension_type?: string
+        extension?: EchoExtension | null
         tags?: Tag[]
         fav_count: number
         created_at: string
@@ -232,8 +238,7 @@ declare namespace App {
         echo_files?: Array<{ file_id: string; sort_order: number }> | null
         tags?: TagToAdd[] | null
         layout?: string | null
-        extension?: string | null
-        extension_type?: string | null
+        extension?: EchoExtension | null
         private: boolean
       }
 
@@ -246,8 +251,7 @@ declare namespace App {
         layout?: string | null
         private: boolean
         user_id: string
-        extension?: string | null
-        extension_type?: string | null
+        extension?: EchoExtension | null
         created_at: string
       }
 
@@ -471,8 +475,7 @@ declare namespace App {
         layout?: string
         private: boolean
         user_id: string
-        extension: string
-        extension_type: string
+        extension?: Ech0.EchoExtension | null
         fav_count: number
         created_at: string
         createdTs: number

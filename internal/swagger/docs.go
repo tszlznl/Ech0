@@ -606,7 +606,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.Echo"
+                            "$ref": "#/definitions/model.EchoUpsertDto"
                         }
                     }
                 ],
@@ -638,7 +638,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.Echo"
+                            "$ref": "#/definitions/model.EchoUpsertDto"
                         }
                     }
                 ],
@@ -2047,10 +2047,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "extension": {
-                    "type": "string"
-                },
-                "extension_type": {
-                    "type": "string"
+                    "$ref": "#/definitions/model.EchoExtension"
                 },
                 "fav_count": {
                     "type": "integer"
@@ -2081,6 +2078,56 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "model.EchoExtension": {
+            "type": "object",
+            "properties": {
+                "echo_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "payload": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.EchoUpsertDto": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "echo_files": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                },
+                "extension": {
+                    "$ref": "#/definitions/model.EchoExtension"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "layout": {
+                    "type": "string"
+                },
+                "private": {
+                    "type": "boolean"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Tag"
+                    }
                 }
             }
         },
