@@ -63,6 +63,16 @@
 
         <div class="h-px bg-[var(--bg-color-300)] mx-2" />
 
+        <!-- Dashboard -->
+        <BaseButton
+          :icon="Dashboard"
+          @click="router.push('/panel/dashboard')"
+          :class="getButtonClasses('panel-dashboard')"
+          title="Dashboard"
+        >
+          Dashboard
+        </BaseButton>
+
         <!-- 偏好设置 -->
         <BaseButton
           :icon="Setting"
@@ -187,6 +197,7 @@ import Auth from '@/components/icons/auth.vue'
 import BackHand from '@/components/icons/backhand.vue'
 import Extension from '@/components/icons/extension.vue'
 import Others from '@/components/icons/theothers.vue'
+import Dashboard from '@/components/icons/dashboard.vue'
 import Setting from '@/components/icons/setting.vue'
 import Storage from '@/components/icons/storage.vue'
 import Data from '@/components/icons/data.vue'
@@ -230,6 +241,7 @@ const getBottomButtonClasses = () => {
 
 // 路由选项
 const routeOptions = [
+  { label: 'Dashboard', value: '/panel/dashboard' },
   { label: '偏好设置', value: '/panel/setting' },
   { label: '用户中心', value: '/panel/user' },
   { label: '存储管理', value: '/panel/storage' },
