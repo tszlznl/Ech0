@@ -130,12 +130,12 @@
             />
           </div>
 
-          <TheImageGallery :images="echoImages" :layout="props.echo.layout" />
+          <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" />
         </template>
 
         <template v-else>
           <!-- 图片在上，文字在下（瀑布流 / 单图轮播 等） -->
-          <TheImageGallery :images="echoImages" :layout="props.echo.layout" />
+          <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" />
 
           <div class="mx-auto w-11/12 pl-1 mt-3">
             <MdPreview
@@ -199,7 +199,7 @@ import { localStg } from '@/utils/storage'
 import { useRouter } from 'vue-router'
 import { ExtensionType, ImageLayout } from '@/enums/enums'
 import { formatDate } from '@/utils/other'
-import { getEchoImages } from '@/utils/echo'
+import { getEchoFilesBy } from '@/utils/echo'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 const { openConfirm } = useBaseDialog()
 
@@ -228,7 +228,9 @@ const previewOptions = {
   codeFoldable: true,
   autoFoldThreshold: 15,
 }
-const echoImages = computed(() => getEchoImages(props.echo))
+const echoImageFiles = computed(() =>
+  getEchoFilesBy(props.echo, { categories: ['image'], dedupeBy: 'id' }),
+)
 
 const echoStore = useEchoStore()
 const editorStore = useEditorStore()

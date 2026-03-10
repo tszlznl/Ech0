@@ -35,7 +35,7 @@
             :active="active"
             :size-dependencies="[
               item.content?.length ?? 0,
-              getEchoImages(item).length,
+              getEchoFilesBy(item, { categories: ['image'], dedupeBy: 'id' }).length,
               item.extension_type ?? '',
               item.layout ?? '',
             ]"
@@ -87,7 +87,7 @@ import { storeToRefs } from 'pinia'
 import { useRouter, useRoute } from 'vue-router'
 import { useBfCacheRestore } from '@/composables/useBfCacheRestore'
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
-import { getEchoImages } from '@/utils/echo'
+import { getEchoFilesBy } from '@/utils/echo'
 
 const router = useRouter()
 const route = useRoute()

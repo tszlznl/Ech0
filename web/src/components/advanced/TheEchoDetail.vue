@@ -56,12 +56,12 @@
             />
           </div>
 
-          <TheImageGallery :images="echoImages" :layout="props.echo.layout" />
+          <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" />
         </template>
 
         <template v-else>
           <!-- 图片在上，文字在下 -->
-          <TheImageGallery :images="echoImages" :layout="props.echo.layout" />
+          <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" />
 
           <div class="mt-3">
             <MdPreview
@@ -192,7 +192,7 @@ import { useSettingStore, useThemeStore } from '@/stores'
 import { getApiUrl } from '@/service/request/shared'
 import { ExtensionType, ImageLayout } from '@/enums/enums'
 import { formatDate } from '@/utils/other'
-import { getEchoImages } from '@/utils/echo'
+import { getEchoFilesBy } from '@/utils/echo'
 const emit = defineEmits(['updateLikeCount', 'printEcho'])
 
 type Echo = App.Api.Ech0.Echo
@@ -213,7 +213,9 @@ const previewOptions = {
   codeFoldable: true,
   autoFoldThreshold: 15,
 }
-const echoImages = computed(() => getEchoImages(props.echo))
+const echoImageFiles = computed(() =>
+  getEchoFilesBy(props.echo, { categories: ['image'], dedupeBy: 'id' }),
+)
 
 const isLikeAnimating = ref(false)
 const isShareAnimating = ref(false)
