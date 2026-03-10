@@ -49,7 +49,7 @@
 
     <div class="flex flex-row items-center gap-2">
       <!-- Published Info -->
-      <div v-if="hasContent || hasImage || hasExtension" class="relative group">
+      <div v-if="hasContent || hasFile || hasExtension" class="relative group">
         <Info class="w-6 h-6 text-[var(--text-color-300)] hover:text-[var(--text-color-400)]" />
         <div
           class="absolute right-0 top-full z-10 mt-2 whitespace-nowrap rounded-md border border-[var(--border-color-300)] border-dashed bg-[var(--editor-bg-color)] px-2 py-1 text-xs shadow-md opacity-0 translate-y-1 scale-95 pointer-events-none transition-all duration-200 ease-out group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100 group-hover:pointer-events-auto"
@@ -154,10 +154,10 @@ const {
   currentMode,
   isUpdateMode,
   echoToAdd,
-  imageToAdd,
+  fileToAdd,
   tagToAdd,
   hasContent,
-  hasImage,
+  hasFile,
   hasExtension,
   extensionToAdd,
 } = storeToRefs(editorStore)
@@ -177,7 +177,7 @@ const infoTooltipLines = computed<TooltipLine[]>(() => {
 
   const parts: TooltipLine[] = []
   if (hasContent.value) parts.push({ label: '文字', icon: Write })
-  if (hasImage.value) parts.push({ label: '图片', icon: ImageIcon })
+  if (hasFile.value) parts.push({ label: '图片', icon: ImageIcon })
   if (hasExtension.value)
     parts.push({
       label:
@@ -202,12 +202,12 @@ const handleChangeMode = () => {
 }
 
 const handleAddImageMode = () => {
-  imageToAdd.value.storage_type = FILE_STORAGE_TYPE.LOCAL
+  fileToAdd.value.storage_type = FILE_STORAGE_TYPE.LOCAL
 
   // 检查localStg中是否有记忆的上传方式
   const rememberedSource = localStg.getItem<App.Api.File.StorageType>('file_storage_type')
   if (rememberedSource) {
-    imageToAdd.value.storage_type = rememberedSource
+    fileToAdd.value.storage_type = rememberedSource
   }
 
   editorStore.setMode(Mode.Image)

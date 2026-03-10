@@ -1,14 +1,13 @@
 package handler
 
 import (
-	"net/http"
+	"errors"
 
 	"github.com/gin-gonic/gin"
 	res "github.com/lin-snow/ech0/internal/handler/response"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	service "github.com/lin-snow/ech0/internal/service/file"
 	"github.com/lin-snow/ech0/internal/storage"
-	errorUtil "github.com/lin-snow/ech0/internal/util/err"
 )
 
 type FileHandler struct {
@@ -52,58 +51,40 @@ func (fileHandler *FileHandler) CreateExternalFile() gin.HandlerFunc {
 
 func (fileHandler *FileHandler) DeleteFile() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		var dto commonModel.FileDeleteDto
-		if err := ctx.ShouldBindJSON(&dto); err != nil {
-			return res.Response{Msg: commonModel.INVALID_REQUEST_BODY, Err: err}
+		id := ctx.Param("id")
+		if id == "" {
+			return res.Response{Msg: commonModel.INVALID_PARAMS, Err: errors.New(commonModel.INVALID_PARAMS)}
 		}
 
-		if err := fileHandler.fileService.DeleteFile(ctx.Request.Context(), dto); err != nil {
-			ctx.JSON(
-				http.StatusOK,
-				commonModel.Fail[string](errorUtil.HandleError(&commonModel.ServerError{
-					Msg: "",
-					Err: err,
-				})),
-			)
+		if err := fileHandler.fileService.DeleteFile(ctx.Request.Context(), id); err != nil {
 			return res.Response{Msg: "", Err: err}
 		}
 		return res.Response{Msg: commonModel.DELETE_SUCCESS}
 	})
 }
 
-func (fileHandler *FileHandler) UploadAudioFile() gin.HandlerFunc {
+func (fileHandler *FileHandler) GetFileByID() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		file, err := ctx.FormFile("file")
-		if err != nil {
-			return res.Response{Msg: commonModel.INVALID_REQUEST_BODY, Err: err}
+		id := ctx.Param("id")
+		if id == "" {
+			return res.Response{Msg: commonModel.INVALID_PARAMS, Err: errors.New(commonModel.INVALID_PARAMS)}
 		}
 
-		audioFile, err := fileHandler.fileService.UploadAudioFile(ctx.Request.Context(), file)
+		fileDto, err := fileHandler.fileService.GetFileByID(ctx.Request.Context(), id)
 		if err != nil {
 			return res.Response{Msg: "", Err: err}
 		}
-		return res.Response{Data: audioFile, Msg: commonModel.UPLOAD_SUCCESS}
+		return res.Response{Data: fileDto}
 	})
 }
 
-func (fileHandler *FileHandler) DeleteAudioFile() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		if err := fileHandler.fileService.DeleteAudioFile(ctx.Request.Context()); err != nil {
-			return res.Response{Msg: "", Err: err}
-		}
-		return res.Response{Msg: commonModel.DELETE_SUCCESS}
-	})
-}
-
-func (fileHandler *FileHandler) GetCurrentAudio() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		audioURL := fileHandler.fileService.GetCurrentAudioURL()
-		return res.Response{Data: audioURL, Msg: commonModel.GET_MUSIC_URL_SUCCESS}
-	})
-}
-
-func (fileHandler *FileHandler) StreamCurrentAudio(ctx *gin.Context) {
-	fileHandler.fileService.StreamCurrentAudio(ctx)
+func (fileHandler *FileHandler) StreamFileByID(ctx *gin.Context) {
+	id := ctx.Param("id")
+	if id == "" {
+		ctx.Status(400)
+		return
+	}
+	fileHandler.fileService.StreamFileByID(ctx, id)
 }
 
 func (fileHandler *FileHandler) GetFilePresignURL() gin.HandlerFunc {

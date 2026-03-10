@@ -31,37 +31,15 @@ export function fetchCreateExternalFile(dto: App.Api.File.CreateExternalFileDto)
 // 删除文件
 export function fetchDeleteFile(file: App.Api.File.FileDeleteDto) {
   return request({
-    url: `/files/delete`,
+    url: `/file/${file.id}`,
     method: 'DELETE',
-    data: file,
   })
 }
 
-// 上传当前音频文件
-export function fetchUploadAudioFile(file: File) {
-  const formData = new FormData()
-  formData.append('file', file)
-  formData.append('storage_type', FILE_STORAGE_TYPE.LOCAL)
-  formData.append('category', FILE_CATEGORY.AUDIO)
+// 按ID获取文件详情
+export function fetchGetFileById(id: string) {
   return request<App.Api.File.FileDto>({
-    url: `/files/audio/upload`,
-    method: 'POST',
-    data: formData,
-  })
-}
-
-// 删除当前音频文件
-export function fetchDeleteAudioFile() {
-  return request({
-    url: `/files/audio`,
-    method: 'DELETE',
-  })
-}
-
-// 获取当前音频播放地址
-export function fetchGetCurrentAudio() {
-  return request<string>({
-    url: `/audio/current`,
+    url: `/file/${id}`,
     method: 'GET',
   })
 }

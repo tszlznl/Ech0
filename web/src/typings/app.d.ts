@@ -81,11 +81,13 @@ declare namespace App {
         url: string
         content_type?: string
         category?: Category
+        storage_type?: StorageType
+        size?: number
         width?: number
         height?: number
       }
       type FileDeleteDto = {
-        key: string
+        id: string
       }
       type CreateExternalFileDto = {
         url: string
@@ -124,6 +126,8 @@ declare namespace App {
         echo_id: string
         url: string
         storage_type: File.StorageType
+        category?: File.Category
+        content_type?: string
         key?: string // 对应后端 file.key
         width?: number // 图片宽度
         height?: number // 图片高度
@@ -163,6 +167,8 @@ declare namespace App {
         id?: string
         url: string
         storage_type: File.StorageType
+        category?: File.Category
+        content_type?: string
         key?: string // 对应后端 file.key
         width?: number // 图片宽度
         height?: number // 图片高度
@@ -218,7 +224,7 @@ declare namespace App {
       }[]
 
       type FileToDelete = {
-        key: string
+        id: string
       }
 
       type GithubCardData = {

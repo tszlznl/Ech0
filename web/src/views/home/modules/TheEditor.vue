@@ -61,7 +61,7 @@ import { watch } from 'vue'
 import { useEchoStore, useEditorStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { Mode, ExtensionType, ImageLayout } from '@/enums/enums'
-import { getEchoImages } from '@/utils/echo'
+import { getEchoFiles } from '@/utils/echo'
 
 /* --------------- 与Pinia相关 ---------------- */
 const echoStore = useEchoStore()
@@ -74,7 +74,7 @@ const {
   echoToAdd,
   videoURL,
   extensionToAdd,
-  imagesToAdd,
+  filesToAdd,
   websiteToAdd,
   tagToAdd,
   currentExtensionType,
@@ -119,16 +119,16 @@ watch(
       echoToAdd.value.content = echoToUpdate.value?.content || ''
 
       // 2. 填充图片
-      const existingImages = getEchoImages(echoToUpdate.value)
+      const existingImages = getEchoFiles(echoToUpdate.value)
       if (existingImages.length > 0) {
-        imagesToAdd.value = existingImages.map((img) => ({
+        filesToAdd.value = existingImages.map((img) => ({
           id: String(img.id || ''),
           url: img.url || '',
           storage_type: img.storage_type || 'local',
           key: img.key || '',
         }))
       } else {
-        imagesToAdd.value = []
+        filesToAdd.value = []
       }
 
       // 3. 填充扩展

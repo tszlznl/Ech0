@@ -5,7 +5,7 @@ import {
   fetchAddEcho,
   fetchUpdateEcho,
   fetchAddTodo,
-  fetchGetCurrentAudio,
+  fetchGetFileById,
   fetchCreateExternalFile,
 } from '@/service/api'
 import { Mode, ExtensionType, ImageLayout } from '@/enums/enums'
@@ -13,7 +13,7 @@ import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { useEchoStore, useTodoStore, useInboxStore } from '@/stores'
 import { localStg } from '@/utils/storage'
 import { getImageSize } from '@/utils/image'
-import { getImageToAddUrl } from '@/utils/other'
+import { getFileToAddUrl } from '@/utils/other'
 
 export const useEditorStore = defineStore('editorStore', () => {
   const echoStore = useEchoStore()
@@ -36,7 +36,7 @@ export const useEditorStore = defineStore('editorStore', () => {
   //================================================================
   const isSubmitting = ref<boolean>(false) // 是否正在提交
   const isUpdateMode = ref<boolean>(false) // 是否为编辑更新模式
-  const ImageUploading = ref<boolean>(false) // 图片是否正在上传
+  const fileUploading = ref<boolean>(false) // 文件是否正在上传
 
   //================================================================
   // 编辑器数据状态管理(待添加的Echo)
@@ -51,7 +51,7 @@ export const useEditorStore = defineStore('editorStore', () => {
   })
 
   const hasContent = computed(() => !!echoToAdd.value.content?.trim()) // 是否已填写内容
-  const hasImage = computed(() => imagesToAdd.value.length > 0) // 是否已添加图片
+  const hasFile = computed(() => filesToAdd.value.length > 0) // 是否已添加文件
   const hasExtension = computed(() => {
     // 适合 Music/Video/Github
     const ext = extensionToAdd.value.extension
@@ -72,15 +72,15 @@ export const useEditorStore = defineStore('editorStore', () => {
   const todoToAdd = ref<App.Api.Todo.TodoToAdd>({ content: '' })
 
   //================================================================
-  // 辅助Echo的添加变量（图片板块）
+  // 辅助Echo的添加变量（文件板块）
   //================================================================
-  const imageToAdd = ref<App.Api.Ech0.FileToAdd>({
-    url: '', // 图片地址(依据存储方式不同而不同)
+  const fileToAdd = ref<App.Api.Ech0.FileToAdd>({
+    url: '', // 文件地址(依据存储方式不同而不同)
     storage_type: FILE_STORAGE_TYPE.LOCAL, // 文件存储方式（local/object/external）
     key: '', // 对应后端 file.key (如果是直链则为空)
   })
-  const imagesToAdd = ref<App.Api.Ech0.FileToAdd[]>([]) // 最终要添加的图片列表
-  const imageIndex = ref<number>(0) // 当前图片索引（用于编辑图片时定位）
+  const filesToAdd = ref<App.Api.Ech0.FileToAdd[]>([]) // 最终要添加的文件列表
+  const fileIndex = ref<number>(0) // 当前文件索引（用于编辑文件时定位）
 
   //================================================================
   // 辅助Echo的添加变量（扩展内容板块）
@@ -95,8 +95,8 @@ export const useEditorStore = defineStore('editorStore', () => {
   //================================================================
   // 其它状态变量
   //================================================================
-  const PlayingMusicURL = ref('') // 当前正在播放的音乐URL
-  const ShouldLoadMusic = ref(true) // 是否应该加载音乐（用于控制音乐播放器的加载）
+  const playingFileURL = ref('') // 当前正在播放的文件URL
+  const shouldLoadMusic = ref(true) // 是否应该加载音乐（用于控制音乐播放器的加载）
 
   //================================================================
   // 编辑器功能函数
@@ -139,13 +139,13 @@ export const useEditorStore = defineStore('editorStore', () => {
       extension_type: null,
       tags: [],
     }
-    imageToAdd.value = {
+    fileToAdd.value = {
       id: undefined,
       url: '',
       storage_type: rememberedStorageType.value,
       key: '',
     }
-    imagesToAdd.value = []
+    filesToAdd.value = []
     videoURL.value = ''
     musicURL.value = ''
     githubRepo.value = ''
@@ -154,27 +154,34 @@ export const useEditorStore = defineStore('editorStore', () => {
     todoToAdd.value = { content: '' }
   }
 
-  const handleGetPlayingMusic = () => {
-    ShouldLoadMusic.value = !ShouldLoadMusic.value
-    fetchGetCurrentAudio().then((res) => {
-      if (res.code === 1 && res.data) {
-        PlayingMusicURL.value = res.data || ''
-        ShouldLoadMusic.value = !ShouldLoadMusic.value
-      }
-    })
+  const handleRefreshPlayingFile = async () => {
+    const currentPlayingFileId = localStg.getItem<string>('playing_file_id') || ''
+    if (!currentPlayingFileId) {
+      playingFileURL.value = ''
+      return
+    }
+    shouldLoadMusic.value = !shouldLoadMusic.value
+    const res = await fetchGetFileById(currentPlayingFileId)
+    if (res.code === 1 && res.data?.url) {
+      playingFileURL.value = res.data.url
+      shouldLoadMusic.value = !shouldLoadMusic.value
+      return
+    }
+    playingFileURL.value = ''
+    localStg.removeItem('playing_file_id')
   }
 
   //===============================================================
-  // 图片模式功能函数
+  // 文件模式功能函数
   //===============================================================
-  // 添加更多图片
-  const handleAddMoreImage = async () => {
-    let width: number | undefined = imageToAdd.value.width
-    let height: number | undefined = imageToAdd.value.height
+  // 添加更多文件
+  const handleAddMoreFile = async () => {
+    let width: number | undefined = fileToAdd.value.width
+    let height: number | undefined = fileToAdd.value.height
     if (width === undefined || height === undefined) {
       try {
-        const previewUrl = getImageToAddUrl(imageToAdd.value)
-        const size = await getImageSize(previewUrl || imageToAdd.value.url)
+        const previewUrl = getFileToAddUrl(fileToAdd.value)
+        const size = await getImageSize(previewUrl || fileToAdd.value.url)
         width = size.width
         height = size.height
       } catch {
@@ -183,8 +190,8 @@ export const useEditorStore = defineStore('editorStore', () => {
     }
 
     // URL 模式先在后端落一条 external file，拿到 file_id 后才能发布。
-    if (imageToAdd.value.storage_type === FILE_STORAGE_TYPE.EXTERNAL && !imageToAdd.value.id) {
-      const externalUrl = String(imageToAdd.value.url || '').trim()
+    if (fileToAdd.value.storage_type === FILE_STORAGE_TYPE.EXTERNAL && !fileToAdd.value.id) {
+      const externalUrl = String(fileToAdd.value.url || '').trim()
       if (!externalUrl) {
         theToast.error('图片链接不能为空')
         return
@@ -201,25 +208,25 @@ export const useEditorStore = defineStore('editorStore', () => {
         return
       }
 
-      imageToAdd.value.id = res.data.id
-      imageToAdd.value.key = res.data.key
-      imageToAdd.value.url = res.data.url || externalUrl
+      fileToAdd.value.id = res.data.id
+      fileToAdd.value.key = res.data.key
+      fileToAdd.value.url = res.data.url || externalUrl
     }
 
-    imagesToAdd.value.push({
-      id: imageToAdd.value.id,
-      url: imageToAdd.value.url,
-      storage_type: imageToAdd.value.storage_type,
-      key: imageToAdd.value.key ? imageToAdd.value.key : '',
+    filesToAdd.value.push({
+      id: fileToAdd.value.id,
+      url: fileToAdd.value.url,
+      storage_type: fileToAdd.value.storage_type,
+      key: fileToAdd.value.key ? fileToAdd.value.key : '',
       width,
       height,
     })
 
-    imageToAdd.value = {
+    fileToAdd.value = {
       id: undefined,
       url: '',
-      storage_type: imageToAdd.value.storage_type
-        ? imageToAdd.value.storage_type
+      storage_type: fileToAdd.value.storage_type
+        ? fileToAdd.value.storage_type
           : FILE_STORAGE_TYPE.LOCAL, // 记忆存储方式
       key: '',
     }
@@ -231,7 +238,7 @@ export const useEditorStore = defineStore('editorStore', () => {
         theToast.error('上传完成但未拿到可预览地址，请重试')
         continue
       }
-      imageToAdd.value = {
+      fileToAdd.value = {
         id: file.id,
         url: file.url,
         storage_type: file.storage_type,
@@ -239,11 +246,11 @@ export const useEditorStore = defineStore('editorStore', () => {
         width: file.width,
         height: file.height,
       }
-      await handleAddMoreImage()
+      await handleAddMoreFile()
     }
 
     if (isUpdateMode.value && echoStore.echoToUpdate) {
-      await handleAddOrUpdateEcho(true) // 仅同步图片
+      await handleAddOrUpdateEcho(true) // 仅同步文件
     }
   }
 
@@ -257,19 +264,19 @@ export const useEditorStore = defineStore('editorStore', () => {
   //===============================================================
   // 添加或更新Echo
   //===============================================================
-  const handleAddOrUpdateEcho = async (justSyncImages: boolean) => {
+  const handleAddOrUpdateEcho = async (justSyncFiles: boolean) => {
     // 防止重复提交
     if (isSubmitting.value) return
     isSubmitting.value = true
 
     // 执行添加或更新
     try {
-      if (ImageUploading.value) {
+      if (fileUploading.value) {
         theToast.error('图片仍在上传中，请等待上传完成后再发布')
         return
       }
 
-      const invalidFile = imagesToAdd.value.find((item) => !item.id)
+      const invalidFile = filesToAdd.value.find((item) => !item.id)
       if (invalidFile) {
         theToast.error('存在未绑定 file_id 的图片，请重新上传后再发布')
         return
@@ -280,7 +287,7 @@ export const useEditorStore = defineStore('editorStore', () => {
       checkEchoExtension()
 
       // 回填图片板块（后端只认 echo_files）
-      echoToAdd.value.echo_files = imagesToAdd.value
+      echoToAdd.value.echo_files = filesToAdd.value
         .filter((img) => img.id)
         .map((img, index) => ({
           file_id: String(img.id),
@@ -338,9 +345,9 @@ export const useEditorStore = defineStore('editorStore', () => {
 
         // 更新 Echo
         theToast.promise(fetchUpdateEcho(echoStore.echoToUpdate), {
-          loading: justSyncImages ? '🔁同步图片中...' : '🚀更新中...',
+          loading: justSyncFiles ? '🔁同步附件中...' : '🚀更新中...',
           success: (res) => {
-            if (res.code === 1 && !justSyncImages) {
+            if (res.code === 1 && !justSyncFiles) {
               clearEditor()
               echoStore.refreshEchos()
               isUpdateMode.value = false
@@ -348,8 +355,8 @@ export const useEditorStore = defineStore('editorStore', () => {
               setMode(Mode.ECH0)
               echoStore.getTags() // 刷新标签列表
               return '🎉更新成功！'
-            } else if (res.code === 1 && justSyncImages) {
-              return '🔁发现图片更改，已自动更新同步Echo！'
+            } else if (res.code === 1 && justSyncFiles) {
+              return '🔁发现附件更改，已自动更新同步Echo！'
             } else {
               return '😭更新失败，请稍后再试！'
             }
@@ -487,7 +494,7 @@ export const useEditorStore = defineStore('editorStore', () => {
   }
 
   const init = () => {
-    handleGetPlayingMusic()
+    handleRefreshPlayingFile()
   }
 
   return {
@@ -499,18 +506,18 @@ export const useEditorStore = defineStore('editorStore', () => {
 
     isSubmitting,
     isUpdateMode,
-    ImageUploading,
+    fileUploading,
 
     echoToAdd,
     todoToAdd,
 
     hasContent,
-    hasImage,
+    hasFile,
     hasExtension,
 
-    imageToAdd,
-    imagesToAdd,
-    imageIndex,
+    fileToAdd,
+    filesToAdd,
+    fileIndex,
 
     websiteToAdd,
     videoURL,
@@ -519,16 +526,16 @@ export const useEditorStore = defineStore('editorStore', () => {
     extensionToAdd,
     tagToAdd,
 
-    PlayingMusicURL,
-    ShouldLoadMusic,
+    playingFileURL,
+    shouldLoadMusic,
 
     // 方法
     init,
     setMode,
     toggleMode,
     clearEditor,
-    handleGetPlayingMusic,
-    handleAddMoreImage,
+    handleRefreshPlayingFile,
+    handleAddMoreFile,
     togglePrivate,
     handleAddTodo,
     handleAddOrUpdateEcho,

@@ -18,7 +18,7 @@ type EchoLike = {
     | null
 }
 
-export function getEchoImages(echo?: EchoLike | null): App.Api.Ech0.FileObject[] {
+export function getEchoFiles(echo?: EchoLike | null): App.Api.Ech0.FileObject[] {
   if (!echo) return []
 
   return (echo.echo_files || []).map((item) => {
@@ -35,6 +35,9 @@ export function getEchoImages(echo?: EchoLike | null): App.Api.Ech0.FileObject[]
     }
   })
 }
+
+// backward-compatible alias
+export const getEchoImages = getEchoFiles
 
 function normalizeStorageType(raw: unknown): App.Api.File.StorageType {
   const value = String(raw || '').toLowerCase()

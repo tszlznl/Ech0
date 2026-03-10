@@ -31,6 +31,8 @@ let uppy: Uppy | null = null
 const props = defineProps<{
   fileStorageType: App.Api.File.StorageType
   EnableCompressor: boolean
+  fileCategory?: App.Api.File.Category
+  allowedFileTypes?: string[]
 }>()
 // const emit = defineEmits(['uppyUploaded'])
 
@@ -46,6 +48,8 @@ const envURL = import.meta.env.VITE_SERVICE_BASE_URL as string
 const backendURL = envURL.endsWith('/') ? envURL.slice(0, -1) : envURL
 
 const outputMimeType = isSafari() ? 'image/jpeg' : 'image/webp'
+const currentCategory = props.fileCategory || FILE_CATEGORY.IMAGE
+const currentAllowedTypes = props.allowedFileTypes?.length ? props.allowedFileTypes : ['image/*']
 
 function inferFileExtFromType(contentType: string): string {
   const normalized = String(contentType || '').toLowerCase()
@@ -116,7 +120,7 @@ const initUppy = () => {
   uppy = new Uppy({
     restrictions: {
       maxNumberOfFiles: 6,
-      allowedFileTypes: ['image/*'],
+      allowedFileTypes: currentAllowedTypes,
     },
     autoProceed: true,
   })
@@ -148,7 +152,7 @@ const initUppy = () => {
   if (memorySource.value == FILE_STORAGE_TYPE.LOCAL) {
     console.log('使用本地存储')
     uppy.setMeta({
-      category: FILE_CATEGORY.IMAGE,
+      category: currentCategory,
       storage_type: FILE_STORAGE_TYPE.LOCAL,
     })
     uppy.use(XHRUpload, {
@@ -210,7 +214,7 @@ const initUppy = () => {
       return
     }
     isUploading.value = true
-    editorStore.ImageUploading = true
+    editorStore.fileUploading = true
   })
   // 上传开始前，检查是否登录
   uppy.on('upload', () => {
@@ -220,7 +224,7 @@ const initUppy = () => {
     }
     theToast.info('正在上传图片，请稍等... ⏳', { duration: 500 })
     isUploading.value = true
-    editorStore.ImageUploading = true
+    editorStore.fileUploading = true
   })
   // 单个文件上传失败后，显示错误信息
   uppy.on('upload-error', (file, error, response) => {
@@ -256,7 +260,7 @@ const initUppy = () => {
       if (msg) theToast.error(msg)
     }
     isUploading.value = false
-    editorStore.ImageUploading = false
+    editorStore.fileUploading = false
   })
   // 单个文件上传成功后，保存文件 URL 到 files 列表
   uppy.on('upload-success', (file, response) => {
@@ -318,7 +322,7 @@ const initUppy = () => {
       filesToAddResult.length > 0 ? editorStore.handleUppyUploaded(filesToAddResult) : undefined,
     ).finally(() => {
       isUploading.value = false
-      editorStore.ImageUploading = false
+      editorStore.fileUploading = false
       files.value = []
       tempFiles.value.clear()
     })

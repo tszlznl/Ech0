@@ -1,7 +1,7 @@
 <template>
   <div>
     <h2 class="text-[var(--text-color-500)] font-bold my-2">插入图片（支持直链、本地、S3存储）</h2>
-    <div v-if="!ImageUploading" class="flex items-center gap-2 mb-3">
+    <div v-if="!fileUploading" class="flex items-center gap-2 mb-3">
       <div class="flex items-center gap-2">
         <span class="text-[var(--text-color-500)]">选择添加方式：</span>
         <!-- 直链 -->
@@ -41,7 +41,7 @@
     </div>
 
     <!-- 智能压缩 -->
-    <div v-if="imageToAdd.storage_type !== FILE_STORAGE_TYPE.EXTERNAL" class="mb-3 flex items-center">
+    <div v-if="fileToAdd.storage_type !== FILE_STORAGE_TYPE.EXTERNAL" class="mb-3 flex items-center">
       <span class="text-[var(--text-color-500)]">智能压缩：</span>
       <BaseSwitch v-model="enableCompressor" />
     </div>
@@ -51,36 +51,36 @@
       当前上传方式为
       <span class="font-bold">
         {{
-          imageToAdd.storage_type === FILE_STORAGE_TYPE.EXTERNAL
+          fileToAdd.storage_type === FILE_STORAGE_TYPE.EXTERNAL
             ? '直链'
-            : imageToAdd.storage_type === FILE_STORAGE_TYPE.LOCAL
+            : fileToAdd.storage_type === FILE_STORAGE_TYPE.LOCAL
               ? '本地存储'
               : 'S3存储'
         }}</span
       >
-      {{ !ImageUploading ? '' : '，正在上传中...' }}
+      {{ !fileUploading ? '' : '，正在上传中...' }}
     </div>
 
     <div class="my-1">
       <!-- 图片上传 -->
       <TheUppy
-        v-if="imageToAdd.storage_type !== FILE_STORAGE_TYPE.EXTERNAL"
-        :fileStorageType="imageToAdd.storage_type"
+        v-if="fileToAdd.storage_type !== FILE_STORAGE_TYPE.EXTERNAL"
+        :fileStorageType="fileToAdd.storage_type"
         :EnableCompressor="enableCompressor"
       />
 
       <!-- 图片直链 -->
-      <div v-if="imageToAdd.storage_type === FILE_STORAGE_TYPE.EXTERNAL" class="flex items-center gap-2">
+      <div v-if="fileToAdd.storage_type === FILE_STORAGE_TYPE.EXTERNAL" class="flex items-center gap-2">
         <BaseInput
-          v-model="imageToAdd.url"
+          v-model="fileToAdd.url"
           class="rounded-lg h-auto flex-1"
           placeholder="请输入图片链接..."
         />
         <BaseButton
-          v-if="imageToAdd.url != ''"
+          v-if="fileToAdd.url != ''"
           :icon="Addmore"
           class="w-8 h-8 sm:w-8 sm:h-8 rounded-md shrink-0"
-          @click="editorStore.handleAddMoreImage"
+          @click="editorStore.handleAddMoreFile"
           title="添加更多图片"
         />
       </div>
@@ -106,13 +106,13 @@ import TheUppy from '@/components/advanced/TheUppy.vue'
 import { localStg } from '@/utils/storage'
 
 const editorStore = useEditorStore()
-const { imageToAdd, ImageUploading, echoToAdd } = storeToRefs(editorStore)
+const { fileToAdd, fileUploading, echoToAdd } = storeToRefs(editorStore)
 const settingStore = useSettingStore()
 const { S3Setting } = storeToRefs(settingStore)
 const enableCompressor = ref<boolean>(false)
 
 const handleSetFileSource = (source: App.Api.File.StorageType) => {
-  imageToAdd.value.storage_type = source
+  fileToAdd.value.storage_type = source
 
   // 记忆上传方式
   localStg.setItem('file_storage_type', source)

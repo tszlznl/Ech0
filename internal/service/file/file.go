@@ -31,9 +31,8 @@ import (
 )
 
 const (
-	globalAudioFileIDKey = "global_audio_file_id"
-	externalKeyPrefix    = "external/"
-	externalDefaultName  = "external"
+	externalKeyPrefix   = "external/"
+	externalDefaultName = "external"
 )
 
 type FileService struct {
@@ -290,7 +289,7 @@ func (s *FileService) CreateExternalFile(
 	}, nil
 }
 
-func (s *FileService) DeleteFile(ctx context.Context, dto commonModel.FileDeleteDto) error {
+func (s *FileService) DeleteFile(ctx context.Context, id string) error {
 	userid := viewer.MustFromContext(ctx).UserID()
 	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
 	if err != nil {
@@ -299,11 +298,11 @@ func (s *FileService) DeleteFile(ctx context.Context, dto commonModel.FileDelete
 	if !user.IsAdmin {
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
-	if dto.Key == "" {
+	if id == "" {
 		return errors.New(commonModel.IMAGE_NOT_FOUND)
 	}
 
-	fileRecord, err := s.fileRepository.GetByKey(context.Background(), dto.Key)
+	fileRecord, err := s.fileRepository.GetByID(context.Background(), id)
 	if err != nil {
 		return err
 	}
@@ -314,119 +313,67 @@ func (s *FileService) DeleteFile(ctx context.Context, dto commonModel.FileDelete
 		return err
 	}
 	if storage.NormalizeStorageType(fileRecord.StorageType) != storage.StorageTypeExternal {
-		_ = s.DeleteStoredFile(fileRecord.StorageType, dto.Key)
-	}
-	return nil
-}
-
-func (s *FileService) UploadAudioFile(
-	ctx context.Context,
-	file *multipart.FileHeader,
-) (commonModel.FileDto, error) {
-	fileDto, err := s.UploadFile(ctx, file, storage.CategoryAudio, storage.StorageTypeLocal)
-	if err != nil {
-		return commonModel.FileDto{}, err
-	}
-
-	if err := s.transactor.Run(context.Background(), func(ctx context.Context) error {
-		return s.keyvalueRepository.AddOrUpdateKeyValue(ctx, globalAudioFileIDKey, fileDto.ID)
-	}); err != nil {
-		_ = s.transactor.Run(context.Background(), func(ctx context.Context) error {
-			return s.DeleteFileRecord(ctx, fileDto.ID)
-		})
-		stored, getErr := s.fileRepository.GetByID(context.Background(), fileDto.ID)
-		if getErr == nil && stored != nil {
-			_ = s.DeleteStoredFile(stored.StorageType, fileDto.Key)
-		}
-		return commonModel.FileDto{}, err
-	}
-
-	return fileDto, nil
-}
-
-func (s *FileService) DeleteAudioFile(ctx context.Context) error {
-	userid := viewer.MustFromContext(ctx).UserID()
-	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
-	if err != nil {
-		return err
-	}
-	if !user.IsAdmin {
-		return errors.New(commonModel.NO_PERMISSION_DENIED)
-	}
-
-	baseCtx := context.Background()
-	val, err := s.keyvalueRepository.GetKeyValue(baseCtx, globalAudioFileIDKey)
-	if err != nil || val == "" {
-		return nil
-	}
-
-	fileRecord, err := s.fileRepository.GetByID(baseCtx, val)
-	if err != nil {
-		return nil
-	}
-
-	if err := s.transactor.Run(baseCtx, func(txCtx context.Context) error {
-		if err := s.keyvalueRepository.DeleteKeyValue(txCtx, globalAudioFileIDKey); err != nil {
-			return err
-		}
-		return s.fileRepository.Delete(txCtx, fileRecord.ID)
-	}); err != nil {
-		return err
-	}
-
-	if storage.NormalizeStorageType(fileRecord.StorageType) != storage.StorageTypeExternal {
 		_ = s.DeleteStoredFile(fileRecord.StorageType, fileRecord.Key)
 	}
 	return nil
 }
 
-func (s *FileService) GetCurrentAudioURL() string {
-	val, err := s.keyvalueRepository.GetKeyValue(context.Background(), globalAudioFileIDKey)
-	if err != nil || val == "" {
-		return ""
-	}
-	fileRecord, err := s.fileRepository.GetByID(context.Background(), val)
+func (s *FileService) GetFileByID(ctx context.Context, id string) (commonModel.FileDto, error) {
+	userid := viewer.MustFromContext(ctx).UserID()
+	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
 	if err != nil {
-		return ""
+		return commonModel.FileDto{}, err
 	}
-	return fileRecord.URL
+	if !user.IsAdmin {
+		return commonModel.FileDto{}, errors.New(commonModel.NO_PERMISSION_DENIED)
+	}
+
+	fileRecord, err := s.fileRepository.GetByID(context.Background(), id)
+	if err != nil {
+		return commonModel.FileDto{}, err
+	}
+
+	return commonModel.FileDto{
+		ID:          fileRecord.ID,
+		Key:         fileRecord.Key,
+		URL:         fileRecord.URL,
+		ContentType: fileRecord.ContentType,
+		Category:    fileRecord.Category,
+		Size:        fileRecord.Size,
+		Width:       fileRecord.Width,
+		Height:      fileRecord.Height,
+	}, nil
 }
 
-func (s *FileService) StreamCurrentAudio(ctx *gin.Context) {
-	val, _ := s.keyvalueRepository.GetKeyValue(context.Background(), globalAudioFileIDKey)
-	if val == "" {
-		ctx.String(http.StatusNotFound, "音乐文件不存在")
-		return
-	}
-	fileRecord, err := s.fileRepository.GetByID(context.Background(), val)
+func (s *FileService) StreamFileByID(ctx *gin.Context, id string) {
+	fileRecord, err := s.fileRepository.GetByID(context.Background(), id)
 	if err != nil {
-		ctx.String(http.StatusNotFound, "音乐文件不存在")
+		ctx.String(http.StatusNotFound, "文件不存在")
 		return
 	}
 
 	contentType := fileRecord.ContentType
 	if contentType == "" {
-		contentType = "audio/mpeg"
+		contentType = "application/octet-stream"
 	}
 	ctx.Header("Content-Type", contentType)
-	ctx.Header("Cache-Control", "no-cache, no-store, must-revalidate")
-	ctx.Header("Pragma", "no-cache")
-	ctx.Header("Expires", "0")
 
-	reader, err := s.getSelector().Get(
-		context.Background(),
-		storage.NormalizeStorageType(fileRecord.StorageType),
-		fileRecord.Key,
-	)
+	normalizedStorageType := storage.NormalizeStorageType(fileRecord.StorageType)
+	if normalizedStorageType == storage.StorageTypeExternal {
+		ctx.Redirect(http.StatusTemporaryRedirect, fileRecord.URL)
+		return
+	}
+
+	reader, err := s.getSelector().Get(context.Background(), normalizedStorageType, fileRecord.Key)
 	if err != nil {
-		ctx.String(http.StatusNotFound, "音乐文件不存在")
+		ctx.String(http.StatusNotFound, "文件不存在")
 		return
 	}
 	defer func() { _ = reader.Close() }()
 
 	readSeeker, ok := reader.(io.ReadSeeker)
 	if !ok {
-		ctx.String(http.StatusInternalServerError, "音乐文件读取失败")
+		ctx.String(http.StatusInternalServerError, "文件读取失败")
 		return
 	}
 	http.ServeContent(ctx.Writer, ctx.Request, fileRecord.Name, fileRecord.CreatedAt, readSeeker)
@@ -514,11 +461,7 @@ func (s *FileService) CleanupOrphanFiles() error {
 		return err
 	}
 
-	currentAudioFileID, _ := s.keyvalueRepository.GetKeyValue(ctx, globalAudioFileIDKey)
 	for _, file := range files {
-		if currentAudioFileID != "" && file.ID == currentAudioFileID {
-			continue
-		}
 		if file.Key != "" && storage.NormalizeStorageType(file.StorageType) != storage.StorageTypeExternal {
 			_ = s.DeleteStoredFile(file.StorageType, file.Key)
 		}
@@ -544,13 +487,8 @@ func (s *FileService) DeleteStoredFile(storageType string, key string) error {
 }
 
 func (s *FileService) keyGenForCategory(category storage.Category, fileName string) storage.KeyGenerator {
-	if category == storage.CategoryAudio {
-		ext := strings.ToLower(filepath.Ext(strings.TrimSpace(fileName)))
-		if ext == "" {
-			ext = ".bin"
-		}
-		return &storage.StaticKeyGenerator{Name: "music" + ext}
-	}
+	_ = category
+	_ = fileName
 	return s.keyGen
 }
 

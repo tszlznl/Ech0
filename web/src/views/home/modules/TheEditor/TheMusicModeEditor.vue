@@ -35,10 +35,12 @@ import UploadMusic from '@/components/icons/musicupload.vue'
 import Delete from '@/components/icons/delete.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import { ref } from 'vue'
-import { fetchUploadAudioFile, fetchDeleteAudioFile } from '@/service/api'
+import { fetchUploadFile, fetchDeleteFile } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useEditorStore } from '@/stores'
+import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
+import { localStg } from '@/utils/storage'
 
 const { openConfirm } = useBaseDialog()
 
@@ -57,14 +59,18 @@ const handleUploadMusic = async (event: Event) => {
   if (!file) return
 
   try {
-    const res = await theToast.promise(fetchUploadAudioFile(file), {
+    const res = await theToast.promise(
+      fetchUploadFile(file, FILE_STORAGE_TYPE.LOCAL, FILE_CATEGORY.AUDIO),
+      {
       loading: '音乐上传中...',
       success: '音乐上传成功！',
       error: '音乐上传失败，请稍后再试',
-    })
+      },
+    )
 
-    if (res.code === 1) {
-      editorStore.handleGetPlayingMusic()
+    if (res.code === 1 && res.data?.id) {
+      localStg.setItem('playing_file_id', String(res.data.id))
+      editorStore.handleRefreshPlayingFile()
     }
   } catch (err) {
     console.error('音乐上传异常:', err)
@@ -78,11 +84,18 @@ const handleDeleteMusic = () => {
     title: '确定要删除音乐吗？',
     description: '删除后将无法恢复，请谨慎操作',
     onConfirm: () => {
-      fetchDeleteAudioFile().then((res) => {
+      const fileId = localStg.getItem<string>('playing_file_id')
+      if (!fileId) {
+        editorStore.playingFileURL = ''
+        theToast.success('音乐删除成功！')
+        return
+      }
+      fetchDeleteFile({ id: fileId }).then((res) => {
         if (res.code === 1) {
           theToast.success('音乐删除成功！')
-          editorStore.handleGetPlayingMusic()
-          editorStore.PlayingMusicURL = ''
+          localStg.removeItem('playing_file_id')
+          editorStore.handleRefreshPlayingFile()
+          editorStore.playingFileURL = ''
         }
       })
     },

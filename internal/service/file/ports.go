@@ -20,11 +20,9 @@ type Service interface {
 		storageType storage.StorageType,
 	) (commonModel.FileDto, error)
 	CreateExternalFile(ctx context.Context, dto commonModel.CreateExternalFileDto) (commonModel.FileDto, error)
-	DeleteFile(ctx context.Context, dto commonModel.FileDeleteDto) error
-	UploadAudioFile(ctx context.Context, file *multipart.FileHeader) (commonModel.FileDto, error)
-	DeleteAudioFile(ctx context.Context) error
-	GetCurrentAudioURL() string
-	StreamCurrentAudio(ctx *gin.Context)
+	DeleteFile(ctx context.Context, id string) error
+	GetFileByID(ctx context.Context, id string) (commonModel.FileDto, error)
+	StreamFileByID(ctx *gin.Context, id string)
 	GetFilePresignURL(ctx context.Context, dto *commonModel.GetPresignURLDto) (commonModel.PresignDto, error)
 	CleanupOrphanFiles() error
 	DeleteFileRecord(ctx context.Context, id string) error

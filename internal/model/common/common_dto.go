@@ -28,7 +28,7 @@ type FileDto struct {
 //
 // swagger:model FileDeleteDto
 type FileDeleteDto struct {
-	Key string `json:"key" binding:"required"`
+	ID string `json:"id" binding:"required"`
 }
 
 // PresignDto 用于响应 S3 预签名 URL 的请求数据传输对象

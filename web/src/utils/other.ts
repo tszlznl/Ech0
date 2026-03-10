@@ -10,7 +10,7 @@ const normalizeMediaPath = (path: string) => {
   return path
 }
 
-const resolveImageUrlByPath = (rawUrl?: string, baseUrl?: string) => {
+const resolveFileUrlByPath = (rawUrl?: string, baseUrl?: string) => {
   const candidate = String(rawUrl ?? '').trim()
   if (!candidate || ABSOLUTE_URL_REGEX.test(candidate)) return candidate
   const base = String(baseUrl ?? defaultServiceBaseUrl).trim()
@@ -18,17 +18,21 @@ const resolveImageUrlByPath = (rawUrl?: string, baseUrl?: string) => {
   return base ? joinBaseAndPath(base, path) : path
 }
 
-const resolveImageUrl = (
-  image: Pick<App.Api.Ech0.FileObject | App.Api.Ech0.FileToAdd, 'url'> & { image_url?: string },
+const resolveFileUrl = (
+  file: Pick<App.Api.Ech0.FileObject | App.Api.Ech0.FileToAdd, 'url'> & { image_url?: string },
   baseUrl?: string,
 ) =>
-  resolveImageUrlByPath(image.url || image.image_url, baseUrl)
+  resolveFileUrlByPath(file.url || file.image_url, baseUrl)
 
 // 获取图片链接
-export const getImageUrl = (image: App.Api.Ech0.FileObject) => resolveImageUrl(image)
+export const getFileUrl = (file: App.Api.Ech0.FileObject) => resolveFileUrl(file)
 
 // 获取待添加图片链接
-export const getImageToAddUrl = (image: App.Api.Ech0.FileToAdd) => resolveImageUrl(image)
+export const getFileToAddUrl = (file: App.Api.Ech0.FileToAdd) => resolveFileUrl(file)
+
+// backward-compatible aliases
+export const getImageUrl = (image: App.Api.Ech0.FileObject) => getFileUrl(image)
+export const getImageToAddUrl = (image: App.Api.Ech0.FileToAdd) => getFileToAddUrl(image)
 
 export const formatDate = (dateInput: string | number) => {
   // 当天则显示（时：分）
@@ -203,7 +207,7 @@ export const extractAndCleanMusicURL = (input: string): string | null => {
 
 // 获取 HubEcho 的图片
 export const getHubImageUrl = (image: App.Api.Ech0.FileObject, baseurl: string) => {
-  return resolveImageUrl(image, baseurl)
+  return resolveFileUrl(image, baseurl)
 }
 
 /**
