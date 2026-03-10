@@ -21,12 +21,7 @@
       <div class="flex justify-start items-center mb-4">
         <div class="w-28 sm:w-23">
           <img
-            :src="
-              (!SystemSetting?.server_logo || SystemSetting?.server_logo.length === 0) &&
-              SystemSetting?.server_logo !== 'Ech0.svg'
-                ? '/Ech0.svg'
-                : `${API_URL}${SystemSetting?.server_logo}`
-            "
+            :src="systemLogoSrc"
             alt="头像"
             class="w-12 h-12 rounded-full ml-2 mr-9 ring-1 ring-gray-200 shadow-sm"
           />
@@ -195,13 +190,13 @@ import BaseTextArea from '@/components/common/BaseTextArea.vue'
 import Edit from '@/components/icons/edit.vue'
 import Close from '@/components/icons/close.vue'
 import Saveupdate from '@/components/icons/saveupdate.vue'
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { fetchUpdateSettings } from '@/service/api'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { theToast } from '@/utils/toast'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
-import { getApiUrl } from '@/service/request/shared'
+import { resolveAvatarUrl } from '@/service/request/shared'
 import { useFileQueue } from '@/lib/file'
 
 const settingStore = useSettingStore()
@@ -209,7 +204,7 @@ const { getSystemSetting } = settingStore
 const { SystemSetting } = storeToRefs(settingStore)
 
 const editMode = ref<boolean>(false)
-const API_URL = getApiUrl()
+const systemLogoSrc = computed(() => resolveAvatarUrl(SystemSetting.value?.server_logo))
 const { enqueueUpload, waitForTask, clearFinishedUploads } = useFileQueue()
 
 const handleUpdateSystemSetting = async () => {

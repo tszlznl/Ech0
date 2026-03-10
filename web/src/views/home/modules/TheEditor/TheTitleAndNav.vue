@@ -43,10 +43,10 @@
 <script setup lang="ts">
 import Hello from '@/components/icons/hello.vue'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { fetchHelloEch0 } from '@/service/api'
 import { useSettingStore, useThemeStore, useUserStore, useZenStore } from '@/stores'
-import { getApiUrl } from '@/service/request/shared'
+import { resolveAvatarUrl } from '@/service/request/shared'
 import { theToast } from '@/utils/toast'
 
 const settingStore = useSettingStore()
@@ -58,17 +58,12 @@ const { SystemSetting } = storeToRefs(settingStore)
 const { user, isLogin } = storeToRefs(userStore)
 const { isZenMode } = storeToRefs(zenStore)
 
-const apiUrl = getApiUrl()
-const logo = ref<string>('/Ech0.svg')
-if (isLogin.value && user.value?.avatar && user.value?.avatar !== '') {
-  logo.value = `${apiUrl}${user.value?.avatar}`
-} else if (
-  SystemSetting.value.server_logo &&
-  SystemSetting.value.server_logo !== '' &&
-  SystemSetting.value.server_logo !== '/Ech0.svg'
-) {
-  logo.value = `${apiUrl}${SystemSetting.value.server_logo}`
-}
+const logo = computed(() => {
+  if (isLogin.value && user.value?.avatar) {
+    return resolveAvatarUrl(user.value.avatar)
+  }
+  return resolveAvatarUrl(SystemSetting.value?.server_logo)
+})
 
 const handleHello = async (event: MouseEvent) => {
   await themeStore.toggleTheme(event)

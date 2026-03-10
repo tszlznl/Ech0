@@ -21,9 +21,7 @@
       <!-- 头像 -->
       <div class="flex justify-start items-center mb-2">
         <img
-          :src="
-            !user?.avatar || user?.avatar.length === 0 ? '/Ech0.svg' : `${API_URL}${user?.avatar}`
-          "
+          :src="avatarSrc"
           alt="头像"
           class="w-12 h-12 rounded-full ml-2 mr-9 ring-1 ring-gray-200 shadow-sm"
         />
@@ -89,12 +87,12 @@ import Edit from '@/components/icons/edit.vue'
 import Close from '@/components/icons/close.vue'
 
 import Saveupdate from '@/components/icons/saveupdate.vue'
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { fetchGetCurrentUser, fetchUpdateUser } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { storeToRefs } from 'pinia'
 import { useUserStore } from '@/stores'
-import { getApiUrl } from '@/service/request/shared'
+import { resolveAvatarUrl } from '@/service/request/shared'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { useFileQueue } from '@/lib/file'
 
@@ -109,7 +107,7 @@ const userInfo = ref<App.Api.User.UserInfo>({
 })
 
 const editMode = ref<boolean>(false)
-const API_URL = getApiUrl()
+const avatarSrc = computed(() => resolveAvatarUrl(user.value?.avatar))
 const { enqueueUpload, waitForTask, clearFinishedUploads } = useFileQueue()
 
 const handleUpdateUser = async () => {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -133,21 +134,17 @@ func (connectService *ConnectService) GetConnect() (model.Connect, error) {
 	connect.TodayEchos = len(todayEchos)
 	connect.SysUsername = status.Username
 
-	// 处理 Logo URL，避免出现重复的斜杠
-	trimmedServerURL := setting.ServerURL
-	if len(trimmedServerURL) > 0 && trimmedServerURL[len(trimmedServerURL)-1] == '/' {
-		trimmedServerURL = trimmedServerURL[:len(trimmedServerURL)-1]
-	}
+	trimmedServerURL := strings.TrimRight(setting.ServerURL, "/")
+	logoPath := strings.TrimSpace(setting.ServerLogo)
 
-	if setting.ServerLogo != "" {
-		// 如果 Logo URL 以 / 开头，去掉一个 /
-		logoPath := setting.ServerLogo
-		if len(logoPath) > 0 && logoPath[0] == '/' {
-			logoPath = logoPath[1:]
-		}
-		connect.Logo = fmt.Sprintf("%s/api/%s", trimmedServerURL, logoPath)
-	} else {
+	if logoPath == "" || logoPath == "Ech0.svg" || logoPath == "/Ech0.svg" {
 		connect.Logo = fmt.Sprintf("%s/Ech0.svg", trimmedServerURL)
+	} else if strings.HasPrefix(logoPath, "http://") || strings.HasPrefix(logoPath, "https://") {
+		connect.Logo = logoPath
+	} else if strings.HasPrefix(logoPath, "/") {
+		connect.Logo = fmt.Sprintf("%s%s", trimmedServerURL, logoPath)
+	} else {
+		connect.Logo = fmt.Sprintf("%s/%s", trimmedServerURL, logoPath)
 	}
 
 	return connect, nil
