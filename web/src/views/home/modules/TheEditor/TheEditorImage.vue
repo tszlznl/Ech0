@@ -54,7 +54,7 @@ import Next from '@/components/icons/next.vue'
 import Prev from '@/components/icons/prev.vue'
 import Close from '@/components/icons/close.vue'
 import { getImageToAddUrl } from '@/utils/other'
-import { fetchDeleteFile } from '@/service/api'
+import { deleteFileById } from '@/lib/file'
 import { theToast } from '@/utils/toast'
 import { useEchoStore, useEditorStore } from '@/stores'
 import { Mode } from '@/enums/enums'
@@ -103,10 +103,10 @@ const handleRemoveImage = () => {
         (source === FILE_STORAGE_TYPE.LOCAL || source === FILE_STORAGE_TYPE.OBJECT) &&
         fileToDelete.id
       ) {
-        fetchDeleteFile({ id: fileToDelete.id }).then(() => {
+        deleteFileById(fileToDelete.id).then(() => {
           // 这里不管图片是否远程删除成功都强制删除图片
           // 从数组中删除图片
-          filesToAdd.value.splice(index, 1)
+          editorStore.removeFileAt(index)
 
           // 如果删除成功且当前处于Echo更新模式，则需要立马执行更新（图片删除操作不可逆，需要立马更新确保后端数据同步）
           if (isUpdateMode.value && echoToUpdate.value) {
@@ -114,7 +114,7 @@ const handleRemoveImage = () => {
           }
         })
       } else {
-        filesToAdd.value.splice(index, 1)
+        editorStore.removeFileAt(index)
       }
 
       fileIndex.value = 0

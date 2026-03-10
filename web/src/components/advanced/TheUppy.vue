@@ -13,7 +13,7 @@ import { useUserStore, useEditorStore } from '@/stores'
 import { theToast } from '@/utils/toast'
 import { storeToRefs } from 'pinia'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
-import { fetchGetPresignedUrl } from '@/service/api'
+import { getPresign, globalFileRegistry } from '@/lib/file'
 import { isSafari } from '@/utils/other'
 
 /* --------------- 与Uppy相关 ---------------- */
@@ -176,15 +176,12 @@ const initUppy = () => {
         const fileName = rawName || `upload_${Date.now()}${inferFileExtFromType(contentType)}`
         console.log('获取预签名fileName, contentType', fileName, contentType)
 
-        const res = await fetchGetPresignedUrl(fileName, contentType, FILE_STORAGE_TYPE.OBJECT)
-        if (res.code !== 1) {
-          if (String(res.msg || '').includes('backend does not support presigned URLs')) {
-            theToast.error('后端当前未启用 S3 预签名能力，请切换到本地存储或检查后端存储配置')
-          }
-          throw new Error(res.msg || '获取预签名 URL 失败')
-        }
+        const data = await getPresign({
+          fileName,
+          contentType,
+          storageType: FILE_STORAGE_TYPE.OBJECT,
+        })
         console.log('获取预签名成功!')
-        const data = res.data as App.Api.Ech0.PresignResult
         tempFiles.value.set(data.file_name, {
           id: String(data.id || ''),
           url: data.file_url,
@@ -294,6 +291,14 @@ const initUppy = () => {
         height: height,
       }
       files.value.push(item)
+      globalFileRegistry.upsert({
+        id: fileId,
+        key: fileKey,
+        url: fileUrl,
+        storageType: FILE_STORAGE_TYPE.LOCAL,
+        width,
+        height,
+      })
     } else if (memorySource.value === FILE_STORAGE_TYPE.OBJECT) {
       const uploadedFile = tempFiles.value.get(file?.name || '') || ''
       if (!uploadedFile) return
@@ -309,6 +314,12 @@ const initUppy = () => {
         key: uploadedFile.key,
       }
       files.value.push(item)
+      globalFileRegistry.upsert({
+        id: uploadedFile.id,
+        key: uploadedFile.key,
+        url: uploadedFile.url,
+        storageType: FILE_STORAGE_TYPE.OBJECT,
+      })
     }
   })
   // 全部文件上传完成后，发射事件到父组件

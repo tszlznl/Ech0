@@ -1,5 +1,5 @@
 <template>
-  <div v-if="playingFileURL" class="px-9 md:px-11">
+  <div v-if="playingFileUrl" class="px-9 md:px-11">
     <!-- 列出所有连接（列出每个连接的头像） -->
     <div
       class="widget rounded-md shadow-sm hover:shadow-md ring-1 ring-[var(--ring-color)] ring-inset p-4"
@@ -49,12 +49,9 @@
 </template>
 
 <script setup lang="ts">
-import { useEditorStore } from '@/stores'
-import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
-import { getApiUrl } from '@/service/request/shared'
 import { theToast } from '@/utils/toast'
-import { localStg } from '@/utils/storage'
+import { useFilePlayer } from '@/lib/file'
 import Album from '../icons/album.vue'
 import Pause from '../icons/pause.vue'
 import Play from '../icons/play.vue'
@@ -64,17 +61,12 @@ const url = ref<string>('')
 const isPlaying = ref<boolean>(false)
 const isLooping = ref<boolean>(false)
 const audioRef = ref<HTMLAudioElement | null>(null)
-const editorStore = useEditorStore()
-const { playingFileURL, shouldLoadMusic } = storeToRefs(editorStore)
+const filePlayer = useFilePlayer()
+const { playingFileUrl, shouldReload, streamUrl } = filePlayer
 
-const buildStreamUrl = () => {
-  const fileId = localStg.getItem<string>('playing_file_id')
-  return fileId ? `${getApiUrl()}/file/${fileId}/stream?t=${Date.now()}` : ''
-}
-
-watch(shouldLoadMusic, (newVal) => {
+watch(shouldReload, (newVal) => {
   if (newVal && audioRef.value) {
-    url.value = buildStreamUrl() // 添加时间戳，绕过缓存
+    url.value = streamUrl.value // 添加时间戳，绕过缓存
     // 强制重新加载音频
     if (isPlaying.value) {
       audioRef.value.pause()
@@ -86,13 +78,13 @@ watch(shouldLoadMusic, (newVal) => {
 })
 
 watch(
-  playingFileURL,
+  playingFileUrl,
   (val) => {
     if (!val) {
       url.value = ''
       return
     }
-    url.value = buildStreamUrl()
+    url.value = streamUrl.value
   },
   { immediate: true },
 )

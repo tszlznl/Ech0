@@ -35,16 +35,14 @@ import UploadMusic from '@/components/icons/musicupload.vue'
 import Delete from '@/components/icons/delete.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import { ref } from 'vue'
-import { fetchUploadFile, fetchDeleteFile } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useBaseDialog } from '@/composables/useBaseDialog'
-import { useEditorStore } from '@/stores'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
-import { localStg } from '@/utils/storage'
+import { uploadFile, useFilePlayer } from '@/lib/file'
 
 const { openConfirm } = useBaseDialog()
 
-const editorStore = useEditorStore()
+const filePlayer = useFilePlayer()
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const handleTriggerUpload = () => {
@@ -59,8 +57,12 @@ const handleUploadMusic = async (event: Event) => {
   if (!file) return
 
   try {
-    const res = await theToast.promise(
-      fetchUploadFile(file, FILE_STORAGE_TYPE.LOCAL, FILE_CATEGORY.AUDIO),
+    const uploaded = await theToast.promise(
+      uploadFile({
+        file,
+        storageType: FILE_STORAGE_TYPE.LOCAL,
+        category: FILE_CATEGORY.AUDIO,
+      }),
       {
       loading: '音乐上传中...',
       success: '音乐上传成功！',
@@ -68,9 +70,8 @@ const handleUploadMusic = async (event: Event) => {
       },
     )
 
-    if (res.code === 1 && res.data?.id) {
-      localStg.setItem('playing_file_id', String(res.data.id))
-      editorStore.handleRefreshPlayingFile()
+    if (uploaded.id) {
+      await filePlayer.setPlayingFile(uploaded.id)
     }
   } catch (err) {
     console.error('音乐上传异常:', err)
@@ -83,21 +84,9 @@ const handleDeleteMusic = () => {
   openConfirm({
     title: '确定要删除音乐吗？',
     description: '删除后将无法恢复，请谨慎操作',
-    onConfirm: () => {
-      const fileId = localStg.getItem<string>('playing_file_id')
-      if (!fileId) {
-        editorStore.playingFileURL = ''
-        theToast.success('音乐删除成功！')
-        return
-      }
-      fetchDeleteFile({ id: fileId }).then((res) => {
-        if (res.code === 1) {
-          theToast.success('音乐删除成功！')
-          localStg.removeItem('playing_file_id')
-          editorStore.handleRefreshPlayingFile()
-          editorStore.playingFileURL = ''
-        }
-      })
+    onConfirm: async () => {
+      await filePlayer.clearAndDeleteCurrent()
+      theToast.success('音乐删除成功！')
     },
   })
 }

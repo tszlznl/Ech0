@@ -5,8 +5,6 @@ import {
   fetchAddEcho,
   fetchUpdateEcho,
   fetchAddTodo,
-  fetchGetFileById,
-  fetchCreateExternalFile,
 } from '@/service/api'
 import { Mode, ExtensionType, ImageLayout } from '@/enums/enums'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
@@ -14,6 +12,12 @@ import { useEchoStore, useTodoStore, useInboxStore } from '@/stores'
 import { localStg } from '@/utils/storage'
 import { getImageSize } from '@/utils/image'
 import { getFileToAddUrl } from '@/utils/other'
+import {
+  createExternalFile,
+  globalFileRegistry,
+  useFileAttachments,
+  useFilePlayer,
+} from '@/lib/file'
 
 export const useEditorStore = defineStore('editorStore', () => {
   const echoStore = useEchoStore()
@@ -79,7 +83,13 @@ export const useEditorStore = defineStore('editorStore', () => {
     storage_type: FILE_STORAGE_TYPE.LOCAL, // 文件存储方式（local/object/external）
     key: '', // 对应后端 file.key (如果是直链则为空)
   })
-  const filesToAdd = ref<App.Api.Ech0.FileToAdd[]>([]) // 最终要添加的文件列表
+  const {
+    files: filesToAdd,
+    addAttachment,
+    resetAttachments,
+    removeAttachment,
+    validateAttachments,
+  } = useFileAttachments() // 最终要添加的文件列表
   const fileIndex = ref<number>(0) // 当前文件索引（用于编辑文件时定位）
 
   //================================================================
@@ -95,8 +105,9 @@ export const useEditorStore = defineStore('editorStore', () => {
   //================================================================
   // 其它状态变量
   //================================================================
-  const playingFileURL = ref('') // 当前正在播放的文件URL
-  const shouldLoadMusic = ref(true) // 是否应该加载音乐（用于控制音乐播放器的加载）
+  const filePlayer = useFilePlayer()
+  const playingFileURL = filePlayer.playingFileUrl // 当前正在播放的文件URL
+  const shouldLoadMusic = filePlayer.shouldReload // 是否应该加载音乐（用于控制音乐播放器的加载）
 
   //================================================================
   // 编辑器功能函数
@@ -145,7 +156,7 @@ export const useEditorStore = defineStore('editorStore', () => {
       storage_type: rememberedStorageType.value,
       key: '',
     }
-    filesToAdd.value = []
+    resetAttachments([])
     videoURL.value = ''
     musicURL.value = ''
     githubRepo.value = ''
@@ -155,20 +166,15 @@ export const useEditorStore = defineStore('editorStore', () => {
   }
 
   const handleRefreshPlayingFile = async () => {
-    const currentPlayingFileId = localStg.getItem<string>('playing_file_id') || ''
-    if (!currentPlayingFileId) {
-      playingFileURL.value = ''
-      return
-    }
-    shouldLoadMusic.value = !shouldLoadMusic.value
-    const res = await fetchGetFileById(currentPlayingFileId)
-    if (res.code === 1 && res.data?.url) {
-      playingFileURL.value = res.data.url
-      shouldLoadMusic.value = !shouldLoadMusic.value
-      return
-    }
-    playingFileURL.value = ''
-    localStg.removeItem('playing_file_id')
+    await filePlayer.refreshPlayingFile()
+  }
+
+  const setCurrentPlayingFile = async (fileId: string) => {
+    await filePlayer.setPlayingFile(fileId)
+  }
+
+  const clearCurrentPlayingFile = () => {
+    filePlayer.clearPlayingFile()
   }
 
   //===============================================================
@@ -197,26 +203,29 @@ export const useEditorStore = defineStore('editorStore', () => {
         return
       }
 
-      const res = await fetchCreateExternalFile({
+      const created = await createExternalFile({
         url: externalUrl,
         category: FILE_CATEGORY.IMAGE,
         width: width,
         height: height,
       })
-      if (res.code !== 1 || !res.data?.id) {
-        theToast.error(res.msg || '直链入库失败，请重试')
+      if (!created.id) {
+        theToast.error('直链入库失败，请重试')
         return
       }
 
-      fileToAdd.value.id = res.data.id
-      fileToAdd.value.key = res.data.key
-      fileToAdd.value.url = res.data.url || externalUrl
+      fileToAdd.value.id = created.id
+      fileToAdd.value.key = created.key
+      fileToAdd.value.url = created.url || externalUrl
+      globalFileRegistry.upsert(created)
     }
 
-    filesToAdd.value.push({
+    addAttachment({
       id: fileToAdd.value.id,
       url: fileToAdd.value.url,
       storage_type: fileToAdd.value.storage_type,
+      category: fileToAdd.value.category,
+      content_type: fileToAdd.value.content_type,
       key: fileToAdd.value.key ? fileToAdd.value.key : '',
       width,
       height,
@@ -242,9 +251,23 @@ export const useEditorStore = defineStore('editorStore', () => {
         id: file.id,
         url: file.url,
         storage_type: file.storage_type,
+        category: file.category,
+        content_type: file.content_type,
         key: file.key ? file.key : '',
         width: file.width,
         height: file.height,
+      }
+      if (file.id) {
+        globalFileRegistry.upsert({
+          id: file.id,
+          key: file.key,
+          url: file.url,
+          category: file.category,
+          contentType: file.content_type,
+          storageType: file.storage_type,
+          width: file.width,
+          height: file.height,
+        })
       }
       await handleAddMoreFile()
     }
@@ -276,9 +299,9 @@ export const useEditorStore = defineStore('editorStore', () => {
         return
       }
 
-      const invalidFile = filesToAdd.value.find((item) => !item.id)
-      if (invalidFile) {
-        theToast.error('存在未绑定 file_id 的图片，请重新上传后再发布')
+      const valid = validateAttachments({ requireId: true })
+      if (!valid.valid) {
+        theToast.error(valid.reason || '存在未绑定 file_id 的附件')
         return
       }
 
@@ -288,9 +311,9 @@ export const useEditorStore = defineStore('editorStore', () => {
 
       // 回填图片板块（后端只认 echo_files）
       echoToAdd.value.echo_files = filesToAdd.value
-        .filter((img) => img.id)
-        .map((img, index) => ({
-          file_id: String(img.id),
+        .filter((file) => file.id)
+        .map((file, index) => ({
+          file_id: String(file.id),
           sort_order: index,
         }))
 
@@ -494,7 +517,27 @@ export const useEditorStore = defineStore('editorStore', () => {
   }
 
   const init = () => {
+    filePlayer.restoreFromStorage()
     handleRefreshPlayingFile()
+  }
+
+  const setFilesToAdd = (files: App.Api.Ech0.FileToAdd[]) => {
+    resetAttachments(
+      files.map((file) => ({
+        id: file.id,
+        key: file.key,
+        url: file.url,
+        storage_type: file.storage_type,
+        category: file.category,
+        content_type: file.content_type,
+        width: file.width,
+        height: file.height,
+      })),
+    )
+  }
+
+  const removeFileAt = (index: number) => {
+    removeAttachment(index)
   }
 
   return {
@@ -535,6 +578,8 @@ export const useEditorStore = defineStore('editorStore', () => {
     toggleMode,
     clearEditor,
     handleRefreshPlayingFile,
+    setCurrentPlayingFile,
+    clearCurrentPlayingFile,
     handleAddMoreFile,
     togglePrivate,
     handleAddTodo,
@@ -546,5 +591,7 @@ export const useEditorStore = defineStore('editorStore', () => {
     syncEchoExtension,
     clearExtension,
     handleUppyUploaded,
+    setFilesToAdd,
+    removeFileAt,
   }
 })

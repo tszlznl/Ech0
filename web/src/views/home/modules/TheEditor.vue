@@ -74,7 +74,6 @@ const {
   echoToAdd,
   videoURL,
   extensionToAdd,
-  filesToAdd,
   websiteToAdd,
   tagToAdd,
   currentExtensionType,
@@ -121,14 +120,16 @@ watch(
       // 2. 填充图片
       const existingImages = getEchoFiles(echoToUpdate.value)
       if (existingImages.length > 0) {
-        filesToAdd.value = existingImages.map((img) => ({
+        editorStore.setFilesToAdd(
+          existingImages.map((img) => ({
           id: String(img.id || ''),
           url: img.url || '',
           storage_type: img.storage_type || 'local',
           key: img.key || '',
-        }))
+          })),
+        )
       } else {
-        filesToAdd.value = []
+        editorStore.setFilesToAdd([])
       }
 
       // 3. 填充扩展
