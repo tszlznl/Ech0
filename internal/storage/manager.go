@@ -56,8 +56,7 @@ func (m *Manager) ApplyS3Setting(setting settingModel.S3Setting) error {
 
 func (m *Manager) replaceSelector(cfg config.StorageConfig) error {
 	selector := NewStorageSelector(cfg)
-	shouldEnableObject := cfg.ObjectEnabled || NormalizeStorageMode(cfg.Mode) == StorageModeObject
-	if shouldEnableObject && !selector.ObjectEnabled() {
+	if cfg.ObjectEnabled && !selector.ObjectEnabled() {
 		return errors.New("object storage enabled but initialization failed")
 	}
 	m.mu.Lock()
@@ -97,11 +96,6 @@ func MergeStorageConfig(defaultCfg config.StorageConfig, dbS3Setting *settingMod
 	}
 
 	cfg.ObjectEnabled = dbS3Setting.Enable
-	if dbS3Setting.Enable {
-		cfg.Mode = string(StorageModeObject)
-	} else {
-		cfg.Mode = string(StorageModeLocal)
-	}
 
 	cfg.Provider = coalesceTrim(dbS3Setting.Provider, cfg.Provider)
 	cfg.Endpoint = trimEndpoint(coalesceTrim(dbS3Setting.Endpoint, cfg.Endpoint))

@@ -5,7 +5,6 @@ import "strings"
 // Category classifies uploaded files.
 type Category string
 type StorageType string
-type StorageMode string
 
 const (
 	CategoryImage    Category = "image"
@@ -20,11 +19,6 @@ const (
 	StorageTypeLocal    StorageType = "local"
 	StorageTypeObject   StorageType = "object"
 	StorageTypeExternal StorageType = "external"
-)
-
-const (
-	StorageModeLocal  StorageMode = "local"
-	StorageModeObject StorageMode = "object"
 )
 
 // NormalizeCategory maps an arbitrary string to a known Category.
@@ -60,15 +54,6 @@ func NormalizeStorageType(raw string) StorageType {
 		return StorageTypeExternal
 	default:
 		return StorageTypeLocal
-	}
-}
-
-func NormalizeStorageMode(raw string) StorageMode {
-	switch strings.ToLower(strings.TrimSpace(raw)) {
-	case string(StorageModeObject), "s3":
-		return StorageModeObject
-	default:
-		return StorageModeLocal
 	}
 }
 

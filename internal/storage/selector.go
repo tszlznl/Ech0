@@ -136,8 +136,7 @@ func buildOptionalObjectFSAndResolver(
 	cfg config.StorageConfig,
 	schema *virefs.Schema,
 ) (virefs.FS, URLResolver, bool) {
-	mode := strings.ToLower(strings.TrimSpace(cfg.Mode))
-	if !cfg.ObjectEnabled && NormalizeStorageMode(mode) != StorageModeObject {
+	if !cfg.ObjectEnabled {
 		return nil, nil, false
 	}
 

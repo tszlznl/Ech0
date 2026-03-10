@@ -21,24 +21,20 @@ var (
 // File classification (images/, audios/, etc.) is handled by VireFS Schema.
 func NewFS(cfg config.StorageConfig) virefs.FS {
 	schema := NewFileSchema()
-	switch NormalizeStorageMode(cfg.Mode) {
-	case StorageModeObject:
+	if cfg.ObjectEnabled {
 		return buildS3FS(cfg, schema)
-	default:
-		return buildLocalFS(cfg, schema)
 	}
+	return buildLocalFS(cfg, schema)
 }
 
 // NewURLResolver builds a URLResolver based on the given StorageConfig.
 // It applies schema.Resolve internally so callers just pass flat keys.
 func NewURLResolver(cfg config.StorageConfig) URLResolver {
 	schema := NewFileSchema()
-	switch NormalizeStorageMode(cfg.Mode) {
-	case StorageModeObject:
+	if cfg.ObjectEnabled {
 		return buildS3URLResolver(cfg, schema)
-	default:
-		return buildLocalURLResolver(schema)
 	}
+	return buildLocalURLResolver(schema)
 }
 
 func buildLocalFS(cfg config.StorageConfig, schema *virefs.Schema) virefs.FS {

@@ -9,7 +9,6 @@ import (
 
 func TestMergeStorageConfig_DBOverrideAndFallback(t *testing.T) {
 	defaultCfg := config.StorageConfig{
-		Mode:          "local",
 		ObjectEnabled: false,
 		DataRoot:      "data/files",
 		Endpoint:      "fallback.example.com",
@@ -35,9 +34,6 @@ func TestMergeStorageConfig_DBOverrideAndFallback(t *testing.T) {
 
 	if !merged.ObjectEnabled {
 		t.Fatalf("expected object storage enabled")
-	}
-	if merged.Mode != "object" {
-		t.Fatalf("expected mode object, got %s", merged.Mode)
 	}
 	if merged.Provider != "aws" {
 		t.Fatalf("expected provider aws, got %s", merged.Provider)

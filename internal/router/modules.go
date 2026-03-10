@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lin-snow/ech0/internal/config"
 	"github.com/lin-snow/ech0/internal/handler"
-	"github.com/lin-snow/ech0/internal/storage"
 )
 
 // RouterContext 聚合路由注册需要的上下文。
@@ -45,13 +44,11 @@ func coreRouteModules() []RouteModule {
 			name: "static-files",
 			register: func(ctx *RouterContext) {
 				cfg := config.Config().Storage
-				if storage.NormalizeStorageMode(cfg.Mode) == storage.StorageModeLocal {
-					root := cfg.DataRoot
-					if root == "" {
-						root = "data/files"
-					}
-					ctx.Engine.Static("api/files", root)
+				root := cfg.DataRoot
+				if root == "" {
+					root = "data/files"
 				}
+				ctx.Engine.Static("api/files", root)
 			},
 		},
 		routeModule{

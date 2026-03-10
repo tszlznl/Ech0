@@ -29,7 +29,6 @@ type AppConfig struct {
 }
 
 type StorageConfig struct {
-	Mode          string // "local" or "object", default "local"
 	ObjectEnabled bool   // enable object storage alongside local
 	DataRoot      string // local root directory, default "data/files"
 	Endpoint      string // S3-compatible endpoint
@@ -140,7 +139,6 @@ func defaultConfig() *AppConfig {
 			},
 		},
 		Storage: StorageConfig{
-			Mode:          "local",
 			ObjectEnabled: false,
 			DataRoot:      "data/files",
 		},
@@ -215,7 +213,6 @@ func applyEnvOverrides(cfg *AppConfig) {
 	setStringEnv("ECH0_UPLOAD_AUDIO_PATH", &cfg.Upload.AudioPath)
 
 	// Storage (local)
-	setStringEnv("ECH0_STORAGE_MODE", &cfg.Storage.Mode)
 	setBoolEnv("ECH0_OBJECT_ENABLED", &cfg.Storage.ObjectEnabled)
 	setStringEnv("ECH0_STORAGE_DATA_ROOT", &cfg.Storage.DataRoot)
 

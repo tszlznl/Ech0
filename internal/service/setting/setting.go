@@ -235,7 +235,7 @@ func (settingService *SettingService) GetS3Setting(ctx context.Context, setting 
 		if err != nil {
 			// 数据库缺失时回退到 config 默认值
 			cfg := config.Config().Storage
-			setting.Enable = cfg.ObjectEnabled || storage.NormalizeStorageMode(cfg.Mode) == storage.StorageModeObject
+			setting.Enable = cfg.ObjectEnabled
 			setting.Provider = strings.TrimSpace(cfg.Provider)
 			setting.Endpoint = strings.TrimPrefix(strings.TrimPrefix(strings.TrimSpace(cfg.Endpoint), "http://"), "https://")
 			setting.AccessKey = cfg.AccessKey
