@@ -34,6 +34,7 @@
 
 .markdown-full-shell.no-preview {
   grid-template-columns: minmax(0, 1fr);
+  width: min(94vw, 38rem);
 }
 
 .markdown-editor.is-full {
@@ -41,6 +42,10 @@
   box-shadow: var(--md-editor-full-shadow);
   border-color: var(--md-editor-full-border);
   background-color: var(--md-editor-full-bg);
+}
+
+.markdown-editor.is-full .toolbar {
+  padding-right: 0.75rem;
 }
 
 .markdown-editor .mode-toggle-btn {

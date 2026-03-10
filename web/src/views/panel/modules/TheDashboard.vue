@@ -90,10 +90,13 @@ onMounted(() => {
 
 <template>
   <div class="dashboard-page">
-    <section class="welcome-card">
-      <p class="welcome-badge">👋 {{ greeting }}, {{ username }}</p>
-      <h2 class="welcome-title">欢迎来到 Ech0 Dashboard</h2>
-      <p class="welcome-subtitle">今天是 {{ dateText }}</p>
+    <section class="welcome-header">
+      <div class="welcome-main">
+        <h2 class="welcome-username">{{ username }}，欢迎回来 <span class="wave-hand">👋</span></h2>
+        <p class="welcome-greeting">{{ greeting }}</p>
+        <p class="welcome-tip">今天也来记录一点新的灵感</p>
+      </div>
+      <p class="welcome-date">{{ dateText }}</p>
     </section>
 
     <section class="stats-grid">
@@ -102,7 +105,6 @@ onMounted(() => {
         <p class="stat-value" :class="{ 'is-loading': loading && item.value === '--' }">{{ item.value }}</p>
       </article>
     </section>
-
   </div>
 </template>
 
@@ -110,63 +112,116 @@ onMounted(() => {
 .dashboard-page {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.95rem;
   width: 100%;
-  padding: 0.25rem 0.5rem 0.75rem;
+  padding: 0.4rem 0.25rem 0.9rem;
 }
 
-.welcome-card,
-.stat-card {
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-surface);
-  box-shadow: var(--shadow-sm);
+.welcome-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.25rem 0.65rem;
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
-.welcome-card {
-  padding: 1.2rem 1.25rem;
+.welcome-main {
+  min-width: 0;
+  text-align: left;
 }
 
-.welcome-badge {
-  display: inline-block;
-  padding: 0.2rem 0.65rem;
-  border-radius: var(--radius-sm);
-  background: var(--color-accent-soft);
-  color: var(--color-text-secondary);
-  font-size: 0.95rem;
-  font-weight: 700;
+.welcome-greeting {
+  font-size: 0.9rem;
+  line-height: 1.2;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  margin-top: 0.35rem;
 }
 
-.welcome-title {
-  margin-top: 0.65rem;
-  font-size: 1.55rem;
-  line-height: 1.3;
+.welcome-username {
+  margin: 0;
+  font-size: clamp(1.45rem, 2.4vw, 1.9rem);
+  line-height: 1.2;
   color: var(--color-text-primary);
   font-weight: 800;
   font-family: var(--font-family-display);
+  letter-spacing: 0.01em;
 }
 
-.welcome-subtitle {
-  margin-top: 0.35rem;
+.welcome-tip {
+  margin-top: 0.3rem;
   color: var(--color-text-muted);
-  font-size: 0.95rem;
+  font-size: 0.88rem;
+}
+
+.welcome-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-top: 0.15rem;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.wave-hand {
+  display: inline-block;
+  margin-left: 0.2rem;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.wave-hand:hover {
+  animation: hand-shake 620ms ease-in-out;
+}
+
+@keyframes hand-shake {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  15% {
+    transform: rotate(16deg) scale(1.08);
+  }
+  30% {
+    transform: rotate(-14deg) scale(1.08);
+  }
+  45% {
+    transform: rotate(12deg) scale(1.06);
+  }
+  60% {
+    transform: rotate(-10deg) scale(1.04);
+  }
+  75% {
+    transform: rotate(7deg) scale(1.02);
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(1, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 0.85rem;
 }
 
 .stat-card {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
   padding: 1rem 1.05rem;
-  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .stat-card:hover {
-  transform: translateY(-1px);
-  border-color: var(--color-border-strong);
-  background: var(--color-bg-muted);
+  border-color: color-mix(in oklab, var(--color-accent) 28%, var(--color-border-subtle));
+  box-shadow: 0 3px 10px color-mix(in oklab, var(--color-accent) 6%, transparent);
+  background: color-mix(in oklab, var(--color-bg-surface) 92%, var(--color-accent-soft));
 }
 
 .stat-label {
@@ -189,15 +244,23 @@ onMounted(() => {
 
 @media (min-width: 768px) {
   .dashboard-page {
-    gap: 1.1rem;
-  }
-
-  .welcome-card {
-    padding: 1.4rem 1.45rem;
+    gap: 1rem;
   }
 
   .stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .welcome-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .welcome-date {
+    white-space: normal;
   }
 }
 </style>

@@ -169,7 +169,9 @@ func (s *FileService) UploadFile(
 
 	return commonModel.FileDto{
 		ID:          fileRecord.ID,
+		Name:        file.Filename,
 		Key:         key,
+		StorageType: routeStorageType,
 		URL:         fileURL,
 		ContentType: contentType,
 		Category:    string(category),
@@ -238,7 +240,9 @@ func (s *FileService) CreateExternalFile(
 	if err == nil && existing != nil {
 		return commonModel.FileDto{
 			ID:          existing.ID,
+			Name:        existing.Name,
 			Key:         existing.Key,
+			StorageType: existing.StorageType,
 			URL:         existing.URL,
 			ContentType: existing.ContentType,
 			Category:    existing.Category,
@@ -279,7 +283,9 @@ func (s *FileService) CreateExternalFile(
 
 	return commonModel.FileDto{
 		ID:          fileRecord.ID,
+		Name:        fileRecord.Name,
 		Key:         key,
+		StorageType: fileRecord.StorageType,
 		URL:         normalizedURL,
 		ContentType: contentType,
 		Category:    string(category),
@@ -335,7 +341,9 @@ func (s *FileService) GetFileByID(ctx context.Context, id string) (commonModel.F
 
 	return commonModel.FileDto{
 		ID:          fileRecord.ID,
+		Name:        fileRecord.Name,
 		Key:         fileRecord.Key,
+		StorageType: fileRecord.StorageType,
 		URL:         fileRecord.URL,
 		ContentType: fileRecord.ContentType,
 		Category:    fileRecord.Category,
@@ -395,7 +403,9 @@ func (s *FileService) UpdateFileMeta(
 
 	return commonModel.FileDto{
 		ID:          updated.ID,
+		Name:        updated.Name,
 		Key:         updated.Key,
+		StorageType: updated.StorageType,
 		URL:         updated.URL,
 		ContentType: updated.ContentType,
 		Category:    updated.Category,
@@ -403,6 +413,70 @@ func (s *FileService) UpdateFileMeta(
 		Width:       updated.Width,
 		Height:      updated.Height,
 	}, nil
+}
+
+func (s *FileService) ListFiles(
+	ctx context.Context,
+	query commonModel.FileListQueryDto,
+) (commonModel.FileListResultDto, error) {
+	result := commonModel.FileListResultDto{Items: []commonModel.FileListItemDto{}}
+	userid := viewer.MustFromContext(ctx).UserID()
+	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
+	if err != nil {
+		return result, err
+	}
+	if !user.IsAdmin {
+		return result, errors.New(commonModel.NO_PERMISSION_DENIED)
+	}
+
+	page := query.Page
+	if page <= 0 {
+		page = 1
+	}
+	pageSize := query.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+
+	storageType := strings.TrimSpace(query.StorageType)
+	if storageType != "" {
+		normalized := storage.NormalizeStorageType(storageType)
+		if normalized != storage.StorageTypeLocal && normalized != storage.StorageTypeObject {
+			return result, errors.New(commonModel.INVALID_PARAMS)
+		}
+		storageType = string(normalized)
+	}
+
+	files, total, err := s.fileRepository.ListByStorageTypeAndSearch(
+		context.Background(),
+		storageType,
+		query.Search,
+		page,
+		pageSize,
+	)
+	if err != nil {
+		return result, err
+	}
+
+	items := make([]commonModel.FileListItemDto, 0, len(files))
+	for _, f := range files {
+		items = append(items, commonModel.FileListItemDto{
+			ID:          f.ID,
+			Name:        f.Name,
+			Key:         f.Key,
+			StorageType: f.StorageType,
+			URL:         f.URL,
+			ContentType: f.ContentType,
+			Size:        f.Size,
+			CreatedAt:   f.CreatedAt,
+		})
+	}
+	result.Total = total
+	result.Items = items
+	return result, nil
 }
 
 func (s *FileService) StreamFileByID(ctx *gin.Context, id string) {

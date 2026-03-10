@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	model "github.com/lin-snow/ech0/internal/model/file"
@@ -59,6 +60,36 @@ func (r *FileRepository) GetByRoute(
 		return nil, err
 	}
 	return &f, nil
+}
+
+func (r *FileRepository) ListByStorageTypeAndSearch(
+	ctx context.Context,
+	storageType string,
+	search string,
+	page int,
+	pageSize int,
+) ([]model.File, int64, error) {
+	db := r.getDB(ctx).Model(&model.File{})
+	if storageType != "" {
+		db = db.Where("storage_type = ?", storageType)
+	}
+	if trimmed := strings.TrimSpace(search); trimmed != "" {
+		like := "%" + trimmed + "%"
+		db = db.Where("name LIKE ? OR key LIKE ?", like, like)
+	}
+
+	var total int64
+	if err := db.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	if total == 0 {
+		return []model.File{}, 0, nil
+	}
+
+	offset := (page - 1) * pageSize
+	var files []model.File
+	err := db.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&files).Error
+	return files, total, err
 }
 
 func (r *FileRepository) UpdateMetaByID(

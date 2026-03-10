@@ -78,6 +78,21 @@ func (fileHandler *FileHandler) GetFileByID() gin.HandlerFunc {
 	})
 }
 
+func (fileHandler *FileHandler) ListFiles() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		var query commonModel.FileListQueryDto
+		if err := ctx.ShouldBindQuery(&query); err != nil {
+			return res.Response{Msg: commonModel.INVALID_QUERY_PARAMS, Err: err}
+		}
+
+		result, err := fileHandler.fileService.ListFiles(ctx.Request.Context(), query)
+		if err != nil {
+			return res.Response{Msg: "", Err: err}
+		}
+		return res.Response{Data: result, Msg: commonModel.SUCCESS_MESSAGE}
+	})
+}
+
 // UpdateFileMeta 更新对象存储文件元信息
 //
 //	@Summary		更新对象存储文件元信息

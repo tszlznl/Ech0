@@ -1,4 +1,4 @@
-import { request } from '../request'
+import { downloadFile, request } from '../request'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 
 // 上传文件
@@ -67,6 +67,30 @@ export function fetchGetPresignedUrl(
       content_type: contentType,
       storage_type: storageType,
     },
+  })
+}
+
+// 获取文件列表
+export function fetchListFiles(query: App.Api.File.FileListQuery) {
+  const searchParams = new URLSearchParams({
+    page: String(query.page),
+    pageSize: String(query.pageSize),
+    search: query.search || '',
+  })
+  if (query.storage_type) {
+    searchParams.set('storage_type', query.storage_type)
+  }
+  return request<App.Api.File.FileListResult>({
+    url: `/files?${searchParams.toString()}`,
+    method: 'GET',
+  })
+}
+
+// 下载文件（二进制流）
+export function fetchDownloadFileById(id: string) {
+  return downloadFile({
+    url: `/file/${id}/stream`,
+    method: 'GET',
   })
 }
 

@@ -22,6 +22,7 @@ type Service interface {
 	CreateExternalFile(ctx context.Context, dto commonModel.CreateExternalFileDto) (commonModel.FileDto, error)
 	DeleteFile(ctx context.Context, id string) error
 	GetFileByID(ctx context.Context, id string) (commonModel.FileDto, error)
+	ListFiles(ctx context.Context, query commonModel.FileListQueryDto) (commonModel.FileListResultDto, error)
 	UpdateFileMeta(ctx context.Context, id string, dto commonModel.UpdateFileMetaDto) (commonModel.FileDto, error)
 	StreamFileByID(ctx *gin.Context, id string)
 	GetFilePresignURL(ctx context.Context, dto *commonModel.GetPresignURLDto) (commonModel.PresignDto, error)
@@ -45,6 +46,13 @@ type FileRepository interface {
 	GetByID(ctx context.Context, id string) (*fileModel.File, error)
 	GetByKey(ctx context.Context, key string) (*fileModel.File, error)
 	GetByRoute(ctx context.Context, storageType, provider, bucket, key string) (*fileModel.File, error)
+	ListByStorageTypeAndSearch(
+		ctx context.Context,
+		storageType string,
+		search string,
+		page int,
+		pageSize int,
+	) ([]fileModel.File, int64, error)
 	UpdateMetaByID(
 		ctx context.Context,
 		id string,

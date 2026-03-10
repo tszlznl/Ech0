@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 // PageQueryDto 用于分页查询的请求数据传输对象
 //
 // swagger:model PageQueryDto
@@ -15,7 +17,9 @@ type PageQueryDto struct {
 // swagger:model FileDto
 type FileDto struct {
 	ID          string `json:"id"`
+	Name        string `json:"name,omitempty"`
 	Key         string `json:"key"`
+	StorageType string `json:"storage_type,omitempty"`
 	URL         string `json:"url"`
 	ContentType string `json:"content_type,omitempty"`
 	Category    string `json:"category,omitempty"`
@@ -68,10 +72,42 @@ type CreateExternalFileDto struct {
 //
 // swagger:model UpdateFileMetaDto
 type UpdateFileMetaDto struct {
-	Size        int64 `json:"size" binding:"required,min=0"`
-	Width       *int  `json:"width,omitempty"`
-	Height      *int  `json:"height,omitempty"`
+	Size        int64  `json:"size" binding:"required,min=0"`
+	Width       *int   `json:"width,omitempty"`
+	Height      *int   `json:"height,omitempty"`
 	ContentType string `json:"content_type,omitempty"`
+}
+
+// FileListQueryDto 文件列表查询参数
+//
+// swagger:model FileListQueryDto
+type FileListQueryDto struct {
+	Page        int    `json:"page" form:"page"`
+	PageSize    int    `json:"pageSize" form:"pageSize"`
+	Search      string `json:"search" form:"search"`
+	StorageType string `json:"storage_type" form:"storage_type"`
+}
+
+// FileListItemDto 文件列表项
+//
+// swagger:model FileListItemDto
+type FileListItemDto struct {
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	Key         string    `json:"key"`
+	StorageType string    `json:"storage_type"`
+	URL         string    `json:"url"`
+	ContentType string    `json:"content_type,omitempty"`
+	Size        int64     `json:"size,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+// FileListResultDto 文件列表结果
+//
+// swagger:model FileListResultDto
+type FileListResultDto struct {
+	Total int64             `json:"total"`
+	Items []FileListItemDto `json:"items"`
 }
 
 // GetWebsiteTitleDto 用于请求网站标题的请求数据传输对象

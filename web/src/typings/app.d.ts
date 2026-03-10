@@ -71,6 +71,7 @@ declare namespace App {
 
       type FileDto = {
         id: string
+        name?: string
         key: string
         url: string
         content_type?: string
@@ -79,6 +80,26 @@ declare namespace App {
         size?: number
         width?: number
         height?: number
+      }
+      type FileListQuery = {
+        page: number
+        pageSize: number
+        search?: string
+        storage_type?: StorageType
+      }
+      type FileListItem = {
+        id: string
+        name: string
+        key: string
+        storage_type: StorageType
+        url: string
+        content_type?: string
+        size?: number
+        created_at: string
+      }
+      type FileListResult = {
+        items: FileListItem[]
+        total: number
       }
       type FileDeleteDto = {
         id: string
