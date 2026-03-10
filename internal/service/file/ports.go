@@ -23,6 +23,7 @@ type Service interface {
 	DeleteFile(ctx context.Context, id string) error
 	GetFileByID(ctx context.Context, id string) (commonModel.FileDto, error)
 	ListFiles(ctx context.Context, query commonModel.FileListQueryDto) (commonModel.FileListResultDto, error)
+	ListFileTree(ctx context.Context, query commonModel.FileTreeQueryDto) (commonModel.FileTreeResultDto, error)
 	UpdateFileMeta(ctx context.Context, id string, dto commonModel.UpdateFileMetaDto) (commonModel.FileDto, error)
 	StreamFileByID(ctx *gin.Context, id string)
 	GetFilePresignURL(ctx context.Context, dto *commonModel.GetPresignURLDto) (commonModel.PresignDto, error)
@@ -53,6 +54,7 @@ type FileRepository interface {
 		page int,
 		pageSize int,
 	) ([]fileModel.File, int64, error)
+	ListByStorageTypeAndURLs(ctx context.Context, storageType string, urls []string) ([]fileModel.File, error)
 	UpdateMetaByID(
 		ctx context.Context,
 		id string,

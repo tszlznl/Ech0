@@ -1,60 +1,277 @@
 <script setup lang="ts">
 import PanelCard from '@/layout/PanelCard.vue'
 import { FILE_STORAGE_TYPE } from '@/constants/file'
-import { fetchDownloadFileById, fetchListFiles } from '@/service/api'
-import { onMounted, reactive, ref } from 'vue'
+import { fetchDownloadFileById, fetchFileTree } from '@/service/api'
+import { nextTick, reactive, ref } from 'vue'
 import { theToast } from '@/utils/toast'
+import DownloadIcon from '@/components/icons/download.vue'
+import ViewIcon from '@/components/icons/view.vue'
+import gsap from 'gsap'
 
 type RootStorageType = typeof FILE_STORAGE_TYPE.LOCAL | typeof FILE_STORAGE_TYPE.OBJECT
 
-type FileSectionState = {
+type TreeNode = App.Api.File.FileTreeNode & {
+  children: TreeNode[]
+  expanded: boolean
+  loaded: boolean
   loading: boolean
   error: string
-  total: number
-  items: App.Api.File.FileListItem[]
+}
+
+type TreeRow = {
+  node: TreeNode
+  depth: number
+}
+
+type FileSectionState = {
+  title: string
+  expanded: boolean
+  loaded: boolean
+  loading: boolean
+  error: string
+  nodes: TreeNode[]
+}
+
+type LoadChildrenOptions = {
+  force?: boolean
+  preserveOnError?: boolean
 }
 
 const sections = reactive<Record<RootStorageType, FileSectionState>>({
-  [FILE_STORAGE_TYPE.LOCAL]: { loading: false, error: '', total: 0, items: [] },
-  [FILE_STORAGE_TYPE.OBJECT]: { loading: false, error: '', total: 0, items: [] },
+  [FILE_STORAGE_TYPE.LOCAL]: {
+    title: '本地存储',
+    expanded: false,
+    loaded: false,
+    loading: false,
+    error: '',
+    nodes: [],
+  },
+  [FILE_STORAGE_TYPE.OBJECT]: {
+    title: '对象存储',
+    expanded: false,
+    loaded: false,
+    loading: false,
+    error: '',
+    nodes: [],
+  },
 })
 
 const downloadingId = ref('')
+const previewingId = ref('')
+const refreshingRoot = ref<RootStorageType | ''>('')
+const selectedNodeKey = ref('')
+const rootStorageTypes: RootStorageType[] = [FILE_STORAGE_TYPE.LOCAL, FILE_STORAGE_TYPE.OBJECT]
+const nodeCache = reactive<Record<string, App.Api.File.FileTreeNode[]>>({})
+const rootContentRefs = reactive<Partial<Record<RootStorageType, HTMLElement | null>>>({})
 
-const sectionMeta: Record<RootStorageType, { title: string }> = {
-  [FILE_STORAGE_TYPE.LOCAL]: { title: 'LocalFS' },
-  [FILE_STORAGE_TYPE.OBJECT]: { title: 'ObjectFS' },
-}
+const toNode = (raw: App.Api.File.FileTreeNode): TreeNode => ({
+  ...raw,
+  children: [],
+  expanded: false,
+  loaded: false,
+  loading: false,
+  error: '',
+})
 
-const loadSection = async (storageType: RootStorageType) => {
-  sections[storageType].loading = true
-  sections[storageType].error = ''
-  const res = await fetchListFiles({
-    page: 1,
-    pageSize: 50,
-    storage_type: storageType,
-  })
-  if (res.code === 1) {
-    sections[storageType].items = res.data?.items || []
-    sections[storageType].total = res.data?.total || 0
-  } else {
-    sections[storageType].error = res.msg || '加载失败'
-  }
+const buildNodeKey = (storageType: RootStorageType, path: string) => `${storageType}:${path}`
+const buildCacheKey = (storageType: RootStorageType, prefix: string) =>
+  `${storageType}:${prefix.trim() === '' ? '/' : prefix}`
+
+const cloneRawNodes = (items: App.Api.File.FileTreeNode[]) => items.map((item) => ({ ...item }))
+
+const clearSection = (storageType: RootStorageType) => {
+  sections[storageType].expanded = false
+  sections[storageType].loaded = false
   sections[storageType].loading = false
+  sections[storageType].error = ''
+  sections[storageType].nodes = []
 }
 
-const loadAll = async () => {
-  await Promise.all([loadSection(FILE_STORAGE_TYPE.LOCAL), loadSection(FILE_STORAGE_TYPE.OBJECT)])
+const getActiveRoot = (): RootStorageType | '' => {
+  return rootStorageTypes.find((type) => sections[type].expanded) || ''
 }
 
-const triggerDownload = async (item: App.Api.File.FileListItem) => {
+const clearCacheByRoot = (storageType: RootStorageType) => {
+  const prefix = `${storageType}:`
+  for (const key of Object.keys(nodeCache)) {
+    if (key.startsWith(prefix)) {
+      delete nodeCache[key]
+    }
+  }
+}
+
+const loadChildren = async (
+  storageType: RootStorageType,
+  prefix: string,
+  parentNode?: TreeNode,
+  options: LoadChildrenOptions = {},
+) => {
+  const { force = false, preserveOnError = true } = options
+  const cleanPrefix = prefix.trim()
+  const cacheKey = buildCacheKey(storageType, cleanPrefix)
+  const section = sections[storageType]
+
+  if (!force && nodeCache[cacheKey]) {
+    const cachedNodes = nodeCache[cacheKey].map(toNode)
+    if (parentNode) {
+      parentNode.children = cachedNodes
+      parentNode.loaded = true
+      parentNode.error = ''
+    } else {
+      section.nodes = cachedNodes
+      section.loaded = true
+      section.error = ''
+    }
+    return
+  }
+
+  const backupChildren = parentNode ? [...parentNode.children] : [...section.nodes]
+  if (parentNode) {
+    parentNode.loading = true
+    parentNode.error = ''
+  } else {
+    section.loading = true
+    section.error = ''
+  }
+
+  const res = await fetchFileTree({
+    storage_type: storageType,
+    prefix: cleanPrefix,
+  })
+
+  if (res.code === 1) {
+    const rawItems = res.data?.items || []
+    nodeCache[cacheKey] = cloneRawNodes(rawItems)
+    const nodes = rawItems.map(toNode)
+    if (parentNode) {
+      parentNode.children = nodes
+      parentNode.loaded = true
+      parentNode.error = ''
+    } else {
+      section.nodes = nodes
+      section.loaded = true
+      section.error = ''
+    }
+  } else if (parentNode) {
+    parentNode.error = res.msg || '加载失败'
+    if (preserveOnError && backupChildren.length > 0) {
+      parentNode.children = backupChildren
+      parentNode.loaded = true
+    }
+  } else {
+    section.error = res.msg || '加载失败'
+    if (preserveOnError && backupChildren.length > 0) {
+      section.nodes = backupChildren
+      section.loaded = true
+    }
+  }
+
+  if (parentNode) {
+    parentNode.loading = false
+  } else {
+    section.loading = false
+  }
+}
+
+const toggleRoot = async (storageType: RootStorageType) => {
+  const section = sections[storageType]
+  if (section.loading || refreshingRoot.value !== '') return
+  const nextExpanded = !section.expanded
+  for (const rootType of rootStorageTypes) {
+    if (rootType !== storageType) {
+      sections[rootType].expanded = false
+    }
+  }
+  section.expanded = nextExpanded
+  if (section.expanded && !section.loaded && !section.loading) {
+    await loadChildren(storageType, '')
+  }
+}
+
+const toggleFolder = async (storageType: RootStorageType, node: TreeNode) => {
+  if (node.loading || refreshingRoot.value !== '') return
+  const contentEl = rootContentRefs[storageType]
+  const startHeight = contentEl?.scrollHeight ?? 0
+  node.expanded = !node.expanded
+  if (node.expanded && !node.loaded) {
+    await loadChildren(storageType, node.path, node)
+  }
+  if (!contentEl || !sections[storageType].expanded) return
+  await nextTick()
+  const endHeight = contentEl.scrollHeight
+  if (startHeight === 0 || startHeight === endHeight) return
+  gsap.killTweensOf(contentEl)
+  gsap.fromTo(
+    contentEl,
+    { height: startHeight },
+    {
+      height: endHeight,
+      duration: 0.26,
+      ease: 'power2.out',
+      onStart: () => {
+        contentEl.style.overflow = 'hidden'
+      },
+      onComplete: () => {
+        contentEl.style.height = 'auto'
+        contentEl.style.overflow = ''
+      },
+    },
+  )
+}
+
+const handleNodeClick = async (storageType: RootStorageType, node: TreeNode) => {
+  if (node.node_type === 'folder') {
+    await toggleFolder(storageType, node)
+    return
+  }
+  selectedNodeKey.value = buildNodeKey(storageType, node.path)
+}
+
+const flattenRows = (nodes: TreeNode[], depth = 0): TreeRow[] => {
+  const rows: TreeRow[] = []
+  for (const node of nodes) {
+    rows.push({ node, depth })
+    if (node.node_type === 'folder' && node.expanded && node.loaded && node.children.length > 0) {
+      rows.push(...flattenRows(node.children, depth + 1))
+    }
+  }
+  return rows
+}
+
+const getVisibleRows = (storageType: RootStorageType) => flattenRows(sections[storageType].nodes)
+
+const isNodeSelected = (storageType: RootStorageType, node: TreeNode) => {
+  return selectedNodeKey.value === buildNodeKey(storageType, node.path)
+}
+
+const rootMark = (storageType: RootStorageType) => {
+  return storageType === FILE_STORAGE_TYPE.LOCAL ? 'L' : 'O'
+}
+
+const refreshCurrentRoot = async () => {
+  const activeRoot = getActiveRoot()
+  if (!activeRoot) return
+  if (refreshingRoot.value !== '' || sections[activeRoot].loading) return
+  refreshingRoot.value = activeRoot
+  clearCacheByRoot(activeRoot)
+  sections[activeRoot].loaded = false
+  sections[activeRoot].error = ''
+  await loadChildren(activeRoot, '', undefined, { force: true, preserveOnError: true })
+  refreshingRoot.value = ''
+}
+
+const triggerDownload = async (node: TreeNode) => {
+  if (!node.file_id) {
+    theToast.error('该文件暂不可下载')
+    return
+  }
   try {
-    downloadingId.value = item.id
-    const blob = await fetchDownloadFileById(item.id)
+    downloadingId.value = node.file_id
+    const blob = await fetchDownloadFileById(node.file_id)
     const objectUrl = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = objectUrl
-    link.download = item.name || item.key || 'file'
+    link.download = node.name || 'file'
     document.body.appendChild(link)
     link.click()
     link.remove()
@@ -66,9 +283,82 @@ const triggerDownload = async (item: App.Api.File.FileListItem) => {
   }
 }
 
-onMounted(() => {
-  void loadAll()
-})
+const triggerPreview = async (node: TreeNode) => {
+  if (!node.file_id) {
+    theToast.error('该文件暂不可预览')
+    return
+  }
+  try {
+    previewingId.value = node.file_id
+    const blob = await fetchDownloadFileById(node.file_id)
+    const objectUrl = window.URL.createObjectURL(blob)
+    window.open(objectUrl, '_blank', 'noopener,noreferrer')
+    window.setTimeout(() => {
+      window.URL.revokeObjectURL(objectUrl)
+    }, 60_000)
+  } catch {
+    theToast.error('预览失败')
+  } finally {
+    previewingId.value = ''
+  }
+}
+
+const onBeforeEnter = (el: Element) => {
+  const element = el as HTMLElement
+  gsap.killTweensOf(element)
+  element.style.overflow = 'hidden'
+  element.style.height = '0'
+  element.style.opacity = '0'
+}
+
+const onEnter = (el: Element, done: () => void) => {
+  const element = el as HTMLElement
+  gsap.killTweensOf(element)
+  gsap.to(element, {
+    height: element.scrollHeight,
+    opacity: 1,
+    duration: 0.34,
+    ease: 'power2.out',
+    onComplete: done,
+  })
+}
+
+const onAfterEnter = (el: Element) => {
+  const element = el as HTMLElement
+  element.style.height = 'auto'
+  element.style.overflow = ''
+}
+
+const onBeforeLeave = (el: Element) => {
+  const element = el as HTMLElement
+  gsap.killTweensOf(element)
+  element.style.overflow = 'hidden'
+  element.style.height = `${element.scrollHeight}px`
+  element.style.opacity = '1'
+}
+
+const onLeave = (el: Element, done: () => void) => {
+  const element = el as HTMLElement
+  gsap.killTweensOf(element)
+  gsap.to(element, {
+    height: 0,
+    opacity: 0,
+    duration: 0.24,
+    ease: 'power2.inOut',
+    onComplete: done,
+  })
+}
+
+const onAfterLeave = (el: Element) => {
+  const element = el as HTMLElement
+  element.style.height = ''
+  element.style.opacity = ''
+  element.style.overflow = ''
+}
+
+const setRootContentRef = (storageType: RootStorageType, el: unknown) => {
+  rootContentRefs[storageType] = el instanceof HTMLElement ? el : null
+}
 </script>
 
 <template>
@@ -76,52 +366,129 @@ onMounted(() => {
     <div class="storage-file-list">
       <div class="header">
         <h1 class="title">文件管理</h1>
-        <button class="refresh-btn" @click="loadAll">刷新</button>
+        <button
+          class="refresh-btn"
+          :disabled="!getActiveRoot() || refreshingRoot !== ''"
+          @click="refreshCurrentRoot"
+        >
+          {{ refreshingRoot !== '' ? '刷新中...' : '刷新' }}
+        </button>
       </div>
+      <div class="explorer-panel">
+        <div class="tree-list">
+          <template v-for="storageType in rootStorageTypes" :key="storageType">
+            <div class="tree-row root-row" @click="toggleRoot(storageType)">
+              <div class="tree-left">
+                <span class="node-icon">{{ sections[storageType].expanded ? '▾' : '▸' }}</span>
+                <span class="root-mark">{{ rootMark(storageType) }}</span>
+                <span class="node-name">{{ sections[storageType].title }}</span>
+              </div>
+              <div class="tree-right">
+                <span class="count">{{ sections[storageType].expanded ? '已展开' : '已折叠' }}</span>
+              </div>
+            </div>
 
-      <section
-        v-for="storageType in [FILE_STORAGE_TYPE.LOCAL, FILE_STORAGE_TYPE.OBJECT]"
-        :key="storageType"
-        class="root-section"
-      >
-        <div class="root-head">
-          <h2>{{ sectionMeta[storageType].title }}</h2>
-          <span class="count">共 {{ sections[storageType].total }} 个文件</span>
+            <Transition
+              :css="false"
+              @before-enter="onBeforeEnter"
+              @enter="onEnter"
+              @after-enter="onAfterEnter"
+              @before-leave="onBeforeLeave"
+              @leave="onLeave"
+              @after-leave="onAfterLeave"
+            >
+              <div
+                v-show="sections[storageType].expanded"
+                :ref="(el) => setRootContentRef(storageType, el)"
+                class="root-content"
+                :class="{ 'is-collapsed': !sections[storageType].expanded }"
+              >
+                <div v-if="sections[storageType].loading" class="status-text nested-status">正在加载...</div>
+                <div v-else-if="sections[storageType].error" class="status-text status-error nested-status">
+                  {{ sections[storageType].error }}
+                  <button class="retry-btn" @click.stop="loadChildren(storageType, '')">重试</button>
+                </div>
+                <div
+                  v-else-if="sections[storageType].loaded && sections[storageType].nodes.length === 0"
+                  class="status-text nested-status"
+                >
+                  暂无文件
+                </div>
+                <template v-else>
+                  <div>
+                    <div
+                      v-for="row in getVisibleRows(storageType)"
+                      :key="`${storageType}:${row.node.path}`"
+                      class="tree-row"
+                      :class="{
+                        'is-file': row.node.node_type === 'file',
+                        'is-selected': isNodeSelected(storageType, row.node),
+                      }"
+                      @click="handleNodeClick(storageType, row.node)"
+                    >
+                      <div class="tree-left" :style="{ paddingLeft: `${row.depth * 1.15 + 1.55}rem` }">
+                        <span class="node-icon">
+                          {{
+                            row.node.node_type === 'folder'
+                              ? row.node.expanded
+                                ? '▾'
+                                : '▸'
+                              : '•'
+                          }}
+                        </span>
+                        <span class="node-name" :title="row.node.name">{{ row.node.name }}</span>
+                      </div>
+                      <div class="tree-right">
+                        <span
+                          v-if="row.node.node_type === 'folder' && row.node.loading"
+                          class="node-status"
+                        >
+                          加载中...
+                        </span>
+                        <button
+                          v-else-if="row.node.node_type === 'folder' && row.node.error"
+                          class="retry-btn"
+                          @click.stop="loadChildren(storageType, row.node.path, row.node)"
+                        >
+                          重试
+                        </button>
+                        <button
+                          v-else-if="row.node.node_type === 'file'"
+                          class="download-btn icon-btn"
+                          :disabled="
+                            !row.node.file_id ||
+                            downloadingId === row.node.file_id ||
+                            previewingId === row.node.file_id
+                          "
+                          :title="previewingId === row.node.file_id ? '预览中' : '预览'"
+                          @click.stop="triggerPreview(row.node)"
+                        >
+                          <span v-if="previewingId === row.node.file_id">◌</span>
+                          <ViewIcon v-else class="preview-icon" />
+                        </button>
+                        <button
+                          v-if="row.node.node_type === 'file'"
+                          class="download-btn icon-btn"
+                          :disabled="
+                            !row.node.file_id ||
+                            downloadingId === row.node.file_id ||
+                            previewingId === row.node.file_id
+                          "
+                          :title="downloadingId === row.node.file_id ? '下载中' : '下载'"
+                          @click.stop="triggerDownload(row.node)"
+                        >
+                          <span v-if="downloadingId === row.node.file_id">◌</span>
+                          <DownloadIcon v-else class="download-icon" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </Transition>
+          </template>
         </div>
-
-        <div v-if="sections[storageType].loading" class="status-text">正在加载...</div>
-        <div v-else-if="sections[storageType].error" class="status-text status-error">
-          {{ sections[storageType].error }}
-          <button class="retry-btn" @click="loadSection(storageType)">重试</button>
-        </div>
-        <div v-else-if="sections[storageType].items.length === 0" class="status-text">暂无文件</div>
-        <div v-else class="table-wrap">
-          <table class="file-table">
-            <thead>
-              <tr>
-                <th>名称</th>
-                <th>Key</th>
-                <th class="action-col">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="item in sections[storageType].items" :key="item.id">
-                <td class="name-cell" :title="item.name">{{ item.name }}</td>
-                <td class="key-cell" :title="item.key">{{ item.key }}</td>
-                <td class="action-col">
-                  <button
-                    class="download-btn"
-                    :disabled="downloadingId === item.id"
-                    @click="triggerDownload(item)"
-                  >
-                    {{ downloadingId === item.id ? '下载中...' : '下载' }}
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
+      </div>
     </div>
   </PanelCard>
 </template>
@@ -145,9 +512,17 @@ onMounted(() => {
   font-size: 1.1rem;
 }
 
-.refresh-btn,
 .retry-btn,
 .download-btn {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.65rem;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-surface);
+  cursor: pointer;
+}
+
+.refresh-btn {
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-sm);
   padding: 0.2rem 0.65rem;
@@ -162,28 +537,14 @@ onMounted(() => {
   border-color: var(--color-border-strong);
 }
 
-.download-btn:disabled {
+.refresh-btn:disabled {
   cursor: not-allowed;
   opacity: 0.7;
 }
 
-.root-section {
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  padding: 0.7rem;
-}
-
-.root-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.55rem;
-}
-
-.root-head h2 {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
+.download-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .count {
@@ -191,42 +552,135 @@ onMounted(() => {
   font-size: 0.85rem;
 }
 
+.explorer-panel {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
 .status-text {
   color: var(--color-text-muted);
   font-size: 0.9rem;
+}
+
+.nested-status {
+  padding: 0.45rem 0.5rem 0.45rem 1.8rem;
 }
 
 .status-error {
   color: var(--color-error, #ef4444);
 }
 
-.table-wrap {
-  overflow-x: auto;
+.tree-list {
+  max-height: 24rem;
+  overflow: auto;
+  padding: 0;
 }
 
-.file-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
-
-.file-table th,
-.file-table td {
-  border-top: 1px solid var(--color-border-subtle);
-  padding: 0.5rem 0.35rem;
-  text-align: left;
+.tree-row {
+  min-height: 2.4rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--color-border-subtle) 70%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.08rem 0;
   color: var(--color-text-secondary);
+  transition: background-color 0.18s ease, border-color 0.18s ease;
 }
 
-.name-cell,
-.key-cell {
+.root-row {
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: color-mix(in oklab, var(--color-bg-muted) 45%, transparent);
+}
+
+.tree-row:hover {
+  background: color-mix(in oklab, var(--color-bg-muted) 70%, transparent);
+}
+
+.tree-row.is-file {
+  cursor: pointer;
+}
+
+.tree-row.is-selected {
+  background: color-mix(in oklab, var(--color-accent-soft, var(--color-bg-muted)) 85%, transparent);
+}
+
+.tree-left {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding-right: 0.6rem;
+}
+
+.node-icon {
+  width: 0.95rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.root-mark {
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  background: color-mix(in oklab, var(--color-accent-soft, var(--color-bg-muted)) 70%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-accent) 35%, var(--color-border-subtle));
+}
+
+.node-name {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.action-col {
-  width: 86px;
-  text-align: center !important;
+.tree-right {
+  min-width: 7rem;
+  display: inline-flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.35rem;
+  padding-right: 0.4rem;
+}
+
+.node-status {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
+.icon-btn {
+  min-width: 2.1rem;
+  height: 1.9rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.download-icon {
+  font-size: 1rem;
+}
+
+.preview-icon {
+  font-size: 0.96rem;
+}
+
+.root-content {
+  overflow: hidden;
+}
+
+.root-content.is-collapsed {
+  pointer-events: none;
+}
+
+.tree-list > :last-child {
+  border-bottom: none;
 }
 </style>

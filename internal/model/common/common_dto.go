@@ -110,6 +110,35 @@ type FileListResultDto struct {
 	Items []FileListItemDto `json:"items"`
 }
 
+// FileTreeQueryDto 文件树查询参数（懒加载）
+//
+// swagger:model FileTreeQueryDto
+type FileTreeQueryDto struct {
+	StorageType string `json:"storage_type" form:"storage_type" binding:"required"`
+	Prefix      string `json:"prefix" form:"prefix"`
+}
+
+// FileTreeNodeDto 文件树节点
+//
+// swagger:model FileTreeNodeDto
+type FileTreeNodeDto struct {
+	Name        string    `json:"name"`
+	Path        string    `json:"path"`
+	NodeType    string    `json:"node_type"` // file|folder
+	HasChildren bool      `json:"has_children"`
+	FileID      string    `json:"file_id,omitempty"`
+	Size        int64     `json:"size,omitempty"`
+	ContentType string    `json:"content_type,omitempty"`
+	ModifiedAt  time.Time `json:"modified_at,omitempty"`
+}
+
+// FileTreeResultDto 文件树结果
+//
+// swagger:model FileTreeResultDto
+type FileTreeResultDto struct {
+	Items []FileTreeNodeDto `json:"items"`
+}
+
 // GetWebsiteTitleDto 用于请求网站标题的请求数据传输对象
 //
 // swagger:model GetWebsiteTitleDto

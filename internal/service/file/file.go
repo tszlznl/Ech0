@@ -33,6 +33,8 @@ import (
 const (
 	externalKeyPrefix   = "external/"
 	externalDefaultName = "external"
+	treeNodeTypeFile    = "file"
+	treeNodeTypeFolder  = "folder"
 )
 
 type FileService struct {
@@ -475,6 +477,87 @@ func (s *FileService) ListFiles(
 		})
 	}
 	result.Total = total
+	result.Items = items
+	return result, nil
+}
+
+func (s *FileService) ListFileTree(
+	ctx context.Context,
+	query commonModel.FileTreeQueryDto,
+) (commonModel.FileTreeResultDto, error) {
+	result := commonModel.FileTreeResultDto{Items: []commonModel.FileTreeNodeDto{}}
+	userid := viewer.MustFromContext(ctx).UserID()
+	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
+	if err != nil {
+		return result, err
+	}
+	if !user.IsAdmin {
+		return result, errors.New(commonModel.NO_PERMISSION_DENIED)
+	}
+
+	storageTypeRaw := strings.TrimSpace(query.StorageType)
+	if storageTypeRaw == "" {
+		return result, errors.New(commonModel.INVALID_PARAMS)
+	}
+	storageType := storage.NormalizeStorageType(storageTypeRaw)
+	if storageType != storage.StorageTypeLocal && storageType != storage.StorageTypeObject {
+		return result, errors.New(commonModel.INVALID_PARAMS)
+	}
+	prefix := strings.Trim(strings.TrimSpace(query.Prefix), "/")
+
+	selector := s.getSelector()
+	nodes, err := selector.ListNodes(context.Background(), storageType, prefix)
+	if err != nil {
+		return result, err
+	}
+
+	urlByPath := make(map[string]string, len(nodes))
+	fileURLs := make([]string, 0, len(nodes))
+	for _, node := range nodes {
+		if node.IsDir {
+			continue
+		}
+		url := selector.ResolveURLByPath(storageType, node.Path)
+		if url == "" {
+			continue
+		}
+		urlByPath[node.Path] = url
+		fileURLs = append(fileURLs, url)
+	}
+	idByURL := map[string]string{}
+	if len(fileURLs) > 0 {
+		dbFiles, err := s.fileRepository.ListByStorageTypeAndURLs(context.Background(), string(storageType), fileURLs)
+		if err != nil {
+			return result, err
+		}
+		idByURL = make(map[string]string, len(dbFiles))
+		for _, f := range dbFiles {
+			idByURL[f.URL] = f.ID
+		}
+	}
+
+	items := make([]commonModel.FileTreeNodeDto, 0, len(nodes))
+	for _, node := range nodes {
+		item := commonModel.FileTreeNodeDto{
+			Name:        node.Name,
+			Path:        node.Path,
+			NodeType:    treeNodeTypeFile,
+			HasChildren: false,
+			Size:        node.Size,
+			ContentType: node.ContentType,
+			ModifiedAt:  node.LastModified,
+		}
+		if node.IsDir {
+			item.NodeType = treeNodeTypeFolder
+			item.HasChildren = true
+			item.Size = 0
+			item.ContentType = ""
+		} else if url, ok := urlByPath[node.Path]; ok {
+			item.FileID = idByURL[url]
+		}
+		items = append(items, item)
+	}
+
 	result.Items = items
 	return result, nil
 }

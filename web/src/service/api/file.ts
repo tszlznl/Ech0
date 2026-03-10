@@ -86,6 +86,20 @@ export function fetchListFiles(query: App.Api.File.FileListQuery) {
   })
 }
 
+// 获取文件树（懒加载）
+export function fetchFileTree(query: App.Api.File.FileTreeQuery) {
+  const searchParams = new URLSearchParams({
+    storage_type: query.storage_type,
+  })
+  if (query.prefix) {
+    searchParams.set('prefix', query.prefix)
+  }
+  return request<App.Api.File.FileTreeResult>({
+    url: `/file/tree?${searchParams.toString()}`,
+    method: 'GET',
+  })
+}
+
 // 下载文件（二进制流）
 export function fetchDownloadFileById(id: string) {
   return downloadFile({

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"path"
+	"sort"
 	"strings"
 	"time"
 
@@ -17,9 +19,20 @@ type StorageSelector struct {
 	objectFS       virefs.FS
 	localResolve   URLResolver
 	objectResolve  URLResolver
+	localPathURL   URLResolver
+	objectPathURL  URLResolver
 	objectEnabled  bool
 	objectProvider string
 	objectBucket   string
+}
+
+type ListNode struct {
+	Name         string
+	Path         string
+	IsDir        bool
+	Size         int64
+	ContentType  string
+	LastModified time.Time
 }
 
 func NewStorageSelector(cfg config.StorageConfig) *StorageSelector {
@@ -27,14 +40,17 @@ func NewStorageSelector(cfg config.StorageConfig) *StorageSelector {
 
 	localFS := buildLocalFS(cfg, schema)
 	localResolve := buildLocalURLResolver(schema)
+	localPathResolve := buildLocalPathURLResolver()
 
-	objectFS, objectResolve, objectEnabled := buildOptionalObjectFSAndResolver(cfg, schema)
+	objectFS, objectResolve, objectPathResolve, objectEnabled := buildOptionalObjectFSAndResolver(cfg, schema)
 
 	return &StorageSelector{
 		localFS:        localFS,
 		objectFS:       objectFS,
 		localResolve:   localResolve,
 		objectResolve:  objectResolve,
+		localPathURL:   localPathResolve,
+		objectPathURL:  objectPathResolve,
 		objectEnabled:  objectEnabled,
 		objectProvider: strings.ToLower(strings.TrimSpace(cfg.Provider)),
 		objectBucket:   strings.TrimSpace(cfg.BucketName),
@@ -100,6 +116,68 @@ func (r *StorageSelector) ResolveURL(storageType StorageType, key string) string
 	}
 }
 
+func (r *StorageSelector) ResolveURLByPath(storageType StorageType, filePath string) string {
+	if r == nil {
+		return ""
+	}
+	cleanPath := strings.Trim(strings.TrimSpace(filePath), "/")
+	if cleanPath == "" {
+		return ""
+	}
+	switch NormalizeStorageType(string(storageType)) {
+	case StorageTypeObject:
+		if r.ObjectEnabled() && r.objectPathURL != nil {
+			return r.objectPathURL(cleanPath)
+		}
+		return ""
+	default:
+		if r.localPathURL != nil {
+			return r.localPathURL(cleanPath)
+		}
+		return ""
+	}
+}
+
+func (r *StorageSelector) ListNodes(
+	ctx context.Context,
+	storageType StorageType,
+	prefix string,
+) ([]ListNode, error) {
+	fs, err := r.getFS(storageType)
+	if err != nil {
+		return nil, err
+	}
+	cleanPrefix := strings.Trim(strings.TrimSpace(prefix), "/")
+	result, err := fs.List(ctx, cleanPrefix)
+	if err != nil {
+		return nil, err
+	}
+
+	nodes := make([]ListNode, 0, len(result.Files))
+	for _, item := range result.Files {
+		cleanPath := strings.Trim(strings.TrimSpace(item.Key), "/")
+		if cleanPath == "" {
+			continue
+		}
+		nodes = append(nodes, ListNode{
+			Name:         path.Base(cleanPath),
+			Path:         cleanPath,
+			IsDir:        item.IsDir,
+			Size:         item.Size,
+			ContentType:  item.ContentType,
+			LastModified: item.LastModified,
+		})
+	}
+
+	sort.SliceStable(nodes, func(i, j int) bool {
+		if nodes[i].IsDir != nodes[j].IsDir {
+			return nodes[i].IsDir
+		}
+		return nodes[i].Name < nodes[j].Name
+	})
+	return nodes, nil
+}
+
 func (r *StorageSelector) PresignPutURL(ctx context.Context, key string, expires time.Duration) (string, error) {
 	if !r.ObjectEnabled() {
 		return "", errors.New("backend does not support presigned URLs")
@@ -135,9 +213,9 @@ func (r *StorageSelector) getFS(storageType StorageType) (virefs.FS, error) {
 func buildOptionalObjectFSAndResolver(
 	cfg config.StorageConfig,
 	schema *virefs.Schema,
-) (virefs.FS, URLResolver, bool) {
+) (virefs.FS, URLResolver, URLResolver, bool) {
 	if !cfg.ObjectEnabled {
-		return nil, nil, false
+		return nil, nil, nil, false
 	}
 
 	provider := mapProvider(cfg.Provider)
@@ -158,10 +236,10 @@ func buildOptionalObjectFSAndResolver(
 		SecretKey: cfg.SecretKey,
 	}, opts...)
 	if err != nil {
-		return nil, nil, false
+		return nil, nil, nil, false
 	}
 
-	return fs, buildS3URLResolver(cfg, schema), true
+	return fs, buildS3URLResolver(cfg, schema), buildS3PathURLResolver(cfg), true
 }
 
 func (r *StorageSelector) CapabilityText() string {

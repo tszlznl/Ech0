@@ -101,6 +101,23 @@ declare namespace App {
         items: FileListItem[]
         total: number
       }
+      type FileTreeQuery = {
+        storage_type: StorageType
+        prefix?: string
+      }
+      type FileTreeNode = {
+        name: string
+        path: string
+        node_type: 'file' | 'folder'
+        has_children: boolean
+        file_id?: string
+        size?: number
+        content_type?: string
+        modified_at?: string
+      }
+      type FileTreeResult = {
+        items: FileTreeNode[]
+      }
       type FileDeleteDto = {
         id: string
       }

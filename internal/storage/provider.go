@@ -60,8 +60,19 @@ func buildLocalFS(cfg config.StorageConfig, schema *virefs.Schema) virefs.FS {
 }
 
 func buildLocalURLResolver(schema *virefs.Schema) URLResolver {
+	pathResolver := buildLocalPathURLResolver()
 	return func(key string) string {
-		return "/api/files/" + schema.Resolve(key)
+		return pathResolver(schema.Resolve(key))
+	}
+}
+
+func buildLocalPathURLResolver() URLResolver {
+	return func(path string) string {
+		clean := strings.Trim(strings.TrimSpace(path), "/")
+		if clean == "" {
+			return "/api/files"
+		}
+		return "/api/files/" + clean
 	}
 }
 
@@ -93,6 +104,13 @@ func buildS3FS(cfg config.StorageConfig, schema *virefs.Schema) virefs.FS {
 }
 
 func buildS3URLResolver(cfg config.StorageConfig, schema *virefs.Schema) URLResolver {
+	pathResolver := buildS3PathURLResolver(cfg)
+	return func(key string) string {
+		return pathResolver(schema.Resolve(key))
+	}
+}
+
+func buildS3PathURLResolver(cfg config.StorageConfig) URLResolver {
 	prefix := ""
 	if cfg.PathPrefix != "" {
 		prefix = strings.Trim(cfg.PathPrefix, "/") + "/"
@@ -109,15 +127,17 @@ func buildS3URLResolver(cfg config.StorageConfig, schema *virefs.Schema) URLReso
 			cdnURL = protocol + "://" + cdnURL
 		}
 		cdnURL = strings.TrimRight(cdnURL, "/")
-		return func(key string) string {
-			return cdnURL + "/" + prefix + schema.Resolve(key)
+		return func(path string) string {
+			clean := strings.Trim(strings.TrimSpace(path), "/")
+			return cdnURL + "/" + prefix + clean
 		}
 	}
 
 	endpoint := normalizeEndpoint(cfg.Endpoint, cfg.UseSSL)
 	baseURL := strings.TrimRight(endpoint, "/") + "/" + cfg.BucketName
-	return func(key string) string {
-		return baseURL + "/" + prefix + schema.Resolve(key)
+	return func(path string) string {
+		clean := strings.Trim(strings.TrimSpace(path), "/")
+		return baseURL + "/" + prefix + clean
 	}
 }
 
