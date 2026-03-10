@@ -41,6 +41,7 @@
         :src="url"
         @play="toggleIsPlaying(true)"
         @pause="toggleIsPlaying(false)"
+        @error="onAudioError"
         :loop="isLooping"
         preload="none"
       />
@@ -93,13 +94,27 @@ const toggleIsPlaying = (state: boolean) => {
   isPlaying.value = state
 }
 
-function togglePlay() {
+async function togglePlay() {
   if (!audioRef.value) return
   if (isPlaying.value) {
     audioRef.value.pause()
   } else {
-    audioRef.value.play()
+    if (!url.value) {
+      theToast.warning('当前音频地址不可用')
+      return
+    }
+    try {
+      await audioRef.value.play()
+    } catch {
+      theToast.error('音频播放失败，请稍后重试')
+      isPlaying.value = false
+    }
   }
+}
+
+function onAudioError() {
+  isPlaying.value = false
+  theToast.error('音频格式不受支持或资源不可访问')
 }
 
 function toggleLoop() {

@@ -18,8 +18,14 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			viewer.AttachToRequest(&ctx.Request, viewer.NewNoopViewer())
 		}
 
-		// 获取 Authorization 头部信息
-		auth := ctx.Request.Header.Get("Authorization")
+		// 获取 Authorization 头部信息，若缺失则回退到 query token（用于 <audio>/<video> 直链等场景）
+		auth := strings.TrimSpace(ctx.Request.Header.Get("Authorization"))
+		if auth == "" {
+			queryToken := strings.TrimSpace(ctx.Query("token"))
+			if queryToken != "" && queryToken != "null" && queryToken != "undefined" {
+				auth = "Bearer " + queryToken
+			}
+		}
 
 		// 将 Authorization 头部信息分割成两部分
 		parts := strings.SplitN(auth, " ", 2)

@@ -93,8 +93,18 @@ export async function updateFileMeta(input: UpdateFileMetaInput): Promise<FileEn
   return normalizeFileEntity(data)
 }
 
+function readAuthTokenFromStorage(): string {
+  if (typeof window === 'undefined') return ''
+  const raw = window.localStorage.getItem('token') || ''
+  const token = raw.replace(/^"|"$/g, '').trim()
+  if (!token || token === 'null' || token === 'undefined') return ''
+  return token
+}
+
 export function buildStreamUrl(fileId: string, t = Date.now()): string {
-  return `${getApiUrl()}/file/${fileId}/stream?t=${t}`
+  const token = readAuthTokenFromStorage()
+  const tokenQuery = token ? `&token=${encodeURIComponent(token)}` : ''
+  return `${getApiUrl()}/file/${fileId}/stream?t=${t}${tokenQuery}`
 }
 
 export const fileApiAdapter = {
