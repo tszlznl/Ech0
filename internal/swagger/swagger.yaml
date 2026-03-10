@@ -1341,21 +1341,6 @@ paths:
       summary: 用户登录接口
       tags:
       - 用户认证
-  /metrics:
-    get:
-      consumes:
-      - application/json
-      description: 获取当前系统的各项运行指标，如 CPU 使用率、内存使用情况等
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 获取系统指标失败
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 获取系统指标
-      tags:
-      - 通用功能
   /oauth2/settings:
     get:
       consumes:
@@ -1869,17 +1854,6 @@ paths:
           schema:
             $ref: '#/definitions/handler.Response'
       summary: 获取网站标题
-      tags:
-      - 通用功能
-  /ws/metrics:
-    get:
-      consumes:
-      - application/json
-      description: 通过 WebSocket 实时订阅系统的各项运行指标
-      produces:
-      - application/json
-      responses: {}
-      summary: 通过 WebSocket 订阅系统指标
       tags:
       - 通用功能
 swagger: "2.0"

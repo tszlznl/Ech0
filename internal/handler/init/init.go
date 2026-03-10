@@ -27,7 +27,7 @@ func (h *InitHandler) GetInitStatus() gin.HandlerFunc {
 		}
 		return res.Response{
 			Data: status,
-			Msg:  commonModel.GET_STATUS_SUCCESS,
+			Msg:  commonModel.SUCCESS_MESSAGE,
 		}
 	})
 }

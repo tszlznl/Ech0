@@ -118,21 +118,23 @@ func (connectService *ConnectService) GetConnect() (model.Connect, error) {
 		return connect, err
 	}
 
-	// 获取系统状态
-	status, err := connectService.commonService.GetStatus()
+	// 获取 owner 信息
+	owner, err := connectService.commonService.GetOwner()
 	if err != nil {
 		return connect, err
 	}
 
 	// 统计当天发布的数量
 	todayEchos := connectService.echoRepository.GetTodayEchos(true, "UTC")
+	// 统计总发布数量
+	_, totalEchos := connectService.echoRepository.GetEchosByPage(1, 1, "", true)
 
 	// 设置 Connect 信息
 	connect.ServerName = setting.ServerName
 	connect.ServerURL = setting.ServerURL
-	connect.TotalEchos = status.TotalEchos
+	connect.TotalEchos = int(totalEchos)
 	connect.TodayEchos = len(todayEchos)
-	connect.SysUsername = status.Username
+	connect.SysUsername = owner.Username
 
 	trimmedServerURL := strings.TrimRight(setting.ServerURL, "/")
 	logoPath := strings.TrimSpace(setting.ServerLogo)

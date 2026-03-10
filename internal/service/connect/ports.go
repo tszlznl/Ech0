@@ -25,6 +25,7 @@ type Repository interface {
 
 type EchoRepository interface {
 	GetTodayEchos(showPrivate bool, timezone string) []echoModel.Echo
+	GetEchosByPage(page, pageSize int, search string, showPrivate bool) ([]echoModel.Echo, int64)
 }
 
 type (

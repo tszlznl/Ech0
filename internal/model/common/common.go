@@ -1,22 +1,5 @@
 package model
 
-// UserStatus 用于存储用户状态信息
-type UserStatus struct {
-	UserID   string `json:"user_id"`  // 用户ID
-	UserName string `json:"username"` // 用户名
-	IsAdmin  bool   `json:"is_admin"` // 是否是管理员
-	IsOwner  bool   `json:"is_owner"` // 是否是Owner
-}
-
-// Status 用于存储Echo状态信息
-type Status struct {
-	OwnerID    string       `json:"owner_id"`    // Owner ID
-	Username   string       `json:"username"`    // Owner 用户名
-	Users      []UserStatus `json:"users"`       // 所有用户
-	Logo       string       `json:"logo"`        // 站点logo
-	TotalEchos int          `json:"total_echos"` // 总共发布数量
-}
-
 // Heatmap 用于存储热力图数据
 type Heatmap struct {
 	Date  string `json:"date"`  // 日期

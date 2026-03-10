@@ -15,8 +15,6 @@ import (
 	eventregistry "github.com/lin-snow/ech0/internal/event/registry"
 	eventsubscriber "github.com/lin-snow/ech0/internal/event/subscriber"
 	"github.com/lin-snow/ech0/internal/handler"
-	"github.com/lin-snow/ech0/internal/metric"
-	"github.com/lin-snow/ech0/internal/monitor"
 	"github.com/lin-snow/ech0/internal/repository"
 	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
 	"github.com/lin-snow/ech0/internal/server"
@@ -112,9 +110,6 @@ var HandlerGraphSet = wire.NewSet(
 	repository.ConnectSet,
 	service.ConnectSet,
 	handler.ConnectSet,
-
-	metric.NewSystemCollector,
-	monitor.NewMonitor,
 
 	service.DashboardSet,
 	handler.DashboardSet,

@@ -421,61 +421,6 @@ declare namespace App {
       }
     }
 
-    namespace Dashboard {
-      // CpuMetric cpu监控指标
-      type CpuMetric = {
-        UsagePercent: number // CPU 使用率百分比
-        Cores: number // CPU 核心数
-        FrequencyMHz: number // CPU 主频，单位 MHz
-      }
-      // MemoryMetric 内存监控指标
-      type MemoryMetric = {
-        Total: number // 总内存大小
-        Used: number // 已使用内存大小
-        Available: number // 可用内存大小
-        Percentage: number // 内存使用率百分比
-      }
-      // DiskMetric 磁盘监控指标
-      type DiskMetric = {
-        Total: number // 磁盘总大小
-        Used: number // 已使用磁盘大小
-        Available: number // 可用磁盘大小
-        Percentage: number // 磁盘使用率百分比
-      }
-
-      // NetworkMetric 网络监控指标
-      type NetworkMetric = {
-        TotalBytesSent: number // 总发送字节数
-        TotalBytesReceived: number // 总接收字节数
-        BytesSentPerSecond: number // 每秒发送字节数 (B/s)
-        BytesReceivedPerSecond: number // 每秒接收字节数 (B/s)
-      }
-
-      // SystemMetric 系统监控指标
-      type SystemMetric = {
-        Hostname: string // 主机名
-        OsName: string // 操作系统名称
-        Uptime: number // 系统运行时长
-        KernelVersion: string // 内核版本
-        KernelArch: string // 内核架构
-        Time: string // 采样时间
-        TimeZone: string // 采样时区
-        ProcessCount: number // 当前进程数
-        ThreadCount: number // 当前线程数
-        GolangVersion: string // Golang 版本
-        GoRoutineCount: number // 当前 Goroutine 数量
-      }
-
-      // Metrics 综合监控指标
-      type Metrics = {
-        CPU: CpuMetric // CPU 监控指标
-        Memory: MemoryMetric // 内存监控指标
-        Disk: DiskMetric // 磁盘监控指标
-        Network: NetworkMetric // 网络监控指标
-        System: SystemMetric // 系统监控指标
-      }
-    }
-
     namespace SystemLog {
       type Entry = {
         time: string

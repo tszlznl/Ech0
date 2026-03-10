@@ -21,23 +21,6 @@ func NewCommonHandler(commonService service.Service) *CommonHandler {
 	}
 }
 
-func (commonHandler *CommonHandler) GetStatus() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		status, err := commonHandler.commonService.GetStatus()
-		if err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: status,
-			Msg:  commonModel.GET_STATUS_SUCCESS,
-		}
-	})
-}
-
 func (commonHandler *CommonHandler) GetHeatMap() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		timezone := timezoneUtil.NormalizeTimezone(ctx.GetHeader(timezoneUtil.DefaultTimezoneHeader))

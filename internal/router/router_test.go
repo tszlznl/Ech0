@@ -40,7 +40,6 @@ func TestSetupRouter_RegistersKeyRoutes(t *testing.T) {
 		{method: http.MethodGet, path: "/api/agent/recent"},
 		{method: http.MethodGet, path: "/api/system/logs"},
 		{method: http.MethodGet, path: "/api/system/logs/stream"},
-		{method: http.MethodGet, path: "/ws/dashboard/metrics"},
 		{method: http.MethodGet, path: "/ws/system/logs"},
 	}
 

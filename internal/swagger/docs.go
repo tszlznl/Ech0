@@ -1239,29 +1239,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/metrics": {
-            "get": {
-                "description": "获取当前系统的各项运行指标，如 CPU 使用率、内存使用情况等",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "通用功能"
-                ],
-                "summary": "获取系统指标",
-                "responses": {
-                    "200": {
-                        "description": "获取系统指标失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/oauth2/settings": {
             "get": {
                 "description": "获取系统的 OAuth2 相关设置",
@@ -2054,22 +2031,6 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/ws/metrics": {
-            "get": {
-                "description": "通过 WebSocket 实时订阅系统的各项运行指标",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "通用功能"
-                ],
-                "summary": "通过 WebSocket 订阅系统指标",
-                "responses": {}
             }
         }
     },

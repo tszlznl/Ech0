@@ -30,8 +30,6 @@ import (
 	handler10 "github.com/lin-snow/ech0/internal/handler/todo"
 	handler3 "github.com/lin-snow/ech0/internal/handler/user"
 	handler2 "github.com/lin-snow/ech0/internal/handler/web"
-	"github.com/lin-snow/ech0/internal/metric"
-	"github.com/lin-snow/ech0/internal/monitor"
 	repository12 "github.com/lin-snow/ech0/internal/repository"
 	repository5 "github.com/lin-snow/ech0/internal/repository/common"
 	repository11 "github.com/lin-snow/ech0/internal/repository/connect"
@@ -148,9 +146,7 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 	connectHandler := handler11.NewConnectHandler(connectService)
 	backupService := service10.NewBackupService(commonService, publisherPublisher)
 	backupHandler := handler12.NewBackupHandler(backupService)
-	metricCollector := metric.NewSystemCollector()
-	monitorMonitor := monitor.NewMonitor(metricCollector)
-	dashboardService := service11.NewDashboardService(monitorMonitor)
+	dashboardService := service11.NewDashboardService()
 	dashboardHandler := handler13.NewDashboardHandler(dashboardService)
 	agentService := service12.NewAgentService(settingService, echoService, todoService, keyValueRepository)
 	agentHandler := handler14.NewAgentHandler(agentService)
@@ -209,7 +205,7 @@ var RuntimeSet = server.ProviderSet
 
 var EventGraphSet = wire.NewSet(repository12.EchoSet, repository12.UserSet, repository12.TodoSet, repository12.InboxSet, repository12.KeyValueSet, repository12.QueueSet, repository12.WebhookSet, wire.Bind(new(registry.WebhookObserver), new(*subscriber.WebhookDispatcher)), wire.Bind(new(subscriber.DeadLetterProcessor), new(*subscriber.WebhookDispatcher)), subscriber.NewWebhookDispatcher, subscriber.NewBackupScheduler, subscriber.NewDeadLetterResolver, subscriber.NewAgentProcessor, subscriber.NewInboxDispatcher, ProvideSubscriptionProviders, registry.NewEventRegistry)
 
-var HandlerGraphSet = wire.NewSet(publisher.New, storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository12.FileSet, handler.WebSet, repository12.UserSet, service13.UserSet, handler.UserSet, repository12.EchoSet, service13.EchoSet, handler.EchoSet, repository12.CommonSet, service13.FileSet, handler.FileSet, repository12.InitSet, service13.InitSet, handler.InitSet, service13.CommonSet, handler.CommonSet, repository12.WebhookSet, repository12.KeyValueSet, repository12.SettingSet, service13.SettingSet, handler.SettingSet, repository12.InboxSet, service13.InboxSet, handler.InboxSet, repository12.TodoSet, service13.TodoSet, handler.TodoSet, repository12.ConnectSet, service13.ConnectSet, handler.ConnectSet, metric.NewSystemCollector, monitor.NewMonitor, service13.DashboardSet, handler.DashboardSet, service13.AgentSet, handler.AgentSet, service13.BackupSet, handler.BackupSet, handler.NewBundle)
+var HandlerGraphSet = wire.NewSet(publisher.New, storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository12.FileSet, handler.WebSet, repository12.UserSet, service13.UserSet, handler.UserSet, repository12.EchoSet, service13.EchoSet, handler.EchoSet, repository12.CommonSet, service13.FileSet, handler.FileSet, repository12.InitSet, service13.InitSet, handler.InitSet, service13.CommonSet, handler.CommonSet, repository12.WebhookSet, repository12.KeyValueSet, repository12.SettingSet, service13.SettingSet, handler.SettingSet, repository12.InboxSet, service13.InboxSet, handler.InboxSet, repository12.TodoSet, service13.TodoSet, handler.TodoSet, repository12.ConnectSet, service13.ConnectSet, handler.ConnectSet, service13.DashboardSet, handler.DashboardSet, service13.AgentSet, handler.AgentSet, service13.BackupSet, handler.BackupSet, handler.NewBundle)
 
 var TaskerGraphSet = wire.NewSet(publisher.New, storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository12.FileSet, repository12.KeyValueSet, repository12.WebhookSet, repository12.SettingSet, service13.SettingSet, repository12.EchoSet, service13.EchoSet, repository12.CommonSet, service13.FileSet, service13.CommonSet, repository12.QueueSet, task.ProviderSet)
 

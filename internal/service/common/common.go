@@ -35,39 +35,6 @@ func (s *CommonService) GetOwner() (userModel.User, error) {
 	return s.commonRepository.GetOwner(context.Background())
 }
 
-func (s *CommonService) GetStatus() (commonModel.Status, error) {
-	ctx := context.Background()
-
-	owner, _ := s.commonRepository.GetOwner(ctx)
-
-	var users []commonModel.UserStatus
-	allusers, err := s.commonRepository.GetAllUsers(ctx)
-	if err != nil {
-		return commonModel.Status{}, err
-	}
-	for _, user := range allusers {
-		users = append(users, commonModel.UserStatus{
-			UserID:   user.ID,
-			UserName: user.Username,
-			IsAdmin:  user.IsAdmin,
-			IsOwner:  user.IsOwner,
-		})
-	}
-
-	echos, err := s.commonRepository.GetAllEchos(ctx, true)
-	if err != nil {
-		return commonModel.Status{}, err
-	}
-
-	return commonModel.Status{
-		OwnerID:    owner.ID,
-		Username:   owner.Username,
-		Logo:       owner.Avatar,
-		Users:      users,
-		TotalEchos: len(echos),
-	}, nil
-}
-
 func (s *CommonService) GetHeatMap(timezone string) ([]commonModel.Heatmap, error) {
 	ctx := context.Background()
 	loc := timezoneUtil.LoadLocationOrUTC(timezone)

@@ -30,13 +30,11 @@ const (
 const (
 	UPLOAD_SUCCESS             = "上传成功"
 	DELETE_SUCCESS             = "删除成功"
-	GET_STATUS_SUCCESS         = "获取状态成功"
 	GET_HEATMAP_SUCCESS        = "获取热力图成功"
 	GET_MUSIC_URL_SUCCESS      = "获取音乐播放链接成功"
 	GET_HELLO_SUCCESS          = "获取Hello成功"
 	GET_HEALTHZ_SUCCESS        = "健康检查"
 	GET_S3_PRESIGN_URL_SUCCESS = "获取 S3 预签名 URL 成功"
-	GET_METRICS_SUCCESS        = "获取系统指标成功"
 	GET_WEBSITE_TITLE_SUCCESS  = "获取网站标题成功"
 )
 
