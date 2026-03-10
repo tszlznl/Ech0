@@ -91,9 +91,9 @@ onMounted(() => {
 <template>
   <div class="dashboard-page">
     <section class="welcome-card">
-      <p class="welcome-badge">{{ greeting }}, {{ username }}</p>
+      <p class="welcome-badge">👋 {{ greeting }}, {{ username }}</p>
       <h2 class="welcome-title">欢迎来到 Ech0 Dashboard</h2>
-      <p class="welcome-subtitle">今天是 {{ dateText }}，这里为你汇总当前站点的关键信息。</p>
+      <p class="welcome-subtitle">今天是 {{ dateText }}</p>
     </section>
 
     <section class="stats-grid">

@@ -209,13 +209,19 @@ onUnmounted(() => {
 
 <style scoped>
 .log-container {
-  height: 68vh;
+  height: 42vh;
   overflow-y: auto;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
   padding: 12px;
   background: var(--color-bg-surface);
   box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 1024px) {
+  .log-container {
+    height: 48vh;
+  }
 }
 
 .log-line {
