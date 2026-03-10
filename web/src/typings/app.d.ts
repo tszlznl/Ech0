@@ -428,6 +428,7 @@ declare namespace App {
         total_echos: number
         today_echos: number
         sys_username: string
+        version: string
       }
 
       type Connected = {

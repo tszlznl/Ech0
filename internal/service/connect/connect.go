@@ -135,6 +135,7 @@ func (connectService *ConnectService) GetConnect() (model.Connect, error) {
 	connect.TotalEchos = int(totalEchos)
 	connect.TodayEchos = len(todayEchos)
 	connect.SysUsername = owner.Username
+	connect.Version = commonModel.Version
 
 	trimmedServerURL := strings.TrimRight(setting.ServerURL, "/")
 	logoPath := strings.TrimSpace(setting.ServerLogo)

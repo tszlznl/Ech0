@@ -13,6 +13,7 @@ type Connect struct {
 	TotalEchos  int    `json:"total_echos"`  // 总共发布数量
 	TodayEchos  int    `json:"today_echos"`  // 今日发布数量
 	SysUsername string `json:"sys_username"` // 系统管理员用户名
+	Version     string `json:"version"`      // 实例版本
 }
 
 // Connected 定义添加的连接信息

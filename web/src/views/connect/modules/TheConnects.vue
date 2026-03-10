@@ -37,9 +37,10 @@
               class="absolute z-10 left-1/2 -translate-x-1/2 top-10 min-w-max bg-gray-800 text-white text-xs rounded px-3 py-2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-lg"
             >
               <div class="font-bold mb-1">{{ connect.server_name }}</div>
-              <div v-if="connect.sys_username">管理员: {{ connect.sys_username }}</div>
-              <div v-if="connect.total_echos">共有: {{ connect.total_echos }}</div>
-              <div v-if="connect.today_echos">今日: {{ connect.today_echos }}</div>
+              <div>Owner: {{ connect.sys_username || '-' }}</div>
+              <div>共有: {{ connect.total_echos ?? 0 }}</div>
+              <div>今日: {{ connect.today_echos ?? 0 }}</div>
+              <div>版本: {{ connect.version || '-' }}</div>
             </div>
           </div>
         </div>
