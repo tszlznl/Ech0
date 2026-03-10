@@ -12,7 +12,7 @@ import { getAuthToken } from '@/service/request/shared'
 import { useUserStore, useEditorStore } from '@/stores'
 import { theToast } from '@/utils/toast'
 import { storeToRefs } from 'pinia'
-import { FileCategory, StorageType } from '@/enums/enums'
+import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { fetchGetPresignedUrl } from '@/service/api'
 import { isSafari } from '@/utils/other'
 
@@ -145,11 +145,11 @@ const initUppy = () => {
   }
 
   // 根据 props.fileStorageType 动态切换上传插件
-  if (memorySource.value == StorageType.LOCAL) {
+  if (memorySource.value == FILE_STORAGE_TYPE.LOCAL) {
     console.log('使用本地存储')
     uppy.setMeta({
-      category: FileCategory.IMAGE,
-      storage_type: StorageType.LOCAL,
+      category: FILE_CATEGORY.IMAGE,
+      storage_type: FILE_STORAGE_TYPE.LOCAL,
     })
     uppy.use(XHRUpload, {
       endpoint: `${backendURL}/api/files/upload`, // 本地上传接口
@@ -159,7 +159,7 @@ const initUppy = () => {
         Authorization: `${getAuthToken()}`,
       },
     })
-  } else if (memorySource.value == StorageType.OBJECT) {
+  } else if (memorySource.value == FILE_STORAGE_TYPE.OBJECT) {
     console.log('使用 S3 存储')
     uppy.use(AwsS3, {
       endpoint: '', // 走自定义的签名接口
@@ -172,7 +172,7 @@ const initUppy = () => {
         const fileName = rawName || `upload_${Date.now()}${inferFileExtFromType(contentType)}`
         console.log('获取预签名fileName, contentType', fileName, contentType)
 
-        const res = await fetchGetPresignedUrl(fileName, contentType, StorageType.OBJECT)
+        const res = await fetchGetPresignedUrl(fileName, contentType, FILE_STORAGE_TYPE.OBJECT)
         if (res.code !== 1) {
           if (String(res.msg || '').includes('backend does not support presigned URLs')) {
             theToast.error('后端当前未启用 S3 预签名能力，请切换到本地存储或检查后端存储配置')
@@ -224,7 +224,7 @@ const initUppy = () => {
   })
   // 单个文件上传失败后，显示错误信息
   uppy.on('upload-error', (file, error, response) => {
-    if (props.fileStorageType === StorageType.LOCAL) {
+    if (props.fileStorageType === FILE_STORAGE_TYPE.LOCAL) {
       type ResponseBody = {
         code: number
         msg: string
@@ -263,7 +263,7 @@ const initUppy = () => {
     theToast.success(`好耶,上传成功！🎉`)
 
     // 分两种情况: Local 或者 S3
-    if (memorySource.value === StorageType.LOCAL) {
+    if (memorySource.value === FILE_STORAGE_TYPE.LOCAL) {
       const payload = extractUploadPayload(response) as App.Api.File.FileDto & Record<string, unknown>
 
       const fileId = String(payload.id || payload.file_id || payload.ID || '')
@@ -284,13 +284,13 @@ const initUppy = () => {
       const item: App.Api.Ech0.FileToAdd = {
         id: fileId,
         url: fileUrl,
-        storage_type: StorageType.LOCAL,
+        storage_type: FILE_STORAGE_TYPE.LOCAL,
         key: fileKey,
         width: width,
         height: height,
       }
       files.value.push(item)
-    } else if (memorySource.value === StorageType.OBJECT) {
+    } else if (memorySource.value === FILE_STORAGE_TYPE.OBJECT) {
       const uploadedFile = tempFiles.value.get(file?.name || '') || ''
       if (!uploadedFile) return
       if (!uploadedFile.id) {
@@ -301,7 +301,7 @@ const initUppy = () => {
       const item: App.Api.Ech0.FileToAdd = {
         id: uploadedFile.id,
         url: uploadedFile.url,
-        storage_type: StorageType.OBJECT,
+        storage_type: FILE_STORAGE_TYPE.OBJECT,
         key: uploadedFile.key,
       }
       files.value.push(item)

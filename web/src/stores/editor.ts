@@ -8,7 +8,8 @@ import {
   fetchGetCurrentAudio,
   fetchCreateExternalFile,
 } from '@/service/api'
-import { Mode, ExtensionType, StorageType, ImageLayout, FileCategory } from '@/enums/enums'
+import { Mode, ExtensionType, ImageLayout } from '@/enums/enums'
+import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { useEchoStore, useTodoStore, useInboxStore } from '@/stores'
 import { localStg } from '@/utils/storage'
 import { getImageSize } from '@/utils/image'
@@ -75,7 +76,7 @@ export const useEditorStore = defineStore('editorStore', () => {
   //================================================================
   const imageToAdd = ref<App.Api.Ech0.FileToAdd>({
     url: '', // 图片地址(依据存储方式不同而不同)
-    storage_type: StorageType.LOCAL, // 文件存储方式（local/object/external）
+    storage_type: FILE_STORAGE_TYPE.LOCAL, // 文件存储方式（local/object/external）
     key: '', // 对应后端 file.key (如果是直链则为空)
   })
   const imagesToAdd = ref<App.Api.Ech0.FileToAdd[]>([]) // 最终要添加的图片列表
@@ -126,7 +127,7 @@ export const useEditorStore = defineStore('editorStore', () => {
   // 清空并重置编辑器
   const clearEditor = () => {
     const rememberedStorageType = ref<App.Api.File.StorageType>(
-      localStg.getItem<App.Api.File.StorageType>('file_storage_type') ?? StorageType.LOCAL,
+      localStg.getItem<App.Api.File.StorageType>('file_storage_type') ?? FILE_STORAGE_TYPE.LOCAL,
     )
 
     echoToAdd.value = {
@@ -182,7 +183,7 @@ export const useEditorStore = defineStore('editorStore', () => {
     }
 
     // URL 模式先在后端落一条 external file，拿到 file_id 后才能发布。
-    if (imageToAdd.value.storage_type === StorageType.EXTERNAL && !imageToAdd.value.id) {
+    if (imageToAdd.value.storage_type === FILE_STORAGE_TYPE.EXTERNAL && !imageToAdd.value.id) {
       const externalUrl = String(imageToAdd.value.url || '').trim()
       if (!externalUrl) {
         theToast.error('图片链接不能为空')
@@ -191,7 +192,7 @@ export const useEditorStore = defineStore('editorStore', () => {
 
       const res = await fetchCreateExternalFile({
         url: externalUrl,
-        category: FileCategory.IMAGE,
+        category: FILE_CATEGORY.IMAGE,
         width: width,
         height: height,
       })
@@ -219,7 +220,7 @@ export const useEditorStore = defineStore('editorStore', () => {
       url: '',
       storage_type: imageToAdd.value.storage_type
         ? imageToAdd.value.storage_type
-        : StorageType.LOCAL, // 记忆存储方式
+          : FILE_STORAGE_TYPE.LOCAL, // 记忆存储方式
       key: '',
     }
   }

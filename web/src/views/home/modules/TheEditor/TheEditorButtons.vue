@@ -141,7 +141,8 @@ import GithubProj from '@/components/icons/githubproj.vue'
 import Website from '@/components/icons/website.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseCombobox from '@/components/common/BaseCombobox.vue'
-import { StorageType, Mode, ExtensionType } from '@/enums/enums'
+import { Mode, ExtensionType } from '@/enums/enums'
+import { FILE_STORAGE_TYPE } from '@/constants/file'
 import { storeToRefs } from 'pinia'
 import { useEditorStore, useEchoStore } from '@/stores'
 import { theToast } from '@/utils/toast'
@@ -201,7 +202,7 @@ const handleChangeMode = () => {
 }
 
 const handleAddImageMode = () => {
-  imageToAdd.value.storage_type = StorageType.LOCAL
+  imageToAdd.value.storage_type = FILE_STORAGE_TYPE.LOCAL
 
   // 检查localStg中是否有记忆的上传方式
   const rememberedSource = localStg.getItem<App.Api.File.StorageType>('file_storage_type')

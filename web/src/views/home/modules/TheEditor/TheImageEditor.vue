@@ -8,14 +8,14 @@
         <BaseButton
           :icon="Url"
           class="w-7 h-7 sm:w-7 sm:h-7 rounded-md"
-          @click="handleSetFileSource(StorageType.EXTERNAL)"
+          @click="handleSetFileSource(FILE_STORAGE_TYPE.EXTERNAL)"
           title="插入图片链接"
         />
         <!-- 上传本地 -->
         <BaseButton
           :icon="Upload"
           class="w-7 h-7 sm:w-7 sm:h-7 rounded-md"
-          @click="handleSetFileSource(StorageType.LOCAL)"
+          @click="handleSetFileSource(FILE_STORAGE_TYPE.LOCAL)"
           title="上传本地图片"
         />
         <!-- S3 存储 -->
@@ -23,7 +23,7 @@
           v-if="S3Setting.enable"
           :icon="Bucket"
           class="w-7 h-7 sm:w-7 sm:h-7 rounded-md"
-          @click="handleSetFileSource(StorageType.OBJECT)"
+          @click="handleSetFileSource(FILE_STORAGE_TYPE.OBJECT)"
           title="S3存储图片"
         />
       </div>
@@ -41,7 +41,7 @@
     </div>
 
     <!-- 智能压缩 -->
-    <div v-if="imageToAdd.storage_type !== StorageType.EXTERNAL" class="mb-3 flex items-center">
+    <div v-if="imageToAdd.storage_type !== FILE_STORAGE_TYPE.EXTERNAL" class="mb-3 flex items-center">
       <span class="text-[var(--text-color-500)]">智能压缩：</span>
       <BaseSwitch v-model="enableCompressor" />
     </div>
@@ -51,9 +51,9 @@
       当前上传方式为
       <span class="font-bold">
         {{
-          imageToAdd.storage_type === StorageType.EXTERNAL
+          imageToAdd.storage_type === FILE_STORAGE_TYPE.EXTERNAL
             ? '直链'
-            : imageToAdd.storage_type === StorageType.LOCAL
+            : imageToAdd.storage_type === FILE_STORAGE_TYPE.LOCAL
               ? '本地存储'
               : 'S3存储'
         }}</span
@@ -64,13 +64,13 @@
     <div class="my-1">
       <!-- 图片上传 -->
       <TheUppy
-        v-if="imageToAdd.storage_type !== StorageType.EXTERNAL"
+        v-if="imageToAdd.storage_type !== FILE_STORAGE_TYPE.EXTERNAL"
         :fileStorageType="imageToAdd.storage_type"
         :EnableCompressor="enableCompressor"
       />
 
       <!-- 图片直链 -->
-      <div v-if="imageToAdd.storage_type === StorageType.EXTERNAL" class="flex items-center gap-2">
+      <div v-if="imageToAdd.storage_type === FILE_STORAGE_TYPE.EXTERNAL" class="flex items-center gap-2">
         <BaseInput
           v-model="imageToAdd.url"
           class="rounded-lg h-auto flex-1"
@@ -92,7 +92,8 @@
 import { ref } from 'vue'
 import { useEditorStore, useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
-import { StorageType, ImageLayout } from '@/enums/enums'
+import { ImageLayout } from '@/enums/enums'
+import { FILE_STORAGE_TYPE } from '@/constants/file'
 import Url from '@/components/icons/url.vue'
 import Upload from '@/components/icons/upload.vue'
 import Bucket from '@/components/icons/bucket.vue'

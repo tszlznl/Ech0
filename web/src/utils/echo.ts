@@ -1,4 +1,4 @@
-import { StorageType } from '@/enums/enums'
+import { FILE_STORAGE_TYPE } from '@/constants/file'
 
 type EchoLike = {
   id?: string
@@ -38,8 +38,8 @@ export function getEchoImages(echo?: EchoLike | null): App.Api.Ech0.FileObject[]
 
 function normalizeStorageType(raw: unknown): App.Api.File.StorageType {
   const value = String(raw || '').toLowerCase()
-  if (value === StorageType.OBJECT) return StorageType.OBJECT
-  if (value === StorageType.EXTERNAL) return StorageType.EXTERNAL
-  return StorageType.LOCAL
+  if (value === FILE_STORAGE_TYPE.OBJECT) return FILE_STORAGE_TYPE.OBJECT
+  if (value === FILE_STORAGE_TYPE.EXTERNAL) return FILE_STORAGE_TYPE.EXTERNAL
+  return FILE_STORAGE_TYPE.LOCAL
 }
 

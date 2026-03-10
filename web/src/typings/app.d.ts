@@ -72,8 +72,8 @@ declare namespace App {
     }
 
     namespace File {
-      type Category = 'image' | 'audio' | 'video' | 'document' | 'file'
-      type StorageType = 'local' | 'object' | 'external'
+      type Category = import('@/constants/file').FileCategory
+      type StorageType = import('@/constants/file').FileStorageType
 
       type FileDto = {
         id: string

@@ -1,11 +1,11 @@
 import { request } from '../request'
-import { FileCategory, StorageType } from '@/enums/enums'
+import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 
 // 上传文件
 export function fetchUploadFile(
   file: File,
-  storageType: App.Api.File.StorageType = StorageType.LOCAL,
-  category: App.Api.File.Category = FileCategory.IMAGE,
+  storageType: App.Api.File.StorageType = FILE_STORAGE_TYPE.LOCAL,
+  category: App.Api.File.Category = FILE_CATEGORY.IMAGE,
 ) {
   const formData = new FormData()
   formData.append('file', file)
@@ -41,8 +41,8 @@ export function fetchDeleteFile(file: App.Api.File.FileDeleteDto) {
 export function fetchUploadAudioFile(file: File) {
   const formData = new FormData()
   formData.append('file', file)
-  formData.append('storage_type', StorageType.LOCAL)
-  formData.append('category', FileCategory.AUDIO)
+  formData.append('storage_type', FILE_STORAGE_TYPE.LOCAL)
+  formData.append('category', FILE_CATEGORY.AUDIO)
   return request<App.Api.File.FileDto>({
     url: `/files/audio/upload`,
     method: 'POST',
@@ -70,7 +70,7 @@ export function fetchGetCurrentAudio() {
 export function fetchGetPresignedUrl(
   fileName: string,
   contentType?: string,
-  storageType: App.Api.File.StorageType = StorageType.OBJECT,
+  storageType: App.Api.File.StorageType = FILE_STORAGE_TYPE.OBJECT,
 ) {
   return request<App.Api.Ech0.PresignResult>({
     url: `/files/presign`,
