@@ -45,6 +45,14 @@ export type PresignResult = {
   file_url: string
 }
 
+export type UpdateFileMetaInput = {
+  id: string
+  size: number
+  width?: number
+  height?: number
+  contentType?: string
+}
+
 export type FileAttachment = {
   id?: string
   key?: string
@@ -52,6 +60,7 @@ export type FileAttachment = {
   category?: FileCategory
   content_type?: string
   storage_type: FileStorageType
+  size?: number
   width?: number
   height?: number
 }

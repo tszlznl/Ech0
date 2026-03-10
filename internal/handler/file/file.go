@@ -78,6 +78,38 @@ func (fileHandler *FileHandler) GetFileByID() gin.HandlerFunc {
 	})
 }
 
+// UpdateFileMeta 更新对象存储文件元信息
+//
+//	@Summary		更新对象存储文件元信息
+//	@Description	用于 ObjectFS 预签名直传完成后回填 size/width/height
+//	@Tags			File
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string						true	"文件ID"
+//	@Param			data	body		commonModel.UpdateFileMetaDto	true	"文件元信息"
+//	@Success		200		{object}	res.Response{data=commonModel.FileDto}
+//	@Failure		500		{object}	res.Response
+//	@Router			/file/{id}/meta [put]
+func (fileHandler *FileHandler) UpdateFileMeta() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		id := ctx.Param("id")
+		if id == "" {
+			return res.Response{Msg: commonModel.INVALID_PARAMS, Err: errors.New(commonModel.INVALID_PARAMS)}
+		}
+
+		var dto commonModel.UpdateFileMetaDto
+		if err := ctx.ShouldBindJSON(&dto); err != nil {
+			return res.Response{Msg: commonModel.INVALID_REQUEST_BODY, Err: err}
+		}
+
+		fileDto, err := fileHandler.fileService.UpdateFileMeta(ctx.Request.Context(), id, dto)
+		if err != nil {
+			return res.Response{Msg: "", Err: err}
+		}
+		return res.Response{Data: fileDto, Msg: commonModel.SUCCESS_MESSAGE}
+	})
+}
+
 func (fileHandler *FileHandler) StreamFileByID(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if id == "" {

@@ -345,6 +345,66 @@ func (s *FileService) GetFileByID(ctx context.Context, id string) (commonModel.F
 	}, nil
 }
 
+func (s *FileService) UpdateFileMeta(
+	ctx context.Context,
+	id string,
+	dto commonModel.UpdateFileMetaDto,
+) (commonModel.FileDto, error) {
+	userid := viewer.MustFromContext(ctx).UserID()
+	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
+	if err != nil {
+		return commonModel.FileDto{}, err
+	}
+	if !user.IsAdmin {
+		return commonModel.FileDto{}, errors.New(commonModel.NO_PERMISSION_DENIED)
+	}
+	if id == "" || dto.Size < 0 {
+		return commonModel.FileDto{}, errors.New(commonModel.INVALID_PARAMS)
+	}
+	if dto.Width != nil && *dto.Width < 0 {
+		return commonModel.FileDto{}, errors.New(commonModel.INVALID_PARAMS)
+	}
+	if dto.Height != nil && *dto.Height < 0 {
+		return commonModel.FileDto{}, errors.New(commonModel.INVALID_PARAMS)
+	}
+
+	fileRecord, err := s.fileRepository.GetByID(context.Background(), id)
+	if err != nil {
+		return commonModel.FileDto{}, err
+	}
+	if storage.NormalizeStorageType(fileRecord.StorageType) != storage.StorageTypeObject {
+		return commonModel.FileDto{}, errors.New(commonModel.INVALID_PARAMS)
+	}
+
+	var contentTypePtr *string
+	if contentType := strings.TrimSpace(dto.ContentType); contentType != "" {
+		contentTypePtr = &contentType
+	}
+
+	updated, err := s.fileRepository.UpdateMetaByID(
+		context.Background(),
+		id,
+		dto.Size,
+		dto.Width,
+		dto.Height,
+		contentTypePtr,
+	)
+	if err != nil {
+		return commonModel.FileDto{}, err
+	}
+
+	return commonModel.FileDto{
+		ID:          updated.ID,
+		Key:         updated.Key,
+		URL:         updated.URL,
+		ContentType: updated.ContentType,
+		Category:    updated.Category,
+		Size:        updated.Size,
+		Width:       updated.Width,
+		Height:      updated.Height,
+	}, nil
+}
+
 func (s *FileService) StreamFileByID(ctx *gin.Context, id string) {
 	fileRecord, err := s.fileRepository.GetByID(context.Background(), id)
 	if err != nil {

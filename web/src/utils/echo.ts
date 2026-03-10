@@ -14,6 +14,7 @@ type EchoLike = {
           storage_type?: string
           category?: string
           content_type?: string
+          size?: number
           width?: number
           height?: number
         }
@@ -35,6 +36,7 @@ export function getEchoFiles(echo?: EchoLike | null): App.Api.Ech0.FileObject[] 
       category: (file?.category as App.Api.File.Category | undefined) || undefined,
       content_type: file?.content_type,
       key: String(file?.key || ''),
+      size: file?.size,
       width: file?.width,
       height: file?.height,
     }

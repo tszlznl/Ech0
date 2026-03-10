@@ -227,6 +227,7 @@ export const useEditorStore = defineStore('editorStore', () => {
       category: fileToAdd.value.category,
       content_type: fileToAdd.value.content_type,
       key: fileToAdd.value.key ? fileToAdd.value.key : '',
+      size: fileToAdd.value.size,
       width,
       height,
     })
@@ -254,6 +255,7 @@ export const useEditorStore = defineStore('editorStore', () => {
         category: file.category,
         content_type: file.content_type,
         key: file.key ? file.key : '',
+        size: file.size,
         width: file.width,
         height: file.height,
       }
@@ -265,6 +267,7 @@ export const useEditorStore = defineStore('editorStore', () => {
           category: file.category,
           contentType: file.content_type,
           storageType: file.storage_type,
+          size: file.size,
           width: file.width,
           height: file.height,
         })
@@ -530,6 +533,7 @@ export const useEditorStore = defineStore('editorStore', () => {
         storage_type: file.storage_type,
         category: file.category,
         content_type: file.content_type,
+        size: file.size,
         width: file.width,
         height: file.height,
       })),

@@ -97,6 +97,12 @@ declare namespace App {
         height?: number
         name?: string
       }
+      type UpdateFileMetaDto = {
+        size: number
+        width?: number
+        height?: number
+        content_type?: string
+      }
     }
 
     namespace Ech0 {
@@ -129,6 +135,7 @@ declare namespace App {
         category?: File.Category
         content_type?: string
         key?: string // 对应后端 file.key
+        size?: number // 文件大小（字节）
         width?: number // 图片宽度
         height?: number // 图片高度
       }
@@ -170,6 +177,7 @@ declare namespace App {
         category?: File.Category
         content_type?: string
         key?: string // 对应后端 file.key
+        size?: number // 文件大小（字节）
         width?: number // 图片宽度
         height?: number // 图片高度
       }

@@ -13,8 +13,9 @@ import { useUserStore, useEditorStore } from '@/stores'
 import { theToast } from '@/utils/toast'
 import { storeToRefs } from 'pinia'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
-import { getPresign, globalFileRegistry } from '@/lib/file'
+import { getPresign, globalFileRegistry, updateFileMeta } from '@/lib/file'
 import { isSafari } from '@/utils/other'
+import { getImageSize } from '@/utils/image'
 
 /* --------------- 与Uppy相关 ---------------- */
 import Uppy from '@uppy/core'
@@ -39,7 +40,8 @@ const props = defineProps<{
 const memorySource = ref<string>(props.fileStorageType) // 用于记住上传方式
 const isUploading = ref<boolean>(false) // 是否正在上传
 const files = ref<App.Api.Ech0.FileToAdd[]>([]) // 已上传的文件列表
-const tempFiles = ref<Map<string, { id: string; url: string; key: string }>>(new Map()) // 用于S3临时存储文件回显地址的 Map(key: fileName, value: {id, url, key})
+const tempFiles = ref<Map<string, { id: string; url: string; key: string }>>(new Map()) // 用于S3临时存储文件回显地址的 Map(key: uppyFileId, value: {id, url, key})
+const pendingUploadTasks = ref<Set<Promise<void>>>(new Set()) // 跟踪 upload-success 异步任务，避免 complete 抢跑
 
 const userStore = useUserStore()
 const editorStore = useEditorStore()
@@ -86,6 +88,49 @@ function extractUploadPayload(response: unknown): Record<string, unknown> {
   const data = first.data
   if (data && typeof data === 'object') return data as Record<string, unknown>
   return first
+}
+
+function getUppyFileSize(file: unknown): number | undefined {
+  const uppyFile = (file || {}) as Record<string, unknown>
+  const directSize = uppyFile.size
+  if (typeof directSize === 'number' && Number.isFinite(directSize) && directSize >= 0) {
+    return directSize
+  }
+  const data = uppyFile.data
+  if (data instanceof File || data instanceof Blob) {
+    return data.size
+  }
+  return undefined
+}
+
+function getUppyFileContentType(file: unknown): string | undefined {
+  const uppyFile = (file || {}) as Record<string, unknown>
+  const directType = String(uppyFile.type || '').trim()
+  if (directType) return directType
+  const data = uppyFile.data
+  if (data instanceof File || data instanceof Blob) {
+    const blobType = String(data.type || '').trim()
+    if (blobType) return blobType
+  }
+  return undefined
+}
+
+async function getImageDimensionsFromUppyFile(
+  file: unknown,
+): Promise<{ width?: number; height?: number }> {
+  const uppyFile = (file || {}) as Record<string, unknown>
+  const data = uppyFile.data
+  if (!(data instanceof Blob)) return {}
+
+  const blobUrl = URL.createObjectURL(data)
+  try {
+    const size = await getImageSize(blobUrl)
+    return { width: size.width, height: size.height }
+  } catch {
+    return {}
+  } finally {
+    URL.revokeObjectURL(blobUrl)
+  }
 }
 
 // ✨ 监听粘贴事件
@@ -182,6 +227,15 @@ const initUppy = () => {
           storageType: FILE_STORAGE_TYPE.OBJECT,
         })
         console.log('获取预签名成功!')
+        const uppyFileId = String((file as unknown as Record<string, unknown>)?.id || '')
+        if (uppyFileId) {
+          tempFiles.value.set(uppyFileId, {
+            id: String(data.id || ''),
+            url: data.file_url,
+            key: data.key || '',
+          })
+        }
+        // 兜底保留一份按 file_name 的索引，兼容潜在的插件行为差异。
         tempFiles.value.set(data.file_name, {
           id: String(data.id || ''),
           url: data.file_url,
@@ -261,69 +315,127 @@ const initUppy = () => {
   })
   // 单个文件上传成功后，保存文件 URL 到 files 列表
   uppy.on('upload-success', (file, response) => {
-    theToast.success(`好耶,上传成功！🎉`)
+    const task = (async () => {
+      theToast.success(`好耶,上传成功！🎉`)
 
-    // 分两种情况: Local 或者 S3
-    if (memorySource.value === FILE_STORAGE_TYPE.LOCAL) {
-      const payload = extractUploadPayload(response) as App.Api.File.FileDto & Record<string, unknown>
+      // 分两种情况: Local 或者 S3
+      if (memorySource.value === FILE_STORAGE_TYPE.LOCAL) {
+        const payload = extractUploadPayload(response) as App.Api.File.FileDto & Record<string, unknown>
 
-      const fileId = String(payload.id || payload.file_id || payload.ID || '')
-      const fileKey = String(payload.key || payload.object_key || '')
-      const fileUrl = String(
-        payload.url ||
-          payload.file_url ||
-          payload.access_url ||
-          (response as Record<string, unknown>)?.uploadURL ||
-          '',
-      )
-      const width = typeof payload.width === 'number' ? payload.width : undefined
-      const height = typeof payload.height === 'number' ? payload.height : undefined
-      if (!fileId || !fileUrl) {
-        theToast.error('上传响应缺少文件标识，无法绑定到 Echo，请重试')
-        return
-      }
-      const item: App.Api.Ech0.FileToAdd = {
-        id: fileId,
-        url: fileUrl,
-        storage_type: FILE_STORAGE_TYPE.LOCAL,
-        key: fileKey,
-        width: width,
-        height: height,
-      }
-      files.value.push(item)
-      globalFileRegistry.upsert({
-        id: fileId,
-        key: fileKey,
-        url: fileUrl,
-        storageType: FILE_STORAGE_TYPE.LOCAL,
-        width,
-        height,
-      })
-    } else if (memorySource.value === FILE_STORAGE_TYPE.OBJECT) {
-      const uploadedFile = tempFiles.value.get(file?.name || '') || ''
-      if (!uploadedFile) return
-      if (!uploadedFile.id) {
-        theToast.error('上传响应缺少文件ID，无法绑定到 Echo，请重试')
-        return
-      }
+        const fileId = String(payload.id || payload.file_id || payload.ID || '')
+        const fileKey = String(payload.key || payload.object_key || '')
+        const fileUrl = String(
+          payload.url ||
+            payload.file_url ||
+            payload.access_url ||
+            (response as Record<string, unknown>)?.uploadURL ||
+            '',
+        )
+        const size =
+          typeof payload.size === 'number' && Number.isFinite(payload.size)
+            ? payload.size
+            : getUppyFileSize(file)
+        const width = typeof payload.width === 'number' ? payload.width : undefined
+        const height = typeof payload.height === 'number' ? payload.height : undefined
+        if (!fileId || !fileUrl) {
+          theToast.error('上传响应缺少文件标识，无法绑定到 Echo，请重试')
+          return
+        }
+        const item: App.Api.Ech0.FileToAdd = {
+          id: fileId,
+          url: fileUrl,
+          storage_type: FILE_STORAGE_TYPE.LOCAL,
+          key: fileKey,
+          size,
+          width: width,
+          height: height,
+        }
+        files.value.push(item)
+        globalFileRegistry.upsert({
+          id: fileId,
+          key: fileKey,
+          url: fileUrl,
+          storageType: FILE_STORAGE_TYPE.LOCAL,
+          size,
+          width,
+          height,
+        })
+      } else if (memorySource.value === FILE_STORAGE_TYPE.OBJECT) {
+        const uppyFileId = String((file as unknown as Record<string, unknown>)?.id || '')
+        const uploadedFile =
+          tempFiles.value.get(uppyFileId) || tempFiles.value.get(String(file?.name || '')) || ''
+        if (!uploadedFile) return
+        if (!uploadedFile.id) {
+          theToast.error('上传响应缺少文件ID，无法绑定到 Echo，请重试')
+          return
+        }
 
-      const item: App.Api.Ech0.FileToAdd = {
-        id: uploadedFile.id,
-        url: uploadedFile.url,
-        storage_type: FILE_STORAGE_TYPE.OBJECT,
-        key: uploadedFile.key,
+        const rawSize = getUppyFileSize(file)
+        const contentType = getUppyFileContentType(file)
+        let width: number | undefined
+        let height: number | undefined
+        if (currentCategory === FILE_CATEGORY.IMAGE) {
+          const dimensions = await getImageDimensionsFromUppyFile(file)
+          width = dimensions.width
+          height = dimensions.height
+        }
+
+        let resolvedSize = rawSize
+        let resolvedWidth = width
+        let resolvedHeight = height
+        let resolvedContentType = contentType
+        try {
+          const updated = await updateFileMeta({
+            id: uploadedFile.id,
+            size: rawSize ?? 0,
+            width,
+            height,
+            contentType,
+          })
+          resolvedSize = updated.size
+          resolvedWidth = updated.width
+          resolvedHeight = updated.height
+          resolvedContentType = updated.contentType || contentType
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : '文件元数据回填失败'
+          theToast.error(msg)
+        }
+
+        const item: App.Api.Ech0.FileToAdd = {
+          id: uploadedFile.id,
+          url: uploadedFile.url,
+          storage_type: FILE_STORAGE_TYPE.OBJECT,
+          key: uploadedFile.key,
+          content_type: resolvedContentType,
+          size: resolvedSize,
+          width: resolvedWidth,
+          height: resolvedHeight,
+        }
+        files.value.push(item)
+        globalFileRegistry.upsert({
+          id: uploadedFile.id,
+          key: uploadedFile.key,
+          url: uploadedFile.url,
+          storageType: FILE_STORAGE_TYPE.OBJECT,
+          contentType: resolvedContentType,
+          size: resolvedSize,
+          width: resolvedWidth,
+          height: resolvedHeight,
+        })
       }
-      files.value.push(item)
-      globalFileRegistry.upsert({
-        id: uploadedFile.id,
-        key: uploadedFile.key,
-        url: uploadedFile.url,
-        storageType: FILE_STORAGE_TYPE.OBJECT,
-      })
-    }
+    })()
+    pendingUploadTasks.value.add(task)
+    task.finally(() => {
+      pendingUploadTasks.value.delete(task)
+    })
   })
   // 全部文件上传完成后，发射事件到父组件
-  uppy.on('complete', (result) => {
+  uppy.on('complete', async (result) => {
+    // 等待所有 upload-success 异步流程（含 meta 回填）完成，避免 complete 先执行。
+    if (pendingUploadTasks.value.size > 0) {
+      await Promise.allSettled(Array.from(pendingUploadTasks.value))
+    }
+
     const filesToAddResult = [...files.value]
     if (result?.successful?.length && filesToAddResult.length === 0) {
       theToast.error('上传成功但未解析到文件ID，请检查后端上传响应结构')
@@ -336,6 +448,7 @@ const initUppy = () => {
       editorStore.fileUploading = false
       files.value = []
       tempFiles.value.clear()
+      pendingUploadTasks.value.clear()
     })
   })
 }

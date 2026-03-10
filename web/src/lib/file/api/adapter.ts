@@ -4,6 +4,7 @@ import {
   fetchDeleteFile,
   fetchGetFileById,
   fetchGetPresignedUrl,
+  fetchUpdateFileMeta,
   fetchUploadFile,
 } from '@/service/api'
 import { getApiUrl } from '@/service/request/shared'
@@ -14,6 +15,7 @@ import type {
   FileUploadInput,
   PresignInput,
   PresignResult,
+  UpdateFileMetaInput,
 } from '../types'
 
 function normalizeFileEntity(dto: App.Api.File.FileDto): FileEntity {
@@ -80,6 +82,17 @@ export async function getPresign(input: PresignInput): Promise<PresignResult> {
   return ensureSuccess(res, '预签名 URL 获取失败')
 }
 
+export async function updateFileMeta(input: UpdateFileMetaInput): Promise<FileEntity> {
+  const res = await fetchUpdateFileMeta(input.id, {
+    size: input.size,
+    width: input.width,
+    height: input.height,
+    content_type: input.contentType,
+  })
+  const data = ensureSuccess(res, '文件元数据回填失败')
+  return normalizeFileEntity(data)
+}
+
 export function buildStreamUrl(fileId: string, t = Date.now()): string {
   return `${getApiUrl()}/file/${fileId}/stream?t=${t}`
 }
@@ -90,6 +103,7 @@ export const fileApiAdapter = {
   getFileById,
   deleteFileById,
   getPresign,
+  updateFileMeta,
   buildStreamUrl,
 }
 

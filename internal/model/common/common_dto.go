@@ -64,6 +64,16 @@ type CreateExternalFileDto struct {
 	Name        string `json:"name"`
 }
 
+// UpdateFileMetaDto 用于回填对象存储上传后的元信息
+//
+// swagger:model UpdateFileMetaDto
+type UpdateFileMetaDto struct {
+	Size        int64 `json:"size" binding:"required,min=0"`
+	Width       *int  `json:"width,omitempty"`
+	Height      *int  `json:"height,omitempty"`
+	ContentType string `json:"content_type,omitempty"`
+}
+
 // GetWebsiteTitleDto 用于请求网站标题的请求数据传输对象
 //
 // swagger:model GetWebsiteTitleDto

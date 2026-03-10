@@ -44,6 +44,15 @@ export function fetchGetFileById(id: string) {
   })
 }
 
+// 回填对象存储文件元信息
+export function fetchUpdateFileMeta(id: string, dto: App.Api.File.UpdateFileMetaDto) {
+  return request<App.Api.File.FileDto>({
+    url: `/file/${id}/meta`,
+    method: 'PUT',
+    data: dto,
+  })
+}
+
 // 获取预签名URL（对象存储）
 export function fetchGetPresignedUrl(
   fileName: string,

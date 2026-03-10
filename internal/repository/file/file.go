@@ -61,6 +61,33 @@ func (r *FileRepository) GetByRoute(
 	return &f, nil
 }
 
+func (r *FileRepository) UpdateMetaByID(
+	ctx context.Context,
+	id string,
+	size int64,
+	width *int,
+	height *int,
+	contentType *string,
+) (*model.File, error) {
+	updates := map[string]any{
+		"size": size,
+	}
+	if width != nil {
+		updates["width"] = *width
+	}
+	if height != nil {
+		updates["height"] = *height
+	}
+	if contentType != nil {
+		updates["content_type"] = *contentType
+	}
+
+	if err := r.getDB(ctx).Model(&model.File{}).Where("id = ?", id).Updates(updates).Error; err != nil {
+		return nil, err
+	}
+	return r.GetByID(ctx, id)
+}
+
 func (r *FileRepository) Delete(ctx context.Context, id string) error {
 	return r.getDB(ctx).Where("id = ?", id).Delete(&model.File{}).Error
 }

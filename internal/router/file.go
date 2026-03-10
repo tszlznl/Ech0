@@ -7,6 +7,7 @@ func setupFileRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	appRouterGroup.AuthRouterGroup.POST("/files/upload", h.FileHandler.UploadFile())
 	appRouterGroup.AuthRouterGroup.GET("/file/:id", h.FileHandler.GetFileByID())
 	appRouterGroup.AuthRouterGroup.GET("/file/:id/stream", h.FileHandler.StreamFileByID)
+	appRouterGroup.AuthRouterGroup.PUT("/file/:id/meta", h.FileHandler.UpdateFileMeta())
 	appRouterGroup.AuthRouterGroup.POST("/files/external", h.FileHandler.CreateExternalFile())
 	appRouterGroup.AuthRouterGroup.DELETE("/file/:id", h.FileHandler.DeleteFile())
 	appRouterGroup.AuthRouterGroup.PUT("/files/presign", h.FileHandler.GetFilePresignURL())
