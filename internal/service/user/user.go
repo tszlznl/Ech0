@@ -159,7 +159,7 @@ func (userService *UserService) InitOwner(registerDto *authModel.RegisterDto) er
 		contracts.UserCreatedEvent{User: owner},
 	); err != nil {
 		logUtil.GetLogger().
-			Error("Failed to publish owner created event", zap.String("error", err.Error()))
+			Error("Failed to publish owner created event", zap.Error(err))
 	}
 
 	return nil
@@ -232,7 +232,7 @@ func (userService *UserService) Register(registerDto *authModel.RegisterDto) err
 		contracts.UserCreatedEvent{User: newUser},
 	); err != nil {
 		logUtil.GetLogger().
-			Error("Failed to publish user created event", zap.String("error", err.Error()))
+			Error("Failed to publish user created event", zap.Error(err))
 	}
 
 	return nil
@@ -297,7 +297,7 @@ func (userService *UserService) UpdateUser(ctx context.Context, userdto model.Us
 		contracts.UserUpdatedEvent{User: user},
 	); err != nil {
 		logUtil.GetLogger().
-			Error("Failed to publish user updated event", zap.String("error", err.Error()))
+			Error("Failed to publish user updated event", zap.Error(err))
 	}
 
 	return nil
@@ -350,7 +350,7 @@ func (userService *UserService) UpdateUserAdmin(ctx context.Context, id string) 
 		contracts.UserUpdatedEvent{User: user},
 	); err != nil {
 		logUtil.GetLogger().
-			Error("Failed to publish user updated event", zap.String("error", err.Error()))
+			Error("Failed to publish user updated event", zap.Error(err))
 	}
 
 	return nil
@@ -452,7 +452,7 @@ func (userService *UserService) DeleteUser(ctx context.Context, id string) error
 		contracts.UserDeletedEvent{User: deletedUser},
 	); err != nil {
 		logUtil.GetLogger().
-			Error("Failed to publish user deleted event", zap.String("error", err.Error()))
+			Error("Failed to publish user deleted event", zap.Error(err))
 	}
 	return nil
 }

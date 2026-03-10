@@ -78,7 +78,7 @@ func (dashboardHandler *DashboardHandler) WSSubsribeMetrics() gin.HandlerFunc {
 
 		if err := dashboardHandler.dashboardService.WSSubsribeMetrics(ctx.Writer, ctx.Request); err != nil {
 			logUtil.GetLogger().
-				Error("WebSocket Subscribe Metrics Failed", zap.String("error", err.Error()))
+				Error("WebSocket Subscribe Metrics Failed", zap.Error(err))
 		}
 	})
 }
@@ -140,7 +140,7 @@ func (dashboardHandler *DashboardHandler) WSSubscribeSystemLogs() gin.HandlerFun
 			},
 		)
 		if err != nil {
-			logUtil.GetLogger().Error("WebSocket Subscribe System Logs Failed", zap.String("error", err.Error()))
+			logUtil.GetLogger().Error("WebSocket Subscribe System Logs Failed", zap.Error(err))
 		}
 	})
 }
@@ -169,7 +169,7 @@ func (dashboardHandler *DashboardHandler) SSESubscribeSystemLogs() gin.HandlerFu
 			},
 		)
 		if err != nil {
-			logUtil.GetLogger().Error("SSE Subscribe System Logs Failed", zap.String("error", err.Error()))
+			logUtil.GetLogger().Error("SSE Subscribe System Logs Failed", zap.Error(err))
 		}
 	})
 }

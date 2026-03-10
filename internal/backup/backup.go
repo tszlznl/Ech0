@@ -113,11 +113,11 @@ func ExcuteRestoreOnline(filePath string, timeStamp int64) error {
 	defer func() {
 		if err := os.RemoveAll(extractPath); err != nil {
 			logUtil.GetLogger().Warn("Failed to cleanup extracted snapshot temp directory",
-				zap.String("path", extractPath), zap.String("error", err.Error()))
+				zap.String("path", extractPath), zap.Error(err))
 		}
 		if err := os.Remove(filePath); err != nil {
 			logUtil.GetLogger().Warn("Failed to cleanup uploaded snapshot zip",
-				zap.String("path", filePath), zap.String("error", err.Error()))
+				zap.String("path", filePath), zap.Error(err))
 		}
 	}()
 
