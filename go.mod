@@ -13,7 +13,7 @@ require (
 	github.com/cloudwego/eino v0.7.37
 	github.com/cloudwego/eino-ext/components/model/claude v0.1.15
 	github.com/cloudwego/eino-ext/components/model/deepseek v0.1.2
-	github.com/cloudwego/eino-ext/components/model/gemini v0.1.28
+	github.com/cloudwego/eino-ext/components/model/gemini v0.1.29
 	github.com/cloudwego/eino-ext/components/model/ollama v0.1.8
 	github.com/cloudwego/eino-ext/components/model/openai v0.1.8
 	github.com/cloudwego/eino-ext/components/model/qwen v0.1.5
@@ -27,7 +27,7 @@ require (
 	github.com/google/wire v0.7.0
 	github.com/gorilla/feeds v1.2.0
 	github.com/gorilla/websocket v1.5.3
-	github.com/minio/minio-go/v7 v7.0.98
+	github.com/minio/minio-go/v7 v7.0.99
 	github.com/muesli/termenv v0.16.0
 	github.com/oklog/ulid/v2 v2.1.1
 	github.com/robfig/cron/v3 v3.0.1
@@ -40,9 +40,9 @@ require (
 	go.uber.org/zap v1.27.1
 	golang.org/x/mod v0.33.0
 	golang.org/x/net v0.51.0
-	golang.org/x/sync v0.19.0
+	golang.org/x/sync v0.20.0
 	golang.org/x/text v0.34.0
-	google.golang.org/genai v1.48.0
+	google.golang.org/genai v1.49.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.1
