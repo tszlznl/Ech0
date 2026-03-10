@@ -118,18 +118,7 @@
         >
           <!-- 文字在上 -->
           <div class="mx-auto w-11/12 pl-1 mb-3">
-            <MdPreview
-              :id="previewOptions.proviewId"
-              :modelValue="props.echo.content"
-              :theme="theme"
-              :show-code-row-number="previewOptions.showCodeRowNumber"
-              :preview-theme="previewOptions.previewTheme"
-              :code-theme="previewOptions.codeTheme"
-              :code-style-reverse="previewOptions.codeStyleReverse"
-              :no-img-zoom-in="previewOptions.noImgZoomIn"
-              :code-foldable="previewOptions.codeFoldable"
-              :auto-fold-threshold="previewOptions.autoFoldThreshold"
-            />
+            <TheMdPreview :content="props.echo.content" />
           </div>
 
           <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" />
@@ -140,18 +129,7 @@
           <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" />
 
           <div class="mx-auto w-11/12 pl-1 mt-3">
-            <MdPreview
-              :id="previewOptions.proviewId"
-              :modelValue="props.echo.content"
-              :theme="theme"
-              :show-code-row-number="previewOptions.showCodeRowNumber"
-              :preview-theme="previewOptions.previewTheme"
-              :code-theme="previewOptions.codeTheme"
-              :code-style-reverse="previewOptions.codeStyleReverse"
-              :no-img-zoom-in="previewOptions.noImgZoomIn"
-              :code-foldable="previewOptions.codeFoldable"
-              :auto-fold-threshold="previewOptions.autoFoldThreshold"
-            />
+            <TheMdPreview :content="props.echo.content" />
           </div>
         </template>
 
@@ -180,15 +158,14 @@
 </template>
 
 <script setup lang="ts">
-import { MdPreview } from 'md-editor-v3'
 import { onMounted, ref, onBeforeUnmount, computed } from 'vue'
 import { fetchDeleteEcho, fetchLikeEcho, fetchGetEchoById } from '@/service/api'
 import { theToast } from '@/utils/toast'
-import { useUserStore, useEchoStore, useEditorStore, useThemeStore } from '@/stores'
+import { useUserStore, useEchoStore, useEditorStore } from '@/stores'
 import TheGithubCard from './TheGithubCard.vue'
 import TheVideoCard from './TheVideoCard.vue'
 import TheImageGallery from './TheImageGallery.vue'
-import 'md-editor-v3/lib/preview.css'
+import TheMdPreview from './TheMdPreview.vue'
 import Roll from '../icons/roll.vue'
 import Lock from '../icons/lock.vue'
 import More from '../icons/more.vue'
@@ -217,19 +194,6 @@ const props = defineProps<{
 const isLikeAnimating = ref(false)
 
 const userStore = useUserStore()
-const themeStore = useThemeStore()
-
-const theme = computed(() => (themeStore.theme === 'light' ? 'light' : 'dark'))
-const previewOptions = {
-  proviewId: 'preview-only',
-  showCodeRowNumber: false,
-  previewTheme: 'github',
-  codeTheme: 'atom',
-  codeStyleReverse: true,
-  noImgZoomIn: false,
-  codeFoldable: true,
-  autoFoldThreshold: 15,
-}
 const echoImageFiles = computed(() =>
   getEchoFilesBy(props.echo, { categories: ['image'], dedupeBy: 'id' }),
 )
@@ -343,45 +307,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped lang="css">
-#preview-only {
-  background-color: inherit;
-}
-
-:deep(.md-editor) {
-  font-family: var(--font-family-sans);
-  /* font-family: 'LXGW WenKai Screen'; */
-}
-
-:deep(.md-editor div.github-theme) {
-  line-height: 1.6;
-  color: var(--color-text-primary);
-}
-
-:deep(ul li) {
-  list-style-type: disc;
-}
-
-:deep(ul li li) {
-  list-style-type: circle;
-}
-
-:deep(ul li li li) {
-  list-style-type: square;
-}
-
-:deep(ol li) {
-  list-style-type: decimal;
-}
-
-:deep(p) {
-  white-space: normal;
-  /* 允许正常换行 */
-  overflow-wrap: break-word;
-  /* 单词太长时自动换行 */
-  word-break: normal;
-  /* 保持单词整体性，不随便拆开 */
-}
-
 .echo-header-sticky {
   position: sticky;
   top: var(--date-sticky-top, 0px);

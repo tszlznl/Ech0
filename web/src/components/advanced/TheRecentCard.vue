@@ -45,12 +45,7 @@ onMounted(() => {
 })
 </script>
 <style scoped>
-.md-editor-dark,
-.md-editor-modal-container[data-theme='dark'] {
-  --md-bk-color: #212121 !important;
-}
-
-:deep(#preview-only-preview) p {
+:deep(.echo-markdown p) {
   color: var(--color-text-secondary) !important;
   font-size: 0.875rem !important;
   line-height: 1.25rem !important;

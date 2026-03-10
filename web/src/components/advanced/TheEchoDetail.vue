@@ -42,18 +42,7 @@
         >
           <!-- 文字在上 -->
           <div class="mb-3">
-            <MdPreview
-              :id="previewOptions.proviewId"
-              :modelValue="props.echo.content"
-              :theme="theme"
-              :show-code-row-number="previewOptions.showCodeRowNumber"
-              :preview-theme="previewOptions.previewTheme"
-              :code-theme="previewOptions.codeTheme"
-              :code-style-reverse="previewOptions.codeStyleReverse"
-              :no-img-zoom-in="previewOptions.noImgZoomIn"
-              :code-foldable="previewOptions.codeFoldable"
-              :auto-fold-threshold="previewOptions.autoFoldThreshold"
-            />
+            <TheMdPreview :content="props.echo.content" />
           </div>
 
           <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" />
@@ -64,18 +53,7 @@
           <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" />
 
           <div class="mt-3">
-            <MdPreview
-              :id="previewOptions.proviewId"
-              :modelValue="props.echo.content"
-              :theme="theme"
-              :show-code-row-number="previewOptions.showCodeRowNumber"
-              :preview-theme="previewOptions.previewTheme"
-              :code-theme="previewOptions.codeTheme"
-              :code-style-reverse="previewOptions.codeStyleReverse"
-              :no-img-zoom-in="previewOptions.noImgZoomIn"
-              :code-foldable="previewOptions.codeFoldable"
-              :auto-fold-threshold="previewOptions.autoFoldThreshold"
-            />
+            <TheMdPreview :content="props.echo.content" />
           </div>
         </template>
 
@@ -181,18 +159,17 @@ import Share from '../icons/share.vue'
 import TheAPlayerCard from './TheAPlayerCard.vue'
 import TheWebsiteCard from './TheWebsiteCard.vue'
 import TheImageGallery from './TheImageGallery.vue'
-import 'md-editor-v3/lib/preview.css'
-import { MdPreview } from 'md-editor-v3'
 import { computed, ref } from 'vue'
 import { fetchLikeEcho } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { localStg } from '@/utils/storage'
 import { storeToRefs } from 'pinia'
-import { useSettingStore, useThemeStore } from '@/stores'
+import { useSettingStore } from '@/stores'
 import { getApiUrl } from '@/service/request/shared'
 import { ExtensionType, ImageLayout } from '@/enums/enums'
 import { formatDate } from '@/utils/other'
 import { getEchoFilesBy } from '@/utils/echo'
+import TheMdPreview from './TheMdPreview.vue'
 const emit = defineEmits(['updateLikeCount', 'printEcho'])
 
 type Echo = App.Api.Ech0.Echo
@@ -200,19 +177,6 @@ type Echo = App.Api.Ech0.Echo
 const props = defineProps<{
   echo: Echo
 }>()
-const themeStore = useThemeStore()
-
-const theme = computed(() => (themeStore.theme === 'light' ? 'light' : 'dark'))
-const previewOptions = {
-  proviewId: 'preview-only',
-  showCodeRowNumber: false,
-  previewTheme: 'github',
-  codeTheme: 'atom',
-  codeStyleReverse: true,
-  noImgZoomIn: false,
-  codeFoldable: true,
-  autoFoldThreshold: 15,
-}
 const echoImageFiles = computed(() =>
   getEchoFilesBy(props.echo, { categories: ['image'], dedupeBy: 'id' }),
 )
@@ -295,37 +259,4 @@ if (
   font-family: var(--font-family-display);
 }
 
-#preview-only {
-  background-color: inherit;
-}
-
-.md-editor {
-  font-family: var(--font-family-sans);
-  /* font-family: 'LXGW WenKai Screen'; */
-}
-
-:deep(ul li) {
-  list-style-type: disc;
-}
-
-:deep(ul li li) {
-  list-style-type: circle;
-}
-
-:deep(ul li li li) {
-  list-style-type: square;
-}
-
-:deep(ol li) {
-  list-style-type: decimal;
-}
-
-:deep(p) {
-  white-space: normal;
-  /* 允许正常换行 */
-  overflow-wrap: break-word;
-  /* 单词太长时自动换行 */
-  word-break: normal;
-  /* 保持单词整体性，不随便拆开 */
-}
 </style>

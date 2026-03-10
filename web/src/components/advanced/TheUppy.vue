@@ -2,7 +2,7 @@
   <!-- Uppy Dashboard 容器 -->
   <div
     id="uppy-dashboard"
-    class="rounded-md overflow-hidden shadow-inner ring-inset ring-1 ring-[var(--color-border-subtle)]"
+    class="rounded-md overflow-hidden shadow-inner"
   ></div>
 </template>
 
@@ -508,46 +508,68 @@ onBeforeUnmount(() => {
 
 <style scoped>
 :deep(.uppy-Root) {
-  border: transparent;
+  border: 0;
+  background-color: transparent;
+}
+
+:deep(.uppy-Dashboard-inner) {
+  border: 1px solid var(--uppy-dropzone-border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-clip: padding-box;
 }
 
 :deep(.uppy-Dashboard-innerWrap) {
-  background-color: var(--color-bg-canvas);
+  background-color: var(--uppy-bg-color);
+  background-clip: padding-box;
 }
 
 :deep(.uppy-Dashboard-AddFiles) {
-  /* 内阴影 */
-  box-shadow:
-    inset 0px 0px 2px rgba(80, 80, 80, 0.12),
-    inset 0px 0px 2px rgba(80, 80, 80, 0.12);
+  background-color: var(--uppy-dropzone-bg-color);
+  border-color: var(--uppy-dropzone-border-color);
+  box-shadow: var(--uppy-shadow-inset);
 }
 
 :deep(.uppy-Dashboard-AddFiles-title) {
-  color: #6f5427;
+  color: var(--uppy-dropzone-title-color);
 }
 
 :deep(.uppy-Dashboard-browse) {
-  color: #e5a437;
+  color: var(--uppy-link-color);
+}
+
+:deep(.uppy-Dashboard-browse:hover) {
+  color: var(--uppy-link-hover-color);
 }
 :deep(.uppy-StatusBar) {
-  color: var(--color-text-primary);
-  background-color: var(--color-bg-surface);
+  color: var(--uppy-text-color);
+  background-color: var(--uppy-panel-bg-color);
 }
 
 :deep(.uppy-DashboardContent-bar) {
-  color: var(--color-text-primary);
-  background-color: var(--color-bg-surface);
+  color: var(--uppy-text-color);
+  background-color: var(--uppy-panel-bg-color);
 }
 
 :deep(.uppy-StatusBar-statusPrimary) {
-  color: var(--color-text-primary);
+  color: var(--uppy-text-color);
 }
 
 :deep(.uppy-DashboardContent-back) {
-  color: #cf8e12;
+  color: var(--uppy-link-color);
 }
 
 :deep(.uppy-DashboardContent-addMore) {
-  color: #cf8e12;
+  color: var(--uppy-link-color);
+}
+
+:deep(.uppy-DashboardContent-back:hover),
+:deep(.uppy-DashboardContent-addMore:hover) {
+  color: var(--uppy-link-hover-color);
+}
+
+:deep(.uppy-Dashboard-note),
+:deep(.uppy-StatusBar-statusSecondary) {
+  color: var(--uppy-muted-text-color);
 }
 </style>

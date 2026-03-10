@@ -1,0 +1,78 @@
+.echo-markdown {
+  color: var(--color-text-primary);
+  font-family: var(--font-family-sans);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.echo-markdown > :first-child {
+  margin-top: 0;
+}
+
+.echo-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.echo-markdown h1,
+.echo-markdown h2,
+.echo-markdown h3,
+.echo-markdown h4,
+.echo-markdown h5,
+.echo-markdown h6 {
+  color: var(--color-text-primary);
+  margin: 0.8rem 0 0.45rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.echo-markdown p {
+  margin: 0.45rem 0;
+  color: var(--color-text-primary);
+}
+
+.echo-markdown ul,
+.echo-markdown ol {
+  margin: 0.5rem 0;
+  padding-left: 1.4rem;
+}
+
+.echo-markdown ul li {
+  list-style-type: disc;
+}
+
+.echo-markdown ul li li {
+  list-style-type: circle;
+}
+
+.echo-markdown ul li li li {
+  list-style-type: square;
+}
+
+.echo-markdown ol li {
+  list-style-type: decimal;
+}
+
+.echo-markdown blockquote {
+  margin: 0.75rem 0;
+  padding-left: 0.8rem;
+  border-left: 3px solid var(--color-border-subtle);
+  color: var(--color-text-secondary);
+}
+
+.echo-markdown a {
+  color: var(--color-link, #409eff);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.echo-markdown pre {
+  border-radius: 0.5rem;
+  overflow: auto;
+  margin: 0.7rem 0;
+}
+
+.echo-markdown :not(pre) > code {
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.35rem;
+  background-color: var(--color-bg-surface-hover, rgba(127, 127, 127, 0.16));
+}

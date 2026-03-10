@@ -5,16 +5,6 @@
 @use './custom.scss';
 @use './base.scss';
 
-// Editor && Preview
-.md-editor-dark,
-.md-editor-modal-container[data-theme='dark'] {
-  --md-bk-color: #333333 !important;
-}
-
-.md-editor div.github-theme {
-  color: var(--color-text-primary) !important;
-}
-
 // widget
 .widget {
   background-color: var(--color-bg-surface);
