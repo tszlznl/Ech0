@@ -69,7 +69,9 @@
   gap: 0.5rem;
   padding: 0.5rem 3.8rem 0.5rem 0.75rem;
   border-bottom: 1px solid var(--md-editor-divider-color);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .markdown-editor .toolbar-actions {
@@ -86,17 +88,29 @@
 .markdown-editor .toolbar-btn {
   border: 1px solid var(--md-editor-border-color);
   border-radius: 0.5rem;
-  padding: 0.25rem 0.6rem;
+  padding: 0.22rem 0.5rem;
+  min-width: 1.9rem;
   font-size: 0.75rem;
+  line-height: 1;
   color: var(--md-editor-toolbar-btn-text);
   background-color: var(--md-editor-toolbar-btn-bg);
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .markdown-editor .toolbar-btn:hover {
   color: var(--md-editor-toolbar-btn-hover-text);
   border-color: var(--md-editor-toolbar-btn-hover-border);
   background-color: var(--md-editor-toolbar-btn-hover-bg);
+}
+
+.markdown-editor .toolbar-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1rem;
+  font-family: var(--font-family-sans);
+  font-weight: 600;
 }
 
 .markdown-editor .editor-content {
@@ -129,7 +143,7 @@
 }
 
 .markdown-editor .editor-input:focus {
-  box-shadow: inset 0 0 0 1px var(--input-focus-ring-color);
+  box-shadow: none;
 }
 
 .markdown-preview-card {
@@ -165,9 +179,17 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .markdown-editor .toolbar {
+    padding: 0.45rem 0.55rem;
+    gap: 0.35rem;
+  }
+
   .markdown-editor .toolbar-actions {
-    width: 100%;
+    width: auto;
+    margin-left: auto;
     justify-content: flex-end;
+    flex: 0 0 auto;
+    gap: 0.35rem;
   }
 
   .markdown-editor.is-full .editor-input {

@@ -40,7 +40,7 @@
             :multiple="false"
             :options="tagOptions"
             placeholder="标签"
-            class="rounded-sm border-none w-auto"
+            wrapper-class="border-transparent shadow-none bg-transparent"
             input-class="w-16 h-7 text-[var(--color-text-secondary)]"
           />
         </div>

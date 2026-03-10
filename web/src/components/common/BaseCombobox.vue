@@ -20,7 +20,10 @@
       <div class="relative">
         <!-- Input -->
         <div
-          class="flex items-center px-0.5 py-0.5 rounded-[var(--radius-md)] bg-[var(--input-bg-color)] border border-[var(--combobox-border-color)] shadow-[var(--shadow-sm)] transition duration-150 ease-in-out"
+          :class="[
+            'flex items-center px-0.5 py-0.5 rounded-[var(--radius-md)] bg-[var(--input-bg-color)] border border-[var(--combobox-border-color)] shadow-[var(--shadow-sm)] transition duration-150 ease-in-out',
+            wrapperClass,
+          ]"
           @focusout="onBlurOutside"
           @focusin="onFocusInput"
           @mousedown="onFocusInput"
@@ -123,6 +126,8 @@ const props = defineProps<{
   multiple?: boolean
   /** 输入框额外的样式类 */
   inputClass?: ClassValue
+  /** 外层 wrapper 额外样式类 */
+  wrapperClass?: ClassValue
 }>()
 
 const emit = defineEmits(['update:modelValue', 'create'])

@@ -29,9 +29,11 @@
           :key="item.action"
           type="button"
           class="toolbar-btn"
+          :title="item.label"
+          :aria-label="item.label"
           @click="onToolbarClick(item.action)"
         >
-          {{ item.label }}
+          <span class="toolbar-icon" aria-hidden="true">{{ item.icon }}</span>
         </button>
         <div class="toolbar-actions">
           <button type="button" class="toolbar-btn" @click="isPreviewMode = !isPreviewMode">
@@ -80,15 +82,12 @@ const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const isFullMode = ref(false)
 const isPreviewMode = ref(false)
 
-const toolbarItems: Array<{ label: string; action: MarkdownEditorAction }> = [
-  { label: '粗体', action: 'bold' },
-  { label: '斜体', action: 'italic' },
-  { label: '标题', action: 'heading' },
-  { label: '引用', action: 'quote' },
-  { label: '无序列表', action: 'unorderedList' },
-  { label: '有序列表', action: 'orderedList' },
-  { label: '代码块', action: 'codeBlock' },
-  { label: '链接', action: 'link' },
+const toolbarItems: Array<{ label: string; icon: string; action: MarkdownEditorAction }> = [
+  { label: '粗体', icon: 'B', action: 'bold' },
+  { label: '斜体', icon: 'I', action: 'italic' },
+  { label: '标题', icon: 'H', action: 'heading' },
+  { label: '引用', icon: '❝', action: 'quote' },
+  { label: '无序列表', icon: '•', action: 'unorderedList' },
 ]
 
 function onInput(event: Event) {
