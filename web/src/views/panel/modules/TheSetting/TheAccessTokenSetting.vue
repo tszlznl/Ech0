@@ -73,7 +73,7 @@
                   @click="handleDeleteAccessToken(t)"
                   title="删除 Token"
                 >
-                  <Trashbin class="w-5 h-5 text-red-500" />
+                  <Trashbin class="w-5 h-5 text-[var(--panel-danger-color)]" />
                 </button>
               </td>
             </tr>

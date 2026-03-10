@@ -123,9 +123,10 @@ onMounted(() => {
 
 .welcome-card,
 .stat-card {
-  border: 1px solid var(--border-color-300);
-  border-radius: 0.9rem;
-  background: var(--card-color);
+  border: 1px solid var(--panel-border-soft);
+  border-radius: var(--panel-radius-lg);
+  background: var(--panel-surface-1);
+  box-shadow: var(--panel-shadow-sm);
 }
 
 .welcome-card {
@@ -135,9 +136,9 @@ onMounted(() => {
 .welcome-badge {
   display: inline-block;
   padding: 0.2rem 0.65rem;
-  border-radius: 0.5rem;
-  background: var(--dashboard-next-color);
-  color: var(--text-color-next-700);
+  border-radius: var(--panel-radius-sm);
+  background: var(--panel-accent-weak);
+  color: var(--panel-text-secondary);
   font-size: 0.95rem;
   font-weight: 700;
 }
@@ -146,13 +147,14 @@ onMounted(() => {
   margin-top: 0.65rem;
   font-size: 1.55rem;
   line-height: 1.3;
-  color: var(--text-color-next-600);
+  color: var(--panel-text-primary);
   font-weight: 800;
+  font-family: var(--font-display);
 }
 
 .welcome-subtitle {
   margin-top: 0.35rem;
-  color: var(--text-color-next-400);
+  color: var(--panel-text-muted);
   font-size: 0.95rem;
 }
 
@@ -164,25 +166,27 @@ onMounted(() => {
 
 .stat-card {
   padding: 1rem 1.05rem;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .stat-card:hover {
   transform: translateY(-1px);
-  border-color: var(--border-color-400);
+  border-color: var(--panel-border-strong);
+  background: var(--panel-surface-2);
 }
 
 .stat-label {
   font-size: 0.88rem;
-  color: var(--text-color-next-500);
+  color: var(--panel-text-muted);
 }
 
 .stat-value {
   margin-top: 0.25rem;
   font-size: 1.5rem;
   line-height: 1.2;
-  color: var(--dashboard-main-color);
+  color: var(--panel-accent);
   font-weight: 800;
+  font-family: var(--font-display);
 }
 
 .stat-value.is-loading {
@@ -192,7 +196,7 @@ onMounted(() => {
 .stat-desc {
   margin-top: 0.28rem;
   font-size: 0.86rem;
-  color: var(--text-color-next-400);
+  color: var(--panel-text-muted);
 }
 
 @media (min-width: 768px) {

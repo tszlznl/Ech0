@@ -3,7 +3,7 @@
     <div class="mb-3 flex flex-col md:flex-row gap-2 md:items-center">
       <select
         v-model="level"
-        class="h-9 rounded-md px-2 bg-[var(--input-bg)] text-[var(--text-color-next-600)] border border-[var(--border-color-300)]"
+        class="h-9 rounded-[var(--panel-radius-md)] px-2 bg-[var(--input-bg-color)] text-[var(--panel-text-secondary)] border border-[var(--panel-border-soft)]"
       >
         <option value="all">全部级别</option>
         <option value="debug">debug</option>
@@ -14,22 +14,22 @@
       <input
         v-model="keyword"
         placeholder="关键词过滤"
-        class="h-9 rounded-md px-2 bg-[var(--input-bg)] text-[var(--text-color-next-600)] border border-[var(--border-color-300)]"
+        class="h-9 rounded-[var(--panel-radius-md)] px-2 bg-[var(--input-bg-color)] text-[var(--panel-text-secondary)] border border-[var(--panel-border-soft)]"
       />
       <input
         v-model.number="tail"
         type="number"
         min="50"
         max="1000"
-        class="h-9 w-24 rounded-md px-2 bg-[var(--input-bg)] text-[var(--text-color-next-600)] border border-[var(--border-color-300)]"
+        class="h-9 w-24 rounded-[var(--panel-radius-md)] px-2 bg-[var(--input-bg-color)] text-[var(--panel-text-secondary)] border border-[var(--panel-border-soft)]"
       />
       <button class="h-9 px-3 rounded-md log-btn" @click="reload">应用过滤</button>
       <button class="h-9 px-3 rounded-md log-btn" @click="clearLogs">清屏</button>
-      <label class="inline-flex items-center gap-1 text-sm text-[var(--text-color-next-600)]">
+      <label class="inline-flex items-center gap-1 text-sm text-[var(--panel-text-secondary)]">
         <input v-model="autoScroll" type="checkbox" />
         自动滚动
       </label>
-      <span class="text-xs text-[var(--text-color-next-500)]">连接: {{ connectionText }}</span>
+      <span class="text-xs text-[var(--panel-text-muted)]">连接: {{ connectionText }}</span>
     </div>
 
     <div ref="logContainer" class="log-container text-xs md:text-sm">
@@ -40,7 +40,7 @@
           <span class="msg">{{ line.msg }}</span>
         </div>
       </template>
-      <div v-else class="text-[var(--text-color-next-500)]">暂无日志</div>
+      <div v-else class="text-[var(--panel-text-muted)]">暂无日志</div>
     </div>
   </div>
 </template>
@@ -211,40 +211,43 @@ onUnmounted(() => {
 .log-container {
   height: 68vh;
   overflow-y: auto;
-  border: 1px solid var(--border-color-300);
-  border-radius: 8px;
+  border: 1px solid var(--panel-border-soft);
+  border-radius: var(--panel-radius-lg);
   padding: 12px;
-  background: var(--bg-color-100);
+  background: var(--panel-surface-1);
+  box-shadow: var(--panel-shadow-sm);
 }
 
 .log-line {
-  font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+  font-family: var(--font-mono);
   line-height: 1.55;
   margin-bottom: 2px;
   word-break: break-word;
-  color: var(--text-color-next-600);
+  color: var(--panel-text-secondary);
 }
 
 .time {
-  color: var(--text-color-next-500);
+  color: var(--panel-text-muted);
 }
 
 .level {
   margin: 0 6px;
-  color: var(--dashboard-main-color);
+  color: var(--panel-accent);
 }
 
 .msg {
-  color: var(--text-color-next-700);
+  color: var(--panel-text-primary);
 }
 
 .log-btn {
-  border: 1px solid var(--border-color-300);
-  color: var(--text-color-next-600);
-  background: var(--bg-color-200);
+  border: 1px solid var(--panel-border-soft);
+  color: var(--panel-text-secondary);
+  background: var(--panel-surface-1);
+  box-shadow: var(--panel-shadow-sm);
 }
 
 .log-btn:hover {
-  opacity: 0.85;
+  background: var(--panel-surface-2);
+  border-color: var(--panel-border-strong);
 }
 </style>

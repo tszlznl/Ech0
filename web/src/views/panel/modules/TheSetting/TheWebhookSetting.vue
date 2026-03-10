@@ -18,7 +18,7 @@
       <!-- 添加 Webhook -->
       <div
         v-if="webhookEdit"
-        class="mb-2 border border-gray-300 border-dashed rounded-md flex flex-col gap-2 p-2 text-[var(--text-color-400)]"
+        class="mb-2 border border-[var(--panel-border-soft)] border-dashed rounded-[var(--panel-radius-md)] flex flex-col gap-2 p-2 text-[var(--text-color-400)]"
       >
         <div>
           <span>Webhook 名称：</span>
@@ -101,7 +101,7 @@
                     @click="handleDeleteWebhook(webhook.id)"
                     title="删除 Webhook"
                   >
-                    <Trashbin class="w-5 h-5 text-red-500" />
+                    <Trashbin class="w-5 h-5 text-[var(--panel-danger-color)]" />
                   </button>
                 </td>
               </tr>

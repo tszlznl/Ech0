@@ -75,7 +75,7 @@
                     @click="handleDisconnect(connect.id)"
                     title="断开连接"
                   >
-                    <Disconnect class="w-5 h-5 text-red-500" />
+                    <Disconnect class="w-5 h-5 text-[var(--panel-danger-color)]" />
                   </button>
                 </td>
               </tr>

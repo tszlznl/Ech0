@@ -23,7 +23,7 @@
         <img
           :src="avatarSrc"
           alt="头像"
-          class="w-12 h-12 rounded-full ml-2 mr-9 ring-1 ring-gray-200 shadow-sm"
+          class="w-12 h-12 rounded-full ml-2 mr-9 ring-1 ring-[var(--panel-border-soft)] shadow-[var(--panel-shadow-sm)]"
         />
         <div>
           <!-- 点击上传头像 -->

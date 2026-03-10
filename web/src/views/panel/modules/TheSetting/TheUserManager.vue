@@ -57,11 +57,11 @@
               </td>
               <td class="px-3 py-2 text-right">
                 <button
-                  class="p-1 hover:bg-[#fff6eb] rounded"
+                  class="p-1 hover:bg-[var(--panel-accent-weak)] rounded"
                   @click="handleDeleteUser(user.id)"
                   title="删除用户"
                 >
-                  <Deluser class="w-5 h-5 text-red-500" />
+                  <Deluser class="w-5 h-5 text-[var(--panel-danger-color)]" />
                 </button>
               </td>
             </tr>

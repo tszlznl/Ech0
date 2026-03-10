@@ -1,5 +1,7 @@
 <template>
-  <div class="rounded-md p-4 border border-dashed border-[var(--border-color-400)] overflow-auto">
+  <div
+    class="rounded-[var(--panel-radius-lg)] p-4 border border-dashed border-[var(--panel-border-soft)] bg-[var(--panel-surface-1)] shadow-[var(--panel-shadow-sm)] overflow-auto"
+  >
     <slot></slot>
   </div>
 </template>

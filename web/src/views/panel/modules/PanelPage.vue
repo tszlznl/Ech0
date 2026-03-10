@@ -1,9 +1,9 @@
 <template>
   <div
-    class="border border-[var(--border-color-300)] p-4 mx-auto flex flex-col max-w-screen-lg rounded-md mt-2 sm:mt-4 mb-12"
+    class="panel-shell border p-4 mx-auto flex flex-col max-w-screen-lg mt-2 sm:mt-4 mb-12"
   >
     <h1
-      class="text-4xl md:text-6xl italic font-bold font-serif text-center text-[var(--text-color-next-300)] mb-8 md:mb-12"
+      class="panel-title text-4xl md:text-6xl italic font-bold text-center mb-8 md:mb-12"
     >
       Ech0 Panel
     </h1>
@@ -53,7 +53,7 @@
     <!-- 主内容区 -->
     <div class="mx-auto flex my-4 w-full max-w-screen-lg rounded-md">
       <!-- 桌面端侧边栏 -->
-      <div class="hidden md:flex flex-col gap-2 w-48 pr-8 shrink-0">
+      <div class="hidden md:flex flex-col gap-2 w-48 pr-8 shrink-0 panel-nav">
         <!-- 返回首页 -->
         <BaseButton @click="router.push('/')" :class="getButtonClasses('', true)" title="返回首页">
           <Arrow
@@ -61,7 +61,7 @@
           />
         </BaseButton>
 
-        <div class="h-px bg-[var(--bg-color-300)] mx-2" />
+        <div class="h-px bg-[var(--panel-border-soft)] mx-2" />
 
         <!-- Dashboard -->
         <BaseButton
@@ -153,7 +153,7 @@
           系统日志
         </BaseButton>
 
-        <div class="h-px bg-[var(--bg-color-300)] mx-2" />
+        <div class="h-px bg-[var(--panel-border-soft)] mx-2" />
 
         <!-- 退出登录 -->
         <BaseButton
@@ -175,7 +175,7 @@
           登录
         </BaseButton>
 
-        <div class="text-[var(--text-color-next-300)] font-serif my-2 ml-3">
+        <div class="panel-version my-2 ml-3">
           Version: {{ settingStore.hello?.version }}
         </div>
       </div>
@@ -223,20 +223,20 @@ const selectedRoute = ref(route.path)
 // 统一的按钮样式计算函数
 const getButtonClasses = (routeName: string, isBackButton = false) => {
   const baseClasses = isBackButton
-    ? 'text-[var(--text-color-next-600)] rounded-md transition-all duration-300 border-none !shadow-none !ring-0 hover:opacity-75 p-2 group bg-transparent'
-    : 'flex items-center gap-2 pl-3 py-1 rounded-md transition-all duration-300 border-none !shadow-none !ring-0 justify-start bg-transparent'
+    ? 'text-[var(--panel-text-secondary)] rounded-[var(--panel-radius-md)] transition-all duration-200 border-none !shadow-none !ring-0 hover:bg-[var(--panel-surface-2)] p-2 group bg-transparent'
+    : 'flex items-center gap-2 pl-3 py-1.5 rounded-[var(--panel-radius-md)] transition-all duration-200 border-none !shadow-none !ring-0 justify-start bg-transparent hover:bg-[var(--panel-surface-2)]'
 
   const activeClasses =
     currentRoute.value === routeName
       ? 'text-[var(--active-panel-tab-text-color)]! bg-[var(--active-panel-tab-bg-color)]!'
-      : 'text-[var(--text-color-next-600)] hover:opacity-75'
+      : 'text-[var(--panel-text-secondary)]'
 
   return `${baseClasses} ${activeClasses}`
 }
 
 // 底部按钮样式
 const getBottomButtonClasses = () => {
-  return 'flex items-center gap-2 pl-3 py-1 rounded-md transition-all duration-300 border-none !shadow-none !ring-0 text-[var(--text-color-600)] hover:opacity-75 justify-start bg-transparent'
+  return 'flex items-center gap-2 pl-3 py-1.5 rounded-[var(--panel-radius-md)] transition-all duration-200 border-none !shadow-none !ring-0 text-[var(--panel-text-secondary)] hover:bg-[var(--panel-surface-2)] justify-start bg-transparent'
 }
 
 // 路由选项
@@ -286,3 +286,25 @@ const handleLogout = () => {
   })
 }
 </script>
+
+<style scoped>
+.panel-shell {
+  border-color: var(--panel-border-soft);
+  border-radius: var(--panel-radius-lg);
+  background: var(--panel-bg);
+}
+
+.panel-title {
+  font-family: var(--font-display);
+  color: var(--panel-text-primary);
+}
+
+.panel-nav {
+  color: var(--panel-text-secondary);
+}
+
+.panel-version {
+  color: var(--panel-text-muted);
+  font-family: var(--font-display);
+}
+</style>

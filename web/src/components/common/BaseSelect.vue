@@ -16,10 +16,10 @@
         type="button"
         :disabled="disabled"
         :class="[
-          'inline-flex items-center justify-between px-3 py-2 rounded-lg border border-[var(--select-border-color)] focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-300 transition duration-150 ease-in-out shadow-xs sm:text-sm text-left',
+          'inline-flex items-center justify-between px-3 py-2 rounded-[var(--panel-radius-md)] border border-[var(--select-border-color)] focus:outline-none focus:ring-2 focus:ring-[var(--select-focus-ring-color)] transition duration-150 ease-in-out shadow-[var(--panel-shadow-sm)] sm:text-sm text-left',
           disabled
             ? 'bg-[var(--select-disabled-bg-color)] cursor-not-allowed opacity-70'
-            : 'bg-[var(--select-bg-color)] hover:border-orange-400 cursor-pointer',
+            : 'bg-[var(--select-bg-color)] hover:border-[var(--panel-border-strong)] cursor-pointer',
           customClass,
         ]"
         @click="onToggle"
@@ -44,7 +44,7 @@
         <!-- Dropdown Arrow -->
         <svg
           :class="[
-            'w-8 text-yellow-200 transition-transform duration-200',
+            'w-8 text-[var(--select-icon-color)] transition-transform duration-200',
             isOpen ? 'rotate-180' : '',
           ]"
           xmlns="http://www.w3.org/2000/svg"
@@ -53,7 +53,7 @@
           viewBox="0 0 24 24"
         >
           <!-- Icon from Material Symbols by Google - https://github.com/google/material-design-icons/blob/master/LICENSE -->
-          <path fill="#888888" d="m12 15.4l-6-6L7.4 8l4.6 4.6L16.6 8L18 9.4z" />
+          <path fill="currentColor" d="m12 15.4l-6-6L7.4 8l4.6 4.6L16.6 8L18 9.4z" />
         </svg>
       </button>
 
@@ -68,7 +68,7 @@
       >
         <div
           v-show="isOpen"
-          class="absolute z-5000 mt-1 min-w-full bg-[var(--select-bg-color)] shadow-lg max-h-70 rounded-lg border border-[var(--select-border-color)] overflow-auto focus:outline-none"
+          class="absolute z-5000 mt-1 min-w-full bg-[var(--select-bg-color)] shadow-[var(--panel-shadow-md)] max-h-70 rounded-[var(--panel-radius-md)] border border-[var(--select-border-color)] overflow-auto focus:outline-none"
         >
           <div
             v-for="(option, index) in normalizedOptions"
@@ -76,7 +76,7 @@
             :class="[
               'cursor-pointer select-none relative px-3 py-2 text-sm',
               index === highlightedIndex
-                ? 'bg-[var(--select-label-hover-bg-color)] text-orange-900'
+                ? 'bg-[var(--select-label-hover-bg-color)] text-[var(--select-option-active-color)]'
                 : 'text-[var(--text-color-900)] hover:bg-[var(--select-label-clicked-bg-color)]',
               isSelected(option) ? 'font-medium' : 'font-normal',
             ]"
@@ -90,7 +90,7 @@
               <!-- Check Icon for Selected -->
               <svg
                 v-if="isSelected(option)"
-                class="text-orange-500"
+                class="text-[var(--panel-accent)]"
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
                 height="24"
@@ -98,7 +98,7 @@
               >
                 <!-- Icon from Typicons by Stephen Hutchings - https://creativecommons.org/licenses/by-sa/4.0/ -->
                 <path
-                  fill="#888888"
+                  fill="currentColor"
                   d="M16.972 6.251a2 2 0 0 0-2.72.777l-3.713 6.682l-2.125-2.125a2 2 0 1 0-2.828 2.828l4 4c.378.379.888.587 1.414.587l.277-.02a2 2 0 0 0 1.471-1.009l5-9a2 2 0 0 0-.776-2.72"
                 />
               </svg>

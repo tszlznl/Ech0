@@ -89,12 +89,36 @@
   --dashboard-next-color: #fae2bf;
 
   // Panel
-  --active-panel-tab-bg-color: oklch(90.1% 0.076 70.697);
-  --active-panel-tab-text-color: oklch(26.8% 0.007 34.298);
+  --panel-bg: oklch(97.7% 0.008 67.1);
+  --panel-nav-bg: oklch(99.1% 0.004 67.6);
+  --panel-surface-1: #ffffff;
+  --panel-surface-2: oklch(98.3% 0.008 74.6);
+  --panel-text-primary: oklch(27.8% 0.026 52.1);
+  --panel-text-secondary: oklch(43.6% 0.021 56.2);
+  --panel-text-muted: oklch(61.9% 0.016 57.7);
+  --panel-accent: oklch(63.5% 0.146 56.9);
+  --panel-accent-weak: oklch(92.3% 0.035 74.2);
+  --panel-border-soft: oklch(90.7% 0.008 63.5);
+  --panel-border-strong: oklch(79.1% 0.014 57.2);
+  --panel-focus-ring: oklch(76.9% 0.078 72.7 / 0.48);
+  --panel-shadow-sm: 0 1px 2px oklch(28.2% 0.01 53.8 / 0.08);
+  --panel-shadow-md: 0 8px 26px oklch(28.2% 0.01 53.8 / 0.12);
+  --panel-radius-sm: 0.5rem;
+  --panel-radius-md: 0.75rem;
+  --panel-radius-lg: 1rem;
+  --panel-danger-color: oklch(62.1% 0.223 27.2);
+  --active-panel-tab-bg-color: var(--panel-accent-weak);
+  --active-panel-tab-text-color: var(--panel-text-primary);
 
   // 通用组件
-  --btn-bg-color: oklch(98.5% 0.002 247.839);
-  --btn-ring-color: oklch(87.2% 0.01 258.338);
+  --btn-bg-color: var(--panel-surface-1);
+  --btn-ring-color: var(--panel-border-soft);
+  --btn-hover-bg-color: var(--panel-surface-2);
+  --btn-hover-border-color: var(--panel-border-strong);
+  --btn-focus-ring-color: var(--panel-focus-ring);
+  --btn-text-color: var(--panel-text-secondary);
+  --btn-radius: var(--panel-radius-md);
+  --btn-shadow: var(--panel-shadow-sm);
 
   --input-bg-color: #ffffff;
   --input-border-color: oklch(86.9% 0.005 56.366);
@@ -111,8 +135,11 @@
 
   --select-bg-color: #ffffff;
   --select-disabled-bg-color: oklch(96.7% 0.003 264.542);
-  --select-border-color: oklch(87.2% 0.01 258.338);
-  --select-label-text-color: oklch(37.3% 0.034 259.733);
-  --select-label-hover-bg-color: oklch(98% 0.016 73.684);
-  --select-label-clicked-bg-color: oklch(98.5% 0.002 247.839);
+  --select-border-color: var(--panel-border-soft);
+  --select-focus-ring-color: var(--panel-focus-ring);
+  --select-label-text-color: var(--panel-text-secondary);
+  --select-label-hover-bg-color: var(--panel-accent-weak);
+  --select-label-clicked-bg-color: var(--panel-surface-2);
+  --select-icon-color: var(--panel-text-muted);
+  --select-option-active-color: var(--panel-text-primary);
 }
