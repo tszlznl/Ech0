@@ -117,7 +117,7 @@ const router = createRouter({
 })
 
 // 全局路由守卫
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to) => {
   const initStore = useInitStore()
   const userStore = useUserStore()
 
@@ -126,11 +126,11 @@ router.beforeEach(async (to, from, next) => {
   }
 
   if (!initStore.initialized && to.name !== 'init') {
-    return next({ name: 'init' })
+    return { name: 'init' }
   }
 
   if (initStore.initialized && to.name === 'init') {
-    return next({ name: 'auth' })
+    return { name: 'auth' }
   }
 
   // 等待用户信息初始化完成
@@ -148,10 +148,10 @@ router.beforeEach(async (to, from, next) => {
   ) {
     localStorage.removeItem('needLoginRedirect')
     localStorage.removeItem('token')
-    return next({ name: 'auth' })
+    return { name: 'auth' }
   }
 
-  next()
+  return true
 })
 
 export default router
