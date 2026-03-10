@@ -145,7 +145,7 @@
 
         <!-- 系统日志 -->
         <BaseButton
-          :icon="System"
+          :icon="Log"
           @click="router.push('/panel/system-log')"
           :class="getButtonClasses('panel-system-log')"
           title="系统日志"
@@ -203,7 +203,7 @@ import Storage from '@/components/icons/storage.vue'
 import Data from '@/components/icons/data.vue'
 import Sso from '@/components/icons/sso.vue'
 import Logout from '@/components/icons/logout.vue'
-import System from '@/components/icons/system.vue'
+import Log from '@/components/icons/log.vue'
 import { computed, ref, watch } from 'vue'
 import { useUserStore, useSettingStore } from '@/stores'
 import { useRouter, useRoute } from 'vue-router'
