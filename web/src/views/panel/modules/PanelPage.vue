@@ -1,68 +1,60 @@
 <template>
-  <div
-    class="panel-shell border p-4 mx-auto flex flex-col max-w-screen-lg mt-2 sm:mt-4 mb-12"
-  >
-    <h1
-      class="panel-title text-4xl md:text-6xl italic font-bold text-center mb-8 md:mb-12"
+  <div class="panel-page-wrap mt-4">
+    <div
+      class="panel-shell border p-4 mx-auto flex flex-col max-w-screen-lg w-full mb-12"
     >
-      Ech0 Panel
-    </h1>
+      <section class="panel-welcome mb-5 md:mb-2">
+        <div class="panel-welcome-main">
+          <h1 class="panel-welcome-username">{{ username }}，欢迎回来 <span class="wave-hand">👋</span></h1>
+          <div class="panel-welcome-meta">
+            <p class="panel-welcome-date">{{ dateText }}</p>
+            <p class="panel-welcome-greeting">{{ greeting }}</p>
+          </div>
+          <p class="panel-welcome-tip">今天也来记录一点新的灵感</p>
+        </div>
+        <div class="panel-welcome-actions">
+          <BaseButton :icon="BackHand" @click="router.push('/')" class="panel-home-btn" title="返回首页" />
+        </div>
+      </section>
 
-    <!-- 移动端选择器 -->
-    <div class="md:hidden mb-6 px-2 flex justify-between items-center mb-3">
-      <div class="w-1/2">
-        <BaseSelect
-          class="!focus:ring-0 h-9"
-          v-model="selectedRoute"
-          :options="routeOptions"
-          placeholder="选择页面"
-          @change="handleRouteChange"
-        />
-      </div>
-
-      <div class="flex gap-2 items-center">
-        <!-- 返回首页 -->
-        <BaseButton
-          :icon="BackHand"
-          @click="router.push('/')"
-          class="w-9 h-9 rounded-md"
-          title="返回首页"
-        >
-        </BaseButton>
-        <!-- 退出登录 -->
-        <BaseButton
-          v-if="userStore.isLogin"
-          :icon="Logout"
-          @click="handleLogout"
-          class="w-9 h-9 rounded-md"
-          title="退出"
-        >
-        </BaseButton>
-        <!-- 登录 / 注册 -->
-        <BaseButton
-          v-else
-          :icon="Auth"
-          @click="router.push('/auth')"
-          class="w-9 h-9 rounded-md"
-          title="登录 / 注册"
-        >
-        </BaseButton>
-      </div>
-    </div>
-
-    <!-- 主内容区 -->
-    <div class="mx-auto flex my-4 w-full max-w-screen-lg rounded-md">
-      <!-- 桌面端侧边栏 -->
-      <div class="hidden md:flex flex-col gap-2 w-48 pr-8 shrink-0 panel-nav">
-        <!-- 返回首页 -->
-        <BaseButton @click="router.push('/')" :class="getButtonClasses('', true)" title="返回首页">
-          <Arrow
-            class="w-9 h-9 rotate-180 transition-transform duration-200 group-hover:-translate-x-1"
+      <!-- 移动端选择器 -->
+      <div class="md:hidden mb-6 px-2 flex justify-between items-center mb-3">
+        <div class="w-1/2">
+          <BaseSelect
+            class="!focus:ring-0 h-9"
+            v-model="selectedRoute"
+            :options="routeOptions"
+            placeholder="选择页面"
+            @change="handleRouteChange"
           />
-        </BaseButton>
+        </div>
 
-        <div class="h-px bg-[var(--color-border-subtle)] mx-2" />
+        <div class="flex gap-2 items-center">
+          <!-- 退出登录 -->
+          <BaseButton
+            v-if="userStore.isLogin"
+            :icon="Logout"
+            @click="handleLogout"
+            class="w-9 h-9 rounded-md"
+            title="退出"
+          >
+          </BaseButton>
+          <!-- 登录 / 注册 -->
+          <BaseButton
+            v-else
+            :icon="Auth"
+            @click="router.push('/auth')"
+            class="w-9 h-9 rounded-md"
+            title="登录 / 注册"
+          >
+          </BaseButton>
+        </div>
+      </div>
 
+      <!-- 主内容区 -->
+      <div class="mx-auto flex my-4 w-full max-w-screen-lg rounded-md">
+        <!-- 桌面端侧边栏 -->
+        <div class="hidden md:flex flex-col gap-2 w-48 pr-8 shrink-0 panel-nav">
         <!-- Dashboard -->
         <BaseButton
           :icon="Dashboard"
@@ -178,11 +170,12 @@
         <div class="panel-version my-2 ml-3">
           Version: {{ settingStore.hello?.version }}
         </div>
-      </div>
+        </div>
 
-      <!-- 路由内容 -->
-      <div class="flex-1 min-w-0">
-        <router-view />
+        <!-- 路由内容 -->
+        <div class="flex-1 min-w-0">
+          <router-view />
+        </div>
       </div>
     </div>
   </div>
@@ -191,7 +184,6 @@
 <script setup lang="ts">
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseSelect from '@/components/common/BaseSelect.vue'
-import Arrow from '@/components/icons/arrow.vue'
 import User from '@/components/icons/user.vue'
 import Auth from '@/components/icons/auth.vue'
 import BackHand from '@/components/icons/backhand.vue'
@@ -219,13 +211,26 @@ const route = useRoute()
 
 const currentRoute = computed(() => route.name as string)
 const selectedRoute = ref(route.path)
+const username = computed(() => userStore.user?.username || '朋友')
+const greeting = computed(() => {
+  const hour = new Date().getHours()
+  if (hour < 6) return '凌晨好'
+  if (hour < 12) return '早上好'
+  if (hour < 18) return '下午好'
+  return '晚上好'
+})
+const dateText = computed(() => {
+  return new Intl.DateTimeFormat('zh-CN', {
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long',
+  }).format(new Date())
+})
 
 // 统一的按钮样式计算函数
-const getButtonClasses = (routeName: string, isBackButton = false) => {
-  const baseClasses = isBackButton
-    ? 'text-[var(--color-text-secondary)] rounded-[var(--radius-md)] transition-all duration-200 border-none !shadow-none !ring-0 hover:bg-[var(--color-bg-muted)] p-2 group bg-transparent'
-    : 'flex items-center gap-2 pl-3 py-1.5 rounded-[var(--radius-md)] transition-all duration-200 border-none !shadow-none !ring-0 justify-start bg-transparent hover:bg-[var(--color-bg-muted)]'
-
+const getButtonClasses = (routeName: string) => {
+  const baseClasses =
+    'flex items-center gap-2 pl-3 py-1.5 rounded-[var(--radius-md)] transition-all duration-200 border-none !shadow-none !ring-0 justify-start bg-transparent hover:bg-[var(--color-bg-muted)]'
   const activeClasses =
     currentRoute.value === routeName
       ? 'text-[var(--color-nav-active-text)]! bg-[var(--color-nav-active-bg)]!'
@@ -288,15 +293,18 @@ const handleLogout = () => {
 </script>
 
 <style scoped>
+.panel-page-wrap {
+  min-height: calc(100vh - 3.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 0.5rem 0;
+}
+
 .panel-shell {
   border-color: var(--color-border-subtle);
   border-radius: var(--radius-lg);
   background: var(--color-bg-canvas);
-}
-
-.panel-title {
-  font-family: var(--font-family-display);
-  color: var(--color-text-primary);
 }
 
 .panel-nav {
@@ -306,5 +314,138 @@ const handleLogout = () => {
 .panel-version {
   color: var(--color-text-muted);
   font-family: var(--font-family-display);
+}
+
+.panel-welcome {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.25rem 0.65rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.panel-welcome-main {
+  min-width: 0;
+  text-align: left;
+}
+
+.panel-welcome-username {
+  margin: 0;
+  font-size: clamp(1.45rem, 2.4vw, 1.9rem);
+  line-height: 1.2;
+  color: var(--color-text-primary);
+  font-weight: 800;
+  font-family: var(--font-family-display);
+  letter-spacing: 0.01em;
+}
+
+.panel-welcome-greeting {
+  font-size: 0.9rem;
+  line-height: 1.2;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.panel-welcome-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+}
+
+.panel-welcome-tip {
+  margin-top: 0.3rem;
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+}
+
+.panel-welcome-date {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.panel-welcome-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.panel-home-btn {
+  border: 1px solid var(--color-border-subtle) !important;
+  border-radius: 999px !important;
+  background: var(--color-bg-surface) !important;
+  color: var(--color-text-secondary) !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.panel-home-btn:hover {
+  border-color: var(--color-border-strong) !important;
+  background: var(--color-bg-muted) !important;
+}
+
+.wave-hand {
+  display: inline-block;
+  margin-left: 0.2rem;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.wave-hand:hover {
+  animation: hand-shake 620ms ease-in-out;
+}
+
+@keyframes hand-shake {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  15% {
+    transform: rotate(16deg) scale(1.08);
+  }
+  30% {
+    transform: rotate(-14deg) scale(1.08);
+  }
+  45% {
+    transform: rotate(12deg) scale(1.06);
+  }
+  60% {
+    transform: rotate(-10deg) scale(1.04);
+  }
+  75% {
+    transform: rotate(7deg) scale(1.02);
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+@media (max-width: 768px) {
+  .panel-page-wrap {
+    min-height: auto;
+    display: block;
+    padding: 0.4rem 0.35rem 0;
+  }
+
+  .panel-welcome {
+    align-items: flex-start;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 0.6rem;
+  }
+
+  .panel-welcome-date {
+    white-space: normal;
+  }
 }
 </style>
