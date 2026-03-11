@@ -2,8 +2,22 @@ package ech0v4
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 
+	"github.com/lin-snow/ech0/internal/database"
 	"github.com/lin-snow/ech0/internal/migrator/spec"
+	commonModel "github.com/lin-snow/ech0/internal/model/common"
+	echoModel "github.com/lin-snow/ech0/internal/model/echo"
+	fileModel "github.com/lin-snow/ech0/internal/model/file"
+	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Extractor struct{}
@@ -13,7 +27,6 @@ func NewExtractor() *Extractor {
 }
 
 func (e *Extractor) Extract(_ context.Context, req spec.ExtractRequest) (spec.ExtractResult, error) {
-	// ech0_v4 导入逻辑由后续迭代补齐；当前先占位保证任务链路可用。
 	return spec.ExtractResult{
 		Records:        []spec.RawRecord{},
 		NextCheckpoint: req.Checkpoint,
@@ -22,23 +35,352 @@ func (e *Extractor) Extract(_ context.Context, req spec.ExtractRequest) (spec.Ex
 	}, nil
 }
 
-func (e *Extractor) Migrate(_ context.Context, req spec.MigrateRequest) (spec.MigrateResult, error) {
+func (e *Extractor) Migrate(ctx context.Context, req spec.MigrateRequest) (spec.MigrateResult, error) {
+	sourceDBPath, err := resolveSourceDBPath(req.SourcePayload)
+	if err != nil {
+		return spec.MigrateResult{}, err
+	}
+	sourceDB, err := gorm.Open(sqlite.Open(sourceDBPath), &gorm.Config{})
+	if err != nil {
+		return spec.MigrateResult{}, fmt.Errorf("open source sqlite: %w", err)
+	}
+
+	var total int64
+	if err := sourceDB.Table("echos").Count(&total).Error; err != nil {
+		return spec.MigrateResult{}, fmt.Errorf("count source echos: %w", err)
+	}
+	jobID := uuidUtil.MustNewV7()
+	report := map[string]any{
+		"job_id":        jobID,
+		"source_db":     sourceDBPath,
+		"processed":     total,
+		"success_count": total,
+		"fail_count":    int64(0),
+		"failed_items":  []spec.FailedItem{},
+	}
+
 	if req.UpdateProgress != nil {
 		req.UpdateProgress(spec.MigrateProgress{
-			CurrentPhase: specPhaseLoading,
+			CurrentPhase: specPhaseExtracting,
 			Processed:    0,
-			Total:        0,
+			Total:        total,
 			SuccessCount: 0,
 			FailCount:    0,
 		})
 	}
+
+	if err := database.GetDB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		if err := migrateEchos(ctx, tx, sourceDB); err != nil {
+			return err
+		}
+		if req.UpdateProgress != nil {
+			req.UpdateProgress(spec.MigrateProgress{
+				CurrentPhase: specPhaseLoading,
+				Processed:    total,
+				Total:        total,
+				SuccessCount: total,
+				FailCount:    0,
+			})
+		}
+		return nil
+	}); err != nil {
+		return spec.MigrateResult{}, err
+	}
+
+	appendSettingToReport(sourceDB, report, commonModel.SystemSettingsKey, "source_system_setting")
+	appendSettingToReport(sourceDB, report, commonModel.CommentSettingKey, "source_comment_setting")
+	appendSettingToReport(sourceDB, report, commonModel.S3SettingKey, "source_s3_setting")
+	appendSettingToReport(sourceDB, report, commonModel.OAuth2SettingKey, "source_oauth2_setting")
+
+	if req.UpdateProgress != nil {
+		req.UpdateProgress(spec.MigrateProgress{
+			CurrentPhase: specPhaseReporting,
+			Processed:    total,
+			Total:        total,
+			SuccessCount: total,
+			FailCount:    0,
+		})
+		req.UpdateProgress(spec.MigrateProgress{
+			CurrentPhase: specPhaseCompleted,
+			Processed:    total,
+			Total:        total,
+			SuccessCount: total,
+			FailCount:    0,
+		})
+	}
+
 	return spec.MigrateResult{
-		Processed:    0,
-		Total:        0,
-		SuccessCount: 0,
+		Processed:    total,
+		Total:        total,
+		SuccessCount: total,
 		FailCount:    0,
-		ErrorSummary: "",
+		ErrorSummary: fmt.Sprintf("迁移完成: success=%d fail=%d", total, 0),
+		JobID:        jobID,
+		Report:       report,
 	}, nil
 }
 
-const specPhaseLoading = "loading"
+func resolveSourceDBPath(payload map[string]any) (string, error) {
+	tmpDir, ok := payload["tmp_dir"].(string)
+	if !ok || strings.TrimSpace(tmpDir) == "" {
+		return "", errors.New("source_payload.tmp_dir is required")
+	}
+	dbPath := filepath.Join("data", filepath.FromSlash(strings.TrimSpace(tmpDir)), "ech0.db")
+	if _, err := os.Stat(dbPath); err != nil {
+		return "", fmt.Errorf("source db not found: %w", err)
+	}
+	return dbPath, nil
+}
+
+func migrateEchos(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB) error {
+	sourceEchos, err := loadRows[echoModel.Echo](ctx, sourceDB, "echos")
+	if err != nil {
+		return fmt.Errorf("load source echos: %w", err)
+	}
+	if len(sourceEchos) > 0 {
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(sourceEchos, dbBatchSize).Error; err != nil {
+			return fmt.Errorf("migrate echos: %w", err)
+		}
+	}
+	sourceExtensions, err := loadRows[echoModel.EchoExtension](ctx, sourceDB, "echo_extensions")
+	if err != nil {
+		return fmt.Errorf("load source echo extensions: %w", err)
+	}
+	if len(sourceExtensions) > 0 {
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(sourceExtensions, dbBatchSize).Error; err != nil {
+			return fmt.Errorf("migrate echo extensions: %w", err)
+		}
+	}
+
+	if err := migrateTags(ctx, tx, sourceDB); err != nil {
+		return err
+	}
+	if err := migrateFiles(ctx, tx, sourceDB); err != nil {
+		return err
+	}
+	return nil
+}
+
+func migrateTags(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB) error {
+	sourceTags, err := loadRows[echoModel.Tag](ctx, sourceDB, "tags")
+	if err != nil {
+		return fmt.Errorf("load source tags: %w", err)
+	}
+	sourceEchoTags, err := loadRows[echoModel.EchoTag](ctx, sourceDB, "echo_tags")
+	if err != nil {
+		return fmt.Errorf("load source echo tags: %w", err)
+	}
+	if len(sourceTags) == 0 || len(sourceEchoTags) == 0 {
+		return nil
+	}
+
+	tagNames := make([]string, 0, len(sourceTags))
+	tagByID := make(map[string]echoModel.Tag, len(sourceTags))
+	for i := range sourceTags {
+		tag := sourceTags[i]
+		if strings.TrimSpace(tag.Name) == "" {
+			continue
+		}
+		tagNames = append(tagNames, tag.Name)
+		tagByID[tag.ID] = tag
+	}
+
+	existing := make(map[string]string)
+	if len(tagNames) > 0 {
+		var existingTags []echoModel.Tag
+		if err := tx.WithContext(ctx).Where("name IN ?", tagNames).Find(&existingTags).Error; err != nil {
+			return fmt.Errorf("load existing tags: %w", err)
+		}
+		for i := range existingTags {
+			existing[existingTags[i].Name] = existingTags[i].ID
+		}
+	}
+
+	tagIDMap := make(map[string]string, len(tagByID))
+	newTags := make([]echoModel.Tag, 0)
+	for oldID, tag := range tagByID {
+		if mappedID, ok := existing[tag.Name]; ok {
+			tagIDMap[oldID] = mappedID
+			continue
+		}
+		if strings.TrimSpace(tag.ID) == "" {
+			tag.ID = uuidUtil.MustNewV7()
+		}
+		newTags = append(newTags, tag)
+		existing[tag.Name] = tag.ID
+		tagIDMap[oldID] = tag.ID
+	}
+	if len(newTags) > 0 {
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(newTags, dbBatchSize).Error; err != nil {
+			return fmt.Errorf("create tags: %w", err)
+		}
+	}
+
+	newEchoTags := make([]echoModel.EchoTag, 0, len(sourceEchoTags))
+	for i := range sourceEchoTags {
+		row := sourceEchoTags[i]
+		tagID, ok := tagIDMap[row.TagID]
+		if !ok {
+			continue
+		}
+		newEchoTags = append(newEchoTags, echoModel.EchoTag{
+			EchoID: row.EchoID,
+			TagID:  tagID,
+		})
+	}
+	if len(newEchoTags) > 0 {
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(newEchoTags, dbBatchSize).Error; err != nil {
+			return fmt.Errorf("create echo_tags: %w", err)
+		}
+	}
+	return nil
+}
+
+func migrateFiles(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB) error {
+	sourceFiles, err := loadRows[fileModel.File](ctx, sourceDB, "files")
+	if err != nil {
+		return fmt.Errorf("load source files: %w", err)
+	}
+	sourceEchoFiles, err := loadRows[fileModel.EchoFile](ctx, sourceDB, "echo_files")
+	if err != nil {
+		return fmt.Errorf("load source echo_files: %w", err)
+	}
+	if len(sourceFiles) == 0 || len(sourceEchoFiles) == 0 {
+		return nil
+	}
+
+	routeKeyToID := make(map[string]string, len(sourceFiles))
+	newFiles := make([]fileModel.File, 0, len(sourceFiles))
+	for i := range sourceFiles {
+		file := sourceFiles[i]
+		key := fileRouteKey(file.StorageType, file.Provider, file.Bucket, file.Key)
+		routeKeyToID[key] = file.ID
+		if strings.TrimSpace(file.ID) == "" {
+			file.ID = uuidUtil.MustNewV7()
+			routeKeyToID[key] = file.ID
+		}
+		newFiles = append(newFiles, file)
+	}
+	if len(newFiles) > 0 {
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(newFiles, dbBatchSize).Error; err != nil {
+			return fmt.Errorf("create files: %w", err)
+		}
+	}
+
+	var existingFiles []fileModel.File
+	if err := tx.WithContext(ctx).Where("id IN ?", mapValues(routeKeyToID)).Find(&existingFiles).Error; err != nil {
+		return fmt.Errorf("load existing files by id: %w", err)
+	}
+	if len(existingFiles) != len(routeKeyToID) {
+		for routeKey := range routeKeyToID {
+			storageType, provider, bucket, key := splitRouteKey(routeKey)
+			var f fileModel.File
+			if err := tx.WithContext(ctx).Where(
+				"storage_type = ? AND provider = ? AND bucket = ? AND key = ?",
+				storageType,
+				provider,
+				bucket,
+				key,
+			).Take(&f).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					continue
+				}
+				return fmt.Errorf("load existing file by route: %w", err)
+			}
+			routeKeyToID[routeKey] = f.ID
+		}
+	} else {
+		for i := range existingFiles {
+			file := existingFiles[i]
+			routeKeyToID[fileRouteKey(file.StorageType, file.Provider, file.Bucket, file.Key)] = file.ID
+		}
+	}
+
+	legacyFileIDToRoute := make(map[string]string, len(sourceFiles))
+	for i := range sourceFiles {
+		file := sourceFiles[i]
+		legacyFileIDToRoute[file.ID] = fileRouteKey(file.StorageType, file.Provider, file.Bucket, file.Key)
+	}
+
+	newEchoFiles := make([]fileModel.EchoFile, 0, len(sourceEchoFiles))
+	for i := range sourceEchoFiles {
+		row := sourceEchoFiles[i]
+		routeKey, ok := legacyFileIDToRoute[row.FileID]
+		if !ok {
+			continue
+		}
+		mappedFileID, ok := routeKeyToID[routeKey]
+		if !ok || strings.TrimSpace(mappedFileID) == "" {
+			continue
+		}
+		if strings.TrimSpace(row.ID) == "" {
+			row.ID = uuidUtil.MustNewV7()
+		}
+		row.FileID = mappedFileID
+		newEchoFiles = append(newEchoFiles, row)
+	}
+	if len(newEchoFiles) > 0 {
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(newEchoFiles, dbBatchSize).Error; err != nil {
+			return fmt.Errorf("create echo_files: %w", err)
+		}
+	}
+	return nil
+}
+
+func appendSettingToReport(sourceDB *gorm.DB, report map[string]any, key string, reportKey string) {
+	var kv commonModel.KeyValue
+	if err := sourceDB.Table("key_values").Where("key = ?", key).Take(&kv).Error; err != nil {
+		return
+	}
+	trimmed := strings.TrimSpace(kv.Value)
+	if trimmed == "" {
+		return
+	}
+	var payload any
+	if err := json.Unmarshal([]byte(trimmed), &payload); err != nil {
+		return
+	}
+	report[reportKey] = payload
+}
+
+func fileRouteKey(storageType string, provider string, bucket string, key string) string {
+	return strings.TrimSpace(storageType) + "|" + strings.TrimSpace(provider) + "|" + strings.TrimSpace(bucket) + "|" + strings.TrimSpace(key)
+}
+
+func splitRouteKey(route string) (string, string, string, string) {
+	parts := strings.SplitN(route, "|", 4)
+	for len(parts) < 4 {
+		parts = append(parts, "")
+	}
+	return parts[0], parts[1], parts[2], parts[3]
+}
+
+func mapValues(m map[string]string) []string {
+	out := make([]string, 0, len(m))
+	for _, value := range m {
+		out = append(out, value)
+	}
+	return out
+}
+
+func loadRows[T any](ctx context.Context, db *gorm.DB, table string) ([]T, error) {
+	rows := make([]T, 0)
+	if err := db.WithContext(ctx).Table(table).Find(&rows).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return rows, nil
+		}
+		return nil, err
+	}
+	return rows, nil
+}
+
+const (
+	specPhaseExtracting = "extracting"
+	specPhaseLoading    = "loading"
+	specPhaseReporting  = "reporting"
+	specPhaseCompleted  = "completed"
+	dbBatchSize         = 200
+)

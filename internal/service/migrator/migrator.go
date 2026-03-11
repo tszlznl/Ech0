@@ -268,8 +268,8 @@ func (s *MigratorService) runGlobalMigration(ctx context.Context, state migratio
 	if strings.TrimSpace(result.ErrorSummary) != "" && result.FailCount > 0 {
 		current.ErrorMessage = result.ErrorSummary
 	}
-	if err := s.applyMigratedS3Setting(context.Background(), result.Report); err != nil {
-		s.updateFailed(context.Background(), runningState, fmt.Sprintf("应用迁移S3配置失败: %v", err))
+	if err := s.applyMigratedSettings(context.Background(), result.Report); err != nil {
+		s.updateFailed(context.Background(), runningState, fmt.Sprintf("应用迁移配置失败: %v", err))
 		return
 	}
 	s.invalidateEchoCachesAfterMigration()
@@ -417,22 +417,28 @@ func isDatabaseLockedError(err error) bool {
 	return strings.Contains(strings.ToLower(err.Error()), "database is locked")
 }
 
-func (s *MigratorService) applyMigratedS3Setting(ctx context.Context, report map[string]any) error {
-	setting, ok, err := parseMigratedS3Setting(report)
-	if err != nil {
-		return err
-	}
-	if !ok {
+func (s *MigratorService) applyMigratedSettings(ctx context.Context, report map[string]any) error {
+	if len(report) == 0 {
 		return nil
 	}
-	raw, err := json.Marshal(setting)
+	updatedS3 := false
+
+	if _, err := applyMigratedSettingValue(ctx, s.keyValueRepository, report, "source_system_setting", commonModel.SystemSettingsKey, parseMigratedSystemSetting); err != nil {
+		return err
+	}
+	if _, err := applyMigratedSettingValue(ctx, s.keyValueRepository, report, "source_comment_setting", commonModel.CommentSettingKey, parseMigratedCommentSetting); err != nil {
+		return err
+	}
+	ok, err := applyMigratedSettingValue(ctx, s.keyValueRepository, report, "source_s3_setting", commonModel.S3SettingKey, parseMigratedS3Setting)
 	if err != nil {
 		return err
 	}
-	if err := s.keyValueRepository.AddOrUpdateKeyValue(ctx, commonModel.S3SettingKey, string(raw)); err != nil {
+	updatedS3 = ok
+	if _, err := applyMigratedSettingValue(ctx, s.keyValueRepository, report, "source_oauth2_setting", commonModel.OAuth2SettingKey, parseMigratedOAuth2Setting); err != nil {
 		return err
 	}
-	if s.storageManager != nil {
+
+	if updatedS3 && s.storageManager != nil {
 		if err := s.storageManager.ReloadFromConfigAndDB(context.Background()); err != nil {
 			return err
 		}
@@ -441,10 +447,66 @@ func (s *MigratorService) applyMigratedS3Setting(ctx context.Context, report map
 }
 
 func parseMigratedS3Setting(report map[string]any) (*settingModel.S3Setting, bool, error) {
+	setting, ok, err := parseSettingFromReport[settingModel.S3Setting](report, "source_s3_setting")
+	if err != nil || !ok || setting == nil {
+		return nil, false, err
+	}
+	if strings.TrimSpace(setting.Provider) == "" || strings.TrimSpace(setting.Endpoint) == "" || strings.TrimSpace(setting.BucketName) == "" {
+		return nil, false, nil
+	}
+	return setting, true, nil
+}
+
+func parseMigratedSystemSetting(report map[string]any) (*settingModel.SystemSetting, bool, error) {
+	return parseSettingFromReport[settingModel.SystemSetting](report, "source_system_setting")
+}
+
+func parseMigratedCommentSetting(report map[string]any) (*settingModel.CommentSetting, bool, error) {
+	setting, ok, err := parseSettingFromReport[settingModel.CommentSetting](report, "source_comment_setting")
+	if err != nil || !ok || setting == nil {
+		return nil, false, err
+	}
+	if setting.Providers == nil {
+		setting.Providers = map[string]settingModel.CommentProviderSetting{}
+	}
+	return setting, true, nil
+}
+
+func parseMigratedOAuth2Setting(report map[string]any) (*settingModel.OAuth2Setting, bool, error) {
+	return parseSettingFromReport[settingModel.OAuth2Setting](report, "source_oauth2_setting")
+}
+
+func applyMigratedSettingValue[T any](
+	ctx context.Context,
+	repo KeyValueRepository,
+	report map[string]any,
+	reportKey string,
+	storeKey string,
+	parser func(map[string]any) (*T, bool, error),
+) (bool, error) {
+	parsed, ok, err := parser(report)
+	if err != nil {
+		// 迁移报告中的单项配置格式异常时忽略，不中断整任务。
+		return false, nil
+	}
+	if !ok || parsed == nil {
+		return false, nil
+	}
+	raw, err := json.Marshal(parsed)
+	if err != nil {
+		return false, nil
+	}
+	if err := repo.AddOrUpdateKeyValue(ctx, storeKey, string(raw)); err != nil {
+		return false, err
+	}
+	return reportKey == "source_s3_setting", nil
+}
+
+func parseSettingFromReport[T any](report map[string]any, key string) (*T, bool, error) {
 	if len(report) == 0 {
 		return nil, false, nil
 	}
-	raw, ok := report["source_s3_setting"]
+	raw, ok := report[key]
 	if !ok || raw == nil {
 		return nil, false, nil
 	}
@@ -452,12 +514,9 @@ func parseMigratedS3Setting(report map[string]any) (*settingModel.S3Setting, boo
 	if err != nil {
 		return nil, false, err
 	}
-	var setting settingModel.S3Setting
+	var setting T
 	if err := json.Unmarshal(bs, &setting); err != nil {
 		return nil, false, err
-	}
-	if strings.TrimSpace(setting.Provider) == "" || strings.TrimSpace(setting.Endpoint) == "" || strings.TrimSpace(setting.BucketName) == "" {
-		return nil, false, nil
 	}
 	return &setting, true, nil
 }
