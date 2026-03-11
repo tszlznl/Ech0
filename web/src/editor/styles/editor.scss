@@ -8,6 +8,21 @@
   z-index: 70;
   background-color: var(--md-editor-backdrop-color);
   backdrop-filter: blur(12px);
+  overflow: hidden;
+}
+
+.markdown-editor-backdrop::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(var(--md-editor-full-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--md-editor-full-grid-line) 1px, transparent 1px),
+    var(--md-editor-full-grid-bg);
+  background-size: 24px 24px;
+  pointer-events: none;
 }
 
 .markdown-editor {
