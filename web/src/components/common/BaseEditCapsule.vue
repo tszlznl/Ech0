@@ -30,7 +30,7 @@ import Edit from '@/components/icons/edit.vue'
 import Close from '@/components/icons/close.vue'
 import Saveupdate from '@/components/icons/saveupdate.vue'
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     editing: boolean
     editTitle?: string

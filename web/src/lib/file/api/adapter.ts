@@ -11,7 +11,6 @@ import { getApiUrl } from '@/service/request/shared'
 import type {
   ExternalFileInput,
   FileEntity,
-  FileStorageType,
   FileUploadInput,
   PresignInput,
   PresignResult,

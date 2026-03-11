@@ -12,7 +12,7 @@ export function useFileAttachments(initial: FileAttachment[] = []) {
   }
 
   const files = computed(() => {
-    revision.value
+    void revision.value
     return manager.list()
   })
 

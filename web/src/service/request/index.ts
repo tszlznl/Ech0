@@ -129,11 +129,11 @@ export const downloadFile = async (requestOptions: RequestOptions): Promise<Blob
     requestOptions.url = `${proxyUrl}${requestOptions.url}`
   }
 
-  return (ofetchInstance as any)(requestOptions.url, {
+  return ofetchInstance<Blob>(requestOptions.url, {
     method: requestOptions.method,
     body: requestOptions.data,
     responseType: 'blob',
-  }).then((res: unknown) => {
+  }).then((res) => {
     if (res instanceof Blob) {
       return res
     }

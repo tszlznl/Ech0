@@ -26,7 +26,7 @@ export function fetchGetWebsiteTitle(websiteURL: string) {
 
 export interface StartMigrationPayload {
   source_type: 'ech0_v4' | 'memos' | 'ech0_v3'
-  source_payload: Record<string, any>
+  source_payload: Record<string, unknown>
 }
 
 export interface MigrationStatusPayload extends StartMigrationPayload {
@@ -70,7 +70,7 @@ export function fetchCleanupMigration() {
 export interface UploadMigrationSourceZipResponse {
   source_type: 'ech0_v4' | 'memos' | 'ech0_v3'
   tmp_dir: string
-  source_payload: Record<string, any>
+  source_payload: Record<string, unknown>
 }
 
 export function fetchUploadMigrationSourceZip(

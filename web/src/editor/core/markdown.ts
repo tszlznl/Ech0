@@ -36,17 +36,25 @@ const markdown: MarkdownIt = new MarkdownIt({
 
 const originalLinkOpen =
   markdown.renderer.rules.link_open ??
-  ((tokens: any[], idx: number, options: any, _env: any, self: any) =>
-    self.renderToken(tokens, idx, options))
+  ((tokens: unknown[], idx: number, options: unknown, _env: unknown, self: unknown) =>
+    (self as { renderToken: (t: unknown[], i: number, o: unknown) => string }).renderToken(
+      tokens,
+      idx,
+      options,
+    ))
 
 markdown.renderer.rules.link_open = (
-  tokens: any[],
+  tokens: unknown[],
   idx: number,
-  options: any,
-  env: any,
-  self: any,
+  options: unknown,
+  env: unknown,
+  self: unknown,
 ) => {
-  const token = tokens[idx]
+  const token = tokens[idx] as {
+    attrIndex: (name: string) => number
+    attrs?: Array<[string, string]>
+    attrSet: (name: string, value: string) => void
+  }
   const hrefIndex = token.attrIndex('href')
 
   if (hrefIndex >= 0) {

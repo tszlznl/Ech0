@@ -87,14 +87,6 @@ const buildCacheKey = (storageType: RootStorageType, prefix: string) =>
 
 const cloneRawNodes = (items: App.Api.File.FileTreeNode[]) => items.map((item) => ({ ...item }))
 
-const clearSection = (storageType: RootStorageType) => {
-  sections[storageType].expanded = false
-  sections[storageType].loaded = false
-  sections[storageType].loading = false
-  sections[storageType].error = ''
-  sections[storageType].nodes = []
-}
-
 const getActiveRoot = (): RootStorageType | '' => {
   return rootStorageTypes.value.find((type) => sections[type].expanded) || ''
 }
