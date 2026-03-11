@@ -3,6 +3,27 @@ import { ref, computed, watch } from 'vue'
 import { fetchGetEchosByPage, fetchGetTags, fetchGetEchosByTagId } from '@/service/api'
 
 export const useEchoStore = defineStore('echoStore', () => {
+  const normalizeEchoId = (echo: App.Api.Ech0.Echo): string => String(echo?.id ?? '').trim()
+
+  const mergeEchoItems = (
+    targetList: { value: App.Api.Ech0.Echo[] },
+    targetIndexMap: { value: Map<string, number> },
+    incoming: App.Api.Ech0.Echo[],
+  ) => {
+    incoming.forEach((item: App.Api.Ech0.Echo) => {
+      const id = normalizeEchoId(item)
+      if (!id) return
+      const normalizedItem = { ...item, id }
+      const idx = targetIndexMap.value.get(id)
+      if (idx !== undefined) {
+        targetList.value[idx] = normalizedItem
+      } else {
+        targetList.value.push(normalizedItem)
+        targetIndexMap.value.set(id, targetList.value.length - 1)
+      }
+    })
+  }
+
   /**
    * state
    */
@@ -82,16 +103,7 @@ export const useEchoStore = defineStore('echoStore', () => {
         if (res.code === 1) {
           total.value = res.data.total
 
-          // 同步更新 echoMap
-          res.data.items.forEach((item: App.Api.Ech0.Echo) => {
-            const idx = echoIndexMap.value.get(item.id)
-            if (idx !== undefined) {
-              echoList.value[idx] = item // 更新已有数据
-            } else {
-              echoList.value.push(item) // 添加新数据
-              echoIndexMap.value.set(item.id, echoList.value.length - 1)
-            }
-          })
+          mergeEchoItems(echoList, echoIndexMap, res.data.items)
 
           page.value += 1
         }
@@ -173,16 +185,7 @@ export const useEchoStore = defineStore('echoStore', () => {
         if (res.code === 1) {
           filteredTotal.value = res.data.total
 
-          // 同步更新 echoMap
-          res.data.items.forEach((item: App.Api.Ech0.Echo) => {
-            const idx = filteredEchoIndexMap.value.get(item.id)
-            if (idx !== undefined) {
-              filteredEchoList.value[idx] = item // 更新已有数据
-            } else {
-              filteredEchoList.value.push(item) // 添加新数据
-              filteredEchoIndexMap.value.set(item.id, filteredEchoList.value.length - 1)
-            }
-          })
+          mergeEchoItems(filteredEchoList, filteredEchoIndexMap, res.data.items)
 
           filteredPage.value += 1
         }

@@ -145,7 +145,10 @@
             />
           </div>
           <TheGithubCard
-            v-if="props.echo.extension.type === ExtensionType.GITHUBPROJ"
+            v-if="
+              props.echo.extension.type === ExtensionType.GITHUBPROJ &&
+              props.echo.extension.payload?.repoUrl
+            "
             :GithubURL="props.echo.extension.payload.repoUrl"
             class="px-2 mx-auto hover:shadow-md"
           />

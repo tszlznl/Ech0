@@ -154,3 +154,64 @@ func TestNormalizeImageSource(t *testing.T) {
 		t.Fatalf("expected local fallback, got %s", got)
 	}
 }
+
+func TestNormalizeExtensionPayload_GithubRawToRepoURL(t *testing.T) {
+	payload := normalizeExtensionPayload(
+		"GITHUBPROJ",
+		map[string]any{"raw": "https://github.com/lin-snow/Ech0"},
+		`"https://github.com/lin-snow/Ech0"`,
+	)
+	if got, _ := payload["repoUrl"].(string); got != "https://github.com/lin-snow/Ech0" {
+		t.Fatalf("expected repoUrl mapped, got %#v", payload)
+	}
+}
+
+func TestNormalizeExtensionPayload_MusicRawToURL(t *testing.T) {
+	payload := normalizeExtensionPayload(
+		"MUSIC",
+		map[string]any{"raw": "https://music.apple.com/cn/song/abc/123"},
+		`"https://music.apple.com/cn/song/abc/123"`,
+	)
+	if got, _ := payload["url"].(string); got == "" {
+		t.Fatalf("expected url mapped, got %#v", payload)
+	}
+}
+
+func TestDeriveS3ObjectKeyMapping(t *testing.T) {
+	key, candidates := deriveS3ObjectKeyMapping(
+		"1_1773238612_100eca.jpeg",
+		"https://minio.vaaat.com/ech0/1_1773238612_100eca.jpeg",
+		"",
+		"ech0",
+	)
+	if key != "1_1773238612_100eca.jpeg" {
+		t.Fatalf("unexpected mapped key: %s", key)
+	}
+	foundTargetCandidate := false
+	for _, c := range candidates {
+		if c == "images/1_1773238612_100eca.jpeg" {
+			foundTargetCandidate = true
+			break
+		}
+	}
+	if !foundTargetCandidate {
+		t.Fatalf("expected schema target candidate in %v", candidates)
+	}
+}
+
+func TestParseObjectPathFromImageURL(t *testing.T) {
+	full, stripped := parseObjectPathFromImageURL("https://minio.vaaat.com/ech0/images/a.jpeg", "ech0")
+	if full != "ech0/images/a.jpeg" {
+		t.Fatalf("unexpected full path: %s", full)
+	}
+	if stripped != "images/a.jpeg" {
+		t.Fatalf("unexpected stripped path: %s", stripped)
+	}
+}
+
+func TestBuildObjectStoragePath(t *testing.T) {
+	path := buildObjectStoragePath(settingModel.S3Setting{PathPrefix: ""}, "1_1773238612_100eca.jpeg")
+	if path != "images/1_1773238612_100eca.jpeg" {
+		t.Fatalf("unexpected object storage path: %s", path)
+	}
+}

@@ -19,6 +19,7 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	migrationModel "github.com/lin-snow/ech0/internal/model/migration"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
+	echoRepository "github.com/lin-snow/ech0/internal/repository/echo"
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"gorm.io/gorm"
@@ -30,6 +31,7 @@ type MigratorService struct {
 	commonService      CommonService
 	keyValueRepository KeyValueRepository
 	storageManager     StorageManager
+	appCache           AppCache
 
 	activeMu     sync.Mutex
 	activeCancel context.CancelFunc
@@ -39,11 +41,13 @@ func NewMigratorService(
 	commonService CommonService,
 	keyValueRepository KeyValueRepository,
 	storageManager StorageManager,
+	appCache AppCache,
 ) *MigratorService {
 	return &MigratorService{
 		commonService:      commonService,
 		keyValueRepository: keyValueRepository,
 		storageManager:     storageManager,
+		appCache:           appCache,
 	}
 }
 
@@ -268,6 +272,7 @@ func (s *MigratorService) runGlobalMigration(ctx context.Context, state migratio
 		s.updateFailed(context.Background(), runningState, fmt.Sprintf("应用迁移S3配置失败: %v", err))
 		return
 	}
+	s.invalidateEchoCachesAfterMigration()
 	current.UpdatedAt = &now
 	current.FinishedAt = &now
 	_ = s.saveGlobalStateWithRetry(context.Background(), current)
@@ -455,4 +460,12 @@ func parseMigratedS3Setting(report map[string]any) (*settingModel.S3Setting, boo
 		return nil, false, nil
 	}
 	return &setting, true, nil
+}
+
+func (s *MigratorService) invalidateEchoCachesAfterMigration() {
+	if s.appCache == nil {
+		return
+	}
+	echoRepository.ClearEchoPageCache(s.appCache)
+	echoRepository.ClearTodayEchosCache(s.appCache)
 }

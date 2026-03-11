@@ -1,8 +1,9 @@
 <template>
   <div
+    v-if="safeGithubURL"
     class="max-w-sm flex justify-center items-center bg-[var(--color-bg-surface)] rounded-lg shadow-sm ring-1 ring-inset ring-[var(--color-border-subtle)] p-2 gap-2"
   >
-    <a :href="props.GithubURL" target="_blank">
+    <a :href="safeGithubURL" target="_blank" rel="noopener noreferrer">
       <div class="flex justify-between items-center">
         <div class="shrink-0 px-6">
           <img
@@ -41,48 +42,49 @@ import Githubproj from '../icons/githubproj.vue'
 import Star from '../icons/star.vue'
 import Fork from '../icons/fork.vue'
 import { fetchGetGithubRepo } from '@/service/api'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 const githubRepoCache = new Map<string, App.Api.Ech0.GithubCardData | null>()
 const githubRepoInFlight = new Map<string, Promise<App.Api.Ech0.GithubCardData | null>>()
 
 const props = defineProps<{
-  GithubURL: string
+  GithubURL?: string
 }>()
 
+const safeGithubURL = computed(() => String(props.GithubURL ?? '').trim())
+
 // 处理GithubURL(提取owner和repo)
-const githubUrlSegments = props.GithubURL.split('/').filter(Boolean)
-const [ownerRaw, repoRaw] = githubUrlSegments.slice(-2)
-const owner = ownerRaw ?? ''
-const repo = repoRaw ?? ''
+const githubUrlSegments = computed(() => safeGithubURL.value.split('/').filter(Boolean))
+const owner = computed(() => githubUrlSegments.value.slice(-2)[0] ?? '')
+const repo = computed(() => githubUrlSegments.value.slice(-2)[1] ?? '')
 const CardData = ref<App.Api.Ech0.GithubCardData>()
-const repoKey = `${owner}/${repo}`
+const repoKey = computed(() => `${owner.value}/${repo.value}`)
 
 const loadGithubRepo = async () => {
-  if (!owner || !repo) {
+  if (!owner.value || !repo.value) {
     return
   }
 
-  if (githubRepoCache.has(repoKey)) {
-    const cachedData = githubRepoCache.get(repoKey)
+  if (githubRepoCache.has(repoKey.value)) {
+    const cachedData = githubRepoCache.get(repoKey.value)
     if (cachedData) {
       CardData.value = cachedData
     }
     return
   }
 
-  if (!githubRepoInFlight.has(repoKey)) {
-    const task = fetchGetGithubRepo({ owner, repo })
+  if (!githubRepoInFlight.has(repoKey.value)) {
+    const task = fetchGetGithubRepo({ owner: owner.value, repo: repo.value })
       .then((res) => res ?? null)
       .catch(() => null)
       .finally(() => {
-        githubRepoInFlight.delete(repoKey)
+        githubRepoInFlight.delete(repoKey.value)
       })
-    githubRepoInFlight.set(repoKey, task)
+    githubRepoInFlight.set(repoKey.value, task)
   }
 
-  const repoData = await githubRepoInFlight.get(repoKey)
-  githubRepoCache.set(repoKey, repoData ?? null)
+  const repoData = await githubRepoInFlight.get(repoKey.value)
+  githubRepoCache.set(repoKey.value, repoData ?? null)
   if (repoData) {
     CardData.value = repoData
   }

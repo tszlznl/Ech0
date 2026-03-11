@@ -4,6 +4,7 @@ import (
 	"context"
 	"mime/multipart"
 
+	"github.com/lin-snow/ech0/internal/cache"
 	migrationModel "github.com/lin-snow/ech0/internal/model/migration"
 	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
@@ -22,4 +23,5 @@ type (
 	CommonService      = commonService.Service
 	KeyValueRepository = *keyvalueRepository.KeyValueRepository
 	StorageManager     = *storage.Manager
+	AppCache           = cache.ICache[string, any]
 )

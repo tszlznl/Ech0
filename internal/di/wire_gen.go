@@ -147,7 +147,7 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 	connectHandler := handler10.NewConnectHandler(connectService)
 	backupService := service9.NewBackupService(commonService, publisherPublisher)
 	backupHandler := handler11.NewBackupHandler(backupService)
-	migratorService := service10.NewMigratorService(commonService, keyValueRepository, manager)
+	migratorService := service10.NewMigratorService(commonService, keyValueRepository, manager, appCache)
 	migrationHandler := handler12.NewMigrationHandler(migratorService)
 	dashboardService := service11.NewDashboardService()
 	dashboardHandler := handler13.NewDashboardHandler(dashboardService)

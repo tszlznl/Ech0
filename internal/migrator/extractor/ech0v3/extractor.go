@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"mime"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -173,12 +174,6 @@ func (e *Extractor) Migrate(ctx context.Context, req spec.MigrateRequest) (spec.
 			hasExtension := strings.TrimSpace(row.Extension) != ""
 			_, hasFiles := echoIDsWithImages[row.ID]
 
-			if !hasContent && hasExtension {
-				content = "[迁移占位] 原记录仅包含扩展内容"
-			}
-			if !hasContent && !hasExtension && hasFiles {
-				content = "[迁移占位] 原记录仅包含图片/附件内容"
-			}
 			if !hasContent && !hasExtension && !hasFiles {
 				failCount++
 				failed = append(failed, spec.FailedItem{
@@ -439,18 +434,123 @@ func persistExtension(tx *gorm.DB, echoID string, extensionType string, raw stri
 	if err := json.Unmarshal([]byte(trimmed), &payload); err != nil {
 		payload["raw"] = trimmed
 	}
-	if len(payload) == 0 {
+	extType := normalizeExtensionType(extensionType, payload)
+	if extType == "LEGACY" {
 		return nil
 	}
-	extType := strings.TrimSpace(extensionType)
-	if extType == "" {
-		extType = "LEGACY"
+	payload = normalizeExtensionPayload(extType, payload, trimmed)
+	if len(payload) == 0 {
+		return nil
 	}
 	return tx.Create(&echoModel.EchoExtension{
 		EchoID:  echoID,
 		Type:    extType,
 		Payload: payload,
 	}).Error
+}
+
+func normalizeExtensionType(extensionType string, payload map[string]any) string {
+	rawType := strings.ToUpper(strings.TrimSpace(extensionType))
+	switch rawType {
+	case echoModel.Extension_MUSIC, "MUSIC163", "NETEASE":
+		return echoModel.Extension_MUSIC
+	case echoModel.Extension_VIDEO, "BILIBILI", "YOUTUBE":
+		return echoModel.Extension_VIDEO
+	case echoModel.Extension_GITHUBPROJ, "GITHUB", "GITHUB_PROJECT":
+		return echoModel.Extension_GITHUBPROJ
+	case echoModel.Extension_WEBSITE, "SITE", "LINK", "URL":
+		return echoModel.Extension_WEBSITE
+	}
+
+	// fallback by payload shape
+	if getPayloadString(payload, "repoUrl") != "" {
+		return echoModel.Extension_GITHUBPROJ
+	}
+	if getPayloadString(payload, "videoId") != "" || getPayloadString(payload, "bvid") != "" {
+		return echoModel.Extension_VIDEO
+	}
+	if getPayloadString(payload, "site") != "" || getPayloadString(payload, "title") != "" {
+		return echoModel.Extension_WEBSITE
+	}
+	if getPayloadString(payload, "url") != "" || getPayloadString(payload, "raw") != "" {
+		return echoModel.Extension_MUSIC
+	}
+	return "LEGACY"
+}
+
+func normalizeExtensionPayload(extType string, payload map[string]any, raw string) map[string]any {
+	out := make(map[string]any)
+	for k, v := range payload {
+		out[k] = v
+	}
+	rawURL := strings.TrimSpace(getPayloadString(payload, "raw"))
+	if rawURL == "" {
+		rawURL = strings.TrimSpace(raw)
+	}
+
+	switch extType {
+	case echoModel.Extension_GITHUBPROJ:
+		repoURL := strings.TrimSpace(getPayloadString(payload, "repoUrl"))
+		if repoURL == "" {
+			repoURL = strings.TrimSpace(getPayloadString(payload, "url"))
+		}
+		if repoURL == "" && strings.Contains(strings.ToLower(rawURL), "github.com/") {
+			repoURL = rawURL
+		}
+		if repoURL != "" {
+			return map[string]any{"repoUrl": repoURL}
+		}
+		return out
+	case echoModel.Extension_MUSIC:
+		url := strings.TrimSpace(getPayloadString(payload, "url"))
+		if url == "" {
+			url = rawURL
+		}
+		if url != "" {
+			return map[string]any{"url": url}
+		}
+		return out
+	case echoModel.Extension_VIDEO:
+		videoID := strings.TrimSpace(getPayloadString(payload, "videoId"))
+		if videoID == "" {
+			videoID = strings.TrimSpace(getPayloadString(payload, "bvid"))
+		}
+		if videoID == "" {
+			videoID = rawURL
+		}
+		if videoID != "" {
+			return map[string]any{"videoId": videoID}
+		}
+		return out
+	case echoModel.Extension_WEBSITE:
+		site := strings.TrimSpace(getPayloadString(payload, "site"))
+		title := strings.TrimSpace(getPayloadString(payload, "title"))
+		if site == "" && rawURL != "" && (strings.HasPrefix(strings.ToLower(rawURL), "http://") || strings.HasPrefix(strings.ToLower(rawURL), "https://")) {
+			site = rawURL
+		}
+		if title == "" && site != "" {
+			title = site
+		}
+		if site != "" && title != "" {
+			return map[string]any{"title": title, "site": site}
+		}
+		return out
+	default:
+		return out
+	}
+}
+
+func getPayloadString(payload map[string]any, key string) string {
+	raw, ok := payload[key]
+	if !ok || raw == nil {
+		return ""
+	}
+	switch v := raw.(type) {
+	case string:
+		return strings.TrimSpace(v)
+	default:
+		return strings.TrimSpace(fmt.Sprintf("%v", raw))
+	}
 }
 
 func migrateTags(tx *gorm.DB, sourceDB *gorm.DB, idMap map[int64]string) error {
@@ -554,12 +654,21 @@ func migrateImages(tx *gorm.DB, sourceDB *gorm.DB, sourceRoot string, createdBy 
 	mappedS3Setting, s3SettingValid := mapSourceS3SettingToV4(sourceS3Setting)
 	objectProvider := strings.ToLower(strings.TrimSpace(mappedS3Setting.Provider))
 	objectBucket := strings.TrimSpace(mappedS3Setting.BucketName)
+	var s3Selector *storage.StorageSelector
+	if s3SettingValid {
+		s3Cfg := buildStorageConfigFromS3Setting(mappedS3Setting)
+		s3Selector = storage.NewStorageSelector(s3Cfg)
+		if s3Selector == nil || !s3Selector.ObjectEnabled() {
+			s3SettingValid = false
+		}
+	}
 
 	type imageCandidate struct {
 		sourceImageID int64
 		sourceMessageID int64
 		targetEchoID string
 		key          string
+		sourceObjectPathCandidates []string
 		imageURL     string
 		imageSrc     string
 		storageType  string
@@ -611,11 +720,12 @@ func migrateImages(tx *gorm.DB, sourceDB *gorm.DB, sourceRoot string, createdBy 
 				})
 				continue
 			}
-			objectKey := strings.TrimSpace(row.ObjectKey)
-			migratedKey := normalizeObjectKeyForV4(objectKey, mappedS3Setting.PathPrefix)
-			if migratedKey == "" {
-				migratedKey = normalizeObjectKeyForV4(normalizeKeyFromURL(row.ImageURL), mappedS3Setting.PathPrefix)
-			}
+			migratedKey, sourceObjectCandidates := deriveS3ObjectKeyMapping(
+				row.ObjectKey,
+				row.ImageURL,
+				mappedS3Setting.PathPrefix,
+				mappedS3Setting.BucketName,
+			)
 			if migratedKey == "" {
 				summary.FailedItems = append(summary.FailedItems, spec.FailedItem{
 					SourceID: strconv.FormatInt(row.MessageID, 10),
@@ -629,6 +739,7 @@ func migrateImages(tx *gorm.DB, sourceDB *gorm.DB, sourceRoot string, createdBy 
 				sourceMessageID: row.MessageID,
 				targetEchoID: targetEchoID,
 				key:          migratedKey,
+				sourceObjectPathCandidates: sourceObjectCandidates,
 				imageURL:     strings.TrimSpace(finalURL),
 				imageSrc:     imageSrc,
 				storageType:  "object",
@@ -720,6 +831,23 @@ func migrateImages(tx *gorm.DB, sourceDB *gorm.DB, sourceRoot string, createdBy 
 					)
 					continue
 				}
+			} else if candidate.storageType == "object" {
+				if s3Selector == nil {
+					summary.FailedItems = append(summary.FailedItems, spec.FailedItem{
+						SourceID: strconv.FormatInt(candidate.sourceMessageID, 10),
+						Reason:   "object storage selector unavailable",
+					})
+					continue
+				}
+				if copyErr := ensureS3ObjectAtSchemaPath(s3Selector, mappedS3Setting, candidate.key, candidate.sourceObjectPathCandidates); copyErr != nil {
+					summary.FailedItems = append(summary.FailedItems, spec.FailedItem{
+						SourceID: strconv.FormatInt(candidate.sourceMessageID, 10),
+						Reason:   "copy s3 image failed: " + copyErr.Error(),
+					})
+					continue
+				}
+				meta.size = 0
+				meta.contentType = inferContentType(candidate.imageURL, candidate.key)
 			} else {
 				meta.size = 0
 				meta.contentType = inferContentType(candidate.imageURL, candidate.key)
@@ -936,12 +1064,9 @@ func normalizeObjectKeyForV4(objectKey string, pathPrefix string) string {
 }
 
 func buildObjectURLFromSetting(setting settingModel.S3Setting, key string) string {
-	resolvedKey := strings.Trim(strings.TrimSpace(storage.NewFileSchema().Resolve(cleanMigratedFileKey(key))), "/")
+	resolvedKey := buildObjectStoragePath(setting, key)
 	if resolvedKey == "" {
 		return ""
-	}
-	if prefix := strings.Trim(strings.TrimSpace(setting.PathPrefix), "/"); prefix != "" {
-		resolvedKey = prefix + "/" + resolvedKey
 	}
 	cdn := strings.TrimRight(strings.TrimSpace(setting.CDNURL), "/")
 	if cdn != "" {
@@ -964,6 +1089,147 @@ func buildObjectURLFromSetting(setting settingModel.S3Setting, key string) strin
 		return ""
 	}
 	return endpoint + "/" + bucket + "/" + resolvedKey
+}
+
+func buildObjectStoragePath(setting settingModel.S3Setting, key string) string {
+	resolvedKey := strings.Trim(strings.TrimSpace(storage.NewFileSchema().Resolve(cleanMigratedFileKey(key))), "/")
+	if resolvedKey == "" {
+		return ""
+	}
+	if prefix := strings.Trim(strings.TrimSpace(setting.PathPrefix), "/"); prefix != "" {
+		return prefix + "/" + resolvedKey
+	}
+	return resolvedKey
+}
+
+func deriveS3ObjectKeyMapping(
+	objectKey string,
+	imageURL string,
+	pathPrefix string,
+	bucketName string,
+) (string, []string) {
+	migratedKey := normalizeObjectKeyForV4(objectKey, pathPrefix)
+	if migratedKey == "" {
+		migratedKey = normalizeObjectKeyForV4(normalizeKeyFromURL(imageURL), pathPrefix)
+	}
+	if migratedKey == "" {
+		return "", nil
+	}
+	return migratedKey, deriveSourceObjectStoragePathCandidates(objectKey, imageURL, pathPrefix, migratedKey, bucketName)
+}
+
+func deriveSourceObjectStoragePathCandidates(
+	objectKey string,
+	imageURL string,
+	pathPrefix string,
+	migratedKey string,
+	bucketName string,
+) []string {
+	appendIf := func(dst []string, item string) []string {
+		clean := cleanMigratedFileKey(item)
+		if clean == "" {
+			return dst
+		}
+		return append(dst, clean)
+	}
+	candidates := make([]string, 0, 10)
+	rawObjectKey := cleanMigratedFileKey(objectKey)
+	rawFromURL := cleanMigratedFileKey(normalizeKeyFromURL(imageURL))
+	fullPathFromURL, strippedPathFromURL := parseObjectPathFromImageURL(imageURL, bucketName)
+	prefix := strings.Trim(strings.TrimSpace(pathPrefix), "/")
+	targetWithoutPrefix := strings.Trim(strings.TrimSpace(storage.NewFileSchema().Resolve(cleanMigratedFileKey(migratedKey))), "/")
+
+	candidates = appendIf(candidates, rawObjectKey)
+	candidates = appendIf(candidates, rawFromURL)
+	candidates = appendIf(candidates, fullPathFromURL)
+	candidates = appendIf(candidates, strippedPathFromURL)
+	candidates = appendIf(candidates, targetWithoutPrefix)
+	if prefix != "" {
+		candidates = appendIf(candidates, prefix+"/"+rawObjectKey)
+		candidates = appendIf(candidates, prefix+"/"+rawFromURL)
+		candidates = appendIf(candidates, prefix+"/"+fullPathFromURL)
+		candidates = appendIf(candidates, prefix+"/"+strippedPathFromURL)
+		candidates = appendIf(candidates, prefix+"/"+targetWithoutPrefix)
+		candidates = appendIf(candidates, strings.TrimPrefix(rawObjectKey, prefix+"/"))
+		candidates = appendIf(candidates, strings.TrimPrefix(rawFromURL, prefix+"/"))
+	}
+	for _, route := range []string{"images/", "files/", "audios/", "videos/", "documents/"} {
+		candidates = appendIf(candidates, route+rawObjectKey)
+		candidates = appendIf(candidates, route+rawFromURL)
+		candidates = appendIf(candidates, route+strippedPathFromURL)
+	}
+	return dedupePaths(candidates)
+}
+
+func parseObjectPathFromImageURL(imageURL string, bucketName string) (string, string) {
+	raw := strings.TrimSpace(imageURL)
+	if raw == "" {
+		return "", ""
+	}
+	u, err := url.Parse(raw)
+	if err != nil {
+		clean := cleanMigratedFileKey(raw)
+		return clean, clean
+	}
+	fullPath := cleanMigratedFileKey(strings.TrimPrefix(u.Path, "/"))
+	if fullPath == "" {
+		return "", ""
+	}
+	bucket := strings.Trim(strings.TrimSpace(bucketName), "/")
+	if bucket == "" {
+		return fullPath, fullPath
+	}
+	stripped := strings.TrimPrefix(fullPath, bucket+"/")
+	if stripped == fullPath {
+		return fullPath, fullPath
+	}
+	return fullPath, cleanMigratedFileKey(stripped)
+}
+
+func buildStorageConfigFromS3Setting(setting settingModel.S3Setting) config.StorageConfig {
+	cfg := config.Config().Storage
+	cfg.ObjectEnabled = true
+	cfg.Provider = strings.TrimSpace(setting.Provider)
+	cfg.Endpoint = strings.TrimSpace(setting.Endpoint)
+	cfg.AccessKey = strings.TrimSpace(setting.AccessKey)
+	cfg.SecretKey = strings.TrimSpace(setting.SecretKey)
+	cfg.BucketName = strings.TrimSpace(setting.BucketName)
+	cfg.Region = strings.TrimSpace(setting.Region)
+	cfg.UseSSL = setting.UseSSL
+	cfg.CDNURL = strings.TrimSpace(setting.CDNURL)
+	cfg.PathPrefix = strings.Trim(strings.TrimSpace(setting.PathPrefix), "/")
+	return cfg
+}
+
+func ensureS3ObjectAtSchemaPath(
+	selector *storage.StorageSelector,
+	setting settingModel.S3Setting,
+	businessKey string,
+	sourcePathCandidates []string,
+) error {
+	if selector == nil {
+		return errors.New("nil object selector")
+	}
+	targetPath := buildObjectStoragePath(setting, businessKey)
+	if targetPath == "" {
+		return errors.New("empty target object path")
+	}
+	if reader, err := selector.GetByStoragePath(context.Background(), storage.StorageTypeObject, targetPath); err == nil {
+		_ = reader.Close()
+		return nil
+	}
+	for _, sourcePath := range sourcePathCandidates {
+		reader, err := selector.GetByStoragePath(context.Background(), storage.StorageTypeObject, sourcePath)
+		if err != nil {
+			continue
+		}
+		putErr := selector.Put(context.Background(), storage.StorageTypeObject, businessKey, reader)
+		_ = reader.Close()
+		if putErr == nil {
+			return nil
+		}
+	}
+	return fmt.Errorf("source object not found for key=%s candidates=%v", businessKey, sourcePathCandidates)
 }
 
 func s3SettingToMap(setting settingModel.S3Setting) map[string]any {
