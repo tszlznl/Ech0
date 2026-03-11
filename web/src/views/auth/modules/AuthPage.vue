@@ -39,6 +39,7 @@
               :icon="Passkey"
               v-if="passkeySupported"
               @click="handlePasskeyLogin"
+              :disabled="!!oauth2Status && !oauth2Status.passkey_ready"
               class="rounded-md w-9 h-9"
               title="使用 Passkey 登录"
             />
@@ -55,6 +56,7 @@
                       : Customoauth
               "
               @click="gotoOAuth2URL"
+              :disabled="!oauth2Status.oauth_ready"
               class="w-9 h-9 rounded-md"
               title="使用 OAuth2 登录"
             />
@@ -132,6 +134,14 @@ const baseURL =
 const oauthURL = ref<string>(`${baseURL}/oauth/github/login`)
 
 const gotoOAuth2URL = () => {
+  if (!oauth2Status.value?.oauth_ready) {
+    theToast.warning('OAuth2 配置未就绪，请先在 Panel 完成认证边界配置')
+    return
+  }
+  if (!oauthURL.value) {
+    theToast.error('OAuth2 登录地址不可用')
+    return
+  }
   window.location.href = oauthURL.value
 }
 
@@ -141,7 +151,7 @@ const getOAuth2Status = async () => {
     oauth2Status.value = res.data
     oauthURL.value = res.data.provider
       ? `${baseURL}/oauth/${res.data.provider}/login?redirect_uri=${window.location.origin}/auth`
-      : `${baseURL}/auth`
+      : ''
   }
 }
 
@@ -211,6 +221,10 @@ function credentialToJSON(cred: PublicKeyCredential) {
 }
 
 const handlePasskeyLogin = async () => {
+  if (oauth2Status.value && !oauth2Status.value.passkey_ready) {
+    theToast.warning('Passkey 配置未就绪，请先在 Panel 完成认证边界配置')
+    return
+  }
   if (!passkeySupported) return
   try {
     const begin = await fetchPasskeyLoginBegin()

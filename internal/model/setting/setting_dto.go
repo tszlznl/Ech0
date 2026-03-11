@@ -49,11 +49,18 @@ type OAuth2SettingDto struct {
 	IsOIDC  bool   `json:"is_oidc"`  // 是否启用 OIDC
 	Issuer  string `json:"issuer"`   // OIDC 颁发者
 	JWKSURL string `json:"jwks_url"` // OIDC JWKS URL
+
+	AuthRedirectAllowedReturnURLs []string `json:"auth_redirect_allowed_return_urls"`
+	WebAuthnRPID                  string   `json:"webauthn_rp_id"`
+	WebAuthnAllowedOrigins        []string `json:"webauthn_allowed_origins"`
+	CORSAllowedOrigins            []string `json:"cors_allowed_origins"`
 }
 
 type OAuth2Status struct {
-	Enabled  bool   `json:"enabled"`
-	Provider string `json:"provider"`
+	Enabled      bool   `json:"enabled"`
+	Provider     string `json:"provider"`
+	OAuthReady   bool   `json:"oauth_ready"`
+	PasskeyReady bool   `json:"passkey_ready"`
 }
 
 type WebhookDto struct {

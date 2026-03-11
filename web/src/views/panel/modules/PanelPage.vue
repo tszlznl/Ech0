@@ -52,7 +52,7 @@
       </div>
 
       <!-- 主内容区 -->
-      <div class="mx-auto flex my-4 w-full max-w-screen-lg rounded-md">
+      <div class="mx-auto flex my-4 w-full max-w-screen-lg rounded-md panel-main">
         <!-- 桌面端侧边栏 -->
         <div class="hidden md:flex flex-col gap-2 w-48 pr-8 shrink-0 panel-nav">
         <!-- Dashboard -->
@@ -173,7 +173,7 @@
         </div>
 
         <!-- 路由内容 -->
-        <div class="flex-1 min-w-0">
+        <div class="flex-1 min-w-0 panel-content">
           <router-view />
         </div>
       </div>
@@ -311,6 +311,17 @@ const handleLogout = () => {
   color: var(--color-text-secondary);
 }
 
+.panel-main {
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.panel-content {
+  max-width: 53rem;
+  width: 100%;
+  padding-left: 0.2rem;
+}
+
 .panel-version {
   color: var(--color-text-muted);
   font-family: var(--font-family-display);
@@ -446,6 +457,15 @@ const handleLogout = () => {
 
   .panel-welcome-date {
     white-space: normal;
+  }
+
+  .panel-main {
+    gap: 0;
+  }
+
+  .panel-content {
+    max-width: 100%;
+    padding-left: 0;
   }
 }
 </style>

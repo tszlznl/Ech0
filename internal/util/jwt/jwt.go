@@ -1,6 +1,7 @@
 package util
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rsa"
@@ -13,6 +14,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/lin-snow/ech0/internal/config"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
@@ -135,76 +137,91 @@ func ParseOAuthState(stateStr string) (*authModel.OAuthState, error) {
 		return nil, err
 	}
 
+	getStringClaim := func(key string) (string, error) {
+		v, ok := claims[key]
+		if !ok {
+			return "", fmt.Errorf("oauth state 缺少 %s", key)
+		}
+		s, ok := v.(string)
+		if !ok || s == "" {
+			return "", fmt.Errorf("oauth state %s 非法", key)
+		}
+		return s, nil
+	}
+
+	action, err := getStringClaim("action")
+	if err != nil {
+		return nil, err
+	}
+	nonce, err := getStringClaim("nonce")
+	if err != nil {
+		return nil, err
+	}
+	redirect, err := getStringClaim("redirect")
+	if err != nil {
+		return nil, err
+	}
+	provider, err := getStringClaim("provider")
+	if err != nil {
+		return nil, err
+	}
+
+	expRaw, ok := claims["exp"]
+	if !ok {
+		return nil, errors.New("oauth state 缺少 exp")
+	}
+	expFloat, ok := expRaw.(float64)
+	if !ok {
+		return nil, errors.New("oauth state exp 非法")
+	}
+
 	return &authModel.OAuthState{
-		Action:   claims["action"].(string),
+		Action:   action,
 		UserID:   fmt.Sprint(claims["user_id"]),
-		Nonce:    claims["nonce"].(string),
-		Redirect: claims["redirect"].(string),
-		Exp:      int64(claims["exp"].(float64)),
-		Provider: claims["provider"].(string),
+		Nonce:    nonce,
+		Redirect: redirect,
+		Exp:      int64(expFloat),
+		Provider: provider,
 	}, nil
 }
 
 // ParseAndVerifyIDToken 解析并验证 OIDC id_token
-func ParseAndVerifyIDToken(idToken, issuer, jwksURL, clientID string) (jwt.MapClaims, error) {
+func ParseAndVerifyIDToken(idToken, issuer, jwksURL, clientID, expectedNonce string) (jwt.MapClaims, error) {
 	if idToken == "" {
 		return nil, errors.New("id_token 为空")
+	}
+	if issuer == "" {
+		return nil, errors.New("OIDC issuer 为空")
 	}
 	if jwksURL == "" {
 		return nil, errors.New("JWKS URL 为空")
 	}
+	if clientID == "" {
+		return nil, errors.New("OIDC client_id 为空")
+	}
 
-	keySet, err := fetchJWKSPublicKeys(jwksURL)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	remoteKeySet := oidc.NewRemoteKeySet(ctx, jwksURL)
+	verifier := oidc.NewVerifier(issuer, remoteKeySet, &oidc.Config{ClientID: clientID})
+	idTokenObj, err := verifier.Verify(ctx, idToken)
 	if err != nil {
 		return nil, err
 	}
 
 	claims := jwt.MapClaims{}
-	parser := jwt.NewParser(jwt.WithLeeway(time.Minute))
-	validator := jwt.NewValidator(jwt.WithLeeway(time.Minute))
-
-	token, err := parser.ParseWithClaims(
-		idToken,
-		claims,
-		func(token *jwt.Token) (interface{}, error) {
-			kid, _ := token.Header["kid"].(string)
-			if kid != "" {
-				if key, ok := keySet[kid]; ok {
-					return key, nil
-				}
-				return nil, errors.New("未找到匹配 kid 的 JWKS 公钥")
-			}
-
-			if len(keySet) == 1 {
-				for _, key := range keySet {
-					return key, nil
-				}
-			}
-
-			return nil, errors.New("id_token 缺少 kid 且 JWKS 含多把公钥")
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-	if !token.Valid {
-		return nil, errors.New("id_token 验证失败")
-	}
-
-	if err := validator.Validate(claims); err != nil {
+	if err := idTokenObj.Claims(&claims); err != nil {
 		return nil, err
 	}
 
-	if issuer != "" {
-		if iss, ok := claims["iss"].(string); !ok || iss != issuer {
-			return nil, errors.New("id_token issuer 不匹配")
+	if expectedNonce != "" {
+		if idTokenObj.Nonce == "" {
+			return nil, errors.New("id_token 缺少 nonce 声明")
 		}
-	}
-
-	if clientID != "" {
-		if err := validateAudience(claims, clientID); err != nil {
-			return nil, err
+		if idTokenObj.Nonce != expectedNonce {
+			return nil, errors.New("id_token nonce 不匹配")
 		}
+		claims["nonce"] = idTokenObj.Nonce
 	}
 
 	subVal, ok := claims["sub"]

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/lin-snow/ech0/internal/config"
 	res "github.com/lin-snow/ech0/internal/handler/response"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
@@ -334,11 +335,17 @@ func (userHandler *UserHandler) GitHubCallback() gin.HandlerFunc {
 			}
 		}
 
-		redirectURL := userHandler.userService.HandleOAuthCallback(
+		redirectURL, err := userHandler.userService.HandleOAuthCallback(
 			string(commonModel.OAuth2GITHUB),
 			code,
 			state,
 		)
+		if err != nil || redirectURL == "" {
+			return res.Response{
+				Msg: commonModel.INVALID_PARAMS,
+				Err: err,
+			}
+		}
 		ctx.Redirect(302, redirectURL)
 		return res.Response{}
 	})
@@ -412,11 +419,17 @@ func (userHandler *UserHandler) GoogleCallback() gin.HandlerFunc {
 			}
 		}
 
-		redirectURL := userHandler.userService.HandleOAuthCallback(
+		redirectURL, err := userHandler.userService.HandleOAuthCallback(
 			string(commonModel.OAuth2GOOGLE),
 			code,
 			state,
 		)
+		if err != nil || redirectURL == "" {
+			return res.Response{
+				Msg: commonModel.INVALID_PARAMS,
+				Err: err,
+			}
+		}
 		ctx.Redirect(302, redirectURL)
 		return res.Response{}
 	})
@@ -457,11 +470,17 @@ func (userHandler *UserHandler) QQCallback() gin.HandlerFunc {
 			}
 		}
 
-		redirectURL := userHandler.userService.HandleOAuthCallback(
+		redirectURL, err := userHandler.userService.HandleOAuthCallback(
 			string(commonModel.OAuth2QQ),
 			code,
 			state,
 		)
+		if err != nil || redirectURL == "" {
+			return res.Response{
+				Msg: commonModel.INVALID_PARAMS,
+				Err: err,
+			}
+		}
 		ctx.Redirect(302, redirectURL)
 		return res.Response{}
 	})
@@ -535,11 +554,17 @@ func (userHandler *UserHandler) CustomOAuthCallback() gin.HandlerFunc {
 			}
 		}
 
-		redirectURL := userHandler.userService.HandleOAuthCallback(
+		redirectURL, err := userHandler.userService.HandleOAuthCallback(
 			string(commonModel.OAuth2CUSTOM),
 			code,
 			state,
 		)
+		if err != nil || redirectURL == "" {
+			return res.Response{
+				Msg: commonModel.INVALID_PARAMS,
+				Err: err,
+			}
+		}
 		ctx.Redirect(302, redirectURL)
 		return res.Response{}
 	})
@@ -604,6 +629,12 @@ func (userHandler *UserHandler) GetOAuthInfo() gin.HandlerFunc {
 }
 
 func getOriginAndRPID(ctx *gin.Context) (origin string, rpID string) {
+	if configured := strings.TrimSpace(config.Config().Setting.Serverurl); configured != "" {
+		if u, err := url.Parse(configured); err == nil && u.Scheme != "" && u.Hostname() != "" {
+			return u.Scheme + "://" + u.Host, u.Hostname()
+		}
+	}
+
 	origin = strings.TrimSpace(ctx.GetHeader("Origin"))
 	if origin == "" {
 		// fallback：尽量从 Referer 推导；再不行用 scheme+Host

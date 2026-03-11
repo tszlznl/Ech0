@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/joho/godotenv"
@@ -28,6 +29,7 @@ type AppConfig struct {
 	Setting   SettingConfig
 	Comment   CommentConfig
 	Security  SecurityConfig
+	Web       WebConfig
 }
 
 type StorageConfig struct {
@@ -74,13 +76,24 @@ type LogConfig struct {
 }
 
 type AuthConfig struct {
-	Jwt JWTConfig
+	Jwt      JWTConfig
+	Redirect RedirectConfig
+	WebAuthn WebAuthnConfig
 }
 
 type JWTConfig struct {
 	Expires  int    // JWT的过期时间，单位为秒
 	Issuer   string // JWT的发行者
 	Audience string // JWT的受众
+}
+
+type RedirectConfig struct {
+	AllowedReturnURLs []string
+}
+
+type WebAuthnConfig struct {
+	RPID    string
+	Origins []string
 }
 
 type UploadConfig struct {
@@ -112,6 +125,14 @@ type CommentConfig struct {
 
 type SecurityConfig struct {
 	JWTSecret []byte
+}
+
+type WebConfig struct {
+	CORS CORSConfig
+}
+
+type CORSConfig struct {
+	AllowedOrigins []string
 }
 
 type EventConfig struct {
@@ -180,6 +201,13 @@ func defaultConfig() *AppConfig {
 				Issuer:   "ech0",
 				Audience: "ech0",
 			},
+			Redirect: RedirectConfig{
+				AllowedReturnURLs: []string{},
+			},
+			WebAuthn: WebAuthnConfig{
+				RPID:    "",
+				Origins: []string{},
+			},
 		},
 		Storage: StorageConfig{
 			ObjectEnabled: false,
@@ -237,6 +265,11 @@ func defaultConfig() *AppConfig {
 			EnableComment: false,
 			Provider:      "twikoo",
 		},
+		Web: WebConfig{
+			CORS: CORSConfig{
+				AllowedOrigins: []string{},
+			},
+		},
 	}
 }
 
@@ -271,6 +304,9 @@ func applyEnvOverrides(cfg *AppConfig) {
 	setIntEnv("ECH0_JWT_EXPIRES", &cfg.Auth.Jwt.Expires)
 	setStringEnv("ECH0_JWT_ISSUER", &cfg.Auth.Jwt.Issuer)
 	setStringEnv("ECH0_JWT_AUDIENCE", &cfg.Auth.Jwt.Audience)
+	setStringSliceEnv("ECH0_AUTH_REDIRECT_ALLOWED_RETURN_URLS", &cfg.Auth.Redirect.AllowedReturnURLs)
+	setStringEnv("ECH0_AUTH_WEBAUTHN_RP_ID", &cfg.Auth.WebAuthn.RPID)
+	setStringSliceEnv("ECH0_AUTH_WEBAUTHN_ORIGINS", &cfg.Auth.WebAuthn.Origins)
 
 	// Upload
 	setIntEnv("ECH0_UPLOAD_IMAGE_MAX_SIZE", &cfg.Upload.ImageMaxSize)
@@ -326,6 +362,9 @@ func applyEnvOverrides(cfg *AppConfig) {
 	// Comment
 	setBoolEnv("ECH0_COMMENT_ENABLE", &cfg.Comment.EnableComment)
 	setStringEnv("ECH0_COMMENT_PROVIDER", &cfg.Comment.Provider)
+
+	// Web/CORS
+	setStringSliceEnv("ECH0_WEB_CORS_ALLOWED_ORIGINS", &cfg.Web.CORS.AllowedOrigins)
 }
 
 func setStringEnv(key string, target *string) {
@@ -353,6 +392,24 @@ func setIntEnv(key string, target *int) {
 	parsed, err := strconv.Atoi(value)
 	if err == nil {
 		*target = parsed
+	}
+}
+
+func setStringSliceEnv(key string, target *[]string) {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return
+	}
+	parts := strings.Split(value, ",")
+	result := make([]string, 0, len(parts))
+	for _, p := range parts {
+		item := strings.TrimSpace(p)
+		if item != "" {
+			result = append(result, item)
+		}
+	}
+	if len(result) > 0 {
+		*target = result
 	}
 }
 

@@ -18,6 +18,7 @@ import (
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
+	"github.com/lin-snow/ech0/internal/config"
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	publisher "github.com/lin-snow/ech0/internal/event/publisher"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
@@ -30,6 +31,7 @@ import (
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2"
 )
 
 // UserService 用户服务结构体，提供用户相关的业务逻辑处理
@@ -92,7 +94,7 @@ func (userService *UserService) Login(loginDto *authModel.LoginDto) (string, err
 	}
 
 	// 生成 Token
-	token, err := jwtUtil.GenerateToken(jwtUtil.CreateClaims(user))
+	token, err := userService.issueUserToken(user)
 	if err != nil {
 		return "", err
 	}
@@ -541,121 +543,38 @@ func (userService *UserService) HandleOAuthCallback(
 	provider string,
 	code string,
 	state string,
-) string {
+) (string, error) {
 	setting, err := userService.getOAuthSetting(provider)
 	if err != nil {
-		return ""
+		return "", err
 	}
 
 	oauthState, err := jwtUtil.ParseOAuthState(state)
 	if err != nil {
-		return ""
+		return "", err
 	}
 
 	if oauthState.Provider != provider {
-		return ""
+		return "", errors.New(commonModel.INVALID_PARAMS)
 	}
 
-	switch provider {
-	case string(commonModel.OAuth2GITHUB):
-		tokenResp, err := exchangeGithubCodeForToken(setting, code)
-		if err != nil {
-			logUtil.Error("exchange oauth code for token failed", zap.String("provider", provider), zap.Error(err))
-			return ""
-		}
-
-		githubUser, err := fetchGitHubUserInfo(setting, tokenResp.AccessToken)
-		if err != nil {
-			logUtil.Error("fetch oauth user info failed", zap.String("provider", provider), zap.Error(err))
-			return ""
-		}
-
-		return userService.resolveOAuthCallback(
-			oauthState,
-			provider,
-			fmt.Sprint(githubUser.ID),
-			"",
-			string(authModel.AuthTypeOAuth2),
-		)
-
-	case string(commonModel.OAuth2GOOGLE):
-		tokenResp, err := exchangeGoogleCodeForToken(setting, code)
-		if err != nil {
-			logUtil.Error("exchange oauth code for token failed", zap.String("provider", provider), zap.Error(err))
-			return ""
-		}
-
-		googleUser, err := fetchGoogleUserInfo(setting, tokenResp.AccessToken)
-		if err != nil {
-			logUtil.Error("fetch oauth user info failed", zap.String("provider", provider), zap.Error(err))
-			return ""
-		}
-
-		return userService.resolveOAuthCallback(
-			oauthState,
-			provider,
-			googleUser.Sub,
-			"",
-			string(authModel.AuthTypeOAuth2),
-		)
-
-	case string(commonModel.OAuth2QQ):
-		tokenResp, err := exchangeQQCodeForToken(setting, code)
-		if err != nil {
-			logUtil.Error("exchange oauth code for token failed", zap.String("provider", provider), zap.Error(err))
-			return ""
-		}
-
-		qqOpenIDResp, err := fetchQQUserInfo(tokenResp.AccessToken)
-		if err != nil {
-			logUtil.Error("fetch oauth user info failed", zap.String("provider", provider), zap.Error(err))
-			return ""
-		}
-
-		return userService.resolveOAuthCallback(
-			oauthState,
-			provider,
-			qqOpenIDResp.OpenID,
-			"",
-			string(authModel.AuthTypeOAuth2),
-		)
-
-	case string(commonModel.OAuth2CUSTOM):
-		// 使用 code 换取 access_token
-		accessToken, idToken, err := exchangeCustomCodeForToken(setting, code)
-		if err != nil {
-			logUtil.Error("exchange oauth code for token failed", zap.String("provider", provider), zap.Error(err))
-			return ""
-		}
-
-		var oauthId string
-		var authType string
-		var issuer string
-
-		if setting.IsOIDC {
-			oauthId, err = fetchCustomUserInfo(setting, accessToken, idToken)
-			if err != nil {
-				logUtil.Error("fetch oauth user info failed", zap.String("provider", provider), zap.Error(err))
-				return ""
-			}
-			issuer = setting.Issuer
-			authType = string(authModel.AuthTypeOIDC)
-		} else {
-			oauthId, err = fetchCustomUserInfo(setting, accessToken, "")
-			if err != nil {
-				logUtil.Error("fetch oauth user info failed", zap.String("provider", provider), zap.Error(err))
-				return ""
-			}
-			issuer = ""
-			authType = string(authModel.AuthTypeOAuth2)
-		}
-
-		// 绑定到本地用户并返回重定向 URL
-		return userService.resolveOAuthCallback(oauthState, provider, oauthId, issuer, authType)
-
-	default:
-		return ""
+	adapter, err := getOAuthProviderAdapter(provider)
+	if err != nil {
+		return "", err
 	}
+	identity, err := adapter.ResolveIdentity(setting, code, oauthState)
+	if err != nil {
+		logUtil.Error("resolve oauth identity failed", zap.String("provider", provider), zap.Error(err))
+		return "", err
+	}
+
+	return userService.resolveOAuthCallback(
+		oauthState,
+		provider,
+		identity.ExternalID,
+		identity.Issuer,
+		identity.AuthType,
+	)
 }
 
 func (userService *UserService) getOAuthSetting(provider string) (*settingModel.OAuth2Setting, error) {
@@ -696,27 +615,27 @@ func (userService *UserService) buildOAuthAuthorizeURL(
 
 	switch provider {
 	case string(commonModel.OAuth2GITHUB):
-		return fmt.Sprintf(
-			"%s?client_id=%s&redirect_uri=%s&scope=%s&state=%s",
-			setting.AuthURL,
-			url.QueryEscape(setting.ClientID),
-			url.QueryEscape(setting.RedirectURI),
-			url.QueryEscape(scope),
-			url.QueryEscape(state),
-		)
-	case string(commonModel.OAuth2GOOGLE):
-		params := url.Values{}
-		params.Set("client_id", setting.ClientID)
-		params.Set("redirect_uri", setting.RedirectURI)
-		params.Set("response_type", "code")
-		params.Set("state", state)
-		params.Set("access_type", "offline")
-		params.Set("prompt", "consent")
-		if scope != "" {
-			params.Set("scope", scope)
+		config := oauth2.Config{
+			ClientID:    setting.ClientID,
+			RedirectURL: setting.RedirectURI,
+			Scopes:      setting.Scopes,
+			Endpoint: oauth2.Endpoint{
+				AuthURL:  setting.AuthURL,
+				TokenURL: setting.TokenURL,
+			},
 		}
-
-		return fmt.Sprintf("%s?%s", setting.AuthURL, params.Encode())
+		return config.AuthCodeURL(state)
+	case string(commonModel.OAuth2GOOGLE):
+		config := oauth2.Config{
+			ClientID:    setting.ClientID,
+			RedirectURL: setting.RedirectURI,
+			Scopes:      setting.Scopes,
+			Endpoint: oauth2.Endpoint{
+				AuthURL:  setting.AuthURL,
+				TokenURL: setting.TokenURL,
+			},
+		}
+		return config.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
 
 	case string(commonModel.OAuth2QQ):
 		params := url.Values{}
@@ -732,19 +651,20 @@ func (userService *UserService) buildOAuthAuthorizeURL(
 
 	// 自定义 OAuth2 （仅 Custom 类型支持 OIDC)
 	case string(commonModel.OAuth2CUSTOM):
-		params := url.Values{}
-		params.Set("client_id", setting.ClientID)
-		params.Set("redirect_uri", setting.RedirectURI)
-		params.Set("response_type", "code")
-		params.Set("state", state)
-		if scope != "" {
-			params.Set("scope", scope)
+		config := oauth2.Config{
+			ClientID:    setting.ClientID,
+			RedirectURL: setting.RedirectURI,
+			Scopes:      setting.Scopes,
+			Endpoint: oauth2.Endpoint{
+				AuthURL:  setting.AuthURL,
+				TokenURL: setting.TokenURL,
+			},
 		}
+		opts := []oauth2.AuthCodeOption{}
 		if setting.IsOIDC && nonce != "" {
-			params.Set("nonce", nonce)
+			opts = append(opts, oauth2.SetAuthURLParam("nonce", nonce))
 		}
-
-		return fmt.Sprintf("%s?%s", setting.AuthURL, params.Encode())
+		return config.AuthCodeURL(state, opts...)
 	default:
 		return ""
 	}
@@ -768,11 +688,19 @@ func bindingPermissionError(provider string) error {
 func (userService *UserService) resolveOAuthCallback(
 	oauthState *authModel.OAuthState,
 	provider, externalID, issuer, authType string,
-) string {
+) (string, error) {
 	switch oauthState.Action {
 	case string(authModel.OAuth2ActionLogin):
 		if oauthState.UserID != "" {
-			return ""
+			logUtil.Warn(
+				"auth audit",
+				zap.String("provider", provider),
+				zap.String("action", "oauth_login"),
+				zap.String("user_id", ""),
+				zap.String("result", "fail"),
+				zap.String("reason", "unexpected_user_id_in_login_state"),
+			)
+			return "", errors.New(commonModel.INVALID_PARAMS)
 		}
 
 		var (
@@ -796,31 +724,63 @@ func (userService *UserService) resolveOAuthCallback(
 		}
 		if err != nil {
 			logUtil.Error("fetch user by oauth id failed", zap.String("provider", provider), zap.Error(err))
-			return ""
+			logUtil.Warn(
+				"auth audit",
+				zap.String("provider", provider),
+				zap.String("action", "oauth_login"),
+				zap.String("user_id", ""),
+				zap.String("result", "fail"),
+				zap.String("reason", "identity_not_bound_or_lookup_failed"),
+			)
+			return "", err
 		}
 
-		token, err := jwtUtil.GenerateToken(jwtUtil.CreateClaims(user))
+		token, err := userService.issueUserToken(user)
 		if err != nil {
 			logUtil.Error("generate oauth login token failed", zap.String("provider", provider), zap.Error(err))
-			return ""
+			logUtil.Warn(
+				"auth audit",
+				zap.String("provider", provider),
+				zap.String("action", "oauth_login"),
+				zap.String("user_id", user.ID),
+				zap.String("result", "fail"),
+				zap.String("reason", "issue_token_failed"),
+			)
+			return "", err
 		}
 
-		redirectURL, err := url.Parse(oauthState.Redirect)
+		redirectURL, err := userService.parseAndValidateClientRedirect(oauthState.Redirect)
 		if err != nil {
-			return ""
+			return "", err
 		}
 		query := redirectURL.Query()
 		query.Set("token", token)
 		redirectURL.RawQuery = query.Encode()
+		logUtil.Info(
+			"auth audit",
+			zap.String("provider", provider),
+			zap.String("action", "oauth_login"),
+			zap.String("user_id", user.ID),
+			zap.String("result", "success"),
+			zap.String("reason", ""),
+		)
 
-		return redirectURL.String()
+		return redirectURL.String(), nil
 
 	case string(authModel.OAuth2ActionBind):
 		if oauthState.UserID == "" {
-			return ""
+			logUtil.Warn(
+				"auth audit",
+				zap.String("provider", provider),
+				zap.String("action", "oauth_bind"),
+				zap.String("user_id", ""),
+				zap.String("result", "fail"),
+				zap.String("reason", "missing_user_id"),
+			)
+			return "", errors.New(commonModel.INVALID_PARAMS)
 		}
 
-		_ = userService.transactor.Run(context.Background(), func(ctx context.Context) error {
+		if err := userService.transactor.Run(context.Background(), func(ctx context.Context) error {
 			return userService.userRepository.BindOAuth(
 				ctx,
 				oauthState.UserID,
@@ -829,13 +789,81 @@ func (userService *UserService) resolveOAuthCallback(
 				issuer,
 				authType,
 			)
-		})
+		}); err != nil {
+			logUtil.Warn(
+				"auth audit",
+				zap.String("provider", provider),
+				zap.String("action", "oauth_bind"),
+				zap.String("user_id", oauthState.UserID),
+				zap.String("result", "fail"),
+				zap.String("reason", "bind_persist_failed"),
+			)
+			return "", err
+		}
 
-		return oauthState.Redirect + "?bind=success"
+		redirectURL, err := userService.parseAndValidateClientRedirect(oauthState.Redirect)
+		if err != nil {
+			return "", err
+		}
+		query := redirectURL.Query()
+		query.Set("bind", "success")
+		redirectURL.RawQuery = query.Encode()
+		logUtil.Info(
+			"auth audit",
+			zap.String("provider", provider),
+			zap.String("action", "oauth_bind"),
+			zap.String("user_id", oauthState.UserID),
+			zap.String("result", "success"),
+			zap.String("reason", ""),
+		)
+		return redirectURL.String(), nil
 
 	default:
-		return ""
+		return "", errors.New(commonModel.INVALID_PARAMS)
 	}
+}
+
+func (userService *UserService) parseAndValidateClientRedirect(redirect string) (*url.URL, error) {
+	redirectURL, err := url.Parse(redirect)
+	if err != nil || redirectURL == nil {
+		return nil, errors.New(commonModel.INVALID_PARAMS)
+	}
+	if !redirectURL.IsAbs() || redirectURL.Host == "" {
+		return nil, errors.New(commonModel.INVALID_PARAMS)
+	}
+	if redirectURL.Scheme != "http" && redirectURL.Scheme != "https" {
+		return nil, errors.New(commonModel.INVALID_PARAMS)
+	}
+
+	allowed := config.Config().Auth.Redirect.AllowedReturnURLs
+	if userService.settingService != nil {
+		systemCtx := viewer.WithContext(context.Background(), viewer.NewSystemViewer())
+		var oauthSetting settingModel.OAuth2Setting
+		if err := userService.settingService.GetOAuth2Setting(systemCtx, &oauthSetting, true); err == nil &&
+			len(oauthSetting.AuthRedirectAllowedReturnURLs) > 0 {
+			allowed = oauthSetting.AuthRedirectAllowedReturnURLs
+		}
+	}
+	if len(allowed) == 0 {
+		return nil, errors.New(commonModel.INVALID_PARAMS)
+	}
+	matched := false
+	for _, item := range allowed {
+		allowURL, parseErr := url.Parse(strings.TrimSpace(item))
+		if parseErr != nil || allowURL == nil || allowURL.Host == "" {
+			continue
+		}
+		if strings.EqualFold(redirectURL.Scheme, allowURL.Scheme) &&
+			strings.EqualFold(redirectURL.Host, allowURL.Host) {
+			matched = true
+			break
+		}
+	}
+	if !matched {
+		return nil, errors.New(commonModel.INVALID_PARAMS)
+	}
+
+	return redirectURL, nil
 }
 
 // 用 code 换取 access_token
@@ -843,34 +871,15 @@ func exchangeGithubCodeForToken(
 	setting *settingModel.OAuth2Setting,
 	code string,
 ) (*authModel.GitHubTokenResponse, error) {
-	data := map[string]string{
-		"client_id":     setting.ClientID,
-		"client_secret": setting.ClientSecret,
-		"code":          code,
-		"redirect_uri":  setting.RedirectURI,
-	}
-	jsonData, _ := json.Marshal(data)
-
-	req, _ := http.NewRequest("POST", setting.TokenURL, bytes.NewBuffer(jsonData))
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
+	token, err := exchangeOAuthCode(setting, code)
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
-
-	body, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode != 200 {
-		return nil, errors.New("GitHub token 响应错误: " + string(body))
-	}
-
-	var tokenResp authModel.GitHubTokenResponse
-	_ = json.Unmarshal(body, &tokenResp)
-	return &tokenResp, nil
+	return &authModel.GitHubTokenResponse{
+		AccessToken: token.AccessToken,
+		TokenType:   token.TokenType,
+		Scope:       fmt.Sprint(token.Extra("scope")),
+	}, nil
 }
 
 // 获取 GitHub 用户信息
@@ -903,34 +912,25 @@ func exchangeGoogleCodeForToken(
 	setting *settingModel.OAuth2Setting,
 	code string,
 ) (*authModel.GoogleTokenResponse, error) {
-	data := url.Values{}
-	data.Set("client_id", setting.ClientID)
-	data.Set("client_secret", setting.ClientSecret)
-	data.Set("code", code)
-	data.Set("redirect_uri", setting.RedirectURI)
-	data.Set("grant_type", "authorization_code")
-
-	req, _ := http.NewRequest("POST", setting.TokenURL, strings.NewReader(data.Encode()))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
+	token, err := exchangeOAuthCode(setting, code)
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = resp.Body.Close() }()
-
-	body, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New("Google token 响应错误: " + string(body))
+	expiresIn := int64(0)
+	if !token.Expiry.IsZero() {
+		expiresIn = int64(time.Until(token.Expiry).Seconds())
+		if expiresIn < 0 {
+			expiresIn = 0
+		}
 	}
-
-	var tokenResp authModel.GoogleTokenResponse
-	if err := json.Unmarshal(body, &tokenResp); err != nil {
-		return nil, err
-	}
-
-	return &tokenResp, nil
+	return &authModel.GoogleTokenResponse{
+		AccessToken:  token.AccessToken,
+		TokenType:    token.TokenType,
+		ExpiresIn:    expiresIn,
+		RefreshToken: token.RefreshToken,
+		Scope:        fmt.Sprint(token.Extra("scope")),
+		IDToken:      fmt.Sprint(token.Extra("id_token")),
+	}, nil
 }
 
 // 获取 Google 用户信息
@@ -1054,46 +1054,19 @@ func exchangeCustomCodeForToken(
 	setting *settingModel.OAuth2Setting,
 	code string,
 ) (accessToken string, idToken string, err error) {
-	data := url.Values{}
-	data.Set("client_id", setting.ClientID)
-	data.Set("client_secret", setting.ClientSecret)
-	data.Set("code", code)
-	data.Set("redirect_uri", setting.RedirectURI)
-	data.Set("grant_type", "authorization_code")
-
-	req, _ := http.NewRequest("POST", setting.TokenURL, strings.NewReader(data.Encode()))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
+	token, err := exchangeOAuthCode(setting, code)
 	if err != nil {
 		return "", "", err
 	}
-	defer func() { _ = resp.Body.Close() }()
 
-	body, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return "", "", errors.New("Custom token 响应错误: " + string(body))
-	}
-
-	var tokenResp map[string]any
-	if err := json.Unmarshal(body, &tokenResp); err != nil {
-		return "", "", err
-	}
-
-	// 获取 access_token
-	if at, ok := tokenResp["access_token"]; ok {
-		accessToken = fmt.Sprint(at)
-	}
+	accessToken = token.AccessToken
 	if accessToken == "" {
 		return "", "", errors.New("custom token 响应缺少 access_token")
 	}
 
 	// OIDC 情况获取 id_token
 	if setting.IsOIDC {
-		if it, ok := tokenResp["id_token"]; ok {
-			idToken = fmt.Sprint(it)
-		}
+		idToken = fmt.Sprint(token.Extra("id_token"))
 		if idToken == "" {
 			return "", "", errors.New("OIDC 响应缺少 id_token")
 		}
@@ -1102,10 +1075,31 @@ func exchangeCustomCodeForToken(
 	return accessToken, idToken, nil
 }
 
+func exchangeOAuthCode(setting *settingModel.OAuth2Setting, code string) (*oauth2.Token, error) {
+	config := oauth2.Config{
+		ClientID:     setting.ClientID,
+		ClientSecret: setting.ClientSecret,
+		RedirectURL:  setting.RedirectURI,
+		Scopes:       setting.Scopes,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  setting.AuthURL,
+			TokenURL: setting.TokenURL,
+		},
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	token, err := config.Exchange(ctx, code)
+	if err != nil {
+		return nil, err
+	}
+	return token, nil
+}
+
 // fetchCustomUserInfo 获取自定义 OAuth2 用户信息
 func fetchCustomUserInfo(
 	setting *settingModel.OAuth2Setting,
-	accessToken, idToken string,
+	accessToken, idToken, expectedNonce string,
 ) (string, error) {
 	// OIDC: 直接使用 id_token 中的 sub 字段
 	if setting.IsOIDC {
@@ -1119,6 +1113,7 @@ func fetchCustomUserInfo(
 			setting.Issuer,
 			setting.JWKSURL,
 			setting.ClientID,
+			expectedNonce,
 		)
 		if err != nil {
 			return "", err
@@ -1540,7 +1535,7 @@ func (userService *UserService) PasskeyLoginFinish(
 		credID := base64.RawURLEncoding.EncodeToString(credentialObj.ID)
 		pk, err2 := userService.userRepository.GetPasskeyByCredentialID(credID)
 		if err2 != nil {
-			return "", err
+			return "", err2
 		}
 		uid = pk.UserID
 	}
@@ -1564,7 +1559,7 @@ func (userService *UserService) PasskeyLoginFinish(
 		return "", err
 	}
 
-	token, err := jwtUtil.GenerateToken(jwtUtil.CreateClaims(u))
+	token, err := userService.issueUserToken(u)
 	if err != nil {
 		return "", err
 	}

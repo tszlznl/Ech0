@@ -110,6 +110,9 @@ func InitDatabase() {
 func MigrateDB() error {
 	models := []interface{}{
 		&userModel.User{},
+		&userModel.UserLocalAuth{},
+		&userModel.UserExternalIdentity{},
+		&userModel.WebAuthnCredential{},
 		&echoModel.Echo{},
 		&echoModel.EchoExtension{},
 		&fileModel.File{},

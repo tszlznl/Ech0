@@ -367,11 +367,18 @@ declare namespace App {
         is_oidc: boolean
         issuer: string
         jwks_url: string
+
+        auth_redirect_allowed_return_urls: string[]
+        webauthn_rp_id: string
+        webauthn_allowed_origins: string[]
+        cors_allowed_origins: string[]
       }
 
       type OAuth2Status = {
         enabled: boolean
         provider: string
+        oauth_ready: boolean
+        passkey_ready: boolean
       }
 
       type OAuthInfo = {
