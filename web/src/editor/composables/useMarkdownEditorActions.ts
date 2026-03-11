@@ -19,6 +19,18 @@ function replaceSelection(
   textArea.setRangeText(replacement, start, end, 'end')
 }
 
+function insertSnippet(
+  textArea: HTMLTextAreaElement,
+  snippet: string,
+  cursorOffset: number,
+  start: number,
+  end: number,
+) {
+  textArea.setRangeText(snippet, start, end, 'end')
+  const cursor = start + cursorOffset
+  textArea.setSelectionRange(cursor, cursor)
+}
+
 function lineStartIndex(value: string, index: number) {
   const lineBreakIndex = value.lastIndexOf('\n', Math.max(0, index - 1))
   return lineBreakIndex === -1 ? 0 : lineBreakIndex + 1
@@ -36,57 +48,89 @@ export function applyMarkdownAction(textArea: HTMLTextAreaElement, action: Markd
 
   switch (action) {
     case 'bold': {
-      const picked = ensureSelection(textArea, '粗体文本')
-      replaceSelection(textArea, `**${picked.selected}**`, picked.start, picked.end)
+      if (start !== end) {
+        const picked = ensureSelection(textArea, '')
+        replaceSelection(textArea, `**${picked.selected}**`, picked.start, picked.end)
+        break
+      }
+      insertSnippet(textArea, '****', 2, start, end)
       break
     }
     case 'italic': {
-      const picked = ensureSelection(textArea, '斜体文本')
-      replaceSelection(textArea, `*${picked.selected}*`, picked.start, picked.end)
+      if (start !== end) {
+        const picked = ensureSelection(textArea, '')
+        replaceSelection(textArea, `*${picked.selected}*`, picked.start, picked.end)
+        break
+      }
+      insertSnippet(textArea, '**', 1, start, end)
       break
     }
     case 'heading': {
       const from = lineStartIndex(value, start)
       const to = lineEndIndex(value, end)
       const line = value.slice(from, to)
-      const normalized = line.startsWith('## ') ? line : `## ${line || '标题'}`
+      const normalized = line.startsWith('## ') ? line : `## ${line}`
       replaceSelection(textArea, normalized, from, to)
+      if (!line) {
+        const cursor = from + 3
+        textArea.setSelectionRange(cursor, cursor)
+      }
       break
     }
     case 'quote': {
       const from = lineStartIndex(value, start)
       const to = lineEndIndex(value, end)
       const line = value.slice(from, to)
-      const normalized = line.startsWith('> ') ? line : `> ${line || '引用'}`
+      const normalized = line.startsWith('> ') ? line : `> ${line}`
       replaceSelection(textArea, normalized, from, to)
+      if (!line) {
+        const cursor = from + 2
+        textArea.setSelectionRange(cursor, cursor)
+      }
       break
     }
     case 'unorderedList': {
       const from = lineStartIndex(value, start)
       const to = lineEndIndex(value, end)
       const line = value.slice(from, to)
-      const normalized = line.startsWith('- ') ? line : `- ${line || '列表项'}`
+      const normalized = line.startsWith('- ') ? line : `- ${line}`
       replaceSelection(textArea, normalized, from, to)
+      if (!line) {
+        const cursor = from + 2
+        textArea.setSelectionRange(cursor, cursor)
+      }
       break
     }
     case 'orderedList': {
       const from = lineStartIndex(value, start)
       const to = lineEndIndex(value, end)
       const line = value.slice(from, to)
-      const normalized = /^\d+\.\s/.test(line) ? line : `1. ${line || '列表项'}`
+      const normalized = /^\d+\.\s/.test(line) ? line : `1. ${line}`
       replaceSelection(textArea, normalized, from, to)
+      if (!line) {
+        const cursor = from + 3
+        textArea.setSelectionRange(cursor, cursor)
+      }
       break
     }
     case 'codeBlock': {
       const picked = ensureSelection(textArea, '')
       const block = `\n\`\`\`\n${picked.selected}\n\`\`\`\n`
       replaceSelection(textArea, block, picked.start, picked.end)
+      if (!picked.selected) {
+        const cursor = picked.start + 5
+        textArea.setSelectionRange(cursor, cursor)
+      }
       break
     }
     case 'link': {
-      const picked = ensureSelection(textArea, '链接文本')
-      const markdownLink = `[${picked.selected}](https://)`
-      replaceSelection(textArea, markdownLink, picked.start, picked.end)
+      if (start !== end) {
+        const picked = ensureSelection(textArea, '')
+        const markdownLink = `[${picked.selected}]()`
+        replaceSelection(textArea, markdownLink, picked.start, picked.end)
+        break
+      }
+      insertSnippet(textArea, '[]()', 1, start, end)
       break
     }
   }
