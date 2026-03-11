@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	model "github.com/lin-snow/ech0/internal/model/echo"
+	fileModel "github.com/lin-snow/ech0/internal/model/file"
 )
 
 func TestNormalizeEchoExtension(t *testing.T) {
@@ -68,6 +69,59 @@ func TestNormalizeEchoExtension(t *testing.T) {
 			}
 			if !tc.wantNil && !tc.wantErr && got == nil {
 				t.Fatalf("expected non-nil extension")
+			}
+		})
+	}
+}
+
+func TestIsEchoEmpty(t *testing.T) {
+	tests := []struct {
+		name  string
+		echo  *model.Echo
+		empty bool
+	}{
+		{
+			name:  "nil echo is empty",
+			echo:  nil,
+			empty: true,
+		},
+		{
+			name: "whitespace content with no file and no extension is empty",
+			echo: &model.Echo{
+				Content: "   \n\t   ",
+			},
+			empty: true,
+		},
+		{
+			name: "whitespace content with files is not empty",
+			echo: &model.Echo{
+				Content: "   ",
+				EchoFiles: []fileModel.EchoFile{
+					{FileID: "test-file-id"},
+				},
+			},
+			empty: false,
+		},
+		{
+			name: "whitespace content with extension is not empty",
+			echo: &model.Echo{
+				Content: "  ",
+				Extension: &model.EchoExtension{
+					Type: model.Extension_MUSIC,
+					Payload: map[string]interface{}{
+						"url": "https://example.com/song",
+					},
+				},
+			},
+			empty: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := isEchoEmpty(tc.echo)
+			if got != tc.empty {
+				t.Fatalf("expected %v, got %v", tc.empty, got)
 			}
 		})
 	}

@@ -71,8 +71,7 @@ func (echoService *EchoService) PostEcho(ctx context.Context, newEcho *model.Ech
 
 	newEcho.Username = user.Username
 
-	if newEcho.Content == "" && len(newEcho.EchoFiles) == 0 &&
-		newEcho.Extension == nil {
+	if isEchoEmpty(newEcho) {
 		return errors.New(commonModel.ECHO_CAN_NOT_BE_EMPTY)
 	}
 
@@ -234,8 +233,7 @@ func (echoService *EchoService) UpdateEcho(ctx context.Context, echo *model.Echo
 		echo.EchoFiles[i].EchoID = echo.ID
 	}
 
-	if echo.Content == "" && len(echo.EchoFiles) == 0 &&
-		echo.Extension == nil {
+	if isEchoEmpty(echo) {
 		return errors.New(commonModel.ECHO_CAN_NOT_BE_EMPTY)
 	}
 
@@ -450,4 +448,12 @@ func getPayloadString(payload map[string]interface{}, key string) string {
 		return ""
 	}
 	return value
+}
+
+func isEchoEmpty(echo *model.Echo) bool {
+	if echo == nil {
+		return true
+	}
+	content := strings.TrimSpace(echo.Content)
+	return content == "" && len(echo.EchoFiles) == 0 && echo.Extension == nil
 }

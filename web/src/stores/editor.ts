@@ -360,7 +360,7 @@ export const useEditorStore = defineStore('editorStore', () => {
 
   function checkIsEmptyEcho(echo: App.Api.Ech0.EchoToAdd): boolean {
     return (
-      !echo.content &&
+      !echo.content?.trim() &&
       (!echo.echo_files || echo.echo_files.length === 0) &&
       !echo.extension
     )
