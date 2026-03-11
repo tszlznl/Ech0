@@ -62,7 +62,6 @@ declare namespace App {
         is_owner?: boolean
         avatar: string
       }
-
     }
 
     namespace File {

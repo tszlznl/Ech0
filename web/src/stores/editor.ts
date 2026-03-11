@@ -1,21 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { theToast } from '@/utils/toast'
-import {
-  fetchAddEcho,
-  fetchUpdateEcho,
-} from '@/service/api'
+import { fetchAddEcho, fetchUpdateEcho } from '@/service/api'
 import { Mode, ExtensionType, ImageLayout } from '@/enums/enums'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { useEchoStore, useInboxStore } from '@/stores'
 import { localStg } from '@/utils/storage'
 import { getImageSize } from '@/utils/image'
 import { getFileToAddUrl } from '@/utils/other'
-import {
-  createExternalFile,
-  globalFileRegistry,
-  useFileAttachments,
-} from '@/lib/file'
+import { createExternalFile, globalFileRegistry, useFileAttachments } from '@/lib/file'
 
 export const useEditorStore = defineStore('editorStore', () => {
   const echoStore = useEchoStore()
@@ -201,7 +194,7 @@ export const useEditorStore = defineStore('editorStore', () => {
       url: '',
       storage_type: fileToAdd.value.storage_type
         ? fileToAdd.value.storage_type
-          : FILE_STORAGE_TYPE.LOCAL, // 记忆存储方式
+        : FILE_STORAGE_TYPE.LOCAL, // 记忆存储方式
       key: '',
     }
   }
@@ -360,9 +353,7 @@ export const useEditorStore = defineStore('editorStore', () => {
 
   function checkIsEmptyEcho(echo: App.Api.Ech0.EchoToAdd): boolean {
     return (
-      !echo.content?.trim() &&
-      (!echo.echo_files || echo.echo_files.length === 0) &&
-      !echo.extension
+      !echo.content?.trim() && (!echo.echo_files || echo.echo_files.length === 0) && !echo.extension
     )
   }
 

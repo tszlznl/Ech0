@@ -11,19 +11,13 @@ function normalize(value: unknown): string {
   return String(value || '').toLowerCase()
 }
 
-function passCategory(
-  category: unknown,
-  categories?: App.Api.File.Category[],
-): boolean {
+function passCategory(category: unknown, categories?: App.Api.File.Category[]): boolean {
   if (!categories || categories.length === 0) return true
   const allowed = new Set(categories.map((item) => normalize(item)))
   return allowed.has(normalize(category))
 }
 
-function passStorageType(
-  storageType: unknown,
-  storageTypes?: App.Api.File.StorageType[],
-): boolean {
+function passStorageType(storageType: unknown, storageTypes?: App.Api.File.StorageType[]): boolean {
   if (!storageTypes || storageTypes.length === 0) return true
   const allowed = new Set(storageTypes.map((item) => normalize(item)))
   return allowed.has(normalize(storageType))

@@ -212,7 +212,10 @@ onBeforeUnmount(() => {})
 .echoimg {
   border-radius: 8px;
   box-shadow:
-    0 1px 2px rgba(0,0,0,.02),0 2px 4px rgba(0,0,0,.02),0 4px 8px rgba(0,0,0,.02),0 8px 16px rgba(0,0,0,.02);
+    0 1px 2px rgba(0, 0, 0, 0.02),
+    0 2px 4px rgba(0, 0, 0, 0.02),
+    0 4px 8px rgba(0, 0, 0, 0.02),
+    0 8px 16px rgba(0, 0, 0, 0.02);
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease;

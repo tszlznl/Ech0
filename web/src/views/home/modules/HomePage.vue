@@ -58,13 +58,7 @@ import TheConnects from '@/views/connect/modules/TheConnects.vue'
 import TheRecentCard from '@/components/advanced/TheRecentCard.vue'
 import TheHeatMap from '@/components/advanced/TheHeatMap.vue'
 import { onMounted, ref, onBeforeUnmount } from 'vue'
-import {
-  useUserStore,
-  useEchoStore,
-  useSettingStore,
-  useInboxStore,
-  useZenStore,
-} from '@/stores'
+import { useUserStore, useEchoStore, useSettingStore, useInboxStore, useZenStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { useBfCacheRestore } from '@/composables/useBfCacheRestore'
 

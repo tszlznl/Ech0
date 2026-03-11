@@ -19,8 +19,10 @@ export function createWalineAdapter(): CommentProviderAdapter {
   return {
     async mount(el, setting) {
       const providerSetting = getProviderSetting(setting, CommentProvider.WALINE)
-      const scriptURL = providerSetting.script_url || 'https://unpkg.com/@waline/client@v2/dist/waline.js'
-      const cssURL = providerSetting.css_url || 'https://unpkg.com/@waline/client@v2/dist/waline.css'
+      const scriptURL =
+        providerSetting.script_url || 'https://unpkg.com/@waline/client@v2/dist/waline.js'
+      const cssURL =
+        providerSetting.css_url || 'https://unpkg.com/@waline/client@v2/dist/waline.css'
 
       loadStyle(cssURL)
       await loadScript(scriptURL)

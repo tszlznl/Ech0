@@ -78,7 +78,7 @@ function showTooltip(row: number, col: number, event: MouseEvent) {
 
     // 计算 tooltip 的位置
     tooltip.value.x = rect.left
-    
+
     // 智能调整垂直位置，防止顶部被遮挡
     if (rect.top < 40) {
       tooltip.value.y = rect.bottom + 10 // 显示在下方

@@ -256,9 +256,9 @@ const handleUploadImage = async (event: Event) => {
       category: FILE_CATEGORY.IMAGE,
     })
     const task = await theToast.promise(waitForTask(taskId), {
-        loading: '服务器 Logo 上传中...',
-        success: '服务器 Logo 上传成功！',
-        error: '上传失败，请稍后再试',
+      loading: '服务器 Logo 上传中...',
+      success: '服务器 Logo 上传成功！',
+      error: '上传失败，请稍后再试',
     })
 
     if (task.result?.url) {

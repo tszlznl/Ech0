@@ -22,9 +22,7 @@ export function useFileQueue(scopeKey = 'global') {
 
   const tasks = computed<QueueTask[]>(() => queue.tasks.value)
   const doneItems = computed(() => queue.tasks.value.filter((task) => task.status === 'success'))
-  const failedItems = computed(() =>
-    queue.tasks.value.filter((task) => task.status === 'failed'),
-  )
+  const failedItems = computed(() => queue.tasks.value.filter((task) => task.status === 'failed'))
   const waitForTask = (taskId: string) =>
     new Promise<QueueTask>((resolve, reject) => {
       const timer = setInterval(() => {

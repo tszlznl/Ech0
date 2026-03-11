@@ -58,4 +58,3 @@ export const useInitStore = defineStore('initStore', () => {
     init,
   }
 })
-

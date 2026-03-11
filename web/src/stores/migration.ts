@@ -22,7 +22,9 @@ export const useMigrationStore = defineStore('migrationStore', () => {
   const loading = ref(false)
   const pollTimer = ref<number | null>(null)
 
-  const isRunning = computed(() => state.value.status === 'pending' || state.value.status === 'running')
+  const isRunning = computed(
+    () => state.value.status === 'pending' || state.value.status === 'running',
+  )
   const hasJob = computed(() => state.value.status !== 'idle')
   const canCleanup = computed(() => state.value.status !== 'idle' && !isRunning.value)
   const isSuccess = computed(() => state.value.status === 'success')

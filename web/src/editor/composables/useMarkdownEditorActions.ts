@@ -16,7 +16,16 @@ function replaceSelection(
   start: number,
   end: number,
 ) {
-  textArea.setRangeText(replacement, start, end, 'end')
+  textArea.focus()
+  textArea.setSelectionRange(start, end)
+  const changedByCommand =
+    typeof document !== 'undefined' &&
+    typeof document.execCommand === 'function' &&
+    document.execCommand('insertText', false, replacement)
+
+  if (!changedByCommand) {
+    textArea.setRangeText(replacement, start, end, 'end')
+  }
 }
 
 function insertSnippet(

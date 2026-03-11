@@ -436,7 +436,9 @@ onMounted(() => {
                 <span class="node-name">{{ sections[storageType].title }}</span>
               </div>
               <div class="tree-right">
-                <span class="count">{{ sections[storageType].expanded ? '已展开' : '已折叠' }}</span>
+                <span class="count">{{
+                  sections[storageType].expanded ? '已展开' : '已折叠'
+                }}</span>
               </div>
             </div>
 
@@ -455,13 +457,22 @@ onMounted(() => {
                 class="root-content"
                 :class="{ 'is-collapsed': !sections[storageType].expanded }"
               >
-                <div v-if="sections[storageType].loading" class="status-text nested-status">正在加载...</div>
-                <div v-else-if="sections[storageType].error" class="status-text status-error nested-status">
-                  {{ sections[storageType].error }}
-                  <button class="retry-btn" @click.stop="loadChildren(storageType, '')">重试</button>
+                <div v-if="sections[storageType].loading" class="status-text nested-status">
+                  正在加载...
                 </div>
                 <div
-                  v-else-if="sections[storageType].loaded && sections[storageType].nodes.length === 0"
+                  v-else-if="sections[storageType].error"
+                  class="status-text status-error nested-status"
+                >
+                  {{ sections[storageType].error }}
+                  <button class="retry-btn" @click.stop="loadChildren(storageType, '')">
+                    重试
+                  </button>
+                </div>
+                <div
+                  v-else-if="
+                    sections[storageType].loaded && sections[storageType].nodes.length === 0
+                  "
                   class="status-text nested-status"
                 >
                   暂无文件
@@ -478,14 +489,13 @@ onMounted(() => {
                       }"
                       @click="handleNodeClick(storageType, row.node)"
                     >
-                      <div class="tree-left" :style="{ paddingLeft: `${row.depth * 1.15 + 1.55}rem` }">
+                      <div
+                        class="tree-left"
+                        :style="{ paddingLeft: `${row.depth * 1.15 + 1.55}rem` }"
+                      >
                         <span class="node-icon">
                           {{
-                            row.node.node_type === 'folder'
-                              ? row.node.expanded
-                                ? '▾'
-                                : '▸'
-                              : '•'
+                            row.node.node_type === 'folder' ? (row.node.expanded ? '▾' : '▸') : '•'
                           }}
                         </span>
                         <span class="node-name" :title="row.node.name">{{ row.node.name }}</span>
@@ -520,11 +530,15 @@ onMounted(() => {
                               previewingId === actionKeyOf(storageType, row.node)
                             "
                             :title="
-                              previewingId === actionKeyOf(storageType, row.node) ? '预览中' : '预览'
+                              previewingId === actionKeyOf(storageType, row.node)
+                                ? '预览中'
+                                : '预览'
                             "
                             @click.stop="triggerPreview(storageType, row.node)"
                           >
-                            <span v-if="previewingId === actionKeyOf(storageType, row.node)">◌</span>
+                            <span v-if="previewingId === actionKeyOf(storageType, row.node)"
+                              >◌</span
+                            >
                             <ViewIcon v-else class="preview-icon" />
                           </button>
                           <button
@@ -534,11 +548,15 @@ onMounted(() => {
                               previewingId === actionKeyOf(storageType, row.node)
                             "
                             :title="
-                              downloadingId === actionKeyOf(storageType, row.node) ? '下载中' : '下载'
+                              downloadingId === actionKeyOf(storageType, row.node)
+                                ? '下载中'
+                                : '下载'
                             "
                             @click.stop="triggerDownload(storageType, row.node)"
                           >
-                            <span v-if="downloadingId === actionKeyOf(storageType, row.node)">◌</span>
+                            <span v-if="downloadingId === actionKeyOf(storageType, row.node)"
+                              >◌</span
+                            >
                             <DownloadIcon v-else class="download-icon" />
                           </button>
                         </div>
@@ -648,7 +666,9 @@ onMounted(() => {
   gap: 0.5rem;
   padding: 0.08rem 0;
   color: var(--color-text-secondary);
-  transition: background-color 0.18s ease, border-color 0.18s ease;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease;
 }
 
 .root-row {
@@ -733,7 +753,9 @@ onMounted(() => {
   opacity: 0;
   pointer-events: none;
   transform: translateX(4px);
-  transition: opacity 0.16s ease, transform 0.16s ease;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
 }
 
 .tree-row.is-file:hover .file-actions,

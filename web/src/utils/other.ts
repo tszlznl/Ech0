@@ -1,12 +1,14 @@
 import { MusicProvider } from '@/enums/enums'
 
 const ABSOLUTE_URL_REGEX = /^https?:\/\//i
-const joinBaseAndPath = (baseUrl: string, path: string) => `${baseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`
+const joinBaseAndPath = (baseUrl: string, path: string) =>
+  `${baseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`
 const defaultServiceBaseUrl = String(import.meta.env.VITE_SERVICE_BASE_URL || '').trim()
 
 const normalizeMediaPath = (path: string) => {
   if (path.startsWith('/api/') || path.startsWith('api/')) return path
-  if (path.startsWith('/files/') || path.startsWith('files/')) return `/api/${path.replace(/^\/+/, '')}`
+  if (path.startsWith('/files/') || path.startsWith('files/'))
+    return `/api/${path.replace(/^\/+/, '')}`
   return path
 }
 
@@ -21,8 +23,7 @@ const resolveFileUrlByPath = (rawUrl?: string, baseUrl?: string) => {
 const resolveFileUrl = (
   file: Pick<App.Api.Ech0.FileObject | App.Api.Ech0.FileToAdd, 'url'> & { image_url?: string },
   baseUrl?: string,
-) =>
-  resolveFileUrlByPath(file.url || file.image_url, baseUrl)
+) => resolveFileUrlByPath(file.url || file.image_url, baseUrl)
 
 // 获取图片链接
 export const getFileUrl = (file: App.Api.Ech0.FileObject) => resolveFileUrl(file)

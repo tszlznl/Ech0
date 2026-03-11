@@ -146,19 +146,31 @@ onMounted(() => {
     </section>
 
     <section class="stats-grid">
-      <PanelCard v-for="item in dashboardStats" :key="item.key" border-style="solid" class="stat-card">
+      <PanelCard
+        v-for="item in dashboardStats"
+        :key="item.key"
+        border-style="solid"
+        class="stat-card"
+      >
         <div class="stat-head">
           <p class="stat-serial">{{ item.serial }}</p>
           <span class="stat-head-line"></span>
         </div>
         <p class="stat-label">{{ item.label }}</p>
-        <p class="stat-value" :class="{ 'is-loading': loading && item.value === '--' }">{{ item.value }}</p>
+        <p class="stat-value" :class="{ 'is-loading': loading && item.value === '--' }">
+          {{ item.value }}
+        </p>
         <p class="stat-note">{{ item.note }}</p>
       </PanelCard>
     </section>
 
     <section class="status-grid">
-      <PanelCard v-for="item in dashboardStatus" :key="item.key" border-style="solid" class="status-card">
+      <PanelCard
+        v-for="item in dashboardStatus"
+        :key="item.key"
+        border-style="solid"
+        class="status-card"
+      >
         <div class="status-head">
           <p class="status-title">{{ item.title }}</p>
           <span class="status-head-line"></span>

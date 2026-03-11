@@ -23,54 +23,50 @@
       </div>
     </div>
 
-    <div
-      v-else
-      class="markdown-full-shell"
-      :class="{ 'no-preview': isPreviewMode }"
-    >
+    <div v-else class="markdown-full-shell" :class="{ 'no-preview': isPreviewMode }">
       <div class="markdown-editor is-full">
         <div class="toolbar">
-        <button
-          v-for="item in toolbarItems"
-          :key="item.action"
-          type="button"
-          class="toolbar-btn"
-          :title="item.label"
-          :aria-label="item.label"
-          @click="onToolbarClick(item.action)"
-        >
-          <span class="toolbar-icon" aria-hidden="true">{{ item.icon }}</span>
-        </button>
-        <div class="toolbar-actions">
           <button
+            v-for="item in toolbarItems"
+            :key="item.action"
             type="button"
             class="toolbar-btn"
-            :title="isPreviewMode ? '显示预览' : '隐藏预览'"
-            :aria-label="isPreviewMode ? '显示预览' : '隐藏预览'"
-            @click="isPreviewMode = !isPreviewMode"
+            :title="item.label"
+            :aria-label="item.label"
+            @click="onToolbarClick(item.action)"
           >
-            <Preview class="w-3.5 h-3.5" />
+            <span class="toolbar-icon" aria-hidden="true">{{ item.icon }}</span>
           </button>
-          <button
-            type="button"
-            class="toolbar-btn mode-toggle-btn-inline"
-            title="退出全屏"
-            aria-label="退出全屏"
-            @click="exitFullMode"
-          >
-            <Closefull class="w-3.5 h-3.5" />
-          </button>
-        </div>
+          <div class="toolbar-actions">
+            <button
+              type="button"
+              class="toolbar-btn"
+              :title="isPreviewMode ? '显示预览' : '隐藏预览'"
+              :aria-label="isPreviewMode ? '显示预览' : '隐藏预览'"
+              @click="isPreviewMode = !isPreviewMode"
+            >
+              <Preview class="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              class="toolbar-btn mode-toggle-btn-inline"
+              title="退出全屏"
+              aria-label="退出全屏"
+              @click="exitFullMode"
+            >
+              <Closefull class="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
 
         <div class="editor-content">
-        <textarea
-          ref="textareaRef"
-          class="editor-input"
-          :placeholder="placeholder"
-          :value="modelValue"
-          @input="onInput"
-        />
+          <textarea
+            ref="textareaRef"
+            class="editor-input"
+            :placeholder="placeholder"
+            :value="modelValue"
+            @input="onInput"
+          />
         </div>
       </div>
 
@@ -141,6 +137,20 @@ function exitFullMode() {
 }
 
 function onWindowKeydown(event: KeyboardEvent) {
+  const key = event.key.toLowerCase()
+  const isUndo = key === 'z' && event.ctrlKey && !event.metaKey && !event.altKey
+  const isRedo =
+    (key === 'y' && event.ctrlKey && !event.metaKey && !event.altKey) ||
+    (key === 'z' && event.ctrlKey && event.shiftKey && !event.metaKey && !event.altKey)
+
+  if ((isUndo || isRedo) && textareaRef.value) {
+    // Let native textarea undo/redo handle history to avoid deprecated execCommand.
+    if (document.activeElement !== textareaRef.value) {
+      return
+    }
+    return
+  }
+
   if (event.key === 'Escape' && isFullMode.value) {
     exitFullMode()
   }

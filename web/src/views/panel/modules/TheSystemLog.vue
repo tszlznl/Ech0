@@ -61,18 +61,20 @@ const logContainer = ref<HTMLElement>()
 const transport = ref<'ws' | 'sse'>('ws')
 let es: EventSource | null = null
 
-const { onMessage, open, close, status } = useOWebSocket<App.Api.Response<App.Api.SystemLog.Entry>>({
-  url: getWsUrl('/ws/system/logs'),
-  autoReconnect: {
-    retries: 5,
-    delay: 1000,
-    onFailed: () => {
-      startSSE()
+const { onMessage, open, close, status } = useOWebSocket<App.Api.Response<App.Api.SystemLog.Entry>>(
+  {
+    url: getWsUrl('/ws/system/logs'),
+    autoReconnect: {
+      retries: 5,
+      delay: 1000,
+      onFailed: () => {
+        startSSE()
+      },
     },
+    // 与后端协议对齐，避免 heartbeat ping/pong 不一致导致反复断连
+    heartbeat: false,
   },
-  // 与后端协议对齐，避免 heartbeat ping/pong 不一致导致反复断连
-  heartbeat: false,
-})
+)
 
 const connectionText = computed(() => {
   if (transport.value === 'sse') return 'sse-fallback'

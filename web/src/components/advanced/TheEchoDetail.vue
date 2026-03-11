@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="w-full max-w-sm bg-[var(--color-bg-surface)] h-auto p-5 shadow rounded-lg mx-auto"
-  >
+  <div class="w-full max-w-sm bg-[var(--color-bg-surface)] h-auto p-5 shadow rounded-lg mx-auto">
     <!-- 顶部Logo 和 用户名 -->
     <div class="flex flex-row items-center gap-2 mt-2 mb-4">
       <!-- <div class="text-xl">👾</div> -->
@@ -24,9 +22,7 @@
             <Verified class="text-sky-500 w-5 h-5" />
           </div>
         </div>
-        <span class="echo-username text-[var(--color-text-secondary)]"
-          >@ {{ echo.username }}
-        </span>
+        <span class="echo-username text-[var(--color-text-secondary)]">@ {{ echo.username }} </span>
       </div>
     </div>
 
@@ -252,5 +248,4 @@ const logo = computed(() => resolveAvatarUrl(SystemSetting.value?.server_logo))
 .echo-username {
   font-family: var(--font-family-display);
 }
-
 </style>

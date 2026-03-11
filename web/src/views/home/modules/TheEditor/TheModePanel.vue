@@ -77,7 +77,6 @@ const handleInbox = () => {
   editorStore.currentMode = Mode.INBOX
   theToast.info('已切换到 收件箱 模式')
 }
-
 </script>
 
 <style scoped></style>

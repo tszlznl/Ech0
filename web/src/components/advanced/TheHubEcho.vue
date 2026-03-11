@@ -22,7 +22,9 @@
             <Verified class="text-sky-500 w-5 h-5" />
           </div>
         </div>
-        <span class="hub-echo-username text-[var(--color-text-secondary)]">@ {{ echo.username }} </span>
+        <span class="hub-echo-username text-[var(--color-text-secondary)]"
+          >@ {{ echo.username }}
+        </span>
       </div>
     </div>
 
@@ -250,5 +252,4 @@ const handlePrintEcho = () => {
 .hub-echo-username {
   font-family: var(--font-family-display);
 }
-
 </style>

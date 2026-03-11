@@ -18,7 +18,14 @@
       v-else
       :src="`https://www.youtube.com/embed/${props.videoId}`"
       frameborder="0"
-      allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allow="
+        accelerometer;
+        clipboard-write;
+        encrypted-media;
+        gyroscope;
+        picture-in-picture;
+        web-share;
+      "
       allowfullscreen
       loading="lazy"
       class="w-full aspect-video rounded"

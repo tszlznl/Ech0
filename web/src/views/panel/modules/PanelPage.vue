@@ -1,11 +1,11 @@
 <template>
   <div class="panel-page-wrap mt-4">
-    <div
-      class="panel-shell border p-4 mx-auto flex flex-col max-w-screen-lg w-full mb-12"
-    >
+    <div class="panel-shell border p-4 mx-auto flex flex-col max-w-screen-lg w-full mb-12">
       <section class="panel-welcome mb-5 md:mb-2">
         <div class="panel-welcome-main">
-          <h1 class="panel-welcome-username">{{ username }}，欢迎回来 <span class="wave-hand">👋</span></h1>
+          <h1 class="panel-welcome-username">
+            {{ username }}，欢迎回来 <span class="wave-hand">👋</span>
+          </h1>
           <div class="panel-welcome-meta">
             <p class="panel-welcome-date">{{ dateText }}</p>
             <p class="panel-welcome-greeting">{{ greeting }}</p>
@@ -13,7 +13,12 @@
           <p class="panel-welcome-tip">今天也来记录一点新的灵感</p>
         </div>
         <div class="panel-welcome-actions">
-          <BaseButton :icon="BackHand" @click="router.push('/')" class="panel-home-btn" title="返回首页" />
+          <BaseButton
+            :icon="BackHand"
+            @click="router.push('/')"
+            class="panel-home-btn"
+            title="返回首页"
+          />
         </div>
       </section>
 
@@ -55,121 +60,119 @@
       <div class="mx-auto flex my-4 w-full max-w-screen-lg rounded-md panel-main">
         <!-- 桌面端侧边栏 -->
         <div class="hidden md:flex flex-col gap-2 w-48 pr-8 shrink-0 panel-nav">
-        <!-- Dashboard -->
-        <BaseButton
-          :icon="Dashboard"
-          @click="router.push('/panel/dashboard')"
-          :class="getButtonClasses('panel-dashboard')"
-          title="Dashboard"
-        >
-          Dashboard
-        </BaseButton>
+          <!-- Dashboard -->
+          <BaseButton
+            :icon="Dashboard"
+            @click="router.push('/panel/dashboard')"
+            :class="getButtonClasses('panel-dashboard')"
+            title="Dashboard"
+          >
+            Dashboard
+          </BaseButton>
 
-        <!-- 偏好设置 -->
-        <BaseButton
-          :icon="Setting"
-          @click="router.push('/panel/setting')"
-          :class="getButtonClasses('panel-setting')"
-          title="偏好设置"
-        >
-          偏好设置
-        </BaseButton>
+          <!-- 偏好设置 -->
+          <BaseButton
+            :icon="Setting"
+            @click="router.push('/panel/setting')"
+            :class="getButtonClasses('panel-setting')"
+            title="偏好设置"
+          >
+            偏好设置
+          </BaseButton>
 
-        <!-- 用户中心 -->
-        <BaseButton
-          :icon="User"
-          @click="router.push('/panel/user')"
-          :class="getButtonClasses('panel-user')"
-          title="用户中心"
-        >
-          用户中心
-        </BaseButton>
+          <!-- 用户中心 -->
+          <BaseButton
+            :icon="User"
+            @click="router.push('/panel/user')"
+            :class="getButtonClasses('panel-user')"
+            title="用户中心"
+          >
+            用户中心
+          </BaseButton>
 
-        <!-- 存储管理 -->
-        <BaseButton
-          :icon="Storage"
-          @click="router.push('/panel/storage')"
-          :class="getButtonClasses('panel-storage')"
-          title="存储管理"
-        >
-          存储管理
-        </BaseButton>
+          <!-- 存储管理 -->
+          <BaseButton
+            :icon="Storage"
+            @click="router.push('/panel/storage')"
+            :class="getButtonClasses('panel-storage')"
+            title="存储管理"
+          >
+            存储管理
+          </BaseButton>
 
-        <!-- 数据管理 -->
-        <BaseButton
-          :icon="Data"
-          @click="router.push('/panel/data-management')"
-          :class="getButtonClasses('panel-data-management')"
-          title="数据管理"
-        >
-          数据管理
-        </BaseButton>
+          <!-- 数据管理 -->
+          <BaseButton
+            :icon="Data"
+            @click="router.push('/panel/data-management')"
+            :class="getButtonClasses('panel-data-management')"
+            title="数据管理"
+          >
+            数据管理
+          </BaseButton>
 
-        <!-- 单点登录 -->
-        <BaseButton
-          :icon="Sso"
-          @click="router.push('/panel/sso')"
-          :class="getButtonClasses('panel-sso')"
-          title="单点登录"
-        >
-          单点登录
-        </BaseButton>
+          <!-- 单点登录 -->
+          <BaseButton
+            :icon="Sso"
+            @click="router.push('/panel/sso')"
+            :class="getButtonClasses('panel-sso')"
+            title="单点登录"
+          >
+            单点登录
+          </BaseButton>
 
-        <!-- 功能扩展 -->
-        <BaseButton
-          :icon="Extension"
-          @click="router.push('/panel/extension')"
-          :class="getButtonClasses('panel-extension')"
-          title="功能扩展"
-        >
-          功能扩展
-        </BaseButton>
+          <!-- 功能扩展 -->
+          <BaseButton
+            :icon="Extension"
+            @click="router.push('/panel/extension')"
+            :class="getButtonClasses('panel-extension')"
+            title="功能扩展"
+          >
+            功能扩展
+          </BaseButton>
 
-        <!-- 外部集成 -->
-        <BaseButton
-          :icon="Others"
-          @click="router.push('/panel/advance')"
-          :class="getButtonClasses('panel-advance')"
-          title="外部集成"
-        >
-          外部集成
-        </BaseButton>
+          <!-- 外部集成 -->
+          <BaseButton
+            :icon="Others"
+            @click="router.push('/panel/advance')"
+            :class="getButtonClasses('panel-advance')"
+            title="外部集成"
+          >
+            外部集成
+          </BaseButton>
 
-        <!-- 系统日志 -->
-        <BaseButton
-          :icon="Log"
-          @click="router.push('/panel/system-log')"
-          :class="getButtonClasses('panel-system-log')"
-          title="系统日志"
-        >
-          系统日志
-        </BaseButton>
+          <!-- 系统日志 -->
+          <BaseButton
+            :icon="Log"
+            @click="router.push('/panel/system-log')"
+            :class="getButtonClasses('panel-system-log')"
+            title="系统日志"
+          >
+            系统日志
+          </BaseButton>
 
-        <div class="h-px bg-[var(--color-border-subtle)] mx-2" />
+          <div class="h-px bg-[var(--color-border-subtle)] mx-2" />
 
-        <!-- 退出登录 -->
-        <BaseButton
-          :icon="Logout"
-          @click="handleLogout"
-          :class="getBottomButtonClasses()"
-          title="退出登录"
-        >
-          登出
-        </BaseButton>
+          <!-- 退出登录 -->
+          <BaseButton
+            :icon="Logout"
+            @click="handleLogout"
+            :class="getBottomButtonClasses()"
+            title="退出登录"
+          >
+            登出
+          </BaseButton>
 
-        <!-- 登录 / 注册 -->
-        <BaseButton
-          :icon="Auth"
-          @click="router.push('/auth')"
-          :class="getBottomButtonClasses()"
-          title="登录 / 注册"
-        >
-          登录
-        </BaseButton>
+          <!-- 登录 / 注册 -->
+          <BaseButton
+            :icon="Auth"
+            @click="router.push('/auth')"
+            :class="getBottomButtonClasses()"
+            title="登录 / 注册"
+          >
+            登录
+          </BaseButton>
 
-        <div class="panel-version my-2 ml-3">
-          Version: {{ settingStore.hello?.version }}
-        </div>
+          <div class="panel-version my-2 ml-3">Version: {{ settingStore.hello?.version }}</div>
         </div>
 
         <!-- 路由内容 -->
@@ -398,7 +401,9 @@ const handleLogout = () => {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .panel-home-btn:hover {

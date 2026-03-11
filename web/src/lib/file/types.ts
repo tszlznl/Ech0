@@ -70,13 +70,7 @@ export type FileValidationRule = {
   maxCount?: number
 }
 
-export type QueueTaskStatus =
-  | 'queued'
-  | 'running'
-  | 'retrying'
-  | 'success'
-  | 'failed'
-  | 'cancelled'
+export type QueueTaskStatus = 'queued' | 'running' | 'retrying' | 'success' | 'failed' | 'cancelled'
 
 export type QueueTask = {
   id: string

@@ -3,23 +3,21 @@ import { filterFiles, type FileSelectorOptions } from '@/lib/file'
 
 type EchoLike = {
   id?: string
-  echo_files?:
-    | Array<{
-        echo_id?: string
-        file_id?: string
-        file?: {
-          id?: string
-          key?: string
-          url?: string
-          storage_type?: string
-          category?: string
-          content_type?: string
-          size?: number
-          width?: number
-          height?: number
-        }
-      }>
-    | null
+  echo_files?: Array<{
+    echo_id?: string
+    file_id?: string
+    file?: {
+      id?: string
+      key?: string
+      url?: string
+      storage_type?: string
+      category?: string
+      content_type?: string
+      size?: number
+      width?: number
+      height?: number
+    }
+  }> | null
 }
 
 export function getEchoFiles(echo?: EchoLike | null): App.Api.Ech0.FileObject[] {
@@ -60,4 +58,3 @@ function normalizeStorageType(raw: unknown): App.Api.File.StorageType {
   if (value === FILE_STORAGE_TYPE.EXTERNAL) return FILE_STORAGE_TYPE.EXTERNAL
   return FILE_STORAGE_TYPE.LOCAL
 }
-

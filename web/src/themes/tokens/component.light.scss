@@ -54,8 +54,7 @@
   --uppy-text-color: var(--color-text-primary);
   --uppy-muted-text-color: var(--color-text-muted);
   --uppy-shadow-inset:
-    inset 0 0 0 1px oklch(80% 0.012 62 / 0.35),
-    inset 0 1px 3px oklch(28% 0.01 60 / 0.08);
+    inset 0 0 0 1px oklch(80% 0.012 62 / 0.35), inset 0 1px 3px oklch(28% 0.01 60 / 0.08);
 
   --zone-bg-color: oklch(89.3% 0.028 238.3);
   --zone-grid-color: oklch(100% 0 0 / 0.38);
@@ -97,8 +96,7 @@
   --md-editor-preview-card-dot: oklch(66.2% 0.073 173.7);
   --md-editor-preview-card-dot-ring: oklch(98.9% 0.004 92 / 0.88);
   --md-editor-preview-card-shadow:
-    0 18px 34px oklch(24% 0.01 62 / 0.12),
-    0 2px 3px oklch(24% 0.007 62 / 0.08);
+    0 18px 34px oklch(24% 0.01 62 / 0.12), 0 2px 3px oklch(24% 0.007 62 / 0.08);
   --md-editor-preview-card-tilt-short: -0.8deg;
   --md-editor-preview-card-tilt-long: 0.6deg;
   --md-editor-preview-card-texture-fiber: oklch(75% 0.006 80 / 0.08);

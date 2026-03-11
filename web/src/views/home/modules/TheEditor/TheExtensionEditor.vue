@@ -4,7 +4,9 @@
     <div v-if="editorStore.currentExtensionType === ExtensionType.MUSIC">
       <h2 class="text-[var(--color-text-secondary)] font-bold mb-1">音乐分享</h2>
       <p class="text-[var(--color-text-muted)] text-sm">支持网易云/QQ音乐/Apple Music</p>
-      <p class="text-[var(--color-text-muted)] text-sm mb-1">注意：不支持VIP歌曲，建议使用自建API</p>
+      <p class="text-[var(--color-text-muted)] text-sm mb-1">
+        注意：不支持VIP歌曲，建议使用自建API
+      </p>
       <BaseInput
         v-model="editorStore.extensionToAdd.extension"
         class="rounded-lg h-auto w-full"

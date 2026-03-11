@@ -45,7 +45,9 @@
       <div class="migration-job" v-if="migrationStore.hasJob">
         <p class="migration-job-status">来源: {{ migrationStore.state.source_type || '-' }}</p>
         <p class="migration-job-status">状态: {{ migrationStore.state.status }}</p>
-        <p class="migration-job-status">失败信息: {{ migrationStore.state.error_message || '-' }}</p>
+        <p class="migration-job-status">
+          失败信息: {{ migrationStore.state.error_message || '-' }}
+        </p>
         <p class="migration-job-status">开始时间: {{ migrationStore.state.started_at || '-' }}</p>
         <p class="migration-job-status">结束时间: {{ migrationStore.state.finished_at || '-' }}</p>
       </div>

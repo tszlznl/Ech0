@@ -32,9 +32,7 @@
           @click="handleLoadMore"
           class="rounded-full bg-[var(--btn-bg-color)] !active:bg-[var(--btn-hover-bg-color)] mr-2"
         >
-          <span class="text-[var(--btn-text-color)] text-md text-center px-2 py-1"
-            >继续装填</span
-          >
+          <span class="text-[var(--btn-text-color)] text-md text-center px-2 py-1">继续装填</span>
         </BaseButton>
         <TheBackTop class="w-8 h-8 p-1" :target="scrollTarget" />
       </div>
@@ -56,12 +54,7 @@
     </Transition>
     <!-- 自定义页脚 -->
     <div v-if="footerContent" class="text-center">
-      <a
-        v-if="footerLink"
-        :href="footerLink"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a v-if="footerLink" :href="footerLink" target="_blank" rel="noopener noreferrer">
         <span class="text-[var(--color-text-muted)] text-sm">
           {{ footerContent }}
         </span>
@@ -88,7 +81,9 @@ defineProps<{
 const echoStore = useEchoStore()
 const settingStore = useSettingStore()
 const { SystemSetting } = storeToRefs(settingStore)
-const footerContent = computed(() => SystemSetting.value.footer_content || SystemSetting.value.ICP_number)
+const footerContent = computed(
+  () => SystemSetting.value.footer_content || SystemSetting.value.ICP_number,
+)
 const footerLink = computed(() => SystemSetting.value.footer_link)
 
 // 列表入场动画钩子 - 交错入场效果

@@ -125,4 +125,3 @@ export function fetchDownloadFileByPath(query: App.Api.File.FilePathStreamQuery)
     method: 'GET',
   })
 }
-

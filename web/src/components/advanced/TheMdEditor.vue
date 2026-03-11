@@ -15,5 +15,4 @@ const content = computed<string>({
     editorStore.echoToAdd.content = val
   },
 })
-
 </script>

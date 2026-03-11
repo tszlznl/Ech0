@@ -213,8 +213,16 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 22% 18%, var(--md-editor-preview-card-texture-grain) 0 0.45px, transparent 0.65px),
-    radial-gradient(circle at 74% 82%, var(--md-editor-preview-card-texture-grain) 0 0.5px, transparent 0.7px),
+    radial-gradient(
+      circle at 22% 18%,
+      var(--md-editor-preview-card-texture-grain) 0 0.45px,
+      transparent 0.65px
+    ),
+    radial-gradient(
+      circle at 74% 82%,
+      var(--md-editor-preview-card-texture-grain) 0 0.5px,
+      transparent 0.7px
+    ),
     repeating-linear-gradient(
       -10deg,
       transparent 0 8px,

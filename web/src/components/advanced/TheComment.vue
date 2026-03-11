@@ -98,7 +98,11 @@ watch(
 )
 
 watch(
-  () => [loading.value, CommentSetting.value.provider, JSON.stringify(CommentSetting.value.providers)],
+  () => [
+    loading.value,
+    CommentSetting.value.provider,
+    JSON.stringify(CommentSetting.value.providers),
+  ],
   () => {
     scheduleRender()
   },

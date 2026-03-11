@@ -14,4 +14,3 @@ export function fetchInitOwner(payload: App.Api.Auth.SignupParams) {
     data: payload,
   })
 }
-

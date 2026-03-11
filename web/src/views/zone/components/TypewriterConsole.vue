@@ -22,18 +22,12 @@
         class="absolute top-2 left-10 right-10 h-1 bg-gradient-to-r from-transparent via-white/60 to-transparent rounded-full blur-[1px]"
       ></div>
 
-      <div
-        class="console-panel relative rounded-3xl p-4 border"
-      >
+      <div class="console-panel relative rounded-3xl p-4 border">
         <div class="flex justify-between items-end mb-3 px-2">
           <div class="flex flex-col">
             <div class="flex items-center gap-1">
-              <div
-                class="console-status-dot w-1.5 h-1.5 rounded-full animate-pulse"
-              ></div>
-              <span
-                class="console-label text-[10px] font-black tracking-widest uppercase"
-              >
+              <div class="console-status-dot w-1.5 h-1.5 rounded-full animate-pulse"></div>
+              <span class="console-label text-[10px] font-black tracking-widest uppercase">
                 Auto-Feed
               </span>
             </div>
@@ -46,17 +40,13 @@
           </div>
         </div>
 
-        <div
-          class="console-screen rounded-xl p-1 pb-0 border-b-2 relative overflow-hidden"
-        >
+        <div class="console-screen rounded-xl p-1 pb-0 border-b-2 relative overflow-hidden">
           <div
             class="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-10 bg-[length:100%_2px,3px_100%] pointer-events-none"
           ></div>
 
           <div class="relative z-20 p-2">
-            <div
-              class="console-screen-meta flex justify-between text-xs mb-1 border-b pb-1"
-            >
+            <div class="console-screen-meta flex justify-between text-xs mb-1 border-b pb-1">
               <span>COMPOSE_MODE</span>
               <span>{{ modelLength }} chars</span>
             </div>
@@ -137,9 +127,7 @@
             <div
               class="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/20 to-transparent"
             ></div>
-            <span class="console-print-label text-2xl font-bold drop-shadow-sm mt-1"
-              >PRINT</span
-            >
+            <span class="console-print-label text-2xl font-bold drop-shadow-sm mt-1">PRINT</span>
           </button>
         </div>
       </div>
@@ -248,7 +236,11 @@ defineExpose({
 
 <style scoped>
 .console-shell {
-  background: linear-gradient(to bottom, var(--zone-console-shell-from), var(--zone-console-shell-to));
+  background: linear-gradient(
+    to bottom,
+    var(--zone-console-shell-from),
+    var(--zone-console-shell-to)
+  );
   border-color: color-mix(in oklab, var(--zone-grid-color) 75%, white);
 }
 
@@ -318,13 +310,17 @@ defineExpose({
 .console-round-btn {
   background: var(--zone-console-button);
   border-color: color-mix(in oklab, var(--zone-console-button) 70%, white);
-  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.88), 0 5px 10px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 4px 0 rgba(0, 0, 0, 0.88),
+    0 5px 10px rgba(0, 0, 0, 0.5);
 }
 
 .console-print-btn {
   background: var(--zone-console-print-button);
   border-color: color-mix(in oklab, var(--zone-console-print-button) 70%, white);
-  box-shadow: 0 5px 0 rgba(80, 34, 10, 0.8), 0 8px 15px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 5px 0 rgba(80, 34, 10, 0.8),
+    0 8px 15px rgba(0, 0, 0, 0.4);
 }
 
 .console-print-label {

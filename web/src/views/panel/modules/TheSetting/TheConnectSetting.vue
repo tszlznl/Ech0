@@ -40,7 +40,10 @@
           <span class="text-[var(--color-text-muted)]">暂无连接...</span>
         </div>
 
-        <div v-else class="mt-2 overflow-x-auto border border-[var(--color-border-subtle)] rounded-lg">
+        <div
+          v-else
+          class="mt-2 overflow-x-auto border border-[var(--color-border-subtle)] rounded-lg"
+        >
           <table class="min-w-full divide-y divide-[var(--color-border-subtle)]">
             <thead>
               <tr class="bg-[var(--color-bg-surface)] opacity-70">

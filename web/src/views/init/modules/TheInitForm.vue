@@ -4,7 +4,9 @@
   >
     <div class="mb-5">
       <h2 class="text-lg font-bold text-[var(--color-text-muted)]">Owner 账号</h2>
-      <p class="text-sm text-[var(--color-text-secondary)] mt-1">请输入一个用于首次登录后台的管理员账号。</p>
+      <p class="text-sm text-[var(--color-text-secondary)] mt-1">
+        请输入一个用于首次登录后台的管理员账号。
+      </p>
     </div>
 
     <form class="space-y-4" @submit.prevent="emit('submit')">

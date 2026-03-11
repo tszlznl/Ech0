@@ -1,6 +1,8 @@
 <template>
   <div>
-    <h2 class="text-[var(--color-text-secondary)] font-bold my-2">插入图片（支持直链、本地、S3存储）</h2>
+    <h2 class="text-[var(--color-text-secondary)] font-bold my-2">
+      插入图片（支持直链、本地、S3存储）
+    </h2>
     <div v-if="!fileUploading" class="flex items-center gap-2 mb-3">
       <div class="flex items-center gap-2">
         <span class="text-[var(--color-text-secondary)]">选择添加方式：</span>
@@ -41,7 +43,10 @@
     </div>
 
     <!-- 智能压缩 -->
-    <div v-if="fileToAdd.storage_type !== FILE_STORAGE_TYPE.EXTERNAL" class="mb-3 flex items-center">
+    <div
+      v-if="fileToAdd.storage_type !== FILE_STORAGE_TYPE.EXTERNAL"
+      class="mb-3 flex items-center"
+    >
       <span class="text-[var(--color-text-secondary)]">智能压缩：</span>
       <BaseSwitch v-model="enableCompressor" />
     </div>
@@ -70,7 +75,10 @@
       />
 
       <!-- 图片直链 -->
-      <div v-if="fileToAdd.storage_type === FILE_STORAGE_TYPE.EXTERNAL" class="flex items-center gap-2">
+      <div
+        v-if="fileToAdd.storage_type === FILE_STORAGE_TYPE.EXTERNAL"
+        class="flex items-center gap-2"
+      >
         <BaseInput
           v-model="fileToAdd.url"
           class="rounded-lg h-auto flex-1"

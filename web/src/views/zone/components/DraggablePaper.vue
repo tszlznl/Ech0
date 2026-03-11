@@ -84,9 +84,7 @@
             ></span>
           </div>
 
-          <div
-            class="paper-footer mt-5 pt-3 border-t flex justify-between items-end opacity-50"
-          >
+          <div class="paper-footer mt-5 pt-3 border-t flex justify-between items-end opacity-50">
             <div
               class="h-3 w-20 opacity-30"
               :class="useSafeRender ? 'barcode-fallback bg-current' : 'bg-current barcode-mask'"

@@ -1,9 +1,6 @@
 <template>
   <!-- Uppy Dashboard 容器 -->
-  <div
-    id="uppy-dashboard"
-    class="rounded-md overflow-hidden shadow-inner"
-  ></div>
+  <div id="uppy-dashboard" class="rounded-md overflow-hidden shadow-inner"></div>
 </template>
 
 <script setup lang="ts">
@@ -69,7 +66,9 @@ function tryParseJSON(input: unknown): Record<string, unknown> | undefined {
   if (typeof input === 'string') {
     try {
       const parsed = JSON.parse(input) as unknown
-      return typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : undefined
+      return typeof parsed === 'object' && parsed !== null
+        ? (parsed as Record<string, unknown>)
+        : undefined
     } catch {
       return undefined
     }
@@ -320,7 +319,8 @@ const initUppy = () => {
 
       // 分两种情况: Local 或者 S3
       if (memorySource.value === FILE_STORAGE_TYPE.LOCAL) {
-        const payload = extractUploadPayload(response) as App.Api.File.FileDto & Record<string, unknown>
+        const payload = extractUploadPayload(response) as App.Api.File.FileDto &
+          Record<string, unknown>
 
         const fileId = String(payload.id || payload.file_id || payload.ID || '')
         const fileKey = String(payload.key || payload.object_key || '')

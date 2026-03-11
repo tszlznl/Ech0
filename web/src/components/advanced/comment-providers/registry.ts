@@ -8,7 +8,9 @@ const factories: Record<string, CommentProviderFactory> = {
   [CommentProvider.GISCUS]: async () => (await import('./giscus')).createGiscusAdapter(),
 }
 
-export async function createCommentAdapter(provider: string): Promise<CommentProviderAdapter | null> {
+export async function createCommentAdapter(
+  provider: string,
+): Promise<CommentProviderAdapter | null> {
   const factory = factories[provider]
   if (!factory) return null
   return factory()

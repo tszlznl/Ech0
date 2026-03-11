@@ -1,6 +1,8 @@
 <template>
   <section class="mb-6 text-center sm:mb-8">
-    <p class="text-xs tracking-[0.2em] uppercase text-[var(--color-text-secondary)] mb-3">Ech0 Setup</p>
+    <p class="text-xs tracking-[0.2em] uppercase text-[var(--color-text-secondary)] mb-3">
+      Ech0 Setup
+    </p>
     <h1
       class="text-4xl sm:text-5xl italic font-bold font-serif text-[var(--color-text-muted)] mb-3 sm:mb-4"
     >

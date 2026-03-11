@@ -114,10 +114,10 @@ watch(
       if (existingImages.length > 0) {
         editorStore.setFilesToAdd(
           existingImages.map((img) => ({
-          id: String(img.id || ''),
-          url: img.url || '',
-          storage_type: img.storage_type || 'local',
-          key: img.key || '',
+            id: String(img.id || ''),
+            url: img.url || '',
+            storage_type: img.storage_type || 'local',
+            key: img.key || '',
           })),
         )
       } else {

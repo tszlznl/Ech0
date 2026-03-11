@@ -301,7 +301,9 @@
         <!-- 认证安全边界（Panel 主配置） -->
         <div class="mt-3 border border-dashed border-[var(--color-border-strong)] rounded-md p-3">
           <h3 class="text-[var(--color-text-primary)] font-semibold mb-2">认证安全边界</h3>
-          <div class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10">
+          <div
+            class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
+          >
             <h2 class="font-semibold w-40 shrink-0">Redirect Allowlist:</h2>
             <span v-if="!oauth2EditMode" class="truncate max-w-80 inline-block align-middle">
               {{
@@ -318,7 +320,9 @@
               class="w-full py-1!"
             />
           </div>
-          <div class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10">
+          <div
+            class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
+          >
             <h2 class="font-semibold w-40 shrink-0">WebAuthn RP ID:</h2>
             <span v-if="!oauth2EditMode" class="truncate max-w-80 inline-block align-middle">
               {{ OAuth2Setting.webauthn_rp_id || '暂无' }}
@@ -331,7 +335,9 @@
               class="w-full py-1!"
             />
           </div>
-          <div class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10">
+          <div
+            class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
+          >
             <h2 class="font-semibold w-40 shrink-0">WebAuthn Origins:</h2>
             <span v-if="!oauth2EditMode" class="truncate max-w-80 inline-block align-middle">
               {{
@@ -348,7 +354,9 @@
               class="w-full py-1!"
             />
           </div>
-          <div class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10">
+          <div
+            class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
+          >
             <h2 class="font-semibold w-40 shrink-0">CORS Origins:</h2>
             <span v-if="!oauth2EditMode" class="truncate max-w-80 inline-block align-middle">
               {{
