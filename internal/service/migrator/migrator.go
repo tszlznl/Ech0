@@ -18,6 +18,7 @@ import (
 	"github.com/lin-snow/ech0/internal/migrator/spec"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	migrationModel "github.com/lin-snow/ech0/internal/model/migration"
+	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"gorm.io/gorm"
@@ -28,6 +29,7 @@ const migrationTmpRelativeDir = "files/tmp"
 type MigratorService struct {
 	commonService      CommonService
 	keyValueRepository KeyValueRepository
+	storageManager     StorageManager
 
 	activeMu     sync.Mutex
 	activeCancel context.CancelFunc
@@ -36,10 +38,12 @@ type MigratorService struct {
 func NewMigratorService(
 	commonService CommonService,
 	keyValueRepository KeyValueRepository,
+	storageManager StorageManager,
 ) *MigratorService {
 	return &MigratorService{
 		commonService:      commonService,
 		keyValueRepository: keyValueRepository,
+		storageManager:     storageManager,
 	}
 }
 
@@ -111,7 +115,8 @@ func (s *MigratorService) StartGlobalMigration(
 	if err := validateStartRequest(req); err != nil {
 		return migrationModel.GlobalMigrationStateDTO{}, err
 	}
-	if _, err := s.ensureAdmin(ctx); err != nil {
+	adminUserID, err := s.ensureAdmin(ctx)
+	if err != nil {
 		return migrationModel.GlobalMigrationStateDTO{}, err
 	}
 
@@ -127,18 +132,23 @@ func (s *MigratorService) StartGlobalMigration(
 		return migrationModel.GlobalMigrationStateDTO{}, errors.New("请先结束/清理当前迁移")
 	}
 
+	sourcePayload := cloneMap(req.SourcePayload)
+	if _, ok := sourcePayload["created_by"]; !ok {
+		sourcePayload["created_by"] = adminUserID
+	}
+
 	now := nowUTC()
 	state = migrationModel.GlobalMigrationStateDTO{
 		Version:       1,
 		SourceType:    strings.TrimSpace(req.SourceType),
 		Status:        migrationModel.MigrationStatusPending,
 		ErrorMessage:  "",
-		SourcePayload: req.SourcePayload,
+		SourcePayload: sourcePayload,
 		StartedAt:     &now,
 		UpdatedAt:     &now,
 		FinishedAt:    nil,
 	}
-	if err := s.saveGlobalState(ctx, state); err != nil {
+	if err := s.saveGlobalStateWithRetry(ctx, state); err != nil {
 		return migrationModel.GlobalMigrationStateDTO{}, err
 	}
 
@@ -159,6 +169,13 @@ func (s *MigratorService) CancelGlobalMigration(ctx context.Context) (migrationM
 	if _, err := s.ensureAdmin(ctx); err != nil {
 		return migrationModel.GlobalMigrationStateDTO{}, err
 	}
+	s.activeMu.Lock()
+	cancelFn := s.activeCancel
+	s.activeCancel = nil
+	s.activeMu.Unlock()
+	if cancelFn != nil {
+		cancelFn()
+	}
 	state, err := s.getGlobalState(ctx)
 	if err != nil {
 		return migrationModel.GlobalMigrationStateDTO{}, err
@@ -171,15 +188,9 @@ func (s *MigratorService) CancelGlobalMigration(ctx context.Context) (migrationM
 	state.ErrorMessage = "迁移已取消"
 	state.UpdatedAt = &now
 	state.FinishedAt = &now
-	if err := s.saveGlobalState(ctx, state); err != nil {
+	if err := s.saveGlobalStateWithRetry(ctx, state); err != nil {
 		return migrationModel.GlobalMigrationStateDTO{}, err
 	}
-	s.activeMu.Lock()
-	if s.activeCancel != nil {
-		s.activeCancel()
-		s.activeCancel = nil
-	}
-	s.activeMu.Unlock()
 	return state, nil
 }
 
@@ -214,24 +225,17 @@ func (s *MigratorService) runGlobalMigration(ctx context.Context, state migratio
 	now := nowUTC()
 	runningState.Status = migrationModel.MigrationStatusRunning
 	runningState.UpdatedAt = &now
-	_ = s.saveGlobalState(context.Background(), runningState)
+	_ = s.saveGlobalStateWithRetry(context.Background(), runningState)
 
 	result, runErr := runner.Migrate(ctx, spec.MigrateRequest{
 		SourcePayload: runningState.SourcePayload,
 		UpdateProgress: func(progress spec.MigrateProgress) {
-			current, err := s.getGlobalState(context.Background())
-			if err != nil {
+			if ctx.Err() != nil {
 				return
 			}
-			if current.Status == migrationModel.MigrationStatusCancelled {
-				return
-			}
-			now := nowUTC()
 			if strings.TrimSpace(progress.ErrorSummary) != "" {
-				current.ErrorMessage = progress.ErrorSummary
+				runningState.ErrorMessage = progress.ErrorSummary
 			}
-			current.UpdatedAt = &now
-			_ = s.saveGlobalState(context.Background(), current)
 		},
 	})
 	if runErr != nil {
@@ -251,12 +255,22 @@ func (s *MigratorService) runGlobalMigration(ctx context.Context, state migratio
 	}
 	now = nowUTC()
 	current.Status = migrationModel.MigrationStatusSuccess
-	if strings.TrimSpace(result.ErrorSummary) != "" {
+	if result.Report != nil {
+		current.SourcePayload["report"] = result.Report
+	}
+	if strings.TrimSpace(result.JobID) != "" {
+		current.SourcePayload["migration_job_id"] = result.JobID
+	}
+	if strings.TrimSpace(result.ErrorSummary) != "" && result.FailCount > 0 {
 		current.ErrorMessage = result.ErrorSummary
+	}
+	if err := s.applyMigratedS3Setting(context.Background(), result.Report); err != nil {
+		s.updateFailed(context.Background(), runningState, fmt.Sprintf("应用迁移S3配置失败: %v", err))
+		return
 	}
 	current.UpdatedAt = &now
 	current.FinishedAt = &now
-	_ = s.saveGlobalState(context.Background(), current)
+	_ = s.saveGlobalStateWithRetry(context.Background(), current)
 }
 
 func (s *MigratorService) updateFailed(ctx context.Context, state migrationModel.GlobalMigrationStateDTO, reason string) {
@@ -265,7 +279,7 @@ func (s *MigratorService) updateFailed(ctx context.Context, state migrationModel
 	state.ErrorMessage = reason
 	state.UpdatedAt = &now
 	state.FinishedAt = &now
-	_ = s.saveGlobalState(ctx, state)
+	_ = s.saveGlobalStateWithRetry(ctx, state)
 }
 
 func validateStartRequest(req migrationModel.StartGlobalMigrationRequest) error {
@@ -325,6 +339,27 @@ func (s *MigratorService) saveGlobalState(ctx context.Context, state migrationMo
 	return s.keyValueRepository.AddOrUpdateKeyValue(ctx, commonModel.MigrationGlobalJobStateKey, string(raw))
 }
 
+func (s *MigratorService) saveGlobalStateWithRetry(ctx context.Context, state migrationModel.GlobalMigrationStateDTO) error {
+	var lastErr error
+	for i := 0; i < 20; i++ {
+		if err := s.saveGlobalState(ctx, state); err != nil {
+			lastErr = err
+			if !isDatabaseLockedError(err) {
+				return err
+			}
+			select {
+			case <-ctx.Done():
+				return err
+			default:
+			}
+			time.Sleep(50 * time.Millisecond)
+			continue
+		}
+		return nil
+	}
+	return lastErr
+}
+
 func nowUTC() time.Time {
 	return time.Now().UTC()
 }
@@ -357,4 +392,67 @@ func saveMultipartFile(file *multipart.FileHeader, dstPath string) error {
 
 	_, err = io.Copy(dst, src)
 	return err
+}
+
+func cloneMap(input map[string]any) map[string]any {
+	if len(input) == 0 {
+		return map[string]any{}
+	}
+	out := make(map[string]any, len(input))
+	for k, v := range input {
+		out[k] = v
+	}
+	return out
+}
+
+func isDatabaseLockedError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(strings.ToLower(err.Error()), "database is locked")
+}
+
+func (s *MigratorService) applyMigratedS3Setting(ctx context.Context, report map[string]any) error {
+	setting, ok, err := parseMigratedS3Setting(report)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return nil
+	}
+	raw, err := json.Marshal(setting)
+	if err != nil {
+		return err
+	}
+	if err := s.keyValueRepository.AddOrUpdateKeyValue(ctx, commonModel.S3SettingKey, string(raw)); err != nil {
+		return err
+	}
+	if s.storageManager != nil {
+		if err := s.storageManager.ReloadFromConfigAndDB(context.Background()); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func parseMigratedS3Setting(report map[string]any) (*settingModel.S3Setting, bool, error) {
+	if len(report) == 0 {
+		return nil, false, nil
+	}
+	raw, ok := report["source_s3_setting"]
+	if !ok || raw == nil {
+		return nil, false, nil
+	}
+	bs, err := json.Marshal(raw)
+	if err != nil {
+		return nil, false, err
+	}
+	var setting settingModel.S3Setting
+	if err := json.Unmarshal(bs, &setting); err != nil {
+		return nil, false, err
+	}
+	if strings.TrimSpace(setting.Provider) == "" || strings.TrimSpace(setting.Endpoint) == "" || strings.TrimSpace(setting.BucketName) == "" {
+		return nil, false, nil
+	}
+	return &setting, true, nil
 }

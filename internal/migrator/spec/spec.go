@@ -57,6 +57,8 @@ type MigrateResult struct {
 	SuccessCount int64
 	FailCount    int64
 	ErrorSummary string
+	JobID        string
+	Report       map[string]any
 }
 
 type Extractor interface {

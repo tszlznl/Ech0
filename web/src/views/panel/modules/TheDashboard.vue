@@ -92,23 +92,6 @@ const dashboardStatus = computed<StatusCard[]>(() => {
   ]
 })
 
-const dashboardInsights = computed(() => {
-  if (loading.value) {
-    return ['同步中：正在加载数据摘要', '同步中：状态短句即将更新']
-  }
-
-  const insights: string[] = []
-  const unread = unreadInboxCount.value ?? 0
-  const connect = connectCount.value ?? 0
-  const echos = echoTotal.value ?? 0
-
-  insights.push(`收件箱：${unread > 0 ? `待处理 ${unread}` : '无待处理消息'}`)
-  insights.push(`节点：${connect > 0 ? `${connect} 个连接可用` : '未检测到连接节点'}`)
-  insights.push(`记录：累计 Echo ${echos} 条`)
-
-  return insights
-})
-
 const loadDashboardStats = async () => {
   loading.value = true
   const [echoRes, unreadRes, connectRes] = await Promise.allSettled([
@@ -179,17 +162,6 @@ onMounted(() => {
       </PanelCard>
     </section>
 
-    <PanelCard border-style="solid" class="dashboard-insights">
-      <div class="insight-head">
-        <span class="insight-tag">STATUS NOTES</span>
-        <span class="insight-head-line"></span>
-      </div>
-      <ul class="insight-list">
-        <li v-for="(item, index) in dashboardInsights" :key="index" class="insight-item">
-          {{ item }}
-        </li>
-      </ul>
-    </PanelCard>
   </div>
 </template>
 
@@ -330,47 +302,6 @@ onMounted(() => {
   color: var(--color-text-secondary);
   font-size: 0.8rem;
   font-weight: 600;
-}
-
-.dashboard-insights {
-  background: var(--color-bg-surface);
-  padding: 0.8rem 0.95rem;
-  box-shadow: none;
-}
-
-.insight-head {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.insight-tag {
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  color: var(--color-text-secondary);
-  font-family: var(--font-family-mono);
-  white-space: nowrap;
-}
-
-.insight-head-line {
-  display: inline-block;
-  width: 100%;
-  height: 1px;
-  background: color-mix(in oklab, var(--color-border-subtle) 85%, transparent);
-}
-
-.insight-list {
-  margin-top: 0.55rem;
-  display: grid;
-  gap: 0.35rem;
-}
-
-.insight-item {
-  border-left: 1px solid var(--color-border-subtle);
-  padding-left: 0.5rem;
-  color: var(--color-text-secondary);
-  font-size: 0.82rem;
-  line-height: 1.45;
 }
 
 @media (min-width: 768px) {

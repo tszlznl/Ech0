@@ -43,20 +43,49 @@
       </div>
 
       <div class="migration-job" v-if="migrationStore.hasJob">
-        <p class="migration-job-status">来源: {{ migrationStore.state.source_type || '-' }}</p>
-        <p class="migration-job-status">状态: {{ migrationStore.state.status }}</p>
-        <p class="migration-job-status">
-          失败信息: {{ migrationStore.state.error_message || '-' }}
+        <div class="migration-job-header">
+          <div class="migration-job-title-wrap">
+            <h3 class="migration-job-title">迁移任务</h3>
+            <p class="migration-job-subtitle">
+              来源 {{ sourceLabelMap[migrationStore.state.source_type] || migrationStore.state.source_type }}
+            </p>
+          </div>
+          <span class="migration-status-pill" :class="`status-${migrationStore.state.status}`">
+            {{ statusLabelMap[migrationStore.state.status] || migrationStore.state.status }}
+          </span>
+        </div>
+
+        <p class="migration-job-error" v-if="migrationStore.state.error_message">
+          {{ migrationStore.state.error_message }}
         </p>
-        <p class="migration-job-status">开始时间: {{ migrationStore.state.started_at || '-' }}</p>
-        <p class="migration-job-status">结束时间: {{ migrationStore.state.finished_at || '-' }}</p>
+
+        <div class="migration-job-metrics" v-if="hasMetrics">
+          <div class="metric-item">
+            <span class="metric-label">总处理</span>
+            <span class="metric-value">{{ migrationProcessed }}</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">成功</span>
+            <span class="metric-value">{{ migrationSuccess }}</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">失败</span>
+            <span class="metric-value">{{ migrationFail }}</span>
+          </div>
+        </div>
+
+        <div class="migration-job-meta">
+          <p v-if="migrationJobId">任务ID: {{ migrationJobId }}</p>
+          <p v-if="formattedStartedAt">开始时间: {{ formattedStartedAt }}</p>
+          <p v-if="formattedFinishedAt">结束时间: {{ formattedFinishedAt }}</p>
+        </div>
       </div>
     </div>
   </PanelCard>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import PanelCard from '@/layout/PanelCard.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import { fetchUploadMigrationSourceZip } from '@/service/api'
@@ -75,6 +104,38 @@ const sourceType = ref<MigrationSourceType>('ech0_v4')
 const selectedZip = ref<File | null>(null)
 const selectedZipName = ref('')
 const migrationStore = useMigrationStore()
+const statusLabelMap: Record<string, string> = {
+  idle: '空闲',
+  pending: '等待中',
+  running: '迁移中',
+  success: '已完成',
+  failed: '失败',
+  cancelled: '已取消',
+}
+const sourceLabelMap: Record<string, string> = {
+  ech0_v4: 'Ech0',
+  ech0_v3: 'Ech0 v3',
+  memos: 'Memos',
+}
+const migrationReport = computed(
+  () => (migrationStore.state.source_payload?.report as Record<string, unknown> | undefined) ?? {},
+)
+const migrationJobId = computed(
+  () =>
+    (migrationStore.state.source_payload?.migration_job_id as string | undefined) ||
+    (migrationReport.value.job_id as string | undefined),
+)
+const migrationProcessed = computed(() => migrationReport.value.processed)
+const migrationSuccess = computed(() => migrationReport.value.success_count)
+const migrationFail = computed(() => migrationReport.value.fail_count)
+const hasMetrics = computed(
+  () =>
+    migrationProcessed.value !== undefined ||
+    migrationSuccess.value !== undefined ||
+    migrationFail.value !== undefined,
+)
+const formattedStartedAt = computed(() => formatTime(migrationStore.state.started_at))
+const formattedFinishedAt = computed(() => formatTime(migrationStore.state.finished_at))
 
 const resetSelectedZip = () => {
   selectedZip.value = null
@@ -157,6 +218,13 @@ const handleCleanupMigration = async () => {
     return
   }
   theToast.success('迁移记录已清理')
+}
+
+const formatTime = (iso?: string) => {
+  if (!iso) return ''
+  const dt = new Date(iso)
+  if (Number.isNaN(dt.getTime())) return iso
+  return dt.toLocaleString('zh-CN', { hour12: false })
 }
 
 void migrationStore.init()
@@ -247,6 +315,7 @@ void migrationStore.init()
   gap: 0.5rem;
 }
 
+
 .migration-file-name {
   color: var(--color-text-secondary);
   font-size: 0.82rem;
@@ -259,20 +328,110 @@ void migrationStore.init()
 }
 
 .migration-job {
-  border: 1px dashed var(--color-border-subtle);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
-  padding: 0.75rem;
-  background: var(--color-bg-canvas);
+  padding: 0.9rem;
+  background: var(--color-bg-surface);
 }
 
-.migration-job-status {
+.migration-job-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.migration-job-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.migration-job-title {
+  color: var(--color-text-primary);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.migration-job-subtitle {
   color: var(--color-text-secondary);
-  font-size: 0.85rem;
-  margin-bottom: 0.35rem;
+  font-size: 0.8rem;
+}
+
+.migration-status-pill {
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-secondary);
+}
+
+.status-running,
+.status-pending {
+  color: var(--color-nav-active-bg);
+  border-color: var(--color-nav-active-bg);
+}
+
+.status-success {
+  color: #1f9d55;
+  border-color: #1f9d55;
+}
+
+.status-failed,
+.status-cancelled {
+  color: #d64545;
+  border-color: #d64545;
+}
+
+.migration-job-error {
+  margin-top: 0.65rem;
+  color: #d64545;
+  font-size: 0.83rem;
+}
+
+.migration-job-metrics {
+  margin-top: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.metric-item {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.metric-label {
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+}
+
+.metric-value {
+  color: var(--color-text-primary);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.migration-job-meta {
+  margin-top: 0.7rem;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 @media (max-width: 768px) {
   .migration-source-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .migration-job-metrics {
     grid-template-columns: 1fr;
   }
 }
