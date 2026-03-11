@@ -71,6 +71,67 @@
   margin: 0.7rem 0;
 }
 
+.echo-markdown .code-block {
+  position: relative;
+  margin: 0.7rem 0;
+}
+
+.echo-markdown .code-block > pre {
+  margin: 0;
+}
+
+.echo-markdown .code-block--collapsible.code-block--collapsed > pre {
+  max-height: calc(var(--code-max-lines, 10) * 1.6em + 1.2rem);
+  overflow: hidden;
+}
+
+.echo-markdown .code-block-toggle {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+  border: 1px solid color-mix(in srgb, white 18%, transparent);
+  background: rgba(15, 23, 42, 0.9);
+  color: #f8fafc;
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 12px rgba(2, 6, 23, 0.35);
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.echo-markdown .code-block-toggle:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: color-mix(in srgb, white 30%, transparent);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(2, 6, 23, 0.4);
+}
+
+.echo-markdown .code-block-toggle:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 1px;
+}
+
+.echo-markdown .code-block--collapsible.code-block--collapsed::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2rem;
+  pointer-events: none;
+  border-radius: 0 0 0.5rem 0.5rem;
+  background: linear-gradient(to bottom, transparent, rgba(15, 23, 42, 0.95));
+}
+
 .echo-markdown :not(pre) > code {
   padding: 0.1rem 0.35rem;
   border-radius: 0.35rem;

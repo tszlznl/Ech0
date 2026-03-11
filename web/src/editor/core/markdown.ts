@@ -2,6 +2,9 @@ import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/atom-one-dark.css'
 
+const CODE_BLOCK_COLLAPSE_THRESHOLD = 18
+const CODE_BLOCK_COLLAPSED_LINES = 10
+
 function escapeHtml(input: string): string {
   return input
     .replaceAll('&', '&amp;')
@@ -9,6 +12,24 @@ function escapeHtml(input: string): string {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;')
+}
+
+function getLineCount(code: string): number {
+  if (!code) return 0
+  return code.split(/\r?\n/).length
+}
+
+function renderCodeBlock(code: string, rendered: string, language?: string): string {
+  const lineCount = getLineCount(code)
+  const isCollapsible = lineCount >= CODE_BLOCK_COLLAPSE_THRESHOLD
+  const languageClass = language ? ` language-${language}` : ''
+  const pre = `<pre><code class="hljs${languageClass}">${rendered}</code></pre>`
+
+  if (!isCollapsible) {
+    return pre
+  }
+
+  return `<div class="code-block code-block--collapsible code-block--collapsed" style="--code-max-lines:${CODE_BLOCK_COLLAPSED_LINES};"><button type="button" class="code-block-toggle" data-expand-label="展开" data-collapse-label="收起" aria-expanded="false">展开</button>${pre}</div>`
 }
 
 const markdown: MarkdownIt = new MarkdownIt({
@@ -24,45 +45,30 @@ const markdown: MarkdownIt = new MarkdownIt({
           language,
           ignoreIllegals: true,
         }).value
-        return `<pre><code class="hljs language-${language}">${rendered}</code></pre>`
+        return renderCodeBlock(str, rendered, language)
       } catch {
         // 降级到默认转义输出
       }
     }
 
-    return `<pre><code class="hljs">${escapeHtml(str)}</code></pre>`
+    return renderCodeBlock(str, escapeHtml(str))
   },
 })
 
-const originalLinkOpen =
+type LinkOpenRule = NonNullable<MarkdownIt['renderer']['rules']['link_open']>
+
+const originalLinkOpen: LinkOpenRule =
   markdown.renderer.rules.link_open ??
-  ((tokens: unknown[], idx: number, options: unknown, _env: unknown, self: unknown) =>
-    (self as { renderToken: (t: unknown[], i: number, o: unknown) => string }).renderToken(
-      tokens,
-      idx,
-      options,
-    ))
+  ((tokens, idx, options, _env, self) => self.renderToken(tokens, idx, options))
 
-markdown.renderer.rules.link_open = (
-  tokens: unknown[],
-  idx: number,
-  options: unknown,
-  env: unknown,
-  self: unknown,
-) => {
-  const token = tokens[idx] as {
-    attrIndex: (name: string) => number
-    attrs?: Array<[string, string]>
-    attrSet: (name: string, value: string) => void
-  }
-  const hrefIndex = token.attrIndex('href')
+markdown.renderer.rules.link_open = (...args: Parameters<LinkOpenRule>) => {
+  const [tokens, idx, options, env, self] = args
+  const token = tokens[idx]
+  const href = token.attrGet('href') ?? ''
 
-  if (hrefIndex >= 0) {
-    const href = token.attrs?.[hrefIndex]?.[1] ?? ''
-    if (/^https?:\/\//i.test(href)) {
-      token.attrSet('target', '_blank')
-      token.attrSet('rel', 'noopener noreferrer')
-    }
+  if (/^https?:\/\//i.test(href)) {
+    token.attrSet('target', '_blank')
+    token.attrSet('rel', 'noopener noreferrer')
   }
 
   return originalLinkOpen(tokens, idx, options, env, self)

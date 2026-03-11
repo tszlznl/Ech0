@@ -132,7 +132,6 @@ export const downloadFile = async (requestOptions: RequestOptions): Promise<Blob
   return ofetchInstance<Blob>(requestOptions.url, {
     method: requestOptions.method,
     body: requestOptions.data,
-    responseType: 'blob',
   }).then((res) => {
     if (res instanceof Blob) {
       return res

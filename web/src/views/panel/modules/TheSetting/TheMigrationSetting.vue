@@ -11,10 +11,13 @@
           v-for="source in sourceCards"
           :key="source.value"
           class="migration-source-card"
-          :class="{ active: sourceType === source.value }"
-          @click="handleSelectSource(source.value)"
+          :class="{ active: sourceType === source.value, disabled: source.inDevelopment }"
+          @click="handleSelectSource(source)"
         >
-          <h3>{{ source.title }}</h3>
+          <div class="migration-source-title-wrap">
+            <h3>{{ source.title }}</h3>
+            <span v-if="source.inDevelopment" class="migration-dev-badge">开发中</span>
+          </div>
           <p>{{ source.desc }}</p>
         </button>
       </div>
@@ -32,7 +35,9 @@
       <div class="migration-actions">
         <BaseButton title="开始迁移" @click="handleStartMigration">开始迁移</BaseButton>
         <BaseButton title="刷新状态" @click="handleRefreshJob">刷新状态</BaseButton>
-        <BaseButton title="取消任务" @click="handleCancelJob">取消任务</BaseButton>
+        <BaseButton v-if="migrationStore.isRunning" title="取消任务" @click="handleCancelJob">
+          取消任务
+        </BaseButton>
         <BaseButton
           v-if="migrationStore.canCleanup"
           :title="migrationStore.isSuccess ? '完成' : '结束/清理迁移'"
@@ -94,11 +99,18 @@ import { theToast } from '@/utils/toast'
 
 type MigrationSourceType = 'ech0_v4' | 'ech0_v3' | 'memos'
 
+interface SourceCard {
+  value: MigrationSourceType
+  title: string
+  desc: string
+  inDevelopment?: boolean
+}
+
 const sourceCards = [
   { value: 'ech0_v4', title: 'Ech0', desc: '支持最新版 Ech0 v4 及以后' },
   { value: 'ech0_v3', title: 'Ech0 v3', desc: '支持 Ech0 v3及更早版本' },
-  { value: 'memos', title: 'Memos', desc: '支持 Memos' },
-]
+  { value: 'memos', title: 'Memos', desc: '支持 Memos（开发中）', inDevelopment: true },
+] satisfies SourceCard[]
 
 const sourceType = ref<MigrationSourceType>('ech0_v4')
 const selectedZip = ref<File | null>(null)
@@ -142,8 +154,12 @@ const resetSelectedZip = () => {
   selectedZipName.value = ''
 }
 
-const handleSelectSource = (value: string) => {
-  sourceType.value = value as MigrationSourceType
+const handleSelectSource = (source: SourceCard) => {
+  if (source.inDevelopment) {
+    theToast.info(`${source.title} 迁移功能开发中，敬请期待`)
+    return
+  }
+  sourceType.value = source.value
   resetSelectedZip()
 }
 
@@ -166,6 +182,10 @@ const handlePickZip = () => {
 }
 
 const handleStartMigration = async () => {
+  if (sourceType.value === 'memos') {
+    theToast.info('Memos 迁移功能开发中，暂不可用')
+    return
+  }
   if (!selectedZip.value) {
     theToast.info('请先选择 zip 文件')
     return
@@ -269,15 +289,38 @@ void migrationStore.init()
   transition: all 0.2s ease;
 }
 
+.migration-source-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.35rem;
+}
+
 .migration-source-card h3 {
   color: var(--color-text-primary);
   font-weight: 700;
-  margin-bottom: 0.35rem;
+}
+
+.migration-dev-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.05rem 0.4rem;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  color: #a56900;
+  background: #fff5db;
+  border: 1px solid #f0d59a;
 }
 
 .migration-source-card p {
   color: var(--color-text-secondary);
   font-size: 0.85rem;
+}
+
+.migration-source-card.disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .migration-source-card.active {
