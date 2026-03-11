@@ -31,8 +31,8 @@ func NewEchoHandler(echoService service.Service) *EchoHandler {
 //	@Accept			json
 //	@Produce		json
 //	@Param			echo	body		model.EchoUpsertDto	true	"Echo内容"
-//	@Success		200		{object}	res.Response	"创建成功"
-//	@Failure		200		{object}	res.Response	"创建失败"
+//	@Success		200		{object}	res.Response		"创建成功"
+//	@Failure		200		{object}	res.Response		"创建失败"
 //	@Router			/echo [post]
 func (echoHandler *EchoHandler) PostEcho() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -191,8 +191,8 @@ func (echoHandler *EchoHandler) GetTodayEchos() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			echo	body		model.EchoUpsertDto	true	"要更新的Echo内容"
-//	@Success		200		{object}	res.Response	"更新成功"
-//	@Failure		200		{object}	res.Response	"更新失败"
+//	@Success		200		{object}	res.Response		"更新成功"
+//	@Failure		200		{object}	res.Response		"更新失败"
 //	@Router			/echo [put]
 func (echoHandler *EchoHandler) UpdateEcho() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {

@@ -17,5 +17,7 @@ type Service interface {
 	CleanupGlobalMigration(ctx context.Context) error
 }
 
-type CommonService = commonService.Service
-type KeyValueRepository = *keyvalueRepository.KeyValueRepository
+type (
+	CommonService      = commonService.Service
+	KeyValueRepository = *keyvalueRepository.KeyValueRepository
+)

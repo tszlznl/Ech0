@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	coreMigrator "github.com/lin-snow/ech0/internal/migrator"
-	"github.com/lin-snow/ech0/internal/migrator/spec"
 	"io"
 	"mime/multipart"
 	"os"
@@ -16,6 +14,8 @@ import (
 	"time"
 
 	"github.com/lin-snow/ech0/internal/backup"
+	coreMigrator "github.com/lin-snow/ech0/internal/migrator"
+	"github.com/lin-snow/ech0/internal/migrator/spec"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	migrationModel "github.com/lin-snow/ech0/internal/model/migration"
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"

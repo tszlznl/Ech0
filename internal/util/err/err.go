@@ -2,6 +2,7 @@ package util
 
 import (
 	"errors"
+
 	model "github.com/lin-snow/ech0/internal/model/common"
 	util "github.com/lin-snow/ech0/internal/util/log"
 	"go.uber.org/zap"

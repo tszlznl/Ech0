@@ -22,8 +22,10 @@ type Service interface {
 	GetEchosByTagId(ctx context.Context, tagId string, pageQueryDto commonModel.PageQueryDto) (commonModel.PageQueryResult[[]model.Echo], error)
 }
 
-type CommonService = commonService.Service
-type FileService = fileService.Service
+type (
+	CommonService = commonService.Service
+	FileService   = fileService.Service
+)
 
 type Repository interface {
 	CreateEcho(ctx context.Context, newEcho *model.Echo) error

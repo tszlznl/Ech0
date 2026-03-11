@@ -1,9 +1,9 @@
 package middleware
 
 import (
+	"net"
 	"net/http"
 	"net/url"
-	"net"
 	"strings"
 
 	"github.com/gin-gonic/gin"

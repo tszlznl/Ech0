@@ -3,8 +3,10 @@ package storage
 import "strings"
 
 // Category classifies uploaded files.
-type Category string
-type StorageType string
+type (
+	Category    string
+	StorageType string
+)
 
 const (
 	CategoryImage    Category = "image"

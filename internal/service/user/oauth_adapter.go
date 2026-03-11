@@ -23,10 +23,12 @@ type oauthProviderAdapter interface {
 	) (*oauthIdentity, error)
 }
 
-type githubOAuthAdapter struct{}
-type googleOAuthAdapter struct{}
-type qqOAuthAdapter struct{}
-type customOAuthAdapter struct{}
+type (
+	githubOAuthAdapter struct{}
+	googleOAuthAdapter struct{}
+	qqOAuthAdapter     struct{}
+	customOAuthAdapter struct{}
+)
 
 func getOAuthProviderAdapter(provider string) (oauthProviderAdapter, error) {
 	switch provider {

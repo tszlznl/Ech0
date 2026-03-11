@@ -10,17 +10,17 @@ import (
 
 // Echo 定义Echo实体
 type Echo struct {
-	ID            string               `gorm:"type:char(36);primaryKey"                      json:"id"`
-	Content       string               `gorm:"type:text;not null"                            json:"content"`
-	Username      string               `gorm:"type:varchar(100)"                             json:"username,omitempty"`
-	EchoFiles     []fileModel.EchoFile `gorm:"foreignKey:EchoID;constraint:OnDelete:CASCADE" json:"echo_files,omitempty"`
-	Layout        string               `gorm:"type:varchar(50);default:'waterfall'"          json:"layout,omitempty"`
-	Private       bool                 `gorm:"default:false;index:idx_echos_private_created,priority:1" json:"private"`
-	UserID        string               `gorm:"type:char(36);not null;index"                  json:"user_id"`
-	Extension     *EchoExtension       `gorm:"foreignKey:EchoID;constraint:OnDelete:CASCADE" json:"extension,omitempty"`
-	Tags          []Tag                `gorm:"many2many:echo_tags;"                          json:"tags,omitempty"`
-	FavCount      int                  `gorm:"default:0"                                     json:"fav_count"`
-	CreatedAt     time.Time            `gorm:"index:idx_echos_private_created,priority:2"    json:"created_at"`
+	ID        string               `gorm:"type:char(36);primaryKey"                      json:"id"`
+	Content   string               `gorm:"type:text;not null"                            json:"content"`
+	Username  string               `gorm:"type:varchar(100)"                             json:"username,omitempty"`
+	EchoFiles []fileModel.EchoFile `gorm:"foreignKey:EchoID;constraint:OnDelete:CASCADE" json:"echo_files,omitempty"`
+	Layout    string               `gorm:"type:varchar(50);default:'waterfall'"          json:"layout,omitempty"`
+	Private   bool                 `gorm:"default:false;index:idx_echos_private_created,priority:1" json:"private"`
+	UserID    string               `gorm:"type:char(36);not null;index"                  json:"user_id"`
+	Extension *EchoExtension       `gorm:"foreignKey:EchoID;constraint:OnDelete:CASCADE" json:"extension,omitempty"`
+	Tags      []Tag                `gorm:"many2many:echo_tags;"                          json:"tags,omitempty"`
+	FavCount  int                  `gorm:"default:0"                                     json:"fav_count"`
+	CreatedAt time.Time            `gorm:"index:idx_echos_private_created,priority:2"    json:"created_at"`
 }
 
 type EchoExtension struct {
