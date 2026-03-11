@@ -303,6 +303,8 @@ declare namespace App {
         server_url: string
         allow_register: boolean
         ICP_number: string
+        footer_content: string
+        footer_link: string
         meting_api: string
         custom_css: string
         custom_js: string

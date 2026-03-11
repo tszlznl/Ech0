@@ -68,12 +68,15 @@ func (settingService *SettingService) GetSetting(setting *model.SystemSetting) e
 			setting.ServerURL = config.Config().Setting.Serverurl
 			setting.AllowRegister = config.Config().Setting.AllowRegister
 			setting.ICPNumber = config.Config().Setting.Icpnumber
+			setting.FooterContent = config.Config().Setting.FooterContent
+			setting.FooterLink = config.Config().Setting.FooterLink
 			setting.MetingAPI = config.Config().Setting.MetingAPI
 			setting.CustomCSS = config.Config().Setting.CustomCSS
 			setting.CustomJS = config.Config().Setting.CustomJS
 
 			// 处理 URL
 			setting.ServerURL = httpUtil.TrimURL(setting.ServerURL)
+			setting.FooterLink = httpUtil.TrimURL(setting.FooterLink)
 			setting.MetingAPI = httpUtil.TrimURL(setting.MetingAPI)
 
 			// 序列化为 JSON
@@ -123,6 +126,8 @@ func (settingService *SettingService) UpdateSetting(
 		setting.ServerURL = httpUtil.TrimURL(newSetting.ServerURL)
 		setting.AllowRegister = newSetting.AllowRegister
 		setting.ICPNumber = newSetting.ICPNumber
+		setting.FooterContent = newSetting.FooterContent
+		setting.FooterLink = httpUtil.TrimURL(newSetting.FooterLink)
 		setting.MetingAPI = httpUtil.TrimURL(newSetting.MetingAPI)
 		setting.CustomCSS = newSetting.CustomCSS
 		setting.CustomJS = newSetting.CustomJS

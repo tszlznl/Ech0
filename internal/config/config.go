@@ -98,6 +98,8 @@ type SettingConfig struct {
 	Serverurl     string // 服务器 URL
 	AllowRegister bool   // 是否允许注册
 	Icpnumber     string // ICP 备案号
+	FooterContent string // 自定义页脚内容
+	FooterLink    string // 自定义页脚链接
 	MetingAPI     string // Meting API 地址
 	CustomCSS     string // 自定义 CSS 样式
 	CustomJS      string // 自定义 JS 脚本
@@ -226,6 +228,8 @@ func defaultConfig() *AppConfig {
 			Serverurl:     "https://ech0.example.com",
 			AllowRegister: true,
 			Icpnumber:     "",
+			FooterContent: "",
+			FooterLink:    "",
 			MetingAPI:     "",
 			CustomCSS:     "",
 			CustomJS:      "",
@@ -315,6 +319,8 @@ func applyEnvOverrides(cfg *AppConfig) {
 	setStringEnv("ECH0_SETTING_SERVER_URL", &cfg.Setting.Serverurl)
 	setBoolEnv("ECH0_SETTING_ALLOW_REGISTER", &cfg.Setting.AllowRegister)
 	setStringEnv("ECH0_SETTING_ICP_NUMBER", &cfg.Setting.Icpnumber)
+	setStringEnv("ECH0_SETTING_FOOTER_CONTENT", &cfg.Setting.FooterContent)
+	setStringEnv("ECH0_SETTING_FOOTER_LINK", &cfg.Setting.FooterLink)
 	setStringEnv("ECH0_SETTING_METING_API", &cfg.Setting.MetingAPI)
 	setStringEnv("ECH0_SETTING_CUSTOM_CSS", &cfg.Setting.CustomCSS)
 	setStringEnv("ECH0_SETTING_CUSTOM_JS", &cfg.Setting.CustomJS)

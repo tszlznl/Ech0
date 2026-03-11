@@ -94,24 +94,45 @@
           class="w-full py-1!"
         />
       </div>
-      <!-- ICP备案号 -->
+      <!-- 自定义页脚内容 -->
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold w-26 shrink-0">ICP备案:</h2>
+        <h2 class="font-semibold w-26 shrink-0">页脚内容:</h2>
         <span
           v-if="!editMode"
           class="truncate max-w-40 inline-block align-middle"
-          :title="SystemSetting.ICP_number"
+          :title="SystemSetting.footer_content"
           style="vertical-align: middle"
         >
-          {{ SystemSetting.ICP_number.length === 0 ? '暂无' : SystemSetting.ICP_number }}
+          {{ SystemSetting.footer_content.length === 0 ? '暂无' : SystemSetting.footer_content }}
         </span>
         <BaseInput
           v-else
-          v-model="SystemSetting.ICP_number"
+          v-model="SystemSetting.footer_content"
           type="text"
-          placeholder="请输入ICP备案号"
+          placeholder="请输入页脚文案"
+          class="w-full py-1!"
+        />
+      </div>
+      <!-- 自定义页脚链接 -->
+      <div
+        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
+      >
+        <h2 class="font-semibold w-26 shrink-0">页脚链接:</h2>
+        <span
+          v-if="!editMode"
+          class="truncate max-w-40 inline-block align-middle"
+          :title="SystemSetting.footer_link"
+          style="vertical-align: middle"
+        >
+          {{ SystemSetting.footer_link.length === 0 ? '暂无' : SystemSetting.footer_link }}
+        </span>
+        <BaseInput
+          v-else
+          v-model="SystemSetting.footer_link"
+          type="text"
+          placeholder="可选，带 http(s)"
           class="w-full py-1!"
         />
       </div>

@@ -56,20 +56,28 @@
         <span class="text-xl text-[var(--color-text-muted)]">加载中...</span>
       </div>
     </Transition>
-    <!-- 备案号 -->
-    <div class="text-center">
-      <a href="https://beian.miit.gov.cn/" target="_blank">
+    <!-- 自定义页脚 -->
+    <div v-if="footerContent" class="text-center">
+      <a
+        v-if="footerLink"
+        :href="footerLink"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         <span class="text-[var(--color-text-muted)] text-sm">
-          {{ SystemSetting.ICP_number }}
+          {{ footerContent }}
         </span>
       </a>
+      <span v-else class="text-[var(--color-text-muted)] text-sm">
+        {{ footerContent }}
+      </span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import TheEchoCard from '@/components/advanced/TheEchoCard.vue'
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useEchoStore, useSettingStore } from '@/stores'
 import BaseButton from '@/components/common/BaseButton.vue'
 import { storeToRefs } from 'pinia'
@@ -83,6 +91,8 @@ defineProps<{
 const echoStore = useEchoStore()
 const settingStore = useSettingStore()
 const { SystemSetting } = storeToRefs(settingStore)
+const footerContent = computed(() => SystemSetting.value.footer_content || SystemSetting.value.ICP_number)
+const footerLink = computed(() => SystemSetting.value.footer_link)
 
 // 列表入场动画钩子 - 交错入场效果
 const onBeforeEnter = (el: Element) => {

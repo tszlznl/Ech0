@@ -2,11 +2,13 @@
 import PanelCard from '@/layout/PanelCard.vue'
 import { FILE_STORAGE_TYPE } from '@/constants/file'
 import { fetchDownloadFileById, fetchDownloadFileByPath, fetchFileTree } from '@/service/api'
-import { nextTick, reactive, ref } from 'vue'
+import { nextTick, reactive, ref, computed, onMounted, watch } from 'vue'
 import { theToast } from '@/utils/toast'
 import DownloadIcon from '@/components/icons/download.vue'
 import ViewIcon from '@/components/icons/view.vue'
 import gsap from 'gsap'
+import { useSettingStore } from '@/stores'
+import { storeToRefs } from 'pinia'
 
 type RootStorageType = typeof FILE_STORAGE_TYPE.LOCAL | typeof FILE_STORAGE_TYPE.OBJECT
 
@@ -60,7 +62,13 @@ const downloadingId = ref('')
 const previewingId = ref('')
 const refreshingRoot = ref<RootStorageType | ''>('')
 const selectedNodeKey = ref('')
-const rootStorageTypes: RootStorageType[] = [FILE_STORAGE_TYPE.LOCAL, FILE_STORAGE_TYPE.OBJECT]
+const settingStore = useSettingStore()
+const { S3Setting } = storeToRefs(settingStore)
+const rootStorageTypes = computed<RootStorageType[]>(() =>
+  S3Setting.value.enable
+    ? [FILE_STORAGE_TYPE.LOCAL, FILE_STORAGE_TYPE.OBJECT]
+    : [FILE_STORAGE_TYPE.LOCAL],
+)
 const nodeCache = reactive<Record<string, App.Api.File.FileTreeNode[]>>({})
 const rootContentRefs = reactive<Partial<Record<RootStorageType, HTMLElement | null>>>({})
 
@@ -88,7 +96,7 @@ const clearSection = (storageType: RootStorageType) => {
 }
 
 const getActiveRoot = (): RootStorageType | '' => {
-  return rootStorageTypes.find((type) => sections[type].expanded) || ''
+  return rootStorageTypes.value.find((type) => sections[type].expanded) || ''
 }
 
 const clearCacheByRoot = (storageType: RootStorageType) => {
@@ -177,7 +185,7 @@ const toggleRoot = async (storageType: RootStorageType) => {
   const section = sections[storageType]
   if (section.loading || refreshingRoot.value !== '') return
   const nextExpanded = !section.expanded
-  for (const rootType of rootStorageTypes) {
+  for (const rootType of rootStorageTypes.value) {
     if (rootType !== storageType) {
       sections[rootType].expanded = false
     }
@@ -387,6 +395,22 @@ const onAfterLeave = (el: Element) => {
 const setRootContentRef = (storageType: RootStorageType, el: unknown) => {
   rootContentRefs[storageType] = el instanceof HTMLElement ? el : null
 }
+
+watch(
+  () => S3Setting.value.enable,
+  (enabled) => {
+    if (!enabled) {
+      sections[FILE_STORAGE_TYPE.OBJECT].expanded = false
+      if (selectedNodeKey.value.startsWith(`${FILE_STORAGE_TYPE.OBJECT}:`)) {
+        selectedNodeKey.value = ''
+      }
+    }
+  },
+)
+
+onMounted(() => {
+  settingStore.getS3Setting()
+})
 </script>
 
 <template>
