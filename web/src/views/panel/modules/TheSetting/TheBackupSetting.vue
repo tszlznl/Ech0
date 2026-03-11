@@ -7,12 +7,9 @@
       </div>
 
       <div class="backup-action">
-        <BaseButton
-          :icon="ExportBackup"
-          @click="handleBackupExport"
-          class="backup-export-btn"
-          title="导出快照"
-        />
+        <BaseButton @click="handleBackupExport" class="backup-export-btn" title="导出快照">
+          导出快照
+        </BaseButton>
       </div>
     </div>
   </PanelCard>
@@ -21,7 +18,6 @@
 <script setup lang="ts">
 import PanelCard from '@/layout/PanelCard.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
-import ExportBackup from '@/components/icons/exportbackup.vue'
 import { theToast } from '@/utils/toast'
 import { useUserStore } from '@/stores'
 import { storeToRefs } from 'pinia'
