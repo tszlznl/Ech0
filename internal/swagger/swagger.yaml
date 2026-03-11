@@ -101,29 +101,82 @@ definitions:
         description: 是否启用备份计划
         type: boolean
     type: object
+  model.CommentProviderFieldMeta:
+    properties:
+      key:
+        description: 字段键名
+        type: string
+      label:
+        description: 字段名称
+        type: string
+      placeholder:
+        description: 输入提示
+        type: string
+      required:
+        description: 是否必填
+        type: boolean
+    type: object
+  model.CommentProviderMeta:
+    properties:
+      fields:
+        description: 字段定义
+        items:
+          $ref: '#/definitions/model.CommentProviderFieldMeta'
+        type: array
+      label:
+        description: 展示名
+        type: string
+      provider:
+        description: provider key
+        type: string
+    type: object
+  model.CommentProviderMetaResponse:
+    properties:
+      providers:
+        items:
+          $ref: '#/definitions/model.CommentProviderMeta'
+        type: array
+    type: object
+  model.CommentProviderSetting:
+    properties:
+      config:
+        additionalProperties: true
+        description: 提供者私有配置
+        type: object
+      css_url:
+        description: 可选样式地址（为空则使用默认）
+        type: string
+      script_url:
+        description: 可选脚本地址（为空则使用默认）
+        type: string
+    type: object
   model.CommentSetting:
     properties:
-      comment_api:
-        description: 评论 API 地址
-        type: string
       enable_comment:
         description: 是否启用评论
         type: boolean
       provider:
-        description: 评论提供者
+        description: 当前启用的评论提供者
         type: string
+      providers:
+        additionalProperties:
+          $ref: '#/definitions/model.CommentProviderSetting'
+        description: 各评论提供者配置
+        type: object
     type: object
   model.CommentSettingDto:
     properties:
-      comment_api:
-        description: 评论 API 地址
-        type: string
       enable_comment:
         description: 是否启用评论
         type: boolean
       provider:
-        description: 评论提供者
+        description: 当前启用的评论提供者
         type: string
+      providers:
+        additionalProperties:
+          $ref: '#/definitions/model.CommentProviderSetting'
+        description: 各评论提供者配置
+        type: object
     type: object
   model.Connected:
     properties:
@@ -449,9 +502,6 @@ definitions:
       allow_register:
         description: 是否允许注册
         type: boolean
-      comment_api:
-        description: 评论 API 地址
-        type: string
       custom_css:
         description: 自定义 CSS
         type: string
@@ -864,6 +914,21 @@ paths:
           schema:
             $ref: '#/definitions/handler.Response'
       summary: 更新评论设置
+      tags:
+      - 系统设置
+  /comment/providers/meta:
+    get:
+      consumes:
+      - application/json
+      description: 获取各评论服务提供者的动态字段定义
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取评论提供者元数据失败
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: 获取评论提供者元数据
       tags:
       - 系统设置
   /connect:

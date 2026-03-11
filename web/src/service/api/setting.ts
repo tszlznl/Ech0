@@ -16,6 +16,14 @@ export function fetchGetCommentSettings() {
   })
 }
 
+// 获取评论提供者元数据
+export function fetchGetCommentProviderMeta() {
+  return request<App.Api.Setting.CommentProviderMetaResponse>({
+    url: '/comment/providers/meta',
+    method: 'GET',
+  })
+}
+
 // 更新系统设置
 export function fetchUpdateSettings(systemSetting: App.Api.Setting.SystemSetting) {
   return request({

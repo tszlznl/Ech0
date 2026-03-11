@@ -109,6 +109,26 @@ func (settingHandler *SettingHandler) GetCommentSettings() gin.HandlerFunc {
 	})
 }
 
+// GetCommentProvidersMeta 获取评论提供者字段元数据
+//
+//	@Summary		获取评论提供者元数据
+//	@Description	获取各评论服务提供者的动态字段定义
+//	@Tags			系统设置
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	res.Response{data=model.CommentProviderMetaResponse}	"获取评论提供者元数据成功"
+//	@Failure		200	{object}	res.Response											"获取评论提供者元数据失败"
+//	@Router			/comment/providers/meta [get]
+func (settingHandler *SettingHandler) GetCommentProvidersMeta() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		meta := settingHandler.settingService.GetCommentProviderMeta()
+		return res.Response{
+			Data: meta,
+			Msg:  commonModel.GET_COMMENT_SETTINGS_SUCCESS,
+		}
+	})
+}
+
 // UpdateCommentSettings 更新评论设置
 //
 //	@Summary		更新评论设置

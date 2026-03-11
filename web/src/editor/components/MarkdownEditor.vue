@@ -3,8 +3,14 @@
     <div v-if="isFullMode" class="markdown-editor-backdrop" @click="exitFullMode"></div>
 
     <div v-if="!isFullMode" class="markdown-editor">
-      <button type="button" class="mode-toggle-btn" @click="enterFullMode">
-        全屏编辑
+      <button
+        type="button"
+        class="mode-toggle-btn"
+        title="全屏编辑"
+        aria-label="全屏编辑"
+        @click="enterFullMode"
+      >
+        <Full class="w-3.5 h-3.5" />
       </button>
       <div class="editor-content">
         <textarea
@@ -36,11 +42,23 @@
           <span class="toolbar-icon" aria-hidden="true">{{ item.icon }}</span>
         </button>
         <div class="toolbar-actions">
-          <button type="button" class="toolbar-btn" @click="isPreviewMode = !isPreviewMode">
-            {{ isPreviewMode ? '显示预览' : '隐藏预览' }}
+          <button
+            type="button"
+            class="toolbar-btn"
+            :title="isPreviewMode ? '显示预览' : '隐藏预览'"
+            :aria-label="isPreviewMode ? '显示预览' : '隐藏预览'"
+            @click="isPreviewMode = !isPreviewMode"
+          >
+            <Preview class="w-3.5 h-3.5" />
           </button>
-          <button type="button" class="toolbar-btn mode-toggle-btn-inline" @click="exitFullMode">
-            退出全屏
+          <button
+            type="button"
+            class="toolbar-btn mode-toggle-btn-inline"
+            title="退出全屏"
+            aria-label="退出全屏"
+            @click="exitFullMode"
+          >
+            <Closefull class="w-3.5 h-3.5" />
           </button>
         </div>
         </div>
@@ -68,6 +86,9 @@ import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import MarkdownPreviewCard from './MarkdownPreviewCard.vue'
 import { applyMarkdownAction } from '../composables/useMarkdownEditorActions'
 import type { MarkdownEditorAction } from '../types'
+import Full from '@/components/icons/full.vue'
+import Closefull from '@/components/icons/closefull.vue'
+import Preview from '@/components/icons/preview.vue'
 
 defineProps<{
   modelValue: string

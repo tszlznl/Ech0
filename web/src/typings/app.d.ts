@@ -312,8 +312,31 @@ declare namespace App {
 
       type CommentSetting = {
         enable_comment: boolean
-        provider: string // 评论提供者
-        comment_api: string // 评论 API 地址
+        provider: string // 当前评论提供者
+        providers: Record<string, CommentProviderSetting>
+      }
+
+      type CommentProviderSetting = {
+        script_url?: string
+        css_url?: string
+        config: Record<string, unknown>
+      }
+
+      type CommentProviderFieldMeta = {
+        key: string
+        label: string
+        required: boolean
+        placeholder?: string
+      }
+
+      type CommentProviderMeta = {
+        provider: string
+        label: string
+        fields: CommentProviderFieldMeta[]
+      }
+
+      type CommentProviderMetaResponse = {
+        providers: CommentProviderMeta[]
       }
 
       type S3Setting = {

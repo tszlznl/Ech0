@@ -31,6 +31,7 @@ type SettingService struct {
 	settingRepository  SettingRepository
 	webhookRepository  WebhookRepository
 	publisher          *publisher.Publisher
+	commentRegistry    commentProviderRegistry
 }
 
 func NewSettingService(
@@ -50,6 +51,7 @@ func NewSettingService(
 		webhookRepository:  webhookRepository,
 		settingRepository:  settingRepository,
 		publisher:          publisher,
+		commentRegistry:    newCommentProviderRegistry(),
 	}
 }
 
@@ -161,13 +163,14 @@ func (settingService *SettingService) GetCommentSetting(setting *model.CommentSe
 			commonModel.CommentSettingKey,
 		)
 		if err != nil {
-			// 数据库中不存在数据，手动添加初始数据
-			setting.EnableComment = config.Config().Comment.EnableComment
-			setting.Provider = config.Config().Comment.Provider
-			setting.CommentAPI = config.Config().Comment.CommentAPI
-
-			// 处理 URL
-			setting.CommentAPI = httpUtil.TrimURL(setting.CommentAPI)
+			// 数据库中不存在数据时写入新模型默认值
+			defaultSetting := settingService.commentRegistry.defaultCommentSetting()
+			defaultSetting.EnableComment = config.Config().Comment.EnableComment
+			defaultSetting.Provider = config.Config().Comment.Provider
+			if err := settingService.commentRegistry.validateProvider(defaultSetting.Provider); err != nil {
+				defaultSetting.Provider = string(commonModel.TWIKOO)
+			}
+			*setting = defaultSetting
 
 			// 序列化为 JSON
 			settingToJSON, err := jsonUtil.JSONMarshal(setting)
@@ -183,6 +186,12 @@ func (settingService *SettingService) GetCommentSetting(setting *model.CommentSe
 
 		if err := jsonUtil.JSONUnmarshal([]byte(commentSetting), setting); err != nil {
 			return err
+		}
+		if setting.Providers == nil {
+			setting.Providers = settingService.commentRegistry.defaultCommentSetting().Providers
+		}
+		if err := settingService.commentRegistry.validateProvider(setting.Provider); err != nil {
+			setting.Provider = string(commonModel.TWIKOO)
 		}
 
 		return nil
@@ -204,18 +213,14 @@ func (settingService *SettingService) UpdateCommentSetting(
 	}
 
 	return settingService.transactor.Run(ctx, func(ctx context.Context) error {
-		// 检查评论服务提供者是否有效
-		if newSetting.Provider != string(commonModel.TWIKOO) &&
-			newSetting.Provider != string(commonModel.ARTALK) &&
-			newSetting.Provider != string(commonModel.WALINE) &&
-			newSetting.Provider != string(commonModel.GISCUS) {
-			return errors.New(commonModel.NO_SUCH_COMMENT_PROVIDER)
+		if err := settingService.commentRegistry.normalizeAndValidate(newSetting); err != nil {
+			return err
 		}
 
 		commentSetting := &model.CommentSetting{
 			EnableComment: newSetting.EnableComment,
 			Provider:      newSetting.Provider,
-			CommentAPI:    httpUtil.TrimURL(newSetting.CommentAPI),
+			Providers:     newSetting.Providers,
 		}
 
 		// 序列化为 JSON
@@ -224,12 +229,16 @@ func (settingService *SettingService) UpdateCommentSetting(
 			return err
 		}
 
-		if err := settingService.keyvalueRepository.UpdateKeyValue(ctx, commonModel.CommentSettingKey, string(settingToJSON)); err != nil {
+		if err := settingService.keyvalueRepository.AddOrUpdateKeyValue(ctx, commonModel.CommentSettingKey, string(settingToJSON)); err != nil {
 			return err
 		}
 
 		return nil
 	})
+}
+
+func (settingService *SettingService) GetCommentProviderMeta() model.CommentProviderMetaResponse {
+	return settingService.commentRegistry.providerMeta()
 }
 
 // GetS3Setting 获取 S3 存储设置

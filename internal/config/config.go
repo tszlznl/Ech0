@@ -108,7 +108,6 @@ type SettingConfig struct {
 type CommentConfig struct {
 	EnableComment bool   // 是否启用评论
 	Provider      string // 评论提供者
-	CommentAPI    string // 评论 API 地址
 }
 
 type SecurityConfig struct {
@@ -237,7 +236,6 @@ func defaultConfig() *AppConfig {
 		Comment: CommentConfig{
 			EnableComment: false,
 			Provider:      "twikoo",
-			CommentAPI:    "",
 		},
 	}
 }
@@ -328,7 +326,6 @@ func applyEnvOverrides(cfg *AppConfig) {
 	// Comment
 	setBoolEnv("ECH0_COMMENT_ENABLE", &cfg.Comment.EnableComment)
 	setStringEnv("ECH0_COMMENT_PROVIDER", &cfg.Comment.Provider)
-	setStringEnv("ECH0_COMMENT_API", &cfg.Comment.CommentAPI)
 }
 
 func setStringEnv(key string, target *string) {

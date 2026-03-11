@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import {
   fetchGetSettings,
   fetchGetCommentSettings,
+  fetchGetCommentProviderMeta,
   fetchGetS3Settings,
   fetchGetOAuth2Settings,
   fetchGetAllWebhooks,
@@ -34,8 +35,39 @@ export const useSettingStore = defineStore('settingStore', () => {
   const CommentSetting = ref<App.Api.Setting.CommentSetting>({
     enable_comment: false,
     provider: CommentProvider.TWIKOO,
-    comment_api: '',
+    providers: {
+      [CommentProvider.TWIKOO]: {
+        script_url: '/others/scripts/twikoo.all.min.js',
+        config: { envId: '' },
+      },
+      [CommentProvider.WALINE]: {
+        script_url: 'https://unpkg.com/@waline/client@v2/dist/waline.js',
+        css_url: 'https://unpkg.com/@waline/client@v2/dist/waline.css',
+        config: { serverURL: '', path: '' },
+      },
+      [CommentProvider.ARTALK]: {
+        script_url: 'https://unpkg.com/artalk@2/dist/Artalk.js',
+        css_url: 'https://unpkg.com/artalk@2/dist/Artalk.css',
+        config: { server: '', site: '', pageKey: '' },
+      },
+      [CommentProvider.GISCUS]: {
+        script_url: 'https://giscus.app/client.js',
+        config: {
+          repo: '',
+          repoId: '',
+          category: '',
+          categoryId: '',
+          mapping: 'pathname',
+          strict: '0',
+          reactionsEnabled: '1',
+          inputPosition: 'top',
+          lang: 'zh-CN',
+          theme: 'preferred_color_scheme',
+        },
+      },
+    },
   })
+  const CommentProviderMeta = ref<App.Api.Setting.CommentProviderMeta[]>([])
   const S3Setting = ref<App.Api.Setting.S3Setting>({
     enable: false,
     provider: S3Provider.AWS,
@@ -94,11 +126,17 @@ export const useSettingStore = defineStore('settingStore', () => {
   }
 
   const getCommentSetting = async () => {
-    fetchGetCommentSettings().then((res) => {
-      if (res.code === 1) {
-        CommentSetting.value = res.data
-      }
-    })
+    const res = await fetchGetCommentSettings()
+    if (res.code === 1) {
+      CommentSetting.value = res.data
+    }
+  }
+
+  const getCommentProviderMeta = async () => {
+    const res = await fetchGetCommentProviderMeta()
+    if (res.code === 1) {
+      CommentProviderMeta.value = res.data.providers || []
+    }
   }
 
   const getS3Setting = async () => {
@@ -172,6 +210,7 @@ export const useSettingStore = defineStore('settingStore', () => {
   const init = async () => {
     await getSystemSetting()
     getCommentSetting()
+    getCommentProviderMeta()
     getS3Setting()
     getAgentInfo()
     getHelloEch0()
@@ -180,6 +219,7 @@ export const useSettingStore = defineStore('settingStore', () => {
   return {
     SystemSetting,
     CommentSetting,
+    CommentProviderMeta,
     S3Setting,
     OAuth2Setting,
     Webhooks,
@@ -192,6 +232,7 @@ export const useSettingStore = defineStore('settingStore', () => {
     getAllAccessTokens,
     getSystemSetting,
     getCommentSetting,
+    getCommentProviderMeta,
     getS3Setting,
     getOAuth2Setting,
     getAllWebhooks,

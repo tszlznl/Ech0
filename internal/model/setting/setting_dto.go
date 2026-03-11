@@ -11,15 +11,14 @@ type SystemSettingDto struct {
 	FooterContent string `json:"footer_content"` // 自定义页脚内容
 	FooterLink    string `json:"footer_link"`    // 自定义页脚链接
 	MetingAPI     string `json:"meting_api"`     // Meting API 地址
-	CommentAPI    string `json:"comment_api"`    // 评论 API 地址
 	CustomCSS     string `json:"custom_css"`     // 自定义 CSS
 	CustomJS      string `json:"custom_js"`      // 自定义 JS
 }
 
 type CommentSettingDto struct {
-	EnableComment bool   `json:"enable_comment"` // 是否启用评论
-	Provider      string `json:"provider"`       // 评论提供者
-	CommentAPI    string `json:"comment_api"`    // 评论 API 地址
+	EnableComment bool                              `json:"enable_comment"` // 是否启用评论
+	Provider      string                            `json:"provider"`       // 当前启用的评论提供者
+	Providers     map[string]CommentProviderSetting `json:"providers"`      // 各评论提供者配置
 }
 
 type S3SettingDto struct {
