@@ -7,12 +7,12 @@
         <div class="flex items-center h-full pr-1">
           <!-- 小点 -->
           <div class="timeline-marker" :class="{ 'is-first': props.index === 0 }">
-            <div class="w-2 h-2 rounded-full bg-[var(--timeline-dot-color)]"></div>
+            <div class="w-2 h-2 rounded-full bg-[var(--color-accent)]"></div>
           </div>
           <!-- 具体日期时间 -->
           <div
             @click="handleExpandEcho(echo.id)"
-            class="flex items-center h-full justify-start leading-none text-sm text-nowrap text-[var(--timeline-datetime-color)] hover:underline hover:decoration-offset-3 hover:decoration-1 mr-1"
+            class="flex items-center h-full justify-start leading-none text-sm text-nowrap text-[var(--color-text-secondary)] hover:underline hover:decoration-offset-3 hover:decoration-1 mr-1"
           >
             {{ formatDate(props.echo.created_at) }}
           </div>
@@ -21,7 +21,7 @@
         <div
           v-if="!showMenu"
           @click="handleFilterByTag"
-          class="text-sm text-[var(--timeline-tag-color)] w-24 px-1 truncate text-nowrap hover:cursor-pointer hover:text-[var(--text-color-400)] hover:underline hover:decoration-offset-3 hover:decoration-1"
+          class="text-sm text-[var(--color-text-muted)] w-24 px-1 truncate text-nowrap hover:cursor-pointer hover:text-[var(--color-text-muted)] hover:underline hover:decoration-offset-3 hover:decoration-1"
         >
           <span>{{ props.echo.tags ? `#${props.echo.tags[0]?.name}` : '' }}</span>
         </div>
@@ -33,7 +33,7 @@
         <div
           v-if="!showMenu"
           @click.stop="toggleMenu"
-          class="w-7 h-7 flex items-center justify-center bg-[var(--echo-card-btn-bg-color)] ring-1 ring-[var(--ring-color)] ring-inset rounded-full shadow-sm hover:shadow-md transition"
+          class="w-7 h-7 flex items-center justify-center bg-[var(--color-bg-surface)] ring-1 ring-[var(--color-border-subtle)] ring-inset rounded-full shadow-sm hover:shadow-md transition"
         >
           <!-- 默认图标，展开后隐藏 -->
           <More class="w-5 h-5" />
@@ -42,7 +42,7 @@
         <!-- 展开后的按钮组 -->
         <div
           v-if="showMenu"
-          class="flex items-center gap-4 bg-[var(--echo-card-btn-bg-color)] rounded-full px-2 py-1 shadow-sm hover:shadow-md ring-1 ring-[var(--ring-color)] ring-inset"
+          class="flex items-center gap-4 bg-[var(--color-bg-surface)] rounded-full px-2 py-1 shadow-sm hover:shadow-md ring-1 ring-[var(--color-border-subtle)] ring-inset"
         >
           <!-- 是否隐私 -->
           <span v-if="props.echo.private" title="私密状态">
@@ -90,11 +90,13 @@
                   isLikeAnimating ? 'scale-110' : 'scale-100',
                 ]"
               >
-                <GrayLike class="w-4 h-4 transition-colors duration-200 hover:text-red-500" />
+                <GrayLike
+                  class="w-4 h-4 transition-colors duration-200 hover:text-[var(--color-danger)]"
+                />
               </button>
 
               <!-- 点赞数量   -->
-              <span class="text-sm text-[var(--text-color-400)]">
+              <span class="text-sm text-[var(--color-text-muted)]">
                 <!-- 如果点赞数不超过99，则显示数字，否则显示99+ -->
                 {{ props.echo.fav_count > 99 ? '99+' : props.echo.fav_count }}
               </span>
@@ -116,59 +118,43 @@
         >
           <!-- 文字在上 -->
           <div class="mx-auto w-11/12 pl-1 mb-3">
-            <MdPreview
-              :id="previewOptions.proviewId"
-              :modelValue="props.echo.content"
-              :theme="theme"
-              :show-code-row-number="previewOptions.showCodeRowNumber"
-              :preview-theme="previewOptions.previewTheme"
-              :code-theme="previewOptions.codeTheme"
-              :code-style-reverse="previewOptions.codeStyleReverse"
-              :no-img-zoom-in="previewOptions.noImgZoomIn"
-              :code-foldable="previewOptions.codeFoldable"
-              :auto-fold-threshold="previewOptions.autoFoldThreshold"
-            />
+            <TheMdPreview :content="props.echo.content" />
           </div>
 
-          <TheImageGallery :images="props.echo.images" :layout="props.echo.layout" />
+          <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" />
         </template>
 
         <template v-else>
           <!-- 图片在上，文字在下（瀑布流 / 单图轮播 等） -->
-          <TheImageGallery :images="props.echo.images" :layout="props.echo.layout" />
+          <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" />
 
           <div class="mx-auto w-11/12 pl-1 mt-3">
-            <MdPreview
-              :id="previewOptions.proviewId"
-              :modelValue="props.echo.content"
-              :theme="theme"
-              :show-code-row-number="previewOptions.showCodeRowNumber"
-              :preview-theme="previewOptions.previewTheme"
-              :code-theme="previewOptions.codeTheme"
-              :code-style-reverse="previewOptions.codeStyleReverse"
-              :no-img-zoom-in="previewOptions.noImgZoomIn"
-              :code-foldable="previewOptions.codeFoldable"
-              :auto-fold-threshold="previewOptions.autoFoldThreshold"
-            />
+            <TheMdPreview :content="props.echo.content" />
           </div>
         </template>
 
         <!-- 扩展内容 -->
         <div v-if="props.echo.extension" class="my-2">
-          <div v-if="props.echo.extension_type === ExtensionType.MUSIC">
+          <div v-if="props.echo.extension.type === ExtensionType.MUSIC">
             <TheAPlayerCard :echo="props.echo" />
           </div>
-          <div v-if="props.echo.extension_type === ExtensionType.VIDEO">
-            <TheVideoCard :videoId="props.echo.extension" class="px-2 mx-auto hover:shadow-md" />
+          <div v-if="props.echo.extension.type === ExtensionType.VIDEO">
+            <TheVideoCard
+              :videoId="props.echo.extension.payload.videoId"
+              class="px-2 mx-auto hover:shadow-md"
+            />
           </div>
           <TheGithubCard
-            v-if="props.echo.extension_type === ExtensionType.GITHUBPROJ"
-            :GithubURL="props.echo.extension"
+            v-if="
+              props.echo.extension.type === ExtensionType.GITHUBPROJ &&
+              props.echo.extension.payload?.repoUrl
+            "
+            :GithubURL="props.echo.extension.payload.repoUrl"
             class="px-2 mx-auto hover:shadow-md"
           />
           <TheWebsiteCard
-            v-if="props.echo.extension_type === ExtensionType.WEBSITE"
-            :website="props.echo.extension"
+            v-if="props.echo.extension.type === ExtensionType.WEBSITE"
+            :website="props.echo.extension.payload"
             class="px-2 mx-auto hover:shadow-md"
           />
         </div>
@@ -178,15 +164,14 @@
 </template>
 
 <script setup lang="ts">
-import { MdPreview } from 'md-editor-v3'
 import { onMounted, ref, onBeforeUnmount, computed } from 'vue'
 import { fetchDeleteEcho, fetchLikeEcho, fetchGetEchoById } from '@/service/api'
 import { theToast } from '@/utils/toast'
-import { useUserStore, useEchoStore, useEditorStore, useThemeStore } from '@/stores'
+import { useUserStore, useEchoStore, useEditorStore } from '@/stores'
 import TheGithubCard from './TheGithubCard.vue'
 import TheVideoCard from './TheVideoCard.vue'
 import TheImageGallery from './TheImageGallery.vue'
-import 'md-editor-v3/lib/preview.css'
+import TheMdPreview from './TheMdPreview.vue'
 import Roll from '../icons/roll.vue'
 import Lock from '../icons/lock.vue'
 import More from '../icons/more.vue'
@@ -199,6 +184,7 @@ import { localStg } from '@/utils/storage'
 import { useRouter } from 'vue-router'
 import { ExtensionType, ImageLayout } from '@/enums/enums'
 import { formatDate } from '@/utils/other'
+import { getEchoFilesBy } from '@/utils/echo'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 const { openConfirm } = useBaseDialog()
 
@@ -214,25 +200,15 @@ const props = defineProps<{
 const isLikeAnimating = ref(false)
 
 const userStore = useUserStore()
-const themeStore = useThemeStore()
-
-const theme = computed(() => (themeStore.theme === 'light' ? 'light' : 'dark'))
-const previewOptions = {
-  proviewId: 'preview-only',
-  showCodeRowNumber: false,
-  previewTheme: 'github',
-  codeTheme: 'atom',
-  codeStyleReverse: true,
-  noImgZoomIn: false,
-  codeFoldable: true,
-  autoFoldThreshold: 15,
-}
+const echoImageFiles = computed(() =>
+  getEchoFilesBy(props.echo, { categories: ['image'], dedupeBy: 'id' }),
+)
 
 const echoStore = useEchoStore()
 const editorStore = useEditorStore()
 const router = useRouter()
 
-const handleDeleteEcho = (echoId: number) => {
+const handleDeleteEcho = (echoId: string) => {
   openConfirm({
     title: '确定要删除吗？',
     description: '删除后将无法恢复，请谨慎操作',
@@ -267,11 +243,11 @@ const handleUpdateEcho = async () => {
 }
 
 const LIKE_LIST_KEY = 'likedEchoIds'
-const likedEchoIds: number[] = localStg.getItem(LIKE_LIST_KEY) || []
-const hasLikedEcho = (echoId: number): boolean => {
+const likedEchoIds: string[] = localStg.getItem(LIKE_LIST_KEY) || []
+const hasLikedEcho = (echoId: string): boolean => {
   return likedEchoIds.includes(echoId)
 }
-const handleLikeEcho = (echoId: number) => {
+const handleLikeEcho = (echoId: string) => {
   isLikeAnimating.value = true
   setTimeout(() => {
     isLikeAnimating.value = false
@@ -294,7 +270,7 @@ const handleLikeEcho = (echoId: number) => {
   })
 }
 
-const handleExpandEcho = (echoId: number) => {
+const handleExpandEcho = (echoId: string) => {
   // 跳转到Echo详情
   router.push({
     name: 'echo',
@@ -337,65 +313,26 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped lang="css">
-#preview-only {
-  background-color: inherit;
-}
-
-:deep(.md-editor) {
-  font-family: var(--font-sans);
-  /* font-family: 'LXGW WenKai Screen'; */
-}
-
-:deep(.md-editor div.github-theme) {
-  line-height: 1.6;
-  color: #000;
-}
-
-:deep(ul li) {
-  list-style-type: disc;
-}
-
-:deep(ul li li) {
-  list-style-type: circle;
-}
-
-:deep(ul li li li) {
-  list-style-type: square;
-}
-
-:deep(ol li) {
-  list-style-type: decimal;
-}
-
-:deep(p) {
-  white-space: normal;
-  /* 允许正常换行 */
-  overflow-wrap: break-word;
-  /* 单词太长时自动换行 */
-  word-break: normal;
-  /* 保持单词整体性，不随便拆开 */
-}
-
 .echo-header-sticky {
   position: sticky;
-  top: var(--echo-date-sticky-top, 0px);
+  top: var(--date-sticky-top, 0px);
   z-index: 8;
-  background-color: var(--bg-color);
+  background-color: var(--color-bg-canvas);
 }
 
 .echo-timeline {
-  --timeline-axis-offset: calc(0.25rem + 1px);
-  --timeline-line-width: 2px;
-  --timeline-dot-size: 0.5rem;
-  --timeline-dot-gap: 0.3rem;
+  --axis-offset: calc(0.25rem + 1px);
+  --axis-line-width: 2px;
+  --axis-dot-size: 0.5rem;
+  --axis-dot-gap: 0.3rem;
 }
 
 .timeline-marker {
   position: relative;
-  width: var(--timeline-dot-size);
+  width: var(--axis-dot-size);
   height: 100%;
   margin-right: 0.5rem;
-  margin-left: calc(var(--timeline-axis-offset) - (var(--timeline-dot-size) / 2));
+  margin-left: calc(var(--axis-offset) - (var(--axis-dot-size) / 2));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -404,11 +341,11 @@ onBeforeUnmount(() => {
 .timeline-marker::before {
   content: '';
   position: absolute;
-  left: calc(50% - (var(--timeline-line-width) / 2));
+  left: calc(50% - (var(--axis-line-width) / 2));
   top: -2px;
-  bottom: calc(50% + (var(--timeline-dot-size) / 2) + var(--timeline-dot-gap));
-  width: var(--timeline-line-width);
-  background-color: var(--timeline-line-color);
+  bottom: calc(50% + (var(--axis-dot-size) / 2) + var(--axis-dot-gap));
+  width: var(--axis-line-width);
+  background-color: var(--color-border-subtle);
   pointer-events: none;
 }
 
@@ -419,17 +356,17 @@ onBeforeUnmount(() => {
 .timeline-marker::after {
   content: '';
   position: absolute;
-  left: calc(50% - (var(--timeline-line-width) / 2));
-  top: calc(50% + (var(--timeline-dot-size) / 2) + var(--timeline-dot-gap));
+  left: calc(50% - (var(--axis-line-width) / 2));
+  top: calc(50% + (var(--axis-dot-size) / 2) + var(--axis-dot-gap));
   bottom: -2px;
-  width: var(--timeline-line-width);
-  background-color: var(--timeline-line-color);
+  width: var(--axis-line-width);
+  background-color: var(--color-border-subtle);
   pointer-events: none;
 }
 
 .timeline-content {
   position: relative;
-  margin-left: var(--timeline-axis-offset);
+  margin-left: var(--axis-offset);
 }
 
 .timeline-content::before {
@@ -437,9 +374,9 @@ onBeforeUnmount(() => {
   position: absolute;
   top: -2px;
   bottom: 0;
-  left: calc((var(--timeline-line-width) / -2));
-  width: var(--timeline-line-width);
-  background-color: var(--timeline-line-color);
+  left: calc((var(--axis-line-width) / -2));
+  width: var(--axis-line-width);
+  background-color: var(--color-border-subtle);
   pointer-events: none;
 }
 </style>

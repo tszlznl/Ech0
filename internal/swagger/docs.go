@@ -606,7 +606,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.Echo"
+                            "$ref": "#/definitions/model.EchoUpsertDto"
                         }
                     }
                 ],
@@ -638,7 +638,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.Echo"
+                            "$ref": "#/definitions/model.EchoUpsertDto"
                         }
                     }
                 ],
@@ -900,84 +900,6 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "删除失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/fediverse/settings": {
-            "get": {
-                "description": "获取系统的联邦网络相关设置",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "系统设置"
-                ],
-                "summary": "获取联邦网络设置",
-                "responses": {
-                    "200": {
-                        "description": "获取联邦网络设置失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "更新系统的联邦网络相关设置",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "系统设置"
-                ],
-                "summary": "更新联邦网络设置",
-                "parameters": [
-                    {
-                        "description": "新的联邦网络设置",
-                        "name": "fediverseSettings",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.FediverseSettingDto"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "更新联邦网络设置失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/getmusic": {
-            "get": {
-                "description": "获取当前可供播放的音乐文件URL",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "通用功能"
-                ],
-                "summary": "获取可播放的音乐",
-                "responses": {
-                    "200": {
-                        "description": "获取音乐URL失败",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
@@ -1294,29 +1216,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/metrics": {
-            "get": {
-                "description": "获取当前系统的各项运行指标，如 CPU 使用率、内存使用情况等",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "通用功能"
-                ],
-                "summary": "获取系统指标",
-                "responses": {
-                    "200": {
-                        "description": "获取系统指标失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/oauth2/settings": {
             "get": {
                 "description": "获取系统的 OAuth2 相关设置",
@@ -1388,29 +1287,6 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "获取 OAuth2 状态失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/playmusic": {
-            "get": {
-                "description": "以流的方式播放当前可用的音乐文件",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "audio/mpeg"
-                ],
-                "tags": [
-                    "通用功能"
-                ],
-                "summary": "播放音乐",
-                "responses": {
-                    "200": {
-                        "description": "播放失败",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
@@ -1619,29 +1495,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/status": {
-            "get": {
-                "description": "查询系统当前运行状态及初始化安装状态",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "通用功能"
-                ],
-                "summary": "获取 Echo 系统状态",
-                "responses": {
-                    "200": {
-                        "description": "获取状态失败或未初始化",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/tag/{id}": {
             "delete": {
                 "description": "根据ID删除指定的标签",
@@ -1690,123 +1543,6 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "获取失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/todo": {
-            "get": {
-                "description": "获取当前用户的所有待办事项",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "待办事项"
-                ],
-                "summary": "获取待办事项列表",
-                "responses": {
-                    "200": {
-                        "description": "获取失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "用户添加一条新的待办事项",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "待办事项"
-                ],
-                "summary": "添加新的待办事项",
-                "parameters": [
-                    {
-                        "description": "待办事项内容",
-                        "name": "todo",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.Todo"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "添加失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/todo/{id}": {
-            "put": {
-                "description": "根据ID更新指定的待办事项",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "待办事项"
-                ],
-                "summary": "更新待办事项",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "待办事项ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "更新失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "根据ID删除指定的待办事项",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "待办事项"
-                ],
-                "summary": "删除待办事项",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "待办事项ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "删除失败",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
@@ -2110,22 +1846,6 @@ const docTemplate = `{
                     }
                 }
             }
-        },
-        "/ws/metrics": {
-            "get": {
-                "description": "通过 WebSocket 实时订阅系统的各项运行指标",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "通用功能"
-                ],
-                "summary": "通过 WebSocket 订阅系统指标",
-                "responses": {}
-            }
         }
     },
     "definitions": {
@@ -2327,10 +2047,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "extension": {
-                    "type": "string"
-                },
-                "extension_type": {
-                    "type": "string"
+                    "$ref": "#/definitions/model.EchoExtension"
                 },
                 "fav_count": {
                     "type": "integer"
@@ -2364,29 +2081,53 @@ const docTemplate = `{
                 }
             }
         },
-        "model.FediverseSetting": {
+        "model.EchoExtension": {
             "type": "object",
             "properties": {
-                "enable": {
-                    "description": "是否启用联邦网络功能",
-                    "type": "boolean"
+                "echo_id": {
+                    "type": "string"
                 },
-                "server_url": {
-                    "description": "服务器 URL",
+                "id": {
+                    "type": "string"
+                },
+                "payload": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "type": {
                     "type": "string"
                 }
             }
         },
-        "model.FediverseSettingDto": {
+        "model.EchoUpsertDto": {
             "type": "object",
             "properties": {
-                "enable": {
-                    "description": "是否启用联邦网络功能",
+                "content": {
+                    "type": "string"
+                },
+                "echo_files": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                },
+                "extension": {
+                    "$ref": "#/definitions/model.EchoExtension"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "layout": {
+                    "type": "string"
+                },
+                "private": {
                     "type": "boolean"
                 },
-                "server_url": {
-                    "description": "服务器 URL",
-                    "type": "string"
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Tag"
+                    }
                 }
             }
         },
@@ -2409,6 +2150,10 @@ const docTemplate = `{
         "model.Image": {
             "type": "object",
             "properties": {
+                "access_url": {
+                    "description": "可直接访问地址（前端渲染应优先使用）",
+                    "type": "string"
+                },
                 "height": {
                     "description": "图片高度",
                     "type": "integer"
@@ -2424,8 +2169,8 @@ const docTemplate = `{
                     "description": "图片URL",
                     "type": "string"
                 },
-                "message_id": {
-                    "description": "关联的Echo ID(注意⚠️: 该字段名为MessageID, 但实际关联的是Echo表,因为为了兼容旧版Echo用户)",
+                "echo_id": {
+                    "description": "关联的 Echo ID",
                     "type": "integer"
                 },
                 "object_key": {
@@ -2445,6 +2190,10 @@ const docTemplate = `{
                 "url"
             ],
             "properties": {
+                "access_url": {
+                    "description": "可直接访问地址（前端渲染应优先使用）",
+                    "type": "string"
+                },
                 "height": {
                     "description": "图片高度",
                     "type": "integer"
@@ -2785,30 +2534,6 @@ const docTemplate = `{
                 "usage_count": {
                     "description": "使用计数",
                     "type": "integer"
-                }
-            }
-        },
-        "model.Todo": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "status": {
-                    "description": "0:未完成 1:已完成",
-                    "type": "integer"
-                },
-                "user_id": {
-                    "type": "integer"
-                },
-                "username": {
-                    "type": "string"
                 }
             }
         },

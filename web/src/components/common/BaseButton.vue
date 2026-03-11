@@ -1,10 +1,12 @@
 <template>
   <button
     :class="[
-      'cursor-pointer p-1.5 shadow-xs ring-inset ring-1 ring-[var(--btn-ring-color)] text-[var(--text-color-700)] outline-none',
+      'cursor-pointer p-1.5 rounded-[var(--btn-radius)] ring-inset ring-1 ring-[var(--btn-ring-color)] text-[var(--btn-text-color)] outline-none shadow-[var(--btn-shadow)] transition-colors duration-200',
       hasBg ? '' : 'bg-[var(--btn-bg-color)]',
+      disabled
+        ? 'cursor-not-allowed opacity-70'
+        : 'hover:bg-[var(--btn-hover-bg-color)] hover:ring-[var(--btn-hover-border-color)] focus-visible:ring-2 focus-visible:ring-[var(--btn-focus-ring-color)]',
       props.class,
-      disabled ? 'cursor-not-allowed opacity-70' : '',
     ]"
     :disabled="disabled"
     @click="onClick"

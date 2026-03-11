@@ -31,17 +31,17 @@
       <!-- Tag Add or Select -->
       <div v-if="currentMode === Mode.ECH0">
         <div
-          class="flex items-center justify-between rounded-sm border border-[var(--tag-editor-border-color)] border-dashed px-1"
+          class="flex items-center justify-between rounded-sm border border-[var(--color-border-subtle)] border-dashed px-1"
         >
-          <span class="text-[var(--text-color-300)]">#</span>
+          <span class="text-[var(--color-text-muted)]">#</span>
           <BaseCombobox
             :key="tagOptions.length"
             v-model="tagToAdd"
             :multiple="false"
             :options="tagOptions"
             placeholder="标签"
-            class="rounded-sm border-none w-auto"
-            input-class="w-16 h-7 text-[var(--text-color-500)]"
+            wrapper-class="border-transparent shadow-none bg-transparent"
+            input-class="w-16 h-7 text-[var(--color-text-secondary)]"
           />
         </div>
       </div>
@@ -49,23 +49,23 @@
 
     <div class="flex flex-row items-center gap-2">
       <!-- Published Info -->
-      <div v-if="hasContent || hasImage || hasExtension" class="relative group">
-        <Info class="w-6 h-6 text-[var(--text-color-300)] hover:text-[var(--text-color-400)]" />
+      <div v-if="hasContent || hasFile || hasExtension" class="relative group">
+        <Info class="w-6 h-6 text-[var(--color-text-muted)] hover:text-[var(--color-text-muted)]" />
         <div
-          class="absolute right-0 top-full z-10 mt-2 whitespace-nowrap rounded-md border border-[var(--border-color-300)] border-dashed bg-[var(--editor-bg-color)] px-2 py-1 text-xs shadow-md opacity-0 translate-y-1 scale-95 pointer-events-none transition-all duration-200 ease-out group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100 group-hover:pointer-events-auto"
+          class="absolute right-0 top-full z-10 mt-2 whitespace-nowrap rounded-md border border-[var(--color-border-subtle)] border-dashed bg-[var(--color-bg-surface)] px-2 py-1 text-xs shadow-md opacity-0 translate-y-1 scale-95 pointer-events-none transition-all duration-200 ease-out group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100 group-hover:pointer-events-auto"
         >
           <div v-if="infoTooltipLines.length > 0">
-            <div class="mb-1 font-medium text-[var(--text-color-500)]">已添加：</div>
+            <div class="mb-1 font-medium text-[var(--color-text-secondary)]">已添加：</div>
             <div
               v-for="line in infoTooltipLines"
               :key="line.label"
-              class="flex items-center gap-1 text-[var(--text-color-400)]"
+              class="flex items-center gap-1 text-[var(--color-text-muted)]"
             >
               <component v-if="line.icon" :is="line.icon" class="w-3.5 h-3.5" />
               <span>{{ line.label }}</span>
             </div>
           </div>
-          <div v-else class="text-[var(--text-color-300)]">尚未添加内容</div>
+          <div v-else class="text-[var(--color-text-muted)]">尚未添加内容</div>
         </div>
       </div>
 
@@ -74,7 +74,6 @@
         v-if="
           currentMode !== Mode.Panel &&
           currentMode !== Mode.TagManage &&
-          currentMode !== Mode.PlayMusic &&
           currentMode !== Mode.INBOX &&
           isUpdateMode === false
         "
@@ -83,19 +82,11 @@
           :icon="Publish"
           @click="handleAddorUpdate"
           class="w-8 h-8 sm:w-9 sm:h-9 rounded-md"
-          title="发布Echo / Todo"
+          title="发布Echo"
         />
       </div>
       <!-- Exit Update -->
-      <div
-        v-if="
-          currentMode !== Mode.Panel &&
-          currentMode !== Mode.TODO &&
-          currentMode !== Mode.PlayMusic &&
-          currentMode !== Mode.INBOX &&
-          isUpdateMode === true
-        "
-      >
+      <div v-if="currentMode !== Mode.Panel && currentMode !== Mode.INBOX && isUpdateMode === true">
         <BaseButton
           :icon="ExitUpdate"
           @click="handleExitUpdateMode"
@@ -104,14 +95,7 @@
         />
       </div>
       <!-- Update -->
-      <div
-        v-if="
-          currentMode !== Mode.Panel &&
-          currentMode !== Mode.TODO &&
-          currentMode !== Mode.PlayMusic &&
-          isUpdateMode === true
-        "
-      >
+      <div v-if="currentMode !== Mode.Panel && isUpdateMode === true">
         <BaseButton
           :icon="Update"
           @click="handleAddorUpdate"
@@ -141,7 +125,8 @@ import GithubProj from '@/components/icons/githubproj.vue'
 import Website from '@/components/icons/website.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseCombobox from '@/components/common/BaseCombobox.vue'
-import { ImageSource, Mode, ExtensionType } from '@/enums/enums'
+import { Mode, ExtensionType } from '@/enums/enums'
+import { FILE_STORAGE_TYPE } from '@/constants/file'
 import { storeToRefs } from 'pinia'
 import { useEditorStore, useEchoStore } from '@/stores'
 import { theToast } from '@/utils/toast'
@@ -153,10 +138,10 @@ const {
   currentMode,
   isUpdateMode,
   echoToAdd,
-  imageToAdd,
+  fileToAdd,
   tagToAdd,
   hasContent,
-  hasImage,
+  hasFile,
   hasExtension,
   extensionToAdd,
 } = storeToRefs(editorStore)
@@ -166,7 +151,7 @@ const { tagOptions } = storeToRefs(echoStore)
 type TooltipLine = { label: string; icon?: Component }
 
 const infoTooltipLines = computed<TooltipLine[]>(() => {
-  const extType = extensionToAdd.value.extension_type || echoToAdd.value.extension_type
+  const extType = extensionToAdd.value.extension_type || echoToAdd.value.extension?.type
   const extMap: Record<ExtensionType, { label: string; icon: Component }> = {
     [ExtensionType.MUSIC]: { label: '音乐', icon: Music },
     [ExtensionType.VIDEO]: { label: '视频', icon: Video },
@@ -176,7 +161,7 @@ const infoTooltipLines = computed<TooltipLine[]>(() => {
 
   const parts: TooltipLine[] = []
   if (hasContent.value) parts.push({ label: '文字', icon: Write })
-  if (hasImage.value) parts.push({ label: '图片', icon: ImageIcon })
+  if (hasFile.value) parts.push({ label: '图片', icon: ImageIcon })
   if (hasExtension.value)
     parts.push({
       label:
@@ -201,14 +186,12 @@ const handleChangeMode = () => {
 }
 
 const handleAddImageMode = () => {
-  if (imageToAdd.value.image_source === '') {
-    imageToAdd.value.image_source = ImageSource.LOCAL
-  }
+  fileToAdd.value.storage_type = FILE_STORAGE_TYPE.LOCAL
 
   // 检查localStg中是否有记忆的上传方式
-  const rememberedSource = localStg.getItem<ImageSource>('image_source')
+  const rememberedSource = localStg.getItem<App.Api.File.StorageType>('file_storage_type')
   if (rememberedSource) {
-    imageToAdd.value.image_source = rememberedSource
+    fileToAdd.value.storage_type = rememberedSource
   }
 
   editorStore.setMode(Mode.Image)

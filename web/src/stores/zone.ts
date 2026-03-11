@@ -7,13 +7,12 @@ interface ZonePrintPayload {
 }
 
 interface PrintableEcho {
-  id: number | string
+  id: string
   content?: string | null
   created_at?: string | null
   tags?: Array<{ name?: string | null }> | null
-  images?: unknown[] | null
-  extension?: string | null
-  extension_type?: string | null
+  echo_files?: unknown[] | null
+  extension?: App.Api.Ech0.EchoExtension | null
 }
 
 const MAX_PRINT_LENGTH = 2000
@@ -26,7 +25,7 @@ const EXTENSION_LABEL_MAP: Record<string, string> = {
 
 const buildPrintableEchoText = (echo: PrintableEcho): string => {
   const content = echo.content?.trim() || ''
-  const imageCount = Array.isArray(echo.images) ? echo.images.length : 0
+  const imageCount = Array.isArray(echo.echo_files) ? echo.echo_files.length : 0
   const hasExtension = Boolean(echo.extension)
   const hasMedia = imageCount > 0 || hasExtension
 
@@ -51,8 +50,8 @@ const buildPrintableEchoText = (echo: PrintableEcho): string => {
   }
 
   if (hasExtension) {
-    const rawType = String(echo.extension_type || 'Unknown').toUpperCase()
-    const extensionLabel = EXTENSION_LABEL_MAP[rawType] || String(echo.extension_type || 'Unknown')
+    const rawType = String(echo.extension?.type || 'Unknown').toUpperCase()
+    const extensionLabel = EXTENSION_LABEL_MAP[rawType] || String(echo.extension?.type || 'Unknown')
     lines.push(`Extension: ${extensionLabel}`)
   }
 

@@ -56,15 +56,15 @@ function onToggle(event: MouseEvent) {
 .toggle-track {
   width: 40px;
   height: 20px;
-  background: #ccc;
-  border-radius: 5px;
+  background: var(--switch-track-off-color);
+  border-radius: var(--radius-sm);
   position: relative;
   transition: background 0.3s;
   margin-right: 0.5rem;
   flex-shrink: 0;
 }
 .toggle-switch-btn.is-on .toggle-track {
-  background: #ebc78c;
+  background: var(--switch-track-on-color);
 }
 .toggle-thumb {
   position: absolute;
@@ -72,8 +72,8 @@ function onToggle(event: MouseEvent) {
   left: 2px;
   width: 16px;
   height: 16px;
-  background: #fff;
-  border-radius: 25%;
+  background: var(--switch-thumb-color);
+  border-radius: calc(var(--radius-sm) - 2px);
   transition: transform 0.3s;
 }
 .toggle-switch-btn.is-on .toggle-thumb {
@@ -81,6 +81,6 @@ function onToggle(event: MouseEvent) {
 }
 .toggle-label {
   font-size: 0.95em;
-  color: #333;
+  color: var(--switch-label-color);
 }
 </style>

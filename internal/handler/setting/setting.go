@@ -1,9 +1,8 @@
 package handler
 
 import (
-	"strconv"
-
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	res "github.com/lin-snow/ech0/internal/handler/response"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
@@ -11,11 +10,11 @@ import (
 )
 
 type SettingHandler struct {
-	settingService service.SettingServiceInterface
+	settingService service.Service
 }
 
 // NewSettingHandler SettingHandler 的构造函数
-func NewSettingHandler(settingService service.SettingServiceInterface) *SettingHandler {
+func NewSettingHandler(settingService service.Service) *SettingHandler {
 	return &SettingHandler{
 		settingService: settingService,
 	}
@@ -61,9 +60,6 @@ func (settingHandler *SettingHandler) GetSettings() gin.HandlerFunc {
 //	@Router			/settings [put]
 func (settingHandler *SettingHandler) UpdateSettings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
-
 		// 解析请求体中的参数
 		var newSettings model.SystemSettingDto
 		if err := ctx.ShouldBindJSON(&newSettings); err != nil {
@@ -73,7 +69,7 @@ func (settingHandler *SettingHandler) UpdateSettings() gin.HandlerFunc {
 			}
 		}
 
-		if err := settingHandler.settingService.UpdateSetting(userid, &newSettings); err != nil {
+		if err := settingHandler.settingService.UpdateSetting(ctx.Request.Context(), &newSettings); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -113,6 +109,26 @@ func (settingHandler *SettingHandler) GetCommentSettings() gin.HandlerFunc {
 	})
 }
 
+// GetCommentProvidersMeta 获取评论提供者字段元数据
+//
+//	@Summary		获取评论提供者元数据
+//	@Description	获取各评论服务提供者的动态字段定义
+//	@Tags			系统设置
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	res.Response{data=model.CommentProviderMetaResponse}	"获取评论提供者元数据成功"
+//	@Failure		200	{object}	res.Response											"获取评论提供者元数据失败"
+//	@Router			/comment/providers/meta [get]
+func (settingHandler *SettingHandler) GetCommentProvidersMeta() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		meta := settingHandler.settingService.GetCommentProviderMeta()
+		return res.Response{
+			Data: meta,
+			Msg:  commonModel.GET_COMMENT_SETTINGS_SUCCESS,
+		}
+	})
+}
+
 // UpdateCommentSettings 更新评论设置
 //
 //	@Summary		更新评论设置
@@ -126,9 +142,6 @@ func (settingHandler *SettingHandler) GetCommentSettings() gin.HandlerFunc {
 //	@Router			/comment/settings [put]
 func (settingHandler *SettingHandler) UpdateCommentSettings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
-
 		// 解析请求体中的参数
 		var newCommentSettings model.CommentSettingDto
 		if err := ctx.ShouldBindJSON(&newCommentSettings); err != nil {
@@ -138,7 +151,7 @@ func (settingHandler *SettingHandler) UpdateCommentSettings() gin.HandlerFunc {
 			}
 		}
 
-		if err := settingHandler.settingService.UpdateCommentSetting(userid, &newCommentSettings); err != nil {
+		if err := settingHandler.settingService.UpdateCommentSetting(ctx.Request.Context(), &newCommentSettings); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -163,11 +176,8 @@ func (settingHandler *SettingHandler) UpdateCommentSettings() gin.HandlerFunc {
 //	@Router			/s3/settings [get]
 func (settingHandler *SettingHandler) GetS3Settings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
-
 		var s3Setting model.S3Setting
-		if err := settingHandler.settingService.GetS3Setting(userid, &s3Setting); err != nil {
+		if err := settingHandler.settingService.GetS3Setting(ctx.Request.Context(), &s3Setting); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -194,9 +204,6 @@ func (settingHandler *SettingHandler) GetS3Settings() gin.HandlerFunc {
 //	@Router			/s3/settings [put]
 func (settingHandler *SettingHandler) UpdateS3Settings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
-
 		// 解析请求体中的参数
 		var newS3Settings model.S3SettingDto
 		if err := ctx.ShouldBindJSON(&newS3Settings); err != nil {
@@ -206,7 +213,7 @@ func (settingHandler *SettingHandler) UpdateS3Settings() gin.HandlerFunc {
 			}
 		}
 
-		if err := settingHandler.settingService.UpdateS3Setting(userid, &newS3Settings); err != nil {
+		if err := settingHandler.settingService.UpdateS3Setting(ctx.Request.Context(), &newS3Settings); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -231,11 +238,8 @@ func (settingHandler *SettingHandler) UpdateS3Settings() gin.HandlerFunc {
 //	@Router			/oauth2/settings [get]
 func (settingHandler *SettingHandler) GetOAuth2Settings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
-
 		var oauthSetting model.OAuth2Setting
-		if err := settingHandler.settingService.GetOAuth2Setting(userid, &oauthSetting, false); err != nil {
+		if err := settingHandler.settingService.GetOAuth2Setting(ctx.Request.Context(), &oauthSetting, false); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -262,9 +266,6 @@ func (settingHandler *SettingHandler) GetOAuth2Settings() gin.HandlerFunc {
 //	@Router			/oauth2/settings [put]
 func (settingHandler *SettingHandler) UpdateOAuth2Settings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
-
 		// 解析请求体中的参数
 		var newOAuthSettings model.OAuth2SettingDto
 		if err := ctx.ShouldBindJSON(&newOAuthSettings); err != nil {
@@ -274,7 +275,7 @@ func (settingHandler *SettingHandler) UpdateOAuth2Settings() gin.HandlerFunc {
 			}
 		}
 
-		if err := settingHandler.settingService.UpdateOAuth2Setting(userid, &newOAuthSettings); err != nil {
+		if err := settingHandler.settingService.UpdateOAuth2Setting(ctx.Request.Context(), &newOAuthSettings); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -326,10 +327,7 @@ func (settingHandler *SettingHandler) GetOAuth2Status() gin.HandlerFunc {
 //	@Router			/webhook [get]
 func (settingHandler *SettingHandler) GetWebhook() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
-
-		result, err := settingHandler.settingService.GetAllWebhooks(userid)
+		result, err := settingHandler.settingService.GetAllWebhooks(ctx.Request.Context())
 		if err != nil {
 			return res.Response{
 				Msg: "",
@@ -357,19 +355,15 @@ func (settingHandler *SettingHandler) GetWebhook() gin.HandlerFunc {
 //	@Router			/webhook/{id} [delete]
 func (settingHandler *SettingHandler) DeleteWebhook() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
-
 		// 从路径参数中获取 Webhook ID
-		idStr := ctx.Param("id")
-		id, err := strconv.ParseUint(idStr, 10, 64)
-		if err != nil {
+		id := ctx.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS,
 			}
 		}
 
-		if err := settingHandler.settingService.DeleteWebhook(userid, uint(id)); err != nil {
+		if err := settingHandler.settingService.DeleteWebhook(ctx.Request.Context(), id); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -396,13 +390,9 @@ func (settingHandler *SettingHandler) DeleteWebhook() gin.HandlerFunc {
 //	@Router			/webhook/{id} [put]
 func (settingHandler *SettingHandler) UpdateWebhook() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
-
 		// 从路径参数中获取 Webhook ID
-		idStr := ctx.Param("id")
-		id, err := strconv.ParseUint(idStr, 10, 64)
-		if err != nil {
+		id := ctx.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS,
 			}
@@ -417,7 +407,7 @@ func (settingHandler *SettingHandler) UpdateWebhook() gin.HandlerFunc {
 			}
 		}
 
-		if err := settingHandler.settingService.UpdateWebhook(userid, uint(id), &updatedWebhook); err != nil {
+		if err := settingHandler.settingService.UpdateWebhook(ctx.Request.Context(), id, &updatedWebhook); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -443,9 +433,6 @@ func (settingHandler *SettingHandler) UpdateWebhook() gin.HandlerFunc {
 //	@Router			/webhook [post]
 func (settingHandler *SettingHandler) CreateWebhook() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
-
 		// 解析请求体中的参数
 		var newWebhook model.WebhookDto
 		if err := ctx.ShouldBindJSON(&newWebhook); err != nil {
@@ -455,7 +442,7 @@ func (settingHandler *SettingHandler) CreateWebhook() gin.HandlerFunc {
 			}
 		}
 
-		if err := settingHandler.settingService.CreateWebhook(userid, &newWebhook); err != nil {
+		if err := settingHandler.settingService.CreateWebhook(ctx.Request.Context(), &newWebhook); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -480,10 +467,7 @@ func (settingHandler *SettingHandler) CreateWebhook() gin.HandlerFunc {
 //	@Router			/access-tokens [get]
 func (settingHandler *SettingHandler) ListAccessTokens() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
-
-		result, err := settingHandler.settingService.ListAccessTokens(userid)
+		result, err := settingHandler.settingService.ListAccessTokens(ctx.Request.Context())
 		if err != nil {
 			return res.Response{
 				Msg: "",
@@ -511,9 +495,6 @@ func (settingHandler *SettingHandler) ListAccessTokens() gin.HandlerFunc {
 //	@Router			/access-tokens [post]
 func (settingHandler *SettingHandler) CreateAccessToken() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
-
 		// 解析请求体中的参数
 		var newAccessToken model.AccessTokenSettingDto
 		if err := ctx.ShouldBindJSON(&newAccessToken); err != nil {
@@ -524,7 +505,7 @@ func (settingHandler *SettingHandler) CreateAccessToken() gin.HandlerFunc {
 		}
 
 		createdToken, err := settingHandler.settingService.CreateAccessToken(
-			userid,
+			ctx.Request.Context(),
 			&newAccessToken,
 		)
 		if err != nil {
@@ -554,19 +535,15 @@ func (settingHandler *SettingHandler) CreateAccessToken() gin.HandlerFunc {
 //	@Router			/access-tokens/{id} [delete]
 func (settingHandler *SettingHandler) DeleteAccessToken() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
-
 		// 从路径参数中获取 访问令牌 ID
-		idStr := ctx.Param("id")
-		id, err := strconv.ParseUint(idStr, 10, 64)
-		if err != nil {
+		id := ctx.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS,
 			}
 		}
 
-		if err := settingHandler.settingService.DeleteAccessToken(userid, uint(id)); err != nil {
+		if err := settingHandler.settingService.DeleteAccessToken(ctx.Request.Context(), id); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -575,73 +552,6 @@ func (settingHandler *SettingHandler) DeleteAccessToken() gin.HandlerFunc {
 
 		return res.Response{
 			Msg: commonModel.DELETE_ACCESS_TOKEN_SUCCESS,
-		}
-	})
-}
-
-// GetFediverseSettings 获取联邦网络设置
-//
-//	@Summary		获取联邦网络设置
-//	@Description	获取系统的联邦网络相关设置
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	res.Response{data=model.FediverseSetting}	"获取联邦网络设置成功"
-//	@Failure		200	{object}	res.Response								"获取联邦网络设置失败"
-//	@Router			/fediverse/settings [get]
-func (settingHandler *SettingHandler) GetFediverseSettings() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
-
-		var fediverseSettings model.FediverseSetting
-		if err := settingHandler.settingService.GetFediverseSetting(userid, &fediverseSettings); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: fediverseSettings,
-			Msg:  commonModel.GET_FEDIVERSE_SETTINGS_SUCCESS,
-		}
-	})
-}
-
-// UpdateFediverseSettings 更新联邦网络设置
-//
-//	@Summary		更新联邦网络设置
-//	@Description	更新系统的联邦网络相关设置
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Param			fediverseSettings	body		model.FediverseSettingDto	true	"新的联邦网络设置"
-//	@Success		200					{object}	res.Response				"更新联邦网络设置成功"
-//	@Failure		200					{object}	res.Response				"更新联邦网络设置失败"
-//	@Router			/fediverse/settings [put]
-func (settingHandler *SettingHandler) UpdateFediverseSettings() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
-		// 解析请求体中的参数
-		var newFediverseSettings model.FediverseSettingDto
-		if err := ctx.ShouldBindJSON(&newFediverseSettings); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-
-		if err := settingHandler.settingService.UpdateFediverseSetting(userid, &newFediverseSettings); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Msg: commonModel.UPDATE_FEDIVERSE_SETTINGS_SUCCESS,
 		}
 	})
 }
@@ -658,9 +568,6 @@ func (settingHandler *SettingHandler) UpdateFediverseSettings() gin.HandlerFunc 
 //	@Router			/backup/schedule [get]
 func (settingHandler *SettingHandler) GetBackupScheduleSetting() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		// userid := ctx.MustGet("userid").(uint)
-
 		var backupSchedule model.BackupSchedule
 		if err := settingHandler.settingService.GetBackupScheduleSetting(&backupSchedule); err != nil {
 			return res.Response{
@@ -689,8 +596,6 @@ func (settingHandler *SettingHandler) GetBackupScheduleSetting() gin.HandlerFunc
 //	@Router			/backup/schedule [post]
 func (settingHandler *SettingHandler) UpdateBackupScheduleSetting() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
 		// 解析请求体中的参数
 		var backupSchedule model.BackupScheduleDto
 		if err := ctx.ShouldBindJSON(&backupSchedule); err != nil {
@@ -700,7 +605,7 @@ func (settingHandler *SettingHandler) UpdateBackupScheduleSetting() gin.HandlerF
 			}
 		}
 
-		if err := settingHandler.settingService.UpdateBackupScheduleSetting(userid, &backupSchedule); err != nil {
+		if err := settingHandler.settingService.UpdateBackupScheduleSetting(ctx.Request.Context(), &backupSchedule); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -756,11 +661,8 @@ func (settingHandler *SettingHandler) GetAgentInfo() gin.HandlerFunc {
 //	@Router			/agent/settings [get]
 func (settingHandler *SettingHandler) GetAgentSettings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
-
 		var settings model.AgentSetting
-		if err := settingHandler.settingService.GetAgentSettings(userid, &settings); err != nil {
+		if err := settingHandler.settingService.GetAgentSettings(ctx.Request.Context(), &settings); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -787,9 +689,6 @@ func (settingHandler *SettingHandler) GetAgentSettings() gin.HandlerFunc {
 //	@Router			/agent/settings [put]
 func (settingHandler *SettingHandler) UpdateAgentSettings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
-
 		// 解析请求体中的参数
 		var newSettings model.AgentSettingDto
 		if err := ctx.ShouldBindJSON(&newSettings); err != nil {
@@ -799,7 +698,7 @@ func (settingHandler *SettingHandler) UpdateAgentSettings() gin.HandlerFunc {
 			}
 		}
 
-		if err := settingHandler.settingService.UpdateAgentSettings(userid, &newSettings); err != nil {
+		if err := settingHandler.settingService.UpdateAgentSettings(ctx.Request.Context(), &newSettings); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,

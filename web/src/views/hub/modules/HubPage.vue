@@ -3,9 +3,9 @@
     class="w-full px-2 pb-4 py-2 mt-4 sm:mt-0 mb-10 sm:mb-0 mx-auto flex justify-center items-start"
   >
     <!-- Ech0s Hub -->
-    <div ref="mainColumn" class="mx-auto px-2 text-[var(--text-color-next-200)] w-full">
+    <div ref="mainColumn" class="mx-auto px-2 text-[var(--color-text-muted)] w-full">
       <h1
-        class="text-4xl md:text-6xl italic font-bold font-serif text-center text-[var(--text-color-next-300)]"
+        class="text-4xl md:text-6xl italic font-bold font-serif text-center text-[var(--color-text-muted)]"
       >
         Ech0 Hub
       </h1>
@@ -35,8 +35,8 @@
             :active="active"
             :size-dependencies="[
               item.content?.length ?? 0,
-              item.images?.length ?? 0,
-              item.extension_type ?? '',
+              getEchoFilesBy(item, { categories: ['image'], dedupeBy: 'id' }).length,
+              item.extension?.type ?? '',
               item.layout ?? '',
             ]"
             :data-index="index"
@@ -49,17 +49,17 @@
       </div>
 
       <div v-if="isLoading || isPreparing" class="my-6">
-        <p class="text-[var(--text-color-500)] text-center">加载中...</p>
+        <p class="text-[var(--color-text-secondary)] text-center">加载中...</p>
       </div>
       <div
         v-else-if="echoList.length === 0 && hasTriedInitialLoad && !isPreparing && !isLoading"
         class="my-6"
       >
-        <p class="text-[var(--text-color-500)] text-center">暂无数据，快去添加Connect吧🙃</p>
+        <p class="text-[var(--color-text-secondary)] text-center">暂无数据，快去添加Connect吧🙃</p>
       </div>
 
       <div v-if="echoList.length > 0 && !hasMore" class="my-6">
-        <p class="text-[var(--text-color-500)] text-center flex items-center justify-center">
+        <p class="text-[var(--color-text-secondary)] text-center flex items-center justify-center">
           没有更多数据了<Flowers />
         </p>
       </div>
@@ -87,6 +87,7 @@ import { storeToRefs } from 'pinia'
 import { useRouter, useRoute } from 'vue-router'
 import { useBfCacheRestore } from '@/composables/useBfCacheRestore'
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
+import { getEchoFilesBy } from '@/utils/echo'
 
 const router = useRouter()
 const route = useRoute()
@@ -96,13 +97,13 @@ const currentRoute = computed(() => route.name as string)
 // 统一的按钮样式计算函数
 const getButtonClasses = (routeName: string, isBackButton = false) => {
   const baseClasses = isBackButton
-    ? 'text-[var(--text-color-next-600)] rounded-md transition-all duration-300 border-none !shadow-none !ring-0 hover:opacity-75 p-2 group bg-transparent'
+    ? 'text-[var(--color-text-primary)] rounded-md transition-all duration-300 border-none !shadow-none !ring-0 hover:opacity-75 p-2 group bg-transparent'
     : 'flex items-center gap-2 pl-3 py-1 rounded-md transition-all duration-300 border-none !shadow-none !ring-0 justify-start bg-transparent'
 
   const activeClasses =
     currentRoute.value === routeName
       ? 'text-stone-800 bg-orange-200'
-      : 'text-[var(--text-color-next-600)] hover:opacity-75'
+      : 'text-[var(--color-text-primary)] hover:opacity-75'
 
   return `${baseClasses} ${activeClasses}`
 }

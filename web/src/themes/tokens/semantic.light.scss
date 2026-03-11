@@ -1,0 +1,20 @@
+:root.light {
+  --selection-text-color: #fffcf0;
+  --selection-bg-color: #393022;
+
+  --color-bg-canvas: #f4f1ec;
+  --color-bg-surface: #ffffff;
+  --color-bg-muted: oklch(98.3% 0.008 74.6);
+  --color-text-primary: oklch(27.8% 0.026 52.1);
+  --color-text-secondary: oklch(43.6% 0.021 56.2);
+  --color-text-muted: oklch(61.9% 0.016 57.7);
+  --color-border-subtle: oklch(90.7% 0.008 63.5);
+  --color-border-strong: oklch(79.1% 0.014 57.2);
+  --color-accent: oklch(63.5% 0.146 56.9);
+  --color-accent-soft: oklch(92.3% 0.035 74.2);
+  --color-danger: oklch(62.1% 0.223 27.2);
+  --color-focus-ring: oklch(76.9% 0.078 72.7 / 0.48);
+
+  --color-nav-active-bg: var(--color-accent-soft);
+  --color-nav-active-text: var(--color-text-primary);
+}

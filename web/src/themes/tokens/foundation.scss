@@ -1,0 +1,19 @@
+:root {
+  --font-family-sans:
+    'Avenir Next', 'SF Pro Text', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue',
+    Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    'Noto Color Emoji';
+  --font-family-display:
+    'Iowan Old Style', 'Palatino Linotype', 'Noto Serif SC', ui-serif, Georgia, serif;
+  --font-family-mono:
+    'JetBrains Mono', 'SF Mono', 'Cascadia Code', Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+
+  --shadow-sm: 0 1px 2px oklch(28.2% 0.01 53.8 / 0.08);
+  --shadow-md: 0 8px 26px oklch(28.2% 0.01 53.8 / 0.12);
+}

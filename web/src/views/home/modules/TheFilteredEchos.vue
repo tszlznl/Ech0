@@ -26,15 +26,13 @@
     <Transition name="fade">
       <div
         v-if="echoStore.filteredHasMore && !echoStore.isLoading"
-        class="mb-4 mt-1 -ml-2 flex items-center justify-between font-serif"
+        class="mb-4 mt-1 -ml-2 flex items-center justify-between echos-toolbar"
       >
         <BaseButton
           @click="handleLoadMore"
-          class="rounded-full bg-[var(--timeline-load-more-bg-color)] !active:bg-[var(--timeline-load-more-active-bg-color)] mr-2"
+          class="rounded-full bg-[var(--btn-bg-color)] !active:bg-[var(--btn-hover-bg-color)] mr-2"
         >
-          <span class="text-[var(--timeline-load-more-text-color)] text-md text-center px-2 py-1"
-            >继续装填</span
-          >
+          <span class="text-[var(--btn-text-color)] text-md text-center px-2 py-1">继续装填</span>
         </BaseButton>
         <TheBackTop class="w-8 h-8 p-1" :target="scrollTarget" />
       </div>
@@ -45,29 +43,32 @@
         v-if="!echoStore.filteredHasMore && !echoStore.isLoading"
         class="mx-auto my-5 text-center"
       >
-        <span class="text-xl text-[var(--text-color-400)]">没有啦！🥲</span>
+        <span class="text-xl text-[var(--color-text-muted)]">没有啦！🥲</span>
       </div>
     </Transition>
     <!-- 加载中 -->
     <Transition name="fade">
       <div v-if="echoStore.isLoading" class="mx-auto my-5 text-center">
-        <span class="text-xl text-[var(--text-color-400)]">加载中...</span>
+        <span class="text-xl text-[var(--color-text-muted)]">加载中...</span>
       </div>
     </Transition>
-    <!-- 备案号 -->
-    <div class="text-center">
-      <a href="https://beian.miit.gov.cn/" target="_blank">
-        <span class="text-[var(--text-color-400)] text-sm">
-          {{ SystemSetting.ICP_number }}
+    <!-- 自定义页脚 -->
+    <div v-if="footerContent" class="text-center">
+      <a v-if="footerLink" :href="footerLink" target="_blank" rel="noopener noreferrer">
+        <span class="text-[var(--color-text-muted)] text-sm">
+          {{ footerContent }}
         </span>
       </a>
+      <span v-else class="text-[var(--color-text-muted)] text-sm">
+        {{ footerContent }}
+      </span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import TheEchoCard from '@/components/advanced/TheEchoCard.vue'
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useEchoStore, useSettingStore } from '@/stores'
 import BaseButton from '@/components/common/BaseButton.vue'
 import TheBackTop from '@/components/advanced/TheBackTop.vue'
@@ -80,6 +81,10 @@ defineProps<{
 const echoStore = useEchoStore()
 const settingStore = useSettingStore()
 const { SystemSetting } = storeToRefs(settingStore)
+const footerContent = computed(
+  () => SystemSetting.value.footer_content || SystemSetting.value.ICP_number,
+)
+const footerLink = computed(() => SystemSetting.value.footer_link)
 
 // 列表入场动画钩子 - 交错入场效果
 const onBeforeEnter = (el: Element) => {
@@ -115,7 +120,7 @@ const handleRefresh = () => {
 }
 
 // 刷新点赞数据
-const handleUpdateLikeCount = (echoId: number) => {
+const handleUpdateLikeCount = (echoId: string) => {
   echoStore.updateLikeCount(echoId, 1)
 }
 
@@ -126,6 +131,10 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.echos-toolbar {
+  font-family: var(--font-family-display);
+}
+
 /* 列表项移动动画 */
 .list-move {
   transition: transform 0.3s ease;

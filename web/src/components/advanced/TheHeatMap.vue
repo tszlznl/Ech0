@@ -6,7 +6,7 @@
           <div
             v-for="row in 3"
             :key="row"
-            class="relative w-5 h-5 rounded-[6px] transition-colors duration-300 ease ring-1 ring-[var(--heatmap-ring-color)] hover:ring-[var(--ring-color-300)] hover:shadow-sm"
+            class="relative w-5 h-5 rounded-[6px] transition-colors duration-300 ease ring-1 ring-[var(--color-border-subtle)] hover:ring-[var(--color-border-strong)] hover:shadow-sm"
             :style="{ backgroundColor: getColor(getCell(row - 1, col - 1)?.count ?? 0) }"
             @mouseenter="showTooltip(row - 1, col - 1, $event)"
             @mouseleave="hideTooltip"
@@ -51,11 +51,11 @@ const getCell = (row: number, col: number) => {
 }
 
 const getColor = (count: number): string => {
-  if (count >= 4) return 'var(--heatmap-bg-color-4)'
-  if (count >= 3) return 'var(--heatmap-bg-color-3)'
-  if (count >= 2) return 'var(--heatmap-bg-color-2)'
-  if (count >= 1) return 'var(--heatmap-bg-color-1)'
-  return 'var(--heatmap-bg-color-0)'
+  if (count >= 4) return 'color-mix(in oklab, var(--color-accent) 78%, black)'
+  if (count >= 3) return 'color-mix(in oklab, var(--color-accent) 62%, black)'
+  if (count >= 2) return 'color-mix(in oklab, var(--color-accent) 52%, var(--color-bg-surface))'
+  if (count >= 1) return 'color-mix(in oklab, var(--color-accent) 30%, var(--color-bg-surface))'
+  return 'var(--color-bg-surface)'
 }
 
 // Tooltip 相关
@@ -78,7 +78,7 @@ function showTooltip(row: number, col: number, event: MouseEvent) {
 
     // 计算 tooltip 的位置
     tooltip.value.x = rect.left
-    
+
     // 智能调整垂直位置，防止顶部被遮挡
     if (rect.top < 40) {
       tooltip.value.y = rect.bottom + 10 // 显示在下方

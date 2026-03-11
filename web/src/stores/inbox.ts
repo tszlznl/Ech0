@@ -112,7 +112,7 @@ export const useInboxStore = defineStore('inboxStore', () => {
   }
 
   // 标记为已读
-  async function markAsRead(id: number) {
+  async function markAsRead(id: string) {
     const res = await fetchMarkInboxRead(id)
     if (res.code === 1) {
       items.value = items.value.map((item) =>
@@ -130,7 +130,7 @@ export const useInboxStore = defineStore('inboxStore', () => {
   }
 
   // 删除
-  async function deleteInbox(id: number) {
+  async function deleteInbox(id: string) {
     const res = await fetchDeleteInbox(id)
     if (res.code === 1) {
       items.value = items.value.filter((item) => item.id !== id)

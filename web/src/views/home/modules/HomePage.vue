@@ -18,22 +18,18 @@
     <div
       ref="mainColumn"
       class="sm:max-w-lg w-full sm:min-h-0 sm:h-full sm:overflow-y-auto sm:[overscroll-behavior:contain]"
-      :style="{ '--echo-date-sticky-top': echoDateStickyTop }"
+      :style="{ '--date-sticky-top': echoDateStickyTop }"
       :class="isZenMode ? 'sm:mx-auto sm:shrink-0' : ''"
     >
       <div
         ref="topStickyBar"
-        class="hidden sm:block sticky top-0 z-20 relative -mx-2 sm:-mx-4 md:-mx-6 px-2 sm:px-4 md:px-6 pt-2 bg-[var(--bg-color)]"
+        class="hidden sm:block sticky top-0 z-20 relative -mx-2 sm:-mx-4 md:-mx-6 px-2 sm:px-4 md:px-6 pt-2 bg-[var(--color-bg-canvas)]"
       >
         <TheTop class="sm:px-4" />
-        <div class="w-full h-2 bg-[var(--bg-color)]"></div>
+        <div class="w-full h-2 bg-[var(--color-bg-canvas)]"></div>
       </div>
-      <TheEchos v-if="!todoMode && !isFilteringMode && !inboxMode" :scroll-target="mainColumn" />
-      <TheFilteredEchos
-        v-else-if="!todoMode && isFilteringMode && !inboxMode"
-        :scroll-target="mainColumn"
-      />
-      <TheTodos v-else-if="todoMode && !inboxMode" />
+      <TheEchos v-if="!isFilteringMode && !inboxMode" :scroll-target="mainColumn" />
+      <TheFilteredEchos v-else-if="isFilteringMode && !inboxMode" :scroll-target="mainColumn" />
       <TheInbox v-else />
     </div>
     <div
@@ -45,13 +41,6 @@
       "
     >
       <TheHeatMap class="mb-2" />
-      <TheStatusCard v-if="isLogin" class="mb-2" />
-      <div v-if="isLogin" class="mb-2 px-11">
-        <TheTodoCard :todo="todos[0]" :index="0" :operative="false" @refresh="getTodos" />
-      </div>
-      <div class="mb-2">
-        <TheAudioCard />
-      </div>
       <TheConnects class="mb-2" />
       <TheRecentCard v-if="AgentSetting.enable" />
     </div>
@@ -64,34 +53,20 @@ import TheEditor from './TheEditor.vue'
 import TheBoard from './TheBoard.vue'
 import TheEchos from './TheEchos.vue'
 import TheFilteredEchos from './TheFilteredEchos.vue'
-import TheTodos from './TheTodos.vue'
 import TheInbox from './TheInbox.vue'
 import TheConnects from '@/views/connect/modules/TheConnects.vue'
-import TheTodoCard from '@/components/advanced/TheTodoCard.vue'
 import TheRecentCard from '@/components/advanced/TheRecentCard.vue'
-import TheStatusCard from '@/components/advanced/TheStatusCard.vue'
 import TheHeatMap from '@/components/advanced/TheHeatMap.vue'
 import { onMounted, ref, onBeforeUnmount } from 'vue'
-import {
-  useUserStore,
-  useTodoStore,
-  useEchoStore,
-  useSettingStore,
-  useInboxStore,
-  useZenStore,
-} from '@/stores'
+import { useUserStore, useEchoStore, useSettingStore, useInboxStore, useZenStore } from '@/stores'
 import { storeToRefs } from 'pinia'
-import TheAudioCard from '@/components/advanced/TheAudioCard.vue'
 import { useBfCacheRestore } from '@/composables/useBfCacheRestore'
 
-const todoStore = useTodoStore()
 const userStore = useUserStore()
 const echoStore = useEchoStore()
 const settingStore = useSettingStore()
 const inboxStore = useInboxStore()
 const zenStore = useZenStore()
-const { getTodos } = todoStore
-const { todoMode, todos } = storeToRefs(todoStore)
 const { isLogin } = storeToRefs(userStore)
 const { isFilteringMode } = storeToRefs(echoStore)
 const { AgentSetting } = storeToRefs(settingStore)

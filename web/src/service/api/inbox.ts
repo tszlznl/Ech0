@@ -24,14 +24,14 @@ export function fetchUnreadInbox() {
   })
 }
 
-export function fetchMarkInboxRead(id: number) {
+export function fetchMarkInboxRead(id: string) {
   return request({
     url: `/inbox/${id}/read`,
     method: 'PUT',
   })
 }
 
-export function fetchDeleteInbox(id: number) {
+export function fetchDeleteInbox(id: string) {
   return request({
     url: `/inbox/${id}`,
     method: 'DELETE',

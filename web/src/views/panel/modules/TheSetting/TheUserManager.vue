@@ -1,55 +1,58 @@
 <template>
   <PanelCard>
     <div class="flex flex-row items-center justify-between mb-3">
-      <h1 class="text-[var(--text-color-600)] font-bold text-lg">用户管理</h1>
+      <h1 class="text-[var(--color-text-primary)] font-bold text-lg">用户管理</h1>
       <div class="flex flex-row items-center justify-end gap-2 w-14">
         <!-- <button @click="userEditMode = !userEditMode" title="编辑">
-          <Edit v-if="!userEditMode" class="w-5 h-5 text-[var(--text-color-400)] hover:w-6 hover:h-6" />
-          <Close v-else class="w-5 h-5 text-[var(--text-color-400)] hover:w-6 hover:h-6" />
+          <Edit v-if="!userEditMode" class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
+          <Close v-else class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
         </button> -->
       </div>
     </div>
 
     <!-- 用户列表 -->
-    <div v-if="loading" class="flex justify-center py-4 text-[var(--text-color-400)]">
+    <div v-if="loading" class="flex justify-center py-4 text-[var(--color-text-muted)]">
       加载中...
     </div>
 
     <div v-else>
       <div v-if="allusers.length === 0" class="flex flex-col items-center justify-center mt-2">
-        <span class="text-[var(--text-color-next-400)]">暂无其它用户...</span>
+        <span class="text-[var(--color-text-muted)]">暂无其它用户...</span>
       </div>
 
-      <div v-else class="mt-2 overflow-x-auto border border-[var(--border-color-300)] rounded-lg">
-        <table class="min-w-full divide-y divide-[var(--divide-color-200)]">
+      <div
+        v-else
+        class="mt-2 overflow-x-auto border border-[var(--color-border-subtle)] rounded-lg"
+      >
+        <table class="min-w-full divide-y divide-[var(--color-border-subtle)]">
           <thead>
-            <tr class="bg-[var(--bg-color-50)] opacity-70">
+            <tr class="bg-[var(--color-bg-surface)] opacity-70">
               <th
-                class="px-3 py-2 text-left text-sm font-semibold text-[var(--text-color-next-600)]"
+                class="px-3 py-2 text-left text-sm font-semibold text-[var(--color-text-primary)]"
               >
                 #
               </th>
               <th
-                class="px-3 min-w-18 py-2 text-left text-sm font-semibold text-[var(--text-color-next-600)]"
+                class="px-3 min-w-18 py-2 text-left text-sm font-semibold text-[var(--color-text-primary)]"
               >
                 用户名
               </th>
               <th
-                class="px-3 py-2 text-center text-sm font-semibold text-[var(--text-color-next-600)]"
+                class="px-3 py-2 text-center text-sm font-semibold text-[var(--color-text-primary)]"
               >
                 权限更改
               </th>
               <th
-                class="px-3 min-w-18 py-2 text-right text-sm font-semibold text-[var(--text-color-next-600)]"
+                class="px-3 min-w-18 py-2 text-right text-sm font-semibold text-[var(--color-text-primary)]"
               >
                 操作
               </th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-[var(--divide-color-100)] text-nowrap">
+          <tbody class="divide-y divide-[var(--color-border-subtle)] text-nowrap">
             <tr v-for="(user, index) in allusers" :key="user.id" class="">
-              <td class="px-3 py-2 text-sm text-[var(--text-color-next-700)]">{{ index + 1 }}</td>
-              <td class="px-3 py-2 text-sm text-[var(--text-color-next-700)] font-semibold">
+              <td class="px-3 py-2 text-sm text-[var(--color-text-primary)]">{{ index + 1 }}</td>
+              <td class="px-3 py-2 text-sm text-[var(--color-text-primary)] font-semibold">
                 {{ user.username }}
               </td>
               <td class="px-3 py-2 text-center">
@@ -57,11 +60,11 @@
               </td>
               <td class="px-3 py-2 text-right">
                 <button
-                  class="p-1 hover:bg-[#fff6eb] rounded"
+                  class="p-1 hover:bg-[var(--color-accent-soft)] rounded"
                   @click="handleDeleteUser(user.id)"
                   title="删除用户"
                 >
-                  <Deluser class="w-5 h-5 text-red-500" />
+                  <Deluser class="w-5 h-5 text-[var(--color-danger)]" />
                 </button>
               </td>
             </tr>
@@ -90,7 +93,7 @@ import { fetchGetAllUsers, fetchUpdateUserPermission, fetchDeleteUser } from '@/
 const allusers = ref<App.Api.User.User[]>([])
 // const userEditMode = ref<boolean>(false)
 
-const handleDeleteUser = async (userId: number) => {
+const handleDeleteUser = async (userId: string) => {
   openConfirm({
     title: '确定要删除该用户吗？',
     description: '删除后将无法恢复，请谨慎操作',
@@ -104,7 +107,7 @@ const handleDeleteUser = async (userId: number) => {
   })
 }
 
-const handleUpdateUserPermission = async (userId: number) => {
+const handleUpdateUserPermission = async (userId: string) => {
   fetchUpdateUserPermission(userId)
     .then((res) => {
       if (res.code === 1) {

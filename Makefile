@@ -13,11 +13,13 @@ IMAGE_TAG?=latest
 OS?=$(if $(GOHOSTOS),$(GOHOSTOS),linux)
 ARCH?=$(if $(GOHOSTARCH),$(GOHOSTARCH),amd64)
 
-.PHONY: help air-install run dev web-dev lint fmt test wire build-image push-image
+.PHONY: help air-install run dev web-dev lint fmt test wire wire-check build-image push-image
+
+AIR_BIN := $(shell command -v air 2>/dev/null || echo "$(GOPATH)/bin/air")
 
 help:
 	@echo "Available targets:"
-	@echo "  make run         - Run backend in web mode"
+	@echo "  make run         - Run backend in serve mode"
 	@echo "  make dev         - Run backend with Air hot reload"
 	@echo "  make air-install - Install Air to GOPATH/bin"
 	@echo "  make web-dev     - Run frontend dev server"
@@ -25,6 +27,7 @@ help:
 	@echo "  make fmt         - Run golangci-lint formatters"
 	@echo "  make test        - Run Go tests"
 	@echo "  make wire        - Generate DI code via Wire"
+	@echo "  make wire-check  - Verify Wire code is up-to-date"
 	@echo "  make build-image - Build Docker image"
 	@echo "  make push-image  - Push Docker image"
 
@@ -32,10 +35,14 @@ air-install:
 	go install github.com/air-verse/air@latest
 
 run:
-	go run ./main.go web
+	go run ./cmd/ech0 serve
 
 dev:
-	air -c .air.toml
+	@if [ ! -x "$(AIR_BIN)" ]; then \
+		echo "air not found, installing..."; \
+		$(MAKE) air-install; \
+	fi
+	"$(AIR_BIN)" -c .air.toml
 
 web-dev:
 	cd web && pnpm dev
@@ -50,7 +57,10 @@ test:
 	go test ./...
 
 wire:
-	cd internal/di && wire
+	go generate ./internal/di
+
+wire-check: wire
+	git diff --exit-code -- internal/di/wire_gen.go
 build-image:
 	@echo "Building image for platform: $(OS)/$(ARCH)"
 	docker build --platform $(OS)/$(ARCH) \

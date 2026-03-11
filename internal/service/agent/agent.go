@@ -7,36 +7,29 @@ import (
 
 	"github.com/cloudwego/eino/schema"
 	"github.com/lin-snow/ech0/internal/agent"
-	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
-	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
-	echoService "github.com/lin-snow/ech0/internal/service/echo"
-	settingService "github.com/lin-snow/ech0/internal/service/setting"
-	todoService "github.com/lin-snow/ech0/internal/service/todo"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
 	"golang.org/x/sync/singleflight"
 )
 
 type AgentService struct {
-	settingService settingService.SettingServiceInterface
-	echoService    echoService.EchoServiceInterface
-	todoService    todoService.TodoServiceInterface
-	kvRepository   keyvalueRepository.KeyValueRepositoryInterface
+	settingService SettingService
+	echoService    EchoService
+	kvRepository   KeyValueRepository
 	recentGenGroup singleflight.Group
 }
 
 func NewAgentService(
-	settingService settingService.SettingServiceInterface,
-	echoService echoService.EchoServiceInterface,
-	todoService todoService.TodoServiceInterface,
-	kvRepository keyvalueRepository.KeyValueRepositoryInterface,
-) AgentServiceInterface {
+	settingService SettingService,
+	echoService EchoService,
+	kvRepository KeyValueRepository,
+) *AgentService {
 	return &AgentService{
 		settingService: settingService,
 		echoService:    echoService,
-		todoService:    todoService,
 		kvRepository:   kvRepository,
 	}
 }
@@ -60,7 +53,7 @@ func (agentService *AgentService) GetRecent(ctx context.Context) (string, error)
 
 		if err := agentService.kvRepository.AddOrUpdateKeyValue(ctx, cacheKey, output); err != nil {
 			logUtil.GetLogger().
-				Error("Failed to add or update key value", zap.String("error", err.Error()))
+				Error("Failed to add or update key value", zap.Error(err))
 		}
 
 		return output, nil
@@ -78,18 +71,17 @@ func (agentService *AgentService) GetRecent(ctx context.Context) (string, error)
 }
 
 func (agentService *AgentService) getRecentFromCache(cacheKey string) (string, bool) {
-	cachedValue, err := agentService.kvRepository.GetKeyValue(cacheKey)
+	cachedValue, err := agentService.kvRepository.GetKeyValue(context.Background(), cacheKey)
 	if err != nil {
 		return "", false
 	}
-
-	value, ok := cachedValue.(string)
-	return value, ok
+	return cachedValue, true
 }
 
 func (agentService *AgentService) buildRecentSummary(ctx context.Context) (string, error) {
+	systemCtx := viewer.WithContext(ctx, viewer.NewSystemViewer())
 	echos, err := agentService.echoService.GetEchosByPage(
-		authModel.NO_USER_LOGINED,
+		systemCtx,
 		commonModel.PageQueryDto{
 			Page:     1,
 			PageSize: 10,

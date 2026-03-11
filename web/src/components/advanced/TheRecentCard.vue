@@ -1,17 +1,17 @@
 <template>
   <div v-if="AgentSetting.enable" class="px-9 md:px-11">
     <div
-      class="widget rounded-md shadow-sm hover:shadow-md ring-1 ring-[var(--ring-color)] ring-inset p-4"
+      class="widget rounded-md shadow-sm hover:shadow-md ring-1 ring-[var(--color-border-subtle)] ring-inset p-4"
     >
-      <h2 class="text-[var(--widget-title-color)] font-bold text-lg mb-1 flex items-center">
+      <h2 class="text-[var(--color-text-primary)] font-bold text-lg mb-1 flex items-center">
         <RecentIcon class="mr-2" /> 近况总结(AI)：
       </h2>
 
-      <div v-if="!loading" class="text-[var(--text-color-next-500)] text-sm p-1">
+      <div v-if="!loading" class="text-[var(--color-text-secondary)] text-sm p-1">
         <TheMdPreview :content="recent" />
       </div>
       <div v-else>
-        <div class="text-[var(--text-color-next-500)] text-sm">生成中...</div>
+        <div class="text-[var(--color-text-secondary)] text-sm">生成中...</div>
       </div>
     </div>
   </div>
@@ -45,14 +45,9 @@ onMounted(() => {
 })
 </script>
 <style scoped>
-.md-editor-dark,
-.md-editor-modal-container[data-theme='dark'] {
-  --md-bk-color: #212121 !important;
-}
-
-:deep(#preview-only-preview) p {
-  color: var(--text-color-next-500) !important;
-  font-size: var(--text-sm-fontSize) !important;
-  line-height: var(--un-leading, var(--text-sm-lineHeight)) !important;
+:deep(.echo-markdown p) {
+  color: var(--color-text-secondary) !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
 }
 </style>

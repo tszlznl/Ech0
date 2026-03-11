@@ -1,0 +1,84 @@
+package repository
+
+import (
+	"github.com/google/wire"
+	eventsubscriber "github.com/lin-snow/ech0/internal/event/subscriber"
+	commonRepository "github.com/lin-snow/ech0/internal/repository/common"
+	connectRepository "github.com/lin-snow/ech0/internal/repository/connect"
+	echoRepository "github.com/lin-snow/ech0/internal/repository/echo"
+	fileRepository "github.com/lin-snow/ech0/internal/repository/file"
+	inboxRepository "github.com/lin-snow/ech0/internal/repository/inbox"
+	initRepository "github.com/lin-snow/ech0/internal/repository/init"
+	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
+	migrationRepository "github.com/lin-snow/ech0/internal/repository/migration"
+	queueRepository "github.com/lin-snow/ech0/internal/repository/queue"
+	settingRepository "github.com/lin-snow/ech0/internal/repository/setting"
+	userRepository "github.com/lin-snow/ech0/internal/repository/user"
+	webhookRepository "github.com/lin-snow/ech0/internal/repository/webhook"
+	agentService "github.com/lin-snow/ech0/internal/service/agent"
+	commonService "github.com/lin-snow/ech0/internal/service/common"
+	connectService "github.com/lin-snow/ech0/internal/service/connect"
+	echoService "github.com/lin-snow/ech0/internal/service/echo"
+	fileService "github.com/lin-snow/ech0/internal/service/file"
+	inboxService "github.com/lin-snow/ech0/internal/service/inbox"
+	initService "github.com/lin-snow/ech0/internal/service/init"
+	settingService "github.com/lin-snow/ech0/internal/service/setting"
+	userService "github.com/lin-snow/ech0/internal/service/user"
+)
+
+var (
+	UserSet = wire.NewSet(
+		userRepository.NewUserRepository,
+		wire.Bind(new(userService.Repository), new(*userRepository.UserRepository)),
+	)
+	EchoSet = wire.NewSet(
+		echoRepository.NewEchoRepository,
+		wire.Bind(new(echoService.Repository), new(*echoRepository.EchoRepository)),
+		wire.Bind(new(connectService.EchoRepository), new(*echoRepository.EchoRepository)),
+	)
+	CommonSet = wire.NewSet(
+		commonRepository.NewCommonRepository,
+		wire.Bind(new(commonService.CommonRepository), new(*commonRepository.CommonRepository)),
+		wire.Bind(new(fileService.CommonRepository), new(*commonRepository.CommonRepository)),
+	)
+	FileSet = wire.NewSet(
+		fileRepository.NewFileRepository,
+		wire.Bind(new(fileService.FileRepository), new(*fileRepository.FileRepository)),
+	)
+	InitSet = wire.NewSet(
+		initRepository.NewInitRepository,
+		wire.Bind(new(initService.Repository), new(*initRepository.InitRepository)),
+	)
+	KeyValueSet = wire.NewSet(
+		keyvalueRepository.NewKeyValueRepository,
+		wire.Bind(new(fileService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
+		wire.Bind(new(settingService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
+		wire.Bind(new(agentService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
+	)
+	SettingSet = wire.NewSet(
+		settingRepository.NewSettingRepository,
+		wire.Bind(new(settingService.SettingRepository), new(*settingRepository.SettingRepository)),
+	)
+	ConnectSet = wire.NewSet(
+		connectRepository.NewConnectRepository,
+		wire.Bind(new(connectService.Repository), new(*connectRepository.ConnectRepository)),
+	)
+	WebhookSet = wire.NewSet(
+		webhookRepository.NewWebhookRepository,
+		wire.Bind(new(settingService.WebhookRepository), new(*webhookRepository.WebhookRepository)),
+		wire.Bind(new(eventsubscriber.WebhookStore), new(*webhookRepository.WebhookRepository)),
+	)
+	InboxSet = wire.NewSet(
+		inboxRepository.NewInboxRepository,
+		wire.Bind(new(inboxService.Repository), new(*inboxRepository.InboxRepository)),
+		wire.Bind(new(eventsubscriber.InboxStore), new(*inboxRepository.InboxRepository)),
+	)
+	QueueSet = wire.NewSet(
+		queueRepository.NewQueueRepository,
+		wire.Bind(new(eventsubscriber.DeadLetterStore), new(*queueRepository.QueueRepository)),
+		wire.Bind(new(eventsubscriber.DeadLetterRepo), new(*queueRepository.QueueRepository)),
+	)
+	MigrationSet = wire.NewSet(
+		migrationRepository.NewMigrationRepository,
+	)
+)

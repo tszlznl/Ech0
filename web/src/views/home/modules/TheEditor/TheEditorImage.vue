@@ -2,26 +2,26 @@
   <!-- 图片预览 -->
   <div
     v-if="
-      imagesToAdd &&
-      imagesToAdd.length > 0 &&
+      filesToAdd &&
+      filesToAdd.length > 0 &&
       (currentMode === Mode.ECH0 || currentMode === Mode.Image)
     "
     class="relative rounded-lg shadow-lg w-5/6 mx-auto my-7"
   >
     <button
       @click="handleRemoveImage"
-      class="absolute -top-3 -right-4 bg-red-100 hover:bg-red-300 text-[var(--text-color-600)] rounded-lg w-7 h-7 flex items-center justify-center shadow"
+      class="absolute -top-3 -right-4 bg-[var(--color-accent-soft)] hover:bg-[var(--color-danger)]/30 text-[var(--color-text-secondary)] rounded-lg w-7 h-7 flex items-center justify-center shadow-[var(--shadow-sm)]"
       title="移除图片"
     >
       <Close class="w-4 h-4" />
     </button>
     <div class="rounded-lg overflow-hidden">
-      <template v-for="(img, idx) in imagesToAdd" :key="idx">
+      <template v-for="(img, idx) in filesToAdd" :key="idx">
         <a
           :href="getImageToAddUrl(img)"
           data-fancybox="gallery"
           :data-thumb="getImageToAddUrl(img)"
-          :class="{ hidden: idx !== imageIndex }"
+          :class="{ hidden: idx !== fileIndex }"
         >
           <img
             :src="getImageToAddUrl(img)"
@@ -34,14 +34,14 @@
     </div>
   </div>
   <!-- 图片切换 -->
-  <div v-if="imagesToAdd.length > 1" class="flex items-center justify-center">
-    <button @click="imageIndex = Math.max(imageIndex - 1, 0)">
+  <div v-if="filesToAdd.length > 1" class="flex items-center justify-center">
+    <button @click="fileIndex = Math.max(fileIndex - 1, 0)">
       <Prev class="w-7 h-7" />
     </button>
-    <span class="text-[var(--text-color-500)] text-sm mx-2">
-      {{ imageIndex + 1 }} / {{ imagesToAdd.length }}
+    <span class="text-[var(--color-text-secondary)] text-sm mx-2">
+      {{ fileIndex + 1 }} / {{ filesToAdd.length }}
     </span>
-    <button @click="imageIndex = Math.min(imageIndex + 1, imagesToAdd.length - 1)">
+    <button @click="fileIndex = Math.min(fileIndex + 1, filesToAdd.length - 1)">
       <Next class="w-7 h-7" />
     </button>
   </div>
@@ -54,13 +54,13 @@ import Next from '@/components/icons/next.vue'
 import Prev from '@/components/icons/prev.vue'
 import Close from '@/components/icons/close.vue'
 import { getImageToAddUrl } from '@/utils/other'
-import { fetchDeleteImage } from '@/service/api'
+import { deleteFileById } from '@/lib/file'
 import { theToast } from '@/utils/toast'
 import { useEchoStore, useEditorStore } from '@/stores'
 import { Mode } from '@/enums/enums'
 import { Fancybox } from '@fancyapps/ui'
 import '@fancyapps/ui/dist/fancybox/fancybox.css'
-import { ImageSource } from '@/enums/enums'
+import { FILE_STORAGE_TYPE } from '@/constants/file'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 
 const { openConfirm } = useBaseDialog()
@@ -73,42 +73,40 @@ const { openConfirm } = useBaseDialog()
 
 // const emit = defineEmits(['handleAddorUpdateEcho'])
 
-const imageIndex = ref<number>(0) // 临时图片索引变量
+const fileIndex = ref<number>(0) // 临时文件索引变量
 const echoStore = useEchoStore()
 const { echoToUpdate } = storeToRefs(echoStore)
 const editorStore = useEditorStore()
-const { imagesToAdd, currentMode, isUpdateMode } = storeToRefs(editorStore)
+const { filesToAdd, currentMode, isUpdateMode } = storeToRefs(editorStore)
 
 const handleRemoveImage = () => {
   if (
-    imageIndex.value < 0 ||
-    imageIndex.value >= imagesToAdd.value.length ||
-    imagesToAdd.value.length === 0
+    fileIndex.value < 0 ||
+    fileIndex.value >= filesToAdd.value.length ||
+    filesToAdd.value.length === 0
   ) {
     theToast.error('当前图片索引无效，无法删除！')
     return
   }
-  const index = imageIndex.value
+  const index = fileIndex.value
 
   openConfirm({
     title: '确定要移除图片吗？',
     description: '',
     onConfirm: () => {
-      const imageToDel: App.Api.Ech0.ImageToDelete = {
-        url: String(imagesToAdd.value[index]?.image_url),
-        source: String(imagesToAdd.value[index]?.image_source),
-        object_key: imagesToAdd.value[index]?.object_key,
+      const fileToDelete: App.Api.Ech0.FileToDelete = {
+        id: String(filesToAdd.value[index]?.id || ''),
       }
 
-      if (imageToDel.source === ImageSource.LOCAL || imageToDel.source === ImageSource.S3) {
-        fetchDeleteImage({
-          url: imageToDel.url,
-          source: imageToDel.source,
-          object_key: imageToDel.object_key,
-        }).then(() => {
+      const source = String(filesToAdd.value[index]?.storage_type || '')
+      if (
+        (source === FILE_STORAGE_TYPE.LOCAL || source === FILE_STORAGE_TYPE.OBJECT) &&
+        fileToDelete.id
+      ) {
+        deleteFileById(fileToDelete.id).then(() => {
           // 这里不管图片是否远程删除成功都强制删除图片
           // 从数组中删除图片
-          imagesToAdd.value.splice(index, 1)
+          editorStore.removeFileAt(index)
 
           // 如果删除成功且当前处于Echo更新模式，则需要立马执行更新（图片删除操作不可逆，需要立马更新确保后端数据同步）
           if (isUpdateMode.value && echoToUpdate.value) {
@@ -116,10 +114,10 @@ const handleRemoveImage = () => {
           }
         })
       } else {
-        imagesToAdd.value.splice(index, 1)
+        editorStore.removeFileAt(index)
       }
 
-      imageIndex.value = 0
+      fileIndex.value = 0
     },
   })
 }

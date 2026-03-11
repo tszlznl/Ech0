@@ -4,6 +4,7 @@ import (
 	"context"
 
 	inboxModel "github.com/lin-snow/ech0/internal/model/inbox"
+	inboxService "github.com/lin-snow/ech0/internal/service/inbox"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"gorm.io/gorm"
 )
@@ -12,7 +13,9 @@ type InboxRepository struct {
 	db func() *gorm.DB
 }
 
-func NewInboxRepository(dbProvider func() *gorm.DB) InboxRepositoryInterface {
+var _ inboxService.Repository = (*InboxRepository)(nil)
+
+func NewInboxRepository(dbProvider func() *gorm.DB) *InboxRepository {
 	return &InboxRepository{
 		db: dbProvider,
 	}
@@ -20,7 +23,7 @@ func NewInboxRepository(dbProvider func() *gorm.DB) InboxRepositoryInterface {
 
 // getDB 从上下文中获取事务
 func (inboxRepository *InboxRepository) getDB(ctx context.Context) *gorm.DB {
-	if tx, ok := ctx.Value(transaction.TxKey).(*gorm.DB); ok {
+	if tx, ok := transaction.TxFromContext(ctx); ok {
 		return tx
 	}
 	return inboxRepository.db()
@@ -80,9 +83,9 @@ func (inboxRepository *InboxRepository) GetInboxList(
 }
 
 // GetInboxById 获取指定 ID 的收件箱消息
-func (inboxRepository *InboxRepository) GetInboxById(ctx context.Context, inboxID uint) (*inboxModel.Inbox, error) {
+func (inboxRepository *InboxRepository) GetInboxById(ctx context.Context, inboxID string) (*inboxModel.Inbox, error) {
 	var inbox inboxModel.Inbox
-	if err := inboxRepository.getDB(ctx).First(&inbox, inboxID).Error; err != nil {
+	if err := inboxRepository.getDB(ctx).Where("id = ?", inboxID).First(&inbox).Error; err != nil {
 		return nil, err
 	}
 	return &inbox, nil
@@ -94,7 +97,7 @@ func (inboxRepository *InboxRepository) UpdateInbox(ctx context.Context, inbox *
 }
 
 // MarkAsRead 标记消息为已读
-func (inboxRepository *InboxRepository) MarkAsRead(ctx context.Context, inboxID uint) error {
+func (inboxRepository *InboxRepository) MarkAsRead(ctx context.Context, inboxID string) error {
 	result := inboxRepository.getDB(ctx).
 		Model(&inboxModel.Inbox{}).
 		Where("id = ?", inboxID).
@@ -111,8 +114,8 @@ func (inboxRepository *InboxRepository) MarkAsRead(ctx context.Context, inboxID 
 }
 
 // DeleteInbox 删除指定收件箱消息
-func (inboxRepository *InboxRepository) DeleteInbox(ctx context.Context, inboxID uint) error {
-	result := inboxRepository.getDB(ctx).Delete(&inboxModel.Inbox{}, inboxID)
+func (inboxRepository *InboxRepository) DeleteInbox(ctx context.Context, inboxID string) error {
+	result := inboxRepository.getDB(ctx).Where("id = ?", inboxID).Delete(&inboxModel.Inbox{})
 	if result.Error != nil {
 		return result.Error
 	}
@@ -146,9 +149,27 @@ func (inboxRepository *InboxRepository) GetUnreadInbox(
 }
 
 // ClearReadInboxByIds 清空已读消息
-func (inboxRepository *InboxRepository) ClearReadInboxByIds(ctx context.Context, inboxIDs []uint) error {
+func (inboxRepository *InboxRepository) ClearReadInboxByIds(ctx context.Context, inboxIDs []string) error {
+	if len(inboxIDs) == 0 {
+		return nil
+	}
 	return inboxRepository.getDB(ctx).
 		Where("id IN (?)", inboxIDs).
-		Update("read", true).
+		Delete(&inboxModel.Inbox{}).
 		Error
+}
+
+func (inboxRepository *InboxRepository) GetExpiredReadInboxIDs(
+	ctx context.Context,
+	minReadCount int,
+	readBefore int64,
+) ([]string, error) {
+	var ids []string
+	if err := inboxRepository.getDB(ctx).
+		Model(&inboxModel.Inbox{}).
+		Where("read = ? AND read_count > ? AND read_at > 0 AND read_at <= ?", true, minReadCount, readBefore).
+		Pluck("id", &ids).Error; err != nil {
+		return nil, err
+	}
+	return ids, nil
 }

@@ -2,7 +2,7 @@
   <div class="flex justify-center items-center h-screen">
     <div class="h-1/2 max-w-sm sm:max-w-md md:max-w-lg">
       <h1
-        class="text-6xl italic font-bold text-center text-[var(--text-color-next-300)] mb-4 font-serif"
+        class="text-6xl italic font-bold text-center text-[var(--color-text-muted)] mb-4 font-serif"
       >
         Ech0
       </h1>
@@ -10,11 +10,11 @@
       <div v-if="AuthMode === 'login'">
         <!-- 模式切换 -->
         <div class="flex justify-between items-center">
-          <h2 class="text-lg font-bold text-[var(--text-color-next-400)] mb-3">登录</h2>
+          <h2 class="text-lg font-bold text-[var(--color-text-muted)] mb-3">登录</h2>
           <div class="mb-3">
             <button
               @click="AuthMode = 'register'"
-              class="text-[var(--text-color-next-500)] hover:text-[var(--text-color-next-700)] transition duration-200"
+              class="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition duration-200"
             >
               <div class="flex flex-row gap-0 items-center">
                 注册
@@ -39,6 +39,7 @@
               :icon="Passkey"
               v-if="passkeySupported"
               @click="handlePasskeyLogin"
+              :disabled="!!oauth2Status && !oauth2Status.passkey_ready"
               class="rounded-md w-9 h-9"
               title="使用 Passkey 登录"
             />
@@ -55,24 +56,25 @@
                       : Customoauth
               "
               @click="gotoOAuth2URL"
+              :disabled="!oauth2Status.oauth_ready"
               class="w-9 h-9 rounded-md"
               title="使用 OAuth2 登录"
             />
           </div>
           <!-- 账号密码登录 -->
           <BaseButton @click="handleLogin" class="w-12 h-9 rounded-md ml-1 flex-shrink-0">
-            <span class="text-[var(--text-color-next-500)]">登录</span>
+            <span class="text-[var(--color-text-secondary)]">登录</span>
           </BaseButton>
         </div>
       </div>
       <!-- 注册 -->
       <div v-else-if="AuthMode === 'register'">
         <div class="flex justify-between items-center">
-          <h2 class="text-lg font-bold text-[var(--text-color-next-400)] mb-3">注册</h2>
+          <h2 class="text-lg font-bold text-[var(--color-text-muted)] mb-3">注册</h2>
           <div class="mb-3">
             <button
               @click="AuthMode = 'login'"
-              class="text-[var(--text-color-next-500)] hover:text-[var(--text-color-next-700)] transition duration-200"
+              class="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition duration-200"
             >
               <div class="flex flex-row gap-0 items-center">
                 登录
@@ -91,7 +93,7 @@
             class="rounded-md w-9 h-9"
           />
           <BaseButton @click="handleRegister" class="rounded-md">
-            <span class="text-[var(--text-color-next-500)]">注册</span>
+            <span class="text-[var(--color-text-secondary)]">注册</span>
           </BaseButton>
         </div>
       </div>
@@ -132,6 +134,14 @@ const baseURL =
 const oauthURL = ref<string>(`${baseURL}/oauth/github/login`)
 
 const gotoOAuth2URL = () => {
+  if (!oauth2Status.value?.oauth_ready) {
+    theToast.warning('OAuth2 配置未就绪，请先在 Panel 完成认证边界配置')
+    return
+  }
+  if (!oauthURL.value) {
+    theToast.error('OAuth2 登录地址不可用')
+    return
+  }
   window.location.href = oauthURL.value
 }
 
@@ -141,7 +151,7 @@ const getOAuth2Status = async () => {
     oauth2Status.value = res.data
     oauthURL.value = res.data.provider
       ? `${baseURL}/oauth/${res.data.provider}/login?redirect_uri=${window.location.origin}/auth`
-      : `${baseURL}/auth`
+      : ''
   }
 }
 
@@ -211,6 +221,10 @@ function credentialToJSON(cred: PublicKeyCredential) {
 }
 
 const handlePasskeyLogin = async () => {
+  if (oauth2Status.value && !oauth2Status.value.passkey_ready) {
+    theToast.warning('Passkey 配置未就绪，请先在 Panel 完成认证边界配置')
+    return
+  }
   if (!passkeySupported) return
   try {
     const begin = await fetchPasskeyLoginBegin()

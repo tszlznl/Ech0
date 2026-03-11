@@ -6,25 +6,25 @@ const (
 	UsernameKeyPrefix = "username" // username:username
 	IDKeyPrefix       = "id"       // id:userid
 	AdminKey          = "admin"    // admin:userid
-	SysAdminKey       = "sysadmin"
+	OwnerKey          = "owner"
 	PasskeyRegKey     = "passkey:reg"   // passkey:reg:nonce
 	PasskeyLoginKey   = "passkey:login" // passkey:login:nonce
 )
 
-func GetUserIDKey(id uint) string {
-	return fmt.Sprintf("%s:%d", IDKeyPrefix, id)
+func GetUserIDKey(id string) string {
+	return fmt.Sprintf("%s:%s", IDKeyPrefix, id)
 }
 
 func GetUsernameKey(username string) string {
 	return fmt.Sprintf("%s:%s", UsernameKeyPrefix, username)
 }
 
-func GetAdminKey(id uint) string {
-	return fmt.Sprintf("%s:%d", AdminKey, id)
+func GetAdminKey(id string) string {
+	return fmt.Sprintf("%s:%s", AdminKey, id)
 }
 
-func GetSysAdminKey() string {
-	return SysAdminKey
+func GetOwnerKey() string {
+	return OwnerKey
 }
 
 func GetPasskeyRegisterSessionKey(nonce string) string {

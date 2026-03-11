@@ -2,28 +2,23 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import {
   fetchGetSettings,
-  fetchGetStatus,
   fetchGetCommentSettings,
+  fetchGetCommentProviderMeta,
   fetchGetS3Settings,
   fetchGetOAuth2Settings,
   fetchGetAllWebhooks,
   fetchListAccessTokens,
-  fetchGetFediverseSettings,
   fetchGetBackupScheduleSetting,
   fetchGetAgentSettings,
   fetchGetAgentInfo,
   fetchHelloEch0,
 } from '@/service/api'
-import { localStg } from '@/utils/storage'
-import { theToast } from '@/utils/toast'
-import router from '@/router'
 import { CommentProvider, S3Provider, OAuth2Provider, AgentProvider } from '@/enums/enums'
 
 export const useSettingStore = defineStore('settingStore', () => {
   /**
    * State
    */
-  const isSystemReady = ref<boolean>(false)
   const SystemSetting = ref<App.Api.Setting.SystemSetting>({
     site_title: import.meta.env.VITE_APP_TITLE,
     server_logo: '/Ech0.svg',
@@ -31,6 +26,8 @@ export const useSettingStore = defineStore('settingStore', () => {
     server_url: '',
     allow_register: true,
     ICP_number: '',
+    footer_content: '',
+    footer_link: '',
     meting_api: '',
     custom_css: '',
     custom_js: '',
@@ -38,8 +35,39 @@ export const useSettingStore = defineStore('settingStore', () => {
   const CommentSetting = ref<App.Api.Setting.CommentSetting>({
     enable_comment: false,
     provider: CommentProvider.TWIKOO,
-    comment_api: '',
+    providers: {
+      [CommentProvider.TWIKOO]: {
+        script_url: 'https://cdn.staticfile.net/twikoo/1.6.44/twikoo.all.min.js',
+        config: { envId: '' },
+      },
+      [CommentProvider.WALINE]: {
+        script_url: 'https://unpkg.com/@waline/client@v2/dist/waline.js',
+        css_url: 'https://unpkg.com/@waline/client@v2/dist/waline.css',
+        config: { serverURL: '', path: '' },
+      },
+      [CommentProvider.ARTALK]: {
+        script_url: 'https://unpkg.com/artalk@2/dist/Artalk.js',
+        css_url: 'https://unpkg.com/artalk@2/dist/Artalk.css',
+        config: { server: '', site: '', pageKey: '' },
+      },
+      [CommentProvider.GISCUS]: {
+        script_url: 'https://giscus.app/client.js',
+        config: {
+          repo: '',
+          repoId: '',
+          category: '',
+          categoryId: '',
+          mapping: 'pathname',
+          strict: '0',
+          reactionsEnabled: '1',
+          inputPosition: 'top',
+          lang: 'zh-CN',
+          theme: 'preferred_color_scheme',
+        },
+      },
+    },
   })
+  const CommentProviderMeta = ref<App.Api.Setting.CommentProviderMeta[]>([])
   const S3Setting = ref<App.Api.Setting.S3Setting>({
     enable: false,
     provider: S3Provider.AWS,
@@ -67,13 +95,13 @@ export const useSettingStore = defineStore('settingStore', () => {
     is_oidc: false,
     issuer: '',
     jwks_url: '',
+    auth_redirect_allowed_return_urls: [],
+    webauthn_rp_id: '',
+    webauthn_allowed_origins: [],
+    cors_allowed_origins: [],
   })
   const Webhooks = ref<App.Api.Setting.Webhook[]>([])
   const AccessTokens = ref<App.Api.Setting.AccessToken[]>([])
-  const FediverseSetting = ref<App.Api.Setting.FediverseSetting>({
-    enable: false,
-    server_url: '',
-  })
   const BackupSchedule = ref<App.Api.Setting.BackupSchedule>({
     enable: false,
     cron_expression: '0 2 * * 0',
@@ -92,36 +120,6 @@ export const useSettingStore = defineStore('settingStore', () => {
   /**
    * Actions
    */
-  const getSystemReady = async () => {
-    // 检查localStorage中是否有系统状态
-    const systemStatus = localStg.getItem<boolean>('systemStatus')
-    if (systemStatus !== null) {
-      // 如果有，直接使用localStorage中的值
-      isSystemReady.value = systemStatus
-    } else {
-      // 如果没有，默认设置为false
-      isSystemReady.value = false
-    }
-
-    // 检查系统是否准备好
-    if (!isSystemReady.value) {
-      // 如果系统未准备好，调用接口获取系统状态
-      const res = await fetchGetStatus()
-      if (res.code === 666) {
-        isSystemReady.value = false
-        theToast.info(res.msg)
-        // 跳转到注册页面
-        router.push({ name: 'auth' })
-      } else {
-        isSystemReady.value = true
-        console.log('系统已准备好')
-      }
-
-      // 保存系统状态到localStorage
-      localStg.setItem('systemStatus', isSystemReady.value)
-    }
-  }
-
   const getSystemSetting = async () => {
     await fetchGetSettings().then((res) => {
       if (res.code === 1) {
@@ -132,11 +130,17 @@ export const useSettingStore = defineStore('settingStore', () => {
   }
 
   const getCommentSetting = async () => {
-    fetchGetCommentSettings().then((res) => {
-      if (res.code === 1) {
-        CommentSetting.value = res.data
-      }
-    })
+    const res = await fetchGetCommentSettings()
+    if (res.code === 1) {
+      CommentSetting.value = res.data
+    }
+  }
+
+  const getCommentProviderMeta = async () => {
+    const res = await fetchGetCommentProviderMeta()
+    if (res.code === 1) {
+      CommentProviderMeta.value = res.data.providers || []
+    }
   }
 
   const getS3Setting = async () => {
@@ -177,13 +181,6 @@ export const useSettingStore = defineStore('settingStore', () => {
     }
   }
 
-  const getFediverseSetting = async () => {
-    const res = await fetchGetFediverseSettings()
-    if (res.code === 1) {
-      FediverseSetting.value = res.data
-    }
-  }
-
   const getBackupSchedule = async () => {
     const res = await fetchGetBackupScheduleSetting()
     if (res.code === 1) {
@@ -196,10 +193,6 @@ export const useSettingStore = defineStore('settingStore', () => {
     if (res.code === 1) {
       hello.value = res.data
     }
-  }
-
-  const setSystemReady = (status: boolean) => {
-    isSystemReady.value = status
   }
 
   const getAgentSetting = async () => {
@@ -219,39 +212,34 @@ export const useSettingStore = defineStore('settingStore', () => {
   }
 
   const init = async () => {
-    if (!isSystemReady.value) {
-      await getSystemReady()
-    }
     await getSystemSetting()
     getCommentSetting()
+    getCommentProviderMeta()
     getS3Setting()
     getAgentInfo()
     getHelloEch0()
   }
 
   return {
-    isSystemReady,
     SystemSetting,
     CommentSetting,
+    CommentProviderMeta,
     S3Setting,
     OAuth2Setting,
     Webhooks,
     AccessTokens,
-    FediverseSetting,
     BackupSchedule,
     AgentSetting,
     hello,
     loading,
 
     getAllAccessTokens,
-    getSystemReady,
     getSystemSetting,
     getCommentSetting,
+    getCommentProviderMeta,
     getS3Setting,
     getOAuth2Setting,
     getAllWebhooks,
-    getFediverseSetting,
-    setSystemReady,
     getHelloEch0,
     getBackupSchedule,
     getAgentSetting,

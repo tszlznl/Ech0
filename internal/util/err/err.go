@@ -1,6 +1,8 @@
 package util
 
 import (
+	"errors"
+
 	model "github.com/lin-snow/ech0/internal/model/common"
 	util "github.com/lin-snow/ech0/internal/util/log"
 	"go.uber.org/zap"
@@ -16,6 +18,18 @@ func HandleError(se *model.ServerError) string {
 	}
 
 	return se.Msg
+}
+
+// ExtractBizErrorCode 从 error 链路中提取业务错误码。
+func ExtractBizErrorCode(err error) string {
+	if err == nil {
+		return ""
+	}
+	var bizErr *model.BizError
+	if errors.As(err, &bizErr) {
+		return bizErr.Code
+	}
+	return ""
 }
 
 // HandlePanicError 处理 panic 错误，记录日志并触发 panic

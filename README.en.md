@@ -30,9 +30,9 @@
 
 </div>
 
-> A next-generation open-source, self-hosted, lightweight federated publishing platform focused on personal idea sharing.
+> A next-generation open-source, self-hosted, lightweight publishing platform focused on personal idea sharing.
 
-Ech0 is a new-generation open-source self-hosted platform designed for individual users. It is ultra-lightweight and low-cost, supporting the ActivityPub protocol to let you easily publish and share ideas, writings, and links. With a clean, intuitive interface and powerful command-line tools, content management becomes simple and flexible. Your data is fully owned and controlled by you, always connected to the world, building your own network of thoughts.
+Ech0 is a new-generation open-source self-hosted platform designed for individual users. It is ultra-lightweight and low-cost, helping you easily publish and share ideas, writings, and links. With a clean, intuitive interface and powerful command-line tools, content management becomes simple and flexible. Your data is fully owned and controlled by you.
 
 ![Interface Preview](./docs/imgs/screenshot.png)
 
@@ -79,7 +79,6 @@ Ech0 is a new-generation open-source self-hosted platform designed for individua
 👾 **PWA Ready**: Installable as a web application, offering a near-native experience  
 🏷️ **Elegant Tag Management & Filtering**: Intelligent tagging system with fast filtering and precise search for effortless organization  
 ☁️ **S3 Storage Integration** — Native support for S3-compatible object storage enables efficient cloud synchronization  
-🌐 **ActivityPub Federation** — Seamlessly federates with Mastodon, Misskey, and other decentralized platforms  
 🔑 **OAuth2 & OIDC Authentication** — Native support for OAuth2 and OIDC protocols, enabling seamless third-party login and API authorization  
 🙈 **Passkey Passwordless Login**: Supports passkey login based on biometrics or hardware keys, greatly enhancing security and login experience  
 🪶 **Highly Available Webhook**: Enables real-time integration and collaboration with external systems, supporting event-driven automated workflows  
@@ -221,13 +220,7 @@ docker image prune -f
 
 Run the binary directly (for example, on Windows double-click `Ech0.exe`).
 
-### 🔐 SSH Mode
-
-Connect to the instance via port 6278:
-
-```shell
-ssh -p 6278 ssh.vaaat.com
-``` -->
+-->
 
 ---
 
@@ -272,8 +265,8 @@ ssh -p 6278 ssh.vaaat.com
 13. **How to configure S3?**  
     Fill in endpoint (without http/https) and bucket with public access.
 
-14. **How to join the Fediverse?**  
-  You need to bind Ech0 to a domain name and fill in the domain in the server address field in the settings page. Once set, Ech0 will automatically join the Fediverse. Example: `https://memo.vaaat.com`
+14. **How to enable passkey login?**  
+  Open settings, enable Passkey, then bind your biometric or hardware security key following browser prompts.
 
 ---
 
@@ -289,12 +282,14 @@ ssh -p 6278 ssh.vaaat.com
 ![Architecture Diagram](./docs/imgs/Ech0技术架构图.svg)  
 > by ExcaliDraw
 
+- The backend event bus now uses [Busen](https://github.com/lin-snow/Busen), adopting a typed-first in-process model with explicit backpressure, hooks, and drain-style shutdown.
+
 ---
 
 ## Development Guide
 
 ### Backend Requirements
-- Go 1.25.3+  
+- Go 1.26.0+  
 - C Compiler for CGO (`go-sqlite3`):
   - Windows: [MinGW-w64](https://winlibs.com/)  
   - macOS: `brew install gcc`  
@@ -303,6 +298,12 @@ ssh -p 6278 ssh.vaaat.com
 - Golangci-Lint: `golangci-lint run` / `golangci-lint fmt`  
 - Air (optional, backend hot reload): `make air-install` or `go install github.com/air-verse/air@latest`  
 - Swagger: `swag init -g internal/server/server.go -o internal/swagger`  
+- Event runtime tuning (Busen):
+  - `ECH0_EVENT_DEFAULT_BUFFER` / `ECH0_EVENT_DEFAULT_OVERFLOW`
+  - `ECH0_EVENT_DEADLETTER_BUFFER` / `ECH0_EVENT_SYSTEM_BUFFER`
+  - `ECH0_EVENT_AGENT_BUFFER` / `ECH0_EVENT_AGENT_PARALLELISM`
+  - `ECH0_EVENT_INBOX_BUFFER`
+  - `ECH0_EVENT_WEBHOOK_POOL_WORKERS` / `ECH0_EVENT_WEBHOOK_POOL_QUEUE`
 
 ### Frontend Requirements
 - NodeJS v25.5.0+, PNPM v10.30.0+  
@@ -311,7 +312,7 @@ ssh -p 6278 ssh.vaaat.com
 ### Start Backend & Frontend
 ```shell
 # Backend
-make run # normal backend start (equivalent to go run main.go web)
+make run # normal backend start (equivalent to go run main.go serve)
 make dev # backend hot reload with Air
 
 # Frontend

@@ -1,9 +1,8 @@
 package handler
 
 import (
-	"strconv"
-
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	res "github.com/lin-snow/ech0/internal/handler/response"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	service "github.com/lin-snow/ech0/internal/service/inbox"
@@ -11,11 +10,11 @@ import (
 
 // InboxHandler 负责处理收件箱相关 HTTP 请求
 type InboxHandler struct {
-	inboxService service.InboxServiceInterface
+	inboxService service.Service
 }
 
 // NewInboxHandler 创建新的 InboxHandler 实例
-func NewInboxHandler(inboxService service.InboxServiceInterface) *InboxHandler {
+func NewInboxHandler(inboxService service.Service) *InboxHandler {
 	return &InboxHandler{inboxService: inboxService}
 }
 
@@ -34,8 +33,6 @@ func NewInboxHandler(inboxService service.InboxServiceInterface) *InboxHandler {
 //	@Router			/inbox [get]
 func (inboxHandler *InboxHandler) GetInboxList() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userid := ctx.MustGet("userid").(uint)
-
 		var pageQuery commonModel.PageQueryDto
 		if err := ctx.ShouldBindQuery(&pageQuery); err != nil {
 			return res.Response{
@@ -44,7 +41,7 @@ func (inboxHandler *InboxHandler) GetInboxList() gin.HandlerFunc {
 			}
 		}
 
-		result, err := inboxHandler.inboxService.GetInboxList(userid, pageQuery)
+		result, err := inboxHandler.inboxService.GetInboxList(ctx.Request.Context(), pageQuery)
 		if err != nil {
 			return res.Response{Err: err}
 		}
@@ -68,9 +65,7 @@ func (inboxHandler *InboxHandler) GetInboxList() gin.HandlerFunc {
 //	@Router			/inbox/unread [get]
 func (inboxHandler *InboxHandler) GetUnreadInbox() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userid := ctx.MustGet("userid").(uint)
-
-		inboxes, err := inboxHandler.inboxService.GetUnreadInbox(userid)
+		inboxes, err := inboxHandler.inboxService.GetUnreadInbox(ctx.Request.Context())
 		if err != nil {
 			return res.Response{Err: err}
 		}
@@ -95,9 +90,7 @@ func (inboxHandler *InboxHandler) GetUnreadInbox() gin.HandlerFunc {
 //	@Router			/inbox/{id}/read [put]
 func (inboxHandler *InboxHandler) MarkInboxAsRead() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userid := ctx.MustGet("userid").(uint)
-
-		inboxID, err := parseUintParam(ctx.Param("id"))
+		inboxID, err := parseUUIDParam(ctx.Param("id"))
 		if err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS_BODY,
@@ -105,7 +98,7 @@ func (inboxHandler *InboxHandler) MarkInboxAsRead() gin.HandlerFunc {
 			}
 		}
 
-		if err := inboxHandler.inboxService.MarkAsRead(userid, uint(inboxID)); err != nil {
+		if err := inboxHandler.inboxService.MarkAsRead(ctx.Request.Context(), inboxID); err != nil {
 			return res.Response{Err: err}
 		}
 
@@ -126,9 +119,7 @@ func (inboxHandler *InboxHandler) MarkInboxAsRead() gin.HandlerFunc {
 //	@Router			/inbox/{id} [delete]
 func (inboxHandler *InboxHandler) DeleteInbox() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userid := ctx.MustGet("userid").(uint)
-
-		inboxID, err := parseUintParam(ctx.Param("id"))
+		inboxID, err := parseUUIDParam(ctx.Param("id"))
 		if err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS_BODY,
@@ -136,7 +127,7 @@ func (inboxHandler *InboxHandler) DeleteInbox() gin.HandlerFunc {
 			}
 		}
 
-		if err := inboxHandler.inboxService.DeleteInbox(userid, uint(inboxID)); err != nil {
+		if err := inboxHandler.inboxService.DeleteInbox(ctx.Request.Context(), inboxID); err != nil {
 			return res.Response{Err: err}
 		}
 
@@ -156,9 +147,7 @@ func (inboxHandler *InboxHandler) DeleteInbox() gin.HandlerFunc {
 //	@Router			/inbox [delete]
 func (inboxHandler *InboxHandler) ClearInbox() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		userid := ctx.MustGet("userid").(uint)
-
-		if err := inboxHandler.inboxService.ClearInbox(userid); err != nil {
+		if err := inboxHandler.inboxService.ClearInbox(ctx.Request.Context()); err != nil {
 			return res.Response{Err: err}
 		}
 
@@ -166,6 +155,9 @@ func (inboxHandler *InboxHandler) ClearInbox() gin.HandlerFunc {
 	})
 }
 
-func parseUintParam(raw string) (uint64, error) {
-	return strconv.ParseUint(raw, 10, 64)
+func parseUUIDParam(raw string) (string, error) {
+	if _, err := uuid.Parse(raw); err != nil {
+		return "", err
+	}
+	return raw, nil
 }

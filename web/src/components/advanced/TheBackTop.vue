@@ -2,7 +2,7 @@
   <button
     @click="scrollToTop"
     id="backToTop"
-    class="cursor-pointer rounded-full shadow hover:shadow-md bg-[var(--back-to-top-bg-color)] ring-1 ring-inset ring-[var(--ring-color)] z-50"
+    class="cursor-pointer rounded-full shadow hover:shadow-md bg-[var(--color-bg-surface)] ring-1 ring-inset ring-[var(--color-border-subtle)] z-50"
   >
     <Arrowup class="w-full h-full" />
   </button>

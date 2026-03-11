@@ -26,7 +26,7 @@ export function fetchGetAllUsers() {
 }
 
 // 更新用户权限
-export function fetchUpdateUserPermission(id: number) {
+export function fetchUpdateUserPermission(id: string) {
   return request({
     url: `/user/admin/${id}`,
     method: 'PUT',
@@ -34,7 +34,7 @@ export function fetchUpdateUserPermission(id: number) {
 }
 
 // 删除用户
-export function fetchDeleteUser(id: number) {
+export function fetchDeleteUser(id: string) {
   return request({
     url: `/user/${id}`,
     method: 'DELETE',

@@ -1,24 +1,15 @@
 // File: src/themes/index.scss
+@use './tokens/foundation.scss';
 @use './light.scss';
 @use './dark.scss';
 @use './custom.scss';
 @use './base.scss';
 
-// Editor && Preview
-.md-editor-dark,
-.md-editor-modal-container[data-theme='dark'] {
-  --md-bk-color: #333333 !important;
-}
-
-.md-editor div.github-theme {
-  color: var(--text-color) !important;
-}
-
 // widget
 .widget {
-  background-color: var(--widget-bg-color);
-  color: var(--widget-text-color);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 .widget-title {
-  color: var(--widget-title-color);
+  color: var(--color-text-primary);
 }

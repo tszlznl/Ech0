@@ -3,11 +3,32 @@ import { ref, computed, watch } from 'vue'
 import { fetchGetEchosByPage, fetchGetTags, fetchGetEchosByTagId } from '@/service/api'
 
 export const useEchoStore = defineStore('echoStore', () => {
+  const normalizeEchoId = (echo: App.Api.Ech0.Echo): string => String(echo?.id ?? '').trim()
+
+  const mergeEchoItems = (
+    targetList: { value: App.Api.Ech0.Echo[] },
+    targetIndexMap: { value: Map<string, number> },
+    incoming: App.Api.Ech0.Echo[],
+  ) => {
+    incoming.forEach((item: App.Api.Ech0.Echo) => {
+      const id = normalizeEchoId(item)
+      if (!id) return
+      const normalizedItem = { ...item, id }
+      const idx = targetIndexMap.value.get(id)
+      if (idx !== undefined) {
+        targetList.value[idx] = normalizedItem
+      } else {
+        targetList.value.push(normalizedItem)
+        targetIndexMap.value.set(id, targetList.value.length - 1)
+      }
+    })
+  }
+
   /**
    * state
    */
   const echoList = ref<App.Api.Ech0.Echo[]>([]) // 存储Echo列表
-  const echoIndexMap = ref(new Map<number, number>()) // id -> index
+  const echoIndexMap = ref(new Map<string, number>()) // id -> index
   const isLoading = ref<boolean>(true) // 是否正在加载数据
   const total = ref<number>(0) // 总数据量
   const pageSize = ref<number>(5) // 每页显示的数量
@@ -28,7 +49,7 @@ export const useEchoStore = defineStore('echoStore', () => {
 
   const isFilteringMode = ref<boolean>(false) // 是否正在通过标签过滤
   const filteredEchoList = ref<App.Api.Ech0.Echo[]>([]) // 过滤后的Echo列表
-  const filteredEchoIndexMap = ref(new Map<number, number>()) // 过滤后的id -> index
+  const filteredEchoIndexMap = ref(new Map<string, number>()) // 过滤后的id -> index
   const filteredTotal = ref<number>(0) // 过滤后的总数据量
   const filteredPageSize = ref<number>(5) // 过滤后的每页显示的数量
   const filteredPage = ref<number>(0) // 过滤后的当前页码，从0开始计数
@@ -82,16 +103,7 @@ export const useEchoStore = defineStore('echoStore', () => {
         if (res.code === 1) {
           total.value = res.data.total
 
-          // 同步更新 echoMap
-          res.data.items.forEach((item: App.Api.Ech0.Echo) => {
-            const idx = echoIndexMap.value.get(item.id)
-            if (idx !== undefined) {
-              echoList.value[idx] = item // 更新已有数据
-            } else {
-              echoList.value.push(item) // 添加新数据
-              echoIndexMap.value.set(item.id, echoList.value.length - 1)
-            }
-          })
+          mergeEchoItems(echoList, echoIndexMap, res.data.items)
 
           page.value += 1
         }
@@ -131,7 +143,7 @@ export const useEchoStore = defineStore('echoStore', () => {
     }
   }
 
-  const updateLikeCount = (echoId: number, delta: number = 1) => {
+  const updateLikeCount = (echoId: string, delta: number = 1) => {
     const idx = echoIndexMap.value.get(echoId)
     if (idx !== undefined) {
       const targetEcho = echoList.value[idx]
@@ -173,16 +185,7 @@ export const useEchoStore = defineStore('echoStore', () => {
         if (res.code === 1) {
           filteredTotal.value = res.data.total
 
-          // 同步更新 echoMap
-          res.data.items.forEach((item: App.Api.Ech0.Echo) => {
-            const idx = filteredEchoIndexMap.value.get(item.id)
-            if (idx !== undefined) {
-              filteredEchoList.value[idx] = item // 更新已有数据
-            } else {
-              filteredEchoList.value.push(item) // 添加新数据
-              filteredEchoIndexMap.value.set(item.id, filteredEchoList.value.length - 1)
-            }
-          })
+          mergeEchoItems(filteredEchoList, filteredEchoIndexMap, res.data.items)
 
           filteredPage.value += 1
         }

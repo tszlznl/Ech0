@@ -6,7 +6,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,26 +18,28 @@ import (
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
-	"github.com/lin-snow/ech0/internal/event"
+	"github.com/lin-snow/ech0/internal/config"
+	contracts "github.com/lin-snow/ech0/internal/event/contracts"
+	publisher "github.com/lin-snow/ech0/internal/event/publisher"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	model "github.com/lin-snow/ech0/internal/model/user"
-	repository "github.com/lin-snow/ech0/internal/repository/user"
-	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	"github.com/lin-snow/ech0/internal/transaction"
 	cryptoUtil "github.com/lin-snow/ech0/internal/util/crypto"
 	jwtUtil "github.com/lin-snow/ech0/internal/util/jwt"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2"
 )
 
 // UserService 用户服务结构体，提供用户相关的业务逻辑处理
 type UserService struct {
-	txManager      transaction.TransactionManager         // 事务管理器
-	userRepository repository.UserRepositoryInterface     // 用户数据层接口
-	settingService settingService.SettingServiceInterface // 系统设置数据层接口
-	eventBus       event.IEventBus                        // 事件总线
+	transactor     transaction.Transactor // 事务执行器
+	userRepository Repository             // 用户数据层接口
+	settingService SettingService         // 系统设置数据层接口
+	publisher      *publisher.Publisher   // 事件发布器
 }
 
 // NewUserService 创建并返回新的用户服务实例
@@ -48,18 +49,18 @@ type UserService struct {
 //   - settingService: 系统设置数据层接口实现
 //
 // 返回:
-//   - UserServiceInterface: 用户服务接口实现
+//   - *UserService: 用户服务实现
 func NewUserService(
-	tm transaction.TransactionManager,
-	userRepository repository.UserRepositoryInterface,
-	settingService settingService.SettingServiceInterface,
-	eventBusProvider func() event.IEventBus,
-) UserServiceInterface {
+	tx transaction.Transactor,
+	userRepository Repository,
+	settingService SettingService,
+	publisher *publisher.Publisher,
+) *UserService {
 	return &UserService{
-		txManager:      tm,
+		transactor:     tx,
 		userRepository: userRepository,
 		settingService: settingService,
-		eventBus:       eventBusProvider(),
+		publisher:      publisher,
 	}
 }
 
@@ -82,7 +83,7 @@ func (userService *UserService) Login(loginDto *authModel.LoginDto) (string, err
 	loginDto.Password = cryptoUtil.MD5Encrypt(loginDto.Password)
 
 	// 检查用户是否存在
-	user, err := userService.userRepository.GetUserByUsername(loginDto.Username)
+	user, err := userService.userRepository.GetUserByUsername(context.Background(), loginDto.Username)
 	if err != nil {
 		return "", errors.New(commonModel.USER_NOTFOUND)
 	}
@@ -93,7 +94,7 @@ func (userService *UserService) Login(loginDto *authModel.LoginDto) (string, err
 	}
 
 	// 生成 Token
-	token, err := jwtUtil.GenerateToken(jwtUtil.CreateClaims(user))
+	token, err := userService.issueUserToken(user)
 	if err != nil {
 		return "", err
 	}
@@ -101,9 +102,73 @@ func (userService *UserService) Login(loginDto *authModel.LoginDto) (string, err
 	return token, nil
 }
 
+// InitOwner 初始化 Owner 账号
+//
+// 参数:
+//   - registerDto: 注册数据传输对象，包含用户名和密码
+//
+// 返回:
+//   - error: 初始化过程中的错误信息
+func (userService *UserService) InitOwner(registerDto *authModel.RegisterDto) error {
+	if registerDto.Username == "" || registerDto.Password == "" {
+		return errors.New(commonModel.USERNAME_OR_PASSWORD_NOT_BE_EMPTY)
+	}
+
+	var owner model.User
+	if err := userService.transactor.Run(context.Background(), func(ctx context.Context) error {
+		initialized, err := userService.userRepository.IsInitialized(ctx)
+		if err != nil {
+			return err
+		}
+		if initialized {
+			return commonModel.NewBizError(commonModel.ErrCodeInitAlreadyDone, commonModel.SYSTEM_ALREADY_INITED)
+		}
+
+		users, err := userService.userRepository.GetAllUsers(ctx)
+		if err != nil {
+			return err
+		}
+		if len(users) > 0 {
+			return commonModel.NewBizError(commonModel.ErrCodeInitOwnerExists, commonModel.OWNER_ALREADY_EXISTS)
+		}
+
+		// 检查用户是否已经存在
+		existingUser, err := userService.userRepository.GetUserByUsername(ctx, registerDto.Username)
+		if err == nil && existingUser.ID != model.USER_NOT_EXISTS_ID {
+			return errors.New(commonModel.USERNAME_HAS_EXISTS)
+		}
+
+		owner = model.User{
+			Username: registerDto.Username,
+			Password: cryptoUtil.MD5Encrypt(registerDto.Password),
+			IsAdmin:  true,
+			IsOwner:  true,
+		}
+
+		if err := userService.userRepository.CreateUser(ctx, &owner); err != nil {
+			return err
+		}
+
+		return userService.userRepository.MarkInitialized(ctx)
+	}); err != nil {
+		return err
+	}
+
+	// 发布用户注册事件
+	owner.Password = "" // 不包含密码信息
+	if err := userService.publisher.UserCreated(
+		context.Background(),
+		contracts.UserCreatedEvent{User: owner},
+	); err != nil {
+		logUtil.GetLogger().
+			Error("Failed to publish owner created event", zap.Error(err))
+	}
+
+	return nil
+}
+
 // Register 用户注册
-// 注册新用户，包括用户数量限制检查、注册权限检查等
-// 第一个注册的用户自动设置为系统管理员
+// 注册普通用户，包括用户数量限制检查、注册权限检查等
 //
 // 参数:
 //   - registerDto: 注册数据传输对象，包含用户名和密码
@@ -111,8 +176,16 @@ func (userService *UserService) Login(loginDto *authModel.LoginDto) (string, err
 // 返回:
 //   - error: 注册过程中的错误信息
 func (userService *UserService) Register(registerDto *authModel.RegisterDto) error {
+	initialized, err := userService.userRepository.IsInitialized(context.Background())
+	if err != nil {
+		return err
+	}
+	if !initialized {
+		return commonModel.NewBizError(commonModel.ErrCodeInitInvalidState, commonModel.SIGNUP_FIRST)
+	}
+
 	// 检查用户数量是否超过限制
-	users, err := userService.userRepository.GetAllUsers()
+	users, err := userService.userRepository.GetAllUsers(context.Background())
 	if err != nil {
 		return err
 	}
@@ -127,18 +200,13 @@ func (userService *UserService) Register(registerDto *authModel.RegisterDto) err
 		Username: registerDto.Username,
 		Password: registerDto.Password,
 		IsAdmin:  false,
+		IsOwner:  false,
 	}
 
 	// 检查用户是否已经存在
-	user, err := userService.userRepository.GetUserByUsername(newUser.Username)
+	user, err := userService.userRepository.GetUserByUsername(context.Background(), newUser.Username)
 	if err == nil && user.ID != model.USER_NOT_EXISTS_ID {
 		return errors.New(commonModel.USERNAME_HAS_EXISTS)
-	}
-
-	// 检查是否该系统第一次注册用户
-	if len(users) == 0 {
-		// 第一个注册的用户为系统管理员
-		newUser.IsAdmin = true
 	}
 
 	// 检查是否开放注册
@@ -146,10 +214,10 @@ func (userService *UserService) Register(registerDto *authModel.RegisterDto) err
 	if err := userService.settingService.GetSetting(&setting); err != nil {
 		return err
 	}
-	if len(users) != 0 && !setting.AllowRegister {
+	if !setting.AllowRegister {
 		return errors.New(commonModel.USER_REGISTER_NOT_ALLOW)
 	}
-	if err := userService.txManager.Run(func(ctx context.Context) error {
+	if err := userService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		if err := userService.userRepository.CreateUser(ctx, &newUser); err != nil {
 			return err
 		}
@@ -161,17 +229,12 @@ func (userService *UserService) Register(registerDto *authModel.RegisterDto) err
 
 	// 发布用户注册事件
 	newUser.Password = "" // 不包含密码信息
-	if err := userService.eventBus.Publish(
+	if err := userService.publisher.UserCreated(
 		context.Background(),
-		event.NewEvent(
-			event.EventTypeUserCreated,
-			event.EventPayload{
-				event.EventPayloadUser: newUser,
-			},
-		),
+		contracts.UserCreatedEvent{User: newUser},
 	); err != nil {
 		logUtil.GetLogger().
-			Error("Failed to publish user created event", zap.String("error", err.Error()))
+			Error("Failed to publish user created event", zap.Error(err))
 	}
 
 	return nil
@@ -186,9 +249,10 @@ func (userService *UserService) Register(registerDto *authModel.RegisterDto) err
 //
 // 返回:
 //   - error: 更新过程中的错误信息
-func (userService *UserService) UpdateUser(userid uint, userdto model.UserInfoDto) error {
+func (userService *UserService) UpdateUser(ctx context.Context, userdto model.UserInfoDto) error {
+	userid := viewer.MustFromContext(ctx).UserID()
 	// 检查执行操作的用户是否为管理员
-	user, err := userService.userRepository.GetUserByID(int(userid))
+	user, err := userService.userRepository.GetUserByID(ctx, userid)
 	if err != nil {
 		return err
 	}
@@ -199,7 +263,7 @@ func (userService *UserService) UpdateUser(userid uint, userdto model.UserInfoDt
 	// 检查是否需要更新用户名
 	if userdto.Username != "" && userdto.Username != user.Username {
 		// 检查用户名是否已存在
-		existingUser, _ := userService.userRepository.GetUserByUsername(userdto.Username)
+		existingUser, _ := userService.userRepository.GetUserByUsername(ctx, userdto.Username)
 		if existingUser.ID != model.USER_NOT_EXISTS_ID {
 			return errors.New(commonModel.USERNAME_ALREADY_EXISTS)
 		}
@@ -221,33 +285,28 @@ func (userService *UserService) UpdateUser(userid uint, userdto model.UserInfoDt
 		// 更新头像
 		user.Avatar = userdto.Avatar
 	}
-	if err := userService.txManager.Run(func(ctx context.Context) error {
+	if err := userService.transactor.Run(ctx, func(txCtx context.Context) error {
 		// 更新用户信息
-		return userService.userRepository.UpdateUser(ctx, &user)
+		return userService.userRepository.UpdateUser(txCtx, &user)
 	}); err != nil {
 		return err
 	}
 
 	// 发布用户更新事件
 	user.Password = "" // 不包含密码信息
-	if err := userService.eventBus.Publish(
+	if err := userService.publisher.UserUpdated(
 		context.Background(),
-		event.NewEvent(
-			event.EventTypeUserUpdated,
-			event.EventPayload{
-				event.EventPayloadUser: user,
-			},
-		),
+		contracts.UserUpdatedEvent{User: user},
 	); err != nil {
 		logUtil.GetLogger().
-			Error("Failed to publish user updated event", zap.String("error", err.Error()))
+			Error("Failed to publish user updated event", zap.Error(err))
 	}
 
 	return nil
 }
 
 // UpdateUserAdmin 更新用户的管理员权限
-// 只有系统管理员、管理员可以修改其他用户的管理员权限，不能修改自己和系统管理员的权限
+// 只有 Owner 可以修改其他用户的管理员权限，不能修改自己和 Owner 的权限
 //
 // 参数:
 //   - userid: 执行操作的用户ID（必须为管理员）
@@ -255,80 +314,70 @@ func (userService *UserService) UpdateUser(userid uint, userdto model.UserInfoDt
 //
 // 返回:
 //   - error: 更新过程中的错误信息
-func (userService *UserService) UpdateUserAdmin(userid uint, id uint) error {
-	// 检查执行操作的用户是否为管理员
-	user, err := userService.userRepository.GetUserByID(int(userid))
+func (userService *UserService) UpdateUserAdmin(ctx context.Context, id string) error {
+	userid := viewer.MustFromContext(ctx).UserID()
+	// 检查执行操作的用户是否为 Owner
+	operator, err := userService.userRepository.GetUserByID(ctx, userid)
 	if err != nil {
 		return err
 	}
-	if !user.IsAdmin {
-		return errors.New(commonModel.NO_PERMISSION_DENIED)
+	if !operator.IsOwner {
+		return errors.New(commonModel.ONLY_OWNER_CAN_MANAGE)
 	}
 
 	// 检查要修改权限的用户是否存在
-	user, err = userService.userRepository.GetUserByID(int(id))
+	user, err := userService.userRepository.GetUserByID(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	// 检查系统管理员信息
-	sysadmin, err := userService.GetSysAdmin()
-	if err != nil {
-		return err
-	}
-
-	// 检查是否尝试修改自己或系统管理员的权限
-	if userid == user.ID || id == sysadmin.ID {
+	// 检查是否尝试修改自己或 Owner 的权限
+	if userid == user.ID || user.IsOwner {
 		return errors.New(commonModel.INVALID_PARAMS_BODY)
 	}
 
 	user.IsAdmin = !user.IsAdmin
 
-	if err := userService.txManager.Run(func(ctx context.Context) error {
+	if err := userService.transactor.Run(ctx, func(txCtx context.Context) error {
 		// 更新用户信息
-		return userService.userRepository.UpdateUser(ctx, &user)
+		return userService.userRepository.UpdateUser(txCtx, &user)
 	}); err != nil {
 		return err
 	}
 
 	// 发布用户更新事件
 	user.Password = "" // 不包含密码信息
-	if err := userService.eventBus.Publish(
+	if err := userService.publisher.UserUpdated(
 		context.Background(),
-		event.NewEvent(
-			event.EventTypeUserUpdated,
-			event.EventPayload{
-				event.EventPayloadUser: user,
-			},
-		),
+		contracts.UserUpdatedEvent{User: user},
 	); err != nil {
 		logUtil.GetLogger().
-			Error("Failed to publish user updated event", zap.String("error", err.Error()))
+			Error("Failed to publish user updated event", zap.Error(err))
 	}
 
 	return nil
 }
 
 // GetAllUsers 获取所有用户列表
-// 返回除系统管理员外的所有用户，并移除密码信息
+// 返回除 Owner 外的所有用户，并移除密码信息
 //
 // 返回:
 //   - []model.User: 用户列表（不包含密码信息）
 //   - error: 获取过程中的错误信息
 func (userService *UserService) GetAllUsers() ([]model.User, error) {
-	allures, err := userService.userRepository.GetAllUsers()
+	allures, err := userService.userRepository.GetAllUsers(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
-	sysadmin, err := userService.GetSysAdmin()
+	owner, err := userService.GetOwner()
 	if err != nil {
 		return nil, err
 	}
 
-	// 处理用户信息(去掉管理员用户)
+	// 处理用户信息(去掉Owner用户)
 	for i := range allures {
-		if allures[i].ID == sysadmin.ID {
+		if allures[i].ID == owner.ID {
 			allures = append(allures[:i], allures[i+1:]...)
 			break
 		}
@@ -342,22 +391,22 @@ func (userService *UserService) GetAllUsers() ([]model.User, error) {
 	return allures, nil
 }
 
-// GetSysAdmin 获取系统管理员信息
+// GetOwner 获取 Owner 信息
 //
 // 返回:
-//   - model.User: 系统管理员用户信息
+//   - model.User: Owner 用户信息
 //   - error: 获取过程中的错误信息
-func (userService *UserService) GetSysAdmin() (model.User, error) {
-	sysadmin, err := userService.userRepository.GetSysAdmin()
+func (userService *UserService) GetOwner() (model.User, error) {
+	owner, err := userService.userRepository.GetOwner(context.Background())
 	if err != nil {
 		return model.User{}, err
 	}
 
-	return sysadmin, nil
+	return owner, nil
 }
 
 // DeleteUser 删除用户
-// 只有管理员可以删除用户，不能删除自己和系统管理员
+// 只有 Owner 可以删除用户，不能删除自己和 Owner
 //
 // 参数:
 //   - userid: 执行删除操作的用户ID（必须为管理员）
@@ -365,38 +414,49 @@ func (userService *UserService) GetSysAdmin() (model.User, error) {
 //
 // 返回:
 //   - error: 删除过程中的错误信息
-func (userService *UserService) DeleteUser(userid, id uint) error {
-	return userService.txManager.Run(func(ctx context.Context) error {
-		// 检查执行操作的用户是否为管理员
-		user, err := userService.userRepository.GetUserByID(int(userid))
+func (userService *UserService) DeleteUser(ctx context.Context, id string) error {
+	userid := viewer.MustFromContext(ctx).UserID()
+	var deletedUser model.User
+	err := userService.transactor.Run(ctx, func(txCtx context.Context) error {
+		// 检查执行操作的用户是否为 Owner
+		operator, err := userService.userRepository.GetUserByID(txCtx, userid)
 		if err != nil {
 			return err
 		}
-		if !user.IsAdmin {
-			return errors.New(commonModel.NO_PERMISSION_DENIED)
+		if !operator.IsOwner {
+			return errors.New(commonModel.ONLY_OWNER_CAN_MANAGE)
 		}
 
 		// 检查要删除的用户是否存在
-		user, err = userService.userRepository.GetUserByID(int(id))
+		user, err := userService.userRepository.GetUserByID(txCtx, id)
 		if err != nil {
 			return err
 		}
 
-		sysadmin, err := userService.GetSysAdmin()
-		if err != nil {
-			return err
-		}
-
-		if userid == user.ID || id == sysadmin.ID {
+		if userid == user.ID || user.IsOwner {
 			return errors.New(commonModel.INVALID_PARAMS_BODY)
 		}
 
-		if err := userService.userRepository.DeleteUser(ctx, id); err != nil {
+		deletedUser = user
+		if err := userService.userRepository.DeleteUser(txCtx, id); err != nil {
 			return err
 		}
 
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	deletedUser.Password = ""
+	if err := userService.publisher.UserDeleted(
+		context.Background(),
+		contracts.UserDeletedEvent{User: deletedUser},
+	); err != nil {
+		logUtil.GetLogger().
+			Error("Failed to publish user deleted event", zap.Error(err))
+	}
+	return nil
 }
 
 // GetUserByID 根据用户ID获取用户信息
@@ -407,17 +467,18 @@ func (userService *UserService) DeleteUser(userid, id uint) error {
 // 返回:
 //   - model.User: 用户信息
 //   - error: 获取过程中的错误信息
-func (userService *UserService) GetUserByID(userId int) (model.User, error) {
-	return userService.userRepository.GetUserByID(userId)
+func (userService *UserService) GetUserByID(userId string) (model.User, error) {
+	return userService.userRepository.GetUserByID(context.Background(), userId)
 }
 
 // BindOAuth 绑定 OAuth2 账号(支持 OAuth2 和 OIDC)
 func (userService *UserService) BindOAuth(
-	userID uint,
+	ctx context.Context,
 	provider string,
 	redirectURI string,
 ) (string, error) {
-	user, err := userService.userRepository.GetUserByID(int(userID))
+	userID := viewer.MustFromContext(ctx).UserID()
+	user, err := userService.userRepository.GetUserByID(ctx, userID)
 	if err != nil {
 		return "", err
 	}
@@ -461,7 +522,7 @@ func (userService *UserService) GetOAuthLoginURL(
 
 	state, nonce, err := jwtUtil.GenerateOAuthState(
 		string(authModel.OAuth2ActionLogin),
-		authModel.NO_USER_LOGINED,
+		"",
 		redirectURI,
 		provider,
 	)
@@ -482,128 +543,44 @@ func (userService *UserService) HandleOAuthCallback(
 	provider string,
 	code string,
 	state string,
-) string {
+) (string, error) {
 	setting, err := userService.getOAuthSetting(provider)
 	if err != nil {
-		return ""
+		return "", err
 	}
 
 	oauthState, err := jwtUtil.ParseOAuthState(state)
 	if err != nil {
-		return ""
+		return "", err
 	}
 
 	if oauthState.Provider != provider {
-		return ""
+		return "", errors.New(commonModel.INVALID_PARAMS)
 	}
 
-	switch provider {
-	case string(commonModel.OAuth2GITHUB):
-		tokenResp, err := exchangeGithubCodeForToken(setting, code)
-		if err != nil {
-			fmt.Printf("Error exchanging %s code for token: %v\n", provider, err)
-			return ""
-		}
-
-		githubUser, err := fetchGitHubUserInfo(setting, tokenResp.AccessToken)
-		if err != nil {
-			fmt.Printf("Error fetching %s user info: %v\n", provider, err)
-			return ""
-		}
-
-		return userService.resolveOAuthCallback(
-			oauthState,
-			provider,
-			fmt.Sprint(githubUser.ID),
-			"",
-			string(authModel.AuthTypeOAuth2),
-		)
-
-	case string(commonModel.OAuth2GOOGLE):
-		tokenResp, err := exchangeGoogleCodeForToken(setting, code)
-		if err != nil {
-			fmt.Printf("Error exchanging %s code for token: %v\n", provider, err)
-			return ""
-		}
-
-		googleUser, err := fetchGoogleUserInfo(setting, tokenResp.AccessToken)
-		if err != nil {
-			fmt.Printf("Error fetching %s user info: %v\n", provider, err)
-			return ""
-		}
-
-		return userService.resolveOAuthCallback(
-			oauthState,
-			provider,
-			googleUser.Sub,
-			"",
-			string(authModel.AuthTypeOAuth2),
-		)
-
-	case string(commonModel.OAuth2QQ):
-		tokenResp, err := exchangeQQCodeForToken(setting, code)
-		if err != nil {
-			fmt.Printf("Error exchanging %s code for token: %v\n", provider, err)
-			return ""
-		}
-
-		qqOpenIDResp, err := fetchQQUserInfo(tokenResp.AccessToken)
-		if err != nil {
-			fmt.Printf("Error fetching %s user info: %v\n", provider, err)
-			return ""
-		}
-
-		return userService.resolveOAuthCallback(
-			oauthState,
-			provider,
-			qqOpenIDResp.OpenID,
-			"",
-			string(authModel.AuthTypeOAuth2),
-		)
-
-	case string(commonModel.OAuth2CUSTOM):
-		// 使用 code 换取 access_token
-		accessToken, idToken, err := exchangeCustomCodeForToken(setting, code)
-		if err != nil {
-			fmt.Printf("Error exchanging %s code for token: %v\n", provider, err)
-			return ""
-		}
-
-		var oauthId string
-		var authType string
-		var issuer string
-
-		if setting.IsOIDC {
-			oauthId, err = fetchCustomUserInfo(setting, accessToken, idToken)
-			if err != nil {
-				fmt.Printf("Error fetching %s user info: %v\n", provider, err)
-				return ""
-			}
-			issuer = setting.Issuer
-			authType = string(authModel.AuthTypeOIDC)
-		} else {
-			oauthId, err = fetchCustomUserInfo(setting, accessToken, "")
-			if err != nil {
-				fmt.Printf("Error fetching %s user info: %v\n", provider, err)
-				return ""
-			}
-			issuer = ""
-			authType = string(authModel.AuthTypeOAuth2)
-		}
-
-		// 绑定到本地用户并返回重定向 URL
-		return userService.resolveOAuthCallback(oauthState, provider, oauthId, issuer, authType)
-
-	default:
-		return ""
+	adapter, err := getOAuthProviderAdapter(provider)
+	if err != nil {
+		return "", err
 	}
+	identity, err := adapter.ResolveIdentity(setting, code, oauthState)
+	if err != nil {
+		logUtil.Error("resolve oauth identity failed", zap.String("provider", provider), zap.Error(err))
+		return "", err
+	}
+
+	return userService.resolveOAuthCallback(
+		oauthState,
+		provider,
+		identity.ExternalID,
+		identity.Issuer,
+		identity.AuthType,
+	)
 }
 
-func (userService *UserService) getOAuthSetting(
-	provider string,
-) (*settingModel.OAuth2Setting, error) {
+func (userService *UserService) getOAuthSetting(provider string) (*settingModel.OAuth2Setting, error) {
 	var setting settingModel.OAuth2Setting
-	if err := userService.settingService.GetOAuth2Setting(0, &setting, true); err != nil {
+	systemCtx := viewer.WithContext(context.Background(), viewer.NewSystemViewer())
+	if err := userService.settingService.GetOAuth2Setting(systemCtx, &setting, true); err != nil {
 		return nil, err
 	}
 
@@ -638,27 +615,27 @@ func (userService *UserService) buildOAuthAuthorizeURL(
 
 	switch provider {
 	case string(commonModel.OAuth2GITHUB):
-		return fmt.Sprintf(
-			"%s?client_id=%s&redirect_uri=%s&scope=%s&state=%s",
-			setting.AuthURL,
-			url.QueryEscape(setting.ClientID),
-			url.QueryEscape(setting.RedirectURI),
-			url.QueryEscape(scope),
-			url.QueryEscape(state),
-		)
-	case string(commonModel.OAuth2GOOGLE):
-		params := url.Values{}
-		params.Set("client_id", setting.ClientID)
-		params.Set("redirect_uri", setting.RedirectURI)
-		params.Set("response_type", "code")
-		params.Set("state", state)
-		params.Set("access_type", "offline")
-		params.Set("prompt", "consent")
-		if scope != "" {
-			params.Set("scope", scope)
+		config := oauth2.Config{
+			ClientID:    setting.ClientID,
+			RedirectURL: setting.RedirectURI,
+			Scopes:      setting.Scopes,
+			Endpoint: oauth2.Endpoint{
+				AuthURL:  setting.AuthURL,
+				TokenURL: setting.TokenURL,
+			},
 		}
-
-		return fmt.Sprintf("%s?%s", setting.AuthURL, params.Encode())
+		return config.AuthCodeURL(state)
+	case string(commonModel.OAuth2GOOGLE):
+		config := oauth2.Config{
+			ClientID:    setting.ClientID,
+			RedirectURL: setting.RedirectURI,
+			Scopes:      setting.Scopes,
+			Endpoint: oauth2.Endpoint{
+				AuthURL:  setting.AuthURL,
+				TokenURL: setting.TokenURL,
+			},
+		}
+		return config.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
 
 	case string(commonModel.OAuth2QQ):
 		params := url.Values{}
@@ -674,19 +651,20 @@ func (userService *UserService) buildOAuthAuthorizeURL(
 
 	// 自定义 OAuth2 （仅 Custom 类型支持 OIDC)
 	case string(commonModel.OAuth2CUSTOM):
-		params := url.Values{}
-		params.Set("client_id", setting.ClientID)
-		params.Set("redirect_uri", setting.RedirectURI)
-		params.Set("response_type", "code")
-		params.Set("state", state)
-		if scope != "" {
-			params.Set("scope", scope)
+		config := oauth2.Config{
+			ClientID:    setting.ClientID,
+			RedirectURL: setting.RedirectURI,
+			Scopes:      setting.Scopes,
+			Endpoint: oauth2.Endpoint{
+				AuthURL:  setting.AuthURL,
+				TokenURL: setting.TokenURL,
+			},
 		}
+		opts := []oauth2.AuthCodeOption{}
 		if setting.IsOIDC && nonce != "" {
-			params.Set("nonce", nonce)
+			opts = append(opts, oauth2.SetAuthURLParam("nonce", nonce))
 		}
-
-		return fmt.Sprintf("%s?%s", setting.AuthURL, params.Encode())
+		return config.AuthCodeURL(state, opts...)
 	default:
 		return ""
 	}
@@ -710,11 +688,19 @@ func bindingPermissionError(provider string) error {
 func (userService *UserService) resolveOAuthCallback(
 	oauthState *authModel.OAuthState,
 	provider, externalID, issuer, authType string,
-) string {
+) (string, error) {
 	switch oauthState.Action {
 	case string(authModel.OAuth2ActionLogin):
-		if oauthState.UserID != authModel.NO_USER_LOGINED {
-			return ""
+		if oauthState.UserID != "" {
+			logUtil.Warn(
+				"auth audit",
+				zap.String("provider", provider),
+				zap.String("action", "oauth_login"),
+				zap.String("user_id", ""),
+				zap.String("result", "fail"),
+				zap.String("reason", "unexpected_user_id_in_login_state"),
+			)
+			return "", errors.New(commonModel.INVALID_PARAMS)
 		}
 
 		var (
@@ -737,32 +723,64 @@ func (userService *UserService) resolveOAuthCallback(
 			)
 		}
 		if err != nil {
-			fmt.Printf("Error fetching user by %s OAuth ID: %v\n", provider, err)
-			return ""
+			logUtil.Error("fetch user by oauth id failed", zap.String("provider", provider), zap.Error(err))
+			logUtil.Warn(
+				"auth audit",
+				zap.String("provider", provider),
+				zap.String("action", "oauth_login"),
+				zap.String("user_id", ""),
+				zap.String("result", "fail"),
+				zap.String("reason", "identity_not_bound_or_lookup_failed"),
+			)
+			return "", err
 		}
 
-		token, err := jwtUtil.GenerateToken(jwtUtil.CreateClaims(user))
+		token, err := userService.issueUserToken(user)
 		if err != nil {
-			fmt.Printf("Error generating token: %v\n", err)
-			return ""
+			logUtil.Error("generate oauth login token failed", zap.String("provider", provider), zap.Error(err))
+			logUtil.Warn(
+				"auth audit",
+				zap.String("provider", provider),
+				zap.String("action", "oauth_login"),
+				zap.String("user_id", user.ID),
+				zap.String("result", "fail"),
+				zap.String("reason", "issue_token_failed"),
+			)
+			return "", err
 		}
 
-		redirectURL, err := url.Parse(oauthState.Redirect)
+		redirectURL, err := userService.parseAndValidateClientRedirect(oauthState.Redirect)
 		if err != nil {
-			return ""
+			return "", err
 		}
 		query := redirectURL.Query()
 		query.Set("token", token)
 		redirectURL.RawQuery = query.Encode()
+		logUtil.Info(
+			"auth audit",
+			zap.String("provider", provider),
+			zap.String("action", "oauth_login"),
+			zap.String("user_id", user.ID),
+			zap.String("result", "success"),
+			zap.String("reason", ""),
+		)
 
-		return redirectURL.String()
+		return redirectURL.String(), nil
 
 	case string(authModel.OAuth2ActionBind):
-		if oauthState.UserID == authModel.NO_USER_LOGINED {
-			return ""
+		if oauthState.UserID == "" {
+			logUtil.Warn(
+				"auth audit",
+				zap.String("provider", provider),
+				zap.String("action", "oauth_bind"),
+				zap.String("user_id", ""),
+				zap.String("result", "fail"),
+				zap.String("reason", "missing_user_id"),
+			)
+			return "", errors.New(commonModel.INVALID_PARAMS)
 		}
 
-		_ = userService.txManager.Run(func(ctx context.Context) error {
+		if err := userService.transactor.Run(context.Background(), func(ctx context.Context) error {
 			return userService.userRepository.BindOAuth(
 				ctx,
 				oauthState.UserID,
@@ -771,13 +789,81 @@ func (userService *UserService) resolveOAuthCallback(
 				issuer,
 				authType,
 			)
-		})
+		}); err != nil {
+			logUtil.Warn(
+				"auth audit",
+				zap.String("provider", provider),
+				zap.String("action", "oauth_bind"),
+				zap.String("user_id", oauthState.UserID),
+				zap.String("result", "fail"),
+				zap.String("reason", "bind_persist_failed"),
+			)
+			return "", err
+		}
 
-		return oauthState.Redirect + "?bind=success"
+		redirectURL, err := userService.parseAndValidateClientRedirect(oauthState.Redirect)
+		if err != nil {
+			return "", err
+		}
+		query := redirectURL.Query()
+		query.Set("bind", "success")
+		redirectURL.RawQuery = query.Encode()
+		logUtil.Info(
+			"auth audit",
+			zap.String("provider", provider),
+			zap.String("action", "oauth_bind"),
+			zap.String("user_id", oauthState.UserID),
+			zap.String("result", "success"),
+			zap.String("reason", ""),
+		)
+		return redirectURL.String(), nil
 
 	default:
-		return ""
+		return "", errors.New(commonModel.INVALID_PARAMS)
 	}
+}
+
+func (userService *UserService) parseAndValidateClientRedirect(redirect string) (*url.URL, error) {
+	redirectURL, err := url.Parse(redirect)
+	if err != nil || redirectURL == nil {
+		return nil, errors.New(commonModel.INVALID_PARAMS)
+	}
+	if !redirectURL.IsAbs() || redirectURL.Host == "" {
+		return nil, errors.New(commonModel.INVALID_PARAMS)
+	}
+	if redirectURL.Scheme != "http" && redirectURL.Scheme != "https" {
+		return nil, errors.New(commonModel.INVALID_PARAMS)
+	}
+
+	allowed := config.Config().Auth.Redirect.AllowedReturnURLs
+	if userService.settingService != nil {
+		systemCtx := viewer.WithContext(context.Background(), viewer.NewSystemViewer())
+		var oauthSetting settingModel.OAuth2Setting
+		if err := userService.settingService.GetOAuth2Setting(systemCtx, &oauthSetting, true); err == nil &&
+			len(oauthSetting.AuthRedirectAllowedReturnURLs) > 0 {
+			allowed = oauthSetting.AuthRedirectAllowedReturnURLs
+		}
+	}
+	if len(allowed) == 0 {
+		return nil, errors.New(commonModel.INVALID_PARAMS)
+	}
+	matched := false
+	for _, item := range allowed {
+		allowURL, parseErr := url.Parse(strings.TrimSpace(item))
+		if parseErr != nil || allowURL == nil || allowURL.Host == "" {
+			continue
+		}
+		if strings.EqualFold(redirectURL.Scheme, allowURL.Scheme) &&
+			strings.EqualFold(redirectURL.Host, allowURL.Host) {
+			matched = true
+			break
+		}
+	}
+	if !matched {
+		return nil, errors.New(commonModel.INVALID_PARAMS)
+	}
+
+	return redirectURL, nil
 }
 
 // 用 code 换取 access_token
@@ -785,34 +871,15 @@ func exchangeGithubCodeForToken(
 	setting *settingModel.OAuth2Setting,
 	code string,
 ) (*authModel.GitHubTokenResponse, error) {
-	data := map[string]string{
-		"client_id":     setting.ClientID,
-		"client_secret": setting.ClientSecret,
-		"code":          code,
-		"redirect_uri":  setting.RedirectURI,
-	}
-	jsonData, _ := json.Marshal(data)
-
-	req, _ := http.NewRequest("POST", setting.TokenURL, bytes.NewBuffer(jsonData))
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
+	token, err := exchangeOAuthCode(setting, code)
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
-
-	body, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode != 200 {
-		return nil, errors.New("GitHub token 响应错误: " + string(body))
-	}
-
-	var tokenResp authModel.GitHubTokenResponse
-	_ = json.Unmarshal(body, &tokenResp)
-	return &tokenResp, nil
+	return &authModel.GitHubTokenResponse{
+		AccessToken: token.AccessToken,
+		TokenType:   token.TokenType,
+		Scope:       fmt.Sprint(token.Extra("scope")),
+	}, nil
 }
 
 // 获取 GitHub 用户信息
@@ -845,34 +912,25 @@ func exchangeGoogleCodeForToken(
 	setting *settingModel.OAuth2Setting,
 	code string,
 ) (*authModel.GoogleTokenResponse, error) {
-	data := url.Values{}
-	data.Set("client_id", setting.ClientID)
-	data.Set("client_secret", setting.ClientSecret)
-	data.Set("code", code)
-	data.Set("redirect_uri", setting.RedirectURI)
-	data.Set("grant_type", "authorization_code")
-
-	req, _ := http.NewRequest("POST", setting.TokenURL, strings.NewReader(data.Encode()))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
+	token, err := exchangeOAuthCode(setting, code)
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = resp.Body.Close() }()
-
-	body, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New("Google token 响应错误: " + string(body))
+	expiresIn := int64(0)
+	if !token.Expiry.IsZero() {
+		expiresIn = int64(time.Until(token.Expiry).Seconds())
+		if expiresIn < 0 {
+			expiresIn = 0
+		}
 	}
-
-	var tokenResp authModel.GoogleTokenResponse
-	if err := json.Unmarshal(body, &tokenResp); err != nil {
-		return nil, err
-	}
-
-	return &tokenResp, nil
+	return &authModel.GoogleTokenResponse{
+		AccessToken:  token.AccessToken,
+		TokenType:    token.TokenType,
+		ExpiresIn:    expiresIn,
+		RefreshToken: token.RefreshToken,
+		Scope:        fmt.Sprint(token.Extra("scope")),
+		IDToken:      fmt.Sprint(token.Extra("id_token")),
+	}, nil
 }
 
 // 获取 Google 用户信息
@@ -996,46 +1054,19 @@ func exchangeCustomCodeForToken(
 	setting *settingModel.OAuth2Setting,
 	code string,
 ) (accessToken string, idToken string, err error) {
-	data := url.Values{}
-	data.Set("client_id", setting.ClientID)
-	data.Set("client_secret", setting.ClientSecret)
-	data.Set("code", code)
-	data.Set("redirect_uri", setting.RedirectURI)
-	data.Set("grant_type", "authorization_code")
-
-	req, _ := http.NewRequest("POST", setting.TokenURL, strings.NewReader(data.Encode()))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
+	token, err := exchangeOAuthCode(setting, code)
 	if err != nil {
 		return "", "", err
 	}
-	defer func() { _ = resp.Body.Close() }()
 
-	body, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return "", "", errors.New("Custom token 响应错误: " + string(body))
-	}
-
-	var tokenResp map[string]any
-	if err := json.Unmarshal(body, &tokenResp); err != nil {
-		return "", "", err
-	}
-
-	// 获取 access_token
-	if at, ok := tokenResp["access_token"]; ok {
-		accessToken = fmt.Sprint(at)
-	}
+	accessToken = token.AccessToken
 	if accessToken == "" {
 		return "", "", errors.New("custom token 响应缺少 access_token")
 	}
 
 	// OIDC 情况获取 id_token
 	if setting.IsOIDC {
-		if it, ok := tokenResp["id_token"]; ok {
-			idToken = fmt.Sprint(it)
-		}
+		idToken = fmt.Sprint(token.Extra("id_token"))
 		if idToken == "" {
 			return "", "", errors.New("OIDC 响应缺少 id_token")
 		}
@@ -1044,10 +1075,31 @@ func exchangeCustomCodeForToken(
 	return accessToken, idToken, nil
 }
 
+func exchangeOAuthCode(setting *settingModel.OAuth2Setting, code string) (*oauth2.Token, error) {
+	config := oauth2.Config{
+		ClientID:     setting.ClientID,
+		ClientSecret: setting.ClientSecret,
+		RedirectURL:  setting.RedirectURI,
+		Scopes:       setting.Scopes,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  setting.AuthURL,
+			TokenURL: setting.TokenURL,
+		},
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	token, err := config.Exchange(ctx, code)
+	if err != nil {
+		return nil, err
+	}
+	return token, nil
+}
+
 // fetchCustomUserInfo 获取自定义 OAuth2 用户信息
 func fetchCustomUserInfo(
 	setting *settingModel.OAuth2Setting,
-	accessToken, idToken string,
+	accessToken, idToken, expectedNonce string,
 ) (string, error) {
 	// OIDC: 直接使用 id_token 中的 sub 字段
 	if setting.IsOIDC {
@@ -1061,6 +1113,7 @@ func fetchCustomUserInfo(
 			setting.Issuer,
 			setting.JWKSURL,
 			setting.ClientID,
+			expectedNonce,
 		)
 		if err != nil {
 			return "", err
@@ -1103,13 +1156,14 @@ func fetchCustomUserInfo(
 
 // GetOAuthInfo 获取 OAuth2 信息
 func (userService *UserService) GetOAuthInfo(
-	userId uint,
+	ctx context.Context,
 	provider string,
 ) (model.OAuthInfoDto, error) {
 	var oauthInfo model.OAuthInfoDto
+	userId := viewer.MustFromContext(ctx).UserID()
 
 	// 检查当前用户是否存在
-	user, err := userService.userRepository.GetUserByID(int(userId))
+	user, err := userService.userRepository.GetUserByID(ctx, userId)
 	if err != nil {
 		return oauthInfo, err
 	}
@@ -1121,7 +1175,7 @@ func (userService *UserService) GetOAuthInfo(
 
 	// 获取 OAuth2 设置
 	var oauth2Setting settingModel.OAuth2Setting
-	if err := userService.settingService.GetOAuth2Setting(user.ID, &oauth2Setting, true); err != nil {
+	if err := userService.settingService.GetOAuth2Setting(viewer.WithContext(ctx, viewer.NewUserViewer(user.ID)), &oauth2Setting, true); err != nil {
 		return oauthInfo, err
 	}
 	isOIDC := oauth2Setting.IsOIDC
@@ -1166,6 +1220,11 @@ func (userService *UserService) GetOAuthInfo(
 
 const passkeySessionTTL = 5 * time.Minute
 
+const (
+	passkeyRegKey   = "passkey:reg"
+	passkeyLoginKey = "passkey:login"
+)
+
 type passkeySessionCache struct {
 	Session    webauthn.SessionData
 	Origin     string
@@ -1202,17 +1261,20 @@ func newNonce() (string, error) {
 	return base64.RawURLEncoding.EncodeToString(b), nil
 }
 
-func makeUserHandle(userID uint) []byte {
-	buf := make([]byte, 8)
-	binary.BigEndian.PutUint64(buf, uint64(userID))
-	return buf
+func getPasskeyRegisterSessionKey(nonce string) string {
+	return fmt.Sprintf("%s:%s", passkeyRegKey, nonce)
 }
 
-func userIDFromHandle(handle []byte) uint {
-	if len(handle) < 8 {
-		return 0
-	}
-	return uint(binary.BigEndian.Uint64(handle[:8]))
+func getPasskeyLoginSessionKey(nonce string) string {
+	return fmt.Sprintf("%s:%s", passkeyLoginKey, nonce)
+}
+
+func makeUserHandle(userID string) []byte {
+	return []byte(userID)
+}
+
+func userIDFromHandle(handle []byte) string {
+	return string(handle)
 }
 
 func (userService *UserService) newWebAuthn(rpID, origin string) (*webauthn.WebAuthn, error) {
@@ -1224,9 +1286,9 @@ func (userService *UserService) newWebAuthn(rpID, origin string) (*webauthn.WebA
 }
 
 func (userService *UserService) getWebauthnUserByID(
-	userID uint,
+	userID string,
 ) (*webauthnUser, model.User, error) {
-	u, err := userService.userRepository.GetUserByID(int(userID))
+	u, err := userService.userRepository.GetUserByID(context.Background(), userID)
 	if err != nil {
 		return nil, model.User{}, err
 	}
@@ -1255,10 +1317,11 @@ func (userService *UserService) getWebauthnUserByID(
 }
 
 func (userService *UserService) PasskeyRegisterBegin(
-	userID uint,
+	ctx context.Context,
 	rpID, origin, deviceName string,
 ) (authModel.PasskeyRegisterBeginResp, error) {
 	var resp authModel.PasskeyRegisterBeginResp
+	userID := viewer.MustFromContext(ctx).UserID()
 
 	wa, err := userService.newWebAuthn(rpID, origin)
 	if err != nil {
@@ -1295,7 +1358,7 @@ func (userService *UserService) PasskeyRegisterBegin(
 	}
 
 	userService.userRepository.CacheSetPasskeySession(
-		repository.GetPasskeyRegisterSessionKey(nonce),
+		getPasskeyRegisterSessionKey(nonce),
 		passkeySessionCache{
 			Session:    *session,
 			Origin:     origin,
@@ -1310,11 +1373,12 @@ func (userService *UserService) PasskeyRegisterBegin(
 }
 
 func (userService *UserService) PasskeyRegisterFinish(
-	userID uint,
+	ctx context.Context,
 	rpID, origin, nonce string,
 	credential json.RawMessage,
 ) error {
-	cacheKey := repository.GetPasskeyRegisterSessionKey(nonce)
+	userID := viewer.MustFromContext(ctx).UserID()
+	cacheKey := getPasskeyRegisterSessionKey(nonce)
 	cached, err := userService.userRepository.CacheGetPasskeySession(cacheKey)
 	if err != nil {
 		return errors.New(commonModel.INVALID_PARAMS)
@@ -1368,7 +1432,7 @@ func (userService *UserService) PasskeyRegisterFinish(
 		AAGUID:         aaguid,
 	}
 
-	return userService.txManager.Run(func(ctx context.Context) error {
+	return userService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		return userService.userRepository.CreatePasskey(ctx, &passkey)
 	})
 }
@@ -1396,7 +1460,7 @@ func (userService *UserService) PasskeyLoginBegin(
 	}
 
 	userService.userRepository.CacheSetPasskeySession(
-		repository.GetPasskeyLoginSessionKey(nonce),
+		getPasskeyLoginSessionKey(nonce),
 		passkeySessionCache{
 			Session: *session,
 			Origin:  origin,
@@ -1413,7 +1477,7 @@ func (userService *UserService) PasskeyLoginFinish(
 	rpID, origin, nonce string,
 	credential json.RawMessage,
 ) (string, error) {
-	cacheKey := repository.GetPasskeyLoginSessionKey(nonce)
+	cacheKey := getPasskeyLoginSessionKey(nonce)
 	cached, err := userService.userRepository.CacheGetPasskeySession(cacheKey)
 	if err != nil {
 		return "", errors.New(commonModel.INVALID_PARAMS)
@@ -1466,12 +1530,12 @@ func (userService *UserService) PasskeyLoginFinish(
 	}
 
 	uid := userIDFromHandle(user.WebAuthnID())
-	if uid == 0 {
+	if uid == "" {
 		// fallback：根据 credentialID 再查一次
 		credID := base64.RawURLEncoding.EncodeToString(credentialObj.ID)
 		pk, err2 := userService.userRepository.GetPasskeyByCredentialID(credID)
 		if err2 != nil {
-			return "", err
+			return "", err2
 		}
 		uid = pk.UserID
 	}
@@ -1480,7 +1544,7 @@ func (userService *UserService) PasskeyLoginFinish(
 	credID := base64.RawURLEncoding.EncodeToString(credentialObj.ID)
 	pk, err := userService.userRepository.GetPasskeyByCredentialID(credID)
 	if err == nil {
-		_ = userService.txManager.Run(func(ctx context.Context) error {
+		_ = userService.transactor.Run(context.Background(), func(ctx context.Context) error {
 			return userService.userRepository.UpdatePasskeyUsage(
 				ctx,
 				pk.ID,
@@ -1490,12 +1554,12 @@ func (userService *UserService) PasskeyLoginFinish(
 		})
 	}
 
-	u, err := userService.userRepository.GetUserByID(int(uid))
+	u, err := userService.userRepository.GetUserByID(context.Background(), uid)
 	if err != nil {
 		return "", err
 	}
 
-	token, err := jwtUtil.GenerateToken(jwtUtil.CreateClaims(u))
+	token, err := userService.issueUserToken(u)
 	if err != nil {
 		return "", err
 	}
@@ -1503,7 +1567,8 @@ func (userService *UserService) PasskeyLoginFinish(
 	return token, nil
 }
 
-func (userService *UserService) ListPasskeys(userID uint) ([]authModel.PasskeyDeviceDto, error) {
+func (userService *UserService) ListPasskeys(ctx context.Context) ([]authModel.PasskeyDeviceDto, error) {
+	userID := viewer.MustFromContext(ctx).UserID()
 	passkeys, err := userService.userRepository.ListPasskeysByUserID(userID)
 	if err != nil {
 		return nil, err
@@ -1522,22 +1587,25 @@ func (userService *UserService) ListPasskeys(userID uint) ([]authModel.PasskeyDe
 	return devs, nil
 }
 
-func (userService *UserService) DeletePasskey(userID, passkeyID uint) error {
-	return userService.txManager.Run(func(ctx context.Context) error {
-		return userService.userRepository.DeletePasskeyByID(ctx, userID, passkeyID)
+func (userService *UserService) DeletePasskey(ctx context.Context, passkeyID string) error {
+	userID := viewer.MustFromContext(ctx).UserID()
+	return userService.transactor.Run(ctx, func(txCtx context.Context) error {
+		return userService.userRepository.DeletePasskeyByID(txCtx, userID, passkeyID)
 	})
 }
 
 func (userService *UserService) UpdatePasskeyDeviceName(
-	userID, passkeyID uint,
+	ctx context.Context,
+	passkeyID string,
 	deviceName string,
 ) error {
+	userID := viewer.MustFromContext(ctx).UserID()
 	if strings.TrimSpace(deviceName) == "" {
 		return errors.New(commonModel.INVALID_PARAMS_BODY)
 	}
-	return userService.txManager.Run(func(ctx context.Context) error {
+	return userService.transactor.Run(ctx, func(txCtx context.Context) error {
 		return userService.userRepository.UpdatePasskeyDeviceName(
-			ctx,
+			txCtx,
 			userID,
 			passkeyID,
 			deviceName,

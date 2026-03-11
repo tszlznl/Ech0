@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full max-w-sm bg-[var(--card-color)] h-auto p-5 shadow rounded-lg mx-auto">
+  <div class="w-full max-w-sm bg-[var(--color-bg-surface)] h-auto p-5 shadow rounded-lg mx-auto">
     <!-- 顶部Logo 和 用户名 -->
     <div class="flex flex-row items-center gap-2 mt-2 mb-4">
       <!-- <div class="text-xl">👾</div> -->
@@ -7,13 +7,13 @@
         <img
           :src="echo.logo"
           alt="logo"
-          class="w-10 h-10 sm:w-12 sm:h-12 rounded-full ring-1 ring-gray-200 shadow-sm object-cover"
+          class="w-10 h-10 sm:w-12 sm:h-12 rounded-full ring-1 ring-[var(--color-border-subtle)] shadow-[var(--shadow-sm)] object-cover"
         />
       </div>
       <div class="flex flex-col">
         <div class="flex items-center gap-1">
           <h2
-            class="text-[var(--text-color-700)] font-bold overflow-hidden whitespace-nowrap text-center"
+            class="text-[var(--color-text-primary)] font-bold overflow-hidden whitespace-nowrap text-center"
           >
             <a :href="echo.server_url" target="_blank">{{ echo.server_name }}</a>
           </h2>
@@ -22,7 +22,9 @@
             <Verified class="text-sky-500 w-5 h-5" />
           </div>
         </div>
-        <span class="text-[#5b7083] font-serif">@ {{ echo.username }} </span>
+        <span class="hub-echo-username text-[var(--color-text-secondary)]"
+          >@ {{ echo.username }}
+        </span>
       </div>
     </div>
 
@@ -37,22 +39,11 @@
         >
           <!-- 文字在上 -->
           <div class="mx-auto w-11/12 pl-1 mb-3">
-            <MdPreview
-              :id="previewOptions.proviewId"
-              :modelValue="props.echo.content"
-              :theme="theme"
-              :show-code-row-number="previewOptions.showCodeRowNumber"
-              :preview-theme="previewOptions.previewTheme"
-              :code-theme="previewOptions.codeTheme"
-              :code-style-reverse="previewOptions.codeStyleReverse"
-              :no-img-zoom-in="previewOptions.noImgZoomIn"
-              :code-foldable="previewOptions.codeFoldable"
-              :auto-fold-threshold="previewOptions.autoFoldThreshold"
-            />
+            <TheMdPreview :content="props.echo.content" />
           </div>
 
           <TheImageGallery
-            :images="props.echo.images"
+            :images="echoImageFiles"
             :baseUrl="echo.server_url"
             :layout="props.echo.layout"
           />
@@ -61,43 +52,38 @@
         <template v-else>
           <!-- 图片在上，文字在下（瀑布流 / 单图轮播 等） -->
           <TheImageGallery
-            :images="props.echo.images"
+            :images="echoImageFiles"
             :baseUrl="echo.server_url"
             :layout="props.echo.layout"
           />
 
           <div class="mx-auto w-11/12 pl-1 mt-3">
-            <MdPreview
-              :id="previewOptions.proviewId"
-              :modelValue="props.echo.content"
-              :theme="theme"
-              :show-code-row-number="previewOptions.showCodeRowNumber"
-              :preview-theme="previewOptions.previewTheme"
-              :code-theme="previewOptions.codeTheme"
-              :code-style-reverse="previewOptions.codeStyleReverse"
-              :no-img-zoom-in="previewOptions.noImgZoomIn"
-              :code-foldable="previewOptions.codeFoldable"
-              :auto-fold-threshold="previewOptions.autoFoldThreshold"
-            />
+            <TheMdPreview :content="props.echo.content" />
           </div>
         </template>
 
         <!-- 扩展内容 -->
         <div v-if="props.echo.extension" class="my-4">
-          <div v-if="props.echo.extension_type === ExtensionType.MUSIC">
+          <div v-if="props.echo.extension.type === ExtensionType.MUSIC">
             <TheAPlayerCard :echo="props.echo" />
           </div>
-          <div v-if="props.echo.extension_type === ExtensionType.VIDEO">
-            <TheVideoCard :videoId="props.echo.extension" class="px-2 mx-auto hover:shadow-md" />
+          <div v-if="props.echo.extension.type === ExtensionType.VIDEO">
+            <TheVideoCard
+              :videoId="props.echo.extension.payload.videoId"
+              class="px-2 mx-auto hover:shadow-md"
+            />
           </div>
           <TheGithubCard
-            v-if="props.echo.extension_type === ExtensionType.GITHUBPROJ"
-            :GithubURL="props.echo.extension"
+            v-if="
+              props.echo.extension.type === ExtensionType.GITHUBPROJ &&
+              props.echo.extension.payload?.repoUrl
+            "
+            :GithubURL="props.echo.extension.payload.repoUrl"
             class="px-2 mx-auto hover:shadow-md"
           />
           <TheWebsiteCard
-            v-if="props.echo.extension_type === ExtensionType.WEBSITE"
-            :website="props.echo.extension"
+            v-if="props.echo.extension.type === ExtensionType.WEBSITE"
+            :website="props.echo.extension.payload"
             class="px-2 mx-auto hover:shadow-md"
           />
         </div>
@@ -112,7 +98,7 @@
         </div>
         <div
           v-if="props.echo.tags?.[0]?.name"
-          class="hidden min-w-0 flex-shrink truncate whitespace-nowrap text-xs text-[var(--text-color-300)] sm:block sm:ml-1"
+          class="hidden min-w-0 flex-shrink truncate whitespace-nowrap text-xs text-[var(--color-text-muted)] sm:block sm:ml-1"
         >
           #{{ props.echo.tags[0]?.name }}
         </div>
@@ -155,7 +141,7 @@
             </button>
 
             <!-- 点赞数量   -->
-            <span class="text-sm text-[var(--text-color-400)]">
+            <span class="text-sm text-[var(--color-text-muted)]">
               <!-- 如果点赞数不超过99，则显示数字，否则显示99+ -->
               {{ fav_count > 99 ? '99+' : fav_count }}
             </span>
@@ -176,12 +162,12 @@ import Print from '../icons/print.vue'
 import TheAPlayerCard from './TheAPlayerCard.vue'
 import TheWebsiteCard from './TheWebsiteCard.vue'
 import TheImageGallery from './TheImageGallery.vue'
-import 'md-editor-v3/lib/preview.css'
-import { MdPreview } from 'md-editor-v3'
+import TheMdPreview from './TheMdPreview.vue'
 import { computed, ref, watch } from 'vue'
 import { ExtensionType, ImageLayout } from '@/enums/enums'
 import { formatDate } from '@/utils/other'
-import { useThemeStore, useZoneStore } from '@/stores'
+import { getEchoFilesBy } from '@/utils/echo'
+import { useZoneStore } from '@/stores'
 import { useFetch } from '@vueuse/core'
 import { theToast } from '@/utils/toast'
 import { localStg } from '@/utils/storage'
@@ -192,23 +178,13 @@ type Echo = App.Api.Hub.Echo
 const props = defineProps<{
   echo: Echo
 }>()
-const themeStore = useThemeStore()
 const zoneStore = useZoneStore()
 const router = useRouter()
 
-const theme = computed(() => (themeStore.theme === 'light' ? 'light' : 'dark'))
-const previewOptions = {
-  proviewId: 'preview-only',
-  showCodeRowNumber: false,
-  previewTheme: 'github',
-  codeTheme: 'atom',
-  codeStyleReverse: true,
-  noImgZoomIn: false,
-  codeFoldable: true,
-  autoFoldThreshold: 15,
-}
-
 const fav_count = ref<number>(props.echo.fav_count)
+const echoImageFiles = computed(() =>
+  getEchoFilesBy(props.echo, { categories: ['image'], dedupeBy: 'id' }),
+)
 const server_url = computed(() => props.echo.server_url)
 const echo_id = computed(() => props.echo.id)
 const isLikeAnimating = ref(false)
@@ -229,7 +205,7 @@ const handleLikeEcho = async () => {
   }, 250)
 
   // 如果已经点赞过，不再重复点赞
-  const likedEchoIds: number[] = localStg.getItem(LIKE_LIST_KEY.value) || []
+  const likedEchoIds: string[] = localStg.getItem(LIKE_LIST_KEY.value) || []
   if (likedEchoIds.includes(echo_id.value)) {
     theToast.info('你已经点赞过')
     return
@@ -268,46 +244,15 @@ const handlePrintEcho = () => {
     content: props.echo.content,
     created_at: props.echo.created_at,
     tags: props.echo.tags,
-    images: props.echo.images,
+    echo_files: props.echo.echo_files,
     extension: props.echo.extension,
-    extension_type: props.echo.extension_type,
   })
   router.push({ name: 'zone' })
 }
 </script>
 
 <style scoped lang="css">
-#preview-only {
-  background-color: inherit;
-}
-
-.md-editor {
-  font-family: var(--font-sans);
-  /* font-family: 'LXGW WenKai Screen'; */
-}
-
-:deep(ul li) {
-  list-style-type: disc;
-}
-
-:deep(ul li li) {
-  list-style-type: circle;
-}
-
-:deep(ul li li li) {
-  list-style-type: square;
-}
-
-:deep(ol li) {
-  list-style-type: decimal;
-}
-
-:deep(p) {
-  white-space: normal;
-  /* 允许正常换行 */
-  overflow-wrap: break-word;
-  /* 单词太长时自动换行 */
-  word-break: normal;
-  /* 保持单词整体性，不随便拆开 */
+.hub-echo-username {
+  font-family: var(--font-family-display);
 }
 </style>

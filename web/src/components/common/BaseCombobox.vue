@@ -4,7 +4,7 @@
     <label
       v-if="label"
       :for="id"
-      class="block text-sm font-medium text-[var(--text-color-700)] mb-1"
+      class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1"
     >
       {{ label }}
     </label>
@@ -20,7 +20,10 @@
       <div class="relative">
         <!-- Input -->
         <div
-          class="flex items-center px-0.5 py-0.5 rounded-md bg-[var(--input-bg-color)] transition duration-150 ease-in-out"
+          :class="[
+            'flex items-center px-0.5 py-0.5 rounded-[var(--radius-md)] bg-[var(--input-bg-color)] border border-[var(--combobox-border-color)] shadow-[var(--shadow-sm)] transition duration-150 ease-in-out',
+            wrapperClass,
+          ]"
           @focusout="onBlurOutside"
           @focusin="onFocusInput"
           @mousedown="onFocusInput"
@@ -36,7 +39,7 @@
 
           <!-- 可选的 suffix slot -->
           <slot name="suffix">
-            <ComboboxButton class="ml-1 text-[var(--text-color-400)]">
+            <ComboboxButton class="ml-1 text-[var(--color-text-muted)]">
               <!-- <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24">
                 <path
                   fill="#888888"
@@ -59,12 +62,12 @@
           <ComboboxOptions
             static
             v-if="dropdownOpen && (filteredOptions.length > 0 || allowCreate)"
-            class="w-auto! absolute z-10 mt-2 max-h-64 overflow-y-scroll rounded-md bg-[var(--combobox-bg-color)] py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+            class="w-auto! absolute z-10 mt-2 max-h-64 overflow-y-scroll rounded-[var(--radius-md)] bg-[var(--combobox-bg-color)] py-1 text-sm shadow-[var(--shadow-md)] ring-1 ring-[var(--combobox-border-color)] focus:outline-none"
           >
             <!-- Existing Options -->
             <div
               @click="toggleManaging"
-              class="px-2 py-1 w-36 text-[var(--text-color-400)] cursor-pointer flex items-center justify-start gap-2 text-lg font-bold mx-auto hover:text-amber-500"
+              class="px-2 py-1 w-36 text-[var(--color-text-muted)] cursor-pointer flex items-center justify-start gap-2 text-lg font-bold mx-auto hover:text-[var(--combobox-hover-text-color)]"
             >
               <tagsetting class="w-4 h-4" />
               标签管理
@@ -75,7 +78,7 @@
               :key="getOptionLabel(item) || String(item)"
               :value="item"
               @mousedown="isUserClicking = true"
-              class="w-full! max-w-32! truncate text-[var(--text-color-300)] hover:text-[var(--text-color-500)] text-lg cursor-pointer select-none px-4 py-1 whitespace-nowrap text-ellipsis"
+              class="w-full! max-w-32! truncate text-[var(--color-text-secondary)] hover:text-[var(--combobox-hover-text-color)] text-lg cursor-pointer select-none px-4 py-1 whitespace-nowrap text-ellipsis"
             >
               <slot name="option" :option="item"> # {{ getOptionLabel(item) }} </slot>
             </ComboboxOption>
@@ -123,6 +126,8 @@ const props = defineProps<{
   multiple?: boolean
   /** 输入框额外的样式类 */
   inputClass?: ClassValue
+  /** 外层 wrapper 额外样式类 */
+  wrapperClass?: ClassValue
 }>()
 
 const emit = defineEmits(['update:modelValue', 'create'])

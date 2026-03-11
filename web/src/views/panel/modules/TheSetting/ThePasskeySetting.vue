@@ -2,10 +2,10 @@
   <PanelCard>
     <div class="w-full">
       <div class="flex flex-row items-center justify-between mb-3">
-        <h1 class="text-[var(--text-color-700)] font-bold text-lg">Passkey</h1>
+        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">Passkey</h1>
       </div>
 
-      <div class="text-[var(--text-color-next-400)] text-sm mb-3">
+      <div class="text-[var(--color-text-muted)] text-sm mb-3">
         使用 Passkey（WebAuthn）可在不同设备上无密码登录
       </div>
 
@@ -28,50 +28,51 @@
         </BaseButton>
       </div>
 
-      <div v-if="!supported" class="text-[var(--text-color-next-400)] text-sm mb-3">
+      <div v-if="!supported" class="text-[var(--color-text-muted)] text-sm mb-3">
         当前浏览器不支持 Passkey / WebAuthn。
       </div>
 
       <!-- 多设备管理 -->
-      <div class="text-[var(--text-color-next-400)] font-semibold mb-2">已绑定设备</div>
-      <div v-if="devices.length === 0" class="text-[var(--text-color-next-400)] text-sm">
-        暂无设备
-      </div>
-      <div v-else class="mt-2 overflow-x-auto border border-[var(--border-color-300)] rounded-lg">
-        <table class="min-w-full divide-y divide-[var(--divide-color-200)]">
+      <div class="text-[var(--color-text-muted)] font-semibold mb-2">已绑定设备</div>
+      <div v-if="devices.length === 0" class="text-[var(--color-text-muted)] text-sm">暂无设备</div>
+      <div
+        v-else
+        class="mt-2 overflow-x-auto border border-[var(--color-border-subtle)] rounded-lg"
+      >
+        <table class="min-w-full divide-y divide-[var(--color-border-subtle)]">
           <thead>
-            <tr class="bg-[var(--bg-color-50)] opacity-70">
+            <tr class="bg-[var(--color-bg-surface)] opacity-70">
               <th
-                class="px-3 py-2 text-left text-sm font-semibold text-[var(--text-color-next-600)]"
+                class="px-3 py-2 text-left text-sm font-semibold text-[var(--color-text-primary)]"
               >
                 设备名称
               </th>
               <th
-                class="px-3 py-2 text-left text-sm font-semibold text-[var(--text-color-next-600)]"
+                class="px-3 py-2 text-left text-sm font-semibold text-[var(--color-text-primary)]"
               >
                 AAGUID
               </th>
               <th
-                class="px-3 py-2 text-left text-sm font-semibold text-[var(--text-color-next-600)]"
+                class="px-3 py-2 text-left text-sm font-semibold text-[var(--color-text-primary)]"
               >
                 时间
               </th>
               <th
-                class="px-3 py-2 text-right text-sm font-semibold text-[var(--text-color-next-600)]"
+                class="px-3 py-2 text-right text-sm font-semibold text-[var(--color-text-primary)]"
               >
                 操作
               </th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-[var(--divide-color-100)] text-nowrap">
+          <tbody class="divide-y divide-[var(--color-border-subtle)] text-nowrap">
             <tr v-for="d in devices" :key="d.id">
-              <td class="px-3 py-2 text-sm text-[var(--text-color-next-700)] font-semibold">
+              <td class="px-3 py-2 text-sm text-[var(--color-text-primary)] font-semibold">
                 {{ d.device_name || 'Passkey' }}
               </td>
-              <td class="px-3 py-2 text-sm text-[var(--text-color-next-500)]">
+              <td class="px-3 py-2 text-sm text-[var(--color-text-secondary)]">
                 {{ d.aaguid || '未知' }}
               </td>
-              <td class="px-3 py-2 text-xs text-[var(--text-color-next-500)]">
+              <td class="px-3 py-2 text-xs text-[var(--color-text-secondary)]">
                 <div>最近使用：{{ formatTime(d.last_used_at) }}</div>
                 <div>创建：{{ formatTime(d.created_at) }}</div>
               </td>
@@ -252,7 +253,7 @@ async function handleBind() {
 }
 
 // 删除设备
-async function handleDelete(id: number) {
+async function handleDelete(id: string) {
   openConfirm({
     title: '确定要删除该设备吗？',
     description: '删除后该设备将无法登录，请谨慎操作',

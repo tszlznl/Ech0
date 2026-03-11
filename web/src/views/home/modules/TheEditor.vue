@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="ShowEditor"
-    class="bg-[var(--editor-bg-color)] ring-1 ring-[var(--ring-color)] ring-inset rounded-lg mx-auto shadow-xs hover:shadow-sm"
+    class="bg-[var(--color-bg-surface)] ring-1 ring-[var(--color-border-subtle)] ring-inset rounded-lg mx-auto shadow-xs hover:shadow-sm"
   >
     <div class="mx-auto w-full px-3 py-4">
       <!-- The Title && Nav -->
@@ -15,14 +15,8 @@
         <!-- ImageMode : TheImageEditor -->
         <TheImageEditor v-if="currentMode === Mode.Image" />
 
-        <!-- TodoMode : TheTodoModeEditor -->
-        <TheTodoModeEditor v-if="currentMode === Mode.TODO" />
-
         <!-- InboxMode : TheInboxModeEditor -->
         <TheInboxModeEditor v-if="currentMode === Mode.INBOX" />
-
-        <!-- MusicMode : TheMusicModeEditor -->
-        <TheMusicModeEditor v-if="currentMode === Mode.PlayMusic" />
 
         <!-- The Mode Panel -->
         <TheModePanel v-if="currentMode === Mode.Panel" />
@@ -50,9 +44,7 @@ import TheTitleAndNav from './TheEditor/TheTitleAndNav.vue'
 import TheImageEditor from './TheEditor/TheImageEditor.vue'
 import TheEditorImage from './TheEditor/TheEditorImage.vue'
 import TheEditorButtons from './TheEditor/TheEditorButtons.vue'
-import TheTodoModeEditor from './TheEditor/TheTodoModeEditor.vue'
 import TheInboxModeEditor from './TheEditor/TheInboxModeEditor.vue'
-import TheMusicModeEditor from './TheEditor/TheMusicModeEditor.vue'
 import TheExtensionEditor from './TheEditor/TheExtensionEditor.vue'
 import TheTagsManager from './TheEditor/TheTagsManager.vue'
 
@@ -61,6 +53,7 @@ import { watch } from 'vue'
 import { useEchoStore, useEditorStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { Mode, ExtensionType, ImageLayout } from '@/enums/enums'
+import { getEchoFiles } from '@/utils/echo'
 
 /* --------------- 与Pinia相关 ---------------- */
 const echoStore = useEchoStore()
@@ -73,7 +66,6 @@ const {
   echoToAdd,
   videoURL,
   extensionToAdd,
-  imagesToAdd,
   websiteToAdd,
   tagToAdd,
   currentExtensionType,
@@ -118,41 +110,42 @@ watch(
       echoToAdd.value.content = echoToUpdate.value?.content || ''
 
       // 2. 填充图片
-      if (echoToUpdate.value?.images && echoToUpdate.value.images.length > 0) {
-        imagesToAdd.value = echoToUpdate.value.images.map((img) => ({
-          image_url: img.image_url || '',
-          image_source: img.image_source || '',
-          object_key: img.object_key || '',
-        }))
+      const existingImages = getEchoFiles(echoToUpdate.value)
+      if (existingImages.length > 0) {
+        editorStore.setFilesToAdd(
+          existingImages.map((img) => ({
+            id: String(img.id || ''),
+            url: img.url || '',
+            storage_type: img.storage_type || 'local',
+            key: img.key || '',
+          })),
+        )
       } else {
-        imagesToAdd.value = []
+        editorStore.setFilesToAdd([])
       }
 
       // 3. 填充扩展
-      if (echoToUpdate.value?.extension && echoToUpdate.value.extension_type) {
-        currentExtensionType.value = echoToUpdate.value.extension_type as ExtensionType
-        extensionToAdd.value.extension = echoToUpdate.value.extension
-        extensionToAdd.value.extension_type = echoToUpdate.value.extension_type
+      if (echoToUpdate.value?.extension) {
+        currentExtensionType.value = echoToUpdate.value.extension.type as ExtensionType
+        extensionToAdd.value.extension_type = echoToUpdate.value.extension.type
         // 根据扩展类型填充
-        switch (echoToUpdate.value.extension_type) {
+        switch (echoToUpdate.value.extension.type) {
           case ExtensionType.MUSIC:
+            extensionToAdd.value.extension = echoToUpdate.value.extension.payload.url || ''
             break
 
           case ExtensionType.VIDEO:
-            videoURL.value = echoToUpdate.value.extension // 直接使用extension填充B站链接
+            extensionToAdd.value.extension = echoToUpdate.value.extension.payload.videoId || ''
+            videoURL.value = echoToUpdate.value.extension.payload.videoId || ''
             break
 
           case ExtensionType.GITHUBPROJ:
+            extensionToAdd.value.extension = echoToUpdate.value.extension.payload.repoUrl || ''
             break
 
           case ExtensionType.WEBSITE:
-            // 反序列化网站链接
-            const websiteData = JSON.parse(echoToUpdate.value.extension) as {
-              title?: string
-              site?: string
-            }
-            websiteToAdd.value.title = websiteData.title || ''
-            websiteToAdd.value.site = websiteData.site || ''
+            websiteToAdd.value.title = echoToUpdate.value.extension.payload.title || ''
+            websiteToAdd.value.site = echoToUpdate.value.extension.payload.site || ''
             break
         }
       }

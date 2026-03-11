@@ -1,6 +1,6 @@
 <template>
   <div
-    class="border border-[var(--border-color-400)] border-dashed rounded-md text-nowrap overflow-auto"
+    class="border border-[var(--color-border-strong)] border-dashed rounded-md text-nowrap overflow-auto"
   >
     <slot></slot>
   </div>

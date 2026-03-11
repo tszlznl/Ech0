@@ -1,7 +1,7 @@
 import { request, requestWithDirectUrlAndData } from '../request'
 
 // 分页获取Echos
-export function fetchGetEchosByPage(searchParams: App.Api.Ech0.ParamsByPagination) {
+export async function fetchGetEchosByPage(searchParams: App.Api.Ech0.ParamsByPagination) {
   return request<App.Api.Ech0.PaginationResult>({
     url: `/echo/page`,
     method: 'POST',
@@ -19,7 +19,7 @@ export function fetchAddEcho(echoToAdd: App.Api.Ech0.EchoToAdd) {
 }
 
 // 删除Echo
-export function fetchDeleteEcho(echoId: number) {
+export function fetchDeleteEcho(echoId: string) {
   return request({
     url: `/echo/${echoId}`,
     method: 'DELETE',
@@ -36,7 +36,7 @@ export function fetchUpdateEcho(echo: App.Api.Ech0.EchoToUpdate) {
 }
 
 // 点赞Echo
-export function fetchLikeEcho(echoId: number) {
+export function fetchLikeEcho(echoId: string) {
   return request({
     url: `/echo/like/${echoId}`,
     method: 'PUT',
@@ -44,17 +44,9 @@ export function fetchLikeEcho(echoId: number) {
 }
 
 // 获取Echo详情
-export function fetchGetEchoById(echoId: string) {
+export async function fetchGetEchoById(echoId: string) {
   return request<App.Api.Ech0.Echo>({
     url: `/echo/${echoId}`,
-    method: 'GET',
-  })
-}
-
-// 获取status
-export function fetchGetStatus() {
-  return request<App.Api.Ech0.Status>({
-    url: `/status`,
     method: 'GET',
   })
 }
@@ -76,18 +68,6 @@ export function fetchGetGithubRepo(githubRepo: { owner: string; repo: string }) 
   })
 }
 
-// 获取预签名URL
-export function fetchGetPresignedUrl(fileName: string, contentType?: string) {
-  return request<App.Api.Ech0.PresignResult>({
-    url: `/s3/presign`,
-    method: 'PUT',
-    data: {
-      file_name: fileName,
-      content_type: contentType,
-    },
-  })
-}
-
 // 获取标签列表
 export function fetchGetTags() {
   return request<App.Api.Ech0.Tag[]>({
@@ -97,7 +77,7 @@ export function fetchGetTags() {
 }
 
 // 删除某个标签
-export function fetchDeleteTagById(tagId: number) {
+export function fetchDeleteTagById(tagId: string) {
   return request({
     url: `/tag/${tagId}`,
     method: 'DELETE',
@@ -105,7 +85,10 @@ export function fetchDeleteTagById(tagId: number) {
 }
 
 // 根据标签查询Echos（支持分页）
-export function fetchGetEchosByTagId(tagId: number, searchParams: App.Api.Ech0.ParamsByPagination) {
+export async function fetchGetEchosByTagId(
+  tagId: string,
+  searchParams: App.Api.Ech0.ParamsByPagination,
+) {
   return request<App.Api.Ech0.PaginationResult>({
     url: `/echo/tag/${tagId}?page=${searchParams.page}&pageSize=${searchParams.pageSize}&search=${searchParams.search || ''}`,
     method: 'GET',

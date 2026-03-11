@@ -27,16 +27,38 @@ export const getApiUrl = () => {
   return resolvedBaseUrl
 }
 
-export const getSystemReadyStatus = () => {
-  // 检查localStorage中是否有系统状态
-  const systemStatus = localStg.getItem<boolean>('systemStatus')
-  if (systemStatus !== null) {
-    // 如果有，直接使用localStorage中的值
-    return systemStatus
-  } else {
-    // 如果没有，默认设置为false
-    return false
+const getServiceBaseUrl = () => {
+  const baseUrl = import.meta.env.VITE_SERVICE_BASE_URL
+  return baseUrl.replace(/\/+$/, '')
+}
+
+export const resolveAvatarUrl = (rawUrl?: string, fallback = '/Ech0.svg') => {
+  const value = (rawUrl || '').trim()
+  if (!value || value === 'Ech0.svg' || value === '/Ech0.svg') {
+    return fallback
   }
+
+  if (/^https?:\/\//i.test(value)) {
+    return value
+  }
+
+  if (value.startsWith('/api/')) {
+    return `${getServiceBaseUrl()}${value}`
+  }
+
+  const apiUrl = getApiUrl().replace(/\/+$/, '')
+  if (value.startsWith('/')) {
+    return `${apiUrl}${value}`
+  }
+  return `${apiUrl}/${value}`
+}
+
+export const getInitReadyStatus = () => {
+  const initStatus = localStg.getItem<boolean>('initialized')
+  if (initStatus !== null) {
+    return initStatus
+  }
+  return false
 }
 
 // src/utils/ws.ts

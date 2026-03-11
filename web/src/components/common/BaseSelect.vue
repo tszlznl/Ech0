@@ -10,16 +10,16 @@
     </label>
 
     <!-- Select Button -->
-    <div class="relative inline-block">
+    <div class="relative inline-block" ref="triggerRef">
       <button
         :id="id"
         type="button"
         :disabled="disabled"
         :class="[
-          'inline-flex items-center justify-between px-3 py-2 rounded-lg border border-[var(--select-border-color)] focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-300 transition duration-150 ease-in-out shadow-xs sm:text-sm text-left',
+          'inline-flex items-center justify-between px-3 py-2 rounded-[var(--radius-md)] border border-[var(--select-border-color)] focus:outline-none focus:ring-2 focus:ring-[var(--select-focus-ring-color)] transition duration-150 ease-in-out shadow-[var(--shadow-sm)] sm:text-sm text-left',
           disabled
             ? 'bg-[var(--select-disabled-bg-color)] cursor-not-allowed opacity-70'
-            : 'bg-[var(--select-bg-color)] hover:border-orange-400 cursor-pointer',
+            : 'bg-[var(--select-bg-color)] hover:border-[var(--color-border-strong)] cursor-pointer',
           customClass,
         ]"
         @click="onToggle"
@@ -34,8 +34,8 @@
           :class="[
             'truncate',
             !selectedOption && placeholder
-              ? 'text-[var(--text-color-500)]'
-              : 'text-[var(--text-color-600)]',
+              ? 'text-[var(--color-text-muted)]'
+              : 'text-[var(--color-text-secondary)]',
           ]"
         >
           {{ displayValue }}
@@ -44,7 +44,7 @@
         <!-- Dropdown Arrow -->
         <svg
           :class="[
-            'w-8 text-yellow-200 transition-transform duration-200',
+            'w-8 text-[var(--select-icon-color)] transition-transform duration-200',
             isOpen ? 'rotate-180' : '',
           ]"
           xmlns="http://www.w3.org/2000/svg"
@@ -53,73 +53,78 @@
           viewBox="0 0 24 24"
         >
           <!-- Icon from Material Symbols by Google - https://github.com/google/material-design-icons/blob/master/LICENSE -->
-          <path fill="#888888" d="m12 15.4l-6-6L7.4 8l4.6 4.6L16.6 8L18 9.4z" />
+          <path fill="currentColor" d="m12 15.4l-6-6L7.4 8l4.6 4.6L16.6 8L18 9.4z" />
         </svg>
       </button>
 
       <!-- Dropdown Menu -->
-      <Transition
-        enter-active-class="transition ease-out duration-100"
-        enter-from-class="transform opacity-0 scale-95"
-        enter-to-class="transform opacity-100 scale-100"
-        leave-active-class="transition ease-in duration-75"
-        leave-from-class="transform opacity-100 scale-100"
-        leave-to-class="transform opacity-0 scale-95"
-      >
-        <div
-          v-show="isOpen"
-          class="absolute z-5000 mt-1 min-w-full bg-[var(--select-bg-color)] shadow-lg max-h-70 rounded-lg border border-[var(--select-border-color)] overflow-auto focus:outline-none"
+      <Teleport to="body">
+        <Transition
+          enter-active-class="transition ease-out duration-100"
+          enter-from-class="transform opacity-0 scale-95"
+          enter-to-class="transform opacity-100 scale-100"
+          leave-active-class="transition ease-in duration-75"
+          leave-from-class="transform opacity-100 scale-100"
+          leave-to-class="transform opacity-0 scale-95"
         >
           <div
-            v-for="(option, index) in normalizedOptions"
-            :key="String(getOptionValue(option) ?? index)"
-            :class="[
-              'cursor-pointer select-none relative px-3 py-2 text-sm',
-              index === highlightedIndex
-                ? 'bg-[var(--select-label-hover-bg-color)] text-orange-900'
-                : 'text-[var(--text-color-900)] hover:bg-[var(--select-label-clicked-bg-color)]',
-              isSelected(option) ? 'font-medium' : 'font-normal',
-            ]"
-            @click="onSelect(option)"
-            @mouseenter="highlightedIndex = index"
+            v-show="isOpen"
+            ref="dropdownRef"
+            class="fixed z-5000 bg-[var(--select-bg-color)] shadow-[var(--shadow-md)] max-h-70 rounded-[var(--radius-md)] border border-[var(--select-border-color)] overflow-auto focus:outline-none"
+            :style="dropdownStyle"
+            @wheel.stop
           >
-            <div class="flex items-center justify-between">
-              <span class="truncate text-[var(--text-color-500)] font-bold">{{
-                getOptionLabel(option)
-              }}</span>
-              <!-- Check Icon for Selected -->
-              <svg
-                v-if="isSelected(option)"
-                class="text-orange-500"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-              >
-                <!-- Icon from Typicons by Stephen Hutchings - https://creativecommons.org/licenses/by-sa/4.0/ -->
-                <path
-                  fill="#888888"
-                  d="M16.972 6.251a2 2 0 0 0-2.72.777l-3.713 6.682l-2.125-2.125a2 2 0 1 0-2.828 2.828l4 4c.378.379.888.587 1.414.587l.277-.02a2 2 0 0 0 1.471-1.009l5-9a2 2 0 0 0-.776-2.72"
-                />
-              </svg>
+            <div
+              v-for="(option, index) in normalizedOptions"
+              :key="String(getOptionValue(option) ?? index)"
+              :class="[
+                'cursor-pointer select-none relative px-3 py-2 text-sm',
+                index === highlightedIndex
+                  ? 'bg-[var(--select-label-hover-bg-color)] text-[var(--select-option-active-color)]'
+                  : 'text-[var(--color-text-primary)] hover:bg-[var(--select-label-clicked-bg-color)]',
+                isSelected(option) ? 'font-medium' : 'font-normal',
+              ]"
+              @click="onSelect(option)"
+              @mouseenter="highlightedIndex = index"
+            >
+              <div class="flex items-center justify-between">
+                <span class="truncate text-[var(--color-text-muted)] font-bold">{{
+                  getOptionLabel(option)
+                }}</span>
+                <!-- Check Icon for Selected -->
+                <svg
+                  v-if="isSelected(option)"
+                  class="text-[var(--color-accent)]"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                >
+                  <!-- Icon from Typicons by Stephen Hutchings - https://creativecommons.org/licenses/by-sa/4.0/ -->
+                  <path
+                    fill="currentColor"
+                    d="M16.972 6.251a2 2 0 0 0-2.72.777l-3.713 6.682l-2.125-2.125a2 2 0 1 0-2.828 2.828l4 4c.378.379.888.587 1.414.587l.277-.02a2 2 0 0 0 1.471-1.009l5-9a2 2 0 0 0-.776-2.72"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div
+              v-if="normalizedOptions.length === 0"
+              class="px-3 py-2 text-sm text-[var(--color-text-muted)] text-center"
+            >
+              {{ emptyText }}
             </div>
           </div>
-
-          <!-- Empty State -->
-          <div
-            v-if="normalizedOptions.length === 0"
-            class="px-3 py-2 text-sm text-[var(--text-color-500)] text-center"
-          >
-            {{ emptyText }}
-          </div>
-        </div>
-      </Transition>
+        </Transition>
+      </Teleport>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 
 // 定义值的类型
 type SelectValue = string | number | boolean | null | undefined
@@ -161,8 +166,11 @@ const emit = defineEmits<{
 
 // Refs
 const selectRef = ref<HTMLElement>()
+const triggerRef = ref<HTMLElement>()
+const dropdownRef = ref<HTMLElement>()
 const isOpen = ref(false)
 const highlightedIndex = ref(-1)
+const dropdownStyle = ref<Record<string, string>>({})
 
 // Computed
 const customClass = props.class
@@ -232,6 +240,9 @@ function onToggle(): void {
 function onOpen(): void {
   isOpen.value = true
   highlightedIndex.value = normalizedOptions.value.findIndex((option) => isSelected(option))
+  void nextTick(() => {
+    updateDropdownPosition()
+  })
   emit('open')
 }
 
@@ -272,17 +283,57 @@ function onNavigate(direction: number): void {
 
 // Handle clicks outside to close dropdown
 function handleClickOutside(event: Event): void {
-  if (selectRef.value && event.target instanceof Node && !selectRef.value.contains(event.target)) {
+  if (!(event.target instanceof Node)) return
+
+  const clickedInsideSelect = !!selectRef.value?.contains(event.target)
+  const clickedInsideDropdown = !!dropdownRef.value?.contains(event.target)
+  if (!clickedInsideSelect && !clickedInsideDropdown) {
     onClose()
+  }
+}
+
+function updateDropdownPosition(): void {
+  if (!isOpen.value || !triggerRef.value) return
+
+  const triggerRect = triggerRef.value.getBoundingClientRect()
+  const gap = 4
+  const menuMaxHeight = 280
+  const viewportBottom = window.innerHeight
+  const viewportRight = window.innerWidth
+  const availableAbove = Math.max(0, triggerRect.top - gap)
+  const availableBelow = Math.max(0, viewportBottom - triggerRect.bottom - gap)
+  const measuredHeight = dropdownRef.value?.offsetHeight || menuMaxHeight
+  const shouldOpenUpward =
+    availableBelow < Math.min(menuMaxHeight, 160) && availableAbove > availableBelow
+  const maxHeight = shouldOpenUpward
+    ? Math.min(menuMaxHeight, availableAbove)
+    : Math.min(menuMaxHeight, availableBelow)
+  const top = shouldOpenUpward
+    ? Math.max(gap, triggerRect.top - gap - Math.min(measuredHeight, maxHeight))
+    : triggerRect.bottom + gap
+  const left = Math.min(
+    Math.max(gap, triggerRect.left),
+    Math.max(gap, viewportRight - triggerRect.width - gap),
+  )
+
+  dropdownStyle.value = {
+    top: `${top}px`,
+    left: `${left}px`,
+    minWidth: `${triggerRect.width}px`,
+    maxHeight: `${Math.max(120, maxHeight)}px`,
   }
 }
 
 // Lifecycle
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+  window.addEventListener('resize', updateDropdownPosition)
+  document.addEventListener('scroll', updateDropdownPosition, true)
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  window.removeEventListener('resize', updateDropdownPosition)
+  document.removeEventListener('scroll', updateDropdownPosition, true)
 })
 </script>

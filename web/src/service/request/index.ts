@@ -1,7 +1,7 @@
 // 封装ofetch
 
 import { ofetch } from 'ofetch'
-import { getAuthToken, getSystemReadyStatus } from './shared'
+import { getAuthToken, getInitReadyStatus } from './shared'
 import { theToast } from '@/utils/toast'
 
 interface RequestOptions {
@@ -52,7 +52,7 @@ const ofetchInstance = ofetch.create({
 
 export const request = async <T>(requestOptions: RequestOptions): Promise<App.Api.Response<T>> => {
   // 检查系统是否已经准备好
-  const isSystemReady = getSystemReadyStatus()
+  const isSystemReady = getInitReadyStatus()
 
   // 检查是否使用正向代理
   if (import.meta.env.VITE_PROXY === 'YES') {
@@ -82,7 +82,7 @@ export const requestWithDirectUrl = async <T>(
   requestOptions: RequestOptions,
 ): Promise<App.Api.Response<T>> => {
   // 检查系统是否已经准备好
-  const isSystemReady = getSystemReadyStatus()
+  const isSystemReady = getInitReadyStatus()
 
   return ofetchInstance<App.Api.Response<T>>(
     requestOptions.dirrectUrl ? requestOptions.dirrectUrl : '',
@@ -135,9 +135,8 @@ export const downloadFile = async (requestOptions: RequestOptions): Promise<Blob
   }).then((res) => {
     if (res instanceof Blob) {
       return res
-    } else {
-      theToast.error('下载失败')
-      throw new Error('下载失败')
     }
+    theToast.error('下载失败')
+    throw new Error('下载失败')
   })
 }

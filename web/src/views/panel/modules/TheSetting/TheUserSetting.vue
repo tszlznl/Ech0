@@ -3,29 +3,25 @@
     <!-- 用户设置 -->
     <div class="w-full">
       <div class="flex flex-row items-center justify-between mb-3">
-        <h1 class="text-[var(--text-color-600)] font-bold text-lg">用户中心</h1>
-        <div class="flex flex-row items-center justify-end gap-2 w-14">
-          <button v-if="editMode" @click="handleUpdateUser" title="编辑">
-            <Saveupdate class="w-5 h-5 text-[var(--text-color-400)] hover:w-6 hover:h-6" />
-          </button>
-          <button @click="editMode = !editMode" title="编辑">
-            <Edit
-              v-if="!editMode"
-              class="w-5 h-5 text-[var(--text-color-400)] hover:w-6 hover:h-6"
-            />
-            <Close v-else class="w-5 h-5 text-[var(--text-color-400)] hover:w-6 hover:h-6" />
-          </button>
+        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">用户中心</h1>
+        <div class="flex flex-row items-center justify-end">
+          <BaseEditCapsule
+            :editing="editMode"
+            apply-title="应用"
+            cancel-title="取消"
+            edit-title="编辑"
+            @apply="handleUpdateUser"
+            @toggle="editMode = !editMode"
+          />
         </div>
       </div>
 
       <!-- 头像 -->
       <div class="flex justify-start items-center mb-2">
         <img
-          :src="
-            !user?.avatar || user?.avatar.length === 0 ? '/Ech0.svg' : `${API_URL}${user?.avatar}`
-          "
+          :src="avatarSrc"
           alt="头像"
-          class="w-12 h-12 rounded-full ml-2 mr-9 ring-1 ring-gray-200 shadow-sm"
+          class="w-12 h-12 rounded-full ml-2 mr-9 ring-1 ring-[var(--color-border-subtle)] shadow-[var(--shadow-sm)]"
         />
         <div>
           <!-- 点击上传头像 -->
@@ -49,7 +45,7 @@
 
       <!-- 用户名 -->
       <div
-        class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] gap-2 h-10"
+        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
         <h2 class="font-semibold w-30">用户名:</h2>
         <span v-if="!editMode">{{ user?.username }}</span>
@@ -64,7 +60,7 @@
 
       <!-- 密码 -->
       <div
-        class="flex flex-row items-center justify-start text-[var(--text-color-next-500)] gap-2 h-10"
+        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
         <h2 class="font-semibold w-30">密码:</h2>
         <span v-if="!editMode">******</span>
@@ -85,17 +81,15 @@
 import PanelCard from '@/layout/PanelCard.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
-import Edit from '@/components/icons/edit.vue'
-import Close from '@/components/icons/close.vue'
-
-import Saveupdate from '@/components/icons/saveupdate.vue'
-import { ref, onMounted } from 'vue'
-import { fetchGetCurrentUser, fetchUpdateUser, fetchUploadImage } from '@/service/api'
+import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
+import { computed, ref, onMounted } from 'vue'
+import { fetchGetCurrentUser, fetchUpdateUser } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { storeToRefs } from 'pinia'
 import { useUserStore } from '@/stores'
-import { getApiUrl } from '@/service/request/shared'
-import { ImageSource } from '@/enums/enums'
+import { resolveAvatarUrl } from '@/service/request/shared'
+import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
+import { useFileQueue } from '@/lib/file'
 
 const userStore = useUserStore()
 const { refreshCurrentUser } = userStore
@@ -108,7 +102,8 @@ const userInfo = ref<App.Api.User.UserInfo>({
 })
 
 const editMode = ref<boolean>(false)
-const API_URL = getApiUrl()
+const avatarSrc = computed(() => resolveAvatarUrl(user.value?.avatar))
+const { enqueueUpload, waitForTask, clearFinishedUploads } = useFileQueue()
 
 const handleUpdateUser = async () => {
   await fetchUpdateUser(userInfo.value)
@@ -139,21 +134,26 @@ const handleUploadImage = async (event: Event) => {
   if (!file) return
 
   try {
-    const res = await theToast.promise(fetchUploadImage(file, ImageSource.LOCAL), {
+    const taskId = enqueueUpload({
+      file,
+      storageType: FILE_STORAGE_TYPE.LOCAL,
+      category: FILE_CATEGORY.IMAGE,
+    })
+    const task = await theToast.promise(waitForTask(taskId), {
       loading: '头像上传中...',
       success: '头像上传成功！',
       error: '上传失败，请稍后再试',
     })
 
-    // 只需处理成功结果即可，失败的 toast 已由 request() 自动处理
-    if (res.code === 1 && res.data.url) {
-      userInfo.value.avatar = res.data.url
-      if (user.value) user.value.avatar = res.data.url
+    if (task.result?.url) {
+      userInfo.value.avatar = task.result.url
+      if (user.value) user.value.avatar = task.result.url
     }
   } catch (err) {
     console.error('上传异常', err)
     // 注意：这里只有抛出异常时才会进入，正常 res.code ≠ 1 是不会进来的
   } finally {
+    clearFinishedUploads()
     target.value = ''
   }
 }

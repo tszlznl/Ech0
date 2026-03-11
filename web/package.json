@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
+    "token:check": "node ./scripts/check-token-usage.mjs",
     "lint": "eslint . --fix",
     "format": "prettier --write src/"
   },
@@ -25,31 +26,27 @@
     "@vueuse/core": "^14.2.1",
     "aplayer": "^1.10.1",
     "chalk": "^5.6.2",
-    "cropperjs": "^2.1.0",
-    "echarts": "^6.0.0",
+    "gsap": "^3.14.2",
     "highlight.js": "^11.11.1",
-    "katex": "^0.16.38",
-    "md-editor-v3": "^6.4.0",
-    "mermaid": "^11.12.3",
+    "markdown-it": "^14.1.1",
     "ofetch": "^1.5.1",
     "pinia": "^3.0.4",
-    "screenfull": "^6.0.2",
     "vditor": "^3.11.2",
-    "vue": "^3.5.29",
-    "vue-echarts": "^8.0.1",
+    "vue": "^3.5.30",
     "vue-router": "^5.0.3",
     "vue-sonner": "^2.0.9",
     "vue-virtual-scroller": "2.0.0-beta.8"
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.5",
-    "@types/node": "^25.4.0",
-    "@unocss/preset-wind4": "66.6.6",
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^24.12.0",
+    "@unocss/preset-wind4": "66.6.5",
     "@vitejs/plugin-vue": "^6.0.4",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.7.0",
     "@vue/tsconfig": "^0.9.0",
-    "eslint": "^10.0.3",
+    "eslint": "^9.39.4",
     "eslint-plugin-vue": "~10.8.0",
     "jiti": "^2.6.1",
     "npm-run-all2": "^8.0.4",
@@ -63,5 +60,5 @@
     "vite-plugin-vue-devtools": "^8.0.7",
     "vue-tsc": "^3.2.5"
   },
-  "packageManager": "pnpm@10.30.3+sha512.c961d1e0a2d8e354ecaa5166b822516668b7f44cb5bd95122d590dd81922f606f5473b6d23ec4a5be05e7fcd18e8488d47d978bbe981872f1145d06e9a740017"
+  "packageManager": "pnpm@10.32.0+sha512.9b2634bb3fed5601c33633f2d92593f506270a3963b8c51d2b2d6a828da615ce4e9deebef9614ccebbc13ac8d3c0f9c9ccceb583c69c8578436fa477dbb20d70"
 }

@@ -2,20 +2,20 @@
   <div class="px-9 md:px-11">
     <!-- 列出所有连接（列出每个连接的头像） -->
     <div
-      class="widget rounded-md shadow-sm hover:shadow-md ring-1 ring-[var(--ring-color)] ring-inset p-4"
+      class="widget rounded-md shadow-sm hover:shadow-md ring-1 ring-[var(--color-border-subtle)] ring-inset p-4"
     >
-      <h2 class="text-[var(--widget-title-color)] font-bold text-lg mb-2 flex items-center">
+      <h2 class="text-[var(--color-text-primary)] font-bold text-lg mb-2 flex items-center">
         <Connect class="mr-2" />我的连接:
       </h2>
       <div v-if="!loading">
-        <div v-if="!connectsInfo.length" class="text-[var(--text-color-next-400)] text-sm mb-2">
+        <div v-if="!connectsInfo.length" class="text-[var(--color-text-muted)] text-sm mb-2">
           当前暂无连接
         </div>
         <div v-else class="flex flex-wrap gap-3">
           <div
             v-for="(connect, index) in connectsInfo"
             :key="index"
-            class="relative flex flex-col items-center justify-center w-8 h-8 min-w-[2rem] min-h-[2rem] flex-none border-2 border-[var(--connect-border-color)] shadow-sm rounded-full hover:shadow-md transition duration-200 ease-in-out group"
+            class="relative flex flex-col items-center justify-center w-8 h-8 min-w-[2rem] min-h-[2rem] flex-none border-2 border-[var(--color-border-subtle)] shadow-sm rounded-full hover:shadow-md transition duration-200 ease-in-out group"
           >
             <a :href="connect.server_url" target="_blank" class="block w-full h-full">
               <img
@@ -25,7 +25,7 @@
               />
               <!-- 热力圆点 -->
               <span
-                class="absolute top-0 right-0 w-2.5 h-2.5 border-2 border-[var(--connect-dot-border-color)] rounded-full"
+                class="absolute top-0 right-0 w-2.5 h-2.5 border-2 border-[var(--color-bg-surface)] rounded-full"
                 :style="{
                   transform: 'translate(35%, -35%)',
                   backgroundColor: getColor(connect.today_echos || 0),
@@ -37,15 +37,16 @@
               class="absolute z-10 left-1/2 -translate-x-1/2 top-10 min-w-max bg-gray-800 text-white text-xs rounded px-3 py-2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-lg"
             >
               <div class="font-bold mb-1">{{ connect.server_name }}</div>
-              <div v-if="connect.sys_username">管理员: {{ connect.sys_username }}</div>
-              <div v-if="connect.total_echos">共有: {{ connect.total_echos }}</div>
-              <div v-if="connect.today_echos">今日: {{ connect.today_echos }}</div>
+              <div>Owner: {{ connect.sys_username || '-' }}</div>
+              <div>共有: {{ connect.total_echos ?? 0 }}</div>
+              <div>今日: {{ connect.today_echos ?? 0 }}</div>
+              <div>版本: {{ connect.version || '-' }}</div>
             </div>
           </div>
         </div>
       </div>
       <div v-else>
-        <div class="text-[var(--text-color-next-500)] text-sm mb-2">加载中...</div>
+        <div class="text-[var(--color-text-secondary)] text-sm mb-2">加载中...</div>
       </div>
     </div>
   </div>
@@ -62,10 +63,10 @@ const { getConnectInfo } = connectStore
 const { loading, connectsInfo } = storeToRefs(connectStore)
 
 const getColor = (count: number): string => {
-  if (count >= 4) return 'var(--heatmap-bg-color-4)'
-  if (count >= 3) return 'var(--heatmap-bg-color-3)'
-  if (count >= 2) return 'var(--heatmap-bg-color-2)'
-  if (count >= 1) return 'var(--heatmap-bg-color-1)'
+  if (count >= 4) return 'var(--color-accent)'
+  if (count >= 3) return 'var(--color-accent)'
+  if (count >= 2) return 'var(--color-accent)'
+  if (count >= 1) return 'var(--color-accent-soft)'
   return '#c4c3c1'
 }
 

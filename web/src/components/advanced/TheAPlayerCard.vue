@@ -8,7 +8,7 @@
       :server="musicInfo.server"
       :type="musicInfo.type"
       :id="musicInfo.id"
-      :auto="props.echo.extension"
+      :auto="musicAuto"
     >
     </meting-js>
   </div>
@@ -29,7 +29,7 @@
   </div>
   <div
     v-else
-    class="max-w-sm flex justify-center items-center bg-[var(--card-color)] rounded-lg shadow-sm ring-1 ring-inset ring-[var(--ring-color-100)] p-2 gap-2 text-[var(--text-color-400)]"
+    class="max-w-sm flex justify-center items-center bg-[var(--color-bg-surface)] rounded-lg shadow-sm ring-1 ring-inset ring-[var(--color-border-subtle)] p-2 gap-2 text-[var(--color-text-muted)]"
   >
     <Music />非常抱歉，该音乐播放源已失效😭
   </div>
@@ -51,8 +51,12 @@ const props = defineProps<{
 }>()
 
 const musicInfo = computed(() => {
-  if (props.echo.extension_type !== ExtensionType.MUSIC || !props.echo.extension) return null
-  return parseMusicURL(props.echo.extension)
+  if (props.echo.extension?.type !== ExtensionType.MUSIC) return null
+  return parseMusicURL(props.echo.extension.payload.url)
+})
+const musicAuto = computed(() => {
+  if (props.echo.extension?.type !== ExtensionType.MUSIC) return ''
+  return props.echo.extension.payload.url
 })
 const metingAPI = computed(() => {
   if (!loading.value && SystemSetting.value && SystemSetting.value.meting_api.length > 0) {

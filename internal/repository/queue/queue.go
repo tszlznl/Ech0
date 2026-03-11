@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	model "github.com/lin-snow/ech0/internal/model/queue"
 	"github.com/lin-snow/ech0/internal/transaction"
@@ -12,12 +13,12 @@ type QueueRepository struct {
 	db func() *gorm.DB
 }
 
-func NewQueueRepository(db func() *gorm.DB) QueueRepositoryInterface {
+func NewQueueRepository(db func() *gorm.DB) *QueueRepository {
 	return &QueueRepository{db: db}
 }
 
 func (queueRepository *QueueRepository) getDB(ctx context.Context) *gorm.DB {
-	if tx, ok := ctx.Value(transaction.TxKey).(*gorm.DB); ok {
+	if tx, ok := transaction.TxFromContext(ctx); ok {
 		return tx
 	}
 	return queueRepository.db()
@@ -33,13 +34,22 @@ func (queueRepository *QueueRepository) SaveDeadLetter(
 
 // DeleteDeadLetter 删除死信任务
 func (queueRepository *QueueRepository) DeleteDeadLetter(ctx context.Context, id int64) error {
-	return queueRepository.getDB(ctx).Delete(&model.DeadLetter{}, id).Error
+	return queueRepository.getDB(ctx).Where("id = ?", id).Delete(&model.DeadLetter{}).Error
 }
 
 // ListDeadLetters 列出所有死信任务
-func (queueRepository *QueueRepository) ListDeadLetters(limit int) ([]model.DeadLetter, error) {
+func (queueRepository *QueueRepository) ListDeadLetters(ctx context.Context, limit int) ([]model.DeadLetter, error) {
 	var deadLetters []model.DeadLetter
-	err := queueRepository.db().Limit(limit).Find(&deadLetters).Error
+	now := time.Now().UTC()
+	err := queueRepository.getDB(ctx).
+		Where("status IN ? AND next_retry <= ?", []string{
+			model.DeadLetterStatusPending,
+			model.DeadLetterStatusFailed,
+		}, now).
+		Order("next_retry ASC").
+		Order("id ASC").
+		Limit(limit).
+		Find(&deadLetters).Error
 	if err != nil {
 		return []model.DeadLetter{}, err
 	}

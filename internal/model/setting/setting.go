@@ -1,6 +1,12 @@
 package model
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+
+	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
+	"gorm.io/gorm"
+)
 
 const (
 	EIGHT_HOUR_EXPIRY string = "8_hours"
@@ -16,6 +22,8 @@ type SystemSetting struct {
 	ServerURL     string `json:"server_url"`     // 服务器地址
 	AllowRegister bool   `json:"allow_register"` // 是否允许注册'
 	ICPNumber     string `json:"ICP_number"`     // 备案号
+	FooterContent string `json:"footer_content"` // 自定义页脚内容
+	FooterLink    string `json:"footer_link"`    // 自定义页脚链接
 	MetingAPI     string `json:"meting_api"`     // Meting API 地址
 	CustomCSS     string `json:"custom_css"`     // 自定义 CSS
 	CustomJS      string `json:"custom_js"`      // 自定义 JS
@@ -23,9 +31,38 @@ type SystemSetting struct {
 
 // CommentSetting 定义评论设置实体
 type CommentSetting struct {
-	EnableComment bool   `json:"enable_comment"` // 是否启用评论
-	Provider      string `json:"provider"`       // 评论提供者
-	CommentAPI    string `json:"comment_api"`    // 评论 API 地址
+	EnableComment bool                              `json:"enable_comment"` // 是否启用评论
+	Provider      string                            `json:"provider"`       // 当前启用的评论提供者
+	Providers     map[string]CommentProviderSetting `json:"providers"`      // 各评论提供者配置
+}
+
+type CommentProviderSetting struct {
+	ScriptURL string                 `json:"script_url,omitempty"` // 可选脚本地址（为空则使用默认）
+	CSSURL    string                 `json:"css_url,omitempty"`    // 可选样式地址（为空则使用默认）
+	Config    map[string]interface{} `json:"config"`               // 提供者私有配置
+}
+
+type CommentProviderFieldMeta struct {
+	Key         string `json:"key"`                   // 字段键名
+	Label       string `json:"label"`                 // 字段名称
+	Required    bool   `json:"required"`              // 是否必填
+	Placeholder string `json:"placeholder,omitempty"` // 输入提示
+}
+
+type CommentProviderMeta struct {
+	Provider string                     `json:"provider"` // provider key
+	Label    string                     `json:"label"`    // 展示名
+	Fields   []CommentProviderFieldMeta `json:"fields"`   // 字段定义
+}
+
+type CommentProviderMetaResponse struct {
+	Providers []CommentProviderMeta `json:"providers"`
+}
+
+type CommentProviderMetaRaw struct {
+	Provider string            `json:"provider"`
+	Label    string            `json:"label"`
+	Fields   []json.RawMessage `json:"fields"`
 }
 
 // S3Setting 定义 S3 存储设置实体
@@ -59,22 +96,29 @@ type OAuth2Setting struct {
 	IsOIDC  bool   `json:"is_oidc"`  // 是否启用 OIDC
 	Issuer  string `json:"issuer"`   // OIDC 颁发者
 	JWKSURL string `json:"jwks_url"` // OIDC JWKS URL
+
+	// 认证边界配置（Panel 主配置，ENV 仅默认值）
+	AuthRedirectAllowedReturnURLs []string `json:"auth_redirect_allowed_return_urls"`
+	WebAuthnRPID                  string   `json:"webauthn_rp_id"`
+	WebAuthnAllowedOrigins        []string `json:"webauthn_allowed_origins"`
+	CORSAllowedOrigins            []string `json:"cors_allowed_origins"`
 }
 
 // AccessTokenSetting 定义访问令牌设置实体
 type AccessTokenSetting struct {
-	ID        int        `json:"id"`         // 访问令牌 ID
-	UserID    uint       `json:"user_id"`    // 创建该访问令牌的用户 ID
-	Token     string     `json:"token"`      // 访问令牌
-	Name      string     `json:"name"`       // 访问令牌名称
-	Expiry    *time.Time `json:"expiry"`     // 指针类型，NULL 表示永不过期
-	CreatedAt time.Time  `json:"created_at"` // 访问令牌创建时间，RFC3339 时间字符串
+	ID        string     `gorm:"type:char(36);primaryKey" json:"id"`         // 访问令牌 ID
+	UserID    string     `gorm:"type:char(36);index" json:"user_id"`         // 创建该访问令牌的用户 ID
+	Token     string     `gorm:"type:varchar(255);uniqueIndex" json:"token"` // 访问令牌
+	Name      string     `json:"name"`                                       // 访问令牌名称
+	Expiry    *time.Time `json:"expiry"`                                     // 指针类型，NULL 表示永不过期
+	CreatedAt time.Time  `json:"created_at"`                                 // 访问令牌创建时间，RFC3339 时间字符串
 }
 
-// FediverseSetting 定义联邦网络设置实体
-type FediverseSetting struct {
-	Enable    bool   `json:"enable"`     // 是否启用联邦网络功能
-	ServerURL string `json:"server_url"` // 服务器 URL
+func (a *AccessTokenSetting) BeforeCreate(_ *gorm.DB) error {
+	if a.ID == "" {
+		a.ID = uuidUtil.MustNewV7()
+	}
+	return nil
 }
 
 // AgentSetting 定义 LLM Agent 设置实体

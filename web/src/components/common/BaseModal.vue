@@ -27,7 +27,7 @@
             leave-to="opacity-0 scale-95"
           >
             <DialogPanel
-              class="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all"
+              class="w-full max-w-3xl transform overflow-hidden rounded-[var(--radius-lg)] bg-[var(--dialog-bg-color)] p-6 text-left align-middle shadow-[var(--shadow-md)] ring-1 ring-[var(--color-border-subtle)] transition-all"
             >
               <!-- 只保留一个通用插槽 -->
               <slot />

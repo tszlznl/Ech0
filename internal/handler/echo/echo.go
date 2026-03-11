@@ -2,9 +2,9 @@ package handler
 
 import (
 	"errors"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	res "github.com/lin-snow/ech0/internal/handler/response"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/echo"
@@ -13,11 +13,11 @@ import (
 )
 
 type EchoHandler struct {
-	echoService service.EchoServiceInterface
+	echoService service.Service
 }
 
 // NewEchoHandler EchoHandler 的构造函数
-func NewEchoHandler(echoService service.EchoServiceInterface) *EchoHandler {
+func NewEchoHandler(echoService service.Service) *EchoHandler {
 	return &EchoHandler{
 		echoService: echoService,
 	}
@@ -30,22 +30,22 @@ func NewEchoHandler(echoService service.EchoServiceInterface) *EchoHandler {
 //	@Tags			Echo
 //	@Accept			json
 //	@Produce		json
-//	@Param			echo	body		model.Echo		true	"Echo内容"
-//	@Success		200		{object}	res.Response	"创建成功"
-//	@Failure		200		{object}	res.Response	"创建失败"
+//	@Param			echo	body		model.EchoUpsertDto	true	"Echo内容"
+//	@Success		200		{object}	res.Response		"创建成功"
+//	@Failure		200		{object}	res.Response		"创建失败"
 //	@Router			/echo [post]
 func (echoHandler *EchoHandler) PostEcho() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		var newEcho model.Echo
-		if err := ctx.ShouldBindJSON(&newEcho); err != nil {
+		var request model.EchoUpsertDto
+		if err := ctx.ShouldBindJSON(&request); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_REQUEST_BODY,
 				Err: err,
 			}
 		}
+		newEcho := request.ToModel()
 
-		userId := ctx.MustGet("userid").(uint)
-		if err := echoHandler.echoService.PostEcho(userId, &newEcho); err != nil {
+		if err := echoHandler.echoService.PostEcho(ctx.Request.Context(), newEcho); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -106,9 +106,7 @@ func (echoHandler *EchoHandler) GetEchosByPage() gin.HandlerFunc {
 			}
 		}
 
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
-		result, err := echoHandler.echoService.GetEchosByPage(userid, pageRequest)
+		result, err := echoHandler.echoService.GetEchosByPage(ctx.Request.Context(), pageRequest)
 		if err != nil {
 			return res.Response{
 				Msg: "",
@@ -136,19 +134,15 @@ func (echoHandler *EchoHandler) GetEchosByPage() gin.HandlerFunc {
 //	@Router			/echo/{id} [delete]
 func (echoHandler *EchoHandler) DeleteEcho() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
-
 		// 从 URL 参数获取Echo ID
-		idStr := ctx.Param("id")
-		id, err := strconv.ParseUint(idStr, 10, 64)
-		if err != nil {
+		id := ctx.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS,
 			}
 		}
 
-		if err := echoHandler.echoService.DeleteEchoById(userid, uint(id)); err != nil {
+		if err := echoHandler.echoService.DeleteEchoById(ctx.Request.Context(), id); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -173,10 +167,8 @@ func (echoHandler *EchoHandler) DeleteEcho() gin.HandlerFunc {
 //	@Router			/echo/today [get]
 func (echoHandler *EchoHandler) GetTodayEchos() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取当前用户 ID
-		userid := ctx.MustGet("userid").(uint)
 		timezone := timezoneUtil.NormalizeTimezone(ctx.GetHeader(timezoneUtil.DefaultTimezoneHeader))
-		result, err := echoHandler.echoService.GetTodayEchos(userid, timezone)
+		result, err := echoHandler.echoService.GetTodayEchos(ctx.Request.Context(), timezone)
 		if err != nil {
 			return res.Response{
 				Msg: "",
@@ -198,22 +190,22 @@ func (echoHandler *EchoHandler) GetTodayEchos() gin.HandlerFunc {
 //	@Tags			Echo
 //	@Accept			json
 //	@Produce		json
-//	@Param			echo	body		model.Echo		true	"要更新的Echo内容"
-//	@Success		200		{object}	res.Response	"更新成功"
-//	@Failure		200		{object}	res.Response	"更新失败"
+//	@Param			echo	body		model.EchoUpsertDto	true	"要更新的Echo内容"
+//	@Success		200		{object}	res.Response		"更新成功"
+//	@Failure		200		{object}	res.Response		"更新失败"
 //	@Router			/echo [put]
 func (echoHandler *EchoHandler) UpdateEcho() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		var updateEcho model.Echo
-		if err := ctx.ShouldBindJSON(&updateEcho); err != nil {
+		var request model.EchoUpsertDto
+		if err := ctx.ShouldBindJSON(&request); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_REQUEST_BODY,
 				Err: err,
 			}
 		}
+		updateEcho := request.ToModel()
 
-		userId := ctx.MustGet("userid").(uint)
-		if err := echoHandler.echoService.UpdateEcho(userId, &updateEcho); err != nil {
+		if err := echoHandler.echoService.UpdateEcho(ctx.Request.Context(), updateEcho); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -240,15 +232,14 @@ func (echoHandler *EchoHandler) UpdateEcho() gin.HandlerFunc {
 func (echoHandler *EchoHandler) LikeEcho() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 从 URL 参数获取Echo ID
-		idStr := ctx.Param("id")
-		id, err := strconv.ParseUint(idStr, 10, 64)
-		if err != nil {
+		id := ctx.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS,
 			}
 		}
 
-		if err := echoHandler.echoService.LikeEcho(uint(id)); err != nil {
+		if err := echoHandler.echoService.LikeEcho(ctx.Request.Context(), id); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -275,17 +266,14 @@ func (echoHandler *EchoHandler) LikeEcho() gin.HandlerFunc {
 func (echoHandler *EchoHandler) GetEchoById() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 从 URL 参数获取Echo ID
-		idStr := ctx.Param("id")
-		id, err := strconv.ParseUint(idStr, 10, 64)
-		if err != nil {
+		id := ctx.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS,
 			}
 		}
 
-		userId := ctx.MustGet("userid").(uint)
-
-		echo, err := echoHandler.echoService.GetEchoById(userId, uint(id))
+		echo, err := echoHandler.echoService.GetEchoById(ctx.Request.Context(), id)
 		if err != nil {
 			return res.Response{
 				Msg: "",
@@ -341,17 +329,14 @@ func (echoHandler *EchoHandler) GetAllTags() gin.HandlerFunc {
 func (echoHandler *EchoHandler) DeleteTag() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 从 URL 参数获取标签 ID
-		idStr := ctx.Param("id")
-		id, err := strconv.ParseUint(idStr, 10, 64)
-		if err != nil {
+		id := ctx.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS,
 			}
 		}
 
-		userid := ctx.MustGet("userid").(uint)
-
-		if err := echoHandler.echoService.DeleteTag(userid, uint(id)); err != nil {
+		if err := echoHandler.echoService.DeleteTag(ctx.Request.Context(), id); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -381,9 +366,8 @@ func (echoHandler *EchoHandler) DeleteTag() gin.HandlerFunc {
 func (echoHandler *EchoHandler) GetEchosByTagId() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 从 URL 参数获取标签 ID
-		tagIdStr := ctx.Param("tagid")
-		tagId, err := strconv.ParseUint(tagIdStr, 10, 64)
-		if err != nil {
+		tagId := ctx.Param("tagid")
+		if _, err := uuid.Parse(tagId); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_PARAMS,
 			}
@@ -398,9 +382,7 @@ func (echoHandler *EchoHandler) GetEchosByTagId() gin.HandlerFunc {
 			}
 		}
 
-		userid := ctx.MustGet("userid").(uint)
-
-		result, err := echoHandler.echoService.GetEchosByTagId(userid, uint(tagId), pageRequest)
+		result, err := echoHandler.echoService.GetEchosByTagId(ctx.Request.Context(), tagId, pageRequest)
 		if err != nil {
 			return res.Response{
 				Msg: "",

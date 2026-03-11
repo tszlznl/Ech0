@@ -11,8 +11,8 @@ import (
 // 默认启动CLI With TUI
 var rootCmd = &cobra.Command{
 	Use:   "ech0",
-	Short: "面向个人的新一代开源、自托管、专注思想流动的轻量级联邦发布平台",
-	Long:  `面向个人的新一代开源、自托管、专注思想流动的轻量级联邦发布平台`,
+	Short: "面向个人的新一代开源、自托管、专注思想流动的轻量级发布平台",
+	Long:  `面向个人的新一代开源、自托管、专注思想流动的轻量级发布平台`,
 
 	// 这个 Run 会在没有子命令时执行
 	Run: func(cmd *cobra.Command, args []string) {

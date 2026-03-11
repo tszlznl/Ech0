@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useUserStore } from '@/stores'
+import { useInitStore, useUserStore } from '@/stores'
 
 // 所有路由组件使用懒加载，优化首屏加载性能
 const router = createRouter({
@@ -13,11 +13,6 @@ const router = createRouter({
         title: 'Home',
         optionalAuth: true,
       },
-    },
-    {
-      path: '/widget',
-      name: 'widget',
-      component: () => import('../views/widget/WidgetView.vue'),
     },
     {
       path: '/panel',
@@ -68,6 +63,11 @@ const router = createRouter({
           name: 'panel-advance',
           component: () => import('../views/panel/modules/TheAdvance.vue'),
         },
+        {
+          path: 'system-log',
+          name: 'panel-system-log',
+          component: () => import('../views/panel/modules/TheSystemLog.vue'),
+        },
       ],
       // beforeEnter: (to, from, next) => {
       //   const userStore = useUserStore()
@@ -82,6 +82,11 @@ const router = createRouter({
       path: '/auth',
       name: 'auth',
       component: () => import('../views/auth/AuthView.vue'),
+    },
+    {
+      path: '/init',
+      name: 'init',
+      component: () => import('../views/init/InitView.vue'),
     },
     {
       path: '/connect',
@@ -103,11 +108,6 @@ const router = createRouter({
       name: 'echo',
       component: () => import('../views/echo/EchoView.vue'),
     },
-    // {
-    //   path: '/fediverse',
-    //   name: 'fediverse',
-    //   component: () => import('../views/fediverse/FediverseView.vue'),
-    // },
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
@@ -117,8 +117,21 @@ const router = createRouter({
 })
 
 // 全局路由守卫
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to) => {
+  const initStore = useInitStore()
   const userStore = useUserStore()
+
+  if (!initStore.ready) {
+    await initStore.init()
+  }
+
+  if (!initStore.initialized && to.name !== 'init') {
+    return { name: 'init' }
+  }
+
+  if (initStore.initialized && to.name === 'init') {
+    return { name: 'auth' }
+  }
 
   // 等待用户信息初始化完成
   if (!userStore.initialized) {
@@ -135,10 +148,10 @@ router.beforeEach(async (to, from, next) => {
   ) {
     localStorage.removeItem('needLoginRedirect')
     localStorage.removeItem('token')
-    return next({ name: 'auth' })
+    return { name: 'auth' }
   }
 
-  next()
+  return true
 })
 
 export default router

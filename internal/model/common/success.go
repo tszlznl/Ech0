@@ -7,8 +7,9 @@ const (
 
 // Auth 成功相关常量
 const (
-	LOGIN_SUCCESS    = "登陆成功"
-	REGISTER_SUCCESS = "注册成功"
+	LOGIN_SUCCESS      = "登陆成功"
+	REGISTER_SUCCESS   = "注册成功"
+	INIT_OWNER_SUCCESS = "Owner初始化成功"
 )
 
 // Echo 成功相关常量
@@ -29,13 +30,10 @@ const (
 const (
 	UPLOAD_SUCCESS             = "上传成功"
 	DELETE_SUCCESS             = "删除成功"
-	GET_STATUS_SUCCESS         = "获取状态成功"
 	GET_HEATMAP_SUCCESS        = "获取热力图成功"
-	GET_MUSIC_URL_SUCCESS      = "获取音乐播放链接成功"
 	GET_HELLO_SUCCESS          = "获取Hello成功"
 	GET_HEALTHZ_SUCCESS        = "健康检查"
 	GET_S3_PRESIGN_URL_SUCCESS = "获取 S3 预签名 URL 成功"
-	GET_METRICS_SUCCESS        = "获取系统指标成功"
 	GET_WEBSITE_TITLE_SUCCESS  = "获取网站标题成功"
 )
 
@@ -50,33 +48,23 @@ const (
 
 // Setting 成功相关常量
 const (
-	GET_SETTINGS_SUCCESS              = "获取设置成功！"
-	UPDATE_SETTINGS_SUCCESS           = "更新设置成功！"
-	GET_COMMENT_SETTINGS_SUCCESS      = "获取评论设置成功！"
-	UPDATE_COMMENT_SETTINGS_SUCCESS   = "更新评论设置成功！"
-	GET_S3_SETTINGS_SUCCESS           = "获取 S3 存储设置成功！"
-	UPDATE_S3_SETTINGS_SUCCESS        = "更新 S3 存储设置成功！"
-	GET_OAUTH_SETTINGS_SUCCESS        = "获取 OAuth 设置成功！"
-	UPDATE_OAUTH_SETTINGS_SUCCESS     = "更新 OAuth 设置成功！"
-	GET_OAUTH2_STATUS_SUCCESS         = "获取 OAuth2 状态成功"
-	GET_WEBHOOK_SUCCESS               = "获取 Webhook 成功"
-	DELETE_WEBHOOK_SUCCESS            = "删除 Webhook 成功"
-	UPDATE_WEBHOOK_SUCCESS            = "更新 Webhook 成功"
-	CREATE_WEBHOOK_SUCCESS            = "创建 Webhook 成功"
-	LIST_ACCESS_TOKENS_SUCCESS        = "列出访问令牌成功"
-	CREATE_ACCESS_TOKEN_SUCCESS       = "创建访问令牌成功"
-	DELETE_ACCESS_TOKEN_SUCCESS       = "删除访问令牌成功"
-	GET_FEDIVERSE_SETTINGS_SUCCESS    = "获取联邦网络设置成功"
-	UPDATE_FEDIVERSE_SETTINGS_SUCCESS = "更新联邦网络设置成功"
-	SCHEDULE_BACKUP_SUCCESS           = "设置备份计划成功"
-)
-
-// To do 成功相关常量
-const (
-	GET_TODO_LIST_SUCCESS = "获取Todo list 成功"
-	ADD_TODO_SUCCESS      = "添加Todo成功"
-	UPDATE_TODO_SUCCESS   = "更新Todo成功"
-	DELETE_TODO_SUCCESS   = "删除Todo成功"
+	GET_SETTINGS_SUCCESS            = "获取设置成功！"
+	UPDATE_SETTINGS_SUCCESS         = "更新设置成功！"
+	GET_COMMENT_SETTINGS_SUCCESS    = "获取评论设置成功！"
+	UPDATE_COMMENT_SETTINGS_SUCCESS = "更新评论设置成功！"
+	GET_S3_SETTINGS_SUCCESS         = "获取 S3 存储设置成功！"
+	UPDATE_S3_SETTINGS_SUCCESS      = "更新 S3 存储设置成功！"
+	GET_OAUTH_SETTINGS_SUCCESS      = "获取 OAuth 设置成功！"
+	UPDATE_OAUTH_SETTINGS_SUCCESS   = "更新 OAuth 设置成功！"
+	GET_OAUTH2_STATUS_SUCCESS       = "获取 OAuth2 状态成功"
+	GET_WEBHOOK_SUCCESS             = "获取 Webhook 成功"
+	DELETE_WEBHOOK_SUCCESS          = "删除 Webhook 成功"
+	UPDATE_WEBHOOK_SUCCESS          = "更新 Webhook 成功"
+	CREATE_WEBHOOK_SUCCESS          = "创建 Webhook 成功"
+	LIST_ACCESS_TOKENS_SUCCESS      = "列出访问令牌成功"
+	CREATE_ACCESS_TOKEN_SUCCESS     = "创建访问令牌成功"
+	DELETE_ACCESS_TOKEN_SUCCESS     = "删除访问令牌成功"
+	SCHEDULE_BACKUP_SUCCESS         = "设置备份计划成功"
 )
 
 // User 成功相关常量
@@ -104,17 +92,6 @@ const (
 	BACKUP_SUCCESS        = "备份成功"
 	EXPORT_BACKUP_SUCCESS = "导出备份成功"
 	IMPORT_BACKUP_SUCCESS = "导入备份成功"
-)
-
-// Fediverse 成功相关常量
-const (
-	FEDIVERSE_SEARCH_ACTOR_SUCCESS      = "搜索 Actor 成功"
-	FEDIVERSE_FOLLOW_SUCCESS            = "关注请求已发送"
-	FEDIVERSE_UNFOLLOW_SUCCESS          = "取消关注请求已发送"
-	FEDIVERSE_LIKE_SUCCESS              = "点赞请求已发送"
-	FEDIVERSE_UNDO_LIKE_SUCCESS         = "取消点赞请求已发送"
-	FEDIVERSE_GET_FOLLOW_STATUS_SUCCESS = "获取关注状态成功"
-	FEDIVERSE_GET_TIMELINE_SUCCESS      = "获取时间线成功"
 )
 
 // Agent 成功相关常量

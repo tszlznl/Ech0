@@ -8,16 +8,17 @@ type SystemSettingDto struct {
 	ServerURL     string `json:"server_url"`     // 服务器地址
 	AllowRegister bool   `json:"allow_register"` // 是否允许注册
 	ICPNumber     string `json:"ICP_number"`     // 备案号
+	FooterContent string `json:"footer_content"` // 自定义页脚内容
+	FooterLink    string `json:"footer_link"`    // 自定义页脚链接
 	MetingAPI     string `json:"meting_api"`     // Meting API 地址
-	CommentAPI    string `json:"comment_api"`    // 评论 API 地址
 	CustomCSS     string `json:"custom_css"`     // 自定义 CSS
 	CustomJS      string `json:"custom_js"`      // 自定义 JS
 }
 
 type CommentSettingDto struct {
-	EnableComment bool   `json:"enable_comment"` // 是否启用评论
-	Provider      string `json:"provider"`       // 评论提供者
-	CommentAPI    string `json:"comment_api"`    // 评论 API 地址
+	EnableComment bool                              `json:"enable_comment"` // 是否启用评论
+	Provider      string                            `json:"provider"`       // 当前启用的评论提供者
+	Providers     map[string]CommentProviderSetting `json:"providers"`      // 各评论提供者配置
 }
 
 type S3SettingDto struct {
@@ -48,11 +49,18 @@ type OAuth2SettingDto struct {
 	IsOIDC  bool   `json:"is_oidc"`  // 是否启用 OIDC
 	Issuer  string `json:"issuer"`   // OIDC 颁发者
 	JWKSURL string `json:"jwks_url"` // OIDC JWKS URL
+
+	AuthRedirectAllowedReturnURLs []string `json:"auth_redirect_allowed_return_urls"`
+	WebAuthnRPID                  string   `json:"webauthn_rp_id"`
+	WebAuthnAllowedOrigins        []string `json:"webauthn_allowed_origins"`
+	CORSAllowedOrigins            []string `json:"cors_allowed_origins"`
 }
 
 type OAuth2Status struct {
-	Enabled  bool   `json:"enabled"`
-	Provider string `json:"provider"`
+	Enabled      bool   `json:"enabled"`
+	Provider     string `json:"provider"`
+	OAuthReady   bool   `json:"oauth_ready"`
+	PasskeyReady bool   `json:"passkey_ready"`
 }
 
 type WebhookDto struct {
@@ -65,11 +73,6 @@ type WebhookDto struct {
 type AccessTokenSettingDto struct {
 	Name   string `json:"name"`   // 访问令牌名称
 	Expiry string `json:"expiry"` // 访问令牌过期策略（8_hours/1_month/never）
-}
-
-type FediverseSettingDto struct {
-	Enable    bool   `json:"enable"`     // 是否启用联邦网络功能
-	ServerURL string `json:"server_url"` // 服务器 URL
 }
 
 type BackupScheduleDto struct {

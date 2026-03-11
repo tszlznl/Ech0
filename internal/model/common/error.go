@@ -1,9 +1,31 @@
 package model
 
+import "fmt"
+
 // ServerError 定义服务器错误信息
 type ServerError struct {
 	Msg string
 	Err error
+}
+
+type BizError struct {
+	Code string
+	Msg  string
+	Err  error
+}
+
+func (e *BizError) Error() string {
+	if e == nil {
+		return ""
+	}
+	if e.Err != nil {
+		return fmt.Sprintf("%s: %v", e.Msg, e.Err)
+	}
+	return e.Msg
+}
+
+func NewBizError(code, msg string) *BizError {
+	return &BizError{Code: code, Msg: msg}
 }
 
 // 失败相关的常量
@@ -13,6 +35,15 @@ const (
 	INVALID_PARAMS_BODY    = "无效参数"
 	INVALID_QUERY_PARAMS   = "无效的查询参数"
 	INVALID_REQUEST_METHOD = "无效的请求方法"
+)
+
+// 业务错误码
+const (
+	ErrCodeInvalidRequest   = "INVALID_REQUEST"
+	ErrCodePermissionDenied = "PERMISSION_DENIED"
+	ErrCodeInitAlreadyDone  = "INIT_ALREADY_DONE"
+	ErrCodeInitOwnerExists  = "INIT_OWNER_EXISTS"
+	ErrCodeInitInvalidState = "INIT_INVALID_STATE"
 )
 
 // Auth 错误相关常量
@@ -43,10 +74,13 @@ const (
 	FILE_SIZE_EXCEED_LIMIT = "文件大小超过限制"
 	IMAGE_NOT_FOUND        = "图片未找到"
 	INVALID_PARAMS         = "错误的参数"
-	SIGNUP_FIRST           = "请先注册用户"
+	SIGNUP_FIRST           = "请先初始化Owner账号"
 	S3_NOT_ENABLED         = "S3存储未启用"
 	S3_NOT_CONFIGURED      = "S3存储未配置"
 	S3_CONFIG_ERROR        = "S3存储配置错误"
+	SYSTEM_ALREADY_INITED  = "系统已初始化"
+	OWNER_ALREADY_EXISTS   = "Owner已存在"
+	ONLY_OWNER_CAN_MANAGE  = "仅Owner可管理管理员权限"
 )
 
 // Inbox 错误相关常量
@@ -69,11 +103,6 @@ const (
 	NO_PERMISSION_BINDING_CUSTOM   = "没有权限绑定自定义 OAuth2 账号"
 )
 
-// TO DO 错误相关常量
-const (
-	TODO_EXCEED_LIMIT = "待办事项数量已达上限"
-)
-
 // Connect 错误相关常量
 const (
 	INVALID_CONNECTION_URL = "connect url不能为空"
@@ -94,12 +123,9 @@ const (
 	DATABASE_CLOSE_FAILED   = "数据库关闭失败"
 )
 
-// Fediverse 错误相关常量
+// Migration 错误相关常量
 const (
-	GET_ACTOR_ERROR         = "获取 Actor 信息失败"
-	ACTIVEPUB_NOT_ENABLED   = "ActivityPub 未启用"
-	FEDIVERSE_INVALID_INPUT = "无效的联邦参数"
-	FOLLOW_RELATION_MISSING = "未找到关注关系"
+	MIGRATION_JOB_NOT_FOUND = "迁移任务不存在"
 )
 
 // Agent 错误相关常量

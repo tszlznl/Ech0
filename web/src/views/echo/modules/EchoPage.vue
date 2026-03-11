@@ -5,7 +5,7 @@
         <!-- 返回上一页 -->
         <BaseButton
           @click="goBack"
-          class="text-[var(--text-color-600)] rounded-md shadow-none! border-none! ring-0! bg-transparent! group"
+          class="text-[var(--color-text-primary)] rounded-md shadow-none! border-none! ring-0! bg-transparent! group"
           title="返回首页"
         >
           <Arrow
@@ -22,7 +22,7 @@
         />
         <TheComment class="my-2" />
       </div>
-      <div v-else class="w-full sm:mt-1 text-[var(--text-color-300)]">
+      <div v-else class="w-full sm:mt-1 text-[var(--color-text-muted)]">
         <p class="text-center">正在加载 Echo 详情...</p>
       </div>
     </div>
@@ -51,7 +51,7 @@ const echo = ref<App.Api.Ech0.Echo | null>(null)
 
 // 从 echoIndexMap 获取对应的 EchoList索引
 const getEchoFromStore = (): App.Api.Ech0.Echo | null => {
-  const idx = echoStore.echoIndexMap.get(Number(echoId))
+  const idx = echoStore.echoIndexMap.get(echoId)
   if (idx !== undefined) {
     return echoStore.echoList[idx] ?? null
   }
