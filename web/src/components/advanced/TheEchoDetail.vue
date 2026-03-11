@@ -165,7 +165,7 @@ import { theToast } from '@/utils/toast'
 import { localStg } from '@/utils/storage'
 import { storeToRefs } from 'pinia'
 import { useSettingStore } from '@/stores'
-import { getApiUrl } from '@/service/request/shared'
+import { resolveAvatarUrl } from '@/service/request/shared'
 import { ExtensionType, ImageLayout } from '@/enums/enums'
 import { formatDate } from '@/utils/other'
 import { getEchoFilesBy } from '@/utils/echo'
@@ -242,16 +242,7 @@ const handlePrintEcho = (echo: Echo) => {
 const settingStore = useSettingStore()
 
 const { SystemSetting } = storeToRefs(settingStore)
-
-const apiUrl = getApiUrl()
-const logo = ref<string>('/Ech0.svg')
-if (
-  SystemSetting.value.server_logo &&
-  SystemSetting.value.server_logo !== '' &&
-  SystemSetting.value.server_logo !== 'Ech0.svg'
-) {
-  logo.value = `${apiUrl}${SystemSetting.value.server_logo}`
-}
+const logo = computed(() => resolveAvatarUrl(SystemSetting.value?.server_logo))
 </script>
 
 <style scoped lang="css">
