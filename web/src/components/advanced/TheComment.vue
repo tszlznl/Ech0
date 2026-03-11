@@ -63,9 +63,13 @@ const mountAdapter = async () => {
   const nextAdapter = await createCommentAdapter(provider)
   if (!nextAdapter || currentToken !== renderToken) return
 
-  await unmountAdapter()
-  adapter = nextAdapter
-  await adapter.mount(commentRef.value, CommentSetting.value)
+  try {
+    await unmountAdapter()
+    adapter = nextAdapter
+    await adapter.mount(commentRef.value, CommentSetting.value)
+  } catch (error) {
+    console.error('[comment] mount adapter failed:', error)
+  }
 }
 
 const scheduleRender = () => {

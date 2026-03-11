@@ -37,7 +37,7 @@ export const useSettingStore = defineStore('settingStore', () => {
     provider: CommentProvider.TWIKOO,
     providers: {
       [CommentProvider.TWIKOO]: {
-        script_url: '/others/scripts/twikoo.all.min.js',
+        script_url: 'https://cdn.staticfile.net/twikoo/1.6.44/twikoo.all.min.js',
         config: { envId: '' },
       },
       [CommentProvider.WALINE]: {

@@ -1,8 +1,23 @@
 const scriptCache = new Map<string, Promise<void>>()
 const styleCache = new Set<string>()
 
+export function resolveResourceURL(url: string): string {
+  const normalized = (url || '').trim()
+  if (!normalized) return ''
+  if (
+    normalized.startsWith('/') ||
+    normalized.startsWith('./') ||
+    normalized.startsWith('../') ||
+    normalized.startsWith('//') ||
+    /^[a-zA-Z][a-zA-Z\d+.-]*:/.test(normalized)
+  ) {
+    return normalized
+  }
+  return `/${normalized}`
+}
+
 export function loadScript(src: string): Promise<void> {
-  const normalized = (src || '').trim()
+  const normalized = resolveResourceURL(src)
   if (!normalized) return Promise.resolve()
   if (scriptCache.has(normalized)) {
     return scriptCache.get(normalized)!
@@ -20,7 +35,10 @@ export function loadScript(src: string): Promise<void> {
     script.src = normalized
     script.async = true
     script.onload = () => resolve()
-    script.onerror = (err) => reject(err)
+    script.onerror = (err) => {
+      scriptCache.delete(normalized)
+      reject(err)
+    }
     document.head.appendChild(script)
   })
 
@@ -29,7 +47,7 @@ export function loadScript(src: string): Promise<void> {
 }
 
 export function loadStyle(href: string): void {
-  const normalized = (href || '').trim()
+  const normalized = resolveResourceURL(href)
   if (!normalized || styleCache.has(normalized)) return
 
   const exists = document.querySelector(`link[rel="stylesheet"][href="${normalized}"]`)

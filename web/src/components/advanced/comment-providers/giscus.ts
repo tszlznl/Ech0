@@ -1,6 +1,6 @@
 import { CommentProvider } from '@/enums/enums'
 import type { CommentProviderAdapter } from './types'
-import { getProviderSetting } from './loader'
+import { getProviderSetting, resolveResourceURL } from './loader'
 
 let mountedScript: HTMLScriptElement | null = null
 
@@ -21,7 +21,7 @@ export function createGiscusAdapter(): CommentProviderAdapter {
 
       el.innerHTML = ''
       const script = document.createElement('script')
-      script.src = providerSetting.script_url || 'https://giscus.app/client.js'
+      script.src = resolveResourceURL(providerSetting.script_url || 'https://giscus.app/client.js')
       script.async = true
       script.crossOrigin = 'anonymous'
       script.setAttribute('data-repo', toAttr(config, 'repo'))

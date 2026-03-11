@@ -28,7 +28,7 @@ func newCommentProviderRegistry() commentProviderRegistry {
 				{Key: "envId", Label: "Env ID", Required: true, Placeholder: "Twikoo envId"},
 			},
 			def: model.CommentProviderSetting{
-				ScriptURL: "/others/scripts/twikoo.all.min.js",
+				ScriptURL: "https://cdn.staticfile.net/twikoo/1.6.44/twikoo.all.min.js",
 				Config: map[string]interface{}{
 					"envId": "",
 				},
