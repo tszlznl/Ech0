@@ -3,7 +3,7 @@
     v-show="shouldShowComment"
     ref="rootRef"
     id="comments"
-    class="max-w-sm h-auto p-4 my-4 mx-auto"
+    class="w-full max-w-lg h-auto px-4 py-4 my-4 mx-auto"
   >
     <div ref="commentRef"></div>
   </div>
@@ -118,3 +118,71 @@ onBeforeUnmount(async () => {
   await unmountAdapter()
 })
 </script>
+
+<style scoped>
+#comments :deep(#twikoo-comment-container) {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+#comments :deep(#twikoo-comment-container .tk-row) {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+#comments :deep(#twikoo-comment-container .tk-meta-input) {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  width: 100%;
+}
+
+#comments :deep(#twikoo-comment-container .tk-meta-input > *) {
+  width: 100% !important;
+  max-width: 100% !important;
+  flex: 0 0 100% !important;
+}
+
+#comments :deep(#twikoo-comment-container .tk-meta-input > * + *) {
+  margin-left: 0;
+  margin-top: 0;
+}
+
+#comments :deep(#twikoo-comment-container .tk-meta-input input) {
+  width: 100% !important;
+  max-width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(100, 116, 139, 0.35);
+  border-radius: 8px;
+  background: var(--el-fill-color-blank, #fff);
+}
+
+#comments :deep(#twikoo-comment-container .tk-meta-input input::placeholder) {
+  color: rgba(100, 116, 139, 0.85);
+}
+
+#comments :deep(#twikoo-comment-container .tk-comments .tk-comment) {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  border-radius: 12px;
+  background: rgba(148, 163, 184, 0.08);
+}
+
+#comments :deep(#twikoo-comment-container .tk-comment .tk-meta) {
+  margin-bottom: 8px;
+}
+
+#comments :deep(#twikoo-comment-container .tk-comment .tk-nick) {
+  font-weight: 600;
+}
+
+#comments :deep(#twikoo-comment-container .tk-comment .tk-time) {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+#comments :deep(#twikoo-comment-container .tk-comment .tk-content) {
+  line-height: 1.75;
+}
+</style>
