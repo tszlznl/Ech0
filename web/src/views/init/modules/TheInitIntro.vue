@@ -1,15 +1,16 @@
 <template>
-  <section class="mb-6 text-center sm:mb-8">
-    <p class="text-xs tracking-[0.2em] uppercase text-[var(--color-text-secondary)] mb-3">
-      Ech0 Setup
+  <section class="mb-3 text-center">
+    <p class="text-[10px] tracking-[0.16em] uppercase text-[var(--color-text-secondary)] mb-2">
+      First Setup
     </p>
     <h1
-      class="text-4xl sm:text-5xl italic font-bold font-serif text-[var(--color-text-muted)] mb-3 sm:mb-4"
+      class="text-5xl italic font-bold text-[var(--color-text-muted)] mb-2 font-serif leading-none"
     >
-      初始化系统
+      Ech0
     </h1>
-    <p class="text-sm sm:text-base text-[var(--color-text-secondary)] max-w-xl mx-auto leading-6">
-      创建首个 Owner 账号后即可进入登录页面。该账号将拥有完整管理权限，请妥善保管凭证。
+    <h2 class="text-sm font-semibold text-[var(--color-text-muted)] mb-1">初始化系统</h2>
+    <p class="text-xs text-[var(--color-text-secondary)] leading-5">
+      创建首个 Owner 账号后即可登录。
     </p>
   </section>
 </template>

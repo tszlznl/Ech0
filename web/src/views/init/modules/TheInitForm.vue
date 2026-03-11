@@ -1,20 +1,13 @@
 <template>
   <section
-    class="w-full rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-muted)]/70 backdrop-blur-sm p-5 sm:p-6"
+    class="w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-muted)]/40 p-3 sm:p-3.5"
   >
-    <div class="mb-5">
-      <h2 class="text-lg font-bold text-[var(--color-text-muted)]">Owner 账号</h2>
-      <p class="text-sm text-[var(--color-text-secondary)] mt-1">
-        请输入一个用于首次登录后台的管理员账号。
-      </p>
-    </div>
-
-    <form class="space-y-4" @submit.prevent="emit('submit')">
+    <form class="space-y-3" @submit.prevent="emit('submit')">
       <BaseInput
         :model-value="username"
         @update:model-value="emit('update:username', String($event))"
         type="text"
-        placeholder="请输入用户名"
+        placeholder="Owner 用户名"
         autocomplete="username"
         required
       />
@@ -23,7 +16,7 @@
         :model-value="password"
         @update:model-value="emit('update:password', String($event))"
         type="password"
-        placeholder="请输入密码"
+        placeholder="Owner 密码"
         autocomplete="new-password"
         required
       />
@@ -31,9 +24,11 @@
       <BaseButton
         type="submit"
         :disabled="submitting"
-        class="w-full h-10 rounded-lg text-white bg-[var(--color-accent)]! border-none! ring-0! hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+        class="w-full h-8.5 rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        {{ submitting ? '初始化中...' : '创建 Owner' }}
+        <span class="text-[var(--color-text-secondary)]">
+          {{ submitting ? '初始化中...' : '初始化' }}
+        </span>
       </BaseButton>
     </form>
   </section>

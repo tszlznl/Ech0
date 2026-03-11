@@ -1,6 +1,6 @@
 <template>
-  <main class="min-h-screen w-full px-4 py-8 sm:py-12">
-    <div class="max-w-xl mx-auto">
+  <main class="min-h-screen w-full px-4 flex items-center justify-center">
+    <div class="w-full max-w-[18rem]">
       <TheInitIntro />
       <TheInitForm
         :username="form.username"

@@ -13,6 +13,7 @@
 import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
+import { CommentProvider } from '@/enums/enums'
 import { createCommentAdapter } from './comment-providers/registry'
 import type { CommentProviderAdapter } from './comment-providers/types'
 
@@ -26,6 +27,32 @@ let observer: IntersectionObserver | null = null
 let adapter: CommentProviderAdapter | null = null
 let rerenderTimer: ReturnType<typeof setTimeout> | null = null
 let renderToken = 0
+const TWIKOO_FORCE_STYLE_ID = 'twikoo-force-three-row-style'
+
+const ensureTwikooThreeRowStyle = () => {
+  if (document.getElementById(TWIKOO_FORCE_STYLE_ID)) return
+  const style = document.createElement('style')
+  style.id = TWIKOO_FORCE_STYLE_ID
+  style.textContent = `
+#comments #twikoo-comment-container .tk-submit .tk-meta-input {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+#comments #twikoo-comment-container .tk-submit .tk-meta-input .el-input {
+  width: 100% !important;
+  max-width: 100% !important;
+  flex: 0 0 100% !important;
+  margin-left: 0 !important;
+}
+#comments #twikoo-comment-container .tk-submit .tk-meta-input .el-input + .el-input {
+  margin-top: 10px !important;
+}
+`
+  document.head.appendChild(style)
+}
 
 const setupObserver = async () => {
   await nextTick()
@@ -67,6 +94,9 @@ const mountAdapter = async () => {
     await unmountAdapter()
     adapter = nextAdapter
     await adapter.mount(commentRef.value, CommentSetting.value)
+    if (provider === CommentProvider.TWIKOO) {
+      ensureTwikooThreeRowStyle()
+    }
   } catch (error) {
     console.error('[comment] mount adapter failed:', error)
   }
