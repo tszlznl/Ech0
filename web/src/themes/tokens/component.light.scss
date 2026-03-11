@@ -90,6 +90,19 @@
   --md-editor-full-grid-bg: oklch(97.2% 0.002 95);
   --md-editor-full-grid-line: oklch(72% 0.006 82 / 0.12);
   --md-editor-full-grid-frame: oklch(88% 0.005 80 / 0.5);
+  --md-editor-preview-card-bg: oklch(98.6% 0.004 92);
+  --md-editor-preview-card-border: oklch(89.7% 0.008 82 / 0.92);
+  --md-editor-preview-card-divider: oklch(84.6% 0.007 80 / 0.62);
+  --md-editor-preview-card-head-text: oklch(61.8% 0.01 243);
+  --md-editor-preview-card-dot: oklch(66.2% 0.073 173.7);
+  --md-editor-preview-card-dot-ring: oklch(98.9% 0.004 92 / 0.88);
+  --md-editor-preview-card-shadow:
+    0 18px 34px oklch(24% 0.01 62 / 0.12),
+    0 2px 3px oklch(24% 0.007 62 / 0.08);
+  --md-editor-preview-card-tilt-short: -0.8deg;
+  --md-editor-preview-card-tilt-long: 0.6deg;
+  --md-editor-preview-card-texture-fiber: oklch(75% 0.006 80 / 0.08);
+  --md-editor-preview-card-texture-grain: oklch(65% 0.007 82 / 0.12);
 
   --md-link-color: var(--color-accent);
   --md-inline-code-bg: oklch(94.8% 0.013 68.9);

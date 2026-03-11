@@ -43,7 +43,7 @@
   height: min(78vh, 30rem);
   z-index: 80;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr);
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 1.08fr);
   gap: 0.75rem;
 }
 
@@ -183,22 +183,68 @@
 }
 
 .markdown-preview-card {
+  width: 100%;
   min-height: 100%;
   height: 100%;
-  background-color: var(--md-editor-bg-color);
-  border: 1px solid var(--md-editor-border-color);
-  border-radius: 0.75rem;
-  box-shadow: var(--md-editor-full-shadow);
+  position: relative;
+  background-color: var(--md-editor-preview-card-bg);
+  border: 1px solid var(--md-editor-preview-card-border);
+  border-radius: 0.35rem;
+  box-shadow: var(--md-editor-preview-card-shadow);
+  transform: rotate(var(--md-editor-preview-card-tilt-short));
+  overflow: hidden;
+}
+
+.markdown-preview-card::before {
+  content: '';
+  position: absolute;
+  top: 0.95rem;
+  right: 1.2rem;
+  width: 0.32rem;
+  height: 0.32rem;
+  border-radius: 999px;
+  background-color: var(--md-editor-preview-card-dot);
+  box-shadow: 0 0 0 2px var(--md-editor-preview-card-dot-ring);
+  z-index: 2;
+}
+
+.markdown-preview-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 22% 18%, var(--md-editor-preview-card-texture-grain) 0 0.45px, transparent 0.65px),
+    radial-gradient(circle at 74% 82%, var(--md-editor-preview-card-texture-grain) 0 0.5px, transparent 0.7px),
+    repeating-linear-gradient(
+      -10deg,
+      transparent 0 8px,
+      var(--md-editor-preview-card-texture-fiber) 8px 9px
+    );
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.markdown-preview-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.markdown-preview-card.is-long-content {
+  transform: rotate(var(--md-editor-preview-card-tilt-long));
 }
 
 .markdown-preview-card .preview-card-header {
-  padding: 0.75rem 0.85rem 0.35rem;
-  font-size: 0.78rem;
-  color: var(--color-text-muted);
+  padding: 1rem 1.05rem 0.65rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--md-editor-preview-card-head-text);
+  border-bottom: 1px solid var(--md-editor-preview-card-divider);
 }
 
 .markdown-preview-card .preview-card-body {
-  padding: 0.85rem;
+  padding: 1rem 1.05rem 1.1rem;
   overflow: auto;
   min-height: 10rem;
   max-height: min(74vh, 27rem);
@@ -207,6 +253,9 @@
 .markdown-preview-dock {
   height: 100%;
   min-height: 0;
+  padding: 0.35rem 0.6rem 0.3rem 0.15rem;
+  display: flex;
+  align-items: stretch;
 }
 
 @media (max-width: 960px) {
@@ -240,6 +289,7 @@
 
   .markdown-preview-card {
     border: 1px solid var(--md-editor-border-color);
+    transform: none;
   }
 
   .markdown-preview-card .preview-card-body {
