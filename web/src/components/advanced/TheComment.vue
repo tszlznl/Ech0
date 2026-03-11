@@ -3,7 +3,7 @@
     v-show="shouldShowComment"
     ref="rootRef"
     id="comments"
-    class="w-full max-w-lg h-auto px-4 py-4 my-4 mx-auto"
+    class="w-full max-w-sm h-auto px-0 py-4 my-4 mx-auto"
   >
     <div ref="commentRef"></div>
   </div>
@@ -125,27 +125,56 @@ onBeforeUnmount(async () => {
   overflow-x: hidden;
 }
 
+#comments :deep(#twikoo-comment-container .tk-submit),
+#comments :deep(#twikoo-comment-container .tk-comments) {
+  max-width: 100%;
+}
+
 #comments :deep(#twikoo-comment-container .tk-row) {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  max-width: 100%;
   margin-left: 0;
   margin-right: 0;
 }
 
+#comments :deep(#twikoo-comment-container .tk-avatar) {
+  flex: 0 0 36px;
+  width: 36px;
+  min-width: 36px;
+}
+
+#comments :deep(#twikoo-comment-container .tk-row .tk-col) {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto !important;
+}
+
 #comments :deep(#twikoo-comment-container .tk-meta-input) {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
   gap: 10px;
   width: 100%;
+  max-width: 100%;
 }
 
 #comments :deep(#twikoo-comment-container .tk-meta-input > *) {
   width: 100% !important;
   max-width: 100% !important;
-  flex: 0 0 100% !important;
+  flex: 0 0 auto !important;
 }
 
 #comments :deep(#twikoo-comment-container .tk-meta-input > * + *) {
   margin-left: 0;
   margin-top: 0;
+}
+
+#comments :deep(#twikoo-comment-container .tk-meta-input .tk-input) {
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 #comments :deep(#twikoo-comment-container .tk-meta-input input) {
@@ -163,7 +192,7 @@ onBeforeUnmount(async () => {
 
 #comments :deep(#twikoo-comment-container .tk-comments .tk-comment) {
   margin-top: 12px;
-  padding: 14px 16px;
+  padding: 12px 14px;
   border: 1px solid rgba(100, 116, 139, 0.2);
   border-radius: 12px;
   background: rgba(148, 163, 184, 0.08);
