@@ -73,7 +73,7 @@ function onToggle(event: MouseEvent) {
   width: 16px;
   height: 16px;
   background: var(--switch-thumb-color);
-  border-radius: 25%;
+  border-radius: calc(var(--radius-sm) - 2px);
   transition: transform 0.3s;
 }
 .toggle-switch-btn.is-on .toggle-thumb {
