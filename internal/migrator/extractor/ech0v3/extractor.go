@@ -1,6 +1,7 @@
 package ech0v3
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/json"
@@ -8,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"mime"
+	"net/http"
 	"net/url"
 	"os"
 	"path"
@@ -16,6 +18,7 @@ import (
 	"strings"
 	"time"
 
+	virefs "github.com/lin-snow/VireFS"
 	"github.com/lin-snow/ech0/internal/config"
 	"github.com/lin-snow/ech0/internal/database"
 	"github.com/lin-snow/ech0/internal/migrator/spec"
@@ -646,6 +649,13 @@ func migrateImages(tx *gorm.DB, sourceDB *gorm.DB, sourceRoot string, createdBy 
 	if len(sourceImages) == 0 {
 		return summary, nil
 	}
+	// v3 contract:
+	// - images.object_key is the physical object key used by v3 uploads/deletes.
+	// - images.image_url is a display URL and may include endpoint/bucket/path_prefix.
+	// v4 contract:
+	// - files.key stores the business key (no schema prefix).
+	// - object storage path is derived by ObjectFS schema (e.g. images/...).
+	// So migration must resolve both source physical path and target schema path.
 	sourceS3Setting, err := loadSourceS3Setting(sourceDB)
 	if err != nil {
 		return summary, fmt.Errorf("load source s3 setting: %w", err)
@@ -655,11 +665,24 @@ func migrateImages(tx *gorm.DB, sourceDB *gorm.DB, sourceRoot string, createdBy 
 	objectProvider := strings.ToLower(strings.TrimSpace(mappedS3Setting.Provider))
 	objectBucket := strings.TrimSpace(mappedS3Setting.BucketName)
 	var s3Selector *storage.StorageSelector
+	var rawObjectFS virefs.FS
 	if s3SettingValid {
 		s3Cfg := buildStorageConfigFromS3Setting(mappedS3Setting)
 		s3Selector = storage.NewStorageSelector(s3Cfg)
 		if s3Selector == nil || !s3Selector.ObjectEnabled() {
 			s3SettingValid = false
+		}
+		if s3SettingValid {
+			rawFS, buildErr := buildRawObjectFSFromS3Setting(mappedS3Setting)
+			if buildErr != nil {
+				logUtil.GetLogger().Warn("build raw s3 fs failed",
+					zap.String("module", "migration"),
+					zap.Error(buildErr),
+				)
+				s3SettingValid = false
+			} else {
+				rawObjectFS = rawFS
+			}
 		}
 	}
 
@@ -669,6 +692,7 @@ func migrateImages(tx *gorm.DB, sourceDB *gorm.DB, sourceRoot string, createdBy 
 		targetEchoID string
 		key          string
 		sourceObjectPathCandidates []string
+		sourceImageURL string
 		imageURL     string
 		imageSrc     string
 		storageType  string
@@ -740,6 +764,7 @@ func migrateImages(tx *gorm.DB, sourceDB *gorm.DB, sourceRoot string, createdBy 
 				targetEchoID: targetEchoID,
 				key:          migratedKey,
 				sourceObjectPathCandidates: sourceObjectCandidates,
+				sourceImageURL: strings.TrimSpace(row.ImageURL),
 				imageURL:     strings.TrimSpace(finalURL),
 				imageSrc:     imageSrc,
 				storageType:  "object",
@@ -839,7 +864,7 @@ func migrateImages(tx *gorm.DB, sourceDB *gorm.DB, sourceRoot string, createdBy 
 					})
 					continue
 				}
-				if copyErr := ensureS3ObjectAtSchemaPath(s3Selector, mappedS3Setting, candidate.key, candidate.sourceObjectPathCandidates); copyErr != nil {
+				if copyErr := ensureS3ObjectAtSchemaPath(rawObjectFS, mappedS3Setting, candidate.key, candidate.sourceObjectPathCandidates, candidate.sourceImageURL); copyErr != nil {
 					summary.FailedItems = append(summary.FailedItems, spec.FailedItem{
 						SourceID: strconv.FormatInt(candidate.sourceMessageID, 10),
 						Reason:   "copy s3 image failed: " + copyErr.Error(),
@@ -1102,6 +1127,9 @@ func buildObjectStoragePath(setting settingModel.S3Setting, key string) string {
 	return resolvedKey
 }
 
+// deriveS3ObjectKeyMapping returns:
+// - migrated business key for v4 files.key (schema prefix removed)
+// - source object path candidates in bucket for fetching legacy objects
 func deriveS3ObjectKeyMapping(
 	objectKey string,
 	imageURL string,
@@ -1125,6 +1153,12 @@ func deriveSourceObjectStoragePathCandidates(
 	migratedKey string,
 	bucketName string,
 ) []string {
+	// Candidate strategy:
+	// 1) raw v3 object_key and basename fallback
+	// 2) parsed URL path, with/without bucket segment
+	// 3) v4 target schema path variants, with/without path_prefix
+	// 4) route-prefixed fallbacks (images/files/...)
+	// This maximizes compatibility with v3 historical uploads.
 	appendIf := func(dst []string, item string) []string {
 		clean := cleanMigratedFileKey(item)
 		if clean == "" {
@@ -1201,35 +1235,139 @@ func buildStorageConfigFromS3Setting(setting settingModel.S3Setting) config.Stor
 	return cfg
 }
 
+func buildRawObjectFSFromS3Setting(setting settingModel.S3Setting) (virefs.FS, error) {
+	cfg := &virefs.S3Config{
+		Provider:  mapVirefsProvider(setting.Provider),
+		Endpoint:  normalizeS3Endpoint(setting.Endpoint, setting.UseSSL),
+		AccessKey: strings.TrimSpace(setting.AccessKey),
+		SecretKey: strings.TrimSpace(setting.SecretKey),
+		Bucket:    strings.TrimSpace(setting.BucketName),
+		Region:    normalizeS3Region(setting.Provider, setting.Region),
+	}
+	return virefs.NewObjectFSFromConfig(context.Background(), cfg)
+}
+
+func mapVirefsProvider(raw string) virefs.Provider {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "minio":
+		return virefs.ProviderMinIO
+	case "r2", "cloudflare", "cloudflare-r2":
+		return virefs.ProviderR2
+	default:
+		return virefs.ProviderAWS
+	}
+}
+
+func normalizeS3Endpoint(endpoint string, useSSL bool) string {
+	trimmed := strings.TrimSpace(endpoint)
+	if trimmed == "" {
+		return ""
+	}
+	lower := strings.ToLower(trimmed)
+	if strings.HasPrefix(lower, "http://") || strings.HasPrefix(lower, "https://") {
+		return strings.TrimRight(trimmed, "/")
+	}
+	scheme := "http://"
+	if useSSL {
+		scheme = "https://"
+	}
+	return strings.TrimRight(scheme+trimmed, "/")
+}
+
+func normalizeS3Region(provider string, region string) string {
+	p := strings.ToLower(strings.TrimSpace(provider))
+	r := strings.TrimSpace(region)
+	if p == "minio" && (r == "" || strings.EqualFold(r, "auto")) {
+		return "us-east-1"
+	}
+	return r
+}
+
 func ensureS3ObjectAtSchemaPath(
-	selector *storage.StorageSelector,
+	rawObjectFS virefs.FS,
 	setting settingModel.S3Setting,
 	businessKey string,
 	sourcePathCandidates []string,
+	sourceImageURL string,
 ) error {
-	if selector == nil {
-		return errors.New("nil object selector")
+	if rawObjectFS == nil {
+		return errors.New("nil object fs")
 	}
 	targetPath := buildObjectStoragePath(setting, businessKey)
 	if targetPath == "" {
 		return errors.New("empty target object path")
 	}
-	if reader, err := selector.GetByStoragePath(context.Background(), storage.StorageTypeObject, targetPath); err == nil {
+	if reader, err := rawObjectFS.Get(context.Background(), targetPath); err == nil {
 		_ = reader.Close()
 		return nil
 	}
+	var lastGetErr error
+	var lastPutErr error
 	for _, sourcePath := range sourcePathCandidates {
-		reader, err := selector.GetByStoragePath(context.Background(), storage.StorageTypeObject, sourcePath)
+		reader, err := rawObjectFS.Get(context.Background(), sourcePath)
 		if err != nil {
+			lastGetErr = err
 			continue
 		}
-		putErr := selector.Put(context.Background(), storage.StorageTypeObject, businessKey, reader)
+		putErr := putObjectFromReadCloser(rawObjectFS, targetPath, reader)
 		_ = reader.Close()
 		if putErr == nil {
 			return nil
 		}
+		lastPutErr = putErr
 	}
-	return fmt.Errorf("source object not found for key=%s candidates=%v", businessKey, sourcePathCandidates)
+	// Fallback for public-read legacy buckets:
+	// if SDK-based object reads fail (credential/region mismatch), try source image URL directly.
+	var fetchErr error
+	if body, err := fetchObjectByURL(sourceImageURL); err == nil {
+		putErr := putObjectFromReadCloser(rawObjectFS, targetPath, body)
+		_ = body.Close()
+		if putErr == nil {
+			return nil
+		}
+		lastPutErr = putErr
+	} else {
+		fetchErr = err
+	}
+	return fmt.Errorf(
+		"source object not found for key=%s candidates=%v last_get_err=%v last_put_err=%v source_url=%q source_url_err=%v",
+		businessKey,
+		sourcePathCandidates,
+		lastGetErr,
+		lastPutErr,
+		strings.TrimSpace(sourceImageURL),
+		fetchErr,
+	)
+}
+
+func putObjectFromReadCloser(rawObjectFS virefs.FS, targetPath string, rc io.ReadCloser) error {
+	if rc == nil {
+		return errors.New("nil source reader")
+	}
+	buf, err := io.ReadAll(rc)
+	if err != nil {
+		return err
+	}
+	return rawObjectFS.Put(context.Background(), targetPath, bytes.NewReader(buf))
+}
+
+func fetchObjectByURL(rawURL string) (io.ReadCloser, error) {
+	if !isAbsoluteURL(rawURL) {
+		return nil, errors.New("invalid source image url")
+	}
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, strings.TrimSpace(rawURL), nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		_ = resp.Body.Close()
+		return nil, fmt.Errorf("unexpected source url status=%d", resp.StatusCode)
+	}
+	return resp.Body, nil
 }
 
 func s3SettingToMap(setting settingModel.S3Setting) map[string]any {

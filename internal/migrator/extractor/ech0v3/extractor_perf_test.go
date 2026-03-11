@@ -1,7 +1,10 @@
 package ech0v3
 
 import (
+	"bytes"
 	"context"
+	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -9,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	virefs "github.com/lin-snow/VireFS"
 	"github.com/lin-snow/ech0/internal/database"
 	"github.com/lin-snow/ech0/internal/migrator/spec"
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
@@ -68,6 +72,34 @@ func TestEch0V3MigrateRegression(t *testing.T) {
 		t.Fatalf("expected echo_files migrated, got 0")
 	}
 }
+
+type stubFSForPut struct {
+	putCalled bool
+	putBody   []byte
+	putErr    error
+}
+
+func (s *stubFSForPut) Get(_ context.Context, _ string) (io.ReadCloser, error) { return nil, errors.New("not implemented") }
+func (s *stubFSForPut) Put(_ context.Context, _ string, r io.Reader, _ ...virefs.PutOption) error {
+	s.putCalled = true
+	b, err := io.ReadAll(r)
+	if err != nil {
+		return err
+	}
+	s.putBody = b
+	return s.putErr
+}
+func (s *stubFSForPut) Delete(_ context.Context, _ string) error { return errors.New("not implemented") }
+func (s *stubFSForPut) List(_ context.Context, _ string) (*virefs.ListResult, error) {
+	return nil, errors.New("not implemented")
+}
+func (s *stubFSForPut) Stat(_ context.Context, _ string) (*virefs.FileInfo, error) {
+	return nil, errors.New("not implemented")
+}
+func (s *stubFSForPut) Access(_ context.Context, _ string) (*virefs.AccessInfo, error) {
+	return nil, errors.New("not implemented")
+}
+func (s *stubFSForPut) Exists(_ context.Context, _ string) (bool, error) { return false, errors.New("not implemented") }
 
 func setRepoRootAsWorkingDir(t *testing.T) {
 	t.Helper()
@@ -199,6 +231,73 @@ func TestDeriveS3ObjectKeyMapping(t *testing.T) {
 	}
 }
 
+func TestDeriveS3ObjectKeyMapping_NoSchemaObjectKeyWithBucketURL(t *testing.T) {
+	key, candidates := deriveS3ObjectKeyMapping(
+		"c0f46d5b6d80a633f7599faa3a421932.png_1759069726",
+		"https://minio.vaaat.com/ech0/c0f46d5b6d80a633f7599faa3a421932.png_1759069726",
+		"",
+		"ech0",
+	)
+	if key != "c0f46d5b6d80a633f7599faa3a421932.png_1759069726" {
+		t.Fatalf("unexpected mapped key: %s", key)
+	}
+	targetPath := buildObjectStoragePath(settingModel.S3Setting{}, key)
+	expected := map[string]bool{
+		"c0f46d5b6d80a633f7599faa3a421932.png_1759069726":      false,
+		"ech0/c0f46d5b6d80a633f7599faa3a421932.png_1759069726": false,
+		targetPath: false,
+	}
+	for _, c := range candidates {
+		if _, ok := expected[c]; ok {
+			expected[c] = true
+		}
+	}
+	for k, ok := range expected {
+		if !ok {
+			t.Fatalf("expected candidate %q in %v", k, candidates)
+		}
+	}
+}
+
+func TestDeriveS3ObjectKeyMapping_RealFailedSamples(t *testing.T) {
+	cases := []struct {
+		sourceID string
+		objectKey string
+		imageURL string
+	}{
+		{
+			sourceID:  "282",
+			objectKey: "c0f46d5b6d80a633f7599faa3a421932.png_1759069726",
+			imageURL:  "https://minio.vaaat.com/ech0/c0f46d5b6d80a633f7599faa3a421932.png_1759069726",
+		},
+		{
+			sourceID:  "406",
+			objectKey: "1_1773238612_100eca.jpeg",
+			imageURL:  "https://minio.vaaat.com/ech0/1_1773238612_100eca.jpeg",
+		},
+	}
+	for _, tc := range cases {
+		key, candidates := deriveS3ObjectKeyMapping(tc.objectKey, tc.imageURL, "", "ech0")
+		if key == "" {
+			t.Fatalf("source_id=%s expected non-empty key", tc.sourceID)
+		}
+		targetPath := buildObjectStoragePath(settingModel.S3Setting{}, key)
+		hasSource := false
+		hasSchemaTarget := false
+		for _, c := range candidates {
+			if c == key || c == "ech0/"+key {
+				hasSource = true
+			}
+			if c == targetPath {
+				hasSchemaTarget = true
+			}
+		}
+		if !hasSource || !hasSchemaTarget {
+			t.Fatalf("source_id=%s missing required candidates source=%v target=%v all=%v", tc.sourceID, hasSource, hasSchemaTarget, candidates)
+		}
+	}
+}
+
 func TestParseObjectPathFromImageURL(t *testing.T) {
 	full, stripped := parseObjectPathFromImageURL("https://minio.vaaat.com/ech0/images/a.jpeg", "ech0")
 	if full != "ech0/images/a.jpeg" {
@@ -213,5 +312,37 @@ func TestBuildObjectStoragePath(t *testing.T) {
 	path := buildObjectStoragePath(settingModel.S3Setting{PathPrefix: ""}, "1_1773238612_100eca.jpeg")
 	if path != "images/1_1773238612_100eca.jpeg" {
 		t.Fatalf("unexpected object storage path: %s", path)
+	}
+}
+
+func TestNormalizeS3Endpoint(t *testing.T) {
+	if got := normalizeS3Endpoint("minio.vaaat.com", true); got != "https://minio.vaaat.com" {
+		t.Fatalf("unexpected normalized endpoint: %s", got)
+	}
+	if got := normalizeS3Endpoint("http://minio.vaaat.com/", true); got != "http://minio.vaaat.com" {
+		t.Fatalf("unexpected normalized endpoint with scheme: %s", got)
+	}
+}
+
+func TestNormalizeS3Region(t *testing.T) {
+	if got := normalizeS3Region("minio", "auto"); got != "us-east-1" {
+		t.Fatalf("expected minio auto -> us-east-1, got %s", got)
+	}
+	if got := normalizeS3Region("r2", "auto"); got != "auto" {
+		t.Fatalf("expected r2 auto unchanged, got %s", got)
+	}
+}
+
+func TestPutObjectFromReadCloser(t *testing.T) {
+	fs := &stubFSForPut{}
+	src := io.NopCloser(bytes.NewBufferString("abc123"))
+	if err := putObjectFromReadCloser(fs, "images/a.jpg", src); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !fs.putCalled {
+		t.Fatalf("expected put called")
+	}
+	if string(fs.putBody) != "abc123" {
+		t.Fatalf("unexpected put body: %q", string(fs.putBody))
 	}
 }
