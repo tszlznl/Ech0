@@ -4,14 +4,15 @@
     <div class="w-full">
       <div class="flex flex-row items-center justify-between mb-3">
         <h1 class="text-[var(--color-text-primary)] font-bold text-lg">Ech0 Connect</h1>
-        <div class="flex flex-row items-center justify-end gap-2 w-14">
-          <button @click="connectsEdit = !connectsEdit" title="编辑">
-            <Edit
-              v-if="!connectsEdit"
-              class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6"
-            />
-            <Close v-else class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
-          </button>
+        <div class="flex flex-row items-center justify-end">
+          <BaseEditCapsule
+            :editing="connectsEdit"
+            apply-title="完成"
+            cancel-title="取消"
+            edit-title="编辑"
+            @apply="connectsEdit = false"
+            @toggle="connectsEdit = !connectsEdit"
+          />
         </div>
       </div>
 
@@ -91,9 +92,8 @@
 import PanelCard from '@/layout/PanelCard.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
-import Edit from '@/components/icons/edit.vue'
+import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
 import Disconnect from '@/components/icons/disconnect.vue'
-import Close from '@/components/icons/close.vue'
 import Publish from '@/components/icons/publish.vue'
 import { ref, onMounted } from 'vue'
 import { fetchAddConnect, fetchDeleteConnect } from '@/service/api'

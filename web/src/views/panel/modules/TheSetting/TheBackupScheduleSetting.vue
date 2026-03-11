@@ -4,17 +4,15 @@
     <div class="w-full">
       <div class="flex flex-row items-center justify-between mb-3">
         <h1 class="text-[var(--color-text-primary)] font-bold text-lg">备份计划设置</h1>
-        <div class="flex flex-row items-center justify-end gap-2 w-14">
-          <button v-if="scheduleEditMode" @click="handleUpdateBackupSchedule" title="编辑">
-            <Saveupdate class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
-          </button>
-          <button @click="scheduleEditMode = !scheduleEditMode" title="编辑">
-            <Edit
-              v-if="!scheduleEditMode"
-              class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6"
-            />
-            <Close v-else class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
-          </button>
+        <div class="flex flex-row items-center justify-end">
+          <BaseEditCapsule
+            :editing="scheduleEditMode"
+            apply-title="应用"
+            cancel-title="取消"
+            edit-title="编辑"
+            @apply="handleUpdateBackupSchedule"
+            @toggle="scheduleEditMode = !scheduleEditMode"
+          />
         </div>
       </div>
 
@@ -55,9 +53,7 @@
 import PanelCard from '@/layout/PanelCard.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseSwitch from '@/components/common/BaseSwitch.vue'
-import Saveupdate from '@/components/icons/saveupdate.vue'
-import Edit from '@/components/icons/edit.vue'
-import Close from '@/components/icons/close.vue'
+import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
 import { ref, onMounted } from 'vue'
 import { fetchUpdateBackupScheduleSetting } from '@/service/api'
 import { theToast } from '@/utils/toast'

@@ -4,17 +4,15 @@
     <div class="w-full">
       <div class="flex flex-row items-center justify-between mb-3">
         <h1 class="text-[var(--color-text-primary)] font-bold text-lg">系统设置</h1>
-        <div class="flex flex-row items-center justify-end gap-2 w-14">
-          <button v-if="editMode" @click="handleUpdateSystemSetting" title="编辑">
-            <Saveupdate class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
-          </button>
-          <button @click="editMode = !editMode" title="编辑">
-            <Edit
-              v-if="!editMode"
-              class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6"
-            />
-            <Close v-else class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
-          </button>
+        <div class="flex flex-row items-center justify-end">
+          <BaseEditCapsule
+            :editing="editMode"
+            apply-title="应用"
+            cancel-title="取消"
+            edit-title="编辑"
+            @apply="handleUpdateSystemSetting"
+            @toggle="editMode = !editMode"
+          />
         </div>
       </div>
       <!-- 服务器&站点图标 -->
@@ -208,9 +206,7 @@ import BaseInput from '@/components/common/BaseInput.vue'
 import BaseSwitch from '@/components/common/BaseSwitch.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseTextArea from '@/components/common/BaseTextArea.vue'
-import Edit from '@/components/icons/edit.vue'
-import Close from '@/components/icons/close.vue'
-import Saveupdate from '@/components/icons/saveupdate.vue'
+import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
 import { computed, ref, onMounted } from 'vue'
 import { fetchUpdateSettings } from '@/service/api'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'

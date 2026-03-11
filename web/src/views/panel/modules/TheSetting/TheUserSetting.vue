@@ -4,17 +4,15 @@
     <div class="w-full">
       <div class="flex flex-row items-center justify-between mb-3">
         <h1 class="text-[var(--color-text-primary)] font-bold text-lg">用户中心</h1>
-        <div class="flex flex-row items-center justify-end gap-2 w-14">
-          <button v-if="editMode" @click="handleUpdateUser" title="编辑">
-            <Saveupdate class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
-          </button>
-          <button @click="editMode = !editMode" title="编辑">
-            <Edit
-              v-if="!editMode"
-              class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6"
-            />
-            <Close v-else class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
-          </button>
+        <div class="flex flex-row items-center justify-end">
+          <BaseEditCapsule
+            :editing="editMode"
+            apply-title="应用"
+            cancel-title="取消"
+            edit-title="编辑"
+            @apply="handleUpdateUser"
+            @toggle="editMode = !editMode"
+          />
         </div>
       </div>
 
@@ -83,10 +81,7 @@
 import PanelCard from '@/layout/PanelCard.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
-import Edit from '@/components/icons/edit.vue'
-import Close from '@/components/icons/close.vue'
-
-import Saveupdate from '@/components/icons/saveupdate.vue'
+import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
 import { computed, ref, onMounted } from 'vue'
 import { fetchGetCurrentUser, fetchUpdateUser } from '@/service/api'
 import { theToast } from '@/utils/toast'

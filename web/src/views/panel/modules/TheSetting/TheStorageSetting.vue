@@ -3,18 +3,16 @@
     <!-- 存储设置 -->
     <div class="w-full">
       <div class="flex flex-row items-center justify-between mb-3">
-        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">存储设置</h1>
-        <div class="flex flex-row items-center justify-end gap-2 w-14">
-          <button v-if="storageEditMode" @click="handleUpdateS3Setting" title="编辑">
-            <Saveupdate class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
-          </button>
-          <button @click="storageEditMode = !storageEditMode" title="编辑">
-            <Edit
-              v-if="!storageEditMode"
-              class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6"
-            />
-            <Close v-else class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
-          </button>
+        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">对象存储设置</h1>
+        <div class="flex flex-row items-center justify-end">
+          <BaseEditCapsule
+            :editing="storageEditMode"
+            apply-title="应用"
+            cancel-title="取消"
+            edit-title="编辑"
+            @apply="handleUpdateS3Setting"
+            @toggle="storageEditMode = !storageEditMode"
+          />
         </div>
       </div>
 
@@ -206,9 +204,7 @@ import PanelCard from '@/layout/PanelCard.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseSwitch from '@/components/common/BaseSwitch.vue'
 import BaseSelect from '@/components/common/BaseSelect.vue'
-import Edit from '@/components/icons/edit.vue'
-import Close from '@/components/icons/close.vue'
-import Saveupdate from '@/components/icons/saveupdate.vue'
+import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
 import { ref, onMounted } from 'vue'
 import { S3Provider } from '@/enums/enums'
 import { fetchUpdateS3Settings } from '@/service/api'

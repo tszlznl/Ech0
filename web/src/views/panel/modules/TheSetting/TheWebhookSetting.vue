@@ -4,14 +4,15 @@
     <div class="w-full">
       <div class="flex flex-row items-center justify-between mb-4">
         <h1 class="text-[var(--color-text-primary)] font-bold text-lg">Webhook</h1>
-        <div class="flex flex-row items-center justify-end gap-2 w-14">
-          <button @click="webhookEdit = !webhookEdit" title="编辑">
-            <Edit
-              v-if="!webhookEdit"
-              class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6"
-            />
-            <Close v-else class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
-          </button>
+        <div class="flex flex-row items-center justify-end">
+          <BaseEditCapsule
+            :editing="webhookEdit"
+            apply-title="完成"
+            cancel-title="取消"
+            edit-title="编辑"
+            @apply="webhookEdit = false"
+            @toggle="webhookEdit = !webhookEdit"
+          />
         </div>
       </div>
 
@@ -117,9 +118,8 @@
 import PanelCard from '@/layout/PanelCard.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
-import Edit from '@/components/icons/edit.vue'
+import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
 import Trashbin from '@/components/icons/trashbin.vue'
-import Close from '@/components/icons/close.vue'
 import { ref, onMounted } from 'vue'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'

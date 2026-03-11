@@ -4,17 +4,15 @@
     <div class="w-full">
       <div class="flex flex-row items-center justify-between mb-3">
         <h1 class="text-[var(--color-text-primary)] font-bold text-lg">Agent 设置</h1>
-        <div class="flex flex-row items-center justify-end gap-2 w-14">
-          <button v-if="agentEditMode" @click="handleUpdateAgentSetting" title="保存">
-            <Saveupdate class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
-          </button>
-          <button @click="agentEditMode = !agentEditMode" title="编辑">
-            <Edit
-              v-if="!agentEditMode"
-              class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6"
-            />
-            <Close v-else class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
-          </button>
+        <div class="flex flex-row items-center justify-end">
+          <BaseEditCapsule
+            :editing="agentEditMode"
+            apply-title="应用"
+            cancel-title="取消"
+            edit-title="编辑"
+            @apply="handleUpdateAgentSetting"
+            @toggle="agentEditMode = !agentEditMode"
+          />
         </div>
       </div>
 
@@ -114,9 +112,7 @@ import BaseInput from '@/components/common/BaseInput.vue'
 import BaseSwitch from '@/components/common/BaseSwitch.vue'
 import BaseSelect from '@/components/common/BaseSelect.vue'
 import BaseTextArea from '@/components/common/BaseTextArea.vue'
-import Edit from '@/components/icons/edit.vue'
-import Close from '@/components/icons/close.vue'
-import Saveupdate from '@/components/icons/saveupdate.vue'
+import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
 import { ref, onMounted } from 'vue'
 import { fetchUpdateAgentSettings } from '@/service/api'
 import { theToast } from '@/utils/toast'
