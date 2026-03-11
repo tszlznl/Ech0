@@ -39,7 +39,7 @@ jobs:
 
       - name: Build frontend
         working-directory: ./web
-        run: pnpm install --frozen-lockfile && pnpm build --mode production
+        run: pnpm install --fix-lockfile --no-frozen-lockfile && pnpm build --mode production
 
       - name: Prepare embedded template assets
         run: |

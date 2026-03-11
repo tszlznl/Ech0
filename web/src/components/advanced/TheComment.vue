@@ -161,6 +161,17 @@ onBeforeUnmount(async () => {
   max-width: 100%;
 }
 
+#comments :deep(#twikoo-comment-container .tk-submit .tk-meta-input .el-input) {
+  width: 100% !important;
+  flex: 0 0 100% !important;
+  margin-left: 0 !important;
+}
+
+#comments :deep(#twikoo-comment-container .tk-submit .tk-meta-input .el-input + .el-input) {
+  margin-left: 0 !important;
+  margin-top: 10px !important;
+}
+
 #comments :deep(#twikoo-comment-container .tk-meta-input > *) {
   width: 100% !important;
   max-width: 100% !important;
