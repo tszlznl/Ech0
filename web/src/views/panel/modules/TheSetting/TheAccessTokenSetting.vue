@@ -57,7 +57,14 @@
               <td
                 class="px-3 py-2 flex items-center gap-x-1 font-mono text-sm text-[var(--color-text-primary)]"
               >
-                （隐藏）
+                <span :title="t.token">{{ maskToken(t.token) }}</span>
+                <button
+                  class="p-1 hover:bg-[var(--color-bg-surface)] rounded"
+                  @click="copyAccessToken(t.token)"
+                  title="复制 Token"
+                >
+                  <Clipboard class="w-4 h-4" />
+                </button>
               </td>
               <td class="px-3 py-2 text-sm text-[var(--color-text-primary)]">
                 <span :title="t.name" class="truncate block max-w-xs">{{ t.name }}</span>
@@ -128,6 +135,7 @@ import BaseInput from '@/components/common/BaseInput.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseSelect from '@/components/common/BaseSelect.vue'
 import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
+import Clipboard from '@/components/icons/clipboard.vue'
 import Trashbin from '@/components/icons/trashbin.vue'
 import { ref, onMounted } from 'vue'
 import { useSettingStore } from '@/stores'
@@ -167,12 +175,7 @@ const handleAddAccessToken = async () => {
     expiry: accessTokenToAdd.value.expiry || AccessTokenExpiration.NEVER_EXPIRY,
   })
   if (res.code === 1) {
-    const createdToken = String(res.data || '')
     theToast.success('Access Token 创建成功')
-    if (createdToken) {
-      navigator.clipboard.writeText(createdToken)
-      theToast.info('新 Token 已自动复制到剪贴板（仅显示一次）')
-    }
     accessTokenToAdd.value = {
       name: '',
       expiry: AccessTokenExpiration.EIGHT_HOUR_EXPIRY,
@@ -186,6 +189,30 @@ const handleAddAccessToken = async () => {
 const handleCancelAddAccessToken = () => {
   accessTokenToAdd.value = { name: '', expiry: AccessTokenExpiration.EIGHT_HOUR_EXPIRY }
   accessTokenEdit.value = false
+}
+
+const maskToken = (token: string) => {
+  if (!token) return ''
+  if (token.length <= 10) {
+    const left = Math.max(1, Math.floor(token.length / 3))
+    const right = Math.max(1, Math.floor(token.length / 3))
+    return `${token.slice(0, left)}***${token.slice(token.length - right)}`
+  }
+  return `${token.slice(0, 6)}...${token.slice(-4)}`
+}
+
+const copyAccessToken = async (token: string) => {
+  if (!token) {
+    theToast.error('Token 为空，无法复制')
+    return
+  }
+
+  try {
+    await navigator.clipboard.writeText(token)
+    theToast.success('Token 已复制到剪贴板')
+  } catch {
+    theToast.error('复制失败，请检查浏览器剪贴板权限')
+  }
 }
 
 // 删除 Access Token

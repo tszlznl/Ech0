@@ -7,20 +7,20 @@
       type="button"
       :title="applyTitle"
       :aria-label="applyTitle"
-      class="h-8 px-2.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-border-subtle)] transition-colors duration-200"
+      class="w-7 h-7 flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-border-subtle)] transition-colors duration-200"
       @click="$emit('apply')"
     >
-      <Saveupdate class="w-5 h-5" />
+      <Saveupdate class="w-4 h-4" />
     </button>
     <button
       type="button"
       :title="editing ? cancelTitle : editTitle"
       :aria-label="editing ? cancelTitle : editTitle"
-      class="h-8 px-2.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-border-subtle)] transition-colors duration-200"
+      class="w-7 h-7 flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-border-subtle)] transition-colors duration-200"
       @click="handleSecondaryClick"
     >
-      <Close v-if="editing" class="w-5 h-5" />
-      <Edit v-else class="w-5 h-5" />
+      <Close v-if="editing" class="w-4 h-4" />
+      <Edit v-else class="w-4 h-4" />
     </button>
   </div>
 </template>

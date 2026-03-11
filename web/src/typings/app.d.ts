@@ -380,6 +380,7 @@ declare namespace App {
       type AccessToken = {
         id: string
         user_id: string
+        token: string
         name: string
         expiry: string | null
         created_at: string
