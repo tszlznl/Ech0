@@ -97,6 +97,8 @@ const (
 	ReleaseVersionKey = "release_version"
 	// InstallInitializedKey 是安装流程完成状态键
 	InstallInitializedKey = "install_initialized"
+	// MigrationGlobalJobStateKey 是全局迁移作业状态键
+	MigrationGlobalJobStateKey = "migration_global_job_state"
 )
 
 // PageQueryResult 用于分页查询的结果数据传输对象

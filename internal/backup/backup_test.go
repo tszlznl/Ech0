@@ -34,6 +34,12 @@ func TestExecuteBackup_KeepOnlyLatestAndExcludeBackupDir(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dataDir, "files/images/demo.txt"), []byte("demo"), 0o644); err != nil {
 		t.Fatalf("write image file failed: %v", err)
 	}
+	if err := os.MkdirAll(filepath.Join(dataDir, tmpRelativeDir), 0o755); err != nil {
+		t.Fatalf("mkdir tmp dir failed: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dataDir, tmpRelativeDir, "payload.txt"), []byte("tmp payload"), 0o644); err != nil {
+		t.Fatalf("write tmp file failed: %v", err)
+	}
 	legacyBackupPath := filepath.Join(dataDir, backupRelativeDir, "legacy.zip")
 	if err := os.WriteFile(legacyBackupPath, []byte("legacy"), 0o644); err != nil {
 		t.Fatalf("write legacy backup failed: %v", err)
@@ -71,6 +77,9 @@ func TestExecuteBackup_KeepOnlyLatestAndExcludeBackupDir(t *testing.T) {
 		if strings.HasPrefix(f.Name, backupRelativeDir+"/") || f.Name == backupRelativeDir {
 			t.Fatalf("backup zip should exclude %s, got entry: %s", backupRelativeDir, f.Name)
 		}
+		if strings.HasPrefix(f.Name, tmpRelativeDir+"/") || f.Name == tmpRelativeDir {
+			t.Fatalf("backup zip should exclude %s, got entry: %s", tmpRelativeDir, f.Name)
+		}
 	}
 }
 
@@ -81,6 +90,8 @@ func TestShouldExcludeFromBackup(t *testing.T) {
 	}{
 		{key: "files/backups", expected: true},
 		{key: "files/backups/a.zip", expected: true},
+		{key: "files/tmp", expected: true},
+		{key: "files/tmp/a.zip", expected: true},
 		{key: "files/images/a.png", expected: false},
 		{key: "ech0.db", expected: false},
 	}

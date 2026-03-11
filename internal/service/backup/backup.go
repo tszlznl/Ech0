@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"mime/multipart"
 	"os"
 	"time"
 
@@ -31,30 +30,6 @@ func NewBackupService(
 		commonService: commonService,
 		publisher:     publisher,
 	}
-}
-
-func (bs *BackupService) Backup(ctx context.Context) error {
-	userid := viewer.MustFromContext(ctx).UserID()
-	user, err := bs.commonService.CommonGetUserByUserId(ctx, userid)
-	if err != nil {
-		return err
-	}
-	if !user.IsAdmin {
-		return errors.New(commonModel.NO_PERMISSION_DENIED)
-	}
-
-	if _, _, err := backup.ExecuteBackup(); err != nil {
-		return err
-	}
-
-	if err := bs.publisher.SystemBackup(
-		context.Background(),
-		contracts.SystemBackupEvent{Info: "System backup completed"},
-	); err != nil {
-		logUtil.GetLogger().Error("Failed to publish system backup completed event", zap.Error(err))
-	}
-
-	return nil
 }
 
 func (bs *BackupService) ExportBackup(ctx *gin.Context, reqCtx context.Context) error {
@@ -95,44 +70,6 @@ func (bs *BackupService) ExportBackup(ctx *gin.Context, reqCtx context.Context) 
 		},
 	); err != nil {
 		logUtil.GetLogger().Error("Failed to publish system export completed event", zap.Error(err))
-	}
-
-	return nil
-}
-
-func (bs *BackupService) ImportBackup(
-	ctx *gin.Context,
-	reqCtx context.Context,
-	file *multipart.FileHeader,
-) error {
-	userid := viewer.MustFromContext(reqCtx).UserID()
-	user, err := bs.commonService.CommonGetUserByUserId(reqCtx, userid)
-	if err != nil {
-		return err
-	}
-	if !user.IsAdmin {
-		return errors.New(commonModel.NO_PERMISSION_DENIED)
-	}
-
-	if err := os.MkdirAll("./temp", 0o755); err != nil {
-		return errors.New(commonModel.SNAPSHOT_UPLOAD_FAILED + ": " + err.Error())
-	}
-
-	timestamp := time.Now().UTC().Unix()
-	tempFilePath := fmt.Sprintf("./temp/snapshot_%d.zip", timestamp)
-	if err := ctx.SaveUploadedFile(file, tempFilePath); err != nil {
-		return errors.New(commonModel.SNAPSHOT_UPLOAD_FAILED + ": " + err.Error())
-	}
-
-	if err := backup.ExcuteRestoreOnline(tempFilePath, timestamp); err != nil {
-		return errors.New(commonModel.SNAPSHOT_RESTORE_FAILED + ": " + err.Error())
-	}
-
-	if err := bs.publisher.SystemRestore(
-		context.Background(),
-		contracts.SystemRestoreEvent{Info: "System restore completed"},
-	); err != nil {
-		logUtil.GetLogger().Error("Failed to publish system restore completed event", zap.Error(err))
 	}
 
 	return nil

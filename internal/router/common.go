@@ -9,8 +9,4 @@ func setupCommonRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	appRouterGroup.PublicRouterGroup.GET("/hello", h.CommonHandler.HelloEch0())
 	appRouterGroup.PublicRouterGroup.GET("/backup/export", h.BackupHandler.ExportBackup())
 	appRouterGroup.PublicRouterGroup.GET("/website/title", h.CommonHandler.GetWebsiteTitle())
-
-	// Auth
-	appRouterGroup.AuthRouterGroup.GET("/backup", h.BackupHandler.Backup())
-	appRouterGroup.AuthRouterGroup.POST("/backup/import", h.BackupHandler.ImportBackup())
 }

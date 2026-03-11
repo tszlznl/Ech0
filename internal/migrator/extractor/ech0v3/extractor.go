@@ -74,3 +74,22 @@ func (e *Extractor) Extract(_ context.Context, req spec.ExtractRequest) (spec.Ex
 		TotalHint:      int64(len(items)),
 	}, nil
 }
+
+func (e *Extractor) Migrate(_ context.Context, req spec.MigrateRequest) (spec.MigrateResult, error) {
+	if req.UpdateProgress != nil {
+		req.UpdateProgress(spec.MigrateProgress{
+			CurrentPhase: "loading",
+			Processed:    0,
+			Total:        0,
+			SuccessCount: 0,
+			FailCount:    0,
+		})
+	}
+	return spec.MigrateResult{
+		Processed:    0,
+		Total:        0,
+		SuccessCount: 0,
+		FailCount:    0,
+		ErrorSummary: "",
+	}, nil
+}

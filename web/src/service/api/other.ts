@@ -8,30 +8,11 @@ export function fetchHelloEch0() {
   })
 }
 
-// 执行备份
-export function fetchBackup() {
-  return request({
-    url: '/backup',
-    method: 'GET',
-  })
-}
-
 // 导出备份 - 使用专门的下载函数
 export function fetchExportBackup() {
   return downloadFile({
     url: '/backup/export',
     method: 'GET',
-  })
-}
-
-// 导入备份
-export function fetchImportBackup(file: File) {
-  const formData = new FormData()
-  formData.append('file', file)
-  return request({
-    url: '/backup/import',
-    method: 'POST',
-    data: formData,
   })
 }
 
@@ -43,37 +24,65 @@ export function fetchGetWebsiteTitle(websiteURL: string) {
   })
 }
 
-export interface CreateMigrationJobPayload {
-  source_type: 'memos' | 'ech0_v3'
-  source_version?: string
+export interface StartMigrationPayload {
+  source_type: 'ech0_v4' | 'memos' | 'ech0_v3'
   source_payload: Record<string, any>
 }
 
-export function fetchCreateMigrationJob(data: CreateMigrationJobPayload) {
+export interface MigrationStatusPayload extends StartMigrationPayload {
+  version: number
+  status: 'idle' | 'pending' | 'running' | 'success' | 'failed' | 'cancelled'
+  error_message: string
+  started_at?: string
+  updated_at?: string
+  finished_at?: string
+}
+
+export function fetchStartMigration(data: StartMigrationPayload) {
   return request({
-    url: '/migration/jobs',
+    url: '/migration/start',
     method: 'POST',
     data,
   })
 }
 
-export function fetchGetMigrationJob(id: string) {
-  return request({
-    url: `/migration/jobs/${id}`,
+export function fetchGetMigrationStatus() {
+  return request<MigrationStatusPayload>({
+    url: '/migration/status',
     method: 'GET',
   })
 }
 
-export function fetchCancelMigrationJob(id: string) {
-  return request({
-    url: `/migration/jobs/${id}/cancel`,
+export function fetchCancelMigration() {
+  return request<MigrationStatusPayload>({
+    url: '/migration/cancel',
     method: 'POST',
   })
 }
 
-export function fetchRetryFailedMigrationJob(id: string) {
+export function fetchCleanupMigration() {
   return request({
-    url: `/migration/jobs/${id}/retry-failed`,
+    url: '/migration/cleanup',
     method: 'POST',
+  })
+}
+
+export interface UploadMigrationSourceZipResponse {
+  source_type: 'ech0_v4' | 'memos' | 'ech0_v3'
+  tmp_dir: string
+  source_payload: Record<string, any>
+}
+
+export function fetchUploadMigrationSourceZip(
+  sourceType: UploadMigrationSourceZipResponse['source_type'],
+  file: File,
+) {
+  const formData = new FormData()
+  formData.append('source_type', sourceType)
+  formData.append('file', file)
+  return request<UploadMigrationSourceZipResponse>({
+    url: '/migration/upload',
+    method: 'POST',
+    data: formData,
   })
 }

@@ -145,10 +145,6 @@ var TaskerGraphSet = wire.NewSet(
 )
 
 var MigratorGraphSet = wire.NewSet(
-	repository.CommonSet,
-	service.CommonSet,
-	repository.MigrationSet,
-	service.MigratorSet,
 	migrator.ProviderSet,
 )
 

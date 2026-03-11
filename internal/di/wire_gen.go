@@ -31,7 +31,7 @@ import (
 	handler3 "github.com/lin-snow/ech0/internal/handler/user"
 	handler2 "github.com/lin-snow/ech0/internal/handler/web"
 	"github.com/lin-snow/ech0/internal/migrator"
-	repository12 "github.com/lin-snow/ech0/internal/repository"
+	repository11 "github.com/lin-snow/ech0/internal/repository"
 	repository5 "github.com/lin-snow/ech0/internal/repository/common"
 	repository10 "github.com/lin-snow/ech0/internal/repository/connect"
 	repository8 "github.com/lin-snow/ech0/internal/repository/echo"
@@ -39,7 +39,6 @@ import (
 	repository3 "github.com/lin-snow/ech0/internal/repository/inbox"
 	repository9 "github.com/lin-snow/ech0/internal/repository/init"
 	"github.com/lin-snow/ech0/internal/repository/keyvalue"
-	repository11 "github.com/lin-snow/ech0/internal/repository/migration"
 	repository2 "github.com/lin-snow/ech0/internal/repository/queue"
 	repository6 "github.com/lin-snow/ech0/internal/repository/setting"
 	repository4 "github.com/lin-snow/ech0/internal/repository/user"
@@ -148,8 +147,7 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 	connectHandler := handler10.NewConnectHandler(connectService)
 	backupService := service9.NewBackupService(commonService, publisherPublisher)
 	backupHandler := handler11.NewBackupHandler(backupService)
-	v := repository11.NewMigrationRepository(dbProvider)
-	migratorService := service10.NewMigratorService(commonService, v)
+	migratorService := service10.NewMigratorService(commonService, keyValueRepository)
 	migrationHandler := handler12.NewMigrationHandler(migratorService)
 	dashboardService := service11.NewDashboardService()
 	dashboardHandler := handler13.NewDashboardHandler(dashboardService)
@@ -194,11 +192,7 @@ func BuildTasker(dbProvider func() *gorm.DB, appCache cache.ICache[string, any],
 }
 
 func BuildMigrator(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor) (*migrator.Worker, error) {
-	commonRepository := repository5.NewCommonRepository(dbProvider)
-	commonService := service.NewCommonService(commonRepository)
-	v := repository11.NewMigrationRepository(dbProvider)
-	migratorService := service10.NewMigratorService(commonService, v)
-	worker := migrator.NewWorker(migratorService)
+	worker := migrator.NewWorker()
 	return worker, nil
 }
 
@@ -218,13 +212,13 @@ var InfraSet = wire.NewSet(database.ProviderSet, bus.ProvideProvider, cache.Prov
 
 var RuntimeSet = server.ProviderSet
 
-var EventGraphSet = wire.NewSet(repository12.EchoSet, repository12.UserSet, repository12.InboxSet, repository12.KeyValueSet, repository12.QueueSet, repository12.WebhookSet, wire.Bind(new(registry.WebhookObserver), new(*subscriber.WebhookDispatcher)), wire.Bind(new(subscriber.DeadLetterProcessor), new(*subscriber.WebhookDispatcher)), subscriber.NewWebhookDispatcher, subscriber.NewBackupScheduler, subscriber.NewDeadLetterResolver, subscriber.NewAgentProcessor, subscriber.NewInboxDispatcher, ProvideSubscriptionProviders, registry.NewEventRegistry)
+var EventGraphSet = wire.NewSet(repository11.EchoSet, repository11.UserSet, repository11.InboxSet, repository11.KeyValueSet, repository11.QueueSet, repository11.WebhookSet, wire.Bind(new(registry.WebhookObserver), new(*subscriber.WebhookDispatcher)), wire.Bind(new(subscriber.DeadLetterProcessor), new(*subscriber.WebhookDispatcher)), subscriber.NewWebhookDispatcher, subscriber.NewBackupScheduler, subscriber.NewDeadLetterResolver, subscriber.NewAgentProcessor, subscriber.NewInboxDispatcher, ProvideSubscriptionProviders, registry.NewEventRegistry)
 
-var HandlerGraphSet = wire.NewSet(publisher.New, storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository12.FileSet, handler.WebSet, repository12.UserSet, service13.UserSet, handler.UserSet, repository12.EchoSet, service13.EchoSet, handler.EchoSet, repository12.CommonSet, service13.FileSet, handler.FileSet, repository12.InitSet, service13.InitSet, handler.InitSet, service13.CommonSet, handler.CommonSet, repository12.WebhookSet, repository12.KeyValueSet, repository12.SettingSet, service13.SettingSet, handler.SettingSet, repository12.InboxSet, service13.InboxSet, handler.InboxSet, repository12.ConnectSet, service13.ConnectSet, handler.ConnectSet, service13.DashboardSet, handler.DashboardSet, service13.AgentSet, handler.AgentSet, service13.BackupSet, handler.BackupSet, repository12.MigrationSet, service13.MigratorSet, handler.MigrationSet, handler.NewBundle)
+var HandlerGraphSet = wire.NewSet(publisher.New, storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository11.FileSet, handler.WebSet, repository11.UserSet, service13.UserSet, handler.UserSet, repository11.EchoSet, service13.EchoSet, handler.EchoSet, repository11.CommonSet, service13.FileSet, handler.FileSet, repository11.InitSet, service13.InitSet, handler.InitSet, service13.CommonSet, handler.CommonSet, repository11.WebhookSet, repository11.KeyValueSet, repository11.SettingSet, service13.SettingSet, handler.SettingSet, repository11.InboxSet, service13.InboxSet, handler.InboxSet, repository11.ConnectSet, service13.ConnectSet, handler.ConnectSet, service13.DashboardSet, handler.DashboardSet, service13.AgentSet, handler.AgentSet, service13.BackupSet, handler.BackupSet, repository11.MigrationSet, service13.MigratorSet, handler.MigrationSet, handler.NewBundle)
 
-var TaskerGraphSet = wire.NewSet(publisher.New, storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository12.FileSet, repository12.KeyValueSet, repository12.WebhookSet, repository12.SettingSet, service13.SettingSet, repository12.EchoSet, service13.EchoSet, repository12.CommonSet, service13.FileSet, service13.CommonSet, repository12.QueueSet, task.ProviderSet)
+var TaskerGraphSet = wire.NewSet(publisher.New, storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository11.FileSet, repository11.KeyValueSet, repository11.WebhookSet, repository11.SettingSet, service13.SettingSet, repository11.EchoSet, service13.EchoSet, repository11.CommonSet, service13.FileSet, service13.CommonSet, repository11.QueueSet, task.ProviderSet)
 
-var MigratorGraphSet = wire.NewSet(repository12.CommonSet, service13.CommonSet, repository12.MigrationSet, service13.MigratorSet, migrator.ProviderSet)
+var MigratorGraphSet = wire.NewSet(migrator.ProviderSet)
 
 func ProvideBackupScheduleApplier(t *task.Tasker) subscriber.BackupScheduleApplier {
 	return t

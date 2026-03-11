@@ -2,22 +2,20 @@ package service
 
 import (
 	"context"
+	"mime/multipart"
 
 	migrationModel "github.com/lin-snow/ech0/internal/model/migration"
-	migrationRepository "github.com/lin-snow/ech0/internal/repository/migration"
+	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
 )
 
 type Service interface {
-	CreateJob(ctx context.Context, req migrationModel.CreateMigrationJobRequest) (migrationModel.MigrationJobDTO, error)
-	GetJob(ctx context.Context, id string) (migrationModel.MigrationJobDTO, error)
-	GetJobModel(ctx context.Context, id string) (migrationModel.MigrationJob, error)
-	CancelJob(ctx context.Context, id string) error
-	RetryFailed(ctx context.Context, id string) (migrationModel.RetryFailedResponse, error)
-
-	ClaimNextPendingJob(ctx context.Context) (migrationModel.MigrationJob, error)
-	UpdateJob(ctx context.Context, job *migrationModel.MigrationJob) error
+	UploadSourceZip(ctx context.Context, sourceType string, file *multipart.FileHeader) (migrationModel.UploadMigrationSourceZipResponse, error)
+	StartGlobalMigration(ctx context.Context, req migrationModel.StartGlobalMigrationRequest) (migrationModel.GlobalMigrationStateDTO, error)
+	GetGlobalMigrationStatus(ctx context.Context) (migrationModel.GlobalMigrationStateDTO, error)
+	CancelGlobalMigration(ctx context.Context) (migrationModel.GlobalMigrationStateDTO, error)
+	CleanupGlobalMigration(ctx context.Context) error
 }
 
 type CommonService = commonService.Service
-type MigrationRepository = *migrationRepository.MigrationRepository
+type KeyValueRepository = *keyvalueRepository.KeyValueRepository

@@ -20,6 +20,7 @@ import (
 const (
 	dataDir           = "data"
 	backupRelativeDir = "files/backups"
+	tmpRelativeDir    = "files/tmp"
 	backupFileName    = "ech0_backup"
 	timeLayout        = "2006-01-02_15-04-05"
 )
@@ -108,7 +109,7 @@ func ExecuteRestore(backupFilePath string) error {
 	logUtil.CloseLogger()
 	defer logUtil.ReopenLogger()
 
-	return unpackZipToDir(backupFilePath, dataDir)
+	return UnpackZipToDir(backupFilePath, dataDir)
 }
 
 // ExcuteRestoreOnline performs an online restore from an uploaded zip.
@@ -138,7 +139,7 @@ func ExcuteRestoreOnline(filePath string, timeStamp int64) error {
 		}
 	}()
 
-	if err := unpackZipToDir(filePath, extractPath); err != nil {
+	if err := UnpackZipToDir(filePath, extractPath); err != nil {
 		return err
 	}
 
@@ -158,7 +159,8 @@ func ExcuteRestoreOnline(filePath string, timeStamp int64) error {
 	return nil
 }
 
-func unpackZipToDir(zipPath, destDir string) error {
+// UnpackZipToDir unpacks a zip file to destination directory.
+func UnpackZipToDir(zipPath, destDir string) error {
 	f, err := os.Open(zipPath)
 	if err != nil {
 		return fmt.Errorf("open zip: %w", err)
@@ -201,7 +203,11 @@ func copyDirViaVireFS(srcDir, dstDir string) error {
 
 func shouldExcludeFromBackup(cleanKey string) bool {
 	backupPrefix := strings.Trim(strings.TrimSpace(backupRelativeDir), "/")
-	return cleanKey == backupPrefix || strings.HasPrefix(cleanKey, backupPrefix+"/")
+	tmpPrefix := strings.Trim(strings.TrimSpace(tmpRelativeDir), "/")
+	return cleanKey == backupPrefix ||
+		strings.HasPrefix(cleanKey, backupPrefix+"/") ||
+		cleanKey == tmpPrefix ||
+		strings.HasPrefix(cleanKey, tmpPrefix+"/")
 }
 
 func keepOnlyLatestBackup(backupDir string, latestFileName string) error {

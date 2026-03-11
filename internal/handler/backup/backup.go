@@ -23,31 +23,6 @@ func NewBackupHandler(backupService service.Service) *BackupHandler {
 	}
 }
 
-// Backup 执行数据备份
-//
-//	@Summary		执行数据备份
-//	@Description	用户触发数据备份操作，成功后返回备份成功信息
-//	@Tags			系统备份
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	response.Response	"备份成功"
-//	@Failure		200	{object}	response.Response	"备份失败"
-//	@Router			/backup [get]
-func (backupHandler *BackupHandler) Backup() gin.HandlerFunc {
-	return response.Execute(func(ctx *gin.Context) response.Response {
-		if err := backupHandler.backupService.Backup(ctx.Request.Context()); err != nil {
-			return response.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return response.Response{
-			Msg: commonModel.BACKUP_SUCCESS,
-		}
-	})
-}
-
 // ExportBackup 导出数据备份
 //
 //	@Summary		导出数据备份
@@ -89,41 +64,6 @@ func (backupHandler *BackupHandler) ExportBackup() gin.HandlerFunc {
 
 		return response.Response{
 			Msg: commonModel.EXPORT_BACKUP_SUCCESS,
-		}
-	})
-}
-
-// ImportBackup 恢复数据备份
-//
-//	@Summary		恢复数据备份
-//	@Description	用户上传备份文件，成功后恢复数据
-//	@Tags			系统备份
-//	@Accept			multipart/form-data
-//	@Produce		json
-//	@Param			file	formData	file				true	"备份文件"
-//	@Success		200		{object}	response.Response	"导入备份成功"
-//	@Failure		200		{object}	response.Response	"导入备份失败"
-//	@Router			/backup/import [post]
-func (backupHandler *BackupHandler) ImportBackup() gin.HandlerFunc {
-	return response.Execute(func(ctx *gin.Context) response.Response {
-		// 提取上传的 File数据
-		file, err := ctx.FormFile("file")
-		if err != nil {
-			return response.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-
-		if err := backupHandler.backupService.ImportBackup(ctx, ctx.Request.Context(), file); err != nil {
-			return response.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return response.Response{
-			Msg: commonModel.IMPORT_BACKUP_SUCCESS,
 		}
 	})
 }

@@ -18,14 +18,14 @@ func NewMigrationHandler(migrationService service.Service) *MigrationHandler {
 	}
 }
 
-func (h *MigrationHandler) CreateJob() gin.HandlerFunc {
+func (h *MigrationHandler) StartMigration() gin.HandlerFunc {
 	return response.Execute(func(ctx *gin.Context) response.Response {
-		var req migrationModel.CreateMigrationJobRequest
+		var req migrationModel.StartGlobalMigrationRequest
 		if err := ctx.ShouldBindJSON(&req); err != nil {
 			return response.Response{Msg: commonModel.INVALID_REQUEST_BODY, Err: err}
 		}
 
-		data, err := h.migrationService.CreateJob(ctx.Request.Context(), req)
+		data, err := h.migrationService.StartGlobalMigration(ctx.Request.Context(), req)
 		if err != nil {
 			return response.Response{Msg: "", Err: err}
 		}
@@ -33,10 +33,18 @@ func (h *MigrationHandler) CreateJob() gin.HandlerFunc {
 	})
 }
 
-func (h *MigrationHandler) GetJob() gin.HandlerFunc {
+func (h *MigrationHandler) UploadSourceZip() gin.HandlerFunc {
 	return response.Execute(func(ctx *gin.Context) response.Response {
-		id := ctx.Param("id")
-		data, err := h.migrationService.GetJob(ctx.Request.Context(), id)
+		sourceType := ctx.PostForm("source_type")
+		if sourceType == "" {
+			return response.Response{Msg: commonModel.INVALID_REQUEST_BODY}
+		}
+		file, err := ctx.FormFile("file")
+		if err != nil {
+			return response.Response{Msg: commonModel.INVALID_REQUEST_BODY, Err: err}
+		}
+
+		data, err := h.migrationService.UploadSourceZip(ctx.Request.Context(), sourceType, file)
 		if err != nil {
 			return response.Response{Msg: "", Err: err}
 		}
@@ -44,23 +52,31 @@ func (h *MigrationHandler) GetJob() gin.HandlerFunc {
 	})
 }
 
-func (h *MigrationHandler) CancelJob() gin.HandlerFunc {
+func (h *MigrationHandler) GetMigrationStatus() gin.HandlerFunc {
 	return response.Execute(func(ctx *gin.Context) response.Response {
-		id := ctx.Param("id")
-		if err := h.migrationService.CancelJob(ctx.Request.Context(), id); err != nil {
+		data, err := h.migrationService.GetGlobalMigrationStatus(ctx.Request.Context())
+		if err != nil {
+			return response.Response{Msg: "", Err: err}
+		}
+		return response.Response{Msg: commonModel.SUCCESS_MESSAGE, Data: data}
+	})
+}
+
+func (h *MigrationHandler) CancelMigration() gin.HandlerFunc {
+	return response.Execute(func(ctx *gin.Context) response.Response {
+		data, err := h.migrationService.CancelGlobalMigration(ctx.Request.Context())
+		if err != nil {
+			return response.Response{Msg: "", Err: err}
+		}
+		return response.Response{Msg: commonModel.SUCCESS_MESSAGE, Data: data}
+	})
+}
+
+func (h *MigrationHandler) CleanupMigration() gin.HandlerFunc {
+	return response.Execute(func(ctx *gin.Context) response.Response {
+		if err := h.migrationService.CleanupGlobalMigration(ctx.Request.Context()); err != nil {
 			return response.Response{Msg: "", Err: err}
 		}
 		return response.Response{Msg: commonModel.SUCCESS_MESSAGE}
-	})
-}
-
-func (h *MigrationHandler) RetryFailed() gin.HandlerFunc {
-	return response.Execute(func(ctx *gin.Context) response.Response {
-		id := ctx.Param("id")
-		data, err := h.migrationService.RetryFailed(ctx.Request.Context(), id)
-		if err != nil {
-			return response.Response{Msg: "", Err: err}
-		}
-		return response.Response{Msg: commonModel.SUCCESS_MESSAGE, Data: data}
 	})
 }

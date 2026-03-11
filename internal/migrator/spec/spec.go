@@ -37,8 +37,34 @@ type LoadResult struct {
 	Failed []FailedItem
 }
 
+type MigrateRequest struct {
+	SourcePayload  map[string]any
+	UpdateProgress func(progress MigrateProgress)
+}
+
+type MigrateProgress struct {
+	CurrentPhase string
+	Processed    int64
+	Total        int64
+	SuccessCount int64
+	FailCount    int64
+	ErrorSummary string
+}
+
+type MigrateResult struct {
+	Processed    int64
+	Total        int64
+	SuccessCount int64
+	FailCount    int64
+	ErrorSummary string
+}
+
 type Extractor interface {
 	Extract(ctx context.Context, req ExtractRequest) (ExtractResult, error)
+}
+
+type SourceMigrator interface {
+	Migrate(ctx context.Context, req MigrateRequest) (MigrateResult, error)
 }
 
 type Transformer interface {

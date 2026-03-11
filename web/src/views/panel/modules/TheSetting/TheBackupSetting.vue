@@ -1,42 +1,18 @@
 <template>
   <PanelCard>
-    <!-- 数据管理 -->
-    <div>
-      <div class="flex items-center justify-start mb-3">
-        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">数据管理</h1>
+    <div class="backup-wrap">
+      <div class="backup-header">
+        <h1 class="backup-title">数据导出</h1>
+        <p class="backup-desc">导出当前系统快照，便于离线归档与迁移。</p>
       </div>
 
-      <div class="flex flex-col gap-4 font-semibold">
-        <!-- 备份数据 -->
-        <div class="flex flex-start items-center gap-2">
-          <p class="text-[var(--color-text-secondary)]">创建快照:</p>
-          <BaseButton
-            :icon="CreateBackup"
-            @click="handleBackup"
-            class="rounded-lg text-[var(--color-text-primary)]!"
-            title="创建快照"
-          />
-        </div>
-        <!-- 导出快照 -->
-        <div class="flex flex-start items-center gap-2">
-          <p class="text-[var(--color-text-secondary)]">导出快照:</p>
-          <BaseButton
-            :icon="ExportBackup"
-            @click="handleBackupExport"
-            class="rounded-lg text-[var(--color-text-primary)]!"
-            title="导出快照"
-          />
-        </div>
-        <!-- 恢复数据 -->
-        <div class="flex flex-start items-center gap-2">
-          <p class="text-[var(--color-text-secondary)]">恢复快照:</p>
-          <BaseButton
-            :icon="RestoreBackup"
-            @click="handleBackupRestore"
-            class="rounded-lg text-[var(--color-text-primary)]!"
-            title="恢复快照"
-          />
-        </div>
+      <div class="backup-action">
+        <BaseButton
+          :icon="ExportBackup"
+          @click="handleBackupExport"
+          class="backup-export-btn"
+          title="导出快照"
+        />
       </div>
     </div>
   </PanelCard>
@@ -45,24 +21,13 @@
 <script setup lang="ts">
 import PanelCard from '@/layout/PanelCard.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
-import CreateBackup from '@/components/icons/createbackup.vue'
 import ExportBackup from '@/components/icons/exportbackup.vue'
-import RestoreBackup from '@/components/icons/restorebackup.vue'
-import { fetchBackup, fetchImportBackup } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useUserStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 
 const userStore = useUserStore()
 const { isLogin } = storeToRefs(userStore)
-
-const handleBackup = async () => {
-  await theToast.promise(fetchBackup(), {
-    loading: '备份中...',
-    success: (res) => (res.code === 1 ? '备份成功' : '备份失败'),
-    error: '备份失败',
-  })
-}
 
 const handleBackupExport = async () => {
   if (!isLogin.value) {
@@ -97,36 +62,39 @@ const handleBackupExport = async () => {
     console.error('导出备份失败:', error)
   }
 }
-
-const handleBackupRestore = async () => {
-  if (!isLogin.value) {
-    theToast.info('请登录后使用', { duration: 3000 })
-    return
-  }
-
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.accept = '.zip'
-  input.onchange = async (event: Event) => {
-    const target = event.target as HTMLInputElement
-    if (target.files && target.files.length > 0) {
-      const file = target.files[0]
-
-      if (file) {
-        await theToast.promise(
-          fetchImportBackup(file),
-          {
-            loading: '导入中,请不要关闭页面...',
-            success: (res) => (res.code === 1 ? '快照恢复成功🎉' : `导入失败: ${res.msg}`),
-            error: '导入失败,请尝试重新导入或使用TUI模式进行恢复',
-          },
-          {
-            duration: 5000,
-          },
-        )
-      }
-    }
-  }
-  input.click()
-}
 </script>
+
+<style scoped>
+.backup-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.backup-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.backup-title {
+  color: var(--color-text-primary);
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.backup-desc {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.backup-action {
+  display: flex;
+  align-items: center;
+}
+
+.backup-export-btn {
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary) !important;
+}
+</style>
