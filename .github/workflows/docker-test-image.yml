@@ -78,9 +78,10 @@ jobs:
           CC: ${{ matrix.goarch == 'arm64' && 'aarch64-linux-musl-gcc' || 'gcc' }}
         run: |
           set -euo pipefail
+          test -f cmd/ech0/main.go
           STATIC_LDFLAGS="-linkmode external -extldflags '-static'"
           OUTPUT_NAME="ech0-linux-${{ matrix.goarch }}"
-          go build -tags netgo -ldflags "$STATIC_LDFLAGS" -o "${OUTPUT_NAME}" ./main.go
+          go build -tags netgo -ldflags "$STATIC_LDFLAGS" -o "${OUTPUT_NAME}" ./cmd/ech0/main.go
 
       - name: Package backend binary
         run: |
