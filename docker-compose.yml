@@ -8,6 +8,5 @@ services:
       # - "6278:6278"
     volumes:
       - ./ech0/data:/app/data
-      - ./ech0/backup:/app/backup
     environment:
       - JWT_SECRET="Hello Echos"
