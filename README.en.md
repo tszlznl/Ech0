@@ -68,40 +68,61 @@ Ech0 is a new-generation open-source self-hosted platform designed for individua
 
 ## Highlights
 
-☁️ **Atomically Lightweight**: Consumes less than **15MB** of memory with an image size under **50MB**, powered by a single-file SQLite architecture  
-🚀 **Instant Deployment**: Zero configuration required — from installation to operation in just one command  
-✍️ **Distraction-Free Writing**: A clean, online Markdown editor with rich plugin support and real-time preview  
-📦 **Data Sovereignty**: All content is stored locally in SQLite, with full RSS feed support  
-🔐 **Secure Backup Mechanism**: One-click export and full data backup across Web, TUI, and CLI modes, with automatic background backup support  
-♻️ **Seamless Recovery**: Supports TUI/CLI snapshot restoration and Web-based zero-downtime recovery, ensuring data safety with ease  
-🎉 **Forever Free**: Open-sourced under the AGPL-3.0 license — no tracking, no subscriptions, no external dependencies  
-🌍 **Cross-Platform Adaptation**: Fully responsive design optimized for desktop, tablet, and mobile browsers  
-👾 **PWA Ready**: Installable as a web application, offering a near-native experience  
-🏷️ **Elegant Tag Management & Filtering**: Intelligent tagging system with fast filtering and precise search for effortless organization  
-☁️ **S3 Storage Integration** — Native support for S3-compatible object storage enables efficient cloud synchronization  
-🔑 **OAuth2 & OIDC Authentication** — Native support for OAuth2 and OIDC protocols, enabling seamless third-party login and API authorization  
-🙈 **Passkey Passwordless Login**: Supports passkey login based on biometrics or hardware keys, greatly enhancing security and login experience  
-🪶 **Highly Available Webhook**: Enables real-time integration and collaboration with external systems, supporting event-driven automated workflows  
-📝 **Built-in Todo Management**: Easily capture and manage daily tasks to stay organized and productive  
-🧘 **Quiet Inbox Mode**: Minimizes system-level interruptions by default—messages are surfaced only as needed, letting the tool assist without intruding.
-🌗 **Dark Mode & Theme Extensions**: Supports adaptive system dark mode or manual switching, with future extensibility for custom color schemes  
-🤖 **Quick Agent AI Setup**: Easily configure multiple large language models for instant AI experience, no manual setup required  
-🧰 **Command-Line Powerhouse**: A built-in high-availability CLI that empowers developers and advanced users with precision control and seamless automation  
-🔑 **Quick Access Token Management**: Generate and revoke access tokens with one click for secure and efficient API calls and third-party integrations  
-📊 **Real-Time System Resource Monitoring**: High-performance WebSocket-based monitoring dashboard for instant visibility into runtime status  
-📟 **Refined TUI Experience**: A beautifully designed terminal interface offering intuitive management of Ech0  
-🔗 **Ech0 Connect**: A multi-instance connectivity feature that enables real-time status sharing and synchronization between Ech0 nodes  
-🎵 **Seamless Music Integration**: Lightweight embedded music player providing immersive soundscapes and focus modes  
-🎥 **Instant Video Sharing**: Natively supports intelligent parsing of Bilibili and YouTube videos  
-🃏 **Rich Smart Cards**: Instantly share websites, GitHub projects, and other media in visually engaging cards  
-⚙️ **Advanced Customization**: Easily personalize styles and scripts for expressive, unique content presentation  
-💬 **Comment System**: Quick Twikoo integration for lightweight, instant, and non-intrusive interactions  
-💻 **Cross-Platform Compatibility**: Runs natively on Windows, Linux, and ARM devices like Raspberry Pi for stable deployment anywhere  
-🔗 **Ech0 Hub Square**: Built-in Ech0 Hub Square for easily discovering, subscribing to, and sharing high-quality content  
-📦 **Self-Contained Binary**: Includes all required resources — no extra dependencies, no setup hassle  
-🔗 **Rich API Support**: Open APIs for seamless integration with external systems and workflows  
-🃏 **Dynamic Content Display**: Supports Twitter-like card layouts with likes and social interactions  
-👤 **Multi-Account & Permission Management**: Flexible user and role-based access control ensuring privacy and security  
+- ☁️ **Lightweight, Efficient Architecture**: Low resource usage and compact images fit environments from personal servers to ARM devices.  
+- 🚀 **Fast Deployment Experience**: Docker-first, out-of-the-box deployment from install to run in a single command.  
+- 📦 **Self-Contained Distribution**: Complete binaries and container images run without extra runtime dependencies.  
+- 💻 **Cross-Platform Support**: Supports Linux, Windows, and ARM devices (for example, Raspberry Pi).  
+
+## Storage & Data
+
+- 🗂️ **VireFS Unified Storage Abstraction**: **VireFS** unifies mounting and management across local storage and S3-compatible object storage.  
+- ☁️ **S3 Object Storage Support**: Native support for S3-compatible object storage for cloud-scale asset expansion.  
+- 📦 **Data Sovereignty Architecture**: All content and metadata remain user-owned, with RSS output support.  
+- 🔄 **Data Migration Workflow**: Import historical data through migration flows and pair with snapshot export for archiving.  
+- 🔐 **Automated Backup System**: Full export and backup via Web, CLI, and TUI, plus automatic background backups.  
+
+## Writing & Content
+
+- ✍️ **Markdown Authoring Experience**: A **markdown-it**-based editor and renderer with plugin extensibility and live preview.  
+- 🧘 **Zen Mode Immersive Reading**: A low-distraction Timeline reading mode designed for focused browsing.  
+- 🏷️ **Tag Management System**: Tag-based organization with fast filtering and precise content retrieval.  
+- 🃏 **Rich Media Cards**: Card-based presentation for links, GitHub projects, and other rich content.  
+- 🎥 **Video Content Parsing**: Built-in parsing and display for Bilibili and YouTube content.  
+
+## Media & Assets
+
+- 📁 **Visual File Manager**: Built-in manager for file upload, browsing, and media asset handling.  
+
+## Social & Interaction
+
+- 💬 **Native Comment System**: Built-in comments and moderation without relying on third-party comment services.  
+- 🃏 **Social Interaction Features**: Supports interactions such as likes and sharing.  
+
+## Auth & Security
+
+- 🔑 **OAuth2 / OIDC Authentication**: Supports OAuth2 and OIDC for integration with third-party identity providers.  
+- 🙈 **Passkey Passwordless Login**: Supports passkey authentication via biometrics or hardware security keys.  
+- 🔑 **Access Token Management**: Generate and revoke access tokens for API calls and third-party integrations.  
+- 👤 **Multi-Account Permissions**: Supports multi-user management with permission control.  
+
+## System & Developer
+
+- 🧱 **Busen Data Bus Architecture**: A self-built Busen data bus enables decoupled modules and reliable message delivery.  
+- 📊 **Structured Logging System**: Standardized structured logs improve readability, observability, and analysis.  
+- 🖥️ **Real-Time Log Console**: Built-in web console for live log streaming, debugging, and incident diagnosis.  
+- 📟 **TUI Management Interface**: Terminal UI for convenient server-side administration.  
+- 🧰 **CLI Toolchain**: CLI utilities for automation workflows and script integration.  
+- 🔗 **Open API & Webhook**: Complete API and Webhook support for system integrations and automated workflows.  
+
+## Experience
+
+- 🌍 **Cross-Device Adaptation**: Responsive design for desktop, tablet, and mobile browsers.  
+- 👾 **PWA Support**: Install as a web app for a more native-like experience.  
+- 🌗 **Themes & Dark Mode**: Supports dark mode and extensible theming.  
+
+## License
+
+- 🎉 **Fully Open Source**: Released under **AGPL-3.0**, with no tracking, no subscription, and no SaaS dependency.  
 
 
 ---
@@ -245,20 +266,20 @@ Run the binary directly (for example, on Windows double-click `Ech0.exe`).
 7. **Why no detailed permission system?**  
    Ech0 emphasizes simplicity: admin vs non-admin only, for smooth experience.  
 
-8. **Why Connect avatars may not show?**  
-   Set your instance URL in `System Settings - Service URL` (with `http://` or `https://`).  
+8. **How do I set the public service URL correctly?**  
+   Set your full external URL in `System Settings - Service URL` (including `http://` or `https://`) so callbacks and external integrations work correctly.  
 
-9. **What is MetingAPI?**  
-   Used to parse music streaming URLs for music cards. If empty, default API provided by Ech0 is used.  
+9. **What storage backends are supported?**  
+   Ech0 supports local storage by default, and can also mount S3-compatible object storage through VireFS for media and asset management.  
 
-10. **Why not all Connect items show?**  
-    Instances that are offline or unreachable are ignored; only valid instances are displayed.  
+10. **How does data migration work in v4?**  
+    Use snapshot export for archiving and use the migration flow to import historical data. Direct in-place upgrade from v3 to v4 is not supported.  
 
 11. **What content is not recommended?**  
     Avoid publishing dense content mixing text + images + extension cards. Long posts or extension cards alone are okay.  
 
 12. **How to enable comments?**  
-    Set up Twikoo backend URL in settings. Only Twikoo is supported.  
+    Comments are built in. Enable and configure comment-related options in system settings; no third-party comment service is required.  
 
 13. **How to configure S3?**  
     Fill in endpoint (without http/https) and bucket with public access.
