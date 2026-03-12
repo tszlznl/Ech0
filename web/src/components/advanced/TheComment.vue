@@ -282,60 +282,61 @@ onMounted(() => {
 </script>
 
 <style scoped>
+:global(:root) {
+  --comment-grid-bg-color: color-mix(in srgb, var(--color-bg-canvas) 88%, #f3f2ee 12%);
+  --comment-grid-line-color: rgba(120, 120, 120, 0.08);
+  --comment-sticky-bg: #f8f6ee;
+  --comment-sticky-border: color-mix(in srgb, var(--color-border-subtle) 78%, #d4c28f 22%);
+  --comment-sticky-shadow-1: rgba(20, 20, 20, 0.05);
+  --comment-sticky-shadow-2: rgba(20, 20, 20, 0.06);
+}
+
+:global(:root.dark) {
+  --comment-grid-bg-color: color-mix(in srgb, var(--color-bg-canvas) 95%, #111 5%);
+  --comment-grid-line-color: rgba(240, 240, 240, 0.055);
+  --comment-sticky-bg: #3a3731;
+  --comment-sticky-border: color-mix(in srgb, var(--color-border-subtle) 84%, #a99662 16%);
+  --comment-sticky-shadow-1: rgba(0, 0, 0, 0.36);
+  --comment-sticky-shadow-2: rgba(0, 0, 0, 0.32);
+}
+
 .comment-list-board {
   position: relative;
   padding: 0.75rem;
   border-radius: 10px;
 }
 
-:global(body) {
-  background-color: color-mix(in srgb, var(--color-bg-canvas) 88%, #f3f2ee 12%);
+:global(html.echo-detail-grid-bg),
+:global(html.echo-detail-grid-bg body),
+:global(html.echo-detail-grid-bg body #app) {
+  background-color: var(--comment-grid-bg-color);
   background-image:
-    linear-gradient(to right, rgba(120, 120, 120, 0.08) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(120, 120, 120, 0.08) 1px, transparent 1px);
+    linear-gradient(to right, var(--comment-grid-line-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--comment-grid-line-color) 1px, transparent 1px);
   background-size: 32px 32px;
+  background-position: 0 0;
+}
+
+:global(html.echo-detail-grid-bg),
+:global(html.echo-detail-grid-bg body) {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+:global(html.echo-detail-grid-bg body #app) {
+  min-height: 100vh;
 }
 
 .comment-sticky {
-  border-color: color-mix(in srgb, var(--color-border-subtle) 78%, #d4c28f 22%);
-  background: linear-gradient(180deg, #fffdf3 0%, #fffbed 100%);
+  border-color: var(--comment-sticky-border);
+  background: var(--comment-sticky-bg);
   box-shadow:
-    0 1px 0 rgba(20, 20, 20, 0.05),
-    0 8px 14px rgba(20, 20, 20, 0.06);
+    0 1px 0 var(--comment-sticky-shadow-1),
+    0 8px 14px var(--comment-sticky-shadow-2);
   transform: translateX(var(--sticky-shift, 0px)) rotate(var(--sticky-rotate, 0deg));
   transform-origin: 42% 8%;
   border-radius: 4px;
-}
-
-.comment-sticky::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0) 44%);
-  pointer-events: none;
-}
-
-.comment-sticky::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(rgba(116, 97, 56, 0.15) 0.65px, transparent 0.8px),
-    radial-gradient(rgba(78, 63, 30, 0.08) 0.6px, transparent 0.9px),
-    radial-gradient(rgba(255, 255, 255, 0.18) 0.55px, transparent 0.7px),
-    linear-gradient(115deg, rgba(132, 107, 62, 0.05) 0%, rgba(132, 107, 62, 0) 45%);
-  background-position:
-    0 0,
-    1px 2px,
-    3px 1px,
-    0 0;
-  background-size:
-    5px 5px,
-    7px 6px,
-    4px 4px,
-    100% 100%;
-  opacity: 0.5;
-  pointer-events: none;
 }
 
 .comment-author-link {
