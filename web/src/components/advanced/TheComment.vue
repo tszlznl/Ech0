@@ -8,7 +8,7 @@
     </div>
 
     <template v-else>
-    <div class="mb-4">
+    <div class="mb-4 comment-list-board">
       <div class="mb-2 flex items-center justify-between">
         <h3 class="font-semibold text-[var(--color-text-primary)]">评论</h3>
         <span class="text-xs text-[var(--color-text-muted)]">{{ comments.length }} 条</span>
@@ -25,23 +25,29 @@
         <article
           v-for="(item, index) in comments"
           :key="item.id"
-          class="comment-sticky relative rounded-md border p-3"
+          class="comment-sticky relative rounded-[4px] border p-3"
           :style="getStickyCardStyle(index)"
         >
           <div class="mb-2 flex items-center gap-2">
             <img :src="resolveCommentAvatar(item, index)" alt="avatar" class="h-8 w-8 rounded-full object-cover" />
             <div class="min-w-0">
-              <a
-                v-if="item.website"
-                :href="item.website"
-                target="_blank"
-                rel="noreferrer"
-                class="comment-author-link truncate text-sm font-medium text-[var(--color-text-primary)]"
-              >
-                {{ item.nickname }}
-              </a>
-              <div v-else class="truncate text-sm font-medium text-[var(--color-text-primary)]">
-                {{ item.nickname }}
+              <div class="flex items-center gap-1 min-w-0">
+                <a
+                  v-if="item.website"
+                  :href="item.website"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="comment-author-link truncate text-sm font-medium text-[var(--color-text-primary)]"
+                >
+                  {{ item.nickname }}
+                </a>
+                <div v-else class="truncate text-sm font-medium text-[var(--color-text-primary)]">
+                  {{ item.nickname }}
+                </div>
+                <Verified
+                  v-if="item.source === 'system'"
+                  class="verified-badge-icon h-3.5! w-3.5! shrink-0 text-sky-500"
+                />
               </div>
               <div class="text-xs text-[var(--color-text-muted)]">
                 {{ formatDate(item.created_at) }}
@@ -53,7 +59,7 @@
       </div>
     </div>
 
-    <form class="rounded-lg border border-[var(--color-border-subtle)] p-3" @submit.prevent="submitComment">
+    <form class="comment-form-panel rounded-lg border border-[var(--color-border-subtle)] p-3" @submit.prevent="submitComment">
       <div class="mb-2 flex items-center justify-between">
         <h3 class="font-semibold text-[var(--color-text-primary)]">发表评论</h3>
         <span class="comment-ready-indicator">
@@ -66,7 +72,7 @@
       </div>
 
       <article
-        class="comment-sticky comment-preview relative mb-2 rounded-md border p-3"
+        class="comment-sticky comment-preview relative mb-2 rounded-[4px] border p-3"
         :style="getStickyCardStyle(0)"
       >
         <div class="mb-2 flex items-center gap-2">
@@ -154,6 +160,7 @@ import { useUserStore } from '@/stores'
 import { theToast } from '@/utils/toast'
 import { formatDate } from '@/utils/other'
 import TheMdPreview from './TheMdPreview.vue'
+import Verified from '../icons/verified.vue'
 
 const route = useRoute()
 const userStore = useUserStore()
@@ -218,8 +225,8 @@ const resolveCommentAvatar = (item: App.Api.Comment.CommentItem, index: number) 
 }
 
 const getStickyCardStyle = (index: number) => {
-  const rotateOptions = ['-0.8deg', '0.5deg', '-0.3deg', '0.9deg']
-  const shiftOptions = ['-4px', '2px', '-1px', '3px']
+  const rotateOptions = ['-0.25deg', '0deg', '0.2deg', '-0.15deg']
+  const shiftOptions = ['-1px', '0px', '1px', '0px']
   return {
     '--sticky-rotate': rotateOptions[index % rotateOptions.length],
     '--sticky-shift': shiftOptions[index % shiftOptions.length],
@@ -275,6 +282,20 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.comment-list-board {
+  position: relative;
+  padding: 0.75rem;
+  border-radius: 10px;
+}
+
+:global(body) {
+  background-color: color-mix(in srgb, var(--color-bg-canvas) 88%, #f3f2ee 12%);
+  background-image:
+    linear-gradient(to right, rgba(120, 120, 120, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(120, 120, 120, 0.08) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
 .comment-sticky {
   border-color: color-mix(in srgb, var(--color-border-subtle) 78%, #d4c28f 22%);
   background: linear-gradient(180deg, #fffdf3 0%, #fffbed 100%);
@@ -283,7 +304,7 @@ onMounted(() => {
     0 8px 14px rgba(20, 20, 20, 0.06);
   transform: translateX(var(--sticky-shift, 0px)) rotate(var(--sticky-rotate, 0deg));
   transform-origin: 42% 8%;
-  transition: transform 0.2s ease;
+  border-radius: 4px;
 }
 
 .comment-sticky::after {
@@ -299,20 +320,22 @@ onMounted(() => {
   position: absolute;
   inset: 0;
   background-image:
-    radial-gradient(rgba(120, 106, 76, 0.06) 0.5px, transparent 0.5px),
-    radial-gradient(rgba(255, 255, 255, 0.26) 0.5px, transparent 0.5px);
+    radial-gradient(rgba(116, 97, 56, 0.15) 0.65px, transparent 0.8px),
+    radial-gradient(rgba(78, 63, 30, 0.08) 0.6px, transparent 0.9px),
+    radial-gradient(rgba(255, 255, 255, 0.18) 0.55px, transparent 0.7px),
+    linear-gradient(115deg, rgba(132, 107, 62, 0.05) 0%, rgba(132, 107, 62, 0) 45%);
   background-position:
     0 0,
-    2px 2px;
+    1px 2px,
+    3px 1px,
+    0 0;
   background-size:
+    5px 5px,
+    7px 6px,
     4px 4px,
-    5px 5px;
-  opacity: 0.32;
+    100% 100%;
+  opacity: 0.5;
   pointer-events: none;
-}
-
-.comment-sticky:hover {
-  transform: translateX(var(--sticky-shift, 0px)) rotate(var(--sticky-rotate, 0deg)) translateY(-1px);
 }
 
 .comment-author-link {
@@ -323,6 +346,10 @@ onMounted(() => {
 
 .comment-author-link:hover {
   color: #0ea5e9;
+}
+
+.verified-badge-icon {
+  transform: translateY(0.5px);
 }
 
 .comment-ready-indicator {
@@ -343,6 +370,14 @@ onMounted(() => {
 
 .comment-ready-dot.is-not-ready {
   background: #ef4444;
+}
+
+.comment-form-panel {
+  background: color-mix(in srgb, var(--color-bg-canvas) 92%, #fff 8%);
+  box-shadow:
+    0 1px 0 rgba(20, 20, 20, 0.04),
+    0 10px 18px rgba(20, 20, 20, 0.08);
+  border-color: color-mix(in srgb, var(--color-border-subtle) 78%, #cabd95 22%);
 }
 
 .comment-md-content {
@@ -367,10 +402,6 @@ onMounted(() => {
     box-shadow:
       0 1px 0 rgba(20, 20, 20, 0.06),
       0 8px 14px rgba(20, 20, 20, 0.08);
-  }
-
-  .comment-sticky:hover {
-    transform: translateX(calc(var(--sticky-shift, 0px) * 0.35)) rotate(calc(var(--sticky-rotate, 0deg) * 0.35));
   }
 }
 </style>
