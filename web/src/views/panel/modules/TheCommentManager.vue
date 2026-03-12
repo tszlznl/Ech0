@@ -1,119 +1,148 @@
 <template>
-  <div class="w-full px-2">
-    <PanelCard class="mb-3">
-      <div class="mb-3 flex items-center justify-between">
-        <h1 class="text-lg font-bold text-[var(--color-text-primary)]">评论系统设置</h1>
-        <button
-          class="rounded-md border border-[var(--color-border-subtle)] px-3 py-1 text-sm"
+  <div class="w-full px-2 comment-manager-page">
+    <PanelCard class="mb-4">
+      <div class="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <h1 class="text-lg font-bold text-[var(--color-text-primary)]">评论系统设置</h1>
+          <p class="text-xs text-[var(--color-text-muted)]">统一管理评论开关、审核策略与验证码配置。</p>
+        </div>
+        <BaseButton
+          class="comment-btn comment-btn-primary px-3 py-1.5 text-sm"
           @click="saveSetting"
           :disabled="settingSaving"
         >
           {{ settingSaving ? '保存中...' : '保存设置' }}
-        </button>
+        </BaseButton>
       </div>
-      <div class="space-y-2 text-sm text-[var(--color-text-secondary)]">
-        <label class="flex items-center gap-2">
-          <input v-model="setting.enable_comment" type="checkbox" />
-          启用评论系统
-        </label>
-        <label class="flex items-center gap-2">
-          <input v-model="setting.require_approval" type="checkbox" />
-          游客评论需审核
-        </label>
-        <label class="flex items-center gap-2">
-          <input v-model="setting.captcha_enabled" type="checkbox" />
-          启用验证码（可选）
-        </label>
-        <input
+
+      <div class="space-y-2 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/50 p-3">
+        <div class="setting-row">
+          <div>
+            <h3 class="setting-title">启用评论系统</h3>
+            <p class="setting-desc">关闭后前台将不展示评论区。</p>
+          </div>
+          <BaseSwitch v-model="setting.enable_comment" />
+        </div>
+        <div class="setting-row">
+          <div>
+            <h3 class="setting-title">游客评论需审核</h3>
+            <p class="setting-desc">开启后游客评论默认进入待审核状态。</p>
+          </div>
+          <BaseSwitch v-model="setting.require_approval" :disabled="!setting.enable_comment" />
+        </div>
+        <div class="setting-row">
+          <div>
+            <h3 class="setting-title">启用验证码</h3>
+            <p class="setting-desc">按需接入第三方验证码服务。</p>
+          </div>
+          <BaseSwitch v-model="setting.captcha_enabled" :disabled="!setting.enable_comment" />
+        </div>
+      </div>
+
+      <div v-if="setting.captcha_enabled" class="mt-3 grid gap-2">
+        <BaseInput
           v-model.trim="setting.captcha_verify_url"
           type="text"
-          class="w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2"
+          :disabled="!setting.enable_comment"
           placeholder="验证码校验地址（例如 https://your-cap-service/verify）"
         />
-        <input
+        <BaseInput
           v-model.trim="setting.captcha_secret"
           type="text"
-          class="w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2"
+          :disabled="!setting.enable_comment"
           placeholder="验证码 secret（按需填写）"
         />
+      </div>
+      <div v-else class="mt-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-muted)]/60 px-3 py-2 text-xs text-[var(--color-text-muted)]">
+        当前未开启验证码。项目使用 <code>cap</code> 验证服务，启用前需要你先自行部署并配置校验地址与 secret。
       </div>
     </PanelCard>
 
     <PanelCard>
       <div class="mb-3 flex flex-wrap items-center gap-2">
-        <input
+        <BaseInput
           v-model.trim="query.keyword"
           type="text"
-          class="min-w-56 rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+          class="min-w-56 md:w-64"
           placeholder="搜索昵称、邮箱、内容"
         />
-        <select
+        <BaseSelect
           v-model="query.status"
-          class="rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+          class="h-9 min-w-28"
+          :options="statusOptions"
+          placeholder="全部状态"
         >
-          <option value="">全部状态</option>
-          <option value="pending">待审核</option>
-          <option value="approved">已通过</option>
-          <option value="rejected">已拒绝</option>
-        </select>
-        <button class="rounded-md border border-[var(--color-border-subtle)] px-3 py-2 text-sm" @click="reload">
+        </BaseSelect>
+        <BaseButton class="comment-btn px-3 py-1.5 text-sm" @click="reload">
           查询
-        </button>
-        <button
-          class="rounded-md border border-[var(--color-border-subtle)] px-3 py-2 text-sm"
+        </BaseButton>
+        <BaseButton
+          class="comment-btn px-3 py-1.5 text-sm"
           @click="runBatch('approve')"
+          :disabled="selectedIds.length === 0"
         >
           批量通过
-        </button>
-        <button
-          class="rounded-md border border-[var(--color-border-subtle)] px-3 py-2 text-sm"
+        </BaseButton>
+        <BaseButton
+          class="comment-btn px-3 py-1.5 text-sm"
           @click="runBatch('reject')"
+          :disabled="selectedIds.length === 0"
         >
           批量拒绝
-        </button>
-        <button
-          class="rounded-md border border-red-300 px-3 py-2 text-sm text-red-500"
+        </BaseButton>
+        <BaseButton
+          class="comment-btn-danger px-3 py-1.5 text-sm"
           @click="runBatch('delete')"
+          :disabled="selectedIds.length === 0"
         >
           批量删除
-        </button>
+        </BaseButton>
       </div>
 
-      <div class="overflow-x-auto">
+      <div class="overflow-x-auto rounded-lg border border-[var(--color-border-subtle)]">
         <table class="w-full min-w-[760px] text-sm">
           <thead>
-            <tr class="border-b border-[var(--color-border-subtle)] text-left text-[var(--color-text-muted)]">
-              <th class="py-2"><input v-model="allChecked" type="checkbox" @change="toggleAll" /></th>
+            <tr class="bg-[var(--color-bg-muted)]/70 text-left text-[var(--color-text-muted)]">
+              <th class="py-2 pl-3"><input v-model="allChecked" type="checkbox" /></th>
               <th class="py-2">昵称</th>
               <th class="py-2">邮箱</th>
               <th class="py-2">状态</th>
               <th class="py-2">时间</th>
-              <th class="py-2">操作</th>
+              <th class="py-2 pr-3">操作</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in list.items" :key="item.id" class="border-b border-[var(--color-border-subtle)]">
-              <td class="py-2">
+            <tr
+              v-for="item in list.items"
+              :key="item.id"
+              class="border-t border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]"
+            >
+              <td class="py-2 pl-3">
                 <input v-model="selectedIds" type="checkbox" :value="item.id" />
               </td>
               <td class="py-2">{{ item.nickname }}</td>
               <td class="py-2">{{ item.email }}</td>
               <td class="py-2">
-                <span :class="statusClass(item.status)">{{ item.status }}</span>
+                <span class="status-pill" :class="statusClass(item.status)">
+                  {{ statusLabelMap[item.status] || item.status }}
+                </span>
               </td>
               <td class="py-2">{{ formatDate(item.created_at) }}</td>
-              <td class="py-2">
+              <td class="py-2 pr-3">
                 <div class="flex items-center gap-2">
-                  <button class="text-sky-500 hover:underline" @click="openDetail(item.id)">详情</button>
-                  <button class="text-emerald-500 hover:underline" @click="updateStatus(item.id, 'approved')">
+                  <button class="table-action text-sky-500" @click="openDetail(item.id)">详情</button>
+                  <button class="table-action text-emerald-500" @click="updateStatus(item.id, 'approved')">
                     通过
                   </button>
-                  <button class="text-amber-500 hover:underline" @click="updateStatus(item.id, 'rejected')">
+                  <button class="table-action text-amber-500" @click="updateStatus(item.id, 'rejected')">
                     拒绝
                   </button>
-                  <button class="text-red-500 hover:underline" @click="remove(item.id)">删除</button>
+                  <button class="table-action text-red-500" @click="remove(item.id)">删除</button>
                 </div>
               </td>
+            </tr>
+            <tr v-if="list.items.length === 0">
+              <td colspan="6" class="px-3 py-8 text-center text-[var(--color-text-muted)]">暂无评论数据</td>
             </tr>
           </tbody>
         </table>
@@ -122,17 +151,17 @@
       <div class="mt-3 flex items-center justify-between text-sm">
         <span class="text-[var(--color-text-muted)]">共 {{ list.total }} 条</span>
         <div class="flex items-center gap-2">
-          <button class="rounded border px-2 py-1" :disabled="query.page <= 1" @click="prevPage">
+          <BaseButton class="comment-btn px-2 py-1 text-sm" :disabled="query.page <= 1" @click="prevPage">
             上一页
-          </button>
-          <span>第 {{ query.page }} 页</span>
-          <button
-            class="rounded border px-2 py-1"
+          </BaseButton>
+          <span class="text-[var(--color-text-secondary)]">第 {{ query.page }} / {{ totalPages }} 页</span>
+          <BaseButton
+            class="comment-btn px-2 py-1 text-sm"
             :disabled="query.page * query.page_size >= list.total"
             @click="nextPage"
           >
             下一页
-          </button>
+          </BaseButton>
         </div>
       </div>
     </PanelCard>
@@ -142,19 +171,21 @@
       class="fixed inset-0 z-30 flex items-end justify-center bg-black/30 p-3 md:items-center"
       @click.self="detailOpen = false"
     >
-      <div class="w-full max-w-lg rounded-lg bg-[var(--color-bg-canvas)] p-4">
+      <div class="w-full max-w-lg rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-canvas)] p-4 shadow-[var(--shadow-md)]">
         <div class="mb-2 flex items-center justify-between">
-          <h3 class="text-base font-semibold">评论详情</h3>
-          <button class="text-sm text-[var(--color-text-muted)]" @click="detailOpen = false">关闭</button>
+          <h3 class="text-base font-semibold text-[var(--color-text-primary)]">评论详情</h3>
+          <button class="table-action text-sm text-[var(--color-text-muted)]" @click="detailOpen = false">关闭</button>
         </div>
-        <div class="space-y-1 text-sm">
+        <div class="space-y-1 text-sm text-[var(--color-text-secondary)]">
           <p><b>昵称：</b>{{ current.nickname }}</p>
           <p><b>邮箱：</b>{{ current.email }}</p>
           <p><b>网址：</b>{{ current.website || '-' }}</p>
-          <p><b>状态：</b>{{ current.status }}</p>
+          <p><b>状态：</b>{{ statusLabelMap[current.status] || current.status }}</p>
           <p><b>来源：</b>{{ current.source }}</p>
           <p><b>时间：</b>{{ formatDate(current.created_at) }}</p>
-          <p class="mt-2 whitespace-pre-wrap break-words rounded border p-2">{{ current.content }}</p>
+          <p class="mt-2 whitespace-pre-wrap break-words rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-muted)]/50 p-2">
+            {{ current.content }}
+          </p>
         </div>
       </div>
     </div>
@@ -173,6 +204,10 @@ import {
   fetchUpdatePanelCommentStatus,
 } from '@/service/api'
 import PanelCard from '@/layout/PanelCard.vue'
+import BaseInput from '@/components/common/BaseInput.vue'
+import BaseSelect from '@/components/common/BaseSelect.vue'
+import BaseSwitch from '@/components/common/BaseSwitch.vue'
+import BaseButton from '@/components/common/BaseButton.vue'
 import { theToast } from '@/utils/toast'
 import { formatDate } from '@/utils/other'
 
@@ -201,6 +236,18 @@ const list = reactive<App.Api.Comment.PanelPageResult>({
 const selectedIds = ref<string[]>([])
 const detailOpen = ref(false)
 const current = ref<App.Api.Comment.CommentItem | null>(null)
+const statusOptions = [
+  { label: '全部状态', value: '' },
+  { label: '待审核', value: 'pending' },
+  { label: '已通过', value: 'approved' },
+  { label: '已拒绝', value: 'rejected' },
+]
+const statusLabelMap: Record<string, string> = {
+  pending: '待审核',
+  approved: '已通过',
+  rejected: '已拒绝',
+}
+const totalPages = computed(() => Math.max(1, Math.ceil(list.total / query.page_size)))
 
 const allChecked = computed({
   get() {
@@ -246,10 +293,6 @@ const loadList = async () => {
 const reload = async () => {
   query.page = 1
   await loadList()
-}
-
-const toggleAll = () => {
-  allChecked.value = !allChecked.value
 }
 
 const runBatch = async (action: App.Api.Comment.BatchAction) => {
@@ -299,13 +342,103 @@ const nextPage = async () => {
 }
 
 const statusClass = (status: string) => {
-  if (status === 'approved') return 'text-emerald-500'
-  if (status === 'rejected') return 'text-amber-500'
-  return 'text-sky-500'
+  if (status === 'approved') return 'status-approved'
+  if (status === 'rejected') return 'status-rejected'
+  return 'status-pending'
 }
 
 onMounted(async () => {
   await Promise.all([loadSetting(), loadList()])
 })
 </script>
+
+<style scoped>
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.6rem;
+}
+
+.setting-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.setting-desc {
+  margin-top: 0.1rem;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.comment-btn {
+  border: 1px solid var(--color-border-subtle) !important;
+  background: var(--color-bg-surface) !important;
+  color: var(--color-text-secondary) !important;
+}
+
+.comment-btn:hover {
+  border-color: var(--color-border-strong) !important;
+  background: var(--color-bg-muted) !important;
+}
+
+.comment-btn-primary {
+  border-color: var(--color-border-strong) !important;
+}
+
+.comment-btn-danger {
+  border: 1px solid color-mix(in srgb, #ef4444 35%, var(--color-border-subtle) 65%) !important;
+  background: color-mix(in srgb, #ef4444 9%, var(--color-bg-surface) 91%) !important;
+  color: #dc2626 !important;
+}
+
+.comment-btn-danger:hover {
+  border-color: #f87171 !important;
+  background: color-mix(in srgb, #ef4444 14%, var(--color-bg-surface) 86%) !important;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  border: 1px solid transparent;
+}
+
+.status-approved {
+  color: #059669;
+  border-color: color-mix(in srgb, #10b981 45%, transparent 55%);
+  background: color-mix(in srgb, #10b981 12%, transparent 88%);
+}
+
+.status-rejected {
+  color: #d97706;
+  border-color: color-mix(in srgb, #f59e0b 45%, transparent 55%);
+  background: color-mix(in srgb, #f59e0b 14%, transparent 86%);
+}
+
+.status-pending {
+  color: #0369a1;
+  border-color: color-mix(in srgb, #38bdf8 45%, transparent 55%);
+  background: color-mix(in srgb, #38bdf8 14%, transparent 86%);
+}
+
+.table-action {
+  transition: opacity 0.2s ease;
+}
+
+.table-action:hover {
+  opacity: 0.72;
+}
+
+@media (max-width: 768px) {
+  .setting-row {
+    align-items: flex-start;
+  }
+}
+</style>
 

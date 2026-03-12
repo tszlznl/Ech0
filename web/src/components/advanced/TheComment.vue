@@ -8,7 +8,7 @@
     </div>
 
     <template v-else>
-    <div class="mb-3 rounded-lg border border-[var(--color-border-subtle)] p-3">
+    <div class="mb-4">
       <div class="mb-2 flex items-center justify-between">
         <h3 class="font-semibold text-[var(--color-text-primary)]">评论</h3>
         <span class="text-xs text-[var(--color-text-muted)]">{{ comments.length }} 条</span>
@@ -30,7 +30,7 @@
         >
           <span class="sticky-pin" aria-hidden="true"></span>
           <div class="mb-2 flex items-center gap-2">
-            <img :src="item.avatar_url" alt="avatar" class="h-8 w-8 rounded-full object-cover" />
+            <img :src="resolveCommentAvatar(item, index)" alt="avatar" class="h-8 w-8 rounded-full object-cover" />
             <div class="min-w-0">
               <div class="truncate text-sm font-medium text-[var(--color-text-primary)]">
                 {{ item.nickname }}
@@ -49,9 +49,7 @@
               主页
             </a>
           </div>
-          <p class="whitespace-pre-wrap break-words text-sm leading-6 text-[var(--color-text-primary)]">
-            {{ item.content }}
-          </p>
+          <TheMdPreview class="comment-md-content" :content="item.content" />
         </article>
       </div>
     </div>
@@ -59,13 +57,34 @@
     <form class="rounded-lg border border-[var(--color-border-subtle)] p-3" @submit.prevent="submitComment">
       <div class="mb-2 flex items-center justify-between">
         <h3 class="font-semibold text-[var(--color-text-primary)]">发表评论</h3>
-        <span
-          v-if="isPrivilegedUser"
-          class="text-xs text-emerald-500"
-        >
-          管理员/Owner 已自动使用账户信息
+        <span class="comment-ready-indicator">
+          <i
+            class="comment-ready-dot"
+            :class="profileReady ? 'is-ready' : 'is-not-ready'"
+            aria-hidden="true"
+          ></i>
         </span>
       </div>
+
+      <article
+        class="comment-sticky comment-preview relative mb-2 rounded-md border p-3"
+        :style="getStickyCardStyle(0)"
+      >
+        <span class="sticky-pin" aria-hidden="true"></span>
+        <div class="mb-2 flex items-center gap-2">
+          <img :src="previewAvatar" alt="avatar" class="h-8 w-8 rounded-full object-cover" />
+          <div class="min-w-0">
+            <div class="truncate text-sm font-medium text-[var(--color-text-primary)]">
+              {{ previewNickname }}
+            </div>
+            <div class="text-xs text-[var(--color-text-muted)]">实时预览</div>
+          </div>
+        </div>
+        <TheMdPreview
+          class="comment-md-content"
+          :content="form.content || '在这里输入评论内容，将实时预览贴纸效果。'"
+        />
+      </article>
 
       <div v-if="!isPrivilegedUser" class="space-y-2">
         <input
@@ -92,7 +111,11 @@
         v-model.trim="form.content"
         class="mt-2 min-h-24 w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
         placeholder="写下你的评论..."
+        maxlength="200"
       />
+      <div class="mt-1 text-right text-xs" :class="contentTooLong ? 'text-red-500' : 'text-[var(--color-text-muted)]'">
+        {{ contentLength }}/200
+      </div>
 
       <input
         v-model="form.hp_field"
@@ -132,6 +155,7 @@ import { fetchCreateComment, fetchGetCommentFormMeta, fetchGetComments } from '@
 import { useUserStore } from '@/stores'
 import { theToast } from '@/utils/toast'
 import { formatDate } from '@/utils/other'
+import TheMdPreview from './TheMdPreview.vue'
 
 const route = useRoute()
 const userStore = useUserStore()
@@ -158,11 +182,42 @@ const isPrivilegedUser = computed(() => {
 
 const canSubmit = computed(() => {
   if (!form.echo_id || !form.content) return false
+  if (contentTooLong.value) return false
   if (!form.form_token) return false
   if (!isPrivilegedUser.value && (!form.nickname || !form.email)) return false
   if (formMeta.value?.captcha_enabled && !form.captcha_token) return false
   return true
 })
+
+const contentLength = computed(() => form.content.length)
+const contentTooLong = computed(() => contentLength.value > 200)
+
+const profileReady = computed(() => {
+  if (isPrivilegedUser.value) return true
+  return Boolean(form.nickname && form.email)
+})
+
+const previewNickname = computed(() => {
+  if (isPrivilegedUser.value) return userStore.user?.username || '你'
+  return form.nickname || '你'
+})
+
+const buildDiceBearURL = (seed: string) => {
+  const trimmed = seed.trim() || 'guest'
+  return `https://api.dicebear.com/9.x/fun-emoji/svg?seed=${encodeURIComponent(trimmed)}`
+}
+
+const previewAvatar = computed(() => {
+  if (isPrivilegedUser.value && userStore.user?.avatar) {
+    return userStore.user.avatar
+  }
+  return buildDiceBearURL(`${form.nickname || 'guest'}-${form.email || 'preview'}`)
+})
+
+const resolveCommentAvatar = (item: App.Api.Comment.CommentItem, index: number) => {
+  if (item.source === 'system' && item.avatar_url) return item.avatar_url
+  return buildDiceBearURL(`${item.id}-${item.nickname}-${index}`)
+}
 
 const getStickyCardStyle = (index: number) => {
   const rotateOptions = ['-0.8deg', '0.5deg', '-0.3deg', '0.9deg']
@@ -264,6 +319,42 @@ onMounted(() => {
     0 1px 1px rgba(0, 0, 0, 0.24),
     0 0 0 2px rgba(255, 255, 255, 0.78);
   transform: translateX(-50%);
+}
+
+.comment-ready-indicator {
+  display: inline-flex;
+  align-items: center;
+}
+
+.comment-ready-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.72);
+}
+
+.comment-ready-dot.is-ready {
+  background: #10b981;
+}
+
+.comment-ready-dot.is-not-ready {
+  background: #ef4444;
+}
+
+.comment-md-content {
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.comment-md-content :deep(p) {
+  margin: 0.15rem 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.comment-preview {
+  opacity: 0.96;
 }
 
 @media (max-width: 640px) {

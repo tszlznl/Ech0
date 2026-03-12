@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/bytedance/sonic"
 	"github.com/lin-snow/ech0/internal/config"
@@ -27,6 +28,7 @@ import (
 const (
 	minSubmitMS       int64 = 2000
 	maxFormTokenHours int64 = 24
+	maxCommentRunes         = 200
 )
 
 type CommentService struct {
@@ -104,6 +106,9 @@ func (s *CommentService) CreateComment(
 	}
 	if comment.EchoID == "" || comment.Content == "" {
 		return commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "评论内容不能为空")
+	}
+	if utf8.RuneCountInString(comment.Content) > maxCommentRunes {
+		return commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "评论内容不能超过200字")
 	}
 
 	if validUser && (user.IsAdmin || user.IsOwner) {
@@ -429,4 +434,3 @@ func defaultSystemEmail(username string) string {
 	}
 	return name + "@local.invalid"
 }
-
