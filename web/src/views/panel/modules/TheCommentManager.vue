@@ -54,7 +54,16 @@
         />
       </div>
       <div v-else class="mt-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-muted)]/60 px-3 py-2 text-xs text-[var(--color-text-muted)]">
-        当前未开启验证码。项目使用 <code>cap</code> 验证服务，启用前需要你先自行部署并配置校验地址与 secret。
+        当前未开启验证码。项目使用
+        <a
+          href="https://github.com/tiagozip/cap"
+          target="_blank"
+          rel="noreferrer"
+          class="underline underline-offset-2 hover:text-[var(--color-text-secondary)]"
+        >
+          cap
+        </a>
+        验证服务，启用前需要你先自行部署并配置校验地址与 secret。
       </div>
     </PanelCard>
 
