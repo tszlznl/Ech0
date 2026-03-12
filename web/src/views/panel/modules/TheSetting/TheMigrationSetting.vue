@@ -26,26 +26,50 @@
         <div class="migration-row migration-row-top">
           <span class="migration-label">来源压缩包</span>
           <div class="migration-upload-wrap">
-            <BaseButton title="选择 zip 文件" @click="handlePickZip">选择 zip 文件</BaseButton>
+            <BaseButton
+              title="选择 zip 文件"
+              :disabled="isSubmittingMigration"
+              @click="handlePickZip"
+            >
+              选择 zip 文件
+            </BaseButton>
             <p class="migration-file-name">{{ selectedZipName || '未选择文件' }}</p>
           </div>
         </div>
       </div>
 
       <div class="migration-actions">
-        <BaseButton title="开始迁移" @click="handleStartMigration">开始迁移</BaseButton>
-        <BaseButton title="刷新状态" @click="handleRefreshJob">刷新状态</BaseButton>
-        <BaseButton v-if="migrationStore.isRunning" title="取消任务" @click="handleCancelJob">
+        <BaseButton
+          title="开始迁移"
+          :disabled="isSubmittingMigration"
+          @click="handleStartMigration"
+        >
+          {{ startActionText }}
+        </BaseButton>
+        <BaseButton title="刷新状态" :disabled="isSubmittingMigration" @click="handleRefreshJob">
+          刷新状态
+        </BaseButton>
+        <BaseButton
+          v-if="migrationStore.isRunning"
+          title="取消任务"
+          :disabled="isSubmittingMigration"
+          @click="handleCancelJob"
+        >
           取消任务
         </BaseButton>
         <BaseButton
           v-if="migrationStore.canCleanup"
           :title="migrationStore.isSuccess ? '完成' : '结束/清理迁移'"
+          :disabled="isSubmittingMigration"
           @click="handleCleanupMigration"
         >
           {{ migrationStore.isSuccess ? '完成' : '结束/清理迁移' }}
         </BaseButton>
       </div>
+      <p v-if="isUploadingZip" class="migration-progress-tip">正在上传并解压文件，请耐心等待...</p>
+      <p v-else-if="isCreatingMigration" class="migration-progress-tip">
+        上传完成，正在创建迁移任务...
+      </p>
 
       <div class="migration-job" v-if="migrationStore.hasJob">
         <div class="migration-job-header">
@@ -118,6 +142,8 @@ const sourceCards = [
 const sourceType = ref<MigrationSourceType>('ech0_v4')
 const selectedZip = ref<File | null>(null)
 const selectedZipName = ref('')
+const isUploadingZip = ref(false)
+const isCreatingMigration = ref(false)
 const migrationStore = useMigrationStore()
 const statusLabelMap: Record<string, string> = {
   idle: '空闲',
@@ -151,6 +177,12 @@ const hasMetrics = computed(
 )
 const formattedStartedAt = computed(() => formatTime(migrationStore.state.started_at))
 const formattedFinishedAt = computed(() => formatTime(migrationStore.state.finished_at))
+const isSubmittingMigration = computed(() => isUploadingZip.value || isCreatingMigration.value)
+const startActionText = computed(() => {
+  if (isUploadingZip.value) return '上传中...'
+  if (isCreatingMigration.value) return '创建任务中...'
+  return '开始迁移'
+})
 
 const resetSelectedZip = () => {
   selectedZip.value = null
@@ -158,6 +190,10 @@ const resetSelectedZip = () => {
 }
 
 const handleSelectSource = (source: SourceCard) => {
+  if (isSubmittingMigration.value) {
+    theToast.info('正在处理迁移请求，请稍候')
+    return
+  }
   if (source.inDevelopment) {
     theToast.info(`${source.title} 迁移功能开发中，敬请期待`)
     return
@@ -167,6 +203,10 @@ const handleSelectSource = (source: SourceCard) => {
 }
 
 const handlePickZip = () => {
+  if (isSubmittingMigration.value) {
+    theToast.info('正在处理迁移请求，请稍候')
+    return
+  }
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = '.zip,application/zip'
@@ -185,6 +225,10 @@ const handlePickZip = () => {
 }
 
 const handleStartMigration = async () => {
+  if (isSubmittingMigration.value) {
+    theToast.info('正在处理迁移请求，请稍候')
+    return
+  }
   if (sourceType.value === 'memos') {
     theToast.info('Memos 迁移功能开发中，暂不可用')
     return
@@ -198,25 +242,41 @@ const handleStartMigration = async () => {
     return
   }
 
-  const uploadRes = await fetchUploadMigrationSourceZip(sourceType.value, selectedZip.value)
-  if (uploadRes.code !== 1) {
-    theToast.error(uploadRes.msg || '上传迁移压缩包失败')
-    return
-  }
-  const sourcePayload = uploadRes.data?.source_payload ?? {}
+  try {
+    isUploadingZip.value = true
+    theToast.info('正在上传并处理迁移压缩包，请勿关闭页面')
+    const uploadRes = await fetchUploadMigrationSourceZip(sourceType.value, selectedZip.value)
+    if (uploadRes.code !== 1) {
+      theToast.error(uploadRes.msg || '上传迁移压缩包失败')
+      return
+    }
+    const sourcePayload = uploadRes.data?.source_payload ?? {}
 
-  const res = await migrationStore.startMigration({
-    source_type: sourceType.value,
-    source_payload: sourcePayload,
-  })
-  if (res.code !== 1) {
-    theToast.error(res.msg || '创建迁移任务失败')
-    return
+    isUploadingZip.value = false
+    isCreatingMigration.value = true
+    const res = await migrationStore.startMigration({
+      source_type: sourceType.value,
+      source_payload: sourcePayload,
+    })
+    if (res.code !== 1) {
+      theToast.error(res.msg || '创建迁移任务失败')
+      return
+    }
+    theToast.success('迁移已开始')
+  } catch (error) {
+    console.error('Upload migration source zip failed:', error)
+    theToast.error('上传请求失败，请检查网络或反向代理上传限制')
+  } finally {
+    isUploadingZip.value = false
+    isCreatingMigration.value = false
   }
-  theToast.success('迁移已开始')
 }
 
 const handleRefreshJob = async () => {
+  if (isSubmittingMigration.value) {
+    theToast.info('正在处理迁移请求，请稍候')
+    return
+  }
   const ok = await migrationStore.fetchStatus()
   if (!ok) {
     theToast.error('查询迁移状态失败')
@@ -226,6 +286,10 @@ const handleRefreshJob = async () => {
 }
 
 const handleCancelJob = async () => {
+  if (isSubmittingMigration.value) {
+    theToast.info('正在处理迁移请求，请稍候')
+    return
+  }
   if (!migrationStore.isRunning) {
     theToast.info('当前没有进行中的迁移')
     return
@@ -239,6 +303,10 @@ const handleCancelJob = async () => {
 }
 
 const handleCleanupMigration = async () => {
+  if (isSubmittingMigration.value) {
+    theToast.info('正在处理迁移请求，请稍候')
+    return
+  }
   const res = await migrationStore.cleanupMigration()
   if (res.code !== 1) {
     theToast.error(res.msg || '清理迁移失败')
@@ -374,6 +442,11 @@ void migrationStore.init()
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem;
+}
+
+.migration-progress-tip {
+  color: var(--color-text-secondary);
+  font-size: 0.83rem;
 }
 
 .migration-job {
