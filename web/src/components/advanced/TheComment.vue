@@ -130,18 +130,14 @@
         aria-hidden="true"
       />
 
-      <input
-        v-if="formMeta?.captcha_enabled"
-        v-model.trim="form.captcha_token"
-        type="text"
-        class="mt-2 w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
-        placeholder="请输入验证码 token（已开启验证码）"
-      />
-
-      <div class="mt-3 flex items-center justify-end">
+      <div class="comment-submit-row mt-3">
+        <div v-if="needCaptcha" class="comment-captcha-wrap">
+          <div ref="captchaMountRef" class="comment-captcha-mount"></div>
+          <p v-if="captchaError" class="comment-captcha-error text-xs text-red-500">{{ captchaError }}</p>
+        </div>
         <button
           type="submit"
-          class="rounded-md bg-[var(--color-text-primary)] px-4 py-2 text-sm text-[var(--color-bg-canvas)]"
+          class="comment-submit-btn rounded-md bg-[var(--color-text-primary)] px-4 py-1 text-sm text-[var(--color-bg-canvas)]"
           :disabled="submitting || !canSubmit"
         >
           {{ submitting ? '提交中...' : '提交评论' }}
@@ -153,7 +149,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchCreateComment, fetchGetCommentFormMeta, fetchGetComments } from '@/service/api'
 import { useUserStore } from '@/stores'
@@ -162,12 +158,29 @@ import { formatDate } from '@/utils/other'
 import TheMdPreview from './TheMdPreview.vue'
 import Verified from '../icons/verified.vue'
 
+type CapSolveDetail = {
+  token?: string
+}
+
+type CapErrorDetail = {
+  error?: string
+}
+
+type CapWidgetElement = HTMLElement & {
+  solve?: () => Promise<CapSolveDetail>
+}
+
 const route = useRoute()
 const userStore = useUserStore()
 const loading = ref(false)
 const submitting = ref(false)
 const comments = ref<App.Api.Comment.CommentItem[]>([])
 const formMeta = ref<App.Api.Comment.FormMeta | null>(null)
+const captchaMountRef = ref<HTMLElement | null>(null)
+const captchaWidget = ref<CapWidgetElement | null>(null)
+const captchaError = ref('')
+const solvingCaptcha = ref(false)
+const CAP_WIDGET_SCRIPT_ID = 'cap-widget-script'
 
 const form = reactive<App.Api.Comment.CreateCommentDto>({
   echo_id: '',
@@ -190,9 +203,12 @@ const canSubmit = computed(() => {
   if (contentTooLong.value) return false
   if (!form.form_token) return false
   if (!isPrivilegedUser.value && (!form.nickname || !form.email)) return false
-  if (formMeta.value?.captcha_enabled && !form.captcha_token) return false
   return true
 })
+
+const needCaptcha = computed(
+  () => Boolean(formMeta.value?.captcha_enabled && formMeta.value?.captcha_api_endpoint),
+)
 
 const contentLength = computed(() => form.content.length)
 const contentTooLong = computed(() => contentLength.value > 200)
@@ -233,6 +249,100 @@ const getStickyCardStyle = (index: number) => {
   } as Record<string, string>
 }
 
+const clearCaptchaWidget = () => {
+  if (captchaWidget.value) {
+    captchaWidget.value.remove()
+    captchaWidget.value = null
+  }
+}
+
+const ensureCapWidgetScript = async () => {
+  if (typeof window === 'undefined') return
+  if (customElements.get('cap-widget')) return
+  const existingScript = document.getElementById(CAP_WIDGET_SCRIPT_ID) as HTMLScriptElement | null
+  if (existingScript) {
+    await new Promise<void>((resolve, reject) => {
+      if (customElements.get('cap-widget')) {
+        resolve()
+        return
+      }
+      existingScript.addEventListener('load', () => resolve(), { once: true })
+      existingScript.addEventListener('error', () => reject(new Error('load cap widget failed')), { once: true })
+    })
+    return
+  }
+  await new Promise<void>((resolve, reject) => {
+    const script = document.createElement('script')
+    script.id = CAP_WIDGET_SCRIPT_ID
+    script.src = 'https://cdn.jsdelivr.net/npm/@cap.js/widget'
+    script.async = true
+    script.onload = () => resolve()
+    script.onerror = () => reject(new Error('load cap widget failed'))
+    document.head.appendChild(script)
+  })
+}
+
+const mountCaptchaWidget = async () => {
+  clearCaptchaWidget()
+  if (!needCaptcha.value || !captchaMountRef.value) return
+  try {
+    await ensureCapWidgetScript()
+  } catch {
+    captchaError.value = '验证码组件加载失败，请稍后重试'
+    return
+  }
+  captchaError.value = ''
+  const widget = document.createElement('cap-widget') as CapWidgetElement
+  widget.setAttribute('data-cap-api-endpoint', formMeta.value?.captcha_api_endpoint || '')
+  widget.addEventListener('solve', (event) => {
+    const token = (event as CustomEvent<CapSolveDetail>).detail?.token
+    form.captcha_token = token || ''
+    if (!token) {
+      captchaError.value = '验证码验证失败，请重试'
+      return
+    }
+    captchaError.value = ''
+  })
+  widget.addEventListener('error', (event: Event) => {
+    const detail = 'detail' in event ? (event as CustomEvent<CapErrorDetail>).detail : undefined
+    const message = detail?.error
+    form.captcha_token = ''
+    captchaError.value = message || '验证码组件异常，请刷新后重试'
+  })
+  captchaMountRef.value.appendChild(widget)
+  captchaWidget.value = widget
+}
+
+const ensureCaptchaToken = async () => {
+  if (!needCaptcha.value) return true
+  if (form.captcha_token) return true
+  if (!captchaWidget.value) {
+    captchaError.value = '验证码组件加载中，请稍后重试'
+    return false
+  }
+  if (!captchaWidget.value.solve) {
+    captchaError.value = '请先完成验证码验证'
+    return false
+  }
+  solvingCaptcha.value = true
+  captchaError.value = ''
+  try {
+    const result = await captchaWidget.value.solve()
+    const token = result?.token || ''
+    form.captcha_token = token
+    if (!token) {
+      captchaError.value = '请先完成验证码验证'
+      return false
+    }
+    return true
+  } catch {
+    captchaError.value = '请先完成验证码验证'
+    return false
+  } finally {
+    solvingCaptcha.value = false
+  }
+}
+
 const loadData = async () => {
   const echoId = String(route.params.echoId || '')
   if (!echoId) return
@@ -259,10 +369,17 @@ const resetForm = () => {
   form.content = ''
   form.hp_field = ''
   form.captcha_token = ''
+  captchaError.value = ''
+  void mountCaptchaWidget()
 }
 
 const submitComment = async () => {
   if (!canSubmit.value || submitting.value) return
+  if (solvingCaptcha.value) return
+  if (!(await ensureCaptchaToken())) {
+    theToast.error('请先完成验证码验证')
+    return
+  }
   submitting.value = true
   try {
     const res = await fetchCreateComment(form)
@@ -278,6 +395,21 @@ const submitComment = async () => {
 
 onMounted(() => {
   loadData()
+})
+
+watch(
+  () => [needCaptcha.value, formMeta.value?.captcha_api_endpoint, captchaMountRef.value] as const,
+  async () => {
+    form.captcha_token = ''
+    captchaError.value = ''
+    await nextTick()
+    void mountCaptchaWidget()
+  },
+  { immediate: true, flush: 'post' },
+)
+
+onBeforeUnmount(() => {
+  clearCaptchaWidget()
 })
 </script>
 
@@ -397,12 +529,70 @@ onMounted(() => {
   opacity: 0.98;
 }
 
+.comment-submit-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.comment-captcha-wrap {
+  margin-right: auto;
+  min-width: 0;
+  max-width: 320px;
+}
+
+.comment-captcha-mount {
+  min-height: 40px;
+}
+
+.comment-captcha-mount :deep(cap-widget) {
+  display: block;
+  max-width: 100%;
+}
+
+.comment-captcha-error {
+  margin-top: 0.25rem;
+}
+
+.comment-submit-btn {
+  flex-shrink: 0;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 1rem;
+}
+
 @media (max-width: 640px) {
   .comment-sticky {
     transform: translateX(calc(var(--sticky-shift, 0px) * 0.35)) rotate(calc(var(--sticky-rotate, 0deg) * 0.35));
     box-shadow:
       0 1px 0 rgba(20, 20, 20, 0.06),
       0 8px 14px rgba(20, 20, 20, 0.08);
+  }
+
+  .comment-submit-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .comment-captcha-wrap {
+    width: 100%;
+    max-width: 320px;
+    margin-right: 0;
+    margin-inline: auto;
+  }
+
+  .comment-captcha-mount {
+    display: flex;
+    justify-content: center;
+  }
+
+  .comment-submit-btn {
+    width: 100%;
+    min-height: 40px;
   }
 }
 </style>

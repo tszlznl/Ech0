@@ -84,10 +84,11 @@ type PageResult[T any] struct {
 }
 
 type FormMeta struct {
-	FormToken      string `json:"form_token"`
-	MinSubmitMs    int64  `json:"min_submit_ms"`
-	CaptchaEnabled bool   `json:"captcha_enabled"`
-	EnableComment  bool   `json:"enable_comment"`
+	FormToken          string `json:"form_token"`
+	MinSubmitMs        int64  `json:"min_submit_ms"`
+	CaptchaEnabled     bool   `json:"captcha_enabled"`
+	CaptchaAPIEndpoint string `json:"captcha_api_endpoint"`
+	EnableComment      bool   `json:"enable_comment"`
 }
 
 type SystemSetting struct {

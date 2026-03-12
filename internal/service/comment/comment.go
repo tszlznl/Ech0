@@ -54,13 +54,18 @@ func (s *CommentService) GetFormMeta(ctx context.Context, clientIP string) (mode
 	if err != nil {
 		return model.FormMeta{}, err
 	}
+	captchaAPIEndpoint := deriveCaptchaAPIEndpoint(setting.CaptchaVerify)
+	captchaReady := setting.CaptchaEnabled &&
+		captchaAPIEndpoint != "" &&
+		strings.TrimSpace(setting.CaptchaSecret) != ""
 	issuedAt := time.Now().UnixMilli()
 	token := s.signFormToken(clientIP, issuedAt)
 	return model.FormMeta{
-		FormToken:      token,
-		MinSubmitMs:    minSubmitMS,
-		CaptchaEnabled: setting.CaptchaEnabled && strings.TrimSpace(setting.CaptchaVerify) != "",
-		EnableComment:  setting.EnableComment,
+		FormToken:          token,
+		MinSubmitMs:        minSubmitMS,
+		CaptchaEnabled:     captchaReady,
+		CaptchaAPIEndpoint: captchaAPIEndpoint,
+		EnableComment:      setting.EnableComment,
 	}, nil
 }
 
@@ -427,4 +432,27 @@ func buildDiceBearURL(seed string) string {
 		trimmed = "guest"
 	}
 	return "https://api.dicebear.com/9.x/fun-emoji/svg?seed=" + url.QueryEscape(trimmed)
+}
+
+func deriveCaptchaAPIEndpoint(verifyURL string) string {
+	trimmed := strings.TrimSpace(verifyURL)
+	if trimmed == "" {
+		return ""
+	}
+	parsed, err := url.Parse(trimmed)
+	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+		return ""
+	}
+	path := strings.TrimSuffix(parsed.Path, "/")
+	path = strings.TrimSuffix(path, "/siteverify")
+	if path == "" || path == "/" {
+		return ""
+	}
+	if !strings.HasSuffix(path, "/") {
+		path += "/"
+	}
+	parsed.Path = path
+	parsed.RawQuery = ""
+	parsed.Fragment = ""
+	return parsed.String()
 }

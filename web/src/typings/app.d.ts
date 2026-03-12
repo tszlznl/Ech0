@@ -443,6 +443,7 @@ declare namespace App {
         form_token: string
         min_submit_ms: number
         captcha_enabled: boolean
+        captcha_api_endpoint: string
         enable_comment: boolean
       }
 
