@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useInitStore } from '@/stores'
 import { theToast } from '@/utils/toast'
@@ -28,6 +28,13 @@ const submitting = ref(false)
 const form = reactive({
   username: '',
   password: '',
+})
+
+onMounted(async () => {
+  await initStore.getStatus().catch(() => undefined)
+  if (initStore.initialized || initStore.ownerExists) {
+    await router.replace({ name: 'auth' })
+  }
 })
 
 const onSubmit = async () => {

@@ -3,6 +3,9 @@ import { ref } from 'vue'
 import { fetchGetInitStatus, fetchInitOwner } from '@/service/api'
 import { localStg } from '@/utils/storage'
 
+const INIT_ALREADY_DONE = 'INIT_ALREADY_DONE'
+const INIT_OWNER_EXISTS = 'INIT_OWNER_EXISTS'
+
 export const useInitStore = defineStore('initStore', () => {
   const initialized = ref<boolean>(false)
   const ownerExists = ref<boolean>(false)
@@ -33,6 +36,12 @@ export const useInitStore = defineStore('initStore', () => {
   const initOwner = async (payload: App.Api.Auth.SignupParams) => {
     const res = await fetchInitOwner(payload)
     if (res.code === 1) {
+      initialized.value = true
+      ownerExists.value = true
+      ready.value = true
+      saveCache()
+    } else if (res.error_code === INIT_ALREADY_DONE || res.error_code === INIT_OWNER_EXISTS) {
+      // 服务端明确返回“已初始化/Owner已存在”时，直接更新本地状态，避免被陈旧缓存卡在 init 页。
       initialized.value = true
       ownerExists.value = true
       ready.value = true
