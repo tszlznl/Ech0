@@ -314,10 +314,10 @@ onBeforeUnmount(() => {
 
 <style scoped lang="css">
 .echo-header-sticky {
-  position: sticky;
-  top: var(--date-sticky-top, 0px);
-  z-index: 8;
+  position: relative;
+  z-index: 1;
   background-color: var(--color-bg-canvas);
+  overflow: hidden;
 }
 
 .echo-timeline {
@@ -345,7 +345,7 @@ onBeforeUnmount(() => {
   content: '';
   position: absolute;
   left: calc(50% - (var(--axis-line-width) / 2));
-  top: -2px;
+  top: 0;
   bottom: calc(50% + (var(--axis-dot-size) / 2) + var(--axis-dot-gap));
   width: var(--axis-line-width);
   background-color: var(--color-border-subtle);
@@ -361,7 +361,7 @@ onBeforeUnmount(() => {
   position: absolute;
   left: calc(50% - (var(--axis-line-width) / 2));
   top: calc(50% + (var(--axis-dot-size) / 2) + var(--axis-dot-gap));
-  bottom: -2px;
+  bottom: 0;
   width: var(--axis-line-width);
   background-color: var(--color-border-subtle);
   pointer-events: none;
@@ -372,6 +372,7 @@ onBeforeUnmount(() => {
   margin-left: var(--axis-offset);
   max-width: 100%;
   min-width: 0;
+  overflow: hidden;
   overflow-x: hidden;
   overflow-x: clip;
 }
@@ -379,7 +380,7 @@ onBeforeUnmount(() => {
 .timeline-content::before {
   content: '';
   position: absolute;
-  top: -2px;
+  top: 0;
   bottom: 0;
   left: calc((var(--axis-line-width) / -2));
   width: var(--axis-line-width);

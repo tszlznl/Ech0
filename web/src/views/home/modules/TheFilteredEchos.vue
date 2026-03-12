@@ -29,6 +29,7 @@
         class="mb-4 mt-1 -ml-2 flex items-center justify-between echos-toolbar"
       >
         <BaseButton
+          v-if="!isZenMode"
           @click="handleLoadMore"
           class="rounded-full bg-[var(--btn-bg-color)] !active:bg-[var(--btn-hover-bg-color)] mr-2"
         >
@@ -68,19 +69,21 @@
 
 <script setup lang="ts">
 import TheEchoCard from '@/components/advanced/TheEchoCard.vue'
-import { computed, onMounted } from 'vue'
-import { useEchoStore, useSettingStore } from '@/stores'
+import { computed, onBeforeUnmount, onMounted, nextTick, watch } from 'vue'
+import { useEchoStore, useSettingStore, useZenStore } from '@/stores'
 import BaseButton from '@/components/common/BaseButton.vue'
 import TheBackTop from '@/components/advanced/TheBackTop.vue'
 import { storeToRefs } from 'pinia'
 
-defineProps<{
+const props = defineProps<{
   scrollTarget?: HTMLElement | null
 }>()
 
 const echoStore = useEchoStore()
 const settingStore = useSettingStore()
+const zenStore = useZenStore()
 const { SystemSetting } = storeToRefs(settingStore)
+const { isZenMode } = storeToRefs(zenStore)
 const footerContent = computed(
   () => SystemSetting.value.footer_content || SystemSetting.value.ICP_number,
 )
@@ -114,6 +117,65 @@ const handleLoadMore = async () => {
   await echoStore.getEchosByPageForFilter()
 }
 
+const nearBottomThreshold = 240
+let scrollListenerAttachedEl: HTMLElement | null = null
+let rafId: number | null = null
+let ensuringScrollable = false
+
+const getScrollMetrics = (container: HTMLElement) => ({
+  scrollTop: container.scrollTop,
+  viewportHeight: container.clientHeight,
+  fullHeight: container.scrollHeight,
+})
+
+const checkAndLoadMoreInZen = async () => {
+  const container = props.scrollTarget
+  if (!container || !isZenMode.value || echoStore.isLoading || !echoStore.filteredHasMore) return
+  const { scrollTop, viewportHeight, fullHeight } = getScrollMetrics(container)
+  if (scrollTop + viewportHeight + nearBottomThreshold >= fullHeight) {
+    await handleLoadMore()
+  }
+}
+
+const onTimelineScroll = () => {
+  if (!isZenMode.value || rafId !== null) return
+  rafId = window.requestAnimationFrame(async () => {
+    rafId = null
+    await checkAndLoadMoreInZen()
+  })
+}
+
+const bindTimelineScroll = () => {
+  if (scrollListenerAttachedEl === props.scrollTarget) return
+  if (scrollListenerAttachedEl) {
+    scrollListenerAttachedEl.removeEventListener('scroll', onTimelineScroll)
+  }
+  scrollListenerAttachedEl = props.scrollTarget ?? null
+  if (scrollListenerAttachedEl) {
+    scrollListenerAttachedEl.addEventListener('scroll', onTimelineScroll, { passive: true })
+  }
+}
+
+const ensureScrollableInZen = async () => {
+  if (ensuringScrollable || !isZenMode.value) return
+  const container = props.scrollTarget
+  if (!container) return
+  ensuringScrollable = true
+  try {
+    const maxAutoLoads = 3
+    let attempts = 0
+    while (attempts < maxAutoLoads && echoStore.filteredHasMore && !echoStore.isLoading) {
+      await nextTick()
+      const { viewportHeight, fullHeight } = getScrollMetrics(container)
+      if (fullHeight > viewportHeight + 10) break
+      attempts += 1
+      await handleLoadMore()
+    }
+  } finally {
+    ensuringScrollable = false
+  }
+}
+
 // 刷新数据
 const handleRefresh = () => {
   echoStore.refreshEchosForFilter()
@@ -126,7 +188,39 @@ const handleUpdateLikeCount = (echoId: string) => {
 
 onMounted(async () => {
   // 获取数据
-  echoStore.getEchosByPageForFilter()
+  bindTimelineScroll()
+  await echoStore.getEchosByPageForFilter()
+  await ensureScrollableInZen()
+})
+
+watch(
+  () => props.scrollTarget,
+  () => {
+    bindTimelineScroll()
+    ensureScrollableInZen()
+  },
+)
+
+watch(isZenMode, () => {
+  ensureScrollableInZen()
+})
+
+watch(
+  () => [echoStore.filteredEchoList.length, echoStore.filteredHasMore, echoStore.isLoading],
+  () => {
+    ensureScrollableInZen()
+  },
+)
+
+onBeforeUnmount(() => {
+  if (scrollListenerAttachedEl) {
+    scrollListenerAttachedEl.removeEventListener('scroll', onTimelineScroll)
+    scrollListenerAttachedEl = null
+  }
+  if (rafId !== null) {
+    window.cancelAnimationFrame(rafId)
+    rafId = null
+  }
 })
 </script>
 
