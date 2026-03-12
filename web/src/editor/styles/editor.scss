@@ -2,6 +2,12 @@
   position: relative;
 }
 
+html.md-editor-full-open,
+body.md-editor-full-open {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 .markdown-editor-backdrop {
   position: fixed;
   inset: 0;
@@ -45,6 +51,9 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(18rem, 1.08fr);
   gap: 0.75rem;
+  overscroll-behavior: contain;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .markdown-full-shell > * {
@@ -61,7 +70,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  box-shadow: var(--md-editor-full-shadow);
+  box-shadow: 0 2px 8px rgba(20, 20, 20, 0.06);
   border-color: var(--md-editor-full-border);
   background-color: var(--md-editor-full-bg);
 }
@@ -172,6 +181,9 @@
   min-height: 0;
   resize: none;
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 .markdown-editor .editor-input::placeholder {
@@ -184,14 +196,16 @@
 
 .markdown-preview-card {
   width: 100%;
-  min-height: 100%;
   height: 100%;
+  min-height: 0;
   position: relative;
+  display: flex;
+  flex-direction: column;
   background-color: var(--md-editor-preview-card-bg);
   border: 1px solid var(--md-editor-preview-card-border);
   border-radius: 0.35rem;
-  box-shadow: var(--md-editor-preview-card-shadow);
-  transform: rotate(var(--md-editor-preview-card-tilt-short));
+  box-shadow: 0 1px 6px rgba(20, 20, 20, 0.05);
+  transform: none;
   overflow: hidden;
 }
 
@@ -239,7 +253,11 @@
 }
 
 .markdown-preview-card.is-long-content {
-  transform: rotate(var(--md-editor-preview-card-tilt-long));
+  transform: none;
+}
+
+.markdown-full-shell.no-preview .markdown-editor.is-full {
+  box-shadow: none;
 }
 
 .markdown-preview-card .preview-card-header {
@@ -252,10 +270,15 @@
 }
 
 .markdown-preview-card .preview-card-body {
+  flex: 1 1 auto;
   padding: 1rem 1.05rem 1.1rem;
-  overflow: auto;
-  min-height: 10rem;
-  max-height: min(74vh, 27rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  max-height: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 .markdown-preview-dock {
@@ -264,18 +287,48 @@
   padding: 0.35rem 0.6rem 0.3rem 0.15rem;
   display: flex;
   align-items: stretch;
+  overflow: hidden;
+}
+
+.markdown-preview-dock > .markdown-preview-card {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 @media (max-width: 960px) {
   .markdown-full-shell {
-    width: min(96vw, 40rem);
-    height: min(82vh, 32rem);
+    top: 0;
+    left: 0;
+    transform: none;
+    width: 100vw;
+    width: 100dvw;
+    height: 100vh;
+    height: 100dvh;
+    padding: calc(env(safe-area-inset-top, 0px) + 0.4rem)
+      max(env(safe-area-inset-right, 0px), 0.4rem) calc(env(safe-area-inset-bottom, 0px) + 0.4rem)
+      max(env(safe-area-inset-left, 0px), 0.4rem);
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.45rem;
+  }
+
+  .markdown-editor.is-full {
+    box-shadow: none;
+    border-radius: 0.7rem;
   }
 
   .markdown-full-shell.no-preview {
-    grid-template-rows: minmax(0, 1fr);
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    grid-template-columns: none;
+    grid-template-rows: none;
+  }
+
+  .markdown-full-shell.no-preview .markdown-editor.is-full {
+    width: min(100%, 34rem);
+    margin: 0 auto;
+    box-shadow: none;
   }
 
   .markdown-editor .toolbar {
@@ -298,10 +351,15 @@
   .markdown-preview-card {
     border: 1px solid var(--md-editor-border-color);
     transform: none;
+    box-shadow: none;
+  }
+
+  .markdown-preview-card.is-long-content {
+    transform: none;
   }
 
   .markdown-preview-card .preview-card-body {
-    min-height: 11rem;
-    max-height: min(58vh, 22rem);
+    min-height: 0;
+    max-height: none;
   }
 }

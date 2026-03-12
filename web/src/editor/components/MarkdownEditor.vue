@@ -98,6 +98,7 @@ const emit = defineEmits<{
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const isFullMode = ref(false)
 const isPreviewMode = ref(false)
+const FULL_MODE_LOCK_CLASS = 'md-editor-full-open'
 
 const toolbarItems: Array<{ label: string; icon: string; action: MarkdownEditorAction }> = [
   { label: '粗体', icon: 'B', action: 'bold' },
@@ -126,14 +127,29 @@ function onToolbarClick(action: MarkdownEditorAction) {
   applyMarkdownAction(textareaRef.value, action)
 }
 
+function syncPageScrollLock(locked: boolean) {
+  if (typeof document === 'undefined') return
+  const root = document.documentElement
+  const body = document.body
+  if (locked) {
+    root.classList.add(FULL_MODE_LOCK_CLASS)
+    body.classList.add(FULL_MODE_LOCK_CLASS)
+    return
+  }
+  root.classList.remove(FULL_MODE_LOCK_CLASS)
+  body.classList.remove(FULL_MODE_LOCK_CLASS)
+}
+
 function enterFullMode() {
   isFullMode.value = true
   isPreviewMode.value = false
+  syncPageScrollLock(true)
 }
 
 function exitFullMode() {
   isFullMode.value = false
   isPreviewMode.value = false
+  syncPageScrollLock(false)
 }
 
 function onWindowKeydown(event: KeyboardEvent) {
@@ -162,5 +178,6 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onWindowKeydown)
+  syncPageScrollLock(false)
 })
 </script>

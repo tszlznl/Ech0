@@ -79,3 +79,5 @@ quality-report.md
 .env
 
 .cursor-go
+
+.DS_Store
