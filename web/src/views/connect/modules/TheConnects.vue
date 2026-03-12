@@ -173,7 +173,7 @@ onMounted(() => {
 }
 
 .connect-title-accent {
-  font-family: 'Comic Sans MS', cursive;
+  font-family: var(--font-family-handwritten);
   color: var(--color-accent);
   font-size: 18px;
   margin-top: -2px;
@@ -245,7 +245,7 @@ onMounted(() => {
 }
 
 .comment-title-accent {
-  font-family: 'Comic Sans MS', cursive;
+  font-family: var(--font-family-handwritten);
   color: var(--color-accent);
   font-size: 18px;
   margin-top: -2px;

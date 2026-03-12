@@ -1,9 +1,14 @@
 <template>
   <div
     v-if="safeGithubURL"
-    class="max-w-sm flex justify-center items-center bg-[var(--color-bg-surface)] rounded-lg shadow-sm ring-1 ring-inset ring-[var(--color-border-subtle)] p-2 gap-2"
+    class="w-full max-w-sm min-w-0 flex justify-center items-center bg-[var(--color-bg-surface)] rounded-lg shadow-sm ring-1 ring-inset ring-[var(--color-border-subtle)] p-2 gap-2 overflow-hidden"
   >
-    <a :href="safeGithubURL" target="_blank" rel="noopener noreferrer">
+    <a
+      :href="safeGithubURL"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="block w-full min-w-0"
+    >
       <div class="flex justify-between items-center">
         <div class="shrink-0 px-6">
           <img
@@ -15,12 +20,12 @@
           <Githubproj v-else class="w-14 h-14" />
         </div>
 
-        <div v-if="CardData" class="py-1">
-          <span class="text-lg font-bold text-[var(--color-text-secondary)]">{{
+        <div v-if="CardData" class="py-1 min-w-0">
+          <span class="block text-lg font-bold text-[var(--color-text-secondary)] truncate">{{
             CardData?.name || repo
           }}</span>
           <p
-            class="text-sm text-[var(--color-text-muted)] font-mono line-clamp-2"
+            class="text-sm text-[var(--color-text-muted)] font-mono line-clamp-2 break-all"
             :title="CardData?.description"
           >
             {{ CardData?.description }}
