@@ -341,32 +341,6 @@ onBeforeUnmount(() => {
   justify-content: center;
 }
 
-.timeline-marker::before {
-  content: '';
-  position: absolute;
-  left: calc(50% - (var(--axis-line-width) / 2));
-  top: 0;
-  bottom: calc(50% + (var(--axis-dot-size) / 2) + var(--axis-dot-gap));
-  width: var(--axis-line-width);
-  background-color: var(--color-border-subtle);
-  pointer-events: none;
-}
-
-.timeline-marker.is-first::before {
-  display: none;
-}
-
-.timeline-marker::after {
-  content: '';
-  position: absolute;
-  left: calc(50% - (var(--axis-line-width) / 2));
-  top: calc(50% + (var(--axis-dot-size) / 2) + var(--axis-dot-gap));
-  bottom: 0;
-  width: var(--axis-line-width);
-  background-color: var(--color-border-subtle);
-  pointer-events: none;
-}
-
 .timeline-content {
   position: relative;
   margin-left: var(--axis-offset);
