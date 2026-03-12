@@ -7,7 +7,7 @@
           <p class="text-xs text-[var(--color-text-muted)]">统一管理评论开关、审核策略与验证码配置。</p>
         </div>
         <BaseButton
-          class="comment-btn comment-btn-primary px-3 py-1.5 text-sm"
+          class="comment-btn comment-btn-primary shrink-0 whitespace-nowrap px-2.5 py-1 text-xs"
           @click="saveSetting"
           :disabled="settingSaving"
         >
