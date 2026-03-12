@@ -2,8 +2,6 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import {
   fetchGetSettings,
-  fetchGetCommentSettings,
-  fetchGetCommentProviderMeta,
   fetchGetS3Settings,
   fetchGetOAuth2Settings,
   fetchGetAllWebhooks,
@@ -13,7 +11,7 @@ import {
   fetchGetAgentInfo,
   fetchHelloEch0,
 } from '@/service/api'
-import { CommentProvider, S3Provider, OAuth2Provider, AgentProvider } from '@/enums/enums'
+import { S3Provider, OAuth2Provider, AgentProvider } from '@/enums/enums'
 
 export const useSettingStore = defineStore('settingStore', () => {
   /**
@@ -32,42 +30,6 @@ export const useSettingStore = defineStore('settingStore', () => {
     custom_css: '',
     custom_js: '',
   })
-  const CommentSetting = ref<App.Api.Setting.CommentSetting>({
-    enable_comment: false,
-    provider: CommentProvider.TWIKOO,
-    providers: {
-      [CommentProvider.TWIKOO]: {
-        script_url: 'https://cdn.jsdelivr.net/npm/twikoo@1.7.2/dist/twikoo.all.min.js',
-        config: { envId: '' },
-      },
-      [CommentProvider.WALINE]: {
-        script_url: 'https://unpkg.com/@waline/client@3.13.0/dist/waline.umd.js',
-        css_url: 'https://unpkg.com/@waline/client@3.13.0/dist/waline.css',
-        config: { serverURL: '', path: '' },
-      },
-      [CommentProvider.ARTALK]: {
-        script_url: 'https://unpkg.com/artalk@2.9.1/dist/Artalk.js',
-        css_url: 'https://unpkg.com/artalk@2.9.1/dist/Artalk.css',
-        config: { server: '', site: '', pageKey: '' },
-      },
-      [CommentProvider.GISCUS]: {
-        script_url: 'https://giscus.app/client.js',
-        config: {
-          repo: '',
-          repoId: '',
-          category: '',
-          categoryId: '',
-          mapping: 'pathname',
-          strict: '0',
-          reactionsEnabled: '1',
-          inputPosition: 'top',
-          lang: 'zh-CN',
-          theme: 'preferred_color_scheme',
-        },
-      },
-    },
-  })
-  const CommentProviderMeta = ref<App.Api.Setting.CommentProviderMeta[]>([])
   const S3Setting = ref<App.Api.Setting.S3Setting>({
     enable: false,
     provider: S3Provider.AWS,
@@ -127,20 +89,6 @@ export const useSettingStore = defineStore('settingStore', () => {
         loading.value = false
       }
     })
-  }
-
-  const getCommentSetting = async () => {
-    const res = await fetchGetCommentSettings()
-    if (res.code === 1) {
-      CommentSetting.value = res.data
-    }
-  }
-
-  const getCommentProviderMeta = async () => {
-    const res = await fetchGetCommentProviderMeta()
-    if (res.code === 1) {
-      CommentProviderMeta.value = res.data.providers || []
-    }
   }
 
   const getS3Setting = async () => {
@@ -213,8 +161,6 @@ export const useSettingStore = defineStore('settingStore', () => {
 
   const init = async () => {
     await getSystemSetting()
-    getCommentSetting()
-    getCommentProviderMeta()
     getS3Setting()
     getAgentInfo()
     getHelloEch0()
@@ -222,8 +168,6 @@ export const useSettingStore = defineStore('settingStore', () => {
 
   return {
     SystemSetting,
-    CommentSetting,
-    CommentProviderMeta,
     S3Setting,
     OAuth2Setting,
     Webhooks,
@@ -235,8 +179,6 @@ export const useSettingStore = defineStore('settingStore', () => {
 
     getAllAccessTokens,
     getSystemSetting,
-    getCommentSetting,
-    getCommentProviderMeta,
     getS3Setting,
     getOAuth2Setting,
     getAllWebhooks,

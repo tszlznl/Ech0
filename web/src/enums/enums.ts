@@ -24,14 +24,6 @@ export enum ImageLayout {
   CAROUSEL = 'carousel', // 单图轮播布局
 }
 
-// 评论服务提供者
-export enum CommentProvider {
-  TWIKOO = 'twikoo',
-  ARTALK = 'artalk',
-  WALINE = 'waline',
-  GISCUS = 'giscus',
-}
-
 // S3 Service Provider
 export enum S3Provider {
   AWS = 'aws',

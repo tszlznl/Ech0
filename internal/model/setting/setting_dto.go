@@ -15,12 +15,6 @@ type SystemSettingDto struct {
 	CustomJS      string `json:"custom_js"`      // 自定义 JS
 }
 
-type CommentSettingDto struct {
-	EnableComment bool                              `json:"enable_comment"` // 是否启用评论
-	Provider      string                            `json:"provider"`       // 当前启用的评论提供者
-	Providers     map[string]CommentProviderSetting `json:"providers"`      // 各评论提供者配置
-}
-
 type S3SettingDto struct {
 	Enable     bool   `json:"enable"`      // 是否启用 S3 存储
 	Provider   string `json:"provider"`    // S3 服务提供商，例如 "aws", "aliyun", "minio", "other"

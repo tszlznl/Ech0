@@ -14,7 +14,6 @@ type SettingService struct {
 	settingRepository  SettingRepository
 	webhookRepository  WebhookRepository
 	publisher          *publisher.Publisher
-	commentRegistry    commentProviderRegistry
 }
 
 func NewSettingService(
@@ -34,6 +33,5 @@ func NewSettingService(
 		webhookRepository:  webhookRepository,
 		settingRepository:  settingRepository,
 		publisher:          publisher,
-		commentRegistry:    newCommentProviderRegistry(),
 	}
 }

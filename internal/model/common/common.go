@@ -8,7 +8,6 @@ type Heatmap struct {
 
 type (
 	UploadFileType  string
-	CommentProvider string
 	S3Provider      string
 	OAuth2Provider  string
 	AgentProvider   string
@@ -21,17 +20,6 @@ const (
 	ImageType UploadFileType = "image"
 	// AudioType  音频类型
 	AudioType UploadFileType = "audio"
-)
-
-const (
-	// Twikoo 评论服务
-	TWIKOO CommentProvider = "twikoo"
-	// Artalk 评论服务
-	ARTALK CommentProvider = "artalk"
-	// WALINE 评论服务
-	WALINE CommentProvider = "waline"
-	// GISCUS 评论服务
-	GISCUS CommentProvider = "giscus"
 )
 
 const (

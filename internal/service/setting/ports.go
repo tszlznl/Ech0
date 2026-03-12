@@ -11,9 +11,6 @@ import (
 type Service interface {
 	GetSetting(setting *model.SystemSetting) error
 	UpdateSetting(ctx context.Context, newSetting *model.SystemSettingDto) error
-	GetCommentSetting(setting *model.CommentSetting) error
-	UpdateCommentSetting(ctx context.Context, newSetting *model.CommentSettingDto) error
-	GetCommentProviderMeta() model.CommentProviderMetaResponse
 	GetS3Setting(ctx context.Context, setting *model.S3Setting) error
 	UpdateS3Setting(ctx context.Context, newSetting *model.S3SettingDto) error
 	GetOAuth2Setting(ctx context.Context, setting *model.OAuth2Setting, forInternal bool) error

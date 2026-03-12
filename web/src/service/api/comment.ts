@@ -1,0 +1,82 @@
+import { request } from '../request'
+
+export function fetchGetCommentFormMeta() {
+  return request<App.Api.Comment.FormMeta>({
+    url: '/comments/form',
+    method: 'GET',
+  })
+}
+
+export function fetchGetComments(echoId: string) {
+  return request<App.Api.Comment.CommentItem[]>({
+    url: `/comments?echo_id=${encodeURIComponent(echoId)}`,
+    method: 'GET',
+  })
+}
+
+export function fetchCreateComment(payload: App.Api.Comment.CreateCommentDto) {
+  return request({
+    url: '/comments',
+    method: 'POST',
+    data: payload,
+  })
+}
+
+export function fetchGetPanelComments(params: App.Api.Comment.PanelListQuery) {
+  const search = new URLSearchParams()
+  search.set('page', String(params.page))
+  search.set('page_size', String(params.page_size))
+  if (params.keyword) search.set('keyword', params.keyword)
+  if (params.status) search.set('status', params.status)
+  if (params.echo_id) search.set('echo_id', params.echo_id)
+  return request<App.Api.Comment.PanelPageResult>({
+    url: `/panel/comments?${search.toString()}`,
+    method: 'GET',
+  })
+}
+
+export function fetchGetPanelCommentById(id: string) {
+  return request<App.Api.Comment.CommentItem>({
+    url: `/panel/comments/${id}`,
+    method: 'GET',
+  })
+}
+
+export function fetchUpdatePanelCommentStatus(id: string, status: App.Api.Comment.CommentStatus) {
+  return request({
+    url: `/panel/comments/${id}/status`,
+    method: 'PATCH',
+    data: { status },
+  })
+}
+
+export function fetchDeletePanelComment(id: string) {
+  return request({
+    url: `/panel/comments/${id}`,
+    method: 'DELETE',
+  })
+}
+
+export function fetchBatchPanelComments(action: App.Api.Comment.BatchAction, ids: string[]) {
+  return request({
+    url: '/panel/comments/batch',
+    method: 'POST',
+    data: { action, ids },
+  })
+}
+
+export function fetchGetCommentSystemSetting() {
+  return request<App.Api.Comment.SystemSetting>({
+    url: '/panel/comments/settings',
+    method: 'GET',
+  })
+}
+
+export function fetchUpdateCommentSystemSetting(setting: App.Api.Comment.SystemSetting) {
+  return request({
+    url: '/panel/comments/settings',
+    method: 'PUT',
+    data: setting,
+  })
+}
+

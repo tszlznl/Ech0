@@ -4,6 +4,7 @@ import (
 	"github.com/google/wire"
 	eventsubscriber "github.com/lin-snow/ech0/internal/event/subscriber"
 	commonRepository "github.com/lin-snow/ech0/internal/repository/common"
+	commentRepository "github.com/lin-snow/ech0/internal/repository/comment"
 	connectRepository "github.com/lin-snow/ech0/internal/repository/connect"
 	echoRepository "github.com/lin-snow/ech0/internal/repository/echo"
 	fileRepository "github.com/lin-snow/ech0/internal/repository/file"
@@ -18,6 +19,7 @@ import (
 	agentService "github.com/lin-snow/ech0/internal/service/agent"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
 	connectService "github.com/lin-snow/ech0/internal/service/connect"
+	commentService "github.com/lin-snow/ech0/internal/service/comment"
 	echoService "github.com/lin-snow/ech0/internal/service/echo"
 	fileService "github.com/lin-snow/ech0/internal/service/file"
 	inboxService "github.com/lin-snow/ech0/internal/service/inbox"
@@ -45,6 +47,10 @@ var (
 		fileRepository.NewFileRepository,
 		wire.Bind(new(fileService.FileRepository), new(*fileRepository.FileRepository)),
 	)
+	CommentSet = wire.NewSet(
+		commentRepository.NewCommentRepository,
+		wire.Bind(new(commentService.Repository), new(*commentRepository.CommentRepository)),
+	)
 	InitSet = wire.NewSet(
 		initRepository.NewInitRepository,
 		wire.Bind(new(initService.Repository), new(*initRepository.InitRepository)),
@@ -54,6 +60,7 @@ var (
 		wire.Bind(new(fileService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
 		wire.Bind(new(settingService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
 		wire.Bind(new(agentService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
+		wire.Bind(new(commentService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
 	)
 	SettingSet = wire.NewSet(
 		settingRepository.NewSettingRepository,

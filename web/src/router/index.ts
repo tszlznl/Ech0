@@ -59,6 +59,11 @@ const router = createRouter({
           component: () => import('../views/panel/modules/TheExtension.vue'),
         },
         {
+          path: 'comment',
+          name: 'panel-comment',
+          component: () => import('../views/panel/modules/TheCommentManager.vue'),
+        },
+        {
           path: 'advance',
           name: 'panel-advance',
           component: () => import('../views/panel/modules/TheAdvance.vue'),

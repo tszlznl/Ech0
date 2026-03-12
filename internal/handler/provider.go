@@ -4,6 +4,7 @@ import (
 	"github.com/google/wire"
 	agentHandler "github.com/lin-snow/ech0/internal/handler/agent"
 	backupHandler "github.com/lin-snow/ech0/internal/handler/backup"
+	commentHandler "github.com/lin-snow/ech0/internal/handler/comment"
 	commonHandler "github.com/lin-snow/ech0/internal/handler/common"
 	connectHandler "github.com/lin-snow/ech0/internal/handler/connect"
 	dashboardHandler "github.com/lin-snow/ech0/internal/handler/dashboard"
@@ -22,6 +23,7 @@ var (
 	UserSet      = wire.NewSet(userHandler.NewUserHandler)
 	EchoSet      = wire.NewSet(echoHandler.NewEchoHandler)
 	FileSet      = wire.NewSet(fileHandler.NewFileHandler)
+	CommentSet   = wire.NewSet(commentHandler.NewCommentHandler)
 	InitSet      = wire.NewSet(initHandler.NewInitHandler)
 	CommonSet    = wire.NewSet(commonHandler.NewCommonHandler)
 	SettingSet   = wire.NewSet(settingHandler.NewSettingHandler)

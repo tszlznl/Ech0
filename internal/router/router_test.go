@@ -9,6 +9,7 @@ import (
 	"github.com/lin-snow/ech0/internal/handler"
 	agentHandler "github.com/lin-snow/ech0/internal/handler/agent"
 	backupHandler "github.com/lin-snow/ech0/internal/handler/backup"
+	commentHandler "github.com/lin-snow/ech0/internal/handler/comment"
 	commonHandler "github.com/lin-snow/ech0/internal/handler/common"
 	connectHandler "github.com/lin-snow/ech0/internal/handler/connect"
 	dashboardHandler "github.com/lin-snow/ech0/internal/handler/dashboard"
@@ -80,6 +81,7 @@ func buildTestHandlers() *handler.Bundle {
 		userHandler.NewUserHandler(nil),
 		echoHandler.NewEchoHandler(nil),
 		fileHandler.NewFileHandler(nil),
+		commentHandler.NewCommentHandler(nil),
 		initHandler.NewInitHandler(nil),
 		commonHandler.NewCommonHandler(nil),
 		settingHandler.NewSettingHandler(nil),

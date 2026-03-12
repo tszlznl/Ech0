@@ -6,18 +6,11 @@ import "github.com/lin-snow/ech0/internal/handler"
 func setupSettingRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	// Public
 	appRouterGroup.PublicRouterGroup.GET("/settings", h.SettingHandler.GetSettings())
-	appRouterGroup.PublicRouterGroup.GET("/comment/settings", h.SettingHandler.GetCommentSettings())
-	appRouterGroup.PublicRouterGroup.GET("/comment/providers/meta", h.SettingHandler.GetCommentProvidersMeta())
 	appRouterGroup.PublicRouterGroup.GET("/oauth2/status", h.SettingHandler.GetOAuth2Status())
 	appRouterGroup.PublicRouterGroup.GET("/agent/info", h.SettingHandler.GetAgentInfo())
 
 	// Auth
 	appRouterGroup.AuthRouterGroup.PUT("/settings", h.SettingHandler.UpdateSettings())
-
-	appRouterGroup.AuthRouterGroup.PUT(
-		"/comment/settings",
-		h.SettingHandler.UpdateCommentSettings(),
-	)
 
 	appRouterGroup.AuthRouterGroup.GET("/s3/settings", h.SettingHandler.GetS3Settings())
 	appRouterGroup.AuthRouterGroup.PUT("/s3/settings", h.SettingHandler.UpdateS3Settings())

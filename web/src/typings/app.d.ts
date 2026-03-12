@@ -309,35 +309,6 @@ declare namespace App {
         custom_js: string
       }
 
-      type CommentSetting = {
-        enable_comment: boolean
-        provider: string // 当前评论提供者
-        providers: Record<string, CommentProviderSetting>
-      }
-
-      type CommentProviderSetting = {
-        script_url?: string
-        css_url?: string
-        config: Record<string, unknown>
-      }
-
-      type CommentProviderFieldMeta = {
-        key: string
-        label: string
-        required: boolean
-        placeholder?: string
-      }
-
-      type CommentProviderMeta = {
-        provider: string
-        label: string
-        fields: CommentProviderFieldMeta[]
-      }
-
-      type CommentProviderMetaResponse = {
-        providers: CommentProviderMeta[]
-      }
-
       type S3Setting = {
         enable: boolean
         provider: string
@@ -446,6 +417,65 @@ declare namespace App {
         api_key: string
         prompt: string
         base_url: string
+      }
+    }
+
+    namespace Comment {
+      type CommentStatus = 'pending' | 'approved' | 'rejected'
+      type BatchAction = 'approve' | 'reject' | 'delete'
+
+      type CommentItem = {
+        id: string
+        echo_id: string
+        user_id?: string
+        nickname: string
+        email: string
+        website?: string
+        avatar_url: string
+        content: string
+        status: CommentStatus
+        source: 'guest' | 'system'
+        created_at: string
+        updated_at: string
+      }
+
+      type FormMeta = {
+        form_token: string
+        min_submit_ms: number
+        captcha_enabled: boolean
+        enable_comment: boolean
+      }
+
+      type CreateCommentDto = {
+        echo_id: string
+        nickname: string
+        email: string
+        website: string
+        content: string
+        hp_field: string
+        form_token: string
+        captcha_token: string
+      }
+
+      type PanelListQuery = {
+        page: number
+        page_size: number
+        keyword?: string
+        status?: string
+        echo_id?: string
+      }
+
+      type PanelPageResult = {
+        items: CommentItem[]
+        total: number
+      }
+
+      type SystemSetting = {
+        enable_comment: boolean
+        require_approval: boolean
+        captcha_enabled: boolean
+        captcha_verify_url: string
+        captcha_secret: string
       }
     }
 

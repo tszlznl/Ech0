@@ -111,7 +111,6 @@ const (
 
 // Setting 错误相关常量
 const (
-	NO_SUCH_COMMENT_PROVIDER            = "无效的评论服务提供者"
 	WEBHOOK_NAME_OR_URL_CANNOT_BE_EMPTY = "未填写 Webhook 名称或 URL"
 	INVALID_CRON_EXPRESSION             = "无效的 Cron 表达式"
 )

@@ -1,258 +1,281 @@
 <template>
-  <div
-    v-show="shouldShowComment"
-    ref="rootRef"
-    id="comments"
-    class="w-full max-w-sm h-auto px-0 py-4 my-4 mx-auto"
-  >
-    <div ref="commentRef"></div>
+  <div id="comments" class="w-full max-w-sm h-auto px-0 py-4 my-4 mx-auto">
+    <div
+      v-if="formMeta && !formMeta.enable_comment"
+      class="rounded-lg border border-[var(--color-border-subtle)] p-3 text-sm text-[var(--color-text-muted)]"
+    >
+      评论功能未开启。
+    </div>
+
+    <template v-else>
+    <div class="mb-3 rounded-lg border border-[var(--color-border-subtle)] p-3">
+      <div class="mb-2 flex items-center justify-between">
+        <h3 class="font-semibold text-[var(--color-text-primary)]">评论</h3>
+        <span class="text-xs text-[var(--color-text-muted)]">{{ comments.length }} 条</span>
+      </div>
+
+      <div v-if="loading" class="text-sm text-[var(--color-text-muted)]">评论加载中...</div>
+      <div
+        v-else-if="comments.length === 0"
+        class="text-sm text-[var(--color-text-muted)]"
+      >
+        暂无评论，来做第一个留言的人吧。
+      </div>
+      <div v-else class="space-y-4 pt-1">
+        <article
+          v-for="(item, index) in comments"
+          :key="item.id"
+          class="comment-sticky relative rounded-md border p-3"
+          :style="getStickyCardStyle(index)"
+        >
+          <span class="sticky-pin" aria-hidden="true"></span>
+          <div class="mb-2 flex items-center gap-2">
+            <img :src="item.avatar_url" alt="avatar" class="h-8 w-8 rounded-full object-cover" />
+            <div class="min-w-0">
+              <div class="truncate text-sm font-medium text-[var(--color-text-primary)]">
+                {{ item.nickname }}
+              </div>
+              <div class="text-xs text-[var(--color-text-muted)]">
+                {{ formatDate(item.created_at) }}
+              </div>
+            </div>
+            <a
+              v-if="item.website"
+              :href="item.website"
+              target="_blank"
+              rel="noreferrer"
+              class="ml-auto text-xs text-sky-500 hover:underline"
+            >
+              主页
+            </a>
+          </div>
+          <p class="whitespace-pre-wrap break-words text-sm leading-6 text-[var(--color-text-primary)]">
+            {{ item.content }}
+          </p>
+        </article>
+      </div>
+    </div>
+
+    <form class="rounded-lg border border-[var(--color-border-subtle)] p-3" @submit.prevent="submitComment">
+      <div class="mb-2 flex items-center justify-between">
+        <h3 class="font-semibold text-[var(--color-text-primary)]">发表评论</h3>
+        <span
+          v-if="isPrivilegedUser"
+          class="text-xs text-emerald-500"
+        >
+          管理员/Owner 已自动使用账户信息
+        </span>
+      </div>
+
+      <div v-if="!isPrivilegedUser" class="space-y-2">
+        <input
+          v-model.trim="form.nickname"
+          type="text"
+          class="w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+          placeholder="昵称（必填）"
+        />
+        <input
+          v-model.trim="form.email"
+          type="email"
+          class="w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+          placeholder="邮箱（必填）"
+        />
+        <input
+          v-model.trim="form.website"
+          type="url"
+          class="w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+          placeholder="网址（可选）"
+        />
+      </div>
+
+      <textarea
+        v-model.trim="form.content"
+        class="mt-2 min-h-24 w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+        placeholder="写下你的评论..."
+      />
+
+      <input
+        v-model="form.hp_field"
+        type="text"
+        tabindex="-1"
+        autocomplete="off"
+        class="hidden"
+        aria-hidden="true"
+      />
+
+      <input
+        v-if="formMeta?.captcha_enabled"
+        v-model.trim="form.captcha_token"
+        type="text"
+        class="mt-2 w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+        placeholder="请输入验证码 token（已开启验证码）"
+      />
+
+      <div class="mt-3 flex items-center justify-end">
+        <button
+          type="submit"
+          class="rounded-md bg-[var(--color-text-primary)] px-4 py-2 text-sm text-[var(--color-bg-canvas)]"
+          :disabled="submitting || !canSubmit"
+        >
+          {{ submitting ? '提交中...' : '提交评论' }}
+        </button>
+      </div>
+    </form>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue'
-import { useSettingStore } from '@/stores'
-import { storeToRefs } from 'pinia'
-import { CommentProvider } from '@/enums/enums'
-import { createCommentAdapter } from './comment-providers/registry'
-import type { CommentProviderAdapter } from './comment-providers/types'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { fetchCreateComment, fetchGetCommentFormMeta, fetchGetComments } from '@/service/api'
+import { useUserStore } from '@/stores'
+import { theToast } from '@/utils/toast'
+import { formatDate } from '@/utils/other'
 
-const { CommentSetting, loading } = storeToRefs(useSettingStore())
-const rootRef = ref<HTMLElement | null>(null)
-const commentRef = ref<HTMLElement | null>(null)
-const canMount = ref(false)
-const shouldShowComment = computed(() => CommentSetting.value?.enable_comment)
+const route = useRoute()
+const userStore = useUserStore()
+const loading = ref(false)
+const submitting = ref(false)
+const comments = ref<App.Api.Comment.CommentItem[]>([])
+const formMeta = ref<App.Api.Comment.FormMeta | null>(null)
 
-let observer: IntersectionObserver | null = null
-let adapter: CommentProviderAdapter | null = null
-let rerenderTimer: ReturnType<typeof setTimeout> | null = null
-let renderToken = 0
-const TWIKOO_FORCE_STYLE_ID = 'twikoo-force-three-row-style'
+const form = reactive<App.Api.Comment.CreateCommentDto>({
+  echo_id: '',
+  nickname: '',
+  email: '',
+  website: '',
+  content: '',
+  hp_field: '',
+  form_token: '',
+  captcha_token: '',
+})
 
-const ensureTwikooThreeRowStyle = () => {
-  if (document.getElementById(TWIKOO_FORCE_STYLE_ID)) return
-  const style = document.createElement('style')
-  style.id = TWIKOO_FORCE_STYLE_ID
-  style.textContent = `
-#comments #twikoo-comment-container .tk-submit .tk-meta-input {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: stretch !important;
-  width: 100% !important;
-  max-width: 100% !important;
-}
-#comments #twikoo-comment-container .tk-submit .tk-meta-input .el-input {
-  width: 100% !important;
-  max-width: 100% !important;
-  flex: 0 0 100% !important;
-  margin-left: 0 !important;
-}
-#comments #twikoo-comment-container .tk-submit .tk-meta-input .el-input + .el-input {
-  margin-top: 10px !important;
-}
-`
-  document.head.appendChild(style)
-}
+const isPrivilegedUser = computed(() => {
+  const user = userStore.user
+  return Boolean(user && (user.is_admin || user.is_owner))
+})
 
-const setupObserver = async () => {
-  await nextTick()
-  if (!rootRef.value) return
-  observer?.disconnect()
-  observer = new IntersectionObserver(
-    (entries) => {
-      const first = entries[0]
-      if (first?.isIntersecting) {
-        canMount.value = true
-      }
-    },
-    {
-      rootMargin: '240px 0px 240px 0px',
-      threshold: 0.01,
-    },
-  )
-  observer.observe(rootRef.value)
+const canSubmit = computed(() => {
+  if (!form.echo_id || !form.content) return false
+  if (!form.form_token) return false
+  if (!isPrivilegedUser.value && (!form.nickname || !form.email)) return false
+  if (formMeta.value?.captcha_enabled && !form.captcha_token) return false
+  return true
+})
+
+const getStickyCardStyle = (index: number) => {
+  const rotateOptions = ['-0.8deg', '0.5deg', '-0.3deg', '0.9deg']
+  const shiftOptions = ['-4px', '2px', '-1px', '3px']
+  return {
+    '--sticky-rotate': rotateOptions[index % rotateOptions.length],
+    '--sticky-shift': shiftOptions[index % shiftOptions.length],
+  } as Record<string, string>
 }
 
-const unmountAdapter = async () => {
-  await adapter?.unmount?.()
-  adapter = null
-  if (commentRef.value) {
-    commentRef.value.innerHTML = ''
-  }
-}
-
-const mountAdapter = async () => {
-  if (loading.value || !shouldShowComment.value || !canMount.value || !commentRef.value) {
-    return
-  }
-  const currentToken = ++renderToken
-  const provider = CommentSetting.value.provider
-  const nextAdapter = await createCommentAdapter(provider)
-  if (!nextAdapter || currentToken !== renderToken) return
-
+const loadData = async () => {
+  const echoId = String(route.params.echoId || '')
+  if (!echoId) return
+  form.echo_id = echoId
+  loading.value = true
   try {
-    await unmountAdapter()
-    adapter = nextAdapter
-    await adapter.mount(commentRef.value, CommentSetting.value)
-    if (provider === CommentProvider.TWIKOO) {
-      ensureTwikooThreeRowStyle()
+    const [metaRes, commentsRes] = await Promise.all([
+      fetchGetCommentFormMeta(),
+      fetchGetComments(echoId),
+    ])
+    if (metaRes.code === 1) {
+      formMeta.value = metaRes.data
+      form.form_token = metaRes.data.form_token
     }
-  } catch (error) {
-    console.error('[comment] mount adapter failed:', error)
+    if (commentsRes.code === 1) {
+      comments.value = commentsRes.data || []
+    }
+  } finally {
+    loading.value = false
   }
 }
 
-const scheduleRender = () => {
-  if (rerenderTimer) {
-    clearTimeout(rerenderTimer)
-  }
-  rerenderTimer = setTimeout(() => {
-    mountAdapter()
-  }, 120)
+const resetForm = () => {
+  form.content = ''
+  form.hp_field = ''
+  form.captcha_token = ''
 }
 
-watch(
-  () => shouldShowComment.value,
-  async (show) => {
-    if (!show) {
-      await unmountAdapter()
-      return
+const submitComment = async () => {
+  if (!canSubmit.value || submitting.value) return
+  submitting.value = true
+  try {
+    const res = await fetchCreateComment(form)
+    if (res.code === 1) {
+      theToast.success('评论提交成功')
+      resetForm()
+      await loadData()
     }
-    setupObserver()
-    scheduleRender()
-  },
-  { immediate: true },
-)
+  } finally {
+    submitting.value = false
+  }
+}
 
-watch(
-  () => canMount.value,
-  (ready) => {
-    if (ready) scheduleRender()
-  },
-)
-
-watch(
-  () => [
-    loading.value,
-    CommentSetting.value.provider,
-    JSON.stringify(CommentSetting.value.providers),
-  ],
-  () => {
-    scheduleRender()
-  },
-)
-
-onBeforeUnmount(async () => {
-  if (rerenderTimer) clearTimeout(rerenderTimer)
-  observer?.disconnect()
-  await unmountAdapter()
+onMounted(() => {
+  loadData()
 })
 </script>
 
 <style scoped>
-#comments :deep(#twikoo-comment-container) {
-  max-width: 100%;
-  overflow-x: hidden;
+.comment-sticky {
+  border-color: color-mix(in srgb, var(--color-border-subtle) 70%, #c7b88a 30%);
+  background: linear-gradient(180deg, #fffdf6 0%, #fff9ea 100%);
+  box-shadow:
+    0 1px 0 rgba(20, 20, 20, 0.08),
+    0 10px 18px rgba(20, 20, 20, 0.08);
+  transform: translateX(var(--sticky-shift, 0px)) rotate(var(--sticky-rotate, 0deg));
+  transform-origin: 50% 8%;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-#comments :deep(#twikoo-comment-container .tk-submit),
-#comments :deep(#twikoo-comment-container .tk-comments) {
-  max-width: 100%;
+.comment-sticky::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(135deg, #f4e5b4 0%, #f1dd9d 60%, #e4cb7e 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+  opacity: 0.72;
 }
 
-#comments :deep(#twikoo-comment-container .tk-row) {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  width: 100%;
-  max-width: 100%;
-  margin-left: 0;
-  margin-right: 0;
+.comment-sticky:hover {
+  transform: translateX(var(--sticky-shift, 0px)) rotate(var(--sticky-rotate, 0deg)) translateY(-2px);
+  box-shadow:
+    0 2px 0 rgba(20, 20, 20, 0.08),
+    0 14px 26px rgba(20, 20, 20, 0.12);
 }
 
-#comments :deep(#twikoo-comment-container .tk-avatar) {
-  flex: 0 0 36px;
-  width: 36px;
-  min-width: 36px;
+.sticky-pin {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 35%, #fff7d5 0%, #d5bd7f 60%, #9f8448 100%);
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.24),
+    0 0 0 2px rgba(255, 255, 255, 0.78);
+  transform: translateX(-50%);
 }
 
-#comments :deep(#twikoo-comment-container .tk-row .tk-col) {
-  flex: 1 1 auto;
-  min-width: 0;
-  width: auto !important;
-}
+@media (max-width: 640px) {
+  .comment-sticky {
+    transform: translateX(calc(var(--sticky-shift, 0px) * 0.35)) rotate(calc(var(--sticky-rotate, 0deg) * 0.35));
+    box-shadow:
+      0 1px 0 rgba(20, 20, 20, 0.06),
+      0 8px 14px rgba(20, 20, 20, 0.08);
+  }
 
-#comments :deep(#twikoo-comment-container .tk-meta-input) {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: stretch !important;
-  gap: 10px;
-  width: 100%;
-  max-width: 100%;
-}
-
-#comments :deep(#twikoo-comment-container .tk-submit .tk-meta-input .el-input) {
-  width: 100% !important;
-  flex: 0 0 100% !important;
-  margin-left: 0 !important;
-}
-
-#comments :deep(#twikoo-comment-container .tk-submit .tk-meta-input .el-input + .el-input) {
-  margin-left: 0 !important;
-  margin-top: 10px !important;
-}
-
-#comments :deep(#twikoo-comment-container .tk-meta-input > *) {
-  width: 100% !important;
-  max-width: 100% !important;
-  flex: 0 0 auto !important;
-}
-
-#comments :deep(#twikoo-comment-container .tk-meta-input > * + *) {
-  margin-left: 0;
-  margin-top: 0;
-}
-
-#comments :deep(#twikoo-comment-container .tk-meta-input .tk-input) {
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-#comments :deep(#twikoo-comment-container .tk-meta-input input) {
-  width: 100% !important;
-  max-width: 100%;
-  box-sizing: border-box;
-  border: 1px solid rgba(100, 116, 139, 0.35);
-  border-radius: 8px;
-  background: var(--el-fill-color-blank, #fff);
-}
-
-#comments :deep(#twikoo-comment-container .tk-meta-input input::placeholder) {
-  color: rgba(100, 116, 139, 0.85);
-}
-
-#comments :deep(#twikoo-comment-container .tk-comments .tk-comment) {
-  margin-top: 12px;
-  padding: 12px 14px;
-  border: 1px solid rgba(100, 116, 139, 0.2);
-  border-radius: 12px;
-  background: rgba(148, 163, 184, 0.08);
-}
-
-#comments :deep(#twikoo-comment-container .tk-comment .tk-meta) {
-  margin-bottom: 8px;
-}
-
-#comments :deep(#twikoo-comment-container .tk-comment .tk-nick) {
-  font-weight: 600;
-}
-
-#comments :deep(#twikoo-comment-container .tk-comment .tk-time) {
-  font-size: 12px;
-  opacity: 0.75;
-}
-
-#comments :deep(#twikoo-comment-container .tk-comment .tk-content) {
-  line-height: 1.75;
+  .comment-sticky:hover {
+    transform: translateX(calc(var(--sticky-shift, 0px) * 0.35)) rotate(calc(var(--sticky-rotate, 0deg) * 0.35));
+  }
 }
 </style>

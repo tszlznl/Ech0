@@ -4,6 +4,7 @@ import (
 	"github.com/google/wire"
 	agentService "github.com/lin-snow/ech0/internal/service/agent"
 	backupService "github.com/lin-snow/ech0/internal/service/backup"
+	commentService "github.com/lin-snow/ech0/internal/service/comment"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
 	connectService "github.com/lin-snow/ech0/internal/service/connect"
 	dashboardService "github.com/lin-snow/ech0/internal/service/dashboard"
@@ -28,6 +29,10 @@ var (
 	FileSet = wire.NewSet(
 		fileService.NewFileService,
 		wire.Bind(new(fileService.Service), new(*fileService.FileService)),
+	)
+	CommentSet = wire.NewSet(
+		commentService.NewCommentService,
+		wire.Bind(new(commentService.Service), new(*commentService.CommentService)),
 	)
 	InitSet = wire.NewSet(
 		initService.NewInitService,

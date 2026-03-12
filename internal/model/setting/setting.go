@@ -1,7 +1,6 @@
 package model
 
 import (
-	"encoding/json"
 	"time"
 
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
@@ -27,42 +26,6 @@ type SystemSetting struct {
 	MetingAPI     string `json:"meting_api"`     // Meting API 地址
 	CustomCSS     string `json:"custom_css"`     // 自定义 CSS
 	CustomJS      string `json:"custom_js"`      // 自定义 JS
-}
-
-// CommentSetting 定义评论设置实体
-type CommentSetting struct {
-	EnableComment bool                              `json:"enable_comment"` // 是否启用评论
-	Provider      string                            `json:"provider"`       // 当前启用的评论提供者
-	Providers     map[string]CommentProviderSetting `json:"providers"`      // 各评论提供者配置
-}
-
-type CommentProviderSetting struct {
-	ScriptURL string                 `json:"script_url,omitempty"` // 可选脚本地址（为空则使用默认）
-	CSSURL    string                 `json:"css_url,omitempty"`    // 可选样式地址（为空则使用默认）
-	Config    map[string]interface{} `json:"config"`               // 提供者私有配置
-}
-
-type CommentProviderFieldMeta struct {
-	Key         string `json:"key"`                   // 字段键名
-	Label       string `json:"label"`                 // 字段名称
-	Required    bool   `json:"required"`              // 是否必填
-	Placeholder string `json:"placeholder,omitempty"` // 输入提示
-}
-
-type CommentProviderMeta struct {
-	Provider string                     `json:"provider"` // provider key
-	Label    string                     `json:"label"`    // 展示名
-	Fields   []CommentProviderFieldMeta `json:"fields"`   // 字段定义
-}
-
-type CommentProviderMetaResponse struct {
-	Providers []CommentProviderMeta `json:"providers"`
-}
-
-type CommentProviderMetaRaw struct {
-	Provider string            `json:"provider"`
-	Label    string            `json:"label"`
-	Fields   []json.RawMessage `json:"fields"`
 }
 
 // S3Setting 定义 S3 存储设置实体

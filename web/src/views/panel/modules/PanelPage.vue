@@ -130,6 +130,15 @@
             功能扩展
           </BaseButton>
 
+          <BaseButton
+            :icon="Extension"
+            @click="router.push('/panel/comment')"
+            :class="getButtonClasses('panel-comment')"
+            title="评论管理"
+          >
+            评论管理
+          </BaseButton>
+
           <!-- 外部集成 -->
           <BaseButton
             :icon="Others"
@@ -256,6 +265,7 @@ const routeOptions = [
   { label: '数据管理', value: '/panel/data-management' },
   { label: '单点登录', value: '/panel/sso' },
   { label: '功能扩展', value: '/panel/extension' },
+  { label: '评论管理', value: '/panel/comment' },
   { label: '外部集成', value: '/panel/advance' },
   { label: '系统日志', value: '/panel/system-log' },
 ]

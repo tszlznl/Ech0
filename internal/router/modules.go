@@ -93,6 +93,12 @@ func featureRouteModules() []RouteModule {
 			},
 		},
 		routeModule{
+			name: "comment",
+			register: func(ctx *RouterContext) {
+				setupCommentRoutes(ctx.Groups, ctx.Handlers)
+			},
+		},
+		routeModule{
 			name: "common",
 			register: func(ctx *RouterContext) {
 				setupCommonRoutes(ctx.Groups, ctx.Handlers)
