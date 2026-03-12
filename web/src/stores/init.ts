@@ -37,6 +37,9 @@ export const useInitStore = defineStore('initStore', () => {
       ownerExists.value = true
       ready.value = true
       saveCache()
+    } else {
+      // 提交初始化失败时同步一次服务端状态，避免并发初始化后前端状态滞后。
+      await getStatus().catch(() => undefined)
     }
     return res
   }

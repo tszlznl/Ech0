@@ -46,6 +46,11 @@ const onSubmit = async () => {
       await router.replace({ name: 'auth' })
       return
     }
+    if (initStore.initialized || initStore.ownerExists) {
+      theToast.success('系统已初始化，正在跳转登录')
+      await router.replace({ name: 'auth' })
+      return
+    }
     theToast.error(res.msg || '初始化失败')
   } finally {
     submitting.value = false

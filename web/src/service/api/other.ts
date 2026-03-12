@@ -83,6 +83,8 @@ export function fetchUploadMigrationSourceZip(
   return request<UploadMigrationSourceZipResponse>({
     url: '/migration/upload',
     method: 'POST',
+    // 上传后端还会执行解压，耗时可能显著高于默认请求超时。
+    timeout: 30 * 60 * 1000,
     data: formData,
   })
 }

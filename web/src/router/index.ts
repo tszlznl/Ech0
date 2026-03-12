@@ -135,11 +135,13 @@ router.beforeEach(async (to) => {
     await initStore.init()
   }
 
-  if (!initStore.initialized && to.name !== 'init') {
+  const isInitReady = initStore.initialized || initStore.ownerExists
+
+  if (!isInitReady && to.name !== 'init') {
     return { name: 'init' }
   }
 
-  if (initStore.initialized && to.name === 'init') {
+  if (isInitReady && to.name === 'init') {
     return { name: 'auth' }
   }
 

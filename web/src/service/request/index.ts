@@ -9,6 +9,7 @@ interface RequestOptions {
   dirrectUrlAndData?: string
   url: string
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+  timeout?: number
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any
 }
@@ -66,6 +67,7 @@ export const request = async <T>(requestOptions: RequestOptions): Promise<App.Ap
   return ofetchInstance<App.Api.Response<T>>(requestOptions.url, {
     method: requestOptions.method,
     body: requestOptions.data,
+    timeout: requestOptions.timeout,
   }).then((res) => {
     if (res.code !== 1) {
       if (isSystemReady) {
@@ -89,6 +91,7 @@ export const requestWithDirectUrl = async <T>(
     {
       method: requestOptions.method,
       body: requestOptions.data,
+      timeout: requestOptions.timeout,
     },
   ).then((res) => {
     if (res.code !== 1) {
@@ -110,6 +113,7 @@ export const requestWithDirectUrlAndData = async <T>(
     {
       method: requestOptions.method,
       body: requestOptions.data,
+      timeout: requestOptions.timeout,
       headers: {
         'X-Direct-URL': requestOptions.dirrectUrlAndData ? requestOptions.dirrectUrlAndData : '',
       },
@@ -132,6 +136,7 @@ export const downloadFile = async (requestOptions: RequestOptions): Promise<Blob
   return ofetchInstance<Blob>(requestOptions.url, {
     method: requestOptions.method,
     body: requestOptions.data,
+    timeout: requestOptions.timeout,
   }).then((res) => {
     if (res instanceof Blob) {
       return res
