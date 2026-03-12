@@ -14,6 +14,14 @@ export function fetchGetComments(echoId: string) {
   })
 }
 
+export function fetchGetPublicComments(limit = 30) {
+  const safeLimit = Math.max(1, Math.min(limit, 100))
+  return request<App.Api.Comment.CommentItem[]>({
+    url: `/comments/public?limit=${safeLimit}`,
+    method: 'GET',
+  })
+}
+
 export function fetchCreateComment(payload: App.Api.Comment.CreateCommentDto) {
   return request({
     url: '/comments',

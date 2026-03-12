@@ -14,12 +14,12 @@
       <TheTop class="sm:hidden" />
       <TheEditor v-if="isLogin" />
       <TheBoard v-else />
-      <div class="mt-2">
-        <div class="hidden sm:block">
-          <TheHeatMap class="mb-2" />
-          <TheConnects class="mb-2" />
+      <div class="mt-3">
+        <div class="hidden sm:flex sm:flex-col sm:gap-4">
+          <TheHeatMap />
+          <TheRecentCard v-if="AgentSetting.enable" />
+          <TheConnects />
         </div>
-        <TheRecentCard v-if="AgentSetting.enable" />
       </div>
     </div>
     <div

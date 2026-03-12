@@ -18,9 +18,11 @@
       </BaseButton>
     </div>
 
-    <TheHeatMap class="mb-2" />
-    <TheConnects class="mb-2" />
-    <TheRecentCard v-if="AgentSetting.enable" />
+    <div class="flex flex-col gap-4">
+      <TheHeatMap />
+      <TheRecentCard v-if="AgentSetting.enable" />
+      <TheConnects />
+    </div>
   </div>
 </template>
 

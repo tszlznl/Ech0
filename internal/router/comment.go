@@ -6,6 +6,7 @@ func setupCommentRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	// Public
 	appRouterGroup.PublicRouterGroup.GET("/comments/form", h.CommentHandler.GetFormMeta())
 	appRouterGroup.PublicRouterGroup.GET("/comments", h.CommentHandler.ListCommentsByEchoID())
+	appRouterGroup.PublicRouterGroup.GET("/comments/public", h.CommentHandler.ListPublicComments())
 	appRouterGroup.PublicRouterGroup.POST("/comments", h.CommentHandler.CreateComment())
 
 	// Admin Panel

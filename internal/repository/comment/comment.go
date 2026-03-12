@@ -41,6 +41,16 @@ func (r *CommentRepository) ListPublicByEchoID(ctx context.Context, echoID strin
 	return out, err
 }
 
+func (r *CommentRepository) ListPublicComments(ctx context.Context, limit int) ([]model.Comment, error) {
+	var out []model.Comment
+	err := r.getDB(ctx).
+		Where("status = ?", model.StatusApproved).
+		Order("created_at desc").
+		Limit(limit).
+		Find(&out).Error
+	return out, err
+}
+
 func (r *CommentRepository) ListComments(
 	ctx context.Context,
 	query model.ListCommentQuery,

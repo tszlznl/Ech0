@@ -47,6 +47,17 @@ func (h *CommentHandler) ListCommentsByEchoID() gin.HandlerFunc {
 	})
 }
 
+func (h *CommentHandler) ListPublicComments() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		limit := parseQueryInt(ctx, "limit", 30)
+		comments, err := h.commentService.ListPublicComments(ctx.Request.Context(), limit)
+		if err != nil {
+			return res.Response{Err: err}
+		}
+		return res.Response{Data: comments, Msg: commonModel.SUCCESS_MESSAGE}
+	})
+}
+
 func (h *CommentHandler) CreateComment() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		h.attachOptionalViewer(ctx)

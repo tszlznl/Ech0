@@ -12,6 +12,7 @@ type Service interface {
 	GetFormMeta(ctx context.Context, clientIP string) (model.FormMeta, error)
 	CreateComment(ctx context.Context, clientIP, userAgent string, dto *model.CreateCommentDto) error
 	ListPublicByEchoID(ctx context.Context, echoID string) ([]model.Comment, error)
+	ListPublicComments(ctx context.Context, limit int) ([]model.Comment, error)
 	ListPanelComments(ctx context.Context, query model.ListCommentQuery) (model.PageResult[model.Comment], error)
 	GetCommentByID(ctx context.Context, id string) (model.Comment, error)
 	UpdateCommentStatus(ctx context.Context, id string, status model.Status) error
@@ -25,6 +26,7 @@ type Service interface {
 type Repository interface {
 	CreateComment(ctx context.Context, c *model.Comment) error
 	ListPublicByEchoID(ctx context.Context, echoID string) ([]model.Comment, error)
+	ListPublicComments(ctx context.Context, limit int) ([]model.Comment, error)
 	ListComments(ctx context.Context, query model.ListCommentQuery) (model.PageResult[model.Comment], error)
 	GetCommentByID(ctx context.Context, id string) (model.Comment, error)
 	UpdateCommentStatus(ctx context.Context, id string, status model.Status) error

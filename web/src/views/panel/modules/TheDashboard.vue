@@ -54,14 +54,14 @@ const dashboardStats = computed<StatCard[]>(() => {
       serial: 'NO.03',
       label: '已连接节点',
       value: formatMetric(connectCount.value),
-      note: '当前在线连接能力',
+      note: '当前连接实例数量',
     },
     {
       key: 'version',
       serial: 'NO.04',
       label: '当前版本',
       value: settingStore.hello?.version || '--',
-      note: '客户端运行版本',
+      note: '系统运行版本',
     },
   ]
 })

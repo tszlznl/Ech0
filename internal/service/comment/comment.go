@@ -166,6 +166,23 @@ func (s *CommentService) ListPublicByEchoID(ctx context.Context, echoID string) 
 	return s.repo.ListPublicByEchoID(ctx, strings.TrimSpace(echoID))
 }
 
+func (s *CommentService) ListPublicComments(ctx context.Context, limit int) ([]model.Comment, error) {
+	setting, err := s.GetSystemSetting(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if !setting.EnableComment {
+		return []model.Comment{}, nil
+	}
+	if limit <= 0 {
+		limit = 30
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	return s.repo.ListPublicComments(ctx, limit)
+}
+
 func (s *CommentService) ListPanelComments(
 	ctx context.Context,
 	query model.ListCommentQuery,

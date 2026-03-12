@@ -53,7 +53,7 @@
         <div class="text-[var(--color-text-secondary)] text-sm mb-2">加载中...</div>
       </div>
 
-      <div class="comment-teaser mt-4">
+      <div class="comment-teaser mt-8">
         <div class="comment-head mb-2">
           <div class="comment-icon-chip">
             <div class="doodle-smile" aria-hidden="true">
@@ -80,7 +80,7 @@
 
 <script setup lang="ts">
 import Connect from '@/components/icons/connect.vue'
-import { fetchGetPanelComments } from '@/service/api'
+import { fetchGetPublicComments } from '@/service/api'
 import { useConnectStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref } from 'vue'
@@ -125,9 +125,9 @@ const pickRandomComment = (items: App.Api.Comment.CommentItem[]) => {
 const loadRandomComment = async () => {
   commentLoading.value = true
   try {
-    const res = await fetchGetPanelComments({ page: 1, page_size: 30, status: 'approved' })
-    if (res.code === 1 && res.data?.items?.length) {
-      pickRandomComment(res.data.items)
+    const res = await fetchGetPublicComments(30)
+    if (res.code === 1 && res.data?.length) {
+      pickRandomComment(res.data)
     }
   } catch {
     randomComment.value = null
