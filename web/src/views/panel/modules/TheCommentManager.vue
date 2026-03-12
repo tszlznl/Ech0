@@ -11,7 +11,7 @@
           @click="saveSetting"
           :disabled="settingSaving"
         >
-          {{ settingSaving ? '保存中...' : '保存设置' }}
+          {{ settingSaving ? '保存中...' : '保存' }}
         </BaseButton>
       </div>
 
@@ -44,13 +44,13 @@
           v-model.trim="setting.captcha_verify_url"
           type="text"
           :disabled="!setting.enable_comment"
-          placeholder="验证码校验地址（例如 https://your-cap-service/verify）"
+          placeholder="Cap siteverify 地址（例如 https://your-cap-service/<key_id>/siteverify）"
         />
         <BaseInput
           v-model.trim="setting.captcha_secret"
           type="text"
           :disabled="!setting.enable_comment"
-          placeholder="验证码 secret（按需填写）"
+          placeholder="Cap key secret（用于 siteverify 校验）"
         />
       </div>
       <div v-else class="mt-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-muted)]/60 px-3 py-2 text-xs text-[var(--color-text-muted)]">
@@ -63,7 +63,7 @@
         >
           cap
         </a>
-        验证服务，启用前需要你先自行部署并配置校验地址与 secret。
+        验证服务，启用前需要你先自行部署并配置 siteverify 地址与 key secret。
       </div>
     </PanelCard>
 

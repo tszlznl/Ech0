@@ -296,14 +296,13 @@ func (s *CommentService) checkRateLimit(ctx context.Context, ipHash, email, user
 	return nil
 }
 
-func (s *CommentService) verifyCaptcha(token, clientIP string, setting model.SystemSetting) error {
+func (s *CommentService) verifyCaptcha(token, _ string, setting model.SystemSetting) error {
 	if strings.TrimSpace(token) == "" {
 		return errors.New("captcha token missing")
 	}
 	payload := map[string]string{
-		"token":     strings.TrimSpace(token),
-		"secret":    setting.CaptchaSecret,
-		"remote_ip": clientIP,
+		"response": strings.TrimSpace(token),
+		"secret":   setting.CaptchaSecret,
 	}
 	body, err := sonic.Marshal(payload)
 	if err != nil {
@@ -325,15 +324,17 @@ func (s *CommentService) verifyCaptcha(token, clientIP string, setting model.Sys
 		return err
 	}
 	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return fmt.Errorf("captcha verify status: %d", resp.StatusCode)
+	}
 
-	var out map[string]any
+	var out struct {
+		Success bool `json:"success"`
+	}
 	if err := sonic.ConfigFastest.NewDecoder(resp.Body).Decode(&out); err != nil {
 		return err
 	}
-	if ok, _ := out["success"].(bool); ok {
-		return nil
-	}
-	if ok, _ := out["ok"].(bool); ok {
+	if out.Success {
 		return nil
 	}
 	return errors.New("captcha verify failed")
