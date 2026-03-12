@@ -7,12 +7,12 @@ type Heatmap struct {
 }
 
 type (
-	UploadFileType  string
-	S3Provider      string
-	OAuth2Provider  string
-	AgentProvider   string
-	InboxType       string
-	InboxSource     string
+	UploadFileType string
+	S3Provider     string
+	OAuth2Provider string
+	AgentProvider  string
+	InboxType      string
+	InboxSource    string
 )
 
 const (

@@ -161,7 +161,6 @@ onMounted(() => {
         <p class="status-value">{{ item.value }}</p>
       </PanelCard>
     </section>
-
   </div>
 </template>
 

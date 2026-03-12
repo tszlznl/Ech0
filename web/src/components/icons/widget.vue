@@ -6,3 +6,9 @@
     />
   </svg>
 </template>
+
+<script setup lang="ts">
+defineOptions({
+  name: 'WidgetIcon',
+})
+</script>

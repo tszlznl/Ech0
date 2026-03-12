@@ -9,8 +9,8 @@ import (
 
 	"github.com/lin-snow/ech0/internal/config"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
-	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	commentModel "github.com/lin-snow/ech0/internal/model/comment"
+	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	connectModel "github.com/lin-snow/ech0/internal/model/connect"
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	fileModel "github.com/lin-snow/ech0/internal/model/file"

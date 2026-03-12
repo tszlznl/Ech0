@@ -32,8 +32,8 @@ func TestEch0V3MigrateRegression(t *testing.T) {
 	start := time.Now()
 	result, err := extractor.Migrate(context.Background(), spec.MigrateRequest{
 		SourcePayload: map[string]any{
-			"tmp_dir":     "files/tmp/ech0_v3_019cdc8c-b7ef-7278-9eb9-77185a34184e",
-			"created_by":  "migration-test-user",
+			"tmp_dir":           "files/tmp/ech0_v3_019cdc8c-b7ef-7278-9eb9-77185a34184e",
+			"created_by":        "migration-test-user",
 			"failure_threshold": 0.9,
 		},
 	})
@@ -79,7 +79,10 @@ type stubFSForPut struct {
 	putErr    error
 }
 
-func (s *stubFSForPut) Get(_ context.Context, _ string) (io.ReadCloser, error) { return nil, errors.New("not implemented") }
+func (s *stubFSForPut) Get(_ context.Context, _ string) (io.ReadCloser, error) {
+	return nil, errors.New("not implemented")
+}
+
 func (s *stubFSForPut) Put(_ context.Context, _ string, r io.Reader, _ ...virefs.PutOption) error {
 	s.putCalled = true
 	b, err := io.ReadAll(r)
@@ -89,17 +92,26 @@ func (s *stubFSForPut) Put(_ context.Context, _ string, r io.Reader, _ ...virefs
 	s.putBody = b
 	return s.putErr
 }
-func (s *stubFSForPut) Delete(_ context.Context, _ string) error { return errors.New("not implemented") }
+
+func (s *stubFSForPut) Delete(_ context.Context, _ string) error {
+	return errors.New("not implemented")
+}
+
 func (s *stubFSForPut) List(_ context.Context, _ string) (*virefs.ListResult, error) {
 	return nil, errors.New("not implemented")
 }
+
 func (s *stubFSForPut) Stat(_ context.Context, _ string) (*virefs.FileInfo, error) {
 	return nil, errors.New("not implemented")
 }
+
 func (s *stubFSForPut) Access(_ context.Context, _ string) (*virefs.AccessInfo, error) {
 	return nil, errors.New("not implemented")
 }
-func (s *stubFSForPut) Exists(_ context.Context, _ string) (bool, error) { return false, errors.New("not implemented") }
+
+func (s *stubFSForPut) Exists(_ context.Context, _ string) (bool, error) {
+	return false, errors.New("not implemented")
+}
 
 func setRepoRootAsWorkingDir(t *testing.T) {
 	t.Helper()
@@ -261,9 +273,9 @@ func TestDeriveS3ObjectKeyMapping_NoSchemaObjectKeyWithBucketURL(t *testing.T) {
 
 func TestDeriveS3ObjectKeyMapping_RealFailedSamples(t *testing.T) {
 	cases := []struct {
-		sourceID string
+		sourceID  string
 		objectKey string
-		imageURL string
+		imageURL  string
 	}{
 		{
 			sourceID:  "282",

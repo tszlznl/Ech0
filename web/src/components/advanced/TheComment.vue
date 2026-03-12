@@ -8,143 +8,152 @@
     </div>
 
     <template v-else>
-    <div class="mb-4 comment-list-board">
-      <div class="mb-2 flex items-center justify-between">
-        <h3 class="font-semibold text-[var(--color-text-primary)]">评论</h3>
-        <span class="text-xs text-[var(--color-text-muted)]">{{ comments.length }} 条</span>
-      </div>
+      <div class="mb-4 comment-list-board">
+        <div class="mb-2 flex items-center justify-between">
+          <h3 class="font-semibold text-[var(--color-text-primary)]">评论</h3>
+          <span class="text-xs text-[var(--color-text-muted)]">{{ comments.length }} 条</span>
+        </div>
 
-      <div v-if="loading" class="text-sm text-[var(--color-text-muted)]">评论加载中...</div>
-      <div
-        v-else-if="comments.length === 0"
-        class="text-sm text-[var(--color-text-muted)]"
-      >
-        暂无评论，来做第一个留言的人吧。
-      </div>
-      <div v-else class="space-y-4 pt-1">
-        <article
-          v-for="(item, index) in comments"
-          :key="item.id"
-          class="comment-sticky relative rounded-[4px] border p-3"
-          :style="getStickyCardStyle(index)"
-        >
-          <span v-if="item.hot" class="comment-hot-badge">Hot</span>
-          <div class="mb-2 flex items-center gap-2">
-            <img :src="resolveCommentAvatar(item, index)" alt="avatar" class="h-8 w-8 rounded-full object-cover" />
-            <div class="min-w-0">
-              <div class="flex items-center gap-1 min-w-0">
-                <a
-                  v-if="item.website"
-                  :href="item.website"
-                  target="_blank"
-                  rel="noreferrer"
-                  class="comment-author-link truncate text-sm font-medium text-[var(--color-text-primary)]"
-                >
-                  {{ item.nickname }}
-                </a>
-                <div v-else class="truncate text-sm font-medium text-[var(--color-text-primary)]">
-                  {{ item.nickname }}
+        <div v-if="loading" class="text-sm text-[var(--color-text-muted)]">评论加载中...</div>
+        <div v-else-if="comments.length === 0" class="text-sm text-[var(--color-text-muted)]">
+          暂无评论，来做第一个留言的人吧。
+        </div>
+        <div v-else class="space-y-4 pt-1">
+          <article
+            v-for="(item, index) in comments"
+            :key="item.id"
+            class="comment-sticky relative rounded-[4px] border p-3"
+            :style="getStickyCardStyle(index)"
+          >
+            <span v-if="item.hot" class="comment-hot-badge">Hot</span>
+            <div class="mb-2 flex items-center gap-2">
+              <img
+                :src="resolveCommentAvatar(item, index)"
+                alt="avatar"
+                class="h-8 w-8 rounded-full object-cover"
+              />
+              <div class="min-w-0">
+                <div class="flex items-center gap-1 min-w-0">
+                  <a
+                    v-if="item.website"
+                    :href="item.website"
+                    target="_blank"
+                    rel="noreferrer"
+                    class="comment-author-link truncate text-sm font-medium text-[var(--color-text-primary)]"
+                  >
+                    {{ item.nickname }}
+                  </a>
+                  <div v-else class="truncate text-sm font-medium text-[var(--color-text-primary)]">
+                    {{ item.nickname }}
+                  </div>
+                  <Verified
+                    v-if="item.source === 'system'"
+                    class="verified-badge-icon h-3.5! w-3.5! shrink-0 text-sky-500"
+                  />
                 </div>
-                <Verified
-                  v-if="item.source === 'system'"
-                  class="verified-badge-icon h-3.5! w-3.5! shrink-0 text-sky-500"
-                />
-              </div>
-              <div class="text-xs text-[var(--color-text-muted)]">
-                {{ formatDate(item.created_at) }}
+                <div class="text-xs text-[var(--color-text-muted)]">
+                  {{ formatDate(item.created_at) }}
+                </div>
               </div>
             </div>
-          </div>
-          <TheMdPreview class="comment-md-content" :content="item.content" />
-        </article>
-      </div>
-    </div>
-
-    <form class="comment-form-panel rounded-lg border border-[var(--color-border-subtle)] p-3" @submit.prevent="submitComment">
-      <div class="mb-2 flex items-center justify-between">
-        <h3 class="font-semibold text-[var(--color-text-primary)]">发表评论</h3>
-        <span class="comment-ready-indicator">
-          <i
-            class="comment-ready-dot"
-            :class="profileReady ? 'is-ready' : 'is-not-ready'"
-            aria-hidden="true"
-          ></i>
-        </span>
+            <TheMdPreview class="comment-md-content" :content="item.content" />
+          </article>
+        </div>
       </div>
 
-      <article
-        class="comment-sticky comment-preview relative mb-2 rounded-[4px] border p-3"
-        :style="getStickyCardStyle(0)"
+      <form
+        class="comment-form-panel rounded-lg border border-[var(--color-border-subtle)] p-3"
+        @submit.prevent="submitComment"
       >
-        <div class="mb-2 flex items-center gap-2">
-          <img :src="previewAvatar" alt="avatar" class="h-8 w-8 rounded-full object-cover" />
-          <div class="min-w-0">
-            <div class="truncate text-sm font-medium text-[var(--color-text-primary)]">
-              {{ previewNickname }}
-            </div>
-            <div class="text-xs text-[var(--color-text-muted)]">实时预览</div>
-          </div>
+        <div class="mb-2 flex items-center justify-between">
+          <h3 class="font-semibold text-[var(--color-text-primary)]">发表评论</h3>
+          <span class="comment-ready-indicator">
+            <i
+              class="comment-ready-dot"
+              :class="profileReady ? 'is-ready' : 'is-not-ready'"
+              aria-hidden="true"
+            ></i>
+          </span>
         </div>
-        <TheMdPreview
-          class="comment-md-content"
-          :content="form.content || '在这里输入评论内容，将实时预览贴纸效果。'"
-        />
-      </article>
 
-      <div v-if="!isPrivilegedUser" class="space-y-2">
-        <input
-          v-model.trim="form.nickname"
-          type="text"
-          class="w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
-          placeholder="昵称（必填）"
-        />
-        <input
-          v-model.trim="form.email"
-          type="email"
-          class="w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
-          placeholder="邮箱（必填）"
-        />
-        <input
-          v-model.trim="form.website"
-          type="url"
-          class="w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
-          placeholder="网址（可选）"
-        />
-      </div>
-
-      <textarea
-        v-model.trim="form.content"
-        class="mt-2 min-h-24 w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
-        placeholder="写下你的评论..."
-        maxlength="200"
-      />
-      <div class="mt-1 text-right text-xs" :class="contentTooLong ? 'text-red-500' : 'text-[var(--color-text-muted)]'">
-        {{ contentLength }}/200
-      </div>
-
-      <input
-        v-model="form.hp_field"
-        type="text"
-        tabindex="-1"
-        autocomplete="off"
-        class="hidden"
-        aria-hidden="true"
-      />
-
-      <div class="comment-submit-row mt-3">
-        <div v-if="needCaptcha" class="comment-captcha-wrap">
-          <div ref="captchaMountRef" class="comment-captcha-mount"></div>
-          <p v-if="captchaError" class="comment-captcha-error text-xs text-red-500">{{ captchaError }}</p>
-        </div>
-        <button
-          type="submit"
-          class="comment-submit-btn rounded-md bg-[var(--color-text-primary)] px-4 py-1 text-sm text-[var(--color-bg-canvas)]"
-          :disabled="submitting || !canSubmit"
+        <article
+          class="comment-sticky comment-preview relative mb-2 rounded-[4px] border p-3"
+          :style="getStickyCardStyle(0)"
         >
-          {{ submitting ? '提交中...' : '提交评论' }}
-        </button>
-      </div>
-    </form>
+          <div class="mb-2 flex items-center gap-2">
+            <img :src="previewAvatar" alt="avatar" class="h-8 w-8 rounded-full object-cover" />
+            <div class="min-w-0">
+              <div class="truncate text-sm font-medium text-[var(--color-text-primary)]">
+                {{ previewNickname }}
+              </div>
+              <div class="text-xs text-[var(--color-text-muted)]">实时预览</div>
+            </div>
+          </div>
+          <TheMdPreview
+            class="comment-md-content"
+            :content="form.content || '在这里输入评论内容，将实时预览贴纸效果。'"
+          />
+        </article>
+
+        <div v-if="!isPrivilegedUser" class="space-y-2">
+          <input
+            v-model.trim="form.nickname"
+            type="text"
+            class="w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+            placeholder="昵称（必填）"
+          />
+          <input
+            v-model.trim="form.email"
+            type="email"
+            class="w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+            placeholder="邮箱（必填）"
+          />
+          <input
+            v-model.trim="form.website"
+            type="url"
+            class="w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+            placeholder="网址（可选）"
+          />
+        </div>
+
+        <textarea
+          v-model.trim="form.content"
+          class="mt-2 min-h-24 w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+          placeholder="写下你的评论..."
+          maxlength="200"
+        />
+        <div
+          class="mt-1 text-right text-xs"
+          :class="contentTooLong ? 'text-red-500' : 'text-[var(--color-text-muted)]'"
+        >
+          {{ contentLength }}/200
+        </div>
+
+        <input
+          v-model="form.hp_field"
+          type="text"
+          tabindex="-1"
+          autocomplete="off"
+          class="hidden"
+          aria-hidden="true"
+        />
+
+        <div class="comment-submit-row mt-3">
+          <div v-if="needCaptcha" class="comment-captcha-wrap">
+            <div ref="captchaMountRef" class="comment-captcha-mount"></div>
+            <p v-if="captchaError" class="comment-captcha-error text-xs text-red-500">
+              {{ captchaError }}
+            </p>
+          </div>
+          <button
+            type="submit"
+            class="comment-submit-btn rounded-md bg-[var(--color-text-primary)] px-4 py-1 text-sm text-[var(--color-bg-canvas)]"
+            :disabled="submitting || !canSubmit"
+          >
+            {{ submitting ? '提交中...' : '提交评论' }}
+          </button>
+        </div>
+      </form>
     </template>
   </div>
 </template>
@@ -207,8 +216,8 @@ const canSubmit = computed(() => {
   return true
 })
 
-const needCaptcha = computed(
-  () => Boolean(formMeta.value?.captcha_enabled && formMeta.value?.captcha_api_endpoint),
+const needCaptcha = computed(() =>
+  Boolean(formMeta.value?.captcha_enabled && formMeta.value?.captcha_api_endpoint),
 )
 
 const contentLength = computed(() => form.content.length)
@@ -267,7 +276,9 @@ const ensureCapWidgetScript = async () => {
         return
       }
       existingScript.addEventListener('load', () => resolve(), { once: true })
-      existingScript.addEventListener('error', () => reject(new Error('load cap widget failed')), { once: true })
+      existingScript.addEventListener('error', () => reject(new Error('load cap widget failed')), {
+        once: true,
+      })
     })
     return
   }
@@ -596,7 +607,8 @@ onBeforeUnmount(() => {
 
 @media (max-width: 640px) {
   .comment-sticky {
-    transform: translateX(calc(var(--sticky-shift, 0px) * 0.35)) rotate(calc(var(--sticky-rotate, 0deg) * 0.35));
+    transform: translateX(calc(var(--sticky-shift, 0px) * 0.35))
+      rotate(calc(var(--sticky-rotate, 0deg) * 0.35));
     box-shadow:
       0 1px 0 rgba(20, 20, 20, 0.06),
       0 8px 14px rgba(20, 20, 20, 0.08);

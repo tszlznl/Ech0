@@ -52,7 +52,10 @@
           <div class="migration-job-title-wrap">
             <h3 class="migration-job-title">迁移任务</h3>
             <p class="migration-job-subtitle">
-              来源 {{ sourceLabelMap[migrationStore.state.source_type] || migrationStore.state.source_type }}
+              来源
+              {{
+                sourceLabelMap[migrationStore.state.source_type] || migrationStore.state.source_type
+              }}
             </p>
           </div>
           <span class="migration-status-pill" :class="`status-${migrationStore.state.status}`">
@@ -361,7 +364,6 @@ void migrationStore.init()
   align-items: flex-start;
   gap: 0.5rem;
 }
-
 
 .migration-file-name {
   color: var(--color-text-secondary);

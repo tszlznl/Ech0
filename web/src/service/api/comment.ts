@@ -88,4 +88,3 @@ export function fetchUpdateCommentSystemSetting(setting: App.Api.Comment.SystemS
     data: setting,
   })
 }
-

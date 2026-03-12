@@ -103,4 +103,3 @@ type SystemSetting struct {
 	CaptchaVerify   string `json:"captcha_verify_url"`
 	CaptchaSecret   string `json:"captcha_secret"`
 }
-

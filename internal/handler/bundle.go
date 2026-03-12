@@ -3,6 +3,7 @@ package handler
 import (
 	agentHandler "github.com/lin-snow/ech0/internal/handler/agent"
 	backupHandler "github.com/lin-snow/ech0/internal/handler/backup"
+	commentHandler "github.com/lin-snow/ech0/internal/handler/comment"
 	commonHandler "github.com/lin-snow/ech0/internal/handler/common"
 	connectHandler "github.com/lin-snow/ech0/internal/handler/connect"
 	dashboardHandler "github.com/lin-snow/ech0/internal/handler/dashboard"
@@ -11,7 +12,6 @@ import (
 	inboxHandler "github.com/lin-snow/ech0/internal/handler/inbox"
 	initHandler "github.com/lin-snow/ech0/internal/handler/init"
 	migrationHandler "github.com/lin-snow/ech0/internal/handler/migration"
-	commentHandler "github.com/lin-snow/ech0/internal/handler/comment"
 	settingHandler "github.com/lin-snow/ech0/internal/handler/setting"
 	userHandler "github.com/lin-snow/ech0/internal/handler/user"
 	webHandler "github.com/lin-snow/ech0/internal/handler/web"

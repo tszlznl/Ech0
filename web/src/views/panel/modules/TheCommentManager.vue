@@ -4,7 +4,9 @@
       <div class="mb-4 flex items-center justify-between gap-3">
         <div>
           <h1 class="text-lg font-bold text-[var(--color-text-primary)]">评论系统设置</h1>
-          <p class="text-xs text-[var(--color-text-muted)]">统一管理评论开关、审核策略与验证码配置。</p>
+          <p class="text-xs text-[var(--color-text-muted)]">
+            统一管理评论开关、审核策略与验证码配置。
+          </p>
         </div>
         <BaseButton
           class="comment-btn comment-btn-primary shrink-0 whitespace-nowrap px-2.5 py-1 text-xs"
@@ -15,7 +17,9 @@
         </BaseButton>
       </div>
 
-      <div class="space-y-2 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/50 p-3">
+      <div
+        class="space-y-2 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/50 p-3"
+      >
         <div class="setting-row">
           <div>
             <h3 class="setting-title">启用评论系统</h3>
@@ -53,7 +57,10 @@
           placeholder="Cap key secret（用于 siteverify 校验）"
         />
       </div>
-      <div v-else class="mt-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-muted)]/60 px-3 py-2 text-xs text-[var(--color-text-muted)]">
+      <div
+        v-else
+        class="mt-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-muted)]/60 px-3 py-2 text-xs text-[var(--color-text-muted)]"
+      >
         当前未开启验证码。项目使用
         <a
           href="https://github.com/tiagozip/cap"
@@ -89,9 +96,7 @@
           placeholder="Hot 筛选"
         >
         </BaseSelect>
-        <BaseButton class="comment-btn px-3 py-1.5 text-sm" @click="reload">
-          查询
-        </BaseButton>
+        <BaseButton class="comment-btn px-3 py-1.5 text-sm" @click="reload"> 查询 </BaseButton>
         <BaseButton
           class="comment-btn px-3 py-1.5 text-sm"
           @click="runBatch('approve')"
@@ -152,14 +157,25 @@
               <td class="py-2">{{ formatDate(item.created_at) }}</td>
               <td class="py-2 pr-3">
                 <div class="flex items-center gap-2">
-                  <button class="table-action text-sky-500" @click="openDetail(item.id)">详情</button>
-                  <button class="table-action text-violet-500" @click="updateHot(item.id, !item.hot)">
+                  <button class="table-action text-sky-500" @click="openDetail(item.id)">
+                    详情
+                  </button>
+                  <button
+                    class="table-action text-violet-500"
+                    @click="updateHot(item.id, !item.hot)"
+                  >
                     {{ item.hot ? '取消 hot' : '设为 hot' }}
                   </button>
-                  <button class="table-action text-emerald-500" @click="updateStatus(item.id, 'approved')">
+                  <button
+                    class="table-action text-emerald-500"
+                    @click="updateStatus(item.id, 'approved')"
+                  >
                     通过
                   </button>
-                  <button class="table-action text-amber-500" @click="updateStatus(item.id, 'rejected')">
+                  <button
+                    class="table-action text-amber-500"
+                    @click="updateStatus(item.id, 'rejected')"
+                  >
                     拒绝
                   </button>
                   <button class="table-action text-red-500" @click="remove(item.id)">删除</button>
@@ -167,7 +183,9 @@
               </td>
             </tr>
             <tr v-if="list.items.length === 0">
-              <td colspan="7" class="px-3 py-8 text-center text-[var(--color-text-muted)]">暂无评论数据</td>
+              <td colspan="7" class="px-3 py-8 text-center text-[var(--color-text-muted)]">
+                暂无评论数据
+              </td>
             </tr>
           </tbody>
         </table>
@@ -176,10 +194,16 @@
       <div class="mt-3 flex items-center justify-between text-sm">
         <span class="text-[var(--color-text-muted)]">共 {{ list.total }} 条</span>
         <div class="flex items-center gap-2">
-          <BaseButton class="comment-btn px-2 py-1 text-sm" :disabled="query.page <= 1" @click="prevPage">
+          <BaseButton
+            class="comment-btn px-2 py-1 text-sm"
+            :disabled="query.page <= 1"
+            @click="prevPage"
+          >
             上一页
           </BaseButton>
-          <span class="text-[var(--color-text-secondary)]">第 {{ query.page }} / {{ totalPages }} 页</span>
+          <span class="text-[var(--color-text-secondary)]"
+            >第 {{ query.page }} / {{ totalPages }} 页</span
+          >
           <BaseButton
             class="comment-btn px-2 py-1 text-sm"
             :disabled="query.page * query.page_size >= list.total"
@@ -196,10 +220,17 @@
       class="fixed inset-0 z-30 flex items-end justify-center bg-black/30 p-3 md:items-center"
       @click.self="detailOpen = false"
     >
-      <div class="w-full max-w-lg rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-canvas)] p-4 shadow-[var(--shadow-md)]">
+      <div
+        class="w-full max-w-lg rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-canvas)] p-4 shadow-[var(--shadow-md)]"
+      >
         <div class="mb-2 flex items-center justify-between">
           <h3 class="text-base font-semibold text-[var(--color-text-primary)]">评论详情</h3>
-          <button class="table-action text-sm text-[var(--color-text-muted)]" @click="detailOpen = false">关闭</button>
+          <button
+            class="table-action text-sm text-[var(--color-text-muted)]"
+            @click="detailOpen = false"
+          >
+            关闭
+          </button>
         </div>
         <div class="space-y-1 text-sm text-[var(--color-text-secondary)]">
           <p><b>昵称：</b>{{ current.nickname }}</p>
@@ -209,7 +240,9 @@
           <p><b>Hot：</b>{{ current.hot ? '是' : '否' }}</p>
           <p><b>来源：</b>{{ current.source }}</p>
           <p><b>时间：</b>{{ formatDate(current.created_at) }}</p>
-          <p class="mt-2 whitespace-pre-wrap break-words rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-muted)]/50 p-2">
+          <p
+            class="mt-2 whitespace-pre-wrap break-words rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-muted)]/50 p-2"
+          >
             {{ current.content }}
           </p>
         </div>
@@ -502,4 +535,3 @@ onMounted(async () => {
   }
 }
 </style>
-

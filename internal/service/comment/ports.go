@@ -49,4 +49,3 @@ type UserContext struct {
 	User  userModel.User
 	Valid bool
 }
-

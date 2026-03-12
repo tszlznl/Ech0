@@ -106,13 +106,17 @@ const getColor = (count: number): string => {
 }
 
 const pickRandomComment = (items: App.Api.Comment.CommentItem[]) => {
-  const hotComments = items.filter((item) => item.status === 'approved' && item.hot && item.content?.trim())
+  const hotComments = items.filter(
+    (item) => item.status === 'approved' && item.hot && item.content?.trim(),
+  )
   if (hotComments.length > 0) {
     randomComment.value = hotComments[Math.floor(Math.random() * hotComments.length)]
     return
   }
 
-  const approvedComments = items.filter((item) => item.status === 'approved' && item.content?.trim())
+  const approvedComments = items.filter(
+    (item) => item.status === 'approved' && item.content?.trim(),
+  )
   if (approvedComments.length > 0) {
     randomComment.value = approvedComments[Math.floor(Math.random() * approvedComments.length)]
   }

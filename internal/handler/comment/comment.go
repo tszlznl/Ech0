@@ -203,4 +203,3 @@ func parseQueryBool(ctx *gin.Context, key string) *bool {
 	}
 	return &v
 }
-

@@ -18,4 +18,3 @@ func setupCommentRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	appRouterGroup.AuthRouterGroup.GET("/panel/comments/settings", h.CommentHandler.GetCommentSetting())
 	appRouterGroup.AuthRouterGroup.PUT("/panel/comments/settings", h.CommentHandler.UpdateCommentSetting())
 }
-
