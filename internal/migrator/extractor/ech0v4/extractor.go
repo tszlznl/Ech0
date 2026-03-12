@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,6 +15,7 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
+	"github.com/lin-snow/ech0/internal/storage"
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -36,7 +38,7 @@ func (e *Extractor) Extract(_ context.Context, req spec.ExtractRequest) (spec.Ex
 }
 
 func (e *Extractor) Migrate(ctx context.Context, req spec.MigrateRequest) (spec.MigrateResult, error) {
-	sourceDBPath, err := resolveSourceDBPath(req.SourcePayload)
+	sourceDBPath, sourceRoot, err := resolveSourceDBPath(req.SourcePayload)
 	if err != nil {
 		return spec.MigrateResult{}, err
 	}
@@ -54,6 +56,7 @@ func (e *Extractor) Migrate(ctx context.Context, req spec.MigrateRequest) (spec.
 	report := map[string]any{
 		"job_id":        jobID,
 		"source_db":     sourceDBPath,
+		"source_root":   sourceRoot,
 		"processed":     total,
 		"success_count": total,
 		"fail_count":    int64(0),
@@ -74,7 +77,7 @@ func (e *Extractor) Migrate(ctx context.Context, req spec.MigrateRequest) (spec.
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		if err := migrateEchos(ctx, tx, sourceDB); err != nil {
+		if err := migrateEchos(ctx, tx, sourceDB, sourceRoot); err != nil {
 			return err
 		}
 		if req.UpdateProgress != nil {
@@ -124,19 +127,20 @@ func (e *Extractor) Migrate(ctx context.Context, req spec.MigrateRequest) (spec.
 	}, nil
 }
 
-func resolveSourceDBPath(payload map[string]any) (string, error) {
+func resolveSourceDBPath(payload map[string]any) (string, string, error) {
 	tmpDir, ok := payload["tmp_dir"].(string)
 	if !ok || strings.TrimSpace(tmpDir) == "" {
-		return "", errors.New("source_payload.tmp_dir is required")
+		return "", "", errors.New("source_payload.tmp_dir is required")
 	}
-	dbPath := filepath.Join("data", filepath.FromSlash(strings.TrimSpace(tmpDir)), "ech0.db")
+	sourceRoot := filepath.Join("data", filepath.FromSlash(strings.TrimSpace(tmpDir)))
+	dbPath := filepath.Join(sourceRoot, "ech0.db")
 	if _, err := os.Stat(dbPath); err != nil {
-		return "", fmt.Errorf("source db not found: %w", err)
+		return "", "", fmt.Errorf("source db not found: %w", err)
 	}
-	return dbPath, nil
+	return dbPath, sourceRoot, nil
 }
 
-func migrateEchos(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB) error {
+func migrateEchos(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB, sourceRoot string) error {
 	sourceEchos, err := loadRows[echoModel.Echo](ctx, sourceDB, "echos")
 	if err != nil {
 		return fmt.Errorf("load source echos: %w", err)
@@ -159,7 +163,7 @@ func migrateEchos(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB) error {
 	if err := migrateTags(ctx, tx, sourceDB); err != nil {
 		return err
 	}
-	if err := migrateFiles(ctx, tx, sourceDB); err != nil {
+	if err := migrateFiles(ctx, tx, sourceDB, sourceRoot); err != nil {
 		return err
 	}
 	return nil
@@ -240,7 +244,7 @@ func migrateTags(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB) error {
 	return nil
 }
 
-func migrateFiles(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB) error {
+func migrateFiles(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB, sourceRoot string) error {
 	sourceFiles, err := loadRows[fileModel.File](ctx, sourceDB, "files")
 	if err != nil {
 		return fmt.Errorf("load source files: %w", err)
@@ -328,7 +332,91 @@ func migrateFiles(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB) error {
 			return fmt.Errorf("create echo_files: %w", err)
 		}
 	}
+
+	for i := range sourceFiles {
+		file := sourceFiles[i]
+		if !isLocalStorageType(file.StorageType) {
+			continue
+		}
+		if err := copySourceLocalFileToTargetRoot(sourceRoot, file.Key); err != nil {
+			// 本地文件缺失不阻断整任务，避免历史仅数据库快照导致整体失败。
+			continue
+		}
+	}
 	return nil
+}
+
+func isLocalStorageType(storageType string) bool {
+	st := strings.ToLower(strings.TrimSpace(storageType))
+	return st == "" || st == "local"
+}
+
+func copySourceLocalFileToTargetRoot(sourceRoot string, key string) error {
+	relativePath := resolveLocalStoragePathByKey(key)
+	if relativePath == "" {
+		return errors.New("empty local file path")
+	}
+
+	targetRoot := filepath.Join("data", "files")
+	targetPath := filepath.Join(targetRoot, filepath.FromSlash(relativePath))
+	if info, err := os.Stat(targetPath); err == nil && !info.IsDir() {
+		return nil
+	}
+
+	sourceCandidates := []string{
+		filepath.Join(sourceRoot, "files", filepath.FromSlash(relativePath)),
+		filepath.Join(sourceRoot, filepath.FromSlash(relativePath)),
+	}
+	if cleanKey := strings.Trim(strings.TrimSpace(key), "/"); cleanKey != "" {
+		sourceCandidates = append(sourceCandidates, filepath.Join(sourceRoot, "files", filepath.FromSlash(cleanKey)))
+		sourceCandidates = append(sourceCandidates, filepath.Join(sourceRoot, filepath.FromSlash(cleanKey)))
+	}
+
+	var srcPath string
+	for _, candidate := range sourceCandidates {
+		info, err := os.Stat(candidate)
+		if err == nil && !info.IsDir() {
+			srcPath = candidate
+			break
+		}
+	}
+	if srcPath == "" {
+		return errors.New("source local file not found")
+	}
+
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0o755); err != nil {
+		return err
+	}
+
+	src, err := os.Open(srcPath)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = src.Close() }()
+
+	dst, err := os.Create(targetPath)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = dst.Close() }()
+
+	if _, err := io.Copy(dst, src); err != nil {
+		return err
+	}
+	return dst.Sync()
+}
+
+func resolveLocalStoragePathByKey(key string) string {
+	cleanKey := strings.Trim(strings.TrimSpace(key), "/")
+	if cleanKey == "" {
+		return ""
+	}
+	for _, route := range []string{"images/", "audios/", "videos/", "documents/", "files/"} {
+		if strings.HasPrefix(cleanKey, route) {
+			return cleanKey
+		}
+	}
+	return storage.NewFileSchema().Resolve(cleanKey)
 }
 
 func appendSettingToReport(sourceDB *gorm.DB, report map[string]any, key string, reportKey string) {

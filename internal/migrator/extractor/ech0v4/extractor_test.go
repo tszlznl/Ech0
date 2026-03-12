@@ -43,6 +43,13 @@ func TestExtractorMigrate_SuccessAndIdempotent(t *testing.T) {
 	if err := seedSourceDB(sourceDB); err != nil {
 		t.Fatalf("seed source db failed: %v", err)
 	}
+	sourceImagePath := filepath.Join(sourceTmpDir, "files", "images", "source.png")
+	if err := os.MkdirAll(filepath.Dir(sourceImagePath), 0o755); err != nil {
+		t.Fatalf("mkdir source image dir failed: %v", err)
+	}
+	if err := os.WriteFile(sourceImagePath, []byte("png-bytes"), 0o644); err != nil {
+		t.Fatalf("write source image failed: %v", err)
+	}
 
 	targetDBPath := filepath.Join(tmpRoot, "target.db")
 	targetDB, err := gorm.Open(sqlite.Open(targetDBPath), &gorm.Config{})
@@ -95,6 +102,9 @@ func TestExtractorMigrate_SuccessAndIdempotent(t *testing.T) {
 	assertCount(t, targetDB, "echo_tags", 1)
 	assertCount(t, targetDB, "files", 1)
 	assertCount(t, targetDB, "echo_files", 1)
+	if _, err := os.Stat(filepath.Join("data", "files", "images", "source.png")); err != nil {
+		t.Fatalf("expected migrated source image exists: %v", err)
+	}
 }
 
 func migrateBaseTables(db *gorm.DB) error {
