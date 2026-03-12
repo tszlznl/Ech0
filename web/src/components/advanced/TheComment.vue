@@ -129,26 +129,26 @@
           <input
             v-model.trim="form.nickname"
             type="text"
-            class="w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+            class="comment-input-field w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
             placeholder="昵称（必填）"
           />
           <input
             v-model.trim="form.email"
             type="email"
-            class="w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+            class="comment-input-field w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
             placeholder="邮箱（必填）"
           />
           <input
             v-model.trim="form.website"
             type="url"
-            class="w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+            class="comment-input-field w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
             placeholder="网址（可选）"
           />
         </div>
 
         <textarea
           v-model.trim="form.content"
-          class="mt-2 min-h-24 w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+          class="comment-input-field comment-textarea mt-2 min-h-24 w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
           placeholder="写下你的评论..."
           maxlength="200"
         />
@@ -699,6 +699,39 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   padding-inline: 1rem;
+}
+
+.comment-input-field {
+  color: var(--color-text-primary);
+  border-color: color-mix(in srgb, var(--color-border-subtle) 84%, #c9b886 16%);
+  background: color-mix(in srgb, var(--color-bg-canvas) 92%, transparent);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.22s ease,
+    background-color 0.2s ease;
+}
+
+.comment-input-field::placeholder {
+  color: color-mix(in srgb, var(--color-text-muted) 86%, transparent);
+}
+
+.comment-input-field:hover {
+  border-color: color-mix(in srgb, var(--color-border-subtle) 68%, #b9a977 32%);
+}
+
+.comment-input-field:focus,
+.comment-input-field:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--color-accent) 58%, var(--color-border-subtle) 42%);
+  background: color-mix(in srgb, var(--color-bg-canvas) 96%, #fff 4%);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-accent) 42%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--color-accent) 16%, transparent);
+}
+
+.comment-textarea {
+  line-height: 1.6;
+  resize: vertical;
 }
 
 @media (max-width: 640px) {
