@@ -33,7 +33,7 @@
         <div
           v-if="!showMenu"
           @click.stop="toggleMenu"
-          class="w-7 h-7 flex items-center justify-center bg-[var(--color-bg-surface)] ring-1 ring-[var(--color-border-subtle)] ring-inset rounded-full shadow-sm hover:shadow-md transition"
+          class="w-7 h-7 flex items-center justify-center bg-[var(--color-bg-surface)] ring-1 ring-[var(--color-border-subtle)] ring-inset rounded-full shadow-sm transition"
         >
           <!-- 默认图标，展开后隐藏 -->
           <More class="w-5 h-5" />
@@ -42,7 +42,7 @@
         <!-- 展开后的按钮组 -->
         <div
           v-if="showMenu"
-          class="flex items-center gap-4 bg-[var(--color-bg-surface)] rounded-full px-2 py-1 shadow-sm hover:shadow-md ring-1 ring-[var(--color-border-subtle)] ring-inset"
+          class="flex items-center gap-4 bg-[var(--color-bg-surface)] rounded-full px-2 py-1 shadow-sm ring-1 ring-[var(--color-border-subtle)] ring-inset"
         >
           <!-- 是否隐私 -->
           <span v-if="props.echo.private" title="私密状态">
