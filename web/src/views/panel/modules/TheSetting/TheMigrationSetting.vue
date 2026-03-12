@@ -186,6 +186,10 @@ const handleStartMigration = async () => {
     theToast.info('Memos 迁移功能开发中，暂不可用')
     return
   }
+  if (migrationStore.hasJob) {
+    theToast.info('请先结束/清理当前迁移任务')
+    return
+  }
   if (!selectedZip.value) {
     theToast.info('请先选择 zip 文件')
     return

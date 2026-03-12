@@ -74,6 +74,13 @@ func (s *MigratorService) UploadSourceZip(
 	if !user.IsAdmin {
 		return migrationModel.UploadMigrationSourceZipResponse{}, errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
+	state, err := s.getGlobalState(ctx)
+	if err != nil {
+		return migrationModel.UploadMigrationSourceZipResponse{}, err
+	}
+	if state.Status != migrationModel.MigrationStatusIdle {
+		return migrationModel.UploadMigrationSourceZipResponse{}, errors.New("请先结束/清理当前迁移")
+	}
 
 	if !strings.HasSuffix(strings.ToLower(file.Filename), ".zip") {
 		return migrationModel.UploadMigrationSourceZipResponse{}, errors.New(commonModel.INVALID_REQUEST_BODY)
@@ -136,6 +143,7 @@ func (s *MigratorService) StartGlobalMigration(
 	}
 
 	if state.Status != migrationModel.MigrationStatusIdle {
+		_ = cleanupMigrationTmpDirFromPayload(req.SourcePayload)
 		return migrationModel.GlobalMigrationStateDTO{}, errors.New("请先结束/清理当前迁移")
 	}
 
