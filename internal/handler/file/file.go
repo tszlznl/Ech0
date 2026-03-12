@@ -115,7 +115,7 @@ func (fileHandler *FileHandler) ListFileTree() gin.HandlerFunc {
 //	@Tags			File
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		string							true	"文件ID"
+//	@Param			id		path		string					true	"文件ID"
 //	@Param			data	body		model.UpdateFileMetaDto	true	"文件元信息"
 //	@Success		200		{object}	res.Response{data=model.FileDto}
 //	@Failure		500		{object}	res.Response

@@ -214,7 +214,7 @@ func (settingHandler *SettingHandler) UpdateOAuth2Settings() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Success		200	{object}	res.Response{data=model.OAuth2Status}	"获取 OAuth2 状态成功"
-//	@Failure		200	{object}	res.Response			"获取 OAuth2 状态失败"
+//	@Failure		200	{object}	res.Response							"获取 OAuth2 状态失败"
 //	@Router			/oauth2/status [get]
 func (settingHandler *SettingHandler) GetOAuth2Status() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -241,7 +241,7 @@ func (settingHandler *SettingHandler) GetOAuth2Status() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Success		200	{object}	res.Response{data=model.PasskeySetting}	"获取 Passkey 设置成功"
-//	@Failure		200	{object}	res.Response								"获取 Passkey 设置失败"
+//	@Failure		200	{object}	res.Response							"获取 Passkey 设置失败"
 //	@Router			/passkey/settings [get]
 func (settingHandler *SettingHandler) GetPasskeySettings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -302,7 +302,7 @@ func (settingHandler *SettingHandler) UpdatePasskeySettings() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Success		200	{object}	res.Response{data=model.PasskeyStatus}	"获取 Passkey 状态成功"
-//	@Failure		200	{object}	res.Response								"获取 Passkey 状态失败"
+//	@Failure		200	{object}	res.Response							"获取 Passkey 状态失败"
 //	@Router			/passkey/status [get]
 func (settingHandler *SettingHandler) GetPasskeyStatus() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {

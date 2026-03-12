@@ -34,8 +34,8 @@ func NewUserHandler(userService service.Service) *UserHandler {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			login	body		model.LoginDto	true	"登录请求体"
-//	@Success		200		{object}	res.Response		"登录成功，返回JWT Token"
-//	@Failure		200		{object}	res.Response		"登录失败，返回错误信息"
+//	@Success		200		{object}	res.Response	"登录成功，返回JWT Token"
+//	@Failure		200		{object}	res.Response	"登录失败，返回错误信息"
 //	@Router			/login [post]
 func (userHandler *UserHandler) Login() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -73,8 +73,8 @@ func (userHandler *UserHandler) Login() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			register	body		model.RegisterDto	true	"注册请求体"
-//	@Success		200			{object}	res.Response			"注册成功，code=1，msg=REGISTER_SUCCESS"
-//	@Failure		200			{object}	res.Response			"请求参数错误或注册失败，code=0，msg错误描述"
+//	@Success		200			{object}	res.Response		"注册成功，code=1，msg=REGISTER_SUCCESS"
+//	@Failure		200			{object}	res.Response		"请求参数错误或注册失败，code=0，msg错误描述"
 //	@Router			/register [post]
 func (userHandler *UserHandler) Register() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
