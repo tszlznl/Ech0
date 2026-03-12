@@ -69,7 +69,7 @@
         </div>
         <div class="comment-teaser-body">
           <div class="comment-teaser-card">
-            <p v-if="commentLoading" class="comment-teaser-content">正在挑选一条系统评论...</p>
+            <p v-if="commentLoading" class="comment-teaser-content">正在挑选一条精选评论...</p>
             <p v-else class="comment-teaser-content">{{ randomCommentContent }}</p>
           </div>
         </div>
@@ -93,7 +93,7 @@ const commentLoading = ref(false)
 
 const randomCommentContent = computed(() => {
   const content = randomComment.value?.content?.trim()
-  if (!content) return '暂无系统评论可展示。'
+  if (!content) return '暂无精选评论可展示。'
   return content.replace(/\s+/g, ' ').slice(0, 120)
 })
 
@@ -106,11 +106,9 @@ const getColor = (count: number): string => {
 }
 
 const pickRandomComment = (items: App.Api.Comment.CommentItem[]) => {
-  const systemComments = items.filter(
-    (item) => item.status === 'approved' && item.source === 'system' && item.content?.trim(),
-  )
-  if (systemComments.length > 0) {
-    randomComment.value = systemComments[Math.floor(Math.random() * systemComments.length)]
+  const hotComments = items.filter((item) => item.status === 'approved' && item.hot && item.content?.trim())
+  if (hotComments.length > 0) {
+    randomComment.value = hotComments[Math.floor(Math.random() * hotComments.length)]
     return
   }
 

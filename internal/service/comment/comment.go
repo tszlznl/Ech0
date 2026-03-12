@@ -199,6 +199,13 @@ func (s *CommentService) UpdateCommentStatus(ctx context.Context, id string, sta
 	return s.repo.UpdateCommentStatus(ctx, id, status)
 }
 
+func (s *CommentService) UpdateCommentHot(ctx context.Context, id string, hot bool) error {
+	if err := s.requireAdmin(ctx); err != nil {
+		return err
+	}
+	return s.repo.UpdateCommentHot(ctx, id, hot)
+}
+
 func (s *CommentService) DeleteComment(ctx context.Context, id string) error {
 	if err := s.requireAdmin(ctx); err != nil {
 		return err

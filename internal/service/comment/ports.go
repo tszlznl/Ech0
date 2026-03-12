@@ -15,6 +15,7 @@ type Service interface {
 	ListPanelComments(ctx context.Context, query model.ListCommentQuery) (model.PageResult[model.Comment], error)
 	GetCommentByID(ctx context.Context, id string) (model.Comment, error)
 	UpdateCommentStatus(ctx context.Context, id string, status model.Status) error
+	UpdateCommentHot(ctx context.Context, id string, hot bool) error
 	DeleteComment(ctx context.Context, id string) error
 	BatchAction(ctx context.Context, action string, ids []string) error
 	GetSystemSetting(ctx context.Context) (model.SystemSetting, error)
@@ -27,6 +28,7 @@ type Repository interface {
 	ListComments(ctx context.Context, query model.ListCommentQuery) (model.PageResult[model.Comment], error)
 	GetCommentByID(ctx context.Context, id string) (model.Comment, error)
 	UpdateCommentStatus(ctx context.Context, id string, status model.Status) error
+	UpdateCommentHot(ctx context.Context, id string, hot bool) error
 	DeleteComment(ctx context.Context, id string) error
 	BatchUpdateStatus(ctx context.Context, ids []string, status model.Status) error
 	BatchDelete(ctx context.Context, ids []string) error

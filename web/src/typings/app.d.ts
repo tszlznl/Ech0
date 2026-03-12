@@ -433,6 +433,7 @@ declare namespace App {
         website?: string
         content: string
         status: CommentStatus
+        hot: boolean
         source: 'guest' | 'system'
         created_at: string
         updated_at: string
@@ -463,6 +464,7 @@ declare namespace App {
         keyword?: string
         status?: string
         echo_id?: string
+        hot?: boolean
       }
 
       type PanelPageResult = {

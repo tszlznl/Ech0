@@ -35,6 +35,7 @@ type Comment struct {
 	Website   string     `gorm:"size:255" json:"website,omitempty"`
 	Content   string     `gorm:"type:text;not null" json:"content"`
 	Status    Status     `gorm:"type:varchar(20);not null;index" json:"status"`
+	Hot       bool       `gorm:"not null;default:false;index" json:"hot"`
 	IPHash    string     `gorm:"size:128;index" json:"-"`
 	UserAgent string     `gorm:"size:512" json:"-"`
 	Source    SourceType `gorm:"type:varchar(20);not null;index" json:"source"`
@@ -64,6 +65,10 @@ type UpdateCommentStatusDto struct {
 	Status Status `json:"status" binding:"required"`
 }
 
+type UpdateCommentHotDto struct {
+	Hot bool `json:"hot"`
+}
+
 type BatchCommentActionDto struct {
 	Action string   `json:"action" binding:"required"`
 	IDs    []string `json:"ids" binding:"required"`
@@ -75,6 +80,7 @@ type ListCommentQuery struct {
 	Keyword  string
 	Status   string
 	EchoID   string
+	Hot      *bool
 }
 
 type PageResult[T any] struct {

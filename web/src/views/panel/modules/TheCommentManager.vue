@@ -82,6 +82,13 @@
           placeholder="全部状态"
         >
         </BaseSelect>
+        <BaseSelect
+          v-model="hotFilter"
+          class="h-9 min-w-28"
+          :options="hotOptions"
+          placeholder="Hot 筛选"
+        >
+        </BaseSelect>
         <BaseButton class="comment-btn px-3 py-1.5 text-sm" @click="reload">
           查询
         </BaseButton>
@@ -116,6 +123,7 @@
               <th class="py-2">昵称</th>
               <th class="py-2">邮箱</th>
               <th class="py-2">状态</th>
+              <th class="py-2">Hot</th>
               <th class="py-2">时间</th>
               <th class="py-2 pr-3">操作</th>
             </tr>
@@ -136,10 +144,18 @@
                   {{ statusLabelMap[item.status] || item.status }}
                 </span>
               </td>
+              <td class="py-2">
+                <span class="status-pill" :class="hotClass(item.hot)">
+                  {{ item.hot ? '精选' : '普通' }}
+                </span>
+              </td>
               <td class="py-2">{{ formatDate(item.created_at) }}</td>
               <td class="py-2 pr-3">
                 <div class="flex items-center gap-2">
                   <button class="table-action text-sky-500" @click="openDetail(item.id)">详情</button>
+                  <button class="table-action text-violet-500" @click="updateHot(item.id, !item.hot)">
+                    {{ item.hot ? '取消 hot' : '设为 hot' }}
+                  </button>
                   <button class="table-action text-emerald-500" @click="updateStatus(item.id, 'approved')">
                     通过
                   </button>
@@ -151,7 +167,7 @@
               </td>
             </tr>
             <tr v-if="list.items.length === 0">
-              <td colspan="6" class="px-3 py-8 text-center text-[var(--color-text-muted)]">暂无评论数据</td>
+              <td colspan="7" class="px-3 py-8 text-center text-[var(--color-text-muted)]">暂无评论数据</td>
             </tr>
           </tbody>
         </table>
@@ -190,6 +206,7 @@
           <p><b>邮箱：</b>{{ current.email }}</p>
           <p><b>网址：</b>{{ current.website || '-' }}</p>
           <p><b>状态：</b>{{ statusLabelMap[current.status] || current.status }}</p>
+          <p><b>Hot：</b>{{ current.hot ? '是' : '否' }}</p>
           <p><b>来源：</b>{{ current.source }}</p>
           <p><b>时间：</b>{{ formatDate(current.created_at) }}</p>
           <p class="mt-2 whitespace-pre-wrap break-words rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-muted)]/50 p-2">
@@ -210,6 +227,7 @@ import {
   fetchGetPanelCommentById,
   fetchGetPanelComments,
   fetchUpdateCommentSystemSetting,
+  fetchUpdatePanelCommentHot,
   fetchUpdatePanelCommentStatus,
 } from '@/service/api'
 import PanelCard from '@/layout/PanelCard.vue'
@@ -241,6 +259,7 @@ const list = reactive<App.Api.Comment.PanelPageResult>({
   items: [],
   total: 0,
 })
+const hotFilter = ref('')
 
 const selectedIds = ref<string[]>([])
 const detailOpen = ref(false)
@@ -250,6 +269,11 @@ const statusOptions = [
   { label: '待审核', value: 'pending' },
   { label: '已通过', value: 'approved' },
   { label: '已拒绝', value: 'rejected' },
+]
+const hotOptions = [
+  { label: '全部 Hot', value: '' },
+  { label: '仅 Hot', value: 'true' },
+  { label: '仅非 Hot', value: 'false' },
 ]
 const statusLabelMap: Record<string, string> = {
   pending: '待审核',
@@ -291,7 +315,11 @@ const saveSetting = async () => {
 }
 
 const loadList = async () => {
-  const res = await fetchGetPanelComments(query)
+  const hot = hotFilter.value === '' ? undefined : hotFilter.value === 'true'
+  const res = await fetchGetPanelComments({
+    ...query,
+    hot,
+  })
   if (res.code === 1) {
     list.items = res.data.items || []
     list.total = res.data.total || 0
@@ -318,6 +346,13 @@ const runBatch = async (action: App.Api.Comment.BatchAction) => {
 
 const updateStatus = async (id: string, status: App.Api.Comment.CommentStatus) => {
   const res = await fetchUpdatePanelCommentStatus(id, status)
+  if (res.code === 1) {
+    await loadList()
+  }
+}
+
+const updateHot = async (id: string, hot: boolean) => {
+  const res = await fetchUpdatePanelCommentHot(id, hot)
   if (res.code === 1) {
     await loadList()
   }
@@ -354,6 +389,11 @@ const statusClass = (status: string) => {
   if (status === 'approved') return 'status-approved'
   if (status === 'rejected') return 'status-rejected'
   return 'status-pending'
+}
+
+const hotClass = (hot: boolean) => {
+  if (hot) return 'status-hot'
+  return 'status-normal'
 }
 
 onMounted(async () => {
@@ -434,6 +474,18 @@ onMounted(async () => {
   color: #0369a1;
   border-color: color-mix(in srgb, #38bdf8 45%, transparent 55%);
   background: color-mix(in srgb, #38bdf8 14%, transparent 86%);
+}
+
+.status-hot {
+  color: #7c3aed;
+  border-color: color-mix(in srgb, #8b5cf6 45%, transparent 55%);
+  background: color-mix(in srgb, #8b5cf6 14%, transparent 86%);
+}
+
+.status-normal {
+  color: var(--color-text-muted);
+  border-color: var(--color-border-subtle);
+  background: color-mix(in srgb, var(--color-bg-muted) 65%, transparent 35%);
 }
 
 .table-action {

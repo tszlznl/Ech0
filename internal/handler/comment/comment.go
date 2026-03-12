@@ -75,6 +75,7 @@ func (h *CommentHandler) ListPanelComments() gin.HandlerFunc {
 			Keyword:  ctx.Query("keyword"),
 			Status:   ctx.Query("status"),
 			EchoID:   ctx.Query("echo_id"),
+			Hot:      parseQueryBool(ctx, "hot"),
 		}
 		data, err := h.commentService.ListPanelComments(ctx.Request.Context(), query)
 		if err != nil {
@@ -116,6 +117,20 @@ func (h *CommentHandler) DeleteComment() gin.HandlerFunc {
 			return res.Response{Err: err}
 		}
 		return res.Response{Msg: commonModel.DELETE_SUCCESS}
+	})
+}
+
+func (h *CommentHandler) UpdateCommentHot() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		id := strings.TrimSpace(ctx.Param("id"))
+		var dto model.UpdateCommentHotDto
+		if err := ctx.ShouldBindJSON(&dto); err != nil {
+			return res.Response{Msg: commonModel.INVALID_REQUEST_BODY, Err: err}
+		}
+		if err := h.commentService.UpdateCommentHot(ctx.Request.Context(), id, dto.Hot); err != nil {
+			return res.Response{Err: err}
+		}
+		return res.Response{Msg: commonModel.SUCCESS_MESSAGE}
 	})
 }
 
@@ -175,5 +190,17 @@ func parseQueryInt(ctx *gin.Context, key string, def int) int {
 		return def
 	}
 	return v
+}
+
+func parseQueryBool(ctx *gin.Context, key string) *bool {
+	raw := strings.TrimSpace(ctx.Query(key))
+	if raw == "" {
+		return nil
+	}
+	v, err := strconv.ParseBool(raw)
+	if err != nil {
+		return nil
+	}
+	return &v
 }
 

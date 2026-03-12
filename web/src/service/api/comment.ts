@@ -29,6 +29,7 @@ export function fetchGetPanelComments(params: App.Api.Comment.PanelListQuery) {
   if (params.keyword) search.set('keyword', params.keyword)
   if (params.status) search.set('status', params.status)
   if (params.echo_id) search.set('echo_id', params.echo_id)
+  if (typeof params.hot === 'boolean') search.set('hot', String(params.hot))
   return request<App.Api.Comment.PanelPageResult>({
     url: `/panel/comments?${search.toString()}`,
     method: 'GET',
@@ -47,6 +48,14 @@ export function fetchUpdatePanelCommentStatus(id: string, status: App.Api.Commen
     url: `/panel/comments/${id}/status`,
     method: 'PATCH',
     data: { status },
+  })
+}
+
+export function fetchUpdatePanelCommentHot(id: string, hot: boolean) {
+  return request({
+    url: `/panel/comments/${id}/hot`,
+    method: 'PATCH',
+    data: { hot },
   })
 }
 

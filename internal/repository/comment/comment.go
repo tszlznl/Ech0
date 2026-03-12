@@ -52,6 +52,9 @@ func (r *CommentRepository) ListComments(
 	if query.Status != "" {
 		db = db.Where("status = ?", query.Status)
 	}
+	if query.Hot != nil {
+		db = db.Where("hot = ?", *query.Hot)
+	}
 	if strings.TrimSpace(query.Keyword) != "" {
 		kw := "%" + strings.TrimSpace(query.Keyword) + "%"
 		db = db.Where(
@@ -98,6 +101,17 @@ func (r *CommentRepository) UpdateCommentStatus(
 		Model(&model.Comment{}).
 		Where("id = ?", id).
 		Update("status", status).Error
+}
+
+func (r *CommentRepository) UpdateCommentHot(
+	ctx context.Context,
+	id string,
+	hot bool,
+) error {
+	return r.getDB(ctx).
+		Model(&model.Comment{}).
+		Where("id = ?", id).
+		Update("hot", hot).Error
 }
 
 func (r *CommentRepository) DeleteComment(ctx context.Context, id string) error {

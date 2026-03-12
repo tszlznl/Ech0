@@ -28,6 +28,7 @@
           class="comment-sticky relative rounded-[4px] border p-3"
           :style="getStickyCardStyle(index)"
         >
+          <span v-if="item.hot" class="comment-hot-badge">Hot</span>
           <div class="mb-2 flex items-center gap-2">
             <img :src="resolveCommentAvatar(item, index)" alt="avatar" class="h-8 w-8 rounded-full object-cover" />
             <div class="min-w-0">
@@ -499,6 +500,19 @@ onBeforeUnmount(() => {
 
 .verified-badge-icon {
   transform: translateY(0.5px);
+}
+
+.comment-hot-badge {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.45rem;
+  z-index: 1;
+  padding: 0;
+  font-size: 0.67rem;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #ef4444;
 }
 
 .comment-ready-indicator {
