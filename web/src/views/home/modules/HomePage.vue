@@ -14,6 +14,13 @@
       <TheTop class="sm:hidden" />
       <TheEditor v-if="isLogin" />
       <TheBoard v-else />
+      <div class="mt-2">
+        <div class="hidden sm:block">
+          <TheHeatMap class="mb-2" />
+          <TheConnects class="mb-2" />
+        </div>
+        <TheRecentCard v-if="AgentSetting.enable" />
+      </div>
     </div>
     <div
       ref="mainColumn"
@@ -31,18 +38,6 @@
       <TheEchos v-if="!isFilteringMode && !inboxMode" :scroll-target="mainColumn" />
       <TheFilteredEchos v-else-if="isFilteringMode && !inboxMode" :scroll-target="mainColumn" />
       <TheInbox v-else />
-    </div>
-    <div
-      class="hidden xl:block sm:max-w-sm w-full px-6 sm:min-h-0 sm:h-full sm:overflow-y-auto transition-opacity duration-900 ease-[cubic-bezier(0.22,1,0.36,1)]"
-      :class="
-        isZenMode
-          ? 'xl:opacity-0 xl:invisible xl:pointer-events-none xl:w-0 xl:max-w-0 xl:px-0 xl:overflow-hidden'
-          : 'xl:opacity-100 xl:visible'
-      "
-    >
-      <TheHeatMap class="mb-2" />
-      <TheConnects class="mb-2" />
-      <TheRecentCard v-if="AgentSetting.enable" />
     </div>
   </div>
 </template>

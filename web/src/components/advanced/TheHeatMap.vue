@@ -1,26 +1,37 @@
 <template>
-  <div class="flex justify-center items-center p-2">
-    <div class="">
-      <div class="flex">
-        <div v-for="col in 10" :key="col" class="flex flex-col gap-1 mr-1">
-          <div
-            v-for="row in 3"
-            :key="row"
-            class="relative w-5 h-5 rounded-[6px] transition-colors duration-300 ease ring-1 ring-[var(--color-border-subtle)] hover:ring-[var(--color-border-strong)] hover:shadow-sm"
-            :style="{ backgroundColor: getColor(getCell(row - 1, col - 1)?.count ?? 0) }"
-            @mouseenter="showTooltip(row - 1, col - 1, $event)"
-            @mouseleave="hideTooltip"
-          ></div>
+  <div class="px-9 md:px-11">
+    <div class="widget bg-transparent! w-full max-w-[19rem] mx-auto rounded-md p-4">
+      <div class="heatmap-head mb-2">
+        <div class="heatmap-date-chip">{{ displayDate }}</div>
+        <div class="heatmap-title-wrap">
+          <div class="heatmap-title">Daily</div>
+          <div class="heatmap-title-accent">Log</div>
         </div>
       </div>
-    </div>
-    <!-- 自定义 tooltip -->
-    <div
-      v-if="tooltip.visible"
-      class="fixed z-50 px-2 py-1 bg-orange-500 text-white text-xs rounded shadow"
-      :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px' }"
-    >
-      {{ tooltip.text }}
+      <div class="flex justify-start items-start py-2 px-0">
+        <div class="">
+          <div class="flex gap-1">
+            <div v-for="col in 10" :key="col" class="flex flex-col gap-1">
+              <div
+                v-for="row in 3"
+                :key="row"
+                class="relative w-5 h-5 rounded-[6px] transition-colors duration-300 ease ring-1 ring-[var(--color-border-subtle)] hover:ring-[var(--color-border-strong)] hover:shadow-sm"
+                :style="{ backgroundColor: getColor(getCell(row - 1, col - 1)?.count ?? 0) }"
+                @mouseenter="showTooltip(row - 1, col - 1, $event)"
+                @mouseleave="hideTooltip"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 自定义 tooltip -->
+      <div
+        v-if="tooltip.visible"
+        class="fixed z-50 px-2 py-1 bg-orange-500 text-white text-xs rounded shadow"
+        :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px' }"
+      >
+        {{ tooltip.text }}
+      </div>
     </div>
   </div>
 </template>
@@ -34,6 +45,13 @@ import { fetchGetHeatMap } from '@/service/api'
 // }>()
 
 const heatmapData = ref<App.Api.Ech0.HeatMap>([])
+const displayDate = computed(() => {
+  return new Date().toLocaleDateString('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+  })
+})
 
 const grid = computed(() => {
   const cells = [...heatmapData.value]
@@ -98,3 +116,40 @@ onMounted(() => {
   })
 })
 </script>
+
+<style scoped>
+.heatmap-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.heatmap-date-chip {
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-muted);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  padding: 2px 8px;
+  transform: rotate(-1.8deg);
+}
+
+.heatmap-title-wrap {
+  line-height: 0.9;
+  text-align: right;
+}
+
+.heatmap-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.heatmap-title-accent {
+  font-family: 'Comic Sans MS', cursive;
+  color: var(--color-accent);
+  font-size: 20px;
+  margin-top: -2px;
+}
+</style>

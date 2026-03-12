@@ -36,6 +36,12 @@
 
       <!-- 右侧图标组 -->
       <div class="flex justify-end items-center gap-1">
+        <!-- Ech0 Widget（移动端入口） -->
+        <div class="sm:hidden">
+          <RouterLink to="/widget" title="Ech0 Widget">
+            <Widget class="w-8 h-8 text-[var(--color-text-muted)]" />
+          </RouterLink>
+        </div>
         <!-- RSS -->
         <div>
           <a href="/rss" title="RSS">
@@ -67,6 +73,7 @@ import BaseInput from '@/components/common/BaseInput.vue'
 import Panel from '@/components/icons/panel.vue'
 import Rss from '@/components/icons/rss.vue'
 import HubIcon from '@/components/icons/hub.vue'
+import Widget from '@/components/icons/widget.vue'
 import { RouterLink } from 'vue-router'
 import { useEchoStore, useZenStore } from '@/stores'
 import { storeToRefs } from 'pinia'
