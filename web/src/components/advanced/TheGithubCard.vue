@@ -3,12 +3,7 @@
     v-if="safeGithubURL"
     class="w-full max-w-sm min-w-0 flex justify-center items-center bg-[var(--color-bg-surface)] rounded-lg shadow-sm ring-1 ring-inset ring-[var(--color-border-subtle)] p-2 gap-2 overflow-hidden"
   >
-    <a
-      :href="safeGithubURL"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="block w-full min-w-0"
-    >
+    <a :href="safeGithubURL" target="_blank" rel="noopener noreferrer" class="block w-full min-w-0">
       <div class="flex justify-between items-center">
         <div class="shrink-0 px-6">
           <img

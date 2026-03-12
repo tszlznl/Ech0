@@ -61,19 +61,49 @@
         </div>
       </div>
 
+      <button
+        v-if="!commentFormExpanded"
+        type="button"
+        class="comment-pill-btn"
+        @click="commentFormExpanded = true"
+      >
+        <span class="comment-pill-btn__icon" aria-hidden="true">+</span>
+        <span>发表评论</span>
+      </button>
+
       <form
+        v-else
         class="comment-form-panel rounded-lg border border-[var(--color-border-subtle)] p-3"
         @submit.prevent="submitComment"
       >
         <div class="mb-2 flex items-center justify-between">
-          <h3 class="font-semibold text-[var(--color-text-primary)]">发表评论</h3>
-          <span class="comment-ready-indicator">
-            <i
-              class="comment-ready-dot"
-              :class="profileReady ? 'is-ready' : 'is-not-ready'"
-              aria-hidden="true"
-            ></i>
-          </span>
+          <div class="flex items-center gap-1.5">
+            <h3 class="font-semibold text-[var(--color-text-primary)]">发表评论</h3>
+            <span
+              class="inline-flex items-center gap-1 rounded-full border border-[var(--color-border-subtle)] px-2 py-[2px] text-[11px] text-[var(--color-text-muted)]"
+              title="支持 Markdown 语法"
+            >
+              <MarkdownIcon class="h-3.5 w-3.5" />
+              <span>Markdown</span>
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="comment-ready-indicator">
+              <i
+                class="comment-ready-dot"
+                :class="profileReady ? 'is-ready' : 'is-not-ready'"
+                aria-hidden="true"
+              ></i>
+            </span>
+            <button
+              type="button"
+              class="comment-collapse-btn"
+              aria-label="收起发表评论"
+              @click="commentFormExpanded = false"
+            >
+              收起
+            </button>
+          </div>
         </div>
 
         <article
@@ -167,6 +197,7 @@ import { theToast } from '@/utils/toast'
 import { formatDate } from '@/utils/other'
 import TheMdPreview from './TheMdPreview.vue'
 import Verified from '../icons/verified.vue'
+import MarkdownIcon from '../icons/markdown.vue'
 
 type CapSolveDetail = {
   token?: string
@@ -190,6 +221,7 @@ const captchaMountRef = ref<HTMLElement | null>(null)
 const captchaWidget = ref<CapWidgetElement | null>(null)
 const captchaError = ref('')
 const solvingCaptcha = ref(false)
+const commentFormExpanded = ref(false)
 const CAP_WIDGET_SCRIPT_ID = 'cap-widget-script'
 
 const form = reactive<App.Api.Comment.CreateCommentDto>({
@@ -552,6 +584,70 @@ onBeforeUnmount(() => {
     0 1px 0 rgba(20, 20, 20, 0.04),
     0 10px 18px rgba(20, 20, 20, 0.08);
   border-color: color-mix(in srgb, var(--color-border-subtle) 78%, #cabd95 22%);
+}
+
+.comment-pill-btn {
+  width: fit-content;
+  min-width: 132px;
+  max-width: 180px;
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.58rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 82%, #cabd95 18%);
+  background: color-mix(in srgb, var(--color-bg-canvas) 92%, #fff 8%);
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+  box-shadow:
+    0 1px 0 rgba(20, 20, 20, 0.04),
+    0 6px 12px rgba(20, 20, 20, 0.06);
+}
+
+.comment-pill-btn:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-border-subtle) 72%, #b7aa7e 28%);
+  box-shadow:
+    0 1px 0 rgba(20, 20, 20, 0.04),
+    0 10px 16px rgba(20, 20, 20, 0.09);
+}
+
+.comment-pill-btn__icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  line-height: 1;
+  background: color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+}
+
+.comment-collapse-btn {
+  padding: 0.18rem 0.55rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.2;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.comment-collapse-btn:hover {
+  color: var(--color-text-primary);
+  border-color: color-mix(in srgb, var(--color-border-subtle) 70%, #b7aa7e 30%);
+  background: color-mix(in srgb, var(--color-bg-canvas) 85%, #fff 15%);
 }
 
 .comment-md-content {

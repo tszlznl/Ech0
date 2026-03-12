@@ -103,7 +103,9 @@ const { getConnectInfo } = connectStore
 const { loading, connectsInfo } = storeToRefs(connectStore)
 const randomComment = ref<App.Api.Comment.CommentItem | null>(null)
 const commentLoading = ref(false)
-const canJumpToEchoDetail = computed(() => Boolean(randomComment.value?.echo_id) && !commentLoading.value)
+const canJumpToEchoDetail = computed(
+  () => Boolean(randomComment.value?.echo_id) && !commentLoading.value,
+)
 
 const randomCommentContent = computed(() => {
   const content = randomComment.value?.content?.trim()
