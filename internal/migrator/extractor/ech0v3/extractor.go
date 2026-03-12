@@ -118,6 +118,7 @@ func (e *Extractor) Migrate(ctx context.Context, req spec.MigrateRequest) (spec.
 	if err != nil {
 		return spec.MigrateResult{}, fmt.Errorf("open source sqlite: %w", err)
 	}
+	defer closeGormDB(sourceDB)
 
 	var total int64
 	if err := sourceDB.Table("echos").Count(&total).Error; err != nil {
@@ -364,13 +365,13 @@ type v3EchoTag struct {
 }
 
 type v3Image struct {
-	ID         int64  `gorm:"column:id"`
-	MessageID  int64  `gorm:"column:message_id"`
-	ImageURL   string `gorm:"column:image_url"`
-	ImageSrc   string `gorm:"column:image_source"`
-	ObjectKey  string `gorm:"column:object_key"`
-	Width      int    `gorm:"column:width"`
-	Height     int    `gorm:"column:height"`
+	ID        int64  `gorm:"column:id"`
+	MessageID int64  `gorm:"column:message_id"`
+	ImageURL  string `gorm:"column:image_url"`
+	ImageSrc  string `gorm:"column:image_source"`
+	ObjectKey string `gorm:"column:object_key"`
+	Width     int    `gorm:"column:width"`
+	Height    int    `gorm:"column:height"`
 }
 
 type migrationOptions struct {
@@ -634,7 +635,7 @@ func migrateTags(tx *gorm.DB, sourceDB *gorm.DB, idMap map[int64]string) error {
 }
 
 type imageMigrationSummary struct {
-	FailedItems    []spec.FailedItem
+	FailedItems     []spec.FailedItem
 	SourceS3Setting *settingModel.S3Setting
 }
 
@@ -687,19 +688,19 @@ func migrateImages(tx *gorm.DB, sourceDB *gorm.DB, sourceRoot string, createdBy 
 	}
 
 	type imageCandidate struct {
-		sourceImageID int64
-		sourceMessageID int64
-		targetEchoID string
-		key          string
+		sourceImageID              int64
+		sourceMessageID            int64
+		targetEchoID               string
+		key                        string
 		sourceObjectPathCandidates []string
-		sourceImageURL string
-		imageURL     string
-		imageSrc     string
-		storageType  string
-		provider     string
-		bucket       string
-		width        int
-		height       int
+		sourceImageURL             string
+		imageURL                   string
+		imageSrc                   string
+		storageType                string
+		provider                   string
+		bucket                     string
+		width                      int
+		height                     int
 	}
 	candidates := make([]imageCandidate, 0, len(sourceImages))
 	uniqueLocalKeys := make(map[string]struct{})
@@ -723,17 +724,17 @@ func migrateImages(tx *gorm.DB, sourceDB *gorm.DB, sourceRoot string, createdBy 
 				continue
 			}
 			candidates = append(candidates, imageCandidate{
-				sourceImageID: row.ID,
+				sourceImageID:   row.ID,
 				sourceMessageID: row.MessageID,
-				targetEchoID: targetEchoID,
-				key:          key,
-				imageURL:     strings.TrimSpace(row.ImageURL),
-				imageSrc:     imageSrc,
-				storageType:  "local",
-				provider:     "",
-				bucket:       "",
-				width:        row.Width,
-				height:       row.Height,
+				targetEchoID:    targetEchoID,
+				key:             key,
+				imageURL:        strings.TrimSpace(row.ImageURL),
+				imageSrc:        imageSrc,
+				storageType:     "local",
+				provider:        "",
+				bucket:          "",
+				width:           row.Width,
+				height:          row.Height,
 			})
 			uniqueLocalKeys[key] = struct{}{}
 		case "s3":
@@ -759,19 +760,19 @@ func migrateImages(tx *gorm.DB, sourceDB *gorm.DB, sourceRoot string, createdBy 
 			}
 			finalURL := buildObjectURLFromSetting(mappedS3Setting, migratedKey)
 			candidates = append(candidates, imageCandidate{
-				sourceImageID: row.ID,
-				sourceMessageID: row.MessageID,
-				targetEchoID: targetEchoID,
-				key:          migratedKey,
+				sourceImageID:              row.ID,
+				sourceMessageID:            row.MessageID,
+				targetEchoID:               targetEchoID,
+				key:                        migratedKey,
 				sourceObjectPathCandidates: sourceObjectCandidates,
-				sourceImageURL: strings.TrimSpace(row.ImageURL),
-				imageURL:     strings.TrimSpace(finalURL),
-				imageSrc:     imageSrc,
-				storageType:  "object",
-				provider:     objectProvider,
-				bucket:       objectBucket,
-				width:        row.Width,
-				height:       row.Height,
+				sourceImageURL:             strings.TrimSpace(row.ImageURL),
+				imageURL:                   strings.TrimSpace(finalURL),
+				imageSrc:                   imageSrc,
+				storageType:                "object",
+				provider:                   objectProvider,
+				bucket:                     objectBucket,
+				width:                      row.Width,
+				height:                     row.Height,
 			})
 			uniqueObjectKeys[migratedKey] = struct{}{}
 		default:
@@ -785,17 +786,17 @@ func migrateImages(tx *gorm.DB, sourceDB *gorm.DB, sourceRoot string, createdBy 
 			}
 			externalKey := buildExternalFileKey(finalURL, "image")
 			candidates = append(candidates, imageCandidate{
-				sourceImageID: row.ID,
+				sourceImageID:   row.ID,
 				sourceMessageID: row.MessageID,
-				targetEchoID: targetEchoID,
-				key:          externalKey,
-				imageURL:     finalURL,
-				imageSrc:     imageSrc,
-				storageType:  "external",
-				provider:     "external",
-				bucket:       "",
-				width:        row.Width,
-				height:       row.Height,
+				targetEchoID:    targetEchoID,
+				key:             externalKey,
+				imageURL:        finalURL,
+				imageSrc:        imageSrc,
+				storageType:     "external",
+				provider:        "external",
+				bucket:          "",
+				width:           row.Width,
+				height:          row.Height,
 			})
 			uniqueExternalKeys[externalKey] = struct{}{}
 		}
@@ -1633,4 +1634,15 @@ func toInt64(v any) int64 {
 	default:
 		return 0
 	}
+}
+
+func closeGormDB(db *gorm.DB) {
+	if db == nil {
+		return
+	}
+	sqlDB, err := db.DB()
+	if err != nil || sqlDB == nil {
+		return
+	}
+	_ = sqlDB.Close()
 }

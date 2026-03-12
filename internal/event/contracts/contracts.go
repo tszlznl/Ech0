@@ -21,7 +21,6 @@ const (
 	TopicEchoDeleted          = "echo.deleted"
 	TopicResourceUploaded     = "resource.uploaded"
 	TopicSystemBackup         = "system.backup"
-	TopicSystemRestore        = "system.restore"
 	TopicSystemExport         = "system.export"
 	TopicBackupScheduleUpdate = "system.backup_schedule.updated"
 	TopicDeadLetterRetried    = "deadletter.retried"
@@ -59,8 +58,7 @@ type (
 		Info string
 		Size int64
 	}
-	SystemRestoreEvent struct{ Info string }
-	SystemExportEvent  struct {
+	SystemExportEvent struct {
 		Info string
 		Size int64
 	}

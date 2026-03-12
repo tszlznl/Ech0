@@ -5,7 +5,6 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/charmbracelet/huh"
 	"github.com/lin-snow/ech0/internal/backup"
@@ -66,15 +65,6 @@ func DoBackup() {
 	tui.PrintCLIInfo("🎉 备份成功", fullPath)
 }
 
-func DoRestore(backupFilePath string) {
-	err := backup.ExecuteRestore(backupFilePath)
-	if err != nil {
-		tui.PrintCLIInfo("😭 执行结果", "恢复失败: "+err.Error())
-		return
-	}
-	tui.PrintCLIInfo("🎉 恢复成功", "已从备份文件 "+backupFilePath+" 中恢复数据")
-}
-
 func DoVersion() {
 	item := struct{ Title, Msg string }{
 		Title: "📦 当前版本",
@@ -113,7 +103,6 @@ func DoTui() {
 		options = append(options,
 			huh.NewOption("🦖 查看信息", "info"),
 			huh.NewOption("📦 执行备份", "backup"),
-			huh.NewOption("💾 恢复备份", "restore"),
 			huh.NewOption("📌 查看版本", "version"),
 			huh.NewOption("❌ 退出", "exit"),
 		)
@@ -140,22 +129,6 @@ func DoTui() {
 			DoEch0Info()
 		case "backup":
 			DoBackup()
-		case "restore":
-			if isWebPortInUse() {
-				tui.PrintCLIInfo("⚠️ 警告", "恢复数据前请先停止服务器")
-			} else {
-				var path string
-				_ = huh.NewInput().
-					Title("请输入备份文件路径").
-					Value(&path).
-					Run()
-				path = strings.TrimSpace(path)
-				if path != "" {
-					DoRestore(path)
-				} else {
-					tui.PrintCLIInfo("⚠️ 跳过", "未输入备份路径")
-				}
-			}
 		case "version":
 			tui.ClearScreen()
 			DoVersion()

@@ -44,6 +44,7 @@ func (e *Extractor) Migrate(ctx context.Context, req spec.MigrateRequest) (spec.
 	if err != nil {
 		return spec.MigrateResult{}, fmt.Errorf("open source sqlite: %w", err)
 	}
+	defer closeGormDB(sourceDB)
 
 	var total int64
 	if err := sourceDB.Table("echos").Count(&total).Error; err != nil {
@@ -375,6 +376,17 @@ func loadRows[T any](ctx context.Context, db *gorm.DB, table string) ([]T, error
 		return nil, err
 	}
 	return rows, nil
+}
+
+func closeGormDB(db *gorm.DB) {
+	if db == nil {
+		return
+	}
+	sqlDB, err := db.DB()
+	if err != nil || sqlDB == nil {
+		return
+	}
+	_ = sqlDB.Close()
 }
 
 const (

@@ -2,7 +2,6 @@ package backup
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,7 +11,6 @@ import (
 
 	virefs "github.com/lin-snow/VireFS"
 	vizip "github.com/lin-snow/VireFS/plugin/zip"
-	"github.com/lin-snow/ech0/internal/database"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"go.uber.org/zap"
 )
@@ -92,71 +90,6 @@ func ExecuteBackup() (string, string, error) {
 	}
 
 	return backupPath, fileName, nil
-}
-
-// ExecuteRestore unpacks a backup zip into the data directory.
-func ExecuteRestore(backupFilePath string) error {
-	if _, err := os.Stat(backupFilePath); err != nil {
-		return errors.New("备份文件不存在: " + backupFilePath)
-	}
-
-	previousLock := database.IsWriteLocked()
-	if !previousLock {
-		database.EnableWriteLock()
-		defer database.DisableWriteLock()
-	}
-
-	logUtil.CloseLogger()
-	defer logUtil.ReopenLogger()
-
-	return UnpackZipToDir(backupFilePath, dataDir)
-}
-
-// ExcuteRestoreOnline performs an online restore from an uploaded zip.
-func ExcuteRestoreOnline(filePath string, timeStamp int64) error {
-	if _, err := os.Stat(filePath); err != nil {
-		return errors.New("备份文件不存在: " + filePath)
-	}
-
-	previousLock := database.IsWriteLocked()
-	if !previousLock {
-		database.EnableWriteLock()
-		defer database.DisableWriteLock()
-	}
-
-	logUtil.CloseLogger()
-	defer logUtil.ReopenLogger()
-
-	extractPath := fmt.Sprintf("temp/snapshot_%d", timeStamp)
-	defer func() {
-		if err := os.RemoveAll(extractPath); err != nil {
-			logUtil.GetLogger().Warn("Failed to cleanup extracted snapshot temp directory",
-				zap.String("path", extractPath), zap.Error(err))
-		}
-		if err := os.Remove(filePath); err != nil {
-			logUtil.GetLogger().Warn("Failed to cleanup uploaded snapshot zip",
-				zap.String("path", filePath), zap.Error(err))
-		}
-	}()
-
-	if err := UnpackZipToDir(filePath, extractPath); err != nil {
-		return err
-	}
-
-	tempDbPath := filepath.Join(extractPath, "ech0.db")
-	if err := database.HotChangeDatabase(tempDbPath); err != nil {
-		return err
-	}
-
-	if err := copyDirViaVireFS(extractPath, dataDir); err != nil {
-		return err
-	}
-
-	if err := database.HotChangeDatabase("data/ech0.db"); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // UnpackZipToDir unpacks a zip file to destination directory.

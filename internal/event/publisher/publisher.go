@@ -62,10 +62,6 @@ func (p *Publisher) SystemBackup(ctx context.Context, evt contracts.SystemBackup
 	return busen.Publish(ctx, p.bus, evt, busen.WithTopic(contracts.TopicSystemBackup))
 }
 
-func (p *Publisher) SystemRestore(ctx context.Context, evt contracts.SystemRestoreEvent) error {
-	return busen.Publish(ctx, p.bus, evt, busen.WithTopic(contracts.TopicSystemRestore))
-}
-
 func (p *Publisher) SystemExport(ctx context.Context, evt contracts.SystemExportEvent) error {
 	return busen.Publish(ctx, p.bus, evt, busen.WithTopic(contracts.TopicSystemExport))
 }

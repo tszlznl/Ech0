@@ -235,8 +235,8 @@ Run the binary directly (for example, on Windows double-click `Ech0.exe`).
 3. **Is Ech0 free?**  
    Yes, fully free and open-source under AGPL-3.0, no ads, tracking, subscription, or service dependency.  
 
-4. **How do I back up and restore data?**  
-  Since all content is stored in a local SQLite file, you only need to back up the files in the `/opt/ech0/data` directory (or the mapped path you chose during deployment). To restore, simply replace the data files with your backup. You can also use the online data management features in the settings under "Data Management" to quickly create, export, or restore snapshots. If the latest content does not appear after restoring, try manually restarting the Docker container.
+4. **How do I back up and import data?**  
+  Since all content is stored in a local SQLite file, it is recommended to regularly back up files in `/opt/ech0/data` (or your mapped data path). In "Data Management", you can use snapshot export for archival and migration import as the only supported online data import path.
 
 5. **Does Ech0 support RSS?**  
    Yes, content updates can be subscribed via RSS.  
