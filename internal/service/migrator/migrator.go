@@ -20,8 +20,10 @@ import (
 	migrationModel "github.com/lin-snow/ech0/internal/model/migration"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	echoRepository "github.com/lin-snow/ech0/internal/repository/echo"
+	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
 	"github.com/lin-snow/ech0/pkg/viewer"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -209,6 +211,9 @@ func (s *MigratorService) CleanupGlobalMigration(ctx context.Context) error {
 	if state.Status == migrationModel.MigrationStatusPending || state.Status == migrationModel.MigrationStatusRunning {
 		return errors.New("迁移进行中，无法清理")
 	}
+	if err := cleanupMigrationTmpDirFromPayload(state.SourcePayload); err != nil {
+		return fmt.Errorf("cleanup migration tmp dir: %w", err)
+	}
 	return s.keyValueRepository.DeleteKeyValue(ctx, commonModel.MigrationGlobalJobStateKey)
 }
 
@@ -217,6 +222,14 @@ func (s *MigratorService) runGlobalMigration(ctx context.Context, state migratio
 		s.activeMu.Lock()
 		s.activeCancel = nil
 		s.activeMu.Unlock()
+	}()
+	defer func() {
+		if err := cleanupMigrationTmpDirFromPayload(state.SourcePayload); err != nil {
+			logUtil.GetLogger().Warn("Failed to cleanup migration temp directory",
+				zap.String("module", "migration"),
+				zap.Error(err),
+			)
+		}
 	}()
 
 	runner, err := coreMigrator.BuildSourceMigrator(state.SourceType)
@@ -415,6 +428,35 @@ func isDatabaseLockedError(err error) bool {
 		return false
 	}
 	return strings.Contains(strings.ToLower(err.Error()), "database is locked")
+}
+
+func cleanupMigrationTmpDirFromPayload(sourcePayload map[string]any) error {
+	tmpDir, ok := resolveMigrationTmpDir(sourcePayload)
+	if !ok {
+		return nil
+	}
+	return os.RemoveAll(tmpDir)
+}
+
+func resolveMigrationTmpDir(sourcePayload map[string]any) (string, bool) {
+	if len(sourcePayload) == 0 {
+		return "", false
+	}
+	tmpDirRaw, ok := sourcePayload["tmp_dir"].(string)
+	if !ok || strings.TrimSpace(tmpDirRaw) == "" {
+		return "", false
+	}
+	cleanRelPath := filepath.Clean(filepath.FromSlash(strings.TrimSpace(tmpDirRaw)))
+	if cleanRelPath == "." || cleanRelPath == "" || filepath.IsAbs(cleanRelPath) || strings.HasPrefix(cleanRelPath, "..") {
+		return "", false
+	}
+
+	allowedBaseDir := filepath.Clean(filepath.Join("data", migrationTmpRelativeDir))
+	targetDir := filepath.Clean(filepath.Join("data", cleanRelPath))
+	if targetDir != allowedBaseDir && !strings.HasPrefix(targetDir, allowedBaseDir+string(os.PathSeparator)) {
+		return "", false
+	}
+	return targetDir, true
 }
 
 func (s *MigratorService) applyMigratedSettings(ctx context.Context, report map[string]any) error {
