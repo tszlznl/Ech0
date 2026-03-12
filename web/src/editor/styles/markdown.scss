@@ -4,6 +4,8 @@
   line-height: 1.6;
   overflow-wrap: anywhere;
   max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
   overflow-x: clip;
 }
 
@@ -68,17 +70,30 @@
 }
 
 .echo-markdown pre {
+  display: block;
+  box-sizing: border-box;
   border-radius: 0.5rem;
   max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
   margin: 0.7rem 0;
+}
+
+.echo-markdown pre code,
+.echo-markdown pre code.hljs,
+.echo-markdown pre .hljs {
+  display: block;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .echo-markdown .code-block {
   position: relative;
   margin: 0.7rem 0;
   max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
   overflow-x: clip;
 }
 

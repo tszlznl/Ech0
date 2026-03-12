@@ -1,6 +1,6 @@
 <template>
   <div
-    class="max-w-sm sm:max-w-full px-2 pb-4 py-2 mt-4 sm:mt-0 mb-10 sm:mb-0 mx-auto flex flex-col sm:flex-row justify-center items-start sm:items-stretch sm:h-[100dvh] sm:overflow-hidden transition-all duration-500"
+    class="max-w-sm sm:max-w-full px-2 pb-4 py-2 mt-4 sm:mt-0 mb-10 sm:mb-0 mx-auto flex flex-col sm:flex-row justify-center items-start sm:items-stretch overflow-x-hidden sm:h-[100dvh] sm:overflow-hidden transition-all duration-500"
     :class="isZenMode ? 'sm:gap-0' : 'sm:gap-8'"
   >
     <div
@@ -24,7 +24,7 @@
     </div>
     <div
       ref="mainColumn"
-      class="sm:max-w-lg w-full sm:min-h-0 sm:h-full sm:overflow-y-auto sm:[overscroll-behavior:contain]"
+      class="sm:max-w-lg w-full min-w-0 overflow-x-hidden sm:min-h-0 sm:h-full sm:overflow-y-auto sm:[overscroll-behavior:contain]"
       :style="{ '--date-sticky-top': echoDateStickyTop }"
       :class="isZenMode ? 'sm:mx-auto sm:shrink-0' : ''"
     >
@@ -129,6 +129,7 @@ onMounted(async () => {
   schedulePositionUpdate()
   window.addEventListener('resize', schedulePositionUpdate)
   if (mainColumn.value) {
+    mainColumn.value.scrollLeft = 0
     mainColumn.value.addEventListener('scroll', saveTimelineScrollPosition, { passive: true })
   }
   if (topStickyBar.value) {

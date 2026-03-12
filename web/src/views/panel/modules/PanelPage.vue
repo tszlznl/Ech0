@@ -67,7 +67,7 @@
             :class="getButtonClasses('panel-dashboard')"
             title="Dashboard"
           >
-            Dashboard
+            控制台
           </BaseButton>
 
           <!-- 偏好设置 -->

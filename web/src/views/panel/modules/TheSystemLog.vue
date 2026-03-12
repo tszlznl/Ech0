@@ -1,35 +1,55 @@
 <template>
   <div class="w-full px-2">
-    <div class="mb-3 flex flex-col md:flex-row gap-2 md:items-center">
-      <select
-        v-model="level"
-        class="h-9 rounded-[var(--radius-md)] px-2 bg-[var(--input-bg-color)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]"
-      >
-        <option value="all">全部级别</option>
-        <option value="debug">debug</option>
-        <option value="info">info</option>
-        <option value="warn">warn</option>
-        <option value="error">error</option>
-      </select>
-      <input
-        v-model="keyword"
-        placeholder="关键词过滤"
-        class="h-9 rounded-[var(--radius-md)] px-2 bg-[var(--input-bg-color)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]"
-      />
-      <input
-        v-model.number="tail"
-        type="number"
-        min="50"
-        max="1000"
-        class="h-9 w-24 rounded-[var(--radius-md)] px-2 bg-[var(--input-bg-color)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]"
-      />
-      <button class="h-9 px-3 rounded-md log-btn" @click="reload">应用过滤</button>
-      <button class="h-9 px-3 rounded-md log-btn" @click="clearLogs">清屏</button>
-      <label class="inline-flex items-center gap-1 text-sm text-[var(--color-text-secondary)]">
-        <input v-model="autoScroll" type="checkbox" />
-        自动滚动
-      </label>
-      <span class="text-xs text-[var(--color-text-muted)]">连接: {{ connectionText }}</span>
+    <div class="mb-3 log-toolbar">
+      <div class="log-toolbar-grid">
+        <label class="toolbar-field">
+          <span class="field-label">日志级别</span>
+          <select
+            v-model="level"
+            class="h-9 rounded-[var(--radius-md)] px-2 bg-[var(--input-bg-color)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]"
+          >
+            <option value="all">全部级别</option>
+            <option value="debug">debug</option>
+            <option value="info">info</option>
+            <option value="warn">warn</option>
+            <option value="error">error</option>
+          </select>
+        </label>
+
+        <label class="toolbar-field field-grow">
+          <span class="field-label">关键词</span>
+          <input
+            v-model="keyword"
+            placeholder="输入关键词进行过滤"
+            class="h-9 rounded-[var(--radius-md)] px-2 bg-[var(--input-bg-color)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]"
+          />
+        </label>
+
+        <label class="toolbar-field field-tail">
+          <span class="field-label">显示条数</span>
+          <input
+            v-model.number="tail"
+            type="number"
+            min="50"
+            max="1000"
+            step="50"
+            title="读取最近日志条数，范围 50-1000"
+            @blur="normalizeTail"
+            class="h-9 rounded-[var(--radius-md)] px-2 bg-[var(--input-bg-color)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]"
+          />
+          <span class="field-hint">读取最近 N 条（50-1000）</span>
+        </label>
+      </div>
+
+      <div class="log-toolbar-actions">
+        <button class="h-9 px-3 rounded-md log-btn" @click="reload">应用过滤</button>
+        <button class="h-9 px-3 rounded-md log-btn" @click="clearLogs">清屏</button>
+        <label class="inline-flex items-center gap-1 text-sm text-[var(--color-text-secondary)]">
+          <input v-model="autoScroll" type="checkbox" />
+          自动滚动
+        </label>
+        <span class="text-xs text-[var(--color-text-muted)]">连接: {{ connectionText }}</span>
+      </div>
     </div>
 
     <div ref="logContainer" class="log-container text-xs md:text-sm">
@@ -81,6 +101,15 @@ const connectionText = computed(() => {
   return String(status.value)
 })
 
+const normalizeTail = () => {
+  const value = Number(tail.value)
+  if (!Number.isFinite(value)) {
+    tail.value = 200
+    return
+  }
+  tail.value = Math.min(1000, Math.max(50, Math.round(value)))
+}
+
 const normalizeLevel = (value: string) => value.trim().toLowerCase()
 
 const hitFilter = (entry: App.Api.SystemLog.Entry) => {
@@ -114,6 +143,7 @@ const pushLog = async (entry: App.Api.SystemLog.Entry) => {
 }
 
 const loadHistory = async () => {
+  normalizeTail()
   const res = await fetchSystemLogs({
     tail: tail.value,
     level: level.value,
@@ -210,6 +240,47 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.log-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.log-toolbar-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.toolbar-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.field-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  line-height: 1.2;
+}
+
+.field-tail input {
+  width: 100%;
+}
+
+.field-hint {
+  font-size: 0.72rem;
+  line-height: 1.2;
+  color: var(--color-text-muted);
+}
+
+.log-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .log-container {
   height: 42vh;
   overflow-y: auto;
@@ -257,5 +328,12 @@ onUnmounted(() => {
 .log-btn:hover {
   background: var(--color-bg-muted);
   border-color: var(--color-border-strong);
+}
+
+@media (min-width: 768px) {
+  .log-toolbar-grid {
+    grid-template-columns: minmax(8rem, 10rem) minmax(12rem, 1fr) minmax(9rem, 11rem);
+    align-items: start;
+  }
 }
 </style>

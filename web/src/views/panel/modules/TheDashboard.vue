@@ -40,28 +40,28 @@ const dashboardStats = computed<StatCard[]>(() => {
       serial: 'NO.01',
       label: 'Echo 总数',
       value: formatMetric(echoTotal.value),
-      note: '累计灵感条目',
+      note: '',
     },
     {
       key: 'inbox',
       serial: 'NO.02',
       label: '未读收件箱',
       value: formatMetric(unreadInboxCount.value),
-      note: '等待你处理的消息',
+      note: '',
     },
     {
       key: 'connect',
       serial: 'NO.03',
       label: '已连接节点',
       value: formatMetric(connectCount.value),
-      note: '当前连接实例数量',
+      note: '',
     },
     {
       key: 'version',
       serial: 'NO.04',
       label: '当前版本',
       value: settingStore.hello?.version || '--',
-      note: '系统运行版本',
+      note: '',
     },
   ]
 })

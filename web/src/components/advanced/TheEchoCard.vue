@@ -326,6 +326,7 @@ onBeforeUnmount(() => {
   --axis-dot-size: 0.5rem;
   --axis-dot-gap: 0.3rem;
   max-width: 100%;
+  overflow-x: hidden;
   overflow-x: clip;
 }
 
@@ -370,6 +371,8 @@ onBeforeUnmount(() => {
   position: relative;
   margin-left: var(--axis-offset);
   max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
   overflow-x: clip;
 }
 
