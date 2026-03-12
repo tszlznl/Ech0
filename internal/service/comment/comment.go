@@ -121,10 +121,6 @@ func (s *CommentService) CreateComment(
 		comment.Nickname = user.Username
 		// 内部成员评论允许邮箱为空，不再自动填充占位邮箱。
 		comment.Email = ""
-		comment.AvatarURL = strings.TrimSpace(user.Avatar)
-		if comment.AvatarURL == "" {
-			comment.AvatarURL = buildDiceBearURL(user.Username)
-		}
 		comment.UserID = &user.ID
 		comment.Status = model.StatusApproved
 	} else {
@@ -146,7 +142,6 @@ func (s *CommentService) CreateComment(
 		comment.Nickname = nickname
 		comment.Email = email
 		comment.Website = website
-		comment.AvatarURL = buildDiceBearURL(nickname)
 
 		if !setting.RequireApproval {
 			comment.Status = model.StatusApproved

@@ -229,15 +229,14 @@ const buildDiceBearURL = (seed: string) => {
 }
 
 const previewAvatar = computed(() => {
-  if (isPrivilegedUser.value && userStore.user?.avatar) {
-    return userStore.user.avatar
+  if (isPrivilegedUser.value) {
+    return buildDiceBearURL(`${previewNickname.value}-system-preview`)
   }
   return buildDiceBearURL(`${form.nickname || 'guest'}-${form.email || 'preview'}`)
 })
 
 const resolveCommentAvatar = (item: App.Api.Comment.CommentItem, index: number) => {
-  if (item.source === 'system' && item.avatar_url) return item.avatar_url
-  return buildDiceBearURL(`${item.id}-${item.nickname}-${index}`)
+  return buildDiceBearURL(`${item.id}-${item.nickname}-${item.source}-${index}`)
 }
 
 const getStickyCardStyle = (index: number) => {

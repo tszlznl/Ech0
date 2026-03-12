@@ -431,7 +431,6 @@ declare namespace App {
         nickname: string
         email: string
         website?: string
-        avatar_url: string
         content: string
         status: CommentStatus
         source: 'guest' | 'system'

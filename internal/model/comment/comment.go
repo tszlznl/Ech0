@@ -33,7 +33,6 @@ type Comment struct {
 	Nickname  string     `gorm:"size:100;not null;index" json:"nickname"`
 	Email     string     `gorm:"size:255;not null;index" json:"email"`
 	Website   string     `gorm:"size:255" json:"website,omitempty"`
-	AvatarURL string     `gorm:"size:255" json:"avatar_url"`
 	Content   string     `gorm:"type:text;not null" json:"content"`
 	Status    Status     `gorm:"type:varchar(20);not null;index" json:"status"`
 	IPHash    string     `gorm:"size:128;index" json:"-"`

@@ -192,7 +192,6 @@ func seedSourceDB(db *gorm.DB) error {
 		EchoID:    echo.ID,
 		Nickname:  "tester",
 		Email:     "tester@example.com",
-		AvatarURL: "",
 		Content:   "hello comment",
 		Status:    commentModel.StatusApproved,
 		Source:    commentModel.SourceSystem,
