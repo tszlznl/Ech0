@@ -12,6 +12,7 @@ import (
 
 	"github.com/lin-snow/ech0/internal/database"
 	"github.com/lin-snow/ech0/internal/migrator/spec"
+	commentModel "github.com/lin-snow/ech0/internal/model/comment"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
@@ -95,7 +96,7 @@ func (e *Extractor) Migrate(ctx context.Context, req spec.MigrateRequest) (spec.
 	}
 
 	appendSettingToReport(sourceDB, report, commonModel.SystemSettingsKey, "source_system_setting")
-	appendSettingToReport(sourceDB, report, commonModel.CommentSettingKey, "source_comment_setting")
+	appendSettingToReport(sourceDB, report, commentModel.CommentSystemSettingKey, "source_comment_setting")
 	appendSettingToReport(sourceDB, report, commonModel.S3SettingKey, "source_s3_setting")
 	appendSettingToReport(sourceDB, report, commonModel.OAuth2SettingKey, "source_oauth2_setting")
 
@@ -164,6 +165,9 @@ func migrateEchos(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB, sourceRoo
 		return err
 	}
 	if err := migrateFiles(ctx, tx, sourceDB, sourceRoot); err != nil {
+		return err
+	}
+	if err := migrateComments(ctx, tx, sourceDB); err != nil {
 		return err
 	}
 	return nil
@@ -342,6 +346,20 @@ func migrateFiles(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB, sourceRoo
 			// 本地文件缺失不阻断整任务，避免历史仅数据库快照导致整体失败。
 			continue
 		}
+	}
+	return nil
+}
+
+func migrateComments(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB) error {
+	sourceComments, err := loadRows[commentModel.Comment](ctx, sourceDB, "comments")
+	if err != nil {
+		return fmt.Errorf("load source comments: %w", err)
+	}
+	if len(sourceComments) == 0 {
+		return nil
+	}
+	if err := tx.Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(sourceComments, dbBatchSize).Error; err != nil {
+		return fmt.Errorf("migrate comments: %w", err)
 	}
 	return nil
 }

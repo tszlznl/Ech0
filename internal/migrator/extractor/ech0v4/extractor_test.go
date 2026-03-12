@@ -10,6 +10,7 @@ import (
 
 	"github.com/lin-snow/ech0/internal/database"
 	"github.com/lin-snow/ech0/internal/migrator/spec"
+	commentModel "github.com/lin-snow/ech0/internal/model/comment"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
@@ -102,6 +103,7 @@ func TestExtractorMigrate_SuccessAndIdempotent(t *testing.T) {
 	assertCount(t, targetDB, "echo_tags", 1)
 	assertCount(t, targetDB, "files", 1)
 	assertCount(t, targetDB, "echo_files", 1)
+	assertCount(t, targetDB, "comments", 1)
 	if _, err := os.Stat(filepath.Join("data", "files", "images", "source.png")); err != nil {
 		t.Fatalf("expected migrated source image exists: %v", err)
 	}
@@ -115,6 +117,7 @@ func migrateBaseTables(db *gorm.DB) error {
 		&echoModel.EchoTag{},
 		&fileModel.File{},
 		&fileModel.EchoFile{},
+		&commentModel.Comment{},
 		&commonModel.KeyValue{},
 	)
 }
@@ -184,9 +187,30 @@ func seedSourceDB(db *gorm.DB) error {
 	}).Error; err != nil {
 		return err
 	}
+	comment := commentModel.Comment{
+		ID:        "comment-source-1",
+		EchoID:    echo.ID,
+		Nickname:  "tester",
+		Email:     "tester@example.com",
+		AvatarURL: "",
+		Content:   "hello comment",
+		Status:    commentModel.StatusApproved,
+		Source:    commentModel.SourceSystem,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	if err := db.Create(&comment).Error; err != nil {
+		return err
+	}
 
 	systemRaw, _ := json.Marshal(map[string]any{"site_title": "Ech0 v4"})
-	commentRaw, _ := json.Marshal(map[string]any{"enable_comment": true, "provider": "waline", "providers": map[string]any{}})
+	commentRaw, _ := json.Marshal(map[string]any{
+		"enable_comment":   true,
+		"require_approval": true,
+		"captcha_enabled":  false,
+		"captcha_verify":   "",
+		"captcha_secret":   "",
+	})
 	s3Raw, _ := json.Marshal(map[string]any{
 		"enable":      true,
 		"provider":    "r2",
@@ -200,7 +224,7 @@ func seedSourceDB(db *gorm.DB) error {
 	oauthRaw, _ := json.Marshal(map[string]any{"enable": true, "provider": "github", "client_id": "id-a", "client_secret": "sec-a"})
 	settings := []commonModel.KeyValue{
 		{Key: commonModel.SystemSettingsKey, Value: string(systemRaw)},
-		{Key: commonModel.CommentSettingKey, Value: string(commentRaw)},
+		{Key: commentModel.CommentSystemSettingKey, Value: string(commentRaw)},
 		{Key: commonModel.S3SettingKey, Value: string(s3Raw)},
 		{Key: commonModel.OAuth2SettingKey, Value: string(oauthRaw)},
 	}

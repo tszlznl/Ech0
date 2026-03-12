@@ -16,6 +16,7 @@ import (
 	"github.com/lin-snow/ech0/internal/backup"
 	coreMigrator "github.com/lin-snow/ech0/internal/migrator"
 	"github.com/lin-snow/ech0/internal/migrator/spec"
+	commentModel "github.com/lin-snow/ech0/internal/model/comment"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	migrationModel "github.com/lin-snow/ech0/internal/model/migration"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
@@ -468,6 +469,9 @@ func (s *MigratorService) applyMigratedSettings(ctx context.Context, report map[
 	if _, err := applyMigratedSettingValue(ctx, s.keyValueRepository, report, "source_system_setting", commonModel.SystemSettingsKey, parseMigratedSystemSetting); err != nil {
 		return err
 	}
+	if _, err := applyMigratedSettingValue(ctx, s.keyValueRepository, report, "source_comment_setting", commentModel.CommentSystemSettingKey, parseMigratedCommentSetting); err != nil {
+		return err
+	}
 	ok, err := applyMigratedSettingValue(ctx, s.keyValueRepository, report, "source_s3_setting", commonModel.S3SettingKey, parseMigratedS3Setting)
 	if err != nil {
 		return err
@@ -498,6 +502,10 @@ func parseMigratedS3Setting(report map[string]any) (*settingModel.S3Setting, boo
 
 func parseMigratedSystemSetting(report map[string]any) (*settingModel.SystemSetting, bool, error) {
 	return parseSettingFromReport[settingModel.SystemSetting](report, "source_system_setting")
+}
+
+func parseMigratedCommentSetting(report map[string]any) (*commentModel.SystemSetting, bool, error) {
+	return parseSettingFromReport[commentModel.SystemSetting](report, "source_comment_setting")
 }
 
 func parseMigratedOAuth2Setting(report map[string]any) (*settingModel.OAuth2Setting, bool, error) {

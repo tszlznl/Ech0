@@ -61,6 +61,11 @@ func TestParseMigratedCommonSettings(t *testing.T) {
 			"server_name":    "ech0",
 			"ICP_number":     "",
 		},
+		"source_comment_setting": map[string]any{
+			"enable_comment":   true,
+			"require_approval": true,
+			"captcha_enabled":  false,
+		},
 		"source_oauth2_setting": map[string]any{
 			"enable":        true,
 			"provider":      "github",
@@ -77,6 +82,14 @@ func TestParseMigratedCommonSettings(t *testing.T) {
 		t.Fatalf("unexpected system setting: %+v", systemSetting)
 	}
 
+	commentSetting, ok, err := parseMigratedCommentSetting(report)
+	if err != nil || !ok || commentSetting == nil {
+		t.Fatalf("parseMigratedCommentSetting failed: ok=%v err=%v", ok, err)
+	}
+	if !commentSetting.EnableComment || !commentSetting.RequireApproval {
+		t.Fatalf("unexpected comment setting: %+v", commentSetting)
+	}
+
 	oauth2Setting, ok, err := parseMigratedOAuth2Setting(report)
 	if err != nil || !ok || oauth2Setting == nil {
 		t.Fatalf("parseMigratedOAuth2Setting failed: ok=%v err=%v", ok, err)
@@ -88,12 +101,16 @@ func TestParseMigratedCommonSettings(t *testing.T) {
 
 func TestParseMigratedCommonSettings_InvalidIgnored(t *testing.T) {
 	report := map[string]any{
-		"source_system_setting": "not-json-object",
-		"source_oauth2_setting": true,
+		"source_system_setting":  "not-json-object",
+		"source_comment_setting": 1,
+		"source_oauth2_setting":  true,
 	}
 
 	if setting, ok, err := parseMigratedSystemSetting(report); err == nil || ok || setting != nil {
 		t.Fatalf("expected invalid system setting to return error and be ignored, got ok=%v err=%v", ok, err)
+	}
+	if setting, ok, err := parseMigratedCommentSetting(report); err == nil || ok || setting != nil {
+		t.Fatalf("expected invalid comment setting to return error and be ignored, got ok=%v err=%v", ok, err)
 	}
 	if setting, ok, err := parseMigratedOAuth2Setting(report); err == nil || ok || setting != nil {
 		t.Fatalf("expected invalid oauth2 setting to return error and be ignored, got ok=%v err=%v", ok, err)
