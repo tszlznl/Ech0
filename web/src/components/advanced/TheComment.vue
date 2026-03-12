@@ -28,26 +28,25 @@
           class="comment-sticky relative rounded-md border p-3"
           :style="getStickyCardStyle(index)"
         >
-          <span class="sticky-pin" aria-hidden="true"></span>
           <div class="mb-2 flex items-center gap-2">
             <img :src="resolveCommentAvatar(item, index)" alt="avatar" class="h-8 w-8 rounded-full object-cover" />
             <div class="min-w-0">
-              <div class="truncate text-sm font-medium text-[var(--color-text-primary)]">
+              <a
+                v-if="item.website"
+                :href="item.website"
+                target="_blank"
+                rel="noreferrer"
+                class="comment-author-link truncate text-sm font-medium text-[var(--color-text-primary)]"
+              >
+                {{ item.nickname }}
+              </a>
+              <div v-else class="truncate text-sm font-medium text-[var(--color-text-primary)]">
                 {{ item.nickname }}
               </div>
               <div class="text-xs text-[var(--color-text-muted)]">
                 {{ formatDate(item.created_at) }}
               </div>
             </div>
-            <a
-              v-if="item.website"
-              :href="item.website"
-              target="_blank"
-              rel="noreferrer"
-              class="ml-auto text-xs text-sky-500 hover:underline"
-            >
-              主页
-            </a>
           </div>
           <TheMdPreview class="comment-md-content" :content="item.content" />
         </article>
@@ -70,7 +69,6 @@
         class="comment-sticky comment-preview relative mb-2 rounded-md border p-3"
         :style="getStickyCardStyle(0)"
       >
-        <span class="sticky-pin" aria-hidden="true"></span>
         <div class="mb-2 flex items-center gap-2">
           <img :src="previewAvatar" alt="avatar" class="h-8 w-8 rounded-full object-cover" />
           <div class="min-w-0">
@@ -278,47 +276,53 @@ onMounted(() => {
 
 <style scoped>
 .comment-sticky {
-  border-color: color-mix(in srgb, var(--color-border-subtle) 70%, #c7b88a 30%);
-  background: linear-gradient(180deg, #fffdf6 0%, #fff9ea 100%);
+  border-color: color-mix(in srgb, var(--color-border-subtle) 78%, #d4c28f 22%);
+  background: linear-gradient(180deg, #fffdf3 0%, #fffbed 100%);
   box-shadow:
-    0 1px 0 rgba(20, 20, 20, 0.08),
-    0 10px 18px rgba(20, 20, 20, 0.08);
+    0 1px 0 rgba(20, 20, 20, 0.05),
+    0 8px 14px rgba(20, 20, 20, 0.06);
   transform: translateX(var(--sticky-shift, 0px)) rotate(var(--sticky-rotate, 0deg));
-  transform-origin: 50% 8%;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transform-origin: 42% 8%;
+  transition: transform 0.2s ease;
 }
 
 .comment-sticky::after {
   content: '';
   position: absolute;
-  top: 0;
-  right: 0;
-  width: 22px;
-  height: 22px;
-  background: linear-gradient(135deg, #f4e5b4 0%, #f1dd9d 60%, #e4cb7e 100%);
-  clip-path: polygon(0 0, 100% 0, 100% 100%);
-  opacity: 0.72;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0) 44%);
+  pointer-events: none;
+}
+
+.comment-sticky::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(rgba(120, 106, 76, 0.06) 0.5px, transparent 0.5px),
+    radial-gradient(rgba(255, 255, 255, 0.26) 0.5px, transparent 0.5px);
+  background-position:
+    0 0,
+    2px 2px;
+  background-size:
+    4px 4px,
+    5px 5px;
+  opacity: 0.32;
+  pointer-events: none;
 }
 
 .comment-sticky:hover {
-  transform: translateX(var(--sticky-shift, 0px)) rotate(var(--sticky-rotate, 0deg)) translateY(-2px);
-  box-shadow:
-    0 2px 0 rgba(20, 20, 20, 0.08),
-    0 14px 26px rgba(20, 20, 20, 0.12);
+  transform: translateX(var(--sticky-shift, 0px)) rotate(var(--sticky-rotate, 0deg)) translateY(-1px);
 }
 
-.sticky-pin {
-  position: absolute;
-  top: 8px;
-  left: 50%;
-  width: 10px;
-  height: 10px;
-  border-radius: 9999px;
-  background: radial-gradient(circle at 35% 35%, #fff7d5 0%, #d5bd7f 60%, #9f8448 100%);
-  box-shadow:
-    0 1px 1px rgba(0, 0, 0, 0.24),
-    0 0 0 2px rgba(255, 255, 255, 0.78);
-  transform: translateX(-50%);
+.comment-author-link {
+  display: inline-block;
+  max-width: 100%;
+  transition: color 0.2s ease;
+}
+
+.comment-author-link:hover {
+  color: #0ea5e9;
 }
 
 .comment-ready-indicator {
@@ -354,7 +358,7 @@ onMounted(() => {
 }
 
 .comment-preview {
-  opacity: 0.96;
+  opacity: 0.98;
 }
 
 @media (max-width: 640px) {
