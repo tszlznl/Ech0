@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"strings"
 
 	"github.com/lin-snow/ech0/internal/config"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
@@ -52,8 +51,6 @@ func (settingService *SettingService) GetOAuth2Setting(
 			setting.Issuer = ""
 			setting.JWKSURL = ""
 			setting.AuthRedirectAllowedReturnURLs = append([]string{}, config.Config().Auth.Redirect.AllowedReturnURLs...)
-			setting.WebAuthnRPID = config.Config().Auth.WebAuthn.RPID
-			setting.WebAuthnAllowedOrigins = append([]string{}, config.Config().Auth.WebAuthn.Origins...)
 			setting.CORSAllowedOrigins = append([]string{}, config.Config().Web.CORS.AllowedOrigins...)
 
 			// 序列化为 JSON
@@ -72,7 +69,7 @@ func (settingService *SettingService) GetOAuth2Setting(
 			return err
 		}
 		applyOAuthBoundaryFallback(setting)
-		syncRuntimeAuthBoundary(setting)
+		syncRuntimeOAuthBoundary(setting)
 
 		return nil
 	})
@@ -107,8 +104,6 @@ func (settingService *SettingService) UpdateOAuth2Setting(
 			Issuer:                        newSetting.Issuer,
 			JWKSURL:                       httpUtil.TrimURL(newSetting.JWKSURL),
 			AuthRedirectAllowedReturnURLs: sanitizeURLList(newSetting.AuthRedirectAllowedReturnURLs),
-			WebAuthnRPID:                  strings.TrimSpace(newSetting.WebAuthnRPID),
-			WebAuthnAllowedOrigins:        sanitizeURLList(newSetting.WebAuthnAllowedOrigins),
 			CORSAllowedOrigins:            sanitizeURLList(newSetting.CORSAllowedOrigins),
 		}
 		applyOAuthBoundaryFallback(oauthSetting)
@@ -123,7 +118,7 @@ func (settingService *SettingService) UpdateOAuth2Setting(
 			return err
 		}
 		// 同步运行时配置，确保中间件/服务按 Panel 最新配置生效。
-		syncRuntimeAuthBoundary(oauthSetting)
+		syncRuntimeOAuthBoundary(oauthSetting)
 
 		return nil
 	})
@@ -140,7 +135,6 @@ func (settingService *SettingService) GetOAuth2Status(status *model.OAuth2Status
 	status.Enabled = oauthSetting.Enable
 	status.Provider = oauthSetting.Provider
 	status.OAuthReady = len(oauthSetting.AuthRedirectAllowedReturnURLs) > 0 && len(oauthSetting.CORSAllowedOrigins) > 0
-	status.PasskeyReady = strings.TrimSpace(oauthSetting.WebAuthnRPID) != "" && len(oauthSetting.WebAuthnAllowedOrigins) > 0
 
 	return nil
 }
@@ -162,21 +156,13 @@ func applyOAuthBoundaryFallback(setting *model.OAuth2Setting) {
 			config.Config().Auth.Redirect.AllowedReturnURLs...,
 		)
 	}
-	if strings.TrimSpace(setting.WebAuthnRPID) == "" {
-		setting.WebAuthnRPID = strings.TrimSpace(config.Config().Auth.WebAuthn.RPID)
-	}
-	if len(setting.WebAuthnAllowedOrigins) == 0 {
-		setting.WebAuthnAllowedOrigins = append([]string{}, config.Config().Auth.WebAuthn.Origins...)
-	}
 	if len(setting.CORSAllowedOrigins) == 0 {
 		setting.CORSAllowedOrigins = append([]string{}, config.Config().Web.CORS.AllowedOrigins...)
 	}
 }
 
-func syncRuntimeAuthBoundary(setting *model.OAuth2Setting) {
+func syncRuntimeOAuthBoundary(setting *model.OAuth2Setting) {
 	cfg := config.Config()
 	cfg.Auth.Redirect.AllowedReturnURLs = append([]string{}, setting.AuthRedirectAllowedReturnURLs...)
-	cfg.Auth.WebAuthn.RPID = setting.WebAuthnRPID
-	cfg.Auth.WebAuthn.Origins = append([]string{}, setting.WebAuthnAllowedOrigins...)
 	cfg.Web.CORS.AllowedOrigins = append([]string{}, setting.CORSAllowedOrigins...)
 }

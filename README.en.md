@@ -264,7 +264,7 @@ Run the binary directly (for example, on Windows double-click `Ech0.exe`).
     Fill in endpoint (without http/https) and bucket with public access.
 
 14. **How to enable passkey login?**  
-  Open settings, enable Passkey, then bind your biometric or hardware security key following browser prompts.
+  Go to `SSO - Passkey`, configure `WebAuthn RP ID` and `WebAuthn Origins`, save until status shows "Passkey ready", then bind your biometric or hardware security key following browser prompts.
 
 ---
 

@@ -62,9 +62,13 @@ type OAuth2Setting struct {
 
 	// 认证边界配置（Panel 主配置，ENV 仅默认值）
 	AuthRedirectAllowedReturnURLs []string `json:"auth_redirect_allowed_return_urls"`
-	WebAuthnRPID                  string   `json:"webauthn_rp_id"`
-	WebAuthnAllowedOrigins        []string `json:"webauthn_allowed_origins"`
 	CORSAllowedOrigins            []string `json:"cors_allowed_origins"`
+}
+
+// PasskeySetting 定义 Passkey(WebAuthn) 配置结构体
+type PasskeySetting struct {
+	WebAuthnRPID           string   `json:"webauthn_rp_id"`
+	WebAuthnAllowedOrigins []string `json:"webauthn_allowed_origins"`
 }
 
 // AccessTokenSetting 定义访问令牌设置实体

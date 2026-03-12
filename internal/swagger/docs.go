@@ -1239,6 +1239,84 @@ const docTemplate = `{
                 }
             }
         },
+        "/passkey/settings": {
+            "get": {
+                "description": "获取系统的 Passkey(WebAuthn) 相关设置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "系统设置"
+                ],
+                "summary": "获取 Passkey 设置",
+                "responses": {
+                    "200": {
+                        "description": "获取 Passkey 设置失败",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新系统的 Passkey(WebAuthn) 相关设置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "系统设置"
+                ],
+                "summary": "更新 Passkey 设置",
+                "parameters": [
+                    {
+                        "description": "新的 Passkey 设置",
+                        "name": "passkeySettings",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.PasskeySettingDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新 Passkey 设置失败",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/passkey/status": {
+            "get": {
+                "description": "获取系统的 Passkey(WebAuthn) 就绪状态",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "系统设置"
+                ],
+                "summary": "获取 Passkey 状态",
+                "responses": {
+                    "200": {
+                        "description": "获取 Passkey 状态失败",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/register": {
             "post": {
                 "description": "通过提交用户名、密码等信息完成注册",
@@ -2251,6 +2329,56 @@ const docTemplate = `{
                 },
                 "user_info_url": {
                     "type": "string"
+                }
+            }
+        },
+        "model.OAuth2Status": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "oauth_ready": {
+                    "type": "boolean"
+                },
+                "provider": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.PasskeySetting": {
+            "type": "object",
+            "properties": {
+                "webauthn_allowed_origins": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "webauthn_rp_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.PasskeySettingDto": {
+            "type": "object",
+            "properties": {
+                "webauthn_allowed_origins": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "webauthn_rp_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.PasskeyStatus": {
+            "type": "object",
+            "properties": {
+                "passkey_ready": {
+                    "type": "boolean"
                 }
             }
         },

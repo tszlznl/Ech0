@@ -16,6 +16,9 @@ type Service interface {
 	GetOAuth2Setting(ctx context.Context, setting *model.OAuth2Setting, forInternal bool) error
 	UpdateOAuth2Setting(ctx context.Context, newSetting *model.OAuth2SettingDto) error
 	GetOAuth2Status(status *model.OAuth2Status) error
+	GetPasskeySetting(ctx context.Context, setting *model.PasskeySetting, forInternal bool) error
+	UpdatePasskeySetting(ctx context.Context, newSetting *model.PasskeySettingDto) error
+	GetPasskeyStatus(status *model.PasskeyStatus) error
 	GetAllWebhooks(ctx context.Context) ([]webhookModel.Webhook, error)
 	DeleteWebhook(ctx context.Context, id string) error
 	UpdateWebhook(ctx context.Context, id string, newWebhook *model.WebhookDto) error

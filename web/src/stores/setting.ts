@@ -58,8 +58,6 @@ export const useSettingStore = defineStore('settingStore', () => {
     issuer: '',
     jwks_url: '',
     auth_redirect_allowed_return_urls: [],
-    webauthn_rp_id: '',
-    webauthn_allowed_origins: [],
     cors_allowed_origins: [],
   })
   const Webhooks = ref<App.Api.Setting.Webhook[]>([])

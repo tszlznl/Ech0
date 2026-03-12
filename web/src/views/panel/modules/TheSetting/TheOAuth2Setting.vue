@@ -36,19 +36,6 @@
                 {{ oauthRuntimeStatus?.oauth_ready ? '已就绪' : '未就绪' }}
               </span>
             </div>
-            <div class="flex items-center gap-2">
-              <span class="text-[var(--color-text-secondary)]">Passkey就绪:</span>
-              <span
-                class="px-2 py-0.5 rounded-md"
-                :class="
-                  oauthRuntimeStatus?.passkey_ready
-                    ? 'bg-green-500/15 text-green-500'
-                    : 'bg-yellow-500/15 text-yellow-500'
-                "
-              >
-                {{ oauthRuntimeStatus?.passkey_ready ? '已就绪' : '未就绪' }}
-              </span>
-            </div>
           </div>
           <p
             v-if="missingBoundaryItems.length > 0"
@@ -323,40 +310,6 @@
           <div
             class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
           >
-            <h2 class="font-semibold w-40 shrink-0">WebAuthn RP ID:</h2>
-            <span v-if="!oauth2EditMode" class="truncate max-w-80 inline-block align-middle">
-              {{ OAuth2Setting.webauthn_rp_id || '暂无' }}
-            </span>
-            <BaseInput
-              v-else
-              v-model="OAuth2Setting.webauthn_rp_id"
-              type="text"
-              placeholder="例如：example.com"
-              class="w-full py-1!"
-            />
-          </div>
-          <div
-            class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
-          >
-            <h2 class="font-semibold w-40 shrink-0">WebAuthn Origins:</h2>
-            <span v-if="!oauth2EditMode" class="truncate max-w-80 inline-block align-middle">
-              {{
-                OAuth2Setting.webauthn_allowed_origins.length === 0
-                  ? '暂无'
-                  : OAuth2Setting.webauthn_allowed_origins.join(', ')
-              }}
-            </span>
-            <BaseInput
-              v-else
-              v-model="webauthnOriginsString"
-              type="text"
-              placeholder="多个Origin用逗号分隔"
-              class="w-full py-1!"
-            />
-          </div>
-          <div
-            class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
-          >
             <h2 class="font-semibold w-40 shrink-0">CORS Origins:</h2>
             <span v-if="!oauth2EditMode" class="truncate max-w-80 inline-block align-middle">
               {{
@@ -487,7 +440,6 @@ if (!redirect_uri.value) {
 }
 const scopeString = ref('read:user')
 const redirectAllowlistString = ref('')
-const webauthnOriginsString = ref('')
 const corsOriginsString = ref('')
 
 const parseList = (input: string) =>
@@ -503,15 +455,10 @@ const handleUpdateOAuth2Setting = async () => {
   OAuth2Setting.value.redirect_uri =
     redirect_uri.value || `${window.location.origin}/oauth/${OAuth2Setting.value.provider}/callback`
   OAuth2Setting.value.auth_redirect_allowed_return_urls = parseList(redirectAllowlistString.value)
-  OAuth2Setting.value.webauthn_allowed_origins = parseList(webauthnOriginsString.value)
   OAuth2Setting.value.cors_allowed_origins = parseList(corsOriginsString.value)
 
   if (OAuth2Setting.value.auth_redirect_allowed_return_urls.some((u) => !/^https?:\/\//.test(u))) {
     theToast.error('Redirect Allowlist 需为 http/https URL')
-    return
-  }
-  if (OAuth2Setting.value.webauthn_allowed_origins.some((u) => !/^https?:\/\//.test(u))) {
-    theToast.error('WebAuthn Origins 需为 http/https URL')
     return
   }
   if (OAuth2Setting.value.cors_allowed_origins.some((u) => !/^https?:\/\//.test(u))) {
@@ -566,12 +513,6 @@ const refreshHealthCheck = async () => {
   if ((OAuth2Setting.value.auth_redirect_allowed_return_urls || []).length === 0) {
     missing.push('Redirect Allowlist')
   }
-  if (!OAuth2Setting.value.webauthn_rp_id) {
-    missing.push('WebAuthn RP ID')
-  }
-  if ((OAuth2Setting.value.webauthn_allowed_origins || []).length === 0) {
-    missing.push('WebAuthn Origins')
-  }
   if ((OAuth2Setting.value.cors_allowed_origins || []).length === 0) {
     missing.push('CORS Origins')
   }
@@ -580,22 +521,14 @@ const refreshHealthCheck = async () => {
 
 const handleAutoFillBoundary = () => {
   const currentOrigin = window.location.origin
-  const currentHost = window.location.hostname
   if (!OAuth2Setting.value.auth_redirect_allowed_return_urls?.length) {
     OAuth2Setting.value.auth_redirect_allowed_return_urls = [`${currentOrigin}/auth`]
-  }
-  if (!OAuth2Setting.value.webauthn_rp_id) {
-    OAuth2Setting.value.webauthn_rp_id = currentHost
-  }
-  if (!OAuth2Setting.value.webauthn_allowed_origins?.length) {
-    OAuth2Setting.value.webauthn_allowed_origins = [currentOrigin]
   }
   if (!OAuth2Setting.value.cors_allowed_origins?.length) {
     OAuth2Setting.value.cors_allowed_origins = [currentOrigin]
   }
 
   redirectAllowlistString.value = OAuth2Setting.value.auth_redirect_allowed_return_urls.join(', ')
-  webauthnOriginsString.value = OAuth2Setting.value.webauthn_allowed_origins.join(', ')
   corsOriginsString.value = OAuth2Setting.value.cors_allowed_origins.join(', ')
   oauth2EditMode.value = true
   void refreshHealthCheck()
@@ -615,7 +548,6 @@ watch(
   () => OAuth2Setting.value,
   (v) => {
     redirectAllowlistString.value = (v.auth_redirect_allowed_return_urls || []).join(', ')
-    webauthnOriginsString.value = (v.webauthn_allowed_origins || []).join(', ')
     corsOriginsString.value = (v.cors_allowed_origins || []).join(', ')
   },
   { immediate: true, deep: true },

@@ -59,6 +59,31 @@ export function fetchGetOAuth2Status() {
   })
 }
 
+// 获取 Passkey 状态
+export function fetchGetPasskeyStatus() {
+  return request<App.Api.Setting.PasskeyStatus>({
+    url: '/passkey/status',
+    method: 'GET',
+  })
+}
+
+// 获取 Passkey 设置
+export function fetchGetPasskeySettings() {
+  return request<App.Api.Setting.PasskeySetting>({
+    url: '/passkey/settings',
+    method: 'GET',
+  })
+}
+
+// 更新 Passkey 设置
+export function fetchUpdatePasskeySettings(passkeySetting: App.Api.Setting.PasskeySetting) {
+  return request({
+    url: '/passkey/settings',
+    method: 'PUT',
+    data: passkeySetting,
+  })
+}
+
 // 获取 OAuth2 绑定信息
 export function fetchGetOAuthInfo(provider?: string) {
   return request<App.Api.Setting.OAuthInfo>({

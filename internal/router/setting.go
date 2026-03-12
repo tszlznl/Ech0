@@ -7,6 +7,7 @@ func setupSettingRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	// Public
 	appRouterGroup.PublicRouterGroup.GET("/settings", h.SettingHandler.GetSettings())
 	appRouterGroup.PublicRouterGroup.GET("/oauth2/status", h.SettingHandler.GetOAuth2Status())
+	appRouterGroup.PublicRouterGroup.GET("/passkey/status", h.SettingHandler.GetPasskeyStatus())
 	appRouterGroup.PublicRouterGroup.GET("/agent/info", h.SettingHandler.GetAgentInfo())
 
 	// Auth
@@ -17,6 +18,8 @@ func setupSettingRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 
 	appRouterGroup.AuthRouterGroup.GET("/oauth2/settings", h.SettingHandler.GetOAuth2Settings())
 	appRouterGroup.AuthRouterGroup.PUT("/oauth2/settings", h.SettingHandler.UpdateOAuth2Settings())
+	appRouterGroup.AuthRouterGroup.GET("/passkey/settings", h.SettingHandler.GetPasskeySettings())
+	appRouterGroup.AuthRouterGroup.PUT("/passkey/settings", h.SettingHandler.UpdatePasskeySettings())
 
 	appRouterGroup.AuthRouterGroup.GET("/webhook", h.SettingHandler.GetWebhook())
 	appRouterGroup.AuthRouterGroup.POST("/webhook", h.SettingHandler.CreateWebhook())

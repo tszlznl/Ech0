@@ -168,6 +168,8 @@ docker-compose up -d
 
 ## 版本更新
 
+> ⚠️ 目前不支持从 v3 直接更新到 v4。请先在 v3 面板中点击“导出快照”，然后重新部署 v4，并在 v4 面板中选择“v3 迁移”即可导入原有数据。
+
 ### 🔄 Docker
 
 ```shell
@@ -277,7 +279,7 @@ docker image prune -f
       在存储设置页面填入所需配置信息，注意：endpoint不需要填http或者https开头，存储桶需提供公共访问权限。
 
 14. **如何启用 Passkey 无密码登录？**
-      进入设置界面后开启 Passkey，按浏览器提示绑定你常用的生物识别或安全密钥设备即可使用。
+      在 `SSO - Passkey` 页面先配置 `WebAuthn RP ID` 与 `WebAuthn Origins`，保存并显示“Passkey就绪”后，再按浏览器提示绑定你常用的生物识别或安全密钥设备即可使用。
 
 ---
 
@@ -304,9 +306,6 @@ docker image prune -f
 ---
 
 ## 项目架构
-
-![技术架构图](./docs/imgs/Ech0技术架构图.svg)
-> by ExcaliDraw
 
 - 后端事件总线已切换为 [Busen](https://github.com/lin-snow/Busen)：采用 typed-first in-process 架构，并通过显式背压、hooks 与 drain shutdown 提升稳定性。
 ---

@@ -75,6 +75,8 @@ const (
 	S3SettingKey = "s3_setting"
 	// OAuth2SettingKey 是 OAuth2 设置的键
 	OAuth2SettingKey = "oauth2_setting"
+	// PasskeySettingKey 是 Passkey 设置的键
+	PasskeySettingKey = "passkey_setting"
 	// ServerURLKey 是服务器URL设置的键
 	ServerURLKey = "server_url"
 	// BackupScheduleKey 是备份计划设置的键

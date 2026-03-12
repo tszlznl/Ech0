@@ -3,10 +3,90 @@
     <div class="w-full">
       <div class="flex flex-row items-center justify-between mb-3">
         <h1 class="text-[var(--color-text-primary)] font-bold text-lg">Passkey</h1>
+        <BaseEditCapsule
+          :editing="passkeyEditMode"
+          apply-title="应用"
+          cancel-title="取消"
+          edit-title="编辑"
+          @apply="handleUpdatePasskeySetting"
+          @toggle="passkeyEditMode = !passkeyEditMode"
+        />
       </div>
 
       <div class="text-[var(--color-text-muted)] text-sm mb-3">
         使用 Passkey（WebAuthn）可在不同设备上无密码登录
+      </div>
+
+      <div class="mb-3 border border-dashed border-[var(--color-border-strong)] rounded-md p-3">
+        <h2 class="text-[var(--color-text-primary)] font-semibold mb-2">配置健康检查</h2>
+        <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2 text-sm">
+          <div class="flex items-center gap-2">
+            <span class="text-[var(--color-text-secondary)]">Passkey就绪:</span>
+            <span
+              class="px-2 py-0.5 rounded-md"
+              :class="
+                passkeyRuntimeStatus?.passkey_ready
+                  ? 'bg-green-500/15 text-green-500'
+                  : 'bg-yellow-500/15 text-yellow-500'
+              "
+            >
+              {{ passkeyRuntimeStatus?.passkey_ready ? '已就绪' : '未就绪' }}
+            </span>
+          </div>
+        </div>
+        <p
+          v-if="missingBoundaryItems.length > 0"
+          class="mt-2 text-xs text-[var(--color-text-muted)] break-all"
+        >
+          缺失项: {{ missingBoundaryItems.join('、') }}
+        </p>
+        <div class="mt-2">
+          <BaseButton
+            class="rounded-md h-8 text-xs"
+            @click="handleAutoFillBoundary"
+            :disabled="missingBoundaryItems.length === 0"
+          >
+            一键填充推荐配置
+          </BaseButton>
+        </div>
+      </div>
+
+      <div class="mb-3 border border-dashed border-[var(--color-border-strong)] rounded-md p-3">
+        <h2 class="text-[var(--color-text-primary)] font-semibold mb-2">Passkey 安全边界</h2>
+        <div
+          class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
+        >
+          <h3 class="font-semibold w-40 shrink-0">WebAuthn RP ID:</h3>
+          <span v-if="!passkeyEditMode" class="truncate max-w-80 inline-block align-middle">
+            {{ passkeySetting.webauthn_rp_id || '暂无' }}
+          </span>
+          <BaseInput
+            v-else
+            v-model="passkeySetting.webauthn_rp_id"
+            type="text"
+            placeholder="例如：example.com"
+            class="w-full py-1!"
+          />
+        </div>
+        <div
+          class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
+        >
+          <h3 class="font-semibold w-40 shrink-0">WebAuthn Origins:</h3>
+          <span v-if="!passkeyEditMode" class="truncate max-w-80 inline-block align-middle">
+            {{
+              passkeySetting.webauthn_allowed_origins.length === 0
+                ? '暂无'
+                : passkeySetting.webauthn_allowed_origins.join(', ')
+            }}
+          </span>
+          <BaseInput
+            v-else
+            v-model="webauthnOriginsString"
+            type="text"
+            placeholder="多个Origin用逗号分隔"
+            class="w-full py-1!"
+          />
+        </div>
       </div>
 
       <!-- 绑定 -->
@@ -104,29 +184,40 @@
   </PanelCard>
 </template>
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { watch, onMounted, ref } from 'vue'
 import PanelCard from '@/layout/PanelCard.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
+import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
 import Trashbin from '@/components/icons/trashbin.vue'
 import Rename from '@/components/icons/rename.vue'
 import {
+  fetchGetPasskeySettings,
+  fetchGetPasskeyStatus,
   fetchDeletePasskeyDevice,
   fetchPasskeyDevices,
   fetchPasskeyRegisterBegin,
   fetchPasskeyRegisterFinish,
+  fetchUpdatePasskeySettings,
   fetchUpdatePasskeyDeviceName,
 } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { base64urlToUint8Array, uint8ArrayToBase64url } from '@/utils/other'
-
 const { openConfirm } = useBaseDialog()
 
 const supported = !!(window.PublicKeyCredential && navigator.credentials)
 const busy = ref(false)
 const newDeviceName = ref<string>('My Passkey')
 const devices = ref<App.Api.Auth.PasskeyDevice[]>([])
+const passkeyEditMode = ref(false)
+const passkeySetting = ref<App.Api.Setting.PasskeySetting>({
+  webauthn_rp_id: '',
+  webauthn_allowed_origins: [],
+})
+const passkeyRuntimeStatus = ref<App.Api.Setting.PasskeyStatus | null>(null)
+const webauthnOriginsString = ref('')
+const missingBoundaryItems = ref<string[]>([])
 
 type Base64urlString = string
 
@@ -150,6 +241,12 @@ type CreationOptionsJSON = Omit<
   user: UserEntityJSON
   excludeCredentials?: CredentialDescriptorJSON[]
 }
+
+const parseList = (input: string) =>
+  input
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
 
 // 断言服务端返回的 publicKey 合法
 function assertCreationOptionsJSON(raw: unknown): CreationOptionsJSON {
@@ -226,6 +323,59 @@ async function refresh() {
   if (res.code === 1) devices.value = res.data ?? []
 }
 
+async function getPasskeySetting() {
+  const res = await fetchGetPasskeySettings()
+  if (res.code === 1) {
+    passkeySetting.value = res.data
+    webauthnOriginsString.value = (res.data.webauthn_allowed_origins || []).join(', ')
+  }
+}
+
+async function refreshHealthCheck() {
+  const statusRes = await fetchGetPasskeyStatus()
+  if (statusRes.code === 1) {
+    passkeyRuntimeStatus.value = statusRes.data
+  }
+  const missing: string[] = []
+  if (!passkeySetting.value.webauthn_rp_id) {
+    missing.push('WebAuthn RP ID')
+  }
+  if ((passkeySetting.value.webauthn_allowed_origins || []).length === 0) {
+    missing.push('WebAuthn Origins')
+  }
+  missingBoundaryItems.value = missing
+}
+
+async function handleUpdatePasskeySetting() {
+  passkeySetting.value.webauthn_allowed_origins = parseList(webauthnOriginsString.value)
+  if (passkeySetting.value.webauthn_allowed_origins.some((u) => !/^https?:\/\//.test(u))) {
+    theToast.error('WebAuthn Origins 需为 http/https URL')
+    return
+  }
+  const res = await fetchUpdatePasskeySettings(passkeySetting.value)
+  if (res.code === 1) {
+    theToast.success(res.msg)
+    passkeyEditMode.value = false
+    await getPasskeySetting()
+    await refreshHealthCheck()
+  }
+}
+
+function handleAutoFillBoundary() {
+  const currentOrigin = window.location.origin
+  const currentHost = window.location.hostname
+  if (!passkeySetting.value.webauthn_rp_id) {
+    passkeySetting.value.webauthn_rp_id = currentHost
+  }
+  if (!passkeySetting.value.webauthn_allowed_origins?.length) {
+    passkeySetting.value.webauthn_allowed_origins = [currentOrigin]
+  }
+  webauthnOriginsString.value = passkeySetting.value.webauthn_allowed_origins.join(', ')
+  passkeyEditMode.value = true
+  void refreshHealthCheck()
+  theToast.success('已填充推荐配置，请点击“应用”保存')
+}
+
 // 绑定设备
 async function handleBind() {
   if (!supported) return
@@ -286,7 +436,17 @@ async function promptRename(d: App.Api.Auth.PasskeyDevice) {
   }
 }
 
-onMounted(() => {
-  refresh()
+watch(
+  () => passkeySetting.value,
+  (v) => {
+    webauthnOriginsString.value = (v.webauthn_allowed_origins || []).join(', ')
+  },
+  { immediate: true, deep: true },
+)
+
+onMounted(async () => {
+  await getPasskeySetting()
+  await refreshHealthCheck()
+  await refresh()
 })
 </script>

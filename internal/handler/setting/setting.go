@@ -213,7 +213,7 @@ func (settingHandler *SettingHandler) UpdateOAuth2Settings() gin.HandlerFunc {
 //	@Tags			系统设置
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response{data=bool}	"获取 OAuth2 状态成功"
+//	@Success		200	{object}	res.Response{data=model.OAuth2Status}	"获取 OAuth2 状态成功"
 //	@Failure		200	{object}	res.Response			"获取 OAuth2 状态失败"
 //	@Router			/oauth2/status [get]
 func (settingHandler *SettingHandler) GetOAuth2Status() gin.HandlerFunc {
@@ -229,6 +229,94 @@ func (settingHandler *SettingHandler) GetOAuth2Status() gin.HandlerFunc {
 		return res.Response{
 			Data: status,
 			Msg:  commonModel.GET_OAUTH2_STATUS_SUCCESS,
+		}
+	})
+}
+
+// GetPasskeySettings 获取 Passkey 设置
+//
+//	@Summary		获取 Passkey 设置
+//	@Description	获取系统的 Passkey(WebAuthn) 相关设置
+//	@Tags			系统设置
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	res.Response{data=model.PasskeySetting}	"获取 Passkey 设置成功"
+//	@Failure		200	{object}	res.Response								"获取 Passkey 设置失败"
+//	@Router			/passkey/settings [get]
+func (settingHandler *SettingHandler) GetPasskeySettings() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		var passkeySetting model.PasskeySetting
+		if err := settingHandler.settingService.GetPasskeySetting(ctx.Request.Context(), &passkeySetting, false); err != nil {
+			return res.Response{
+				Msg: "",
+				Err: err,
+			}
+		}
+
+		return res.Response{
+			Data: passkeySetting,
+			Msg:  commonModel.GET_PASSKEY_SETTINGS_SUCCESS,
+		}
+	})
+}
+
+// UpdatePasskeySettings 更新 Passkey 设置
+//
+//	@Summary		更新 Passkey 设置
+//	@Description	更新系统的 Passkey(WebAuthn) 相关设置
+//	@Tags			系统设置
+//	@Accept			json
+//	@Produce		json
+//	@Param			passkeySettings	body		model.PasskeySettingDto	true	"新的 Passkey 设置"
+//	@Success		200				{object}	res.Response			"更新 Passkey 设置成功"
+//	@Failure		200				{object}	res.Response			"更新 Passkey 设置失败"
+//	@Router			/passkey/settings [put]
+func (settingHandler *SettingHandler) UpdatePasskeySettings() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		var newPasskeySettings model.PasskeySettingDto
+		if err := ctx.ShouldBindJSON(&newPasskeySettings); err != nil {
+			return res.Response{
+				Msg: commonModel.INVALID_REQUEST_BODY,
+				Err: err,
+			}
+		}
+
+		if err := settingHandler.settingService.UpdatePasskeySetting(ctx.Request.Context(), &newPasskeySettings); err != nil {
+			return res.Response{
+				Msg: "",
+				Err: err,
+			}
+		}
+
+		return res.Response{
+			Msg: commonModel.UPDATE_PASSKEY_SETTINGS_SUCCESS,
+		}
+	})
+}
+
+// GetPasskeyStatus 获取 Passkey 状态
+//
+//	@Summary		获取 Passkey 状态
+//	@Description	获取系统的 Passkey(WebAuthn) 就绪状态
+//	@Tags			系统设置
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	res.Response{data=model.PasskeyStatus}	"获取 Passkey 状态成功"
+//	@Failure		200	{object}	res.Response								"获取 Passkey 状态失败"
+//	@Router			/passkey/status [get]
+func (settingHandler *SettingHandler) GetPasskeyStatus() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		var status model.PasskeyStatus
+		if err := settingHandler.settingService.GetPasskeyStatus(&status); err != nil {
+			return res.Response{
+				Msg: "",
+				Err: err,
+			}
+		}
+
+		return res.Response{
+			Data: status,
+			Msg:  commonModel.GET_PASSKEY_STATUS_SUCCESS,
 		}
 	})
 }

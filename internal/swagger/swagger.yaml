@@ -373,6 +373,38 @@ definitions:
       user_info_url:
         type: string
     type: object
+  model.OAuth2Status:
+    properties:
+      enabled:
+        type: boolean
+      oauth_ready:
+        type: boolean
+      provider:
+        type: string
+    type: object
+  model.PasskeySetting:
+    properties:
+      webauthn_allowed_origins:
+        items:
+          type: string
+        type: array
+      webauthn_rp_id:
+        type: string
+    type: object
+  model.PasskeySettingDto:
+    properties:
+      webauthn_allowed_origins:
+        items:
+          type: string
+        type: array
+      webauthn_rp_id:
+        type: string
+    type: object
+  model.PasskeyStatus:
+    properties:
+      passkey_ready:
+        type: boolean
+    type: object
   model.PageQueryDto:
     properties:
       page:
@@ -1419,6 +1451,57 @@ paths:
           schema:
             $ref: '#/definitions/handler.Response'
       summary: 获取 OAuth2 状态
+      tags:
+      - 系统设置
+  /passkey/settings:
+    get:
+      consumes:
+      - application/json
+      description: 获取系统的 Passkey(WebAuthn) 相关设置
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取 Passkey 设置失败
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: 获取 Passkey 设置
+      tags:
+      - 系统设置
+    put:
+      consumes:
+      - application/json
+      description: 更新系统的 Passkey(WebAuthn) 相关设置
+      parameters:
+      - description: 新的 Passkey 设置
+        in: body
+        name: passkeySettings
+        required: true
+        schema:
+          $ref: '#/definitions/model.PasskeySettingDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新 Passkey 设置失败
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: 更新 Passkey 设置
+      tags:
+      - 系统设置
+  /passkey/status:
+    get:
+      consumes:
+      - application/json
+      description: 获取系统的 Passkey(WebAuthn) 就绪状态
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取 Passkey 状态失败
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: 获取 Passkey 状态
       tags:
       - 系统设置
   /register:

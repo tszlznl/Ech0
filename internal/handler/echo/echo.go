@@ -31,8 +31,8 @@ func NewEchoHandler(echoService service.Service) *EchoHandler {
 //	@Accept			json
 //	@Produce		json
 //	@Param			echo	body		model.EchoUpsertDto	true	"Echo内容"
-//	@Success		200		{object}	res.Response		"创建成功"
-//	@Failure		200		{object}	res.Response		"创建失败"
+//	@Success		200		{object}	handler.Response		"创建成功"
+//	@Failure		200		{object}	handler.Response		"创建失败"
 //	@Router			/echo [post]
 func (echoHandler *EchoHandler) PostEcho() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -67,9 +67,9 @@ func (echoHandler *EchoHandler) PostEcho() gin.HandlerFunc {
 //	@Produce		json
 //	@Param			page		query		int							false	"页码（GET方式）"
 //	@Param			pageSize	query		int							false	"每页数量（GET方式）"
-//	@Param			body		body		commonModel.PageQueryDto	false	"分页参数（POST方式）"
-//	@Success		200			{object}	res.Response{data=object}	"获取成功"
-//	@Failure		200			{object}	res.Response				"获取失败"
+//	@Param			body		body		model.PageQueryDto	false	"分页参数（POST方式）"
+//	@Success		200			{object}	handler.Response{data=object}	"获取成功"
+//	@Failure		200			{object}	handler.Response				"获取失败"
 //	@Router			/echo/page [get]
 //	@Router			/echo/page [post]
 func (echoHandler *EchoHandler) GetEchosByPage() gin.HandlerFunc {
@@ -129,8 +129,8 @@ func (echoHandler *EchoHandler) GetEchosByPage() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int				true	"Echo ID"
-//	@Success		200	{object}	res.Response	"删除成功"
-//	@Failure		200	{object}	res.Response	"删除失败"
+//	@Success		200	{object}	handler.Response	"删除成功"
+//	@Failure		200	{object}	handler.Response	"删除失败"
 //	@Router			/echo/{id} [delete]
 func (echoHandler *EchoHandler) DeleteEcho() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -162,8 +162,8 @@ func (echoHandler *EchoHandler) DeleteEcho() gin.HandlerFunc {
 //	@Tags			Echo
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response	"获取成功"
-//	@Failure		200	{object}	res.Response	"获取失败"
+//	@Success		200	{object}	handler.Response	"获取成功"
+//	@Failure		200	{object}	handler.Response	"获取失败"
 //	@Router			/echo/today [get]
 func (echoHandler *EchoHandler) GetTodayEchos() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -191,8 +191,8 @@ func (echoHandler *EchoHandler) GetTodayEchos() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			echo	body		model.EchoUpsertDto	true	"要更新的Echo内容"
-//	@Success		200		{object}	res.Response		"更新成功"
-//	@Failure		200		{object}	res.Response		"更新失败"
+//	@Success		200		{object}	handler.Response		"更新成功"
+//	@Failure		200		{object}	handler.Response		"更新失败"
 //	@Router			/echo [put]
 func (echoHandler *EchoHandler) UpdateEcho() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -226,8 +226,8 @@ func (echoHandler *EchoHandler) UpdateEcho() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int				true	"Echo ID"
-//	@Success		200	{object}	res.Response	"点赞成功"
-//	@Failure		200	{object}	res.Response	"点赞失败"
+//	@Success		200	{object}	handler.Response	"点赞成功"
+//	@Failure		200	{object}	handler.Response	"点赞失败"
 //	@Router			/echo/like/{id} [put]
 func (echoHandler *EchoHandler) LikeEcho() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -260,8 +260,8 @@ func (echoHandler *EchoHandler) LikeEcho() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int				true	"Echo ID"
-//	@Success		200	{object}	res.Response	"获取成功"
-//	@Failure		200	{object}	res.Response	"获取失败"
+//	@Success		200	{object}	handler.Response	"获取成功"
+//	@Failure		200	{object}	handler.Response	"获取失败"
 //	@Router			/echo/{id} [get]
 func (echoHandler *EchoHandler) GetEchoById() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -295,8 +295,8 @@ func (echoHandler *EchoHandler) GetEchoById() gin.HandlerFunc {
 //	@Tags			Tag
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response	"获取成功"
-//	@Failure		200	{object}	res.Response	"获取失败"
+//	@Success		200	{object}	handler.Response	"获取成功"
+//	@Failure		200	{object}	handler.Response	"获取失败"
 //	@Router			/tags [get]
 func (echoHandler *EchoHandler) GetAllTags() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -323,8 +323,8 @@ func (echoHandler *EchoHandler) GetAllTags() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int				true	"标签 ID"
-//	@Success		200	{object}	res.Response	"删除成功"
-//	@Failure		200	{object}	res.Response	"删除失败"
+//	@Success		200	{object}	handler.Response	"删除成功"
+//	@Failure		200	{object}	handler.Response	"删除失败"
 //	@Router			/tag/{id} [delete]
 func (echoHandler *EchoHandler) DeleteTag() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -360,8 +360,8 @@ func (echoHandler *EchoHandler) DeleteTag() gin.HandlerFunc {
 //	@Param			page		query		int							false	"页码"
 //	@Param			pageSize	query		int							false	"每页数量"
 //	@Param			search		query		string						false	"搜索关键字"
-//	@Success		200			{object}	res.Response{data=object}	"获取成功"
-//	@Failure		200			{object}	res.Response				"获取失败"
+//	@Success		200			{object}	handler.Response{data=object}	"获取成功"
+//	@Failure		200			{object}	handler.Response				"获取失败"
 //	@Router			/echo/tag/{tagid} [get]
 func (echoHandler *EchoHandler) GetEchosByTagId() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {

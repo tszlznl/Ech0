@@ -39,7 +39,7 @@
               :icon="Passkey"
               v-if="passkeySupported"
               @click="handlePasskeyLogin"
-              :disabled="!!oauth2Status && !oauth2Status.passkey_ready"
+              :disabled="!!passkeyStatus && !passkeyStatus.passkey_ready"
               class="rounded-md w-9 h-9"
               title="使用 Passkey 登录"
             />
@@ -114,7 +114,7 @@ import Github from '@/components/icons/github.vue'
 import Google from '@/components/icons/google.vue'
 import QQ from '@/components/icons/qq.vue'
 import Customoauth from '@/components/icons/customoauth.vue'
-import { fetchGetOAuth2Status } from '@/service/api'
+import { fetchGetOAuth2Status, fetchGetPasskeyStatus } from '@/service/api'
 import { OAuth2Provider } from '@/enums/enums'
 import { fetchPasskeyLoginBegin, fetchPasskeyLoginFinish } from '@/service/api'
 import { theToast } from '@/utils/toast'
@@ -127,6 +127,7 @@ const userStore = useUserStore()
 const passkeySupported = !!(window.PublicKeyCredential && navigator.credentials)
 
 const oauth2Status = ref<App.Api.Setting.OAuth2Status | null>(null)
+const passkeyStatus = ref<App.Api.Setting.PasskeyStatus | null>(null)
 const baseURL =
   import.meta.env.VITE_SERVICE_BASE_URL === '/'
     ? window.location.origin
@@ -152,6 +153,13 @@ const getOAuth2Status = async () => {
     oauthURL.value = res.data.provider
       ? `${baseURL}/oauth/${res.data.provider}/login?redirect_uri=${window.location.origin}/auth`
       : ''
+  }
+}
+
+const getPasskeyStatus = async () => {
+  const res = await fetchGetPasskeyStatus()
+  if (res.code === 1) {
+    passkeyStatus.value = res.data
   }
 }
 
@@ -221,7 +229,7 @@ function credentialToJSON(cred: PublicKeyCredential) {
 }
 
 const handlePasskeyLogin = async () => {
-  if (oauth2Status.value && !oauth2Status.value.passkey_ready) {
+  if (passkeyStatus.value && !passkeyStatus.value.passkey_ready) {
     theToast.warning('Passkey 配置未就绪，请先在 Panel 完成认证边界配置')
     return
   }
@@ -267,6 +275,6 @@ onMounted(async () => {
     await userStore.loginWithToken(token)
     return
   }
-  getOAuth2Status()
+  await Promise.all([getOAuth2Status(), getPasskeyStatus()])
 })
 </script>
