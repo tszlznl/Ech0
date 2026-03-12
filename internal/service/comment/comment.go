@@ -114,7 +114,8 @@ func (s *CommentService) CreateComment(
 	if validUser && (user.IsAdmin || user.IsOwner) {
 		comment.Source = model.SourceSystem
 		comment.Nickname = user.Username
-		comment.Email = defaultSystemEmail(user.Username)
+		// 内部成员评论允许邮箱为空，不再自动填充占位邮箱。
+		comment.Email = ""
 		comment.AvatarURL = strings.TrimSpace(user.Avatar)
 		if comment.AvatarURL == "" {
 			comment.AvatarURL = buildDiceBearURL(user.Username)
@@ -425,12 +426,4 @@ func buildDiceBearURL(seed string) string {
 		trimmed = "guest"
 	}
 	return "https://api.dicebear.com/9.x/fun-emoji/svg?seed=" + url.QueryEscape(trimmed)
-}
-
-func defaultSystemEmail(username string) string {
-	name := strings.TrimSpace(username)
-	if name == "" {
-		name = "system"
-	}
-	return name + "@local.invalid"
 }
