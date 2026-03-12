@@ -69,6 +69,16 @@
         </div>
         <div class="comment-teaser-body">
           <div class="comment-teaser-card">
+            <button
+              v-if="canJumpToEchoDetail"
+              type="button"
+              class="comment-jump-btn"
+              title="查看对应 Echo 详情"
+              aria-label="查看对应 Echo 详情"
+              @click="handleJumpToEchoDetail"
+            >
+              <LinkTo class="w-4 h-4" />
+            </button>
             <p v-if="commentLoading" class="comment-teaser-content">正在挑选一条精选评论...</p>
             <p v-else class="comment-teaser-content">{{ randomCommentContent }}</p>
           </div>
@@ -80,16 +90,20 @@
 
 <script setup lang="ts">
 import Connect from '@/components/icons/connect.vue'
+import LinkTo from '@/components/icons/linkto.vue'
 import { fetchGetPublicComments } from '@/service/api'
 import { useConnectStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const connectStore = useConnectStore()
+const router = useRouter()
 const { getConnectInfo } = connectStore
 const { loading, connectsInfo } = storeToRefs(connectStore)
 const randomComment = ref<App.Api.Comment.CommentItem | null>(null)
 const commentLoading = ref(false)
+const canJumpToEchoDetail = computed(() => Boolean(randomComment.value?.echo_id) && !commentLoading.value)
 
 const randomCommentContent = computed(() => {
   const content = randomComment.value?.content?.trim()
@@ -134,6 +148,15 @@ const loadRandomComment = async () => {
   } finally {
     commentLoading.value = false
   }
+}
+
+const handleJumpToEchoDetail = () => {
+  const echoId = randomComment.value?.echo_id?.trim()
+  if (!echoId) return
+  router.push({
+    name: 'echo',
+    params: { echoId },
+  })
 }
 
 onMounted(() => {
@@ -269,6 +292,41 @@ onMounted(() => {
 
 .comment-teaser-card:hover {
   transform: rotate(-0.4deg);
+}
+
+.comment-jump-btn {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 88%, transparent);
+  background: color-mix(in srgb, var(--color-bg-canvas) 92%, transparent);
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(-1px) scale(0.96);
+  pointer-events: none;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease;
+}
+
+.comment-teaser-card:hover .comment-jump-btn,
+.comment-jump-btn:focus-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.comment-jump-btn:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent);
 }
 
 .comment-teaser-card::before {
