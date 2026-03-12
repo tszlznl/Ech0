@@ -28,7 +28,7 @@ func newCommentProviderRegistry() commentProviderRegistry {
 				{Key: "envId", Label: "Env ID", Required: true, Placeholder: "Twikoo envId"},
 			},
 			def: model.CommentProviderSetting{
-				ScriptURL: "https://cdn.staticfile.net/twikoo/1.6.44/twikoo.all.min.js",
+				ScriptURL: "https://cdn.jsdelivr.net/npm/twikoo@1.7.2/dist/twikoo.all.min.js",
 				Config: map[string]interface{}{
 					"envId": "",
 				},
@@ -47,8 +47,8 @@ func newCommentProviderRegistry() commentProviderRegistry {
 				{Key: "path", Label: "Path", Required: false, Placeholder: "/"},
 			},
 			def: model.CommentProviderSetting{
-				ScriptURL: "https://unpkg.com/@waline/client@v2/dist/waline.js",
-				CSSURL:    "https://unpkg.com/@waline/client@v2/dist/waline.css",
+				ScriptURL: "https://unpkg.com/@waline/client@3.13.0/dist/waline.umd.js",
+				CSSURL:    "https://unpkg.com/@waline/client@3.13.0/dist/waline.css",
 				Config: map[string]interface{}{
 					"serverURL": "",
 					"path":      "",
@@ -70,8 +70,8 @@ func newCommentProviderRegistry() commentProviderRegistry {
 				{Key: "pageKey", Label: "Page Key", Required: false, Placeholder: "留空时使用当前路径"},
 			},
 			def: model.CommentProviderSetting{
-				ScriptURL: "https://unpkg.com/artalk@2/dist/Artalk.js",
-				CSSURL:    "https://unpkg.com/artalk@2/dist/Artalk.css",
+				ScriptURL: "https://unpkg.com/artalk@2.9.1/dist/Artalk.js",
+				CSSURL:    "https://unpkg.com/artalk@2.9.1/dist/Artalk.css",
 				Config: map[string]interface{}{
 					"server":  "",
 					"site":    "",

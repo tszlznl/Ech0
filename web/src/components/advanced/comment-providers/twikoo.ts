@@ -16,12 +16,13 @@ export function createTwikooAdapter(): CommentProviderAdapter {
   return {
     async mount(el, setting) {
       const providerSetting = getProviderSetting(setting, CommentProvider.TWIKOO)
-      const scriptURL = providerSetting.script_url || '/others/scripts/twikoo.all.min.js'
+      const scriptURL =
+        providerSetting.script_url || 'https://cdn.jsdelivr.net/npm/twikoo@1.7.2/dist/twikoo.all.min.js'
       try {
         await loadScript(scriptURL)
       } catch {
         // Fallback to CDN when local script is unavailable.
-        await loadScript('https://cdn.staticfile.net/twikoo/1.6.44/twikoo.all.min.js')
+        await loadScript('https://cdn.jsdelivr.net/npm/twikoo@1.7.2/dist/twikoo.all.min.js')
       }
 
       const config = providerSetting.config || {}

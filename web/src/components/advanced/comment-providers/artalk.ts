@@ -4,9 +4,11 @@ import { getProviderSetting, loadScript, loadStyle } from './loader'
 
 declare global {
   interface Window {
-    Artalk?: {
-      new (options: Record<string, unknown>): { destroy?: () => void }
-    }
+    Artalk?:
+      | {
+          init?: (options: Record<string, unknown>) => { destroy?: () => void }
+        }
+      | (new (options: Record<string, unknown>) => { destroy?: () => void })
   }
 }
 
@@ -16,8 +18,8 @@ export function createArtalkAdapter(): CommentProviderAdapter {
   return {
     async mount(el, setting) {
       const providerSetting = getProviderSetting(setting, CommentProvider.ARTALK)
-      const scriptURL = providerSetting.script_url || 'https://unpkg.com/artalk@2/dist/Artalk.js'
-      const cssURL = providerSetting.css_url || 'https://unpkg.com/artalk@2/dist/Artalk.css'
+      const scriptURL = providerSetting.script_url || 'https://unpkg.com/artalk@2.9.1/dist/Artalk.js'
+      const cssURL = providerSetting.css_url || 'https://unpkg.com/artalk@2.9.1/dist/Artalk.css'
 
       loadStyle(cssURL)
       await loadScript(scriptURL)
@@ -28,13 +30,27 @@ export function createArtalkAdapter(): CommentProviderAdapter {
       if (!window.Artalk || !server || !site) return
 
       el.innerHTML = '<div id="artalk-comment-container"></div>'
-      artalkInstance = new window.Artalk({
+      const options = {
         el: '#artalk-comment-container',
         server,
         site,
         pageKey: String(config.pageKey || window.location.pathname || ''),
         pageTitle: document.title,
-      })
+      }
+
+      // Prefer the official API in recent Artalk versions.
+      const artalk = window.Artalk as {
+        init?: (opts: Record<string, unknown>) => { destroy?: () => void }
+      }
+      if (typeof artalk.init === 'function') {
+        artalkInstance = artalk.init(options)
+        return
+      }
+
+      // Compatibility fallback for older constructor-style builds.
+      artalkInstance = new (window.Artalk as new (
+        opts: Record<string, unknown>,
+      ) => { destroy?: () => void })(options)
     },
     unmount() {
       artalkInstance?.destroy?.()

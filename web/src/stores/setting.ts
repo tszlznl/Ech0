@@ -37,17 +37,17 @@ export const useSettingStore = defineStore('settingStore', () => {
     provider: CommentProvider.TWIKOO,
     providers: {
       [CommentProvider.TWIKOO]: {
-        script_url: 'https://cdn.staticfile.net/twikoo/1.6.44/twikoo.all.min.js',
+        script_url: 'https://cdn.jsdelivr.net/npm/twikoo@1.7.2/dist/twikoo.all.min.js',
         config: { envId: '' },
       },
       [CommentProvider.WALINE]: {
-        script_url: 'https://unpkg.com/@waline/client@v2/dist/waline.js',
-        css_url: 'https://unpkg.com/@waline/client@v2/dist/waline.css',
+        script_url: 'https://unpkg.com/@waline/client@3.13.0/dist/waline.umd.js',
+        css_url: 'https://unpkg.com/@waline/client@3.13.0/dist/waline.css',
         config: { serverURL: '', path: '' },
       },
       [CommentProvider.ARTALK]: {
-        script_url: 'https://unpkg.com/artalk@2/dist/Artalk.js',
-        css_url: 'https://unpkg.com/artalk@2/dist/Artalk.css',
+        script_url: 'https://unpkg.com/artalk@2.9.1/dist/Artalk.js',
+        css_url: 'https://unpkg.com/artalk@2.9.1/dist/Artalk.css',
         config: { server: '', site: '', pageKey: '' },
       },
       [CommentProvider.GISCUS]: {
