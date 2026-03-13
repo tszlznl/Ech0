@@ -22,9 +22,12 @@ import (
 	"github.com/lin-snow/ech0/internal/config"
 	"github.com/lin-snow/ech0/internal/database"
 	"github.com/lin-snow/ech0/internal/migrator/spec"
+	commonModel "github.com/lin-snow/ech0/internal/model/common"
+	connectModel "github.com/lin-snow/ech0/internal/model/connect"
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
+	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 	"github.com/lin-snow/ech0/internal/storage"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
@@ -289,6 +292,10 @@ func (e *Extractor) Migrate(ctx context.Context, req spec.MigrateRequest) (spec.
 			if exceedsFailureThreshold(successCount+failCount, failCount, options.FailureThreshold) {
 				return fmt.Errorf("failure rate exceeded %.2f%%, rollback job %s", options.FailureThreshold*100, jobID)
 			}
+		}
+
+		if err := migrateSettings(tx, sourceDB); err != nil {
+			return fmt.Errorf("migrate settings: %w", err)
 		}
 
 		report["processed"] = successCount + failCount
@@ -1658,4 +1665,442 @@ func closeGormDB(db *gorm.DB) {
 		return
 	}
 	_ = sqlDB.Close()
+}
+
+type v3KeyValue struct {
+	Key   string `json:"key"   gorm:"primaryKey"`
+	Value string `json:"value"`
+}
+
+func (v *v3KeyValue) TableName() string {
+	return "key_values"
+}
+
+const (
+	// SystemSettingsKey 是系统设置的键
+	SystemSettingsKey = "system_settings"
+	// CommentSettingKey 是评论设置的建
+	CommentSettingKey = "comment_setting"
+	// S3SettingKey 是 S3 存储设置的键
+	S3SettingKey = "s3_setting"
+	// OAuth2SettingKey 是 OAuth2 设置的键
+	OAuth2SettingKey = "oauth2_setting"
+	// ServerURLKey 是服务器URL设置的键
+	ServerURLKey = "server_url"
+	// FediverseSettingKey 是联邦网络设置的键
+	FediverseSettingKey = "fediverse_setting"
+	// BackupScheduleKey 是备份计划设置的键
+	BackupScheduleKey = "backup_schedule"
+	// AgentSettingKey 是 Agent 设置的键
+	AgentSettingKey = "agent_setting"
+	// ReleaseVersionKey 是发布版本号的键
+	ReleaseVersionKey = "release_version"
+	// MigrationKey 是数据库迁移的标记键
+	MigrationKey = "db_migration:message_to_echo:v1"
+)
+
+type v3SystemSetting struct {
+	SiteTitle     string `json:"site_title"`     // 站点标题
+	ServerLogo    string `json:"server_logo"`    // 服务器Logo
+	ServerName    string `json:"server_name"`    // 服务器名称
+	ServerURL     string `json:"server_url"`     // 服务器地址
+	AllowRegister bool   `json:"allow_register"` // 是否允许注册'
+	ICPNumber     string `json:"ICP_number"`     // 备案号
+	MetingAPI     string `json:"meting_api"`     // Meting API 地址
+	CustomCSS     string `json:"custom_css"`     // 自定义 CSS
+	CustomJS      string `json:"custom_js"`      // 自定义 JS
+}
+
+func (v *v3SystemSetting) TableName() string {
+	return "system_settings"
+}
+
+type v3OAuth2Setting struct {
+	Enable       bool     `json:"enable"`        // 是否启用 OAuth2 登录
+	Provider     string   `json:"provider"`      // OAuth2 提供商
+	ClientID     string   `json:"client_id"`     // OAuth2 Client ID
+	ClientSecret string   `json:"client_secret"` // OAuth2 Client Secret
+	RedirectURI  string   `json:"redirect_uri"`  // OAuth2 重定向 URI
+	Scopes       []string `json:"scopes"`        // OAuth2 请求的权限范围
+	AuthURL      string   `json:"auth_url"`      // OAuth2 授权 URL
+	TokenURL     string   `json:"token_url"`     // OAuth2 令牌 URL
+	UserInfoURL  string   `json:"user_info_url"` // OAuth2 用户信息 URL
+
+	// OIDC 扩展
+	IsOIDC  bool   `json:"is_oidc"`  // 是否启用 OIDC
+	Issuer  string `json:"issuer"`   // OIDC 颁发者
+	JWKSURL string `json:"jwks_url"` // OIDC JWKS URL
+}
+
+func (v *v3OAuth2Setting) TableName() string {
+	return "oauth2_settings"
+}
+
+type v3Connected struct {
+	ID         uint   `gorm:"primaryKey" json:"id"`
+	ConnectURL string `                  json:"connect_url"` // 连接地址
+}
+
+func (v *v3Connected) TableName() string {
+	return "connecteds"
+}
+
+type v3AgentSetting struct {
+	Enable   bool   `json:"enable"`   // 是否启用 Agent 功能
+	Provider string `json:"provider"` // LLM 提供商 （OpenAI、DeepSeek、Anthropic、Gemini、阿里百炼、Ollama等）
+	Model    string `json:"model"`    // LLM 模型名称
+	ApiKey   string `json:"api_key"`  // LLM API Key
+	Prompt   string `json:"prompt"`   // Agent 额外使用的提示词
+	BaseURL  string `json:"base_url"` // 自定义 API URL（可选）
+}
+
+func (v *v3AgentSetting) TableName() string {
+	return "agent_settings"
+}
+
+type v3Webhook struct {
+	ID          uint      `gorm:"primaryKey"   json:"id"`           // Webhook ID
+	Name        string    `                    json:"name"`         // Webhook 名称
+	URL         string    `                    json:"url"`          // Webhook URL
+	Secret      string    `                    json:"secret"`       // 签名密钥，用于请求验证（HMAC等）
+	IsActive    bool      `gorm:"default:true" json:"is_active"`    // 启用/禁用状态
+	LastStatus  string    `                    json:"last_status"`  // 最近调用状态（如 success, failed）
+	LastTrigger time.Time `                    json:"last_trigger"` // 最近触发时间
+	CreatedAt   time.Time `                    json:"created_at"`   // 创建时间
+	UpdatedAt   time.Time `                    json:"updated_at"`   // 更新时间
+}
+
+func (v *v3Webhook) TableName() string {
+	return "webhooks"
+}
+
+type v3BackupSchedule struct {
+	Enable         bool   `json:"enable"`          // 是否启用备份计划
+	CronExpression string `json:"cron_expression"` // 备份计划的 Cron 表达式
+}
+
+func (v *v3BackupSchedule) TableName() string {
+	return "backup_schedules"
+}
+
+func migrateSettings(tx *gorm.DB, sourceDB *gorm.DB) error {
+	// TODO: Implement migration of settings
+
+	var err error
+
+	// 迁移 System 设置
+	migrateSystemSettingErr := migrateSystemSetting(tx, sourceDB)
+	if migrateSystemSettingErr != nil {
+		logUtil.GetLogger().Warn("migration system setting failed", zap.Error(err))
+		err = errors.Join(err, migrateSystemSettingErr)
+	}
+
+	// 迁移 OAuth2 设置
+	migrateOAuth2SettingErr := migrateOAuth2Setting(tx, sourceDB)
+	if migrateOAuth2SettingErr != nil {
+		logUtil.GetLogger().Warn("migration oauth2 setting failed", zap.Error(err))
+		err = errors.Join(err, migrateOAuth2SettingErr)
+	}
+
+	// 迁移 Connect 设置
+	migrateConnectSettingErr := migrateConnectSetting(tx, sourceDB)
+	if migrateConnectSettingErr != nil {
+		logUtil.GetLogger().Warn("migration connect setting failed", zap.Error(err))
+		err = errors.Join(err, migrateConnectSettingErr)
+	}
+
+	// 迁移 Agent 设置
+	migrateAgentSettingErr := migrateAgentSetting(tx, sourceDB)
+	if migrateAgentSettingErr != nil {
+		logUtil.GetLogger().Warn("migration agent setting failed", zap.Error(err))
+		err = errors.Join(err, migrateAgentSettingErr)
+	}
+
+	// 迁移 Webhook 设置
+	migrateWebhookSettingErr := migrateWebhookSetting(tx, sourceDB)
+	if migrateWebhookSettingErr != nil {
+		logUtil.GetLogger().Warn("migration webhook setting failed", zap.Error(err))
+		err = errors.Join(err, migrateWebhookSettingErr)
+	}
+
+	// 迁移 bakeup 设置
+	migrateBackupSettingErr := migrateBackupSetting(tx, sourceDB)
+	if migrateBackupSettingErr != nil {
+		logUtil.GetLogger().Warn("migration backup schedule setting failed", zap.Error(err))
+		err = errors.Join(err, migrateBackupSettingErr)
+	}
+
+	return err
+}
+
+func migrateSystemSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
+	var v3kv v3KeyValue
+	if err := sourceDB.Model(&v3KeyValue{}).
+		Where("key = ?", SystemSettingsKey).
+		First(&v3kv).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		return err
+	}
+	raw := strings.TrimSpace(v3kv.Value)
+	if raw == "" {
+		return nil
+	}
+
+	var v3SystemSetting v3SystemSetting
+	if err := json.Unmarshal([]byte(raw), &v3SystemSetting); err != nil {
+		return err
+	}
+
+	var systemSetting settingModel.SystemSetting
+	systemSetting.SiteTitle = v3SystemSetting.SiteTitle
+	// TODO: Implement migration of server logo
+	// systemSetting.ServerLogo = v3SystemSetting.ServerLogo
+	systemSetting.ServerName = v3SystemSetting.ServerName
+	systemSetting.ServerURL = v3SystemSetting.ServerURL
+	systemSetting.AllowRegister = v3SystemSetting.AllowRegister
+	systemSetting.ICPNumber = v3SystemSetting.ICPNumber
+	systemSetting.MetingAPI = v3SystemSetting.MetingAPI
+	systemSetting.CustomCSS = v3SystemSetting.CustomCSS
+	systemSetting.CustomJS = v3SystemSetting.CustomJS
+
+	data, err := json.Marshal(systemSetting)
+	if err != nil {
+		return err
+	}
+	dataString := string(data)
+
+	var systemSettingKV commonModel.KeyValue
+	if err := tx.Model(&commonModel.KeyValue{}).
+		Where("key = ?", commonModel.SystemSettingsKey).
+		FirstOrInit(&systemSettingKV).Error; err != nil {
+		return err
+	}
+	systemSettingKV.Value = dataString
+	if err := tx.Save(&systemSettingKV).Error; err != nil {
+		return err
+	}
+
+	var serverURLKV commonModel.KeyValue
+	if err := tx.Model(&commonModel.KeyValue{}).
+		Where("key = ?", commonModel.ServerURLKey).
+		FirstOrInit(&serverURLKV).Error; err != nil {
+		return err
+	}
+	serverURLKV.Value = systemSetting.ServerURL
+	if err := tx.Save(&serverURLKV).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func migrateOAuth2Setting(tx *gorm.DB, sourceDB *gorm.DB) error {
+	var v3kv v3KeyValue
+	if err := sourceDB.Model(&v3KeyValue{}).
+		Where("key = ?", OAuth2SettingKey).
+		First(&v3kv).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		return err
+	}
+	raw := strings.TrimSpace(v3kv.Value)
+	if raw == "" {
+		return nil
+	}
+
+	var v3OAuth2Setting v3OAuth2Setting
+	if err := json.Unmarshal([]byte(raw), &v3OAuth2Setting); err != nil {
+		return err
+	}
+
+	var oauth2Setting settingModel.OAuth2Setting
+	oauth2Setting.Enable = v3OAuth2Setting.Enable
+	oauth2Setting.Provider = v3OAuth2Setting.Provider
+	oauth2Setting.ClientID = v3OAuth2Setting.ClientID
+	oauth2Setting.ClientSecret = v3OAuth2Setting.ClientSecret
+	oauth2Setting.RedirectURI = v3OAuth2Setting.RedirectURI
+	oauth2Setting.Scopes = v3OAuth2Setting.Scopes
+	oauth2Setting.AuthURL = v3OAuth2Setting.AuthURL
+	oauth2Setting.TokenURL = v3OAuth2Setting.TokenURL
+	oauth2Setting.UserInfoURL = v3OAuth2Setting.UserInfoURL
+	oauth2Setting.IsOIDC = v3OAuth2Setting.IsOIDC
+	oauth2Setting.Issuer = v3OAuth2Setting.Issuer
+	oauth2Setting.JWKSURL = v3OAuth2Setting.JWKSURL
+
+	data, err := json.Marshal(oauth2Setting)
+	if err != nil {
+		return err
+	}
+	dataString := string(data)
+
+	var oauth2SettingKV commonModel.KeyValue
+	if err := tx.Model(&commonModel.KeyValue{}).
+		Where("key = ?", commonModel.OAuth2SettingKey).
+		FirstOrInit(&oauth2SettingKV).Error; err != nil {
+		return err
+	}
+	oauth2SettingKV.Value = dataString
+	if err := tx.Save(&oauth2SettingKV).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func migrateConnectSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
+	var v3Connects []v3Connected
+	if err := sourceDB.Model(&v3Connected{}).Find(&v3Connects).Error; err != nil {
+		return err
+	}
+	v3ConnectURLs := make([]string, 0, len(v3Connects))
+	for _, v3Connect := range v3Connects {
+		v3ConnectURLs = append(v3ConnectURLs, v3Connect.ConnectURL)
+	}
+
+	var connects []connectModel.Connected
+	if err := tx.Model(&connectModel.Connected{}).Find(&connects).Error; err != nil {
+		return err
+	}
+	isExists := make(map[string]struct{}, len(connects))
+	for _, connect := range connects {
+		isExists[connect.ConnectURL] = struct{}{}
+	}
+
+	connectsToCreate := make([]connectModel.Connected, 0)
+	for _, v3ConnectURL := range v3ConnectURLs {
+		if _, ok := isExists[v3ConnectURL]; !ok {
+			connectsToCreate = append(connectsToCreate, connectModel.Connected{
+				ConnectURL: v3ConnectURL,
+			})
+		}
+	}
+
+	if len(connectsToCreate) > 0 {
+		if err := tx.Create(&connectsToCreate).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func migrateAgentSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
+	var v3kv v3KeyValue
+	if err := sourceDB.Model(&v3KeyValue{}).
+		Where("key = ?", AgentSettingKey).
+		First(&v3kv).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		return err
+	}
+	raw := strings.TrimSpace(v3kv.Value)
+	if raw == "" {
+		return nil
+	}
+
+	var v3AgentSetting v3AgentSetting
+	if err := json.Unmarshal([]byte(raw), &v3AgentSetting); err != nil {
+		return err
+	}
+
+	var agentSetting settingModel.AgentSetting
+	agentSetting.Enable = v3AgentSetting.Enable
+	agentSetting.Provider = v3AgentSetting.Provider
+	agentSetting.Model = v3AgentSetting.Model
+	agentSetting.ApiKey = v3AgentSetting.ApiKey
+	agentSetting.Prompt = v3AgentSetting.Prompt
+	agentSetting.BaseURL = v3AgentSetting.BaseURL
+
+	data, err := json.Marshal(agentSetting)
+	if err != nil {
+		return err
+	}
+	dataString := string(data)
+
+	var agentSettingKV commonModel.KeyValue
+	if err := tx.Model(&commonModel.KeyValue{}).
+		Where("key = ?", commonModel.AgentSettingKey).
+		FirstOrInit(&agentSettingKV).Error; err != nil {
+		return err
+	}
+	agentSettingKV.Value = dataString
+	if err := tx.Save(&agentSettingKV).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func migrateWebhookSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
+	var v3Webhooks []v3Webhook
+	if err := sourceDB.Model(&v3Webhook{}).Find(&v3Webhooks).Error; err != nil {
+		return err
+	}
+
+	var webhooks []webhookModel.Webhook
+	for _, v3Webhook := range v3Webhooks {
+		webhooks = append(webhooks, webhookModel.Webhook{
+			Name:        v3Webhook.Name,
+			URL:         v3Webhook.URL,
+			Secret:      v3Webhook.Secret,
+			IsActive:    v3Webhook.IsActive,
+			LastStatus:  v3Webhook.LastStatus,
+			LastTrigger: v3Webhook.LastTrigger,
+			CreatedAt:   v3Webhook.CreatedAt,
+			UpdatedAt:   v3Webhook.UpdatedAt,
+		})
+	}
+
+	if len(webhooks) > 0 {
+		if err := tx.Create(&webhooks).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func migrateBackupSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
+	var v3kv v3KeyValue
+	if err := sourceDB.Model(&v3KeyValue{}).
+		Where("key = ?", BackupScheduleKey).
+		First(&v3kv).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		return err
+	}
+	raw := strings.TrimSpace(v3kv.Value)
+	if raw == "" {
+		return nil
+	}
+
+	var v3BackupSchedule v3BackupSchedule
+	if err := json.Unmarshal([]byte(raw), &v3BackupSchedule); err != nil {
+		return err
+	}
+
+	var backupSchedule settingModel.BackupSchedule
+	backupSchedule.Enable = v3BackupSchedule.Enable
+	backupSchedule.CronExpression = v3BackupSchedule.CronExpression
+
+	data, err := json.Marshal(backupSchedule)
+	if err != nil {
+		return err
+	}
+	dataString := string(data)
+
+	var backupScheduleKV commonModel.KeyValue
+	if err := tx.Model(&commonModel.KeyValue{}).
+		Where("key = ?", commonModel.BackupScheduleKey).
+		FirstOrInit(&backupScheduleKV).Error; err != nil {
+		return err
+	}
+	backupScheduleKV.Value = dataString
+	if err := tx.Save(&backupScheduleKV).Error; err != nil {
+		return err
+	}
+	return nil
 }
