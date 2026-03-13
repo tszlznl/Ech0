@@ -1705,6 +1705,23 @@ type v3SystemSetting struct {
 	CustomJS      string `json:"custom_js"`      // 自定义 JS
 }
 
+type v3OAuth2Setting struct {
+	Enable       bool     `json:"enable"`        // 是否启用 OAuth2 登录
+	Provider     string   `json:"provider"`      // OAuth2 提供商
+	ClientID     string   `json:"client_id"`     // OAuth2 Client ID
+	ClientSecret string   `json:"client_secret"` // OAuth2 Client Secret
+	RedirectURI  string   `json:"redirect_uri"`  // OAuth2 重定向 URI
+	Scopes       []string `json:"scopes"`        // OAuth2 请求的权限范围
+	AuthURL      string   `json:"auth_url"`      // OAuth2 授权 URL
+	TokenURL     string   `json:"token_url"`     // OAuth2 令牌 URL
+	UserInfoURL  string   `json:"user_info_url"` // OAuth2 用户信息 URL
+
+	// OIDC 扩展
+	IsOIDC  bool   `json:"is_oidc"`  // 是否启用 OIDC
+	Issuer  string `json:"issuer"`   // OIDC 颁发者
+	JWKSURL string `json:"jwks_url"` // OIDC JWKS URL
+}
+
 func migrateSettings(tx *gorm.DB, sourceDB *gorm.DB) error {
 	// TODO: Implement migration of settings
 
@@ -1716,6 +1733,14 @@ func migrateSettings(tx *gorm.DB, sourceDB *gorm.DB) error {
 		logUtil.GetLogger().Warn("migration system setting failed", zap.Error(err))
 		err = errors.Join(err, migrateSystemSettingErr)
 	}
+
+	// 迁移 OAuth2 设置
+	migrateOAuth2SettingErr := migrateOAuth2Setting(tx, sourceDB)
+	if migrateOAuth2SettingErr != nil {
+		logUtil.GetLogger().Warn("migration oauth2 setting failed", zap.Error(err))
+		err = errors.Join(err, migrateOAuth2SettingErr)
+	}
+
 	return err
 }
 
@@ -1779,5 +1804,58 @@ func migrateSystemSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
 		return err
 	}
 
+	return nil
+}
+
+func migrateOAuth2Setting(tx *gorm.DB, sourceDB *gorm.DB) error {
+	var v3kv v3KeyValue
+	if err := sourceDB.Model(&v3KeyValue{}).
+		Where("key = ?", OAuth2SettingKey).
+		First(&v3kv).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		return err
+	}
+	raw := strings.TrimSpace(v3kv.Value)
+	if raw == "" {
+		return nil
+	}
+
+	var v3OAuth2Setting v3OAuth2Setting
+	if err := json.Unmarshal([]byte(raw), &v3OAuth2Setting); err != nil {
+		return err
+	}
+
+	var oauth2Setting settingModel.OAuth2Setting
+	oauth2Setting.Enable = v3OAuth2Setting.Enable
+	oauth2Setting.Provider = v3OAuth2Setting.Provider
+	oauth2Setting.ClientID = v3OAuth2Setting.ClientID
+	oauth2Setting.ClientSecret = v3OAuth2Setting.ClientSecret
+	oauth2Setting.RedirectURI = v3OAuth2Setting.RedirectURI
+	oauth2Setting.Scopes = v3OAuth2Setting.Scopes
+	oauth2Setting.AuthURL = v3OAuth2Setting.AuthURL
+	oauth2Setting.TokenURL = v3OAuth2Setting.TokenURL
+	oauth2Setting.UserInfoURL = v3OAuth2Setting.UserInfoURL
+	oauth2Setting.IsOIDC = v3OAuth2Setting.IsOIDC
+	oauth2Setting.Issuer = v3OAuth2Setting.Issuer
+	oauth2Setting.JWKSURL = v3OAuth2Setting.JWKSURL
+
+	data, err := json.Marshal(oauth2Setting)
+	if err != nil {
+		return err
+	}
+	dataString := string(data)
+
+	var oauth2SettingKV commonModel.KeyValue
+	if err := tx.Model(&commonModel.KeyValue{}).
+		Where("key = ?", commonModel.OAuth2SettingKey).
+		FirstOrInit(&oauth2SettingKV).Error; err != nil {
+		return err
+	}
+	oauth2SettingKV.Value = dataString
+	if err := tx.Save(&oauth2SettingKV).Error; err != nil {
+		return err
+	}
 	return nil
 }
