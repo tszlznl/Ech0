@@ -1750,12 +1750,17 @@ type v3Webhook struct {
 	UpdatedAt   time.Time `                    json:"updated_at"`   // 更新时间
 }
 
+type v3BackupSchedule struct {
+	Enable         bool   `json:"enable"`          // 是否启用备份计划
+	CronExpression string `json:"cron_expression"` // 备份计划的 Cron 表达式
+}
+
 func migrateSettings(tx *gorm.DB, sourceDB *gorm.DB) error {
 	// TODO: Implement migration of settings
 
 	var err error
 
-	// 迁移系统设置
+	// 迁移 System 设置
 	migrateSystemSettingErr := migrateSystemSetting(tx, sourceDB)
 	if migrateSystemSettingErr != nil {
 		logUtil.GetLogger().Warn("migration system setting failed", zap.Error(err))
@@ -1788,6 +1793,13 @@ func migrateSettings(tx *gorm.DB, sourceDB *gorm.DB) error {
 	if migrateWebhookSettingErr != nil {
 		logUtil.GetLogger().Warn("migration webhook setting failed", zap.Error(err))
 		err = errors.Join(err, migrateWebhookSettingErr)
+	}
+
+	// 迁移 bakeup 设置
+	migrateBackupSettingErr := migrateBackupSetting(tx, sourceDB)
+	if migrateBackupSettingErr != nil {
+		logUtil.GetLogger().Warn("migration backup schedule setting failed", zap.Error(err))
+		err = errors.Join(err, migrateBackupSettingErr)
 	}
 
 	return err
@@ -2019,5 +2031,48 @@ func migrateWebhookSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
 		}
 	}
 
+	return nil
+}
+
+func migrateBackupSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
+	var v3kv v3KeyValue
+	if err := sourceDB.Model(&v3KeyValue{}).
+		Where("key = ?", BackupScheduleKey).
+		First(&v3kv).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		return err
+	}
+	raw := strings.TrimSpace(v3kv.Value)
+	if raw == "" {
+		return nil
+	}
+
+	var v3BackupSchedule v3BackupSchedule
+	if err := json.Unmarshal([]byte(raw), &v3BackupSchedule); err != nil {
+		return err
+	}
+
+	var backupSchedule settingModel.BackupSchedule
+	backupSchedule.Enable = v3BackupSchedule.Enable
+	backupSchedule.CronExpression = v3BackupSchedule.CronExpression
+
+	data, err := json.Marshal(backupSchedule)
+	if err != nil {
+		return err
+	}
+	dataString := string(data)
+
+	var backupScheduleKV commonModel.KeyValue
+	if err := tx.Model(&commonModel.KeyValue{}).
+		Where("key = ?", commonModel.BackupScheduleKey).
+		FirstOrInit(&backupScheduleKV).Error; err != nil {
+		return err
+	}
+	backupScheduleKV.Value = dataString
+	if err := tx.Save(&backupScheduleKV).Error; err != nil {
+		return err
+	}
 	return nil
 }
