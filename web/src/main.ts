@@ -30,8 +30,22 @@ app.component('BaseDialog', BaseDialog)
 
 app.mount('#app')
 
-// 移除启动加载动画
+// 启动加载页淡出并恢复页面滚动
 const appLoader = document.getElementById('app-loader')
+let loaderCleared = false
+const clearStartupLoader = () => {
+  if (loaderCleared) return
+  loaderCleared = true
+  appLoader?.remove()
+  document.documentElement.classList.remove('app-loading')
+}
+
 if (appLoader) {
-  appLoader.remove()
+  window.requestAnimationFrame(() => {
+    appLoader.classList.add('fade-out')
+  })
+  appLoader.addEventListener('transitionend', clearStartupLoader, { once: true })
+  window.setTimeout(clearStartupLoader, 400)
+} else {
+  clearStartupLoader()
 }

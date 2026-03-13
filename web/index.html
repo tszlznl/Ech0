@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" class="app-loading">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.ico" />
@@ -73,14 +73,65 @@
 
     <!-- Canonical -->
     <link rel="canonical" href="https://lin-snow.github.io/Ech0/" />
+
+    <style>
+      html.app-loading,
+      html.app-loading body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      #app-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-content: center;
+        gap: 12px;
+        color: #f0d3a8;
+        background: radial-gradient(circle at 30% 20%, #4a3b2e 0%, #1c1d26 55%, #13141b 100%);
+        transition:
+          opacity 0.28s ease,
+          visibility 0.28s ease;
+      }
+
+      #app-loader p {
+        margin: 0;
+        text-align: center;
+        font-size: 14px;
+        letter-spacing: 0.04em;
+      }
+
+      #app-loader.fade-out {
+        opacity: 0;
+        visibility: hidden;
+      }
+
+      #app-loader .loader {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 4px solid rgba(255, 255, 255, 0.18);
+        border-top-color: #f6b56a;
+        animation: app-loader-spin 0.9s linear infinite;
+        margin: 0 auto;
+      }
+
+      @keyframes app-loader-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
   </head>
 
   <body>
-    <div id="app">
-      <div id="app-loader">
-        <div class="loader"></div>
-        <p> 加载中...</p>
-      </div>
+    <div id="app"></div>
+    <div id="app-loader">
+      <div class="loader"></div>
+      <p>加载中...</p>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
