@@ -26,9 +26,10 @@ import (
 )
 
 const (
-	minSubmitMS       int64 = 2000
-	maxFormTokenHours int64 = 24
-	maxCommentRunes         = 200
+	minSubmitMS        int64 = 2000
+	maxFormTokenHours  int64 = 24
+	maxCommentRunes          = 200
+	recentDuplicateSec int64 = 90
 )
 
 type CommentService struct {
@@ -74,31 +75,35 @@ func (s *CommentService) CreateComment(
 	clientIP string,
 	userAgent string,
 	dto *model.CreateCommentDto,
-) error {
+) (model.CreateCommentResult, error) {
 	if strings.TrimSpace(dto.HoneypotField) != "" {
-		return commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "提交被拒绝")
+		return model.CreateCommentResult{},
+			commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "提交被拒绝")
 	}
 	if err := s.verifyFormToken(clientIP, dto.FormToken); err != nil {
-		return commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "提交过快或表单已失效")
+		return model.CreateCommentResult{},
+			commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "提交过快或表单已失效")
 	}
 
 	setting, err := s.GetSystemSetting(ctx)
 	if err != nil {
-		return err
+		return model.CreateCommentResult{}, err
 	}
 	if !setting.EnableComment {
-		return commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "评论功能未启用")
+		return model.CreateCommentResult{},
+			commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "评论功能未启用")
 	}
 
 	if setting.CaptchaEnabled && strings.TrimSpace(setting.CaptchaVerify) != "" {
 		if err := s.verifyCaptcha(dto.CaptchaToken, clientIP, setting); err != nil {
-			return commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "验证码验证失败")
+			return model.CreateCommentResult{},
+				commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "验证码验证失败")
 		}
 	}
 
 	user, validUser, err := s.resolveRequestUser(ctx)
 	if err != nil {
-		return err
+		return model.CreateCommentResult{}, err
 	}
 
 	comment := model.Comment{
@@ -110,10 +115,12 @@ func (s *CommentService) CreateComment(
 		Source:    model.SourceGuest,
 	}
 	if comment.EchoID == "" || comment.Content == "" {
-		return commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "评论内容不能为空")
+		return model.CreateCommentResult{},
+			commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "评论内容不能为空")
 	}
 	if utf8.RuneCountInString(comment.Content) > maxCommentRunes {
-		return commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "评论内容不能超过200字")
+		return model.CreateCommentResult{},
+			commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "评论内容不能超过200字")
 	}
 
 	if validUser && (user.IsAdmin || user.IsOwner) {
@@ -128,15 +135,18 @@ func (s *CommentService) CreateComment(
 		email := strings.TrimSpace(dto.Email)
 		website := strings.TrimSpace(dto.Website)
 		if nickname == "" || email == "" {
-			return commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "昵称和邮箱不能为空")
+			return model.CreateCommentResult{},
+				commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "昵称和邮箱不能为空")
 		}
 		if _, err := mail.ParseAddress(email); err != nil {
-			return commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "邮箱格式无效")
+			return model.CreateCommentResult{},
+				commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "邮箱格式无效")
 		}
 		if website != "" {
 			parsed, err := url.ParseRequestURI(website)
 			if err != nil || parsed.Scheme == "" || parsed.Host == "" {
-				return commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "网址格式无效")
+				return model.CreateCommentResult{},
+					commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "网址格式无效")
 			}
 		}
 		comment.Nickname = nickname
@@ -148,11 +158,34 @@ func (s *CommentService) CreateComment(
 		}
 
 		if err := s.checkRateLimit(ctx, comment.IPHash, email, ""); err != nil {
-			return err
+			return model.CreateCommentResult{}, err
 		}
 	}
 
-	return s.repo.CreateComment(ctx, &comment)
+	duplicated, err := s.repo.ExistsRecentDuplicate(
+		ctx,
+		comment.EchoID,
+		comment.Content,
+		comment.Email,
+		comment.IPHash,
+		derefString(comment.UserID),
+		recentDuplicateSec,
+	)
+	if err != nil {
+		return model.CreateCommentResult{}, err
+	}
+	if duplicated {
+		return model.CreateCommentResult{},
+			commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "请勿重复提交相同评论")
+	}
+
+	if err := s.repo.CreateComment(ctx, &comment); err != nil {
+		return model.CreateCommentResult{}, err
+	}
+	return model.CreateCommentResult{
+		ID:     comment.ID,
+		Status: comment.Status,
+	}, nil
 }
 
 func (s *CommentService) ListPublicByEchoID(ctx context.Context, echoID string) ([]model.Comment, error) {
@@ -443,6 +476,13 @@ func hashClientIP(ip string) string {
 	}
 	sum := sha256.Sum256([]byte(strings.TrimSpace(ip)))
 	return hex.EncodeToString(sum[:])
+}
+
+func derefString(v *string) string {
+	if v == nil {
+		return ""
+	}
+	return strings.TrimSpace(*v)
 }
 
 func buildDiceBearURL(seed string) string {

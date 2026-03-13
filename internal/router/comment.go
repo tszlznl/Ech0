@@ -1,12 +1,19 @@
 package router
 
-import "github.com/lin-snow/ech0/internal/handler"
+import (
+	"github.com/lin-snow/ech0/internal/handler"
+	"github.com/lin-snow/ech0/internal/middleware"
+)
 
 func setupCommentRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	// Public
-	appRouterGroup.PublicRouterGroup.GET("/comments/form", h.CommentHandler.GetFormMeta())
-	appRouterGroup.PublicRouterGroup.GET("/comments", h.CommentHandler.ListCommentsByEchoID())
-	appRouterGroup.PublicRouterGroup.GET("/comments/public", h.CommentHandler.ListPublicComments())
+	appRouterGroup.PublicRouterGroup.GET("/comments/form", middleware.NoCache(), h.CommentHandler.GetFormMeta())
+	appRouterGroup.PublicRouterGroup.GET("/comments", middleware.NoCache(), h.CommentHandler.ListCommentsByEchoID())
+	appRouterGroup.PublicRouterGroup.GET(
+		"/comments/public",
+		middleware.NoCache(),
+		h.CommentHandler.ListPublicComments(),
+	)
 	appRouterGroup.PublicRouterGroup.POST("/comments", h.CommentHandler.CreateComment())
 
 	// Admin Panel

@@ -189,6 +189,24 @@
             {{ submitting ? '提交中...' : '提交评论' }}
           </button>
         </div>
+
+        <div
+          v-if="submitNotice"
+          class="mt-3 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-canvas)] p-3 text-sm"
+        >
+          <div class="font-medium text-[var(--color-text-primary)]">
+            {{ submitNotice.status === 'approved' ? '评论已发布' : '评论已提交，等待审核' }}
+          </div>
+          <div class="mt-1 text-xs text-[var(--color-text-muted)]">
+            {{ submitNoticeText }}
+          </div>
+          <div
+            v-if="submitNotice.contentPreview"
+            class="mt-2 rounded border border-[var(--color-border-subtle)] px-2 py-1 text-xs text-[var(--color-text-muted)]"
+          >
+            {{ submitNotice.contentPreview }}
+          </div>
+        </div>
       </form>
     </template>
   </div>
@@ -218,6 +236,12 @@ type CapWidgetElement = HTMLElement & {
   solve?: () => Promise<CapSolveDetail>
 }
 
+type SubmitNotice = {
+  status: App.Api.Comment.CommentStatus
+  contentPreview: string
+  submittedAt: number
+}
+
 const route = useRoute()
 const userStore = useUserStore()
 const loading = ref(false)
@@ -229,6 +253,7 @@ const captchaWidget = ref<CapWidgetElement | null>(null)
 const captchaError = ref('')
 const solvingCaptcha = ref(false)
 const commentFormExpanded = ref(false)
+const submitNotice = ref<SubmitNotice | null>(null)
 const CAP_WIDGET_SCRIPT_ID = 'cap-widget-script'
 
 const form = reactive<App.Api.Comment.CreateCommentDto>({
@@ -291,6 +316,15 @@ const getStickyCardStyle = (index: number) => {
     '--sticky-shift': shiftOptions[index % shiftOptions.length],
   } as Record<string, string>
 }
+
+const submitNoticeText = computed(() => {
+  if (!submitNotice.value) return ''
+  const timeLabel = formatDate(submitNotice.value.submittedAt)
+  if (submitNotice.value.status === 'approved') {
+    return `已于 ${timeLabel} 发布到评论列表。`
+  }
+  return `已于 ${timeLabel} 提交，审核通过后会显示在评论列表中。`
+})
 
 const clearCaptchaWidget = () => {
   if (captchaWidget.value) {
@@ -427,11 +461,24 @@ const submitComment = async () => {
   }
   submitting.value = true
   try {
+    const submittedContent = form.content.trim()
     const res = await fetchCreateComment(form)
     if (res.code === 1) {
-      theToast.success('评论提交成功')
+      const status = res.data?.status || 'pending'
+      submitNotice.value = {
+        status,
+        contentPreview: submittedContent.slice(0, 80),
+        submittedAt: Date.now(),
+      }
+      if (status === 'approved') {
+        theToast.success('评论已发布')
+      } else {
+        theToast.success('评论已提交，等待审核')
+      }
       resetForm()
-      await loadData()
+      if (status === 'approved') {
+        await loadData()
+      }
     }
   } finally {
     submitting.value = false

@@ -65,7 +65,7 @@ func (h *CommentHandler) CreateComment() gin.HandlerFunc {
 		if err := ctx.ShouldBindJSON(&dto); err != nil {
 			return res.Response{Msg: commonModel.INVALID_REQUEST_BODY, Err: err}
 		}
-		err := h.commentService.CreateComment(
+		result, err := h.commentService.CreateComment(
 			ctx.Request.Context(),
 			ctx.ClientIP(),
 			ctx.Request.UserAgent(),
@@ -74,7 +74,7 @@ func (h *CommentHandler) CreateComment() gin.HandlerFunc {
 		if err != nil {
 			return res.Response{Err: err}
 		}
-		return res.Response{Msg: commonModel.SUCCESS_MESSAGE}
+		return res.Response{Data: result, Msg: commonModel.SUCCESS_MESSAGE}
 	})
 }
 

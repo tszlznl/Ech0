@@ -10,7 +10,12 @@ import (
 
 type Service interface {
 	GetFormMeta(ctx context.Context, clientIP string) (model.FormMeta, error)
-	CreateComment(ctx context.Context, clientIP, userAgent string, dto *model.CreateCommentDto) error
+	CreateComment(
+		ctx context.Context,
+		clientIP,
+		userAgent string,
+		dto *model.CreateCommentDto,
+	) (model.CreateCommentResult, error)
 	ListPublicByEchoID(ctx context.Context, echoID string) ([]model.Comment, error)
 	ListPublicComments(ctx context.Context, limit int) ([]model.Comment, error)
 	ListPanelComments(ctx context.Context, query model.ListCommentQuery) (model.PageResult[model.Comment], error)
@@ -37,6 +42,11 @@ type Repository interface {
 	CountByIPWithin(ctx context.Context, ipHash string, seconds int64) (int64, error)
 	CountByEmailWithin(ctx context.Context, email string, seconds int64) (int64, error)
 	CountByUserWithin(ctx context.Context, userID string, seconds int64) (int64, error)
+	ExistsRecentDuplicate(
+		ctx context.Context,
+		echoID, content, email, ipHash, userID string,
+		seconds int64,
+	) (bool, error)
 }
 
 type CommonService = commonService.Service

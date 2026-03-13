@@ -178,3 +178,37 @@ func (r *CommentRepository) countByFieldWithin(
 		Count(&count).Error
 	return count, err
 }
+
+func (r *CommentRepository) ExistsRecentDuplicate(
+	ctx context.Context,
+	echoID, content, email, ipHash, userID string,
+	seconds int64,
+) (bool, error) {
+	since := time.Now().Add(-time.Duration(seconds) * time.Second)
+	db := r.getDB(ctx).Model(&model.Comment{}).
+		Where(
+			"echo_id = ? AND content = ? AND created_at >= ?",
+			strings.TrimSpace(echoID),
+			strings.TrimSpace(content),
+			since,
+		)
+
+	trimmedUserID := strings.TrimSpace(userID)
+	if trimmedUserID != "" {
+		db = db.Where("user_id = ?", trimmedUserID)
+	} else {
+		trimmedEmail := strings.TrimSpace(email)
+		trimmedIPHash := strings.TrimSpace(ipHash)
+		if trimmedEmail != "" {
+			db = db.Where("email = ?", trimmedEmail)
+		} else if trimmedIPHash != "" {
+			db = db.Where("ip_hash = ?", trimmedIPHash)
+		}
+	}
+
+	var count int64
+	if err := db.Count(&count).Error; err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}

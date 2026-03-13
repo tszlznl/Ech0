@@ -61,6 +61,11 @@ type CreateCommentDto struct {
 	CaptchaToken  string `json:"captcha_token"`
 }
 
+type CreateCommentResult struct {
+	ID     string `json:"id"`
+	Status Status `json:"status"`
+}
+
 type UpdateCommentStatusDto struct {
 	Status Status `json:"status" binding:"required"`
 }

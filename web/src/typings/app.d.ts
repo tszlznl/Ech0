@@ -464,6 +464,11 @@ declare namespace App {
         captcha_token: string
       }
 
+      type CreateCommentResult = {
+        id: string
+        status: CommentStatus
+      }
+
       type PanelListQuery = {
         page: number
         page_size: number

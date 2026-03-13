@@ -7,9 +7,10 @@ export function fetchGetCommentFormMeta() {
   })
 }
 
-export function fetchGetComments(echoId: string) {
+export function fetchGetComments(echoId: string, cacheBust = true) {
+  const cacheSuffix = cacheBust ? `&_t=${Date.now()}` : ''
   return request<App.Api.Comment.CommentItem[]>({
-    url: `/comments?echo_id=${encodeURIComponent(echoId)}`,
+    url: `/comments?echo_id=${encodeURIComponent(echoId)}${cacheSuffix}`,
     method: 'GET',
   })
 }
@@ -23,7 +24,7 @@ export function fetchGetPublicComments(limit = 30) {
 }
 
 export function fetchCreateComment(payload: App.Api.Comment.CreateCommentDto) {
-  return request({
+  return request<App.Api.Comment.CreateCommentResult>({
     url: '/comments',
     method: 'POST',
     data: payload,
