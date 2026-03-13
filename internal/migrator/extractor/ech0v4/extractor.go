@@ -17,7 +17,9 @@ import (
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
 	"github.com/lin-snow/ech0/internal/storage"
+	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
+	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -63,6 +65,13 @@ func (e *Extractor) Migrate(ctx context.Context, req spec.MigrateRequest) (spec.
 		"fail_count":    int64(0),
 		"failed_items":  []spec.FailedItem{},
 	}
+	logUtil.GetLogger().Info("migration ech0_v4 started",
+		zap.String("module", "migration"),
+		zap.String("job_id", jobID),
+		zap.String("source_db", sourceDBPath),
+		zap.String("source_root", sourceRoot),
+		zap.Int64("total", total),
+	)
 
 	if req.UpdateProgress != nil {
 		req.UpdateProgress(spec.MigrateProgress{
@@ -92,6 +101,11 @@ func (e *Extractor) Migrate(ctx context.Context, req spec.MigrateRequest) (spec.
 		}
 		return nil
 	}); err != nil {
+		logUtil.GetLogger().Error("migration ech0_v4 failed",
+			zap.String("module", "migration"),
+			zap.String("job_id", jobID),
+			zap.Error(err),
+		)
 		return spec.MigrateResult{}, err
 	}
 
@@ -116,6 +130,13 @@ func (e *Extractor) Migrate(ctx context.Context, req spec.MigrateRequest) (spec.
 			FailCount:    0,
 		})
 	}
+	logUtil.GetLogger().Info("migration ech0_v4 finished",
+		zap.String("module", "migration"),
+		zap.String("job_id", jobID),
+		zap.Int64("processed", total),
+		zap.Int64("success_count", total),
+		zap.Int64("fail_count", 0),
+	)
 
 	return spec.MigrateResult{
 		Processed:    total,
@@ -151,6 +172,11 @@ func migrateEchos(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB, sourceRoo
 			return fmt.Errorf("migrate echos: %w", err)
 		}
 	}
+	logUtil.GetLogger().Info("migration ech0_v4 phase completed",
+		zap.String("module", "migration"),
+		zap.String("phase", "echos"),
+		zap.Int("count", len(sourceEchos)),
+	)
 	sourceExtensions, err := loadRows[echoModel.EchoExtension](ctx, sourceDB, "echo_extensions")
 	if err != nil {
 		return fmt.Errorf("load source echo extensions: %w", err)
@@ -160,6 +186,11 @@ func migrateEchos(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB, sourceRoo
 			return fmt.Errorf("migrate echo extensions: %w", err)
 		}
 	}
+	logUtil.GetLogger().Info("migration ech0_v4 phase completed",
+		zap.String("module", "migration"),
+		zap.String("phase", "echo_extensions"),
+		zap.Int("count", len(sourceExtensions)),
+	)
 
 	if err := migrateTags(ctx, tx, sourceDB); err != nil {
 		return err
@@ -245,6 +276,14 @@ func migrateTags(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB) error {
 			return fmt.Errorf("create echo_tags: %w", err)
 		}
 	}
+	logUtil.GetLogger().Info("migration ech0_v4 phase completed",
+		zap.String("module", "migration"),
+		zap.String("phase", "tags"),
+		zap.Int("source_tags", len(sourceTags)),
+		zap.Int("source_echo_tags", len(sourceEchoTags)),
+		zap.Int("created_tags", len(newTags)),
+		zap.Int("created_echo_tags", len(newEchoTags)),
+	)
 	return nil
 }
 
@@ -337,6 +376,7 @@ func migrateFiles(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB, sourceRoo
 		}
 	}
 
+	localCopyFailed := 0
 	for i := range sourceFiles {
 		file := sourceFiles[i]
 		if !isLocalStorageType(file.StorageType) {
@@ -344,9 +384,24 @@ func migrateFiles(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB, sourceRoo
 		}
 		if err := copySourceLocalFileToTargetRoot(sourceRoot, file.Key); err != nil {
 			// 本地文件缺失不阻断整任务，避免历史仅数据库快照导致整体失败。
+			localCopyFailed++
+			logUtil.GetLogger().Warn("migration ech0_v4 local file copy skipped",
+				zap.String("module", "migration"),
+				zap.String("file_key", file.Key),
+				zap.Error(err),
+			)
 			continue
 		}
 	}
+	logUtil.GetLogger().Info("migration ech0_v4 phase completed",
+		zap.String("module", "migration"),
+		zap.String("phase", "files"),
+		zap.Int("source_files", len(sourceFiles)),
+		zap.Int("source_echo_files", len(sourceEchoFiles)),
+		zap.Int("created_files", len(newFiles)),
+		zap.Int("created_echo_files", len(newEchoFiles)),
+		zap.Int("local_copy_failed", localCopyFailed),
+	)
 	return nil
 }
 
@@ -361,6 +416,11 @@ func migrateComments(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB) error 
 	if err := tx.Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(sourceComments, dbBatchSize).Error; err != nil {
 		return fmt.Errorf("migrate comments: %w", err)
 	}
+	logUtil.GetLogger().Info("migration ech0_v4 phase completed",
+		zap.String("module", "migration"),
+		zap.String("phase", "comments"),
+		zap.Int("count", len(sourceComments)),
+	)
 	return nil
 }
 
@@ -448,6 +508,11 @@ func appendSettingToReport(sourceDB *gorm.DB, report map[string]any, key string,
 	}
 	var payload any
 	if err := json.Unmarshal([]byte(trimmed), &payload); err != nil {
+		logUtil.GetLogger().Warn("migration ech0_v4 setting parse skipped",
+			zap.String("module", "migration"),
+			zap.String("setting_key", key),
+			zap.Error(err),
+		)
 		return
 	}
 	report[reportKey] = payload

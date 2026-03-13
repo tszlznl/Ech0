@@ -299,6 +299,11 @@ func (e *Extractor) Migrate(ctx context.Context, req spec.MigrateRequest) (spec.
 		return nil
 	})
 	if migrateErr != nil {
+		logUtil.GetLogger().Error("migration ech0_v3 failed",
+			zap.String("module", "migration"),
+			zap.String("job_id", jobID),
+			zap.Error(migrateErr),
+		)
 		return spec.MigrateResult{}, migrateErr
 	}
 
@@ -321,20 +326,28 @@ func (e *Extractor) Migrate(ctx context.Context, req spec.MigrateRequest) (spec.
 			FailCount:    toInt64(report["fail_count"]),
 		})
 	}
-	logUtil.GetLogger().Info("migration ech0_v3 finished",
+	processed := toInt64(report["processed"])
+	successCount := toInt64(report["success_count"])
+	failCount := toInt64(report["fail_count"])
+	logFields := []zap.Field{
 		zap.String("module", "migration"),
 		zap.String("job_id", jobID),
-		zap.Int64("processed", toInt64(report["processed"])),
-		zap.Int64("success_count", toInt64(report["success_count"])),
-		zap.Int64("fail_count", toInt64(report["fail_count"])),
-	)
+		zap.Int64("processed", processed),
+		zap.Int64("success_count", successCount),
+		zap.Int64("fail_count", failCount),
+	}
+	if failCount > 0 {
+		logUtil.GetLogger().Warn("migration ech0_v3 finished with failures", logFields...)
+	} else {
+		logUtil.GetLogger().Info("migration ech0_v3 finished", logFields...)
+	}
 
 	return spec.MigrateResult{
-		Processed:    toInt64(report["processed"]),
+		Processed:    processed,
 		Total:        total,
-		SuccessCount: toInt64(report["success_count"]),
-		FailCount:    toInt64(report["fail_count"]),
-		ErrorSummary: fmt.Sprintf("迁移完成: success=%d fail=%d", toInt64(report["success_count"]), toInt64(report["fail_count"])),
+		SuccessCount: successCount,
+		FailCount:    failCount,
+		ErrorSummary: fmt.Sprintf("迁移完成: success=%d fail=%d", successCount, failCount),
 		JobID:        jobID,
 		Report:       report,
 	}, nil

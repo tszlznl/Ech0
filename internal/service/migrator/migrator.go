@@ -227,6 +227,10 @@ func (s *MigratorService) CleanupGlobalMigration(ctx context.Context) error {
 }
 
 func (s *MigratorService) runGlobalMigration(ctx context.Context, state migrationModel.GlobalMigrationStateDTO) {
+	logUtil.GetLogger().Info("global migration started",
+		zap.String("module", "migration"),
+		zap.String("source_type", state.SourceType),
+	)
 	defer func() {
 		s.activeMu.Lock()
 		s.activeCancel = nil
@@ -243,6 +247,11 @@ func (s *MigratorService) runGlobalMigration(ctx context.Context, state migratio
 
 	runner, err := coreMigrator.BuildSourceMigrator(state.SourceType)
 	if err != nil {
+		logUtil.GetLogger().Error("build source migrator failed",
+			zap.String("module", "migration"),
+			zap.String("source_type", state.SourceType),
+			zap.Error(err),
+		)
 		s.updateFailed(context.Background(), state, fmt.Sprintf("构建迁移器失败: %v", err))
 		return
 	}
@@ -266,8 +275,17 @@ func (s *MigratorService) runGlobalMigration(ctx context.Context, state migratio
 	})
 	if runErr != nil {
 		if errors.Is(ctx.Err(), context.Canceled) {
+			logUtil.GetLogger().Warn("global migration cancelled",
+				zap.String("module", "migration"),
+				zap.String("source_type", state.SourceType),
+			)
 			return
 		}
+		logUtil.GetLogger().Error("global migration failed",
+			zap.String("module", "migration"),
+			zap.String("source_type", state.SourceType),
+			zap.Error(runErr),
+		)
 		s.updateFailed(context.Background(), runningState, runErr.Error())
 		return
 	}
@@ -291,6 +309,11 @@ func (s *MigratorService) runGlobalMigration(ctx context.Context, state migratio
 		current.ErrorMessage = result.ErrorSummary
 	}
 	if err := s.applyMigratedSettings(context.Background(), result.Report); err != nil {
+		logUtil.GetLogger().Error("apply migrated settings failed",
+			zap.String("module", "migration"),
+			zap.String("source_type", state.SourceType),
+			zap.Error(err),
+		)
 		s.updateFailed(context.Background(), runningState, fmt.Sprintf("应用迁移配置失败: %v", err))
 		return
 	}
@@ -298,9 +321,23 @@ func (s *MigratorService) runGlobalMigration(ctx context.Context, state migratio
 	current.UpdatedAt = &now
 	current.FinishedAt = &now
 	_ = s.saveGlobalStateWithRetry(context.Background(), current)
+	logUtil.GetLogger().Info("global migration completed",
+		zap.String("module", "migration"),
+		zap.String("source_type", state.SourceType),
+		zap.String("status", string(current.Status)),
+		zap.Int64("processed", result.Processed),
+		zap.Int64("success_count", result.SuccessCount),
+		zap.Int64("fail_count", result.FailCount),
+		zap.String("job_id", result.JobID),
+	)
 }
 
 func (s *MigratorService) updateFailed(ctx context.Context, state migrationModel.GlobalMigrationStateDTO, reason string) {
+	logUtil.GetLogger().Error("global migration marked failed",
+		zap.String("module", "migration"),
+		zap.String("source_type", state.SourceType),
+		zap.String("reason", reason),
+	)
 	now := nowUTC()
 	state.Status = migrationModel.MigrationStatusFailed
 	state.ErrorMessage = reason
