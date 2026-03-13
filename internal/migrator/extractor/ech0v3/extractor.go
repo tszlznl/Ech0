@@ -1728,6 +1728,15 @@ type v3Connected struct {
 	ConnectURL string `                  json:"connect_url"` // 连接地址
 }
 
+type v3AgentSetting struct {
+	Enable   bool   `json:"enable"`   // 是否启用 Agent 功能
+	Provider string `json:"provider"` // LLM 提供商 （OpenAI、DeepSeek、Anthropic、Gemini、阿里百炼、Ollama等）
+	Model    string `json:"model"`    // LLM 模型名称
+	ApiKey   string `json:"api_key"`  // LLM API Key
+	Prompt   string `json:"prompt"`   // Agent 额外使用的提示词
+	BaseURL  string `json:"base_url"` // 自定义 API URL（可选）
+}
+
 func migrateSettings(tx *gorm.DB, sourceDB *gorm.DB) error {
 	// TODO: Implement migration of settings
 
@@ -1752,6 +1761,13 @@ func migrateSettings(tx *gorm.DB, sourceDB *gorm.DB) error {
 	if migrateConnectSettingErr != nil {
 		logUtil.GetLogger().Warn("migration connect setting failed", zap.Error(err))
 		err = errors.Join(err, migrateConnectSettingErr)
+	}
+
+	// 迁移 Agent 设置
+	migrateAgentSettingErr := migrateAgentSetting(tx, sourceDB)
+	if migrateAgentSettingErr != nil {
+		logUtil.GetLogger().Warn("migration agent setting failed", zap.Error(err))
+		err = errors.Join(err, migrateAgentSettingErr)
 	}
 
 	return err
@@ -1907,5 +1923,52 @@ func migrateConnectSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
 		}
 	}
 
+	return nil
+}
+
+func migrateAgentSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
+	var v3kv v3KeyValue
+	if err := sourceDB.Model(&v3KeyValue{}).
+		Where("key = ?", AgentSettingKey).
+		First(&v3kv).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		return err
+	}
+	raw := strings.TrimSpace(v3kv.Value)
+	if raw == "" {
+		return nil
+	}
+
+	var v3AgentSetting v3AgentSetting
+	if err := json.Unmarshal([]byte(raw), &v3AgentSetting); err != nil {
+		return err
+	}
+
+	var agentSetting settingModel.AgentSetting
+	agentSetting.Enable = v3AgentSetting.Enable
+	agentSetting.Provider = v3AgentSetting.Provider
+	agentSetting.Model = v3AgentSetting.Model
+	agentSetting.ApiKey = v3AgentSetting.ApiKey
+	agentSetting.Prompt = v3AgentSetting.Prompt
+	agentSetting.BaseURL = v3AgentSetting.BaseURL
+
+	data, err := json.Marshal(agentSetting)
+	if err != nil {
+		return err
+	}
+	dataString := string(data)
+
+	var agentSettingKV commonModel.KeyValue
+	if err := tx.Model(&commonModel.KeyValue{}).
+		Where("key = ?", commonModel.AgentSettingKey).
+		FirstOrInit(&agentSettingKV).Error; err != nil {
+		return err
+	}
+	agentSettingKV.Value = dataString
+	if err := tx.Save(&agentSettingKV).Error; err != nil {
+		return err
+	}
 	return nil
 }
