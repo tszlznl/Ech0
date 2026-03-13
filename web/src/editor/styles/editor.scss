@@ -320,14 +320,23 @@ body.md-editor-full-open {
   .markdown-full-shell.no-preview {
     display: flex;
     align-items: stretch;
-    justify-content: center;
+    justify-content: stretch;
+    width: 100vw;
+    width: 100dvw;
+    height: 100vh;
+    height: 100dvh;
     grid-template-columns: none;
     grid-template-rows: none;
+    gap: 0;
+    /* 无预览时保留轻微呼吸边距，同时兼容设备安全区 */
+    padding-right: max(env(safe-area-inset-right, 0px), 0.4rem);
+    padding-left: max(env(safe-area-inset-left, 0px), 0.4rem);
   }
 
   .markdown-full-shell.no-preview .markdown-editor.is-full {
-    width: min(100%, 34rem);
-    margin: 0 auto;
+    width: 100%;
+    max-width: none;
+    margin: 0;
     box-shadow: none;
   }
 
