@@ -157,6 +157,9 @@
               <td class="py-2">{{ formatDate(item.created_at) }}</td>
               <td class="py-2 pr-3">
                 <div class="flex items-center gap-2">
+                  <button class="table-action text-cyan-500" @click="openEcho(item.echo_id)">
+                    查看
+                  </button>
                   <button class="table-action text-sky-500" @click="openDetail(item.id)">
                     详情
                   </button>
@@ -253,6 +256,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   fetchBatchPanelComments,
   fetchDeletePanelComment,
@@ -270,6 +274,8 @@ import BaseSwitch from '@/components/common/BaseSwitch.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import { theToast } from '@/utils/toast'
 import { formatDate } from '@/utils/other'
+
+const router = useRouter()
 
 const setting = reactive<App.Api.Comment.SystemSetting>({
   enable_comment: true,
@@ -396,6 +402,19 @@ const remove = async (id: string) => {
   if (res.code === 1) {
     await loadList()
   }
+}
+
+const openEcho = (echoId: string) => {
+  const id = echoId?.trim()
+  if (!id) {
+    theToast.info('未找到原贴 ID')
+    return
+  }
+  const target = router.resolve({
+    name: 'echo',
+    params: { echoId: id },
+  })
+  window.open(target.href, '_blank', 'noopener,noreferrer')
 }
 
 const openDetail = async (id: string) => {
