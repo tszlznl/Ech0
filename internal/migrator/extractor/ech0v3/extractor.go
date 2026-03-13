@@ -23,6 +23,7 @@ import (
 	"github.com/lin-snow/ech0/internal/database"
 	"github.com/lin-snow/ech0/internal/migrator/spec"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
+	connectModel "github.com/lin-snow/ech0/internal/model/connect"
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
@@ -1722,6 +1723,11 @@ type v3OAuth2Setting struct {
 	JWKSURL string `json:"jwks_url"` // OIDC JWKS URL
 }
 
+type v3Connected struct {
+	ID         uint   `gorm:"primaryKey" json:"id"`
+	ConnectURL string `                  json:"connect_url"` // 连接地址
+}
+
 func migrateSettings(tx *gorm.DB, sourceDB *gorm.DB) error {
 	// TODO: Implement migration of settings
 
@@ -1739,6 +1745,13 @@ func migrateSettings(tx *gorm.DB, sourceDB *gorm.DB) error {
 	if migrateOAuth2SettingErr != nil {
 		logUtil.GetLogger().Warn("migration oauth2 setting failed", zap.Error(err))
 		err = errors.Join(err, migrateOAuth2SettingErr)
+	}
+
+	// 迁移 Connect 设置
+	migrateConnectSettingErr := migrateConnectSetting(tx, sourceDB)
+	if migrateConnectSettingErr != nil {
+		logUtil.GetLogger().Warn("migration connect setting failed", zap.Error(err))
+		err = errors.Join(err, migrateConnectSettingErr)
 	}
 
 	return err
@@ -1857,5 +1870,42 @@ func migrateOAuth2Setting(tx *gorm.DB, sourceDB *gorm.DB) error {
 	if err := tx.Save(&oauth2SettingKV).Error; err != nil {
 		return err
 	}
+	return nil
+}
+
+func migrateConnectSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
+	var v3Connects []v3Connected
+	if err := sourceDB.Model(&v3Connected{}).Find(&v3Connects).Error; err != nil {
+		return err
+	}
+	v3ConnectURLs := make([]string, 0, len(v3Connects))
+	for _, v3Connect := range v3Connects {
+		v3ConnectURLs = append(v3ConnectURLs, v3Connect.ConnectURL)
+	}
+
+	var connects []connectModel.Connected
+	if err := tx.Model(&connectModel.Connected{}).Find(&connects).Error; err != nil {
+		return err
+	}
+	isExists := make(map[string]struct{}, len(connects))
+	for _, connect := range connects {
+		isExists[connect.ConnectURL] = struct{}{}
+	}
+
+	connectsToCreate := make([]connectModel.Connected, 0)
+	for _, v3ConnectURL := range v3ConnectURLs {
+		if _, ok := isExists[v3ConnectURL]; !ok {
+			connectsToCreate = append(connectsToCreate, connectModel.Connected{
+				ConnectURL: v3ConnectURL,
+			})
+		}
+	}
+
+	if len(connectsToCreate) > 0 {
+		if err := tx.Create(&connectsToCreate).Error; err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
