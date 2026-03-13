@@ -27,8 +27,9 @@
           >
             <span v-if="item.hot" class="comment-hot-badge">Hot</span>
             <div class="mb-2 flex items-center gap-2">
-              <img
-                :src="resolveCommentAvatar(item, index)"
+              <BaseAvatar
+                :seed="getCommentAvatarSeed(item, index)"
+                :size="32"
                 alt="avatar"
                 class="h-8 w-8 rounded-full object-cover"
               />
@@ -111,7 +112,12 @@
           :style="getStickyCardStyle(0)"
         >
           <div class="mb-2 flex items-center gap-2">
-            <img :src="previewAvatar" alt="avatar" class="h-8 w-8 rounded-full object-cover" />
+            <BaseAvatar
+              :seed="previewAvatarSeed"
+              :size="32"
+              alt="avatar"
+              class="h-8 w-8 rounded-full object-cover"
+            />
             <div class="min-w-0">
               <div class="truncate text-sm font-medium text-[var(--color-text-primary)]">
                 {{ previewNickname }}
@@ -195,6 +201,7 @@ import { fetchCreateComment, fetchGetCommentFormMeta, fetchGetComments } from '@
 import { useUserStore } from '@/stores'
 import { theToast } from '@/utils/toast'
 import { formatDate } from '@/utils/other'
+import BaseAvatar from '@/components/common/BaseAvatar.vue'
 import TheMdPreview from './TheMdPreview.vue'
 import Verified from '../icons/verified.vue'
 import MarkdownIcon from '../icons/markdown.vue'
@@ -265,20 +272,15 @@ const previewNickname = computed(() => {
   return form.nickname || '你'
 })
 
-const buildDiceBearURL = (seed: string) => {
-  const trimmed = seed.trim() || 'guest'
-  return `https://api.dicebear.com/9.x/micah/svg?seed=${encodeURIComponent(trimmed)}`
-}
-
-const previewAvatar = computed(() => {
+const previewAvatarSeed = computed(() => {
   if (isPrivilegedUser.value) {
-    return buildDiceBearURL(`${previewNickname.value}-system-preview`)
+    return `${previewNickname.value}-system-preview`
   }
-  return buildDiceBearURL(`${form.nickname || 'guest'}-${form.email || 'preview'}`)
+  return `${form.nickname || 'guest'}-${form.email || 'preview'}`
 })
 
-const resolveCommentAvatar = (item: App.Api.Comment.CommentItem, index: number) => {
-  return buildDiceBearURL(`${item.id}-${item.nickname}-${item.source}-${index}`)
+const getCommentAvatarSeed = (item: App.Api.Comment.CommentItem, index: number) => {
+  return `${item.id}-${item.nickname}-${item.source}-${index}`
 }
 
 const getStickyCardStyle = (index: number) => {
