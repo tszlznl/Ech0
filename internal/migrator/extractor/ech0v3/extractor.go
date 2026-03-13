@@ -27,6 +27,7 @@ import (
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
+	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 	"github.com/lin-snow/ech0/internal/storage"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
@@ -1737,6 +1738,18 @@ type v3AgentSetting struct {
 	BaseURL  string `json:"base_url"` // 自定义 API URL（可选）
 }
 
+type v3Webhook struct {
+	ID          uint      `gorm:"primaryKey"   json:"id"`           // Webhook ID
+	Name        string    `                    json:"name"`         // Webhook 名称
+	URL         string    `                    json:"url"`          // Webhook URL
+	Secret      string    `                    json:"secret"`       // 签名密钥，用于请求验证（HMAC等）
+	IsActive    bool      `gorm:"default:true" json:"is_active"`    // 启用/禁用状态
+	LastStatus  string    `                    json:"last_status"`  // 最近调用状态（如 success, failed）
+	LastTrigger time.Time `                    json:"last_trigger"` // 最近触发时间
+	CreatedAt   time.Time `                    json:"created_at"`   // 创建时间
+	UpdatedAt   time.Time `                    json:"updated_at"`   // 更新时间
+}
+
 func migrateSettings(tx *gorm.DB, sourceDB *gorm.DB) error {
 	// TODO: Implement migration of settings
 
@@ -1768,6 +1781,13 @@ func migrateSettings(tx *gorm.DB, sourceDB *gorm.DB) error {
 	if migrateAgentSettingErr != nil {
 		logUtil.GetLogger().Warn("migration agent setting failed", zap.Error(err))
 		err = errors.Join(err, migrateAgentSettingErr)
+	}
+
+	// 迁移 Webhook 设置
+	migrateWebhookSettingErr := migrateWebhookSetting(tx, sourceDB)
+	if migrateWebhookSettingErr != nil {
+		logUtil.GetLogger().Warn("migration webhook setting failed", zap.Error(err))
+		err = errors.Join(err, migrateWebhookSettingErr)
 	}
 
 	return err
@@ -1970,5 +1990,34 @@ func migrateAgentSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
 	if err := tx.Save(&agentSettingKV).Error; err != nil {
 		return err
 	}
+	return nil
+}
+
+func migrateWebhookSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
+	var v3Webhooks []v3Webhook
+	if err := sourceDB.Model(&v3Webhook{}).Find(&v3Webhooks).Error; err != nil {
+		return err
+	}
+
+	var webhooks []webhookModel.Webhook
+	for _, v3Webhook := range v3Webhooks {
+		webhooks = append(webhooks, webhookModel.Webhook{
+			Name:        v3Webhook.Name,
+			URL:         v3Webhook.URL,
+			Secret:      v3Webhook.Secret,
+			IsActive:    v3Webhook.IsActive,
+			LastStatus:  v3Webhook.LastStatus,
+			LastTrigger: v3Webhook.LastTrigger,
+			CreatedAt:   v3Webhook.CreatedAt,
+			UpdatedAt:   v3Webhook.UpdatedAt,
+		})
+	}
+
+	if len(webhooks) > 0 {
+		if err := tx.Create(&webhooks).Error; err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
