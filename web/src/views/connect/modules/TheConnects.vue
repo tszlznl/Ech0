@@ -141,7 +141,7 @@ const pickRandomComment = (items: App.Api.Comment.CommentItem[]) => {
 const loadRandomComment = async () => {
   commentLoading.value = true
   try {
-    const res = await fetchGetPublicComments(30)
+    const res = await fetchGetPublicComments(10)
     if (res.code === 1 && res.data?.length) {
       pickRandomComment(res.data)
     }
