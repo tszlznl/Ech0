@@ -14,6 +14,8 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@dicebear/core": "^9.4.0",
+    "@dicebear/micah": "^9.4.0",
     "@fancyapps/ui": "^6.1.13",
     "@headlessui/vue": "^1.7.23",
     "@uppy/aws-s3": "^5.1.0",

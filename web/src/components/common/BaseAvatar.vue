@@ -4,23 +4,28 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { createAvatar } from '@dicebear/core'
+import * as micah from '@dicebear/micah'
 
 type AvatarOptionItem = string | number | boolean
 type AvatarOptionValue = AvatarOptionItem | AvatarOptionItem[] | null | undefined
+type MicahRuntimeOptions = NonNullable<Parameters<typeof micah.create>[0]['options']>
+type MicahOptionKey = keyof MicahRuntimeOptions
+type BaseAvatarOptions = Partial<Record<MicahOptionKey, AvatarOptionValue>>
+
+const avatarCache = new Map<string, string>()
 
 const props = withDefaults(
   defineProps<{
     seed?: string
     size?: number | string
-    style?: string
     alt?: string
     src?: string
-    options?: Record<string, AvatarOptionValue>
+    options?: BaseAvatarOptions
   }>(),
   {
     seed: 'guest',
     size: 128,
-    style: 'micah',
     alt: 'avatar',
     src: '',
     options: () => ({}),
@@ -32,20 +37,34 @@ const avatarSrc = computed(() => {
   if (customSrc) return customSrc
 
   const seed = props.seed.trim() || 'guest'
-  const url = new URL(`https://api.dicebear.com/9.x/${props.style}/svg`)
-  url.searchParams.set('seed', seed)
-  url.searchParams.set('size', String(props.size))
+  const sizeNum = Number(props.size)
+  const size = Number.isFinite(sizeNum) && sizeNum > 0 ? Math.round(sizeNum) : 128
+  const normalizedOptions: Partial<MicahRuntimeOptions> = {}
+  const sortedOptionEntries = (
+    Object.entries(props.options) as [MicahOptionKey, AvatarOptionValue][]
+  ).sort(([a], [b]) => String(a).localeCompare(String(b)))
 
-  Object.entries(props.options).forEach(([key, value]) => {
+  sortedOptionEntries.forEach(([key, value]) => {
     if (value === undefined || value === null) return
-    if (Array.isArray(value)) {
-      if (!value.length) return
-      url.searchParams.set(key, value.map(String).join(','))
-      return
-    }
-    url.searchParams.set(key, String(value))
+    ;(normalizedOptions as Record<MicahOptionKey, unknown>)[key] = value
   })
 
-  return url.href
+  const cacheKey = JSON.stringify({
+    seed,
+    size,
+    options: normalizedOptions,
+  })
+
+  const cachedAvatar = avatarCache.get(cacheKey)
+  if (cachedAvatar) return cachedAvatar
+
+  const generatedAvatar = createAvatar(micah, {
+    seed,
+    size,
+    ...normalizedOptions,
+  } as Record<string, unknown>).toDataUri()
+
+  avatarCache.set(cacheKey, generatedAvatar)
+  return generatedAvatar
 })
 </script>
