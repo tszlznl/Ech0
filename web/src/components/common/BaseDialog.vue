@@ -1,7 +1,7 @@
 <!-- ConfirmDialog.vue -->
 <template>
   <TransitionRoot :show="isOpen" as="template">
-    <Dialog @close="close" class="relative z-5000">
+    <Dialog @close="handleDialogClose" class="relative z-5000">
       <!-- 背景遮罩 -->
       <TransitionChild
         enter="duration-300 ease-out"
@@ -81,6 +81,11 @@ function open() {
 
 function close() {
   isOpen.value = false
+}
+
+function handleDialogClose() {
+  emit('cancel')
+  close()
 }
 
 function confirm() {

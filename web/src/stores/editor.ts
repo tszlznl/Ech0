@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { theToast } from '@/utils/toast'
 import { fetchAddEcho, fetchUpdateEcho } from '@/service/api'
 import { Mode, ExtensionType, ImageLayout } from '@/enums/enums'
@@ -9,10 +9,28 @@ import { localStg } from '@/utils/storage'
 import { getImageSize } from '@/utils/image'
 import { getFileToAddUrl } from '@/utils/other'
 import { createExternalFile, globalFileRegistry, useFileAttachments } from '@/lib/file'
+import { useBaseDialog } from '@/composables/useBaseDialog'
+
+const EDITOR_DRAFT_STORAGE_KEY = 'editor_echo_draft_v1'
+const EDITOR_DRAFT_TTL_MS = 24 * 60 * 60 * 1000
+const EDITOR_DRAFT_SAVE_DEBOUNCE_MS = 600
+
+type EditorDraft = {
+  savedAt: number
+  echoToAdd: Pick<App.Api.Ech0.EchoToAdd, 'content' | 'private' | 'layout' | 'extension'>
+  filesToAdd: App.Api.Ech0.FileToAdd[]
+  websiteToAdd: { title: string; site: string }
+  videoURL: string
+  musicURL: string
+  githubRepo: string
+  extensionToAdd: { extension: string; extension_type: string }
+  tagToAdd: string
+}
 
 export const useEditorStore = defineStore('editorStore', () => {
   const echoStore = useEchoStore()
   const inboxStore = useInboxStore()
+  const { openConfirm } = useBaseDialog()
 
   //================================================================
   // 编辑器状态控制
@@ -85,6 +103,127 @@ export const useEditorStore = defineStore('editorStore', () => {
   const githubRepo = ref('') // 辅助生成扩展内容（GitHub项目）的变量
   const extensionToAdd = ref({ extension: '', extension_type: '' }) // 最终要添加的扩展内容
   const tagToAdd = ref<string>('')
+  let draftTimer: ReturnType<typeof setTimeout> | null = null
+  const isRestoringDraft = ref<boolean>(false)
+  const hasBoundDraftFlushListeners = ref<boolean>(false)
+
+  const clearLocalDraft = () => {
+    localStg.removeItem(EDITOR_DRAFT_STORAGE_KEY)
+  }
+
+  const hasDraftContent = () => {
+    const hasText = !!echoToAdd.value.content?.trim()
+    const hasTag = !!tagToAdd.value.trim()
+    const hasFiles = filesToAdd.value.length > 0
+    const hasWebsiteInput = !!websiteToAdd.value.title.trim() || !!websiteToAdd.value.site.trim()
+    const hasExtInput =
+      !!extensionToAdd.value.extension?.trim() ||
+      !!extensionToAdd.value.extension_type ||
+      !!videoURL.value.trim() ||
+      !!musicURL.value.trim() ||
+      !!githubRepo.value.trim()
+
+    return hasText || hasTag || hasFiles || hasWebsiteInput || hasExtInput
+  }
+
+  const saveDraftNow = () => {
+    if (isRestoringDraft.value || isUpdateMode.value) return
+    if (!hasDraftContent()) {
+      clearLocalDraft()
+      return
+    }
+
+    const draft: EditorDraft = {
+      savedAt: Date.now(),
+      echoToAdd: {
+        content: echoToAdd.value.content || '',
+        private: !!echoToAdd.value.private,
+        layout: echoToAdd.value.layout || ImageLayout.WATERFALL,
+        extension: echoToAdd.value.extension || null,
+      },
+      filesToAdd: filesToAdd.value.map((file) => ({
+        id: file.id,
+        url: file.url || '',
+        storage_type: file.storage_type,
+        category: file.category,
+        content_type: file.content_type,
+        key: file.key,
+        size: file.size,
+        width: file.width,
+        height: file.height,
+      })),
+      websiteToAdd: {
+        title: websiteToAdd.value.title || '',
+        site: websiteToAdd.value.site || '',
+      },
+      videoURL: videoURL.value || '',
+      musicURL: musicURL.value || '',
+      githubRepo: githubRepo.value || '',
+      extensionToAdd: {
+        extension: extensionToAdd.value.extension || '',
+        extension_type: extensionToAdd.value.extension_type || '',
+      },
+      tagToAdd: tagToAdd.value || '',
+    }
+    localStg.setItem(EDITOR_DRAFT_STORAGE_KEY, draft)
+  }
+
+  const scheduleSaveDraft = () => {
+    if (draftTimer) clearTimeout(draftTimer)
+    draftTimer = setTimeout(() => {
+      saveDraftNow()
+    }, EDITOR_DRAFT_SAVE_DEBOUNCE_MS)
+  }
+
+  const flushDraftOnPageLeave = () => {
+    saveDraftNow()
+  }
+
+  const restoreDraftIfNeeded = () => {
+    const draft = localStg.getItem<EditorDraft>(EDITOR_DRAFT_STORAGE_KEY)
+    if (!draft) return
+    if (typeof draft.savedAt !== 'number' || Date.now() - draft.savedAt > EDITOR_DRAFT_TTL_MS) {
+      clearLocalDraft()
+      return
+    }
+
+    openConfirm({
+      title: '恢复本地草稿',
+      description: '检测到你有未发布的本地草稿，是否恢复？',
+      onConfirm: () => {
+        isRestoringDraft.value = true
+        try {
+          echoToAdd.value = {
+            content: draft.echoToAdd?.content || '',
+            echo_files: [],
+            private: !!draft.echoToAdd?.private,
+            layout: draft.echoToAdd?.layout || ImageLayout.WATERFALL,
+            extension: draft.echoToAdd?.extension || null,
+            tags: [],
+          }
+          resetAttachments(draft.filesToAdd || [])
+          websiteToAdd.value = {
+            title: draft.websiteToAdd?.title || '',
+            site: draft.websiteToAdd?.site || '',
+          }
+          videoURL.value = draft.videoURL || ''
+          musicURL.value = draft.musicURL || ''
+          githubRepo.value = draft.githubRepo || ''
+          extensionToAdd.value = {
+            extension: draft.extensionToAdd?.extension || '',
+            extension_type: draft.extensionToAdd?.extension_type || '',
+          }
+          tagToAdd.value = draft.tagToAdd || ''
+          theToast.info('已恢复本地草稿')
+        } finally {
+          isRestoringDraft.value = false
+        }
+      },
+      onCancel: () => {
+        clearLocalDraft()
+      },
+    })
+  }
 
   //================================================================
   // 编辑器功能函数
@@ -132,6 +271,7 @@ export const useEditorStore = defineStore('editorStore', () => {
     githubRepo.value = ''
     extensionToAdd.value = { extension: '', extension_type: '' }
     tagToAdd.value = ''
+    clearLocalDraft()
   }
 
   //===============================================================
@@ -486,8 +626,31 @@ export const useEditorStore = defineStore('editorStore', () => {
   }
 
   const init = () => {
-    // 预留初始化入口，当前无播放器状态需要恢复
+    restoreDraftIfNeeded()
+    if (!hasBoundDraftFlushListeners.value) {
+      window.addEventListener('pagehide', flushDraftOnPageLeave)
+      window.addEventListener('beforeunload', flushDraftOnPageLeave)
+      hasBoundDraftFlushListeners.value = true
+    }
   }
+
+  watch(
+    [
+      echoToAdd,
+      filesToAdd,
+      websiteToAdd,
+      videoURL,
+      musicURL,
+      githubRepo,
+      extensionToAdd,
+      tagToAdd,
+      isUpdateMode,
+    ],
+    () => {
+      scheduleSaveDraft()
+    },
+    { deep: true },
+  )
 
   const setFilesToAdd = (files: App.Api.Ech0.FileToAdd[]) => {
     resetAttachments(

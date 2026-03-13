@@ -11,7 +11,7 @@ import BaseDialog from './components/common/BaseDialog.vue'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useBfCacheRestore } from '@/composables/useBfCacheRestore'
 
-const { register, title, description, handleConfirm } = useBaseDialog()
+const { register, title, description, handleConfirm, handleCancel } = useBaseDialog()
 const dialogRef = ref()
 
 // 路由切换动画
@@ -181,7 +181,13 @@ onMounted(() => {
   <!-- 通知组件 -->
   <Toaster theme="light" position="top-right" :expand="false" richColors />
   <!-- 全局弹窗对话框 -->
-  <BaseDialog ref="dialogRef" :title="title" :description="description" @confirm="handleConfirm" />
+  <BaseDialog
+    ref="dialogRef"
+    :title="title"
+    :description="description"
+    @confirm="handleConfirm"
+    @cancel="handleCancel"
+  />
 </template>
 
 <style scoped>
