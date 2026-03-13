@@ -22,6 +22,7 @@ import (
 	"github.com/lin-snow/ech0/internal/config"
 	"github.com/lin-snow/ech0/internal/database"
 	"github.com/lin-snow/ech0/internal/migrator/spec"
+	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
@@ -289,6 +290,10 @@ func (e *Extractor) Migrate(ctx context.Context, req spec.MigrateRequest) (spec.
 			if exceedsFailureThreshold(successCount+failCount, failCount, options.FailureThreshold) {
 				return fmt.Errorf("failure rate exceeded %.2f%%, rollback job %s", options.FailureThreshold*100, jobID)
 			}
+		}
+
+		if err := migrateSettings(tx, sourceDB); err != nil {
+			return fmt.Errorf("migrate settings: %w", err)
 		}
 
 		report["processed"] = successCount + failCount
@@ -1658,4 +1663,121 @@ func closeGormDB(db *gorm.DB) {
 		return
 	}
 	_ = sqlDB.Close()
+}
+
+type v3KeyValue struct {
+	Key   string `json:"key"   gorm:"primaryKey"`
+	Value string `json:"value"`
+}
+
+const (
+	// SystemSettingsKey 是系统设置的键
+	SystemSettingsKey = "system_settings"
+	// CommentSettingKey 是评论设置的建
+	CommentSettingKey = "comment_setting"
+	// S3SettingKey 是 S3 存储设置的键
+	S3SettingKey = "s3_setting"
+	// OAuth2SettingKey 是 OAuth2 设置的键
+	OAuth2SettingKey = "oauth2_setting"
+	// ServerURLKey 是服务器URL设置的键
+	ServerURLKey = "server_url"
+	// FediverseSettingKey 是联邦网络设置的键
+	FediverseSettingKey = "fediverse_setting"
+	// BackupScheduleKey 是备份计划设置的键
+	BackupScheduleKey = "backup_schedule"
+	// AgentSettingKey 是 Agent 设置的键
+	AgentSettingKey = "agent_setting"
+	// ReleaseVersionKey 是发布版本号的键
+	ReleaseVersionKey = "release_version"
+	// MigrationKey 是数据库迁移的标记键
+	MigrationKey = "db_migration:message_to_echo:v1"
+)
+
+type v3SystemSetting struct {
+	SiteTitle     string `json:"site_title"`     // 站点标题
+	ServerLogo    string `json:"server_logo"`    // 服务器Logo
+	ServerName    string `json:"server_name"`    // 服务器名称
+	ServerURL     string `json:"server_url"`     // 服务器地址
+	AllowRegister bool   `json:"allow_register"` // 是否允许注册'
+	ICPNumber     string `json:"ICP_number"`     // 备案号
+	MetingAPI     string `json:"meting_api"`     // Meting API 地址
+	CustomCSS     string `json:"custom_css"`     // 自定义 CSS
+	CustomJS      string `json:"custom_js"`      // 自定义 JS
+}
+
+func migrateSettings(tx *gorm.DB, sourceDB *gorm.DB) error {
+	// TODO: Implement migration of settings
+
+	var err error
+
+	// 迁移系统设置
+	migrateSystemSettingErr := migrateSystemSetting(tx, sourceDB)
+	if migrateSystemSettingErr != nil {
+		logUtil.GetLogger().Warn("migration system setting failed", zap.Error(err))
+		err = errors.Join(err, migrateSystemSettingErr)
+	}
+	return err
+}
+
+func migrateSystemSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
+	var v3kv v3KeyValue
+	if err := sourceDB.Model(&v3KeyValue{}).
+		Where("key = ?", SystemSettingsKey).
+		First(&v3kv).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		return err
+	}
+	raw := strings.TrimSpace(v3kv.Value)
+	if raw == "" {
+		return nil
+	}
+
+	var v3SystemSetting v3SystemSetting
+	if err := json.Unmarshal([]byte(raw), &v3SystemSetting); err != nil {
+		return err
+	}
+
+	var systemSetting settingModel.SystemSetting
+	systemSetting.SiteTitle = v3SystemSetting.SiteTitle
+	// TODO: Implement migration of server logo
+	// systemSetting.ServerLogo = v3SystemSetting.ServerLogo
+	systemSetting.ServerName = v3SystemSetting.ServerName
+	systemSetting.ServerURL = v3SystemSetting.ServerURL
+	systemSetting.AllowRegister = v3SystemSetting.AllowRegister
+	systemSetting.ICPNumber = v3SystemSetting.ICPNumber
+	systemSetting.MetingAPI = v3SystemSetting.MetingAPI
+	systemSetting.CustomCSS = v3SystemSetting.CustomCSS
+	systemSetting.CustomJS = v3SystemSetting.CustomJS
+
+	data, err := json.Marshal(systemSetting)
+	if err != nil {
+		return err
+	}
+	dataString := string(data)
+
+	var systemSettingKV commonModel.KeyValue
+	if err := tx.Model(&commonModel.KeyValue{}).
+		Where("key = ?", commonModel.SystemSettingsKey).
+		FirstOrInit(&systemSettingKV).Error; err != nil {
+		return err
+	}
+	systemSettingKV.Value = dataString
+	if err := tx.Save(&systemSettingKV).Error; err != nil {
+		return err
+	}
+
+	var serverURLKV commonModel.KeyValue
+	if err := tx.Model(&commonModel.KeyValue{}).
+		Where("key = ?", commonModel.ServerURLKey).
+		FirstOrInit(&serverURLKV).Error; err != nil {
+		return err
+	}
+	serverURLKV.Value = systemSetting.ServerURL
+	if err := tx.Save(&serverURLKV).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
