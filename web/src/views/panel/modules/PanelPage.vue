@@ -110,6 +110,15 @@
             数据管理
           </BaseButton>
 
+          <BaseButton
+            :icon="Extension"
+            @click="router.push('/panel/comment')"
+            :class="getButtonClasses('panel-comment')"
+            title="评论管理"
+          >
+            评论管理
+          </BaseButton>
+
           <!-- 单点登录 -->
           <BaseButton
             :icon="Sso"
@@ -128,15 +137,6 @@
             title="功能扩展"
           >
             功能扩展
-          </BaseButton>
-
-          <BaseButton
-            :icon="Extension"
-            @click="router.push('/panel/comment')"
-            :class="getButtonClasses('panel-comment')"
-            title="评论管理"
-          >
-            评论管理
           </BaseButton>
 
           <!-- 外部集成 -->
@@ -258,14 +258,14 @@ const getBottomButtonClasses = () => {
 
 // 路由选项
 const routeOptions = [
-  { label: 'Dashboard', value: '/panel/dashboard' },
+  { label: '控制台', value: '/panel/dashboard' },
   { label: '偏好设置', value: '/panel/setting' },
   { label: '用户中心', value: '/panel/user' },
   { label: '存储管理', value: '/panel/storage' },
   { label: '数据管理', value: '/panel/data-management' },
+  { label: '评论管理', value: '/panel/comment' },
   { label: '单点登录', value: '/panel/sso' },
   { label: '功能扩展', value: '/panel/extension' },
-  { label: '评论管理', value: '/panel/comment' },
   { label: '外部集成', value: '/panel/advance' },
   { label: '系统日志', value: '/panel/system-log' },
 ]
