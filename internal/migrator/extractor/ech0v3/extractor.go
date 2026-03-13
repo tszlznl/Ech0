@@ -1679,7 +1679,7 @@ func (v *v3KeyValue) TableName() string {
 const (
 	// SystemSettingsKey 是系统设置的键
 	SystemSettingsKey = "system_settings"
-	// CommentSettingKey 是评论设置的建
+	// CommentSettingKey 是评论设置的键
 	CommentSettingKey = "comment_setting"
 	// S3SettingKey 是 S3 存储设置的键
 	S3SettingKey = "s3_setting"
@@ -1784,49 +1784,49 @@ func (v *v3BackupSchedule) TableName() string {
 }
 
 func migrateSettings(tx *gorm.DB, sourceDB *gorm.DB) error {
-	// TODO: Implement migration of settings
+	// Migrate all settings from the source database into the target database
 
 	var err error
 
 	// 迁移 System 设置
 	migrateSystemSettingErr := migrateSystemSetting(tx, sourceDB)
 	if migrateSystemSettingErr != nil {
-		logUtil.GetLogger().Warn("migration system setting failed", zap.Error(err))
+		logUtil.GetLogger().Warn("migration system setting failed", zap.Error(migrateSystemSettingErr))
 		err = errors.Join(err, migrateSystemSettingErr)
 	}
 
 	// 迁移 OAuth2 设置
 	migrateOAuth2SettingErr := migrateOAuth2Setting(tx, sourceDB)
 	if migrateOAuth2SettingErr != nil {
-		logUtil.GetLogger().Warn("migration oauth2 setting failed", zap.Error(err))
+		logUtil.GetLogger().Warn("migration oauth2 setting failed", zap.Error(migrateOAuth2SettingErr))
 		err = errors.Join(err, migrateOAuth2SettingErr)
 	}
 
 	// 迁移 Connect 设置
 	migrateConnectSettingErr := migrateConnectSetting(tx, sourceDB)
 	if migrateConnectSettingErr != nil {
-		logUtil.GetLogger().Warn("migration connect setting failed", zap.Error(err))
+		logUtil.GetLogger().Warn("migration connect setting failed", zap.Error(migrateConnectSettingErr))
 		err = errors.Join(err, migrateConnectSettingErr)
 	}
 
 	// 迁移 Agent 设置
 	migrateAgentSettingErr := migrateAgentSetting(tx, sourceDB)
 	if migrateAgentSettingErr != nil {
-		logUtil.GetLogger().Warn("migration agent setting failed", zap.Error(err))
+		logUtil.GetLogger().Warn("migration agent setting failed", zap.Error(migrateAgentSettingErr))
 		err = errors.Join(err, migrateAgentSettingErr)
 	}
 
 	// 迁移 Webhook 设置
 	migrateWebhookSettingErr := migrateWebhookSetting(tx, sourceDB)
 	if migrateWebhookSettingErr != nil {
-		logUtil.GetLogger().Warn("migration webhook setting failed", zap.Error(err))
+		logUtil.GetLogger().Warn("migration webhook setting failed", zap.Error(migrateWebhookSettingErr))
 		err = errors.Join(err, migrateWebhookSettingErr)
 	}
 
-	// 迁移 bakeup 设置
+	// 迁移 Backup 设置
 	migrateBackupSettingErr := migrateBackupSetting(tx, sourceDB)
 	if migrateBackupSettingErr != nil {
-		logUtil.GetLogger().Warn("migration backup schedule setting failed", zap.Error(err))
+		logUtil.GetLogger().Warn("migration backup setting failed", zap.Error(migrateBackupSettingErr))
 		err = errors.Join(err, migrateBackupSettingErr)
 	}
 
@@ -1848,22 +1848,22 @@ func migrateSystemSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
 		return nil
 	}
 
-	var v3SystemSetting v3SystemSetting
-	if err := json.Unmarshal([]byte(raw), &v3SystemSetting); err != nil {
+	var v3Setting v3SystemSetting
+	if err := json.Unmarshal([]byte(raw), &v3Setting); err != nil {
 		return err
 	}
 
 	var systemSetting settingModel.SystemSetting
-	systemSetting.SiteTitle = v3SystemSetting.SiteTitle
+	systemSetting.SiteTitle = v3Setting.SiteTitle
 	// TODO: Implement migration of server logo
-	// systemSetting.ServerLogo = v3SystemSetting.ServerLogo
-	systemSetting.ServerName = v3SystemSetting.ServerName
-	systemSetting.ServerURL = v3SystemSetting.ServerURL
-	systemSetting.AllowRegister = v3SystemSetting.AllowRegister
-	systemSetting.ICPNumber = v3SystemSetting.ICPNumber
-	systemSetting.MetingAPI = v3SystemSetting.MetingAPI
-	systemSetting.CustomCSS = v3SystemSetting.CustomCSS
-	systemSetting.CustomJS = v3SystemSetting.CustomJS
+	// systemSetting.ServerLogo = v3Setting.ServerLogo
+	systemSetting.ServerName = v3Setting.ServerName
+	systemSetting.ServerURL = v3Setting.ServerURL
+	systemSetting.AllowRegister = v3Setting.AllowRegister
+	systemSetting.ICPNumber = v3Setting.ICPNumber
+	systemSetting.MetingAPI = v3Setting.MetingAPI
+	systemSetting.CustomCSS = v3Setting.CustomCSS
+	systemSetting.CustomJS = v3Setting.CustomJS
 
 	data, err := json.Marshal(systemSetting)
 	if err != nil {
@@ -1911,24 +1911,24 @@ func migrateOAuth2Setting(tx *gorm.DB, sourceDB *gorm.DB) error {
 		return nil
 	}
 
-	var v3OAuth2Setting v3OAuth2Setting
-	if err := json.Unmarshal([]byte(raw), &v3OAuth2Setting); err != nil {
+	var v3Setting v3OAuth2Setting
+	if err := json.Unmarshal([]byte(raw), &v3Setting); err != nil {
 		return err
 	}
 
 	var oauth2Setting settingModel.OAuth2Setting
-	oauth2Setting.Enable = v3OAuth2Setting.Enable
-	oauth2Setting.Provider = v3OAuth2Setting.Provider
-	oauth2Setting.ClientID = v3OAuth2Setting.ClientID
-	oauth2Setting.ClientSecret = v3OAuth2Setting.ClientSecret
-	oauth2Setting.RedirectURI = v3OAuth2Setting.RedirectURI
-	oauth2Setting.Scopes = v3OAuth2Setting.Scopes
-	oauth2Setting.AuthURL = v3OAuth2Setting.AuthURL
-	oauth2Setting.TokenURL = v3OAuth2Setting.TokenURL
-	oauth2Setting.UserInfoURL = v3OAuth2Setting.UserInfoURL
-	oauth2Setting.IsOIDC = v3OAuth2Setting.IsOIDC
-	oauth2Setting.Issuer = v3OAuth2Setting.Issuer
-	oauth2Setting.JWKSURL = v3OAuth2Setting.JWKSURL
+	oauth2Setting.Enable = v3Setting.Enable
+	oauth2Setting.Provider = v3Setting.Provider
+	oauth2Setting.ClientID = v3Setting.ClientID
+	oauth2Setting.ClientSecret = v3Setting.ClientSecret
+	oauth2Setting.RedirectURI = v3Setting.RedirectURI
+	oauth2Setting.Scopes = v3Setting.Scopes
+	oauth2Setting.AuthURL = v3Setting.AuthURL
+	oauth2Setting.TokenURL = v3Setting.TokenURL
+	oauth2Setting.UserInfoURL = v3Setting.UserInfoURL
+	oauth2Setting.IsOIDC = v3Setting.IsOIDC
+	oauth2Setting.Issuer = v3Setting.Issuer
+	oauth2Setting.JWKSURL = v3Setting.JWKSURL
 
 	data, err := json.Marshal(oauth2Setting)
 	if err != nil {
@@ -2001,18 +2001,18 @@ func migrateAgentSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
 		return nil
 	}
 
-	var v3AgentSetting v3AgentSetting
-	if err := json.Unmarshal([]byte(raw), &v3AgentSetting); err != nil {
+	var v3Setting v3AgentSetting
+	if err := json.Unmarshal([]byte(raw), &v3Setting); err != nil {
 		return err
 	}
 
 	var agentSetting settingModel.AgentSetting
-	agentSetting.Enable = v3AgentSetting.Enable
-	agentSetting.Provider = v3AgentSetting.Provider
-	agentSetting.Model = v3AgentSetting.Model
-	agentSetting.ApiKey = v3AgentSetting.ApiKey
-	agentSetting.Prompt = v3AgentSetting.Prompt
-	agentSetting.BaseURL = v3AgentSetting.BaseURL
+	agentSetting.Enable = v3Setting.Enable
+	agentSetting.Provider = v3Setting.Provider
+	agentSetting.Model = v3Setting.Model
+	agentSetting.ApiKey = v3Setting.ApiKey
+	agentSetting.Prompt = v3Setting.Prompt
+	agentSetting.BaseURL = v3Setting.BaseURL
 
 	data, err := json.Marshal(agentSetting)
 	if err != nil {
@@ -2077,14 +2077,14 @@ func migrateBackupSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
 		return nil
 	}
 
-	var v3BackupSchedule v3BackupSchedule
-	if err := json.Unmarshal([]byte(raw), &v3BackupSchedule); err != nil {
+	var v3Setting v3BackupSchedule
+	if err := json.Unmarshal([]byte(raw), &v3Setting); err != nil {
 		return err
 	}
 
 	var backupSchedule settingModel.BackupSchedule
-	backupSchedule.Enable = v3BackupSchedule.Enable
-	backupSchedule.CronExpression = v3BackupSchedule.CronExpression
+	backupSchedule.Enable = v3Setting.Enable
+	backupSchedule.CronExpression = v3Setting.CronExpression
 
 	data, err := json.Marshal(backupSchedule)
 	if err != nil {
