@@ -1871,25 +1871,23 @@ func migrateSystemSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
 	}
 	dataString := string(data)
 
-	var systemSettingKV commonModel.KeyValue
-	if err := tx.Model(&commonModel.KeyValue{}).
-		Where("key = ?", commonModel.SystemSettingsKey).
-		FirstOrInit(&systemSettingKV).Error; err != nil {
-		return err
+	systemSettingKV := commonModel.KeyValue{
+		Key:   commonModel.SystemSettingsKey,
+		Value: dataString,
 	}
-	systemSettingKV.Value = dataString
-	if err := tx.Save(&systemSettingKV).Error; err != nil {
+	if err := tx.Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Create(&systemSettingKV).Error; err != nil {
 		return err
 	}
 
-	var serverURLKV commonModel.KeyValue
-	if err := tx.Model(&commonModel.KeyValue{}).
-		Where("key = ?", commonModel.ServerURLKey).
-		FirstOrInit(&serverURLKV).Error; err != nil {
-		return err
+	serverURLKV := commonModel.KeyValue{
+		Key:   commonModel.ServerURLKey,
+		Value: systemSetting.ServerURL,
 	}
-	serverURLKV.Value = systemSetting.ServerURL
-	if err := tx.Save(&serverURLKV).Error; err != nil {
+	if err := tx.Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Create(&serverURLKV).Error; err != nil {
 		return err
 	}
 
@@ -1936,14 +1934,13 @@ func migrateOAuth2Setting(tx *gorm.DB, sourceDB *gorm.DB) error {
 	}
 	dataString := string(data)
 
-	var oauth2SettingKV commonModel.KeyValue
-	if err := tx.Model(&commonModel.KeyValue{}).
-		Where("key = ?", commonModel.OAuth2SettingKey).
-		FirstOrInit(&oauth2SettingKV).Error; err != nil {
-		return err
+	oauth2SettingKV := commonModel.KeyValue{
+		Key:   commonModel.OAuth2SettingKey,
+		Value: dataString,
 	}
-	oauth2SettingKV.Value = dataString
-	if err := tx.Save(&oauth2SettingKV).Error; err != nil {
+	if err := tx.Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Create(&oauth2SettingKV).Error; err != nil {
 		return err
 	}
 	return nil
@@ -2020,14 +2017,13 @@ func migrateAgentSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
 	}
 	dataString := string(data)
 
-	var agentSettingKV commonModel.KeyValue
-	if err := tx.Model(&commonModel.KeyValue{}).
-		Where("key = ?", commonModel.AgentSettingKey).
-		FirstOrInit(&agentSettingKV).Error; err != nil {
-		return err
+	agentSettingKV := commonModel.KeyValue{
+		Key:   commonModel.AgentSettingKey,
+		Value: dataString,
 	}
-	agentSettingKV.Value = dataString
-	if err := tx.Save(&agentSettingKV).Error; err != nil {
+	if err := tx.Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Create(&agentSettingKV).Error; err != nil {
 		return err
 	}
 	return nil
@@ -2092,14 +2088,13 @@ func migrateBackupSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
 	}
 	dataString := string(data)
 
-	var backupScheduleKV commonModel.KeyValue
-	if err := tx.Model(&commonModel.KeyValue{}).
-		Where("key = ?", commonModel.BackupScheduleKey).
-		FirstOrInit(&backupScheduleKV).Error; err != nil {
-		return err
+	backupScheduleKV := commonModel.KeyValue{
+		Key:   commonModel.BackupScheduleKey,
+		Value: dataString,
 	}
-	backupScheduleKV.Value = dataString
-	if err := tx.Save(&backupScheduleKV).Error; err != nil {
+	if err := tx.Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Create(&backupScheduleKV).Error; err != nil {
 		return err
 	}
 	return nil
