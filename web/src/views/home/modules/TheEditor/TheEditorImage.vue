@@ -21,12 +21,13 @@
           :href="getImageToAddUrl(img)"
           data-fancybox="gallery"
           :data-thumb="getImageToAddUrl(img)"
+          class="block w-full"
           :class="{ hidden: idx !== fileIndex }"
         >
           <img
             :src="getImageToAddUrl(img)"
             alt="Image"
-            class="max-w-full object-cover"
+            class="w-full h-auto max-w-full object-cover"
             loading="lazy"
           />
         </a>
