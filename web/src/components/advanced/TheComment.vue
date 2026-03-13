@@ -267,7 +267,7 @@ const previewNickname = computed(() => {
 
 const buildDiceBearURL = (seed: string) => {
   const trimmed = seed.trim() || 'guest'
-  return `https://api.dicebear.com/9.x/fun-emoji/svg?seed=${encodeURIComponent(trimmed)}`
+  return `https://api.dicebear.com/9.x/micah/svg?seed=${encodeURIComponent(trimmed)}`
 }
 
 const previewAvatar = computed(() => {
