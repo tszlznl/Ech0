@@ -1672,6 +1672,10 @@ type v3KeyValue struct {
 	Value string `json:"value"`
 }
 
+func (v *v3KeyValue) TableName() string {
+	return "key_values"
+}
+
 const (
 	// SystemSettingsKey 是系统设置的键
 	SystemSettingsKey = "system_settings"
@@ -1707,6 +1711,10 @@ type v3SystemSetting struct {
 	CustomJS      string `json:"custom_js"`      // 自定义 JS
 }
 
+func (v *v3SystemSetting) TableName() string {
+	return "system_settings"
+}
+
 type v3OAuth2Setting struct {
 	Enable       bool     `json:"enable"`        // 是否启用 OAuth2 登录
 	Provider     string   `json:"provider"`      // OAuth2 提供商
@@ -1724,9 +1732,17 @@ type v3OAuth2Setting struct {
 	JWKSURL string `json:"jwks_url"` // OIDC JWKS URL
 }
 
+func (v *v3OAuth2Setting) TableName() string {
+	return "oauth2_settings"
+}
+
 type v3Connected struct {
 	ID         uint   `gorm:"primaryKey" json:"id"`
 	ConnectURL string `                  json:"connect_url"` // 连接地址
+}
+
+func (v *v3Connected) TableName() string {
+	return "connecteds"
 }
 
 type v3AgentSetting struct {
@@ -1736,6 +1752,10 @@ type v3AgentSetting struct {
 	ApiKey   string `json:"api_key"`  // LLM API Key
 	Prompt   string `json:"prompt"`   // Agent 额外使用的提示词
 	BaseURL  string `json:"base_url"` // 自定义 API URL（可选）
+}
+
+func (v *v3AgentSetting) TableName() string {
+	return "agent_settings"
 }
 
 type v3Webhook struct {
@@ -1750,9 +1770,17 @@ type v3Webhook struct {
 	UpdatedAt   time.Time `                    json:"updated_at"`   // 更新时间
 }
 
+func (v *v3Webhook) TableName() string {
+	return "webhooks"
+}
+
 type v3BackupSchedule struct {
 	Enable         bool   `json:"enable"`          // 是否启用备份计划
 	CronExpression string `json:"cron_expression"` // 备份计划的 Cron 表达式
+}
+
+func (v *v3BackupSchedule) TableName() string {
+	return "backup_schedules"
 }
 
 func migrateSettings(tx *gorm.DB, sourceDB *gorm.DB) error {
