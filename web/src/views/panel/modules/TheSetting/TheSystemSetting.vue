@@ -201,6 +201,21 @@
           class="w-full py-1!"
         />
       </div>
+      <!-- 默认语言 -->
+      <div
+        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
+      >
+        <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.defaultLocale') }}:</h2>
+        <span v-if="!editMode">
+          {{ SystemSetting.default_locale === 'en-US' ? t('commonUi.localeEnUS') : t('commonUi.localeZhCN') }}
+        </span>
+        <BaseSelect
+          v-else
+          v-model="SystemSetting.default_locale"
+          :options="localeOptions"
+          class="w-fit h-8"
+        />
+      </div>
       <!-- 允许注册 -->
       <div class="flex flex-row items-center justify-start text-[var(--color-text-secondary)]">
         <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.allowRegister') }}:</h2>
@@ -214,6 +229,7 @@
 import PanelCard from '@/layout/PanelCard.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseSwitch from '@/components/common/BaseSwitch.vue'
+import BaseSelect from '@/components/common/BaseSelect.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseTextArea from '@/components/common/BaseTextArea.vue'
 import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
@@ -234,6 +250,10 @@ const { SystemSetting } = storeToRefs(settingStore)
 
 const editMode = ref<boolean>(false)
 const systemLogoSrc = computed(() => resolveAvatarUrl(SystemSetting.value?.server_logo))
+const localeOptions = computed(() => [
+  { label: String(t('commonUi.localeZhCN')), value: 'zh-CN' },
+  { label: String(t('commonUi.localeEnUS')), value: 'en-US' },
+])
 const { enqueueUpload, waitForTask, clearFinishedUploads } = useFileQueue()
 
 const handleUpdateSystemSetting = async () => {

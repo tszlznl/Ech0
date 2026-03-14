@@ -11,7 +11,9 @@
     "done": "Done",
     "add": "Add",
     "actions": "Actions",
-    "none": "N/A"
+    "none": "N/A",
+    "localeZhCN": "Simplified Chinese",
+    "localeEnUS": "English"
   },
   "commentManager": {
     "title": "Comment System Settings",
@@ -102,6 +104,7 @@
     "changeAvatar": "Change",
     "username": "Username",
     "password": "Password",
+    "locale": "Interface language",
     "usernamePlaceholder": "Enter username",
     "passwordPlaceholder": "Enter password",
     "avatarUploading": "Uploading avatar...",
@@ -129,6 +132,7 @@
     "customJs": "Custom JS",
     "customJsPlaceholder": "Enter custom script",
     "allowRegister": "Allow registration",
+    "defaultLocale": "Default language",
     "logoUploading": "Uploading server logo...",
     "logoUploadSuccess": "Server logo uploaded successfully!",
     "uploadFailed": "Upload failed, please try again later"

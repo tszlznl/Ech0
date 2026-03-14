@@ -55,6 +55,7 @@ declare namespace App {
         is_admin: boolean
         is_owner?: boolean
         avatar?: string
+        locale: string
       }
 
       type UserInfo = {
@@ -63,6 +64,7 @@ declare namespace App {
         is_admin: boolean
         is_owner?: boolean
         avatar: string
+        locale: string
       }
     }
 

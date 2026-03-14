@@ -23,6 +23,10 @@ type UserInfoDto struct {
 	// 头像地址
 	// example: https://example.com/avatar.png
 	Avatar string `json:"avatar"`
+
+	// 语言偏好
+	// example: zh-CN
+	Locale string `json:"locale"`
 }
 
 // OAuthInfoDto OAuth2 信息数据传输对象

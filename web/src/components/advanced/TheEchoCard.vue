@@ -356,7 +356,7 @@ onBeforeUnmount(() => {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: calc((var(--axis-line-width) / -2));
+  left: 0;
   width: var(--axis-line-width);
   background-color: var(--color-border-subtle);
   pointer-events: none;

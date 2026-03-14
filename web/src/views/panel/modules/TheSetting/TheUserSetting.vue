@@ -75,6 +75,19 @@
           autocomplete="off"
         />
       </div>
+      <!-- 界面语言 -->
+      <div
+        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
+      >
+        <h2 class="font-semibold w-30">{{ t('userSetting.locale') }}:</h2>
+        <span v-if="!editMode">{{ localeLabel }}</span>
+        <BaseSelect
+          v-else
+          v-model="userInfo.locale"
+          :options="localeOptions"
+          class="w-fit h-8"
+        />
+      </div>
     </div>
   </PanelCard>
 </template>
@@ -83,6 +96,7 @@
 import PanelCard from '@/layout/PanelCard.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
+import BaseSelect from '@/components/common/BaseSelect.vue'
 import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
 import { computed, ref, onMounted } from 'vue'
 import { fetchGetCurrentUser, fetchUpdateUser } from '@/service/api'
@@ -93,6 +107,7 @@ import { resolveAvatarUrl } from '@/service/request/shared'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { useFileQueue } from '@/lib/file'
 import { useI18n } from 'vue-i18n'
+import { setI18nLocale } from '@/locales'
 
 const userStore = useUserStore()
 const { t } = useI18n()
@@ -103,10 +118,18 @@ const userInfo = ref<App.Api.User.UserInfo>({
   password: '',
   is_admin: false,
   avatar: '',
+  locale: 'zh-CN',
 })
 
 const editMode = ref<boolean>(false)
 const avatarSrc = computed(() => resolveAvatarUrl(user.value?.avatar))
+const localeOptions = computed(() => [
+  { label: String(t('commonUi.localeZhCN')), value: 'zh-CN' },
+  { label: String(t('commonUi.localeEnUS')), value: 'en-US' },
+])
+const localeLabel = computed(() =>
+  userInfo.value.locale === 'en-US' ? t('commonUi.localeEnUS') : t('commonUi.localeZhCN'),
+)
 const { enqueueUpload, waitForTask, clearFinishedUploads } = useFileQueue()
 
 const handleUpdateUser = async () => {
@@ -114,6 +137,7 @@ const handleUpdateUser = async () => {
     .then((res) => {
       if (res.code === 1) {
         theToast.success(res.msg)
+        void setI18nLocale(userInfo.value.locale)
         editMode.value = false
       }
     })
@@ -169,6 +193,7 @@ onMounted(() => {
       userInfo.value.password = res.data.password || ''
       userInfo.value.avatar = res.data.avatar || ''
       userInfo.value.is_admin = res.data.is_admin
+      userInfo.value.locale = res.data.locale || 'zh-CN'
     }
   })
 })

@@ -11,7 +11,9 @@
     "done": "完成",
     "add": "添加",
     "actions": "操作",
-    "none": "暂无"
+    "none": "暂无",
+    "localeZhCN": "简体中文",
+    "localeEnUS": "English"
   },
   "commentManager": {
     "title": "评论系统设置",
@@ -102,6 +104,7 @@
     "changeAvatar": "更改",
     "username": "用户名",
     "password": "密码",
+    "locale": "界面语言",
     "usernamePlaceholder": "请输入用户名",
     "passwordPlaceholder": "请输入密码",
     "avatarUploading": "头像上传中...",
@@ -129,6 +132,7 @@
     "customJs": "自定义 JS",
     "customJsPlaceholder": "请输入自定义 Script",
     "allowRegister": "允许注册",
+    "defaultLocale": "默认语言",
     "logoUploading": "服务器 Logo 上传中...",
     "logoUploadSuccess": "服务器 Logo 上传成功！",
     "uploadFailed": "上传失败，请稍后再试"

@@ -6,7 +6,7 @@ import { localStg } from '@/utils/storage'
 import { theToast } from '@/utils/toast'
 import router from '@/router'
 import { useEchoStore } from './echo'
-import { i18n } from '@/locales'
+import { i18n, setI18nLocale } from '@/locales'
 
 export const useUserStore = defineStore('userStore', () => {
   /**
@@ -111,6 +111,9 @@ export const useUserStore = defineStore('userStore', () => {
     if (res.code === 1) {
       console.log('获取用户信息成功,自动登录', res.data)
       user.value = res.data
+      if (res.data.locale) {
+        await setI18nLocale(res.data.locale)
+      }
     } else {
       // 获取用户信息失败，清除token
       console.log('获取用户信息失败，清除token，重新登录')

@@ -6,10 +6,16 @@
 - Default locale: `zh-CN`.
 - Fallback locale: `en-US`.
 - Negotiation order:
-  1. User preference in local storage (`locale`)
-  2. Explicit request value (`lang` query or `X-Locale` header)
-  3. `Accept-Language`
-  4. System default locale (`system_settings.default_locale`)
+  1. Explicit request value (`lang` query or `X-Locale` header)
+  2. User preference (`user.locale`, for authenticated requests)
+  3. System default locale (`system_settings.default_locale`)
+  4. `Accept-Language`
+  5. Fallback locale (`zh-CN`)
+- Frontend startup order:
+  1. `localStorage.locale`
+  2. user profile locale (after login)
+  3. `system_settings.default_locale`
+  4. browser locale
 
 ## 2. API Contract
 
@@ -44,6 +50,7 @@
 - New UI text should be added to locale JSON and rendered via `t()`.
 - API error display should prefer `message_key` from server.
 - Send `X-Locale` on API requests to allow server-side localization.
+- User settings should persist personal locale to backend (`user.locale`) and switch UI locale immediately after save.
 
 ## 6. Content/Template Rules
 

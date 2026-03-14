@@ -21,6 +21,7 @@ import (
 	"github.com/lin-snow/ech0/internal/config"
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	publisher "github.com/lin-snow/ech0/internal/event/publisher"
+	i18nUtil "github.com/lin-snow/ech0/internal/i18n"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
@@ -143,6 +144,7 @@ func (userService *UserService) InitOwner(registerDto *authModel.RegisterDto) er
 			Password: cryptoUtil.MD5Encrypt(registerDto.Password),
 			IsAdmin:  true,
 			IsOwner:  true,
+			Locale:   string(commonModel.DefaultLocale),
 		}
 
 		if err := userService.userRepository.CreateUser(ctx, &owner); err != nil {
@@ -201,6 +203,7 @@ func (userService *UserService) Register(registerDto *authModel.RegisterDto) err
 		Password: registerDto.Password,
 		IsAdmin:  false,
 		IsOwner:  false,
+		Locale:   string(commonModel.DefaultLocale),
 	}
 
 	// 检查用户是否已经存在
@@ -284,6 +287,9 @@ func (userService *UserService) UpdateUser(ctx context.Context, userdto model.Us
 	if userdto.Avatar != "" && userdto.Avatar != user.Avatar {
 		// 更新头像
 		user.Avatar = userdto.Avatar
+	}
+	if userdto.Locale != "" {
+		user.Locale = i18nUtil.ResolveLocale(userdto.Locale)
 	}
 	if err := userService.transactor.Run(ctx, func(txCtx context.Context) error {
 		// 更新用户信息
