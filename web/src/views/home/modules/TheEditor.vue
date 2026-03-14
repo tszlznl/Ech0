@@ -54,6 +54,7 @@ import { useEchoStore, useEditorStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { Mode, ExtensionType, ImageLayout } from '@/enums/enums'
 import { getEchoFiles } from '@/utils/echo'
+import { useI18n } from 'vue-i18n'
 
 /* --------------- 与Pinia相关 ---------------- */
 const echoStore = useEchoStore()
@@ -70,6 +71,7 @@ const {
   tagToAdd,
   currentExtensionType,
 } = storeToRefs(editorStore)
+const { t } = useI18n()
 
 /* -------------------------------------------- */
 
@@ -90,7 +92,7 @@ watch(
         if (match) {
           extensionToAdd.value.extension = match[1] ?? '' //youtube
         } else {
-          theToast.error('请输入正确的B站/YT分享链接！')
+          theToast.error(String(t('editor.videoShareLinkInvalid')))
         }
       }
     }
@@ -162,7 +164,7 @@ watch(
       window.scrollTo({ top: 0, behavior: 'smooth' })
 
       // 7. 弹出通知，提示可以编辑了
-      theToast.info('已进入更新模式，请编辑内容后点击更新按钮！')
+      theToast.info(String(t('editor.enteredUpdateMode')))
     } else {
       // 退出更新模式
       echoToUpdate.value = null

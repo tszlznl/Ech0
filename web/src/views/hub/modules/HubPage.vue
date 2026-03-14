@@ -12,7 +12,11 @@
 
       <div class="w-full max-w-sm mx-auto">
         <!-- 返回首页 -->
-        <BaseButton @click="router.push('/')" :class="getButtonClasses('', true)" title="返回首页">
+        <BaseButton
+          @click="router.push('/')"
+          :class="getButtonClasses('', true)"
+          :title="t('commonNav.backHome')"
+        >
           <Arrow
             class="w-9 h-9 rotate-180 transition-transform duration-200 group-hover:-translate-x-1"
           />
@@ -49,18 +53,18 @@
       </div>
 
       <div v-if="isLoading || isPreparing" class="my-6">
-        <p class="text-[var(--color-text-secondary)] text-center">加载中...</p>
+        <p class="text-[var(--color-text-secondary)] text-center">{{ t('hub.loading') }}</p>
       </div>
       <div
         v-else-if="echoList.length === 0 && hasTriedInitialLoad && !isPreparing && !isLoading"
         class="my-6"
       >
-        <p class="text-[var(--color-text-secondary)] text-center">暂无数据，快去添加Connect吧🙃</p>
+        <p class="text-[var(--color-text-secondary)] text-center">{{ t('hub.emptyConnectHint') }}</p>
       </div>
 
       <div v-if="echoList.length > 0 && !hasMore" class="my-6">
         <p class="text-[var(--color-text-secondary)] text-center flex items-center justify-center">
-          没有更多数据了<Flowers />
+          {{ t('hub.noMoreData') }}<Flowers />
         </p>
       </div>
     </div>
@@ -88,9 +92,11 @@ import { useRouter, useRoute } from 'vue-router'
 import { useBfCacheRestore } from '@/composables/useBfCacheRestore'
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
 import { getEchoFilesBy } from '@/utils/echo'
+import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
 const route = useRoute()
+const { t } = useI18n()
 
 const currentRoute = computed(() => route.name as string)
 

@@ -9,7 +9,7 @@
           <img
             v-if="CardData?.owner?.avatar_url"
             :src="CardData?.owner?.avatar_url"
-            alt="头像"
+            :alt="t('githubCard.avatarAlt')"
             class="w-14 h-14 rounded-full shadow"
           />
           <Githubproj v-else class="w-14 h-14" />
@@ -43,6 +43,7 @@ import Star from '../icons/star.vue'
 import Fork from '../icons/fork.vue'
 import { fetchGetGithubRepo } from '@/service/api'
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const githubRepoCache = new Map<string, App.Api.Ech0.GithubCardData | null>()
 const githubRepoInFlight = new Map<string, Promise<App.Api.Ech0.GithubCardData | null>>()
@@ -50,6 +51,7 @@ const githubRepoInFlight = new Map<string, Promise<App.Api.Ech0.GithubCardData |
 const props = defineProps<{
   GithubURL?: string
 }>()
+const { t } = useI18n()
 
 const safeGithubURL = computed(() => String(props.GithubURL ?? '').trim())
 

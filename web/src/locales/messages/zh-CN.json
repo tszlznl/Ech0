@@ -95,7 +95,40 @@
     "inboxUnread": "未读消息共有 {total} 条",
     "removeImage": "移除图片",
     "invalidImageIndex": "当前图片索引无效，无法删除！",
-    "removeImageConfirmTitle": "确定要移除图片吗？"
+    "removeImageConfirmTitle": "确定要移除图片吗？",
+    "restoreDraftTitle": "恢复本地草稿",
+    "restoreDraftDesc": "检测到你有未发布的本地草稿，是否恢复？",
+    "restoreDraftRecovered": "已恢复本地草稿",
+    "imageUrlRequired": "图片链接不能为空",
+    "externalRegisterFailed": "直链入库失败，请重试",
+    "uploadNoPreviewUrl": "上传完成但未拿到可预览地址，请重试",
+    "fileUploadingWait": "图片仍在上传中，请等待上传完成后再发布",
+    "attachmentMissingFileId": "存在未绑定 file_id 的附件",
+    "updateEchoEmpty": "待更新的Echo不能为空！",
+    "addEchoEmpty": "待添加的Echo不能为空！",
+    "publishing": "🚀发布中...",
+    "publishSuccess": "🎉发布成功！",
+    "publishFailed": "😭发布失败，请稍后再试！",
+    "noEchoToUpdate": "没有待更新的Echo！",
+    "syncingFiles": "🔁同步附件中...",
+    "updating": "🚀更新中...",
+    "updateSuccess": "🎉更新成功！",
+    "updateSuccessWithSync": "🔁发现附件更改，已自动更新同步Echo！",
+    "updateFailed": "😭更新失败，请稍后再试！",
+    "websiteUrlRequired": "网站链接不能为空！",
+    "externalLink": "外部链接",
+    "exitUpdateModeSuccess": "已退出更新模式",
+    "videoShareLinkInvalid": "请输入正确的B站/YT分享链接！",
+    "enteredUpdateMode": "已进入更新模式，请编辑内容后点击更新按钮！",
+    "fullscreenEdit": "全屏编辑",
+    "exitFullscreen": "退出全屏",
+    "bold": "粗体",
+    "italic": "斜体",
+    "heading": "标题",
+    "quote": "引用",
+    "unorderedList": "无序列表",
+    "addedLabel": "已添加：",
+    "noContentAdded": "尚未添加内容"
   },
   "commentManager": {
     "title": "评论系统设置",
@@ -197,12 +230,18 @@
     "ownerUsernamePlaceholder": "Owner 用户名",
     "ownerPasswordPlaceholder": "Owner 密码",
     "initializing": "初始化中...",
-    "initialize": "初始化"
+    "initialize": "初始化",
+    "initDone": "初始化完成",
+    "alreadyInitializedRedirect": "系统已初始化，正在跳转登录",
+    "initFailed": "初始化失败"
   },
   "hub": {
     "emptyList": "Hub列表为空，请到设置中添加Connect吧~",
     "noAvailableInstance": "当前Hub暂无可连接的实例。",
-    "connectedCount": "成功连接 {count} 个实例，开始加载 Echos"
+    "connectedCount": "成功连接 {count} 个实例，开始加载 Echos",
+    "loading": "加载中...",
+    "emptyConnectHint": "暂无数据，快去添加Connect吧🙃",
+    "noMoreData": "没有更多数据了"
   },
   "inbox": {
     "cleared": "收件箱已清空"
@@ -291,7 +330,12 @@
   },
   "homeTop": {
     "searchTitle": "搜索",
-    "searchPlaceholder": "搜索..."
+    "searchPlaceholder": "搜索...",
+    "exitZenMode": "退出 Zen Mode",
+    "rssTitle": "RSS",
+    "widgetTitle": "Ech0 Widget",
+    "hubTitle": "Ech0 Hub",
+    "panelTitle": "面板"
   },
   "homeFeed": {
     "loadMore": "继续装填",
@@ -512,7 +556,9 @@
     "customAccount": "自定义 {type} 账号",
     "customTemplate": "Custom(支持 OIDC)",
     "redirectAllowlistInvalid": "Redirect Allowlist 需为 http/https URL",
-    "corsOriginsInvalid": "CORS Origins 需为 http/https URL"
+    "corsOriginsInvalid": "CORS Origins 需为 http/https URL",
+    "bindSuccess": "OAuth2账号绑定成功",
+    "bindFailed": "OAuth2账号绑定失败，请重试"
   },
   "backupSetting": {
     "title": "数据导出",
@@ -638,5 +684,62 @@
     "enableAutoBackup": "启用自动备份",
     "crontab": "备份计划Crontab",
     "crontabPlaceholder": "备份计划Crontab表达式"
+  },
+  "uppy": {
+    "dashboardNote": "支持粘贴或选择图片上传哦！",
+    "loginRequired": "请先登录再上传图片 😢",
+    "uploadingImageWait": "正在上传图片，请稍等... ⏳",
+    "uploadImageError": "上传图片时发生错误 😢",
+    "uploadSuccess": "好耶,上传成功！🎉",
+    "missingFileIdentifier": "上传响应缺少文件标识，无法绑定到 Echo，请重试",
+    "missingFileId": "上传响应缺少文件ID，无法绑定到 Echo，请重试",
+    "fileMetaFillbackFailed": "文件元数据回填失败",
+    "uploadSuccessNoFileId": "上传成功但未解析到文件ID，请检查后端上传响应结构",
+    "uploadingTaskSwitchBlocked": "当前有文件正在上传，请稍后再切换上传方式 😢",
+    "uploadingSwitchCompressBlocked": "正在上传中，无法切换压缩模式"
+  },
+  "markdown": {
+    "expand": "展开",
+    "collapse": "收起"
+  },
+  "baseSelect": {
+    "empty": "暂无选项",
+    "pleaseSelect": "请选择"
+  },
+  "commonNav": {
+    "backHome": "返回首页"
+  },
+  "echoPage": {
+    "loadingDetail": "正在加载 Echo 详情..."
+  },
+  "notFound": {
+    "pageNotFound": "页面不存在"
+  },
+  "hubEcho": {
+    "jumpToEcho": "跳转至该 Echo",
+    "print": "打印",
+    "like": "点赞",
+    "alreadyLiked": "你已经点赞过",
+    "likeFailed": "点赞失败",
+    "likeSuccess": "点赞成功",
+    "printTextOnly": "仅支持带有文本内容的 print"
+  },
+  "imageGallery": {
+    "previewImage": "预览图片{index}",
+    "scrollHint": "← 左右滑动查看更多 →"
+  },
+  "zone": {
+    "clearedPrintNotes": "已清空打印纸条",
+    "noPrintableText": "该链接对应的 Echo 没有可打印文本"
+  },
+  "githubCard": {
+    "avatarAlt": "头像"
+  },
+  "recentCard": {
+    "mysteriousRecent": "作者最近很神秘～",
+    "generating": "生成中..."
+  },
+  "websocket": {
+    "invalidMessage": "收到无效的 WebSocket 消息"
   }
 }

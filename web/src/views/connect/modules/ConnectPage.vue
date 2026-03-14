@@ -12,7 +12,7 @@
           <BaseButton
             @click="$router.push('/')"
             class="text-[var(--color-text-primary)] rounded-md shadow-none! border-none! ring-0! bg-transparent! group"
-            title="返回首页"
+            :title="t('commonNav.backHome')"
           >
             <Arrow
               class="w-9 h-9 rotate-180 transition-transform duration-200 group-hover:-translate-x-1"
@@ -30,4 +30,7 @@
 import BaseButton from '@/components/common/BaseButton.vue'
 import Arrow from '@/components/icons/arrow.vue'
 import TheConnects from './TheConnects.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 </script>

@@ -314,7 +314,7 @@ export const useHubStore = defineStore('hubStore', () => {
       )
 
       if (!hasMore.value && echoList.value.length > 0) {
-        theToast.info('没有更多数据了🙃')
+        theToast.info(String(i18n.global.t('hub.noMoreData')))
       }
     } finally {
       isLoading.value = false

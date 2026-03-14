@@ -4,6 +4,8 @@ import 'highlight.js/styles/atom-one-dark.css'
 
 const CODE_BLOCK_COLLAPSE_THRESHOLD = 18
 const CODE_BLOCK_COLLAPSED_LINES = 10
+const EXPAND_PLACEHOLDER = '__ECHO_MD_EXPAND__'
+const COLLAPSE_PLACEHOLDER = '__ECHO_MD_COLLAPSE__'
 
 function escapeHtml(input: string): string {
   return input
@@ -29,7 +31,7 @@ function renderCodeBlock(code: string, rendered: string, language?: string): str
     return pre
   }
 
-  return `<div class="code-block code-block--collapsible code-block--collapsed" style="--code-max-lines:${CODE_BLOCK_COLLAPSED_LINES};"><button type="button" class="code-block-toggle" data-expand-label="展开" data-collapse-label="收起" aria-expanded="false">展开</button>${pre}</div>`
+  return `<div class="code-block code-block--collapsible code-block--collapsed" style="--code-max-lines:${CODE_BLOCK_COLLAPSED_LINES};"><button type="button" class="code-block-toggle" data-expand-label="${EXPAND_PLACEHOLDER}" data-collapse-label="${COLLAPSE_PLACEHOLDER}" aria-expanded="false">${EXPAND_PLACEHOLDER}</button>${pre}</div>`
 }
 
 const markdown: MarkdownIt = new MarkdownIt({
@@ -74,7 +76,15 @@ markdown.renderer.rules.link_open = (...args: Parameters<LinkOpenRule>) => {
   return originalLinkOpen(tokens, idx, options, env, self)
 }
 
-export function renderMarkdown(source: string): string {
+export function renderMarkdown(
+  source: string,
+  labels?: { expandLabel?: string; collapseLabel?: string },
+): string {
   if (!source) return ''
-  return markdown.render(source)
+  const rendered = markdown.render(source)
+  const expandLabel = escapeHtml(String(labels?.expandLabel || 'Expand'))
+  const collapseLabel = escapeHtml(String(labels?.collapseLabel || 'Collapse'))
+  return rendered
+    .replaceAll(EXPAND_PLACEHOLDER, expandLabel)
+    .replaceAll(COLLAPSE_PLACEHOLDER, collapseLabel)
 }

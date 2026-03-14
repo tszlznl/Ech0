@@ -21,9 +21,11 @@ import { useInitStore } from '@/stores'
 import { theToast } from '@/utils/toast'
 import TheInitForm from './TheInitForm.vue'
 import TheInitIntro from './TheInitIntro.vue'
+import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
 const initStore = useInitStore()
+const { t } = useI18n()
 const submitting = ref(false)
 const form = reactive({
   username: '',
@@ -49,16 +51,16 @@ const onSubmit = async () => {
       password: form.password,
     })
     if (res.code === 1) {
-      theToast.success(res.msg || '初始化完成')
+      theToast.success(res.msg || String(t('init.initDone')))
       await router.replace({ name: 'auth' })
       return
     }
     if (initStore.initialized || initStore.ownerExists) {
-      theToast.success('系统已初始化，正在跳转登录')
+      theToast.success(String(t('init.alreadyInitializedRedirect')))
       await router.replace({ name: 'auth' })
       return
     }
-    theToast.error(res.msg || '初始化失败')
+    theToast.error(res.msg || String(t('init.initFailed')))
   } finally {
     submitting.value = false
   }

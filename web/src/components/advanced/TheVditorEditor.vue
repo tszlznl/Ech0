@@ -6,6 +6,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
+import { i18n } from '@/locales'
 
 const props = defineProps({
   modelValue: {
@@ -52,7 +53,7 @@ const editorOptions: IOptions = {
     },
     actions: [],
   },
-  placeholder: '一吐为快~',
+  placeholder: String(i18n.global.t('editor.mainPlaceholder')),
 }
 
 // 初始化编辑器

@@ -1,5 +1,6 @@
 import { useWebSocket } from '@vueuse/core'
 import { reactive, watch } from 'vue'
+import { i18n } from '@/locales'
 
 type ReconnectOptions = {
   retries?: number
@@ -53,7 +54,7 @@ export function useOWebSocket<T = unknown>(options: WSOptions) {
       // 默认回调 key = 'default'
       listeners['default']?.forEach((cb) => cb(parsed))
     } catch {
-      console.warn('收到无效的 WebSocket 消息', msg)
+      console.warn(i18n.global.t('websocket.invalidMessage'), msg)
     }
   })
 

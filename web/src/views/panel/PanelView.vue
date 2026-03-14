@@ -2,14 +2,17 @@
 import PanelPage from './modules/PanelPage.vue'
 import { onMounted } from 'vue'
 import { theToast } from '@/utils/toast'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 onMounted(() => {
   const url = new URL(window.location.href)
   const bind = url.searchParams.get('bind')
   if (bind === 'success') {
-    theToast.success('OAuth2账号绑定成功', { duration: 5000 })
+    theToast.success(String(t('oauth2Setting.bindSuccess')), { duration: 5000 })
   } else if (bind === 'failed') {
-    theToast.error('OAuth2账号绑定失败，请重试')
+    theToast.error(String(t('oauth2Setting.bindFailed')))
   }
 })
 </script>

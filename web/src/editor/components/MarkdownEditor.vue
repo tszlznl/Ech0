@@ -6,8 +6,8 @@
       <button
         type="button"
         class="mode-toggle-btn"
-        title="全屏编辑"
-        aria-label="全屏编辑"
+        :title="t('editor.fullscreenEdit')"
+        :aria-label="t('editor.fullscreenEdit')"
         @click="enterFullMode"
       >
         <Full class="w-3.5 h-3.5" />
@@ -50,8 +50,8 @@
             <button
               type="button"
               class="toolbar-btn mode-toggle-btn-inline"
-              title="退出全屏"
-              aria-label="退出全屏"
+              :title="t('editor.exitFullscreen')"
+              :aria-label="t('editor.exitFullscreen')"
               @click="exitFullMode"
             >
               <Closefull class="w-3.5 h-3.5" />
@@ -78,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import MarkdownPreviewCard from './MarkdownPreviewCard.vue'
 import { applyMarkdownAction } from '../composables/useMarkdownEditorActions'
 import type { MarkdownEditorAction } from '../types'
@@ -102,13 +102,15 @@ const isPreviewMode = ref(false)
 const FULL_MODE_LOCK_CLASS = 'md-editor-full-open'
 const { t } = useI18n()
 
-const toolbarItems: Array<{ label: string; icon: string; action: MarkdownEditorAction }> = [
-  { label: '粗体', icon: 'B', action: 'bold' },
-  { label: '斜体', icon: 'I', action: 'italic' },
-  { label: '标题', icon: 'H', action: 'heading' },
-  { label: '引用', icon: '❝', action: 'quote' },
-  { label: '无序列表', icon: '•', action: 'unorderedList' },
-]
+const toolbarItems = computed<Array<{ label: string; icon: string; action: MarkdownEditorAction }>>(
+  () => [
+    { label: String(t('editor.bold')), icon: 'B', action: 'bold' },
+    { label: String(t('editor.italic')), icon: 'I', action: 'italic' },
+    { label: String(t('editor.heading')), icon: 'H', action: 'heading' },
+    { label: String(t('editor.quote')), icon: '❝', action: 'quote' },
+    { label: String(t('editor.unorderedList')), icon: '•', action: 'unorderedList' },
+  ],
+)
 
 function onInput(event: Event) {
   const target = event.target as HTMLTextAreaElement

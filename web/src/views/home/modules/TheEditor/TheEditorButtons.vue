@@ -55,7 +55,9 @@
           class="absolute right-0 top-full z-10 mt-2 whitespace-nowrap rounded-md border border-[var(--color-border-subtle)] border-dashed bg-[var(--color-bg-surface)] px-2 py-1 text-xs shadow-md opacity-0 translate-y-1 scale-95 pointer-events-none transition-all duration-200 ease-out group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100 group-hover:pointer-events-auto"
         >
           <div v-if="infoTooltipLines.length > 0">
-            <div class="mb-1 font-medium text-[var(--color-text-secondary)]">已添加：</div>
+            <div class="mb-1 font-medium text-[var(--color-text-secondary)]">
+              {{ t('editor.addedLabel') }}
+            </div>
             <div
               v-for="line in infoTooltipLines"
               :key="line.label"
@@ -65,7 +67,7 @@
               <span>{{ line.label }}</span>
             </div>
           </div>
-          <div v-else class="text-[var(--color-text-muted)]">尚未添加内容</div>
+          <div v-else class="text-[var(--color-text-muted)]">{{ t('editor.noContentAdded') }}</div>
         </div>
       </div>
 

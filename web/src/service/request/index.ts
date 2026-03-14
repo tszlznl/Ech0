@@ -43,7 +43,7 @@ const ofetchInstance = ofetch.create({
     try {
       data = await response.json()
     } catch {
-      data = { code: 0, msg: `请求失败`, data: null }
+      data = { code: 0, msg: String(i18n.global.t('common.requestFailed')), data: null }
     }
 
     response._data = data

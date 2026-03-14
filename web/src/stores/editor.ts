@@ -10,6 +10,7 @@ import { getImageSize } from '@/utils/image'
 import { getFileToAddUrl } from '@/utils/other'
 import { createExternalFile, globalFileRegistry, useFileAttachments } from '@/lib/file'
 import { useBaseDialog } from '@/composables/useBaseDialog'
+import { i18n } from '@/locales'
 
 const EDITOR_DRAFT_STORAGE_KEY = 'editor_echo_draft_v1'
 const EDITOR_DRAFT_TTL_MS = 24 * 60 * 60 * 1000
@@ -31,6 +32,8 @@ export const useEditorStore = defineStore('editorStore', () => {
   const echoStore = useEchoStore()
   const inboxStore = useInboxStore()
   const { openConfirm } = useBaseDialog()
+  const t = (key: string, params?: Record<string, unknown>) =>
+    String(i18n.global.t(key, params || {}))
 
   //================================================================
   // 编辑器状态控制
@@ -188,8 +191,8 @@ export const useEditorStore = defineStore('editorStore', () => {
     }
 
     openConfirm({
-      title: '恢复本地草稿',
-      description: '检测到你有未发布的本地草稿，是否恢复？',
+      title: t('editor.restoreDraftTitle'),
+      description: t('editor.restoreDraftDesc'),
       onConfirm: () => {
         isRestoringDraft.value = true
         try {
@@ -214,7 +217,7 @@ export const useEditorStore = defineStore('editorStore', () => {
             extension_type: draft.extensionToAdd?.extension_type || '',
           }
           tagToAdd.value = draft.tagToAdd || ''
-          theToast.info('已恢复本地草稿')
+          theToast.info(t('editor.restoreDraftRecovered'))
         } finally {
           isRestoringDraft.value = false
         }
@@ -296,7 +299,7 @@ export const useEditorStore = defineStore('editorStore', () => {
     if (fileToAdd.value.storage_type === FILE_STORAGE_TYPE.EXTERNAL && !fileToAdd.value.id) {
       const externalUrl = String(fileToAdd.value.url || '').trim()
       if (!externalUrl) {
-        theToast.error('图片链接不能为空')
+        theToast.error(t('editor.imageUrlRequired'))
         return
       }
 
@@ -307,7 +310,7 @@ export const useEditorStore = defineStore('editorStore', () => {
         height: height,
       })
       if (!created.id) {
-        theToast.error('直链入库失败，请重试')
+        theToast.error(t('editor.externalRegisterFailed'))
         return
       }
 
@@ -342,7 +345,7 @@ export const useEditorStore = defineStore('editorStore', () => {
   const handleUppyUploaded = async (files: App.Api.Ech0.FileToAdd[]) => {
     for (const file of files) {
       if (!file.url) {
-        theToast.error('上传完成但未拿到可预览地址，请重试')
+        theToast.error(t('editor.uploadNoPreviewUrl'))
         continue
       }
       fileToAdd.value = {
@@ -395,13 +398,13 @@ export const useEditorStore = defineStore('editorStore', () => {
     // 执行添加或更新
     try {
       if (fileUploading.value) {
-        theToast.error('图片仍在上传中，请等待上传完成后再发布')
+        theToast.error(t('editor.fileUploadingWait'))
         return
       }
 
       const valid = validateAttachments({ requireId: true })
       if (!valid.valid) {
-        theToast.error(valid.reason || '存在未绑定 file_id 的附件')
+        theToast.error(valid.reason || t('editor.attachmentMissingFileId'))
         return
       }
 
@@ -422,7 +425,7 @@ export const useEditorStore = defineStore('editorStore', () => {
 
       // 检查Echo是否为空
       if (checkIsEmptyEcho(echoToAdd.value)) {
-        const errMsg = isUpdateMode.value ? '待更新的Echo不能为空！' : '待添加的Echo不能为空！'
+        const errMsg = isUpdateMode.value ? t('editor.updateEchoEmpty') : t('editor.addEchoEmpty')
         theToast.error(errMsg)
         return
       }
@@ -431,19 +434,19 @@ export const useEditorStore = defineStore('editorStore', () => {
       if (!isUpdateMode.value) {
         console.log('adding echo:', echoToAdd.value)
         theToast.promise(fetchAddEcho(echoToAdd.value), {
-          loading: '🚀发布中...',
+          loading: t('editor.publishing'),
           success: (res) => {
             if (res.code === 1) {
               clearEditor()
               echoStore.refreshEchos()
               setMode(Mode.ECH0)
               echoStore.getTags() // 刷新标签列表
-              return '🎉发布成功！'
+              return t('editor.publishSuccess')
             } else {
-              return '😭发布失败，请稍后再试！'
+              return t('editor.publishFailed')
             }
           },
-          error: '😭发布失败，请稍后再试！',
+          error: t('editor.publishFailed'),
         })
 
         isSubmitting.value = false
@@ -453,7 +456,7 @@ export const useEditorStore = defineStore('editorStore', () => {
       // ======== 更新模式 =========
       if (isUpdateMode.value) {
         if (!echoStore.echoToUpdate) {
-          theToast.error('没有待更新的Echo！')
+          theToast.error(t('editor.noEchoToUpdate'))
           return
         }
 
@@ -467,7 +470,7 @@ export const useEditorStore = defineStore('editorStore', () => {
 
         // 更新 Echo
         theToast.promise(fetchUpdateEcho(echoStore.echoToUpdate), {
-          loading: justSyncFiles ? '🔁同步附件中...' : '🚀更新中...',
+          loading: justSyncFiles ? t('editor.syncingFiles') : t('editor.updating'),
           success: (res) => {
             if (res.code === 1 && !justSyncFiles) {
               clearEditor()
@@ -476,14 +479,14 @@ export const useEditorStore = defineStore('editorStore', () => {
               echoStore.echoToUpdate = null
               setMode(Mode.ECH0)
               echoStore.getTags() // 刷新标签列表
-              return '🎉更新成功！'
+              return t('editor.updateSuccess')
             } else if (res.code === 1 && justSyncFiles) {
-              return '🔁发现附件更改，已自动更新同步Echo！'
+              return t('editor.updateSuccessWithSync')
             } else {
-              return '😭更新失败，请稍后再试！'
+              return t('editor.updateFailed')
             }
           },
-          error: '😭更新失败，请稍后再试！',
+          error: t('editor.updateFailed'),
         })
       }
     } finally {
@@ -526,12 +529,12 @@ export const useEditorStore = defineStore('editorStore', () => {
 
     // 存在标题但无链接
     if (title && !site) {
-      theToast.error('网站链接不能为空！')
+      theToast.error(t('editor.websiteUrlRequired'))
       return false
     }
 
     // 如果有链接但没标题，补默认标题
-    const finalTitle = title || (site ? '外部链接' : '')
+    const finalTitle = title || (site ? t('editor.externalLink') : '')
     if (!finalTitle || !site) {
       clearExtension()
       return true
@@ -615,7 +618,7 @@ export const useEditorStore = defineStore('editorStore', () => {
     echoStore.echoToUpdate = null
     clearEditor()
     setMode(Mode.ECH0)
-    theToast.info('已退出更新模式')
+    theToast.info(t('editor.exitUpdateModeSuccess'))
   }
 
   //===============================================================

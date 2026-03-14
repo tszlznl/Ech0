@@ -17,7 +17,7 @@
             <TheMdPreview :content="recent" />
           </div>
           <div v-else>
-            <div class="recent-loading">生成中...</div>
+            <div class="recent-loading">{{ t('recentCard.generating') }}</div>
           </div>
         </div>
       </div>
@@ -31,11 +31,13 @@ import RecentIcon from '../icons/recent.vue'
 import TheMdPreview from './TheMdPreview.vue'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 
 const settingStore = useSettingStore()
 const { AgentSetting } = storeToRefs(settingStore)
+const { t } = useI18n()
 
-const recent = ref<string>('作者最近很神秘～')
+const recent = ref<string>(String(t('recentCard.mysteriousRecent')))
 const loading = ref<boolean>(true)
 
 onMounted(() => {

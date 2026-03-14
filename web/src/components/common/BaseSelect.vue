@@ -125,6 +125,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 // 定义值的类型
 type SelectValue = string | number | boolean | null | undefined
@@ -163,6 +164,7 @@ const emit = defineEmits<{
   (e: 'open'): void
   (e: 'close'): void
 }>()
+const { t } = useI18n()
 
 // Refs
 const selectRef = ref<HTMLElement>()
@@ -174,7 +176,7 @@ const dropdownStyle = ref<Record<string, string>>({})
 
 // Computed
 const customClass = props.class
-const emptyText = props.emptyText || '暂无选项'
+const emptyText = computed(() => props.emptyText || String(t('baseSelect.empty')))
 
 const normalizedOptions = computed((): SelectOption[] => {
   return props.options.map((option): SelectOption => {
@@ -211,7 +213,7 @@ const selectedOption = computed(() => {
 })
 
 const displayValue = computed(() => {
-  return selectedOption.value?.label || props.placeholder || '请选择'
+  return selectedOption.value?.label || props.placeholder || String(t('baseSelect.pleaseSelect'))
 })
 
 // Methods

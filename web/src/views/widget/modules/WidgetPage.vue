@@ -10,7 +10,7 @@
       <BaseButton
         @click="router.push('/')"
         class="text-[var(--color-text-primary)] rounded-md shadow-none! border-none! ring-0! bg-transparent! group"
-        title="返回首页"
+        :title="t('commonNav.backHome')"
       >
         <Arrow
           class="w-9 h-9 rotate-180 transition-transform duration-200 group-hover:-translate-x-1"
@@ -35,8 +35,10 @@ import TheRecentCard from '@/components/advanced/TheRecentCard.vue'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
+const { t } = useI18n()
 const settingStore = useSettingStore()
 const { AgentSetting } = storeToRefs(settingStore)
 </script>

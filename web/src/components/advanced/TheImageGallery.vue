@@ -17,7 +17,7 @@
       >
         <img
           :src="baseUrl ? getHubImageUrl(src, baseUrl) : getImageUrl(src)"
-          :alt="`预览图片${idx + 1}`"
+          :alt="t('imageGallery.previewImage', { index: idx + 1 })"
           loading="lazy"
           class="echoimg block max-w-full h-auto"
         />
@@ -35,7 +35,7 @@
         >
           <img
             :src="baseUrl ? getHubImageUrl(src, baseUrl) : getImageUrl(src)"
-            :alt="`预览图片${idx + 1}`"
+            :alt="t('imageGallery.previewImage', { index: idx + 1 })"
             loading="lazy"
             class="echoimg w-full h-full object-cover"
           />
@@ -61,7 +61,7 @@
                 ? getHubImageUrl(images[carouselIndex]!, baseUrl)
                 : getImageUrl(images[carouselIndex]!)
             "
-            :alt="`预览图片${carouselIndex + 1}`"
+            :alt="t('imageGallery.previewImage', { index: carouselIndex + 1 })"
             loading="lazy"
             class="echoimg w-full h-auto"
           />
@@ -102,14 +102,14 @@
           >
             <img
               :src="baseUrl ? getHubImageUrl(src, baseUrl) : getImageUrl(src)"
-              :alt="`预览图片${idx + 1}`"
+              :alt="t('imageGallery.previewImage', { index: idx + 1 })"
               loading="lazy"
               class="echoimg h-full w-auto object-contain"
             />
           </button>
         </div>
       </div>
-      <div class="scroll-hint">← 左右滑动查看更多 →</div>
+      <div class="scroll-hint">{{ t('imageGallery.scrollHint') }}</div>
     </div>
   </div>
 </template>
@@ -122,12 +122,14 @@ import '@fancyapps/ui/dist/fancybox/fancybox.css'
 import { ImageLayout } from '@/enums/enums'
 import Prev from '@/components/icons/prev.vue'
 import Next from '@/components/icons/next.vue'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
   images?: App.Api.Ech0.FileObject[]
   baseUrl?: string
   layout?: ImageLayout | string | undefined
 }>()
+const { t } = useI18n()
 
 const baseUrl = computed(() => props.baseUrl)
 

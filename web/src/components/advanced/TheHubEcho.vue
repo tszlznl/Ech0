@@ -107,15 +107,15 @@
       <!-- 操作按钮 -->
       <div ref="menuRef" class="relative flex h-auto flex-none items-center justify-center gap-2">
         <!-- 跳转 -->
-        <a :href="`${server_url}/echo/${echo_id}`" target="_blank" title="跳转至该 Echo">
+        <a :href="`${server_url}/echo/${echo_id}`" target="_blank" :title="t('hubEcho.jumpToEcho')">
           <LinkTo class="w-4 h-4" />
         </a>
 
         <!-- 打印 -->
-        <div class="flex items-center justify-end" title="打印">
+        <div class="flex items-center justify-end" :title="t('hubEcho.print')">
           <button
             @click="handlePrintEcho()"
-            title="打印"
+            :title="t('hubEcho.print')"
             :class="[
               'transform transition-transform duration-150',
               isPrintAnimating ? 'scale-160' : 'scale-100',
@@ -126,12 +126,12 @@
         </div>
 
         <!-- 点赞 -->
-        <div class="flex items-center justify-end" title="点赞">
+        <div class="flex items-center justify-end" :title="t('hubEcho.like')">
           <div class="flex items-center gap-1">
             <!-- 点赞按钮   -->
             <button
               @click="handleLikeEcho()"
-              title="点赞"
+              :title="t('hubEcho.like')"
               :class="[
                 'transform transition-transform duration-150',
                 isLikeAnimating ? 'scale-160' : 'scale-100',
@@ -172,6 +172,7 @@ import { useFetch } from '@vueuse/core'
 import { theToast } from '@/utils/toast'
 import { localStg } from '@/utils/storage'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 type Echo = App.Api.Hub.Echo
 
@@ -180,6 +181,7 @@ const props = defineProps<{
 }>()
 const zoneStore = useZoneStore()
 const router = useRouter()
+const { t } = useI18n()
 
 const fav_count = ref<number>(props.echo.fav_count)
 const echoImageFiles = computed(() =>
@@ -207,7 +209,7 @@ const handleLikeEcho = async () => {
   // 如果已经点赞过，不再重复点赞
   const likedEchoIds: string[] = localStg.getItem(LIKE_LIST_KEY.value) || []
   if (likedEchoIds.includes(echo_id.value)) {
-    theToast.info('你已经点赞过')
+    theToast.info(String(t('hubEcho.alreadyLiked')))
     return
   }
 
@@ -219,12 +221,12 @@ const handleLikeEcho = async () => {
     .json()
 
   if (error.value || data.value?.code !== 1) {
-    theToast.error('点赞失败')
+    theToast.error(String(t('hubEcho.likeFailed')))
   } else {
     fav_count.value += 1
     likedEchoIds.push(echo_id.value)
     localStg.setItem(LIKE_LIST_KEY.value, likedEchoIds)
-    theToast.success('点赞成功')
+    theToast.success(String(t('hubEcho.likeSuccess')))
   }
 }
 
@@ -235,7 +237,7 @@ const handlePrintEcho = () => {
   }, 250)
 
   if (!props.echo.content?.trim()) {
-    theToast.info('仅支持带有文本内容的 print')
+    theToast.info(String(t('hubEcho.printTextOnly')))
     return
   }
 

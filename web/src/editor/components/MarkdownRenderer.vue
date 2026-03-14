@@ -5,13 +5,20 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { renderMarkdown } from '../core/markdown'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
   content: string
 }>()
 
 const rootRef = ref<HTMLElement | null>(null)
-const html = computed(() => renderMarkdown(props.content))
+const { t } = useI18n()
+const html = computed(() =>
+  renderMarkdown(props.content, {
+    expandLabel: String(t('markdown.expand')),
+    collapseLabel: String(t('markdown.collapse')),
+  }),
+)
 
 function onRootClick(event: Event) {
   const target = event.target
@@ -24,8 +31,8 @@ function onRootClick(event: Event) {
   if (!block) return
 
   const isCollapsed = block.classList.toggle('code-block--collapsed')
-  const expandLabel = toggleButton.dataset.expandLabel ?? '展开'
-  const collapseLabel = toggleButton.dataset.collapseLabel ?? '收起'
+  const expandLabel = toggleButton.dataset.expandLabel ?? String(t('markdown.expand'))
+  const collapseLabel = toggleButton.dataset.collapseLabel ?? String(t('markdown.collapse'))
 
   toggleButton.setAttribute('aria-expanded', String(!isCollapsed))
   toggleButton.textContent = isCollapsed ? expandLabel : collapseLabel

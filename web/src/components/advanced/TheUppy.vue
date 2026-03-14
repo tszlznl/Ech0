@@ -13,6 +13,7 @@ import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { getPresign, globalFileRegistry, updateFileMeta } from '@/lib/file'
 import { isSafari } from '@/utils/other'
 import { getImageSize } from '@/utils/image'
+import { useI18n } from 'vue-i18n'
 
 /* --------------- 与Uppy相关 ---------------- */
 import Uppy from '@uppy/core'
@@ -45,6 +46,7 @@ const editorStore = useEditorStore()
 const { isLogin } = storeToRefs(userStore)
 const envURL = import.meta.env.VITE_SERVICE_BASE_URL as string
 const backendURL = envURL.endsWith('/') ? envURL.slice(0, -1) : envURL
+const { t } = useI18n()
 
 const outputMimeType = isSafari() ? 'image/jpeg' : 'image/webp'
 const currentCategory = props.fileCategory || FILE_CATEGORY.IMAGE
@@ -181,7 +183,7 @@ const initUppy = () => {
     proudlyDisplayPoweredByUppy: false,
     height: 200,
     locale: zh_CN,
-    note: '支持粘贴或选择图片上传哦！',
+    note: String(t('uppy.dashboardNote')),
   })
 
   // 是否启用智能压缩
@@ -260,7 +262,7 @@ const initUppy = () => {
   // 添加文件时
   uppy.on('files-added', () => {
     if (!isLogin.value) {
-      theToast.error('请先登录再上传图片 😢')
+      theToast.error(String(t('uppy.loginRequired')))
       return
     }
     isUploading.value = true
@@ -269,10 +271,10 @@ const initUppy = () => {
   // 上传开始前，检查是否登录
   uppy.on('upload', () => {
     if (!isLogin.value) {
-      theToast.error('请先登录再上传图片 😢')
+      theToast.error(String(t('uppy.loginRequired')))
       return
     }
-    theToast.info('正在上传图片，请稍等... ⏳', { duration: 500 })
+    theToast.info(String(t('uppy.uploadingImageWait')), { duration: 500 })
     isUploading.value = true
     editorStore.fileUploading = true
   })
@@ -287,7 +289,7 @@ const initUppy = () => {
         data: any
       }
 
-      let errorMsg = '上传图片时发生错误 😢'
+      let errorMsg = String(t('uppy.uploadImageError'))
       // @ts-nocheck
       /* eslint-disable */
       const resp = response as any // 忽略 TS 类型限制
@@ -315,7 +317,7 @@ const initUppy = () => {
   // 单个文件上传成功后，保存文件 URL 到 files 列表
   uppy.on('upload-success', (file, response) => {
     const task = (async () => {
-      theToast.success(`好耶,上传成功！🎉`)
+      theToast.success(String(t('uppy.uploadSuccess')))
 
       // 分两种情况: Local 或者 S3
       if (memorySource.value === FILE_STORAGE_TYPE.LOCAL) {
@@ -338,7 +340,7 @@ const initUppy = () => {
         const width = typeof payload.width === 'number' ? payload.width : undefined
         const height = typeof payload.height === 'number' ? payload.height : undefined
         if (!fileId || !fileUrl) {
-          theToast.error('上传响应缺少文件标识，无法绑定到 Echo，请重试')
+          theToast.error(String(t('uppy.missingFileIdentifier')))
           return
         }
         const item: App.Api.Ech0.FileToAdd = {
@@ -366,7 +368,7 @@ const initUppy = () => {
           tempFiles.value.get(uppyFileId) || tempFiles.value.get(String(file?.name || '')) || ''
         if (!uploadedFile) return
         if (!uploadedFile.id) {
-          theToast.error('上传响应缺少文件ID，无法绑定到 Echo，请重试')
+          theToast.error(String(t('uppy.missingFileId')))
           return
         }
 
@@ -397,7 +399,7 @@ const initUppy = () => {
           resolvedHeight = updated.height
           resolvedContentType = updated.contentType || contentType
         } catch (err) {
-          const msg = err instanceof Error ? err.message : '文件元数据回填失败'
+          const msg = err instanceof Error ? err.message : String(t('uppy.fileMetaFillbackFailed'))
           theToast.error(msg)
         }
 
@@ -438,7 +440,7 @@ const initUppy = () => {
 
     const filesToAddResult = [...files.value]
     if (result?.successful?.length && filesToAddResult.length === 0) {
-      theToast.error('上传成功但未解析到文件ID，请检查后端上传响应结构')
+      theToast.error(String(t('uppy.uploadSuccessNoFileId')))
     }
     // 保持“上传中”直到写回编辑器状态完成，避免用户立即发布导致 echo_files 为空。
     Promise.resolve(
@@ -469,7 +471,7 @@ watch(
         // 初始化新的 Uppy 实例
         initUppy()
       } else {
-        theToast.error('当前有文件正在上传，请稍后再切换上传方式 😢')
+        theToast.error(String(t('uppy.uploadingTaskSwitchBlocked')))
       }
     }
   },
@@ -481,7 +483,7 @@ watch(
   (newVal, oldVal) => {
     if (newVal === oldVal) return
     if (isUploading.value) {
-      theToast.error('正在上传中，无法切换压缩模式')
+      theToast.error(String(t('uppy.uploadingSwitchCompressBlocked')))
       return
     }
 

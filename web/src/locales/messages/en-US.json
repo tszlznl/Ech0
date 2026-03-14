@@ -95,7 +95,40 @@
     "inboxUnread": "Unread messages: {total}",
     "removeImage": "Remove image",
     "invalidImageIndex": "Invalid current image index; cannot remove",
-    "removeImageConfirmTitle": "Remove this image?"
+    "removeImageConfirmTitle": "Remove this image?",
+    "restoreDraftTitle": "Restore local draft",
+    "restoreDraftDesc": "An unpublished local draft was detected. Restore it?",
+    "restoreDraftRecovered": "Local draft restored",
+    "imageUrlRequired": "Image URL cannot be empty",
+    "externalRegisterFailed": "Failed to register external image, please retry",
+    "uploadNoPreviewUrl": "Upload finished but preview URL is missing, please retry",
+    "fileUploadingWait": "Images are still uploading. Please wait before publishing",
+    "attachmentMissingFileId": "There are attachments without bound file_id",
+    "updateEchoEmpty": "Echo to update cannot be empty!",
+    "addEchoEmpty": "Echo to publish cannot be empty!",
+    "publishing": "🚀 Publishing...",
+    "publishSuccess": "🎉 Published successfully!",
+    "publishFailed": "😭 Publish failed, please try again later!",
+    "noEchoToUpdate": "No Echo selected for update!",
+    "syncingFiles": "🔁 Syncing attachments...",
+    "updating": "🚀 Updating...",
+    "updateSuccess": "🎉 Updated successfully!",
+    "updateSuccessWithSync": "🔁 Attachments changed and Echo was synced automatically!",
+    "updateFailed": "😭 Update failed, please try again later!",
+    "websiteUrlRequired": "Website URL cannot be empty!",
+    "externalLink": "External link",
+    "exitUpdateModeSuccess": "Exited update mode",
+    "videoShareLinkInvalid": "Please enter a valid Bilibili/YouTube share URL!",
+    "enteredUpdateMode": "Entered update mode. Edit content and click update!",
+    "fullscreenEdit": "Fullscreen edit",
+    "exitFullscreen": "Exit fullscreen",
+    "bold": "Bold",
+    "italic": "Italic",
+    "heading": "Heading",
+    "quote": "Quote",
+    "unorderedList": "Unordered list",
+    "addedLabel": "Added:",
+    "noContentAdded": "No content added yet"
   },
   "commentManager": {
     "title": "Comment System Settings",
@@ -197,12 +230,18 @@
     "ownerUsernamePlaceholder": "Owner username",
     "ownerPasswordPlaceholder": "Owner password",
     "initializing": "Initializing...",
-    "initialize": "Initialize"
+    "initialize": "Initialize",
+    "initDone": "Initialization completed",
+    "alreadyInitializedRedirect": "System already initialized, redirecting to login",
+    "initFailed": "Initialization failed"
   },
   "hub": {
     "emptyList": "Hub list is empty. Add Connect entries in settings first.",
     "noAvailableInstance": "No available Hub instances can be connected right now.",
-    "connectedCount": "Connected to {count} instance(s), loading Echos..."
+    "connectedCount": "Connected to {count} instance(s), loading Echos...",
+    "loading": "Loading...",
+    "emptyConnectHint": "No data yet. Add a Connect first 🙃",
+    "noMoreData": "No more data"
   },
   "inbox": {
     "cleared": "Inbox has been cleared"
@@ -291,7 +330,12 @@
   },
   "homeTop": {
     "searchTitle": "Search",
-    "searchPlaceholder": "Search..."
+    "searchPlaceholder": "Search...",
+    "exitZenMode": "Exit Zen Mode",
+    "rssTitle": "RSS",
+    "widgetTitle": "Ech0 Widget",
+    "hubTitle": "Ech0 Hub",
+    "panelTitle": "Panel"
   },
   "homeFeed": {
     "loadMore": "Load more",
@@ -512,7 +556,9 @@
     "customAccount": "Custom {type} account",
     "customTemplate": "Custom (supports OIDC)",
     "redirectAllowlistInvalid": "Redirect Allowlist must be valid http/https URLs",
-    "corsOriginsInvalid": "CORS Origins must be valid http/https URLs"
+    "corsOriginsInvalid": "CORS Origins must be valid http/https URLs",
+    "bindSuccess": "OAuth2 account linked successfully",
+    "bindFailed": "OAuth2 account linking failed, please retry"
   },
   "backupSetting": {
     "title": "Data Export",
@@ -638,5 +684,62 @@
     "enableAutoBackup": "Enable auto backup",
     "crontab": "Backup crontab",
     "crontabPlaceholder": "Backup crontab expression"
+  },
+  "uppy": {
+    "dashboardNote": "Paste or choose images to upload!",
+    "loginRequired": "Please log in before uploading images 😢",
+    "uploadingImageWait": "Uploading images, please wait... ⏳",
+    "uploadImageError": "An error occurred while uploading image 😢",
+    "uploadSuccess": "Upload successful! 🎉",
+    "missingFileIdentifier": "Upload response missing file identifier; cannot bind to Echo",
+    "missingFileId": "Upload response missing file ID; cannot bind to Echo",
+    "fileMetaFillbackFailed": "Failed to write back file metadata",
+    "uploadSuccessNoFileId": "Upload succeeded but file ID could not be parsed. Check backend response",
+    "uploadingTaskSwitchBlocked": "Files are uploading. Please switch upload mode later 😢",
+    "uploadingSwitchCompressBlocked": "Cannot switch compression mode while uploading"
+  },
+  "markdown": {
+    "expand": "Expand",
+    "collapse": "Collapse"
+  },
+  "baseSelect": {
+    "empty": "No options",
+    "pleaseSelect": "Please select"
+  },
+  "commonNav": {
+    "backHome": "Back to home"
+  },
+  "echoPage": {
+    "loadingDetail": "Loading Echo details..."
+  },
+  "notFound": {
+    "pageNotFound": "Page not found"
+  },
+  "hubEcho": {
+    "jumpToEcho": "Open this Echo",
+    "print": "Print",
+    "like": "Like",
+    "alreadyLiked": "You have already liked this",
+    "likeFailed": "Like failed",
+    "likeSuccess": "Liked successfully",
+    "printTextOnly": "Only Echos with text can be printed"
+  },
+  "imageGallery": {
+    "previewImage": "Preview image {index}",
+    "scrollHint": "← Swipe left/right to see more →"
+  },
+  "zone": {
+    "clearedPrintNotes": "Cleared all printed notes",
+    "noPrintableText": "This Echo link has no printable text"
+  },
+  "githubCard": {
+    "avatarAlt": "Avatar"
+  },
+  "recentCard": {
+    "mysteriousRecent": "The author has been mysterious lately~",
+    "generating": "Generating..."
+  },
+  "websocket": {
+    "invalidMessage": "Received invalid WebSocket message"
   }
 }

@@ -43,6 +43,7 @@ import DraggablePaper from '../components/DraggablePaper.vue'
 import TypewriterConsole from '../components/TypewriterConsole.vue'
 import type { PaperCardData } from '../types'
 import { getRandomStamp } from '../utils/stampUtils'
+import { useI18n } from 'vue-i18n'
 
 type PaperCardDataWithZ = PaperCardData & { zIndex: number }
 
@@ -50,6 +51,7 @@ const STORAGE_KEY = 'zone-paper-cards'
 
 const route = useRoute()
 const zoneStore = useZoneStore()
+const { t } = useI18n()
 const cards = ref<PaperCardDataWithZ[]>([])
 const inputText = ref('')
 const topZIndex = ref(10)
@@ -144,7 +146,7 @@ const handlePrint = (text: string, withStamp: boolean) => {
 const clearAllCards = () => {
   cards.value = []
   localStorage.removeItem(STORAGE_KEY)
-  theToast.info('已清空打印纸条')
+  theToast.info(String(t('zone.clearedPrintNotes')))
 }
 
 const updateCard = (id: string, updates: Partial<PaperCardData>) => {
@@ -203,7 +205,7 @@ const tryPrintFromRouteEchoId = async () => {
     return
   }
 
-  theToast.info('该链接对应的 Echo 没有可打印文本')
+  theToast.info(String(t('zone.noPrintableText')))
 }
 
 watch(cards, persistCards, { deep: true })

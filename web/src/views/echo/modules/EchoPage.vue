@@ -6,7 +6,7 @@
         <BaseButton
           @click="goBack"
           class="text-[var(--color-text-primary)] rounded-md shadow-none! border-none! ring-0! bg-transparent! group"
-          title="返回首页"
+          :title="t('commonNav.backHome')"
         >
           <Arrow
             class="w-9 h-9 rotate-180 transition-transform duration-200 group-hover:-translate-x-1"
@@ -23,7 +23,7 @@
         <TheComment class="my-2" />
       </div>
       <div v-else class="w-full sm:mt-1 text-[var(--color-text-muted)]">
-        <p class="text-center">正在加载 Echo 详情...</p>
+        <p class="text-center">{{ t('echoPage.loadingDetail') }}</p>
       </div>
     </div>
   </div>
@@ -39,9 +39,11 @@ import TheComment from '@/components/advanced/TheComment.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import Arrow from '@/components/icons/arrow.vue'
 import { useEchoStore, useZoneStore } from '@/stores'
+import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
 const route = useRoute()
+const { t } = useI18n()
 const echoId = route.params.echoId as string
 
 const echoStore = useEchoStore()

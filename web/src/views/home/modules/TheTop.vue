@@ -26,7 +26,7 @@
         <button
           v-if="isZenMode"
           type="button"
-          title="退出 Zen Mode"
+          :title="t('homeTop.exitZenMode')"
           class="h-8 px-2 text-xs text-[var(--color-text-muted)] border border-[var(--color-border-subtle)] rounded-md hover:line-through hover:text-[var(--color-text-secondary)] hover:border-[var(--color-text-muted)] transition-colors duration-200"
           @click="handleExitZenMode"
         >
@@ -38,27 +38,27 @@
       <div class="flex justify-end items-center gap-1">
         <!-- RSS -->
         <div>
-          <a href="/rss" title="RSS">
+          <a href="/rss" :title="t('homeTop.rssTitle')">
             <!-- icon -->
             <Rss class="w-8 h-8 text-[var(--color-text-muted)]" />
           </a>
         </div>
         <!-- Ech0 Widget（移动端入口） -->
         <div class="sm:hidden">
-          <RouterLink to="/widget" title="Ech0 Widget">
+          <RouterLink to="/widget" :title="t('homeTop.widgetTitle')">
             <Widget class="w-8 h-8 text-[var(--color-text-muted)]" />
           </RouterLink>
         </div>
         <!-- Ech0 Hub -->
         <div>
-          <RouterLink to="/hub" title="Ech0 Hub">
+          <RouterLink to="/hub" :title="t('homeTop.hubTitle')">
             <!-- icon -->
             <HubIcon class="w-8 h-8 text-[var(--color-text-muted)]" />
           </RouterLink>
         </div>
         <!-- PanelPage -->
         <div>
-          <RouterLink to="/panel" title="面板">
+          <RouterLink to="/panel" :title="t('homeTop.panelTitle')">
             <!-- icon -->
             <Panel class="w-8 h-8 text-[var(--color-text-muted)]" />
           </RouterLink>
@@ -91,8 +91,6 @@ const { t } = useI18n()
 const searchContent = ref<string>('')
 
 const handleSearch = () => {
-  console.log('搜索内容:', searchContent.value)
-
   // 设置搜索内容
 
   echoStore.searchValue = searchContent.value

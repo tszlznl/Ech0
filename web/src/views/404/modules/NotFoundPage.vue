@@ -5,11 +5,11 @@
         class="text-7xl italic font-bold text-center text-[var(--color-text-muted)] mb-4 flex-wrap"
       >
         <span> 404 </span>
-        <span class="text-nowrap"> 页面不存在 </span>
+        <span class="text-nowrap"> {{ t('notFound.pageNotFound') }} </span>
       </div>
       <BaseButton
         @click="$router.push({ name: 'home' })"
-        title="返回首页"
+        :title="t('commonNav.backHome')"
         class="rounded-md absolute top-10 left-10"
       >
         <Arrow class="text-3xl rotate-180" />
@@ -21,4 +21,7 @@
 <script setup lang="ts">
 import BaseButton from '@/components/common/BaseButton.vue'
 import Arrow from '@/components/icons/arrow.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 </script>
