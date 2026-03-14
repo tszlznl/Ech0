@@ -117,6 +117,7 @@ Ech0 is a new-generation open-source self-hosted platform designed for individua
 ## Experience
 
 - 🌍 **Cross-Device Adaptation**: Responsive design for desktop, tablet, and mobile browsers.  
+- 🌐 **i18n Localization Support**: Supports multi-language UI switching across different language usage scenarios.  
 - 👾 **PWA Support**: Install as a web app for a more native-like experience.  
 - 🌗 **Themes & Dark Mode**: Supports dark mode and extensible theming.  
 
