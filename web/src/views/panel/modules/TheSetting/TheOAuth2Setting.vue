@@ -68,7 +68,9 @@
         <div
           class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] h-10"
         >
-          <h2 class="font-semibold w-30 shrink-0">{{ t('oauth2Setting.enableOAuth2') }}:</h2>
+          <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">
+            {{ t('oauth2Setting.enableOAuth2') }}:
+          </h2>
           <BaseSwitch v-model="OAuth2Setting.enable" :disabled="!oauth2EditMode" />
         </div>
 
@@ -76,7 +78,9 @@
         <div
           class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
-          <h2 class="font-semibold w-30 shrink-0">{{ t('oauth2Setting.template') }}:</h2>
+          <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">
+            {{ t('oauth2Setting.template') }}:
+          </h2>
           <BaseSelect
             v-model="OAuth2Setting.provider"
             :options="OAuth2ProviderOptions"
@@ -89,10 +93,10 @@
         <div
           class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
-          <h2 class="font-semibold w-30 shrink-0">Client ID:</h2>
+          <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">Client ID:</h2>
           <span
             v-if="!oauth2EditMode"
-            class="truncate max-w-40 inline-block align-middle"
+            class="flex-1 min-w-0 truncate inline-block align-middle"
             :title="OAuth2Setting.client_id"
             style="vertical-align: middle"
           >
@@ -113,10 +117,10 @@
         <div
           class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
-          <h2 class="font-semibold w-30 shrink-0">Client Secret:</h2>
+          <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">Client Secret:</h2>
           <span
             v-if="!oauth2EditMode"
-            class="truncate max-w-40 inline-block align-middle"
+            class="flex-1 min-w-0 truncate inline-block align-middle"
             :title="OAuth2Setting.client_secret"
             style="vertical-align: middle"
           >
@@ -139,10 +143,10 @@
         <div
           class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
-          <h2 class="font-semibold w-30 shrink-0">Callback URL:</h2>
+          <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">Callback URL:</h2>
           <span
             v-if="!oauth2EditMode"
-            class="truncate max-w-40 inline-block align-middle"
+            class="flex-1 min-w-0 truncate inline-block align-middle"
             :title="OAuth2Setting.redirect_uri"
             style="vertical-align: middle"
           >
@@ -161,10 +165,10 @@
         <div
           class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
-          <h2 class="font-semibold w-30 shrink-0">Auth URL:</h2>
+          <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">Auth URL:</h2>
           <span
             v-if="!oauth2EditMode"
-            class="truncate max-w-40 inline-block align-middle"
+            class="flex-1 min-w-0 truncate inline-block align-middle"
             :title="OAuth2Setting.auth_url"
             style="vertical-align: middle"
           >
@@ -183,10 +187,10 @@
         <div
           class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
-          <h2 class="font-semibold w-30 shrink-0">Token URL:</h2>
+          <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">Token URL:</h2>
           <span
             v-if="!oauth2EditMode"
-            class="truncate max-w-40 inline-block align-middle"
+            class="flex-1 min-w-0 truncate inline-block align-middle"
             :title="OAuth2Setting.token_url"
             style="vertical-align: middle"
           >
@@ -207,10 +211,10 @@
         <div
           class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
-          <h2 class="font-semibold w-30 shrink-0">UserInfo URL:</h2>
+          <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">UserInfo URL:</h2>
           <span
             v-if="!oauth2EditMode"
-            class="truncate max-w-40 inline-block align-middle"
+            class="flex-1 min-w-0 truncate inline-block align-middle"
             :title="OAuth2Setting.user_info_url"
             style="vertical-align: middle"
           >
@@ -233,10 +237,10 @@
         <div
           class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
-          <h2 class="font-semibold w-30 shrink-0">Scopes:</h2>
+          <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">Scopes:</h2>
           <span
             v-if="!oauth2EditMode"
-            class="truncate max-w-40 inline-block align-middle"
+            class="flex-1 min-w-0 truncate inline-block align-middle"
             :title="OAuth2Setting.scopes.join(', ')"
             style="vertical-align: middle"
           >
@@ -261,7 +265,9 @@
           v-if="OAuth2Setting.enable"
           class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] h-10"
         >
-          <h2 class="font-semibold w-30 shrink-0">{{ t('oauth2Setting.enableOidc') }}:</h2>
+          <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">
+            {{ t('oauth2Setting.enableOidc') }}:
+          </h2>
           <BaseSwitch v-model="OAuth2Setting.is_oidc" :disabled="!oauth2EditMode" />
         </div>
 
@@ -270,10 +276,10 @@
           v-if="OAuth2Setting.is_oidc"
           class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
-          <h2 class="font-semibold w-30 shrink-0">Issuer:</h2>
+          <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">Issuer:</h2>
           <span
             v-if="!oauth2EditMode"
-            class="truncate max-w-40 inline-block align-middle"
+            class="flex-1 min-w-0 truncate inline-block align-middle"
             :title="OAuth2Setting.issuer"
             style="vertical-align: middle"
           >
@@ -293,10 +299,10 @@
           v-if="OAuth2Setting.is_oidc"
           class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
-          <h2 class="font-semibold w-30 shrink-0">JWKS URL:</h2>
+          <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">JWKS URL:</h2>
           <span
             v-if="!oauth2EditMode"
-            class="truncate max-w-40 inline-block align-middle"
+            class="flex-1 min-w-0 truncate inline-block align-middle"
             :title="OAuth2Setting.jwks_url"
             style="vertical-align: middle"
           >
@@ -319,8 +325,10 @@
           <div
             class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
           >
-            <h2 class="font-semibold w-40 shrink-0">Redirect Allowlist:</h2>
-            <span v-if="!oauth2EditMode" class="truncate max-w-80 inline-block align-middle">
+            <h2 class="font-semibold min-w-40 w-max shrink-0 whitespace-nowrap">
+              Redirect Allowlist:
+            </h2>
+            <span v-if="!oauth2EditMode" class="flex-1 min-w-0 truncate inline-block align-middle">
               {{
                 OAuth2Setting.auth_redirect_allowed_return_urls.length === 0
                   ? t('commonUi.none')
@@ -338,8 +346,8 @@
           <div
             class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
           >
-            <h2 class="font-semibold w-40 shrink-0">CORS Origins:</h2>
-            <span v-if="!oauth2EditMode" class="truncate max-w-80 inline-block align-middle">
+            <h2 class="font-semibold min-w-40 w-max shrink-0 whitespace-nowrap">CORS Origins:</h2>
+            <span v-if="!oauth2EditMode" class="flex-1 min-w-0 truncate inline-block align-middle">
               {{
                 OAuth2Setting.cors_allowed_origins.length === 0
                   ? t('commonUi.none')

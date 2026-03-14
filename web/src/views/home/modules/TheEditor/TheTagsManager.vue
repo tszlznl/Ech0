@@ -1,7 +1,9 @@
 <template>
   <div class="py-4">
-    <h2 class="text-[var(--color-text-secondary)] font-bold mb-2">标签管理</h2>
-    <p class="text-xs text-[var(--color-text-muted)] mb-3">Tip: 点击标签可以按标签过滤或删除</p>
+    <h2 class="text-[var(--color-text-secondary)] font-bold mb-2">
+      {{ t('editor.tagManagerTitle') }}
+    </h2>
+    <p class="text-xs text-[var(--color-text-muted)] mb-3">{{ t('editor.tagManagerHint') }}</p>
     <div class="flex flex-wrap gap-2">
       <Popover v-for="tag in tagList" :key="tag.id" class="relative" v-slot="{ close }">
         <PopoverButton
@@ -36,7 +38,7 @@
                       close()
                     }
                   "
-                  title="按标签过滤内容"
+                  :title="t('editor.filterByTag')"
                   class="flex items-center justify-center rounded-md p-1 transition duration-150 ease-in-out hover:bg-[var(--color-bg-surface)] focus:outline-none focus-visible:ring focus-visible:ring-[var(--input-focus-color-border-subtle)]"
                 >
                   <Filter class="w-5 h-5" />
@@ -49,7 +51,7 @@
                       close()
                     }
                   "
-                  title="删除该标签"
+                  :title="t('editor.deleteTag')"
                   class="flex items-center justify-center rounded-md p-1 transition duration-150 ease-in-out hover:bg-[var(--color-accent-soft)] focus:outline-none focus-visible:ring focus-visible:ring-[var(--input-focus-color-border-subtle)]"
                 >
                   <Trashbin class="w-5 h-5" />
@@ -71,9 +73,11 @@ import { useBaseDialog } from '@/composables/useBaseDialog'
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
 import Trashbin from '@/components/icons/trashbin.vue'
 import Filter from '@/components/icons/filter.vue'
+import { useI18n } from 'vue-i18n'
 
 const echoStore = useEchoStore()
 const { tagList } = storeToRefs(echoStore)
+const { t } = useI18n()
 
 const { openConfirm } = useBaseDialog()
 
@@ -101,8 +105,8 @@ const handleFilterByTag = (tag: App.Api.Ech0.Tag) => {
 // 删除标签
 const handleDeleteTag = (tagId: string) => {
   openConfirm({
-    title: '确认删除该标签吗？',
-    description: '删除后，所有使用该标签的内容将不再关联此标签',
+    title: String(t('editor.deleteTagConfirmTitle')),
+    description: String(t('editor.deleteTagConfirmDesc')),
     onConfirm: () => {
       fetchDeleteTagById(tagId).then((res) => {
         if (res.code === 1) {

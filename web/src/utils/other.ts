@@ -1,4 +1,5 @@
 import { MusicProvider } from '@/enums/enums'
+import { i18n, DEFAULT_LOCALE } from '@/locales'
 
 const ABSOLUTE_URL_REGEX = /^https?:\/\//i
 const joinBaseAndPath = (baseUrl: string, path: string) =>
@@ -56,20 +57,27 @@ export const formatDate = (dateInput: string | number) => {
   const diffInHours = Math.floor(diff / (1000 * 60 * 60))
   const diffInMinutes = Math.floor(diff / (1000 * 60))
 
+  const locale = i18n.global.locale.value || DEFAULT_LOCALE
+  const t = (key: string, params?: Record<string, unknown>) =>
+    String(i18n.global.t(key, params || {}))
+
   const diffInSeconds = Math.floor(diff / 1000)
   if (diffInSeconds < 60) {
-    return '刚刚'
+    return t('dateTime.justNow')
   } else if (diffInMinutes < 60) {
-    return `${diffInMinutes}分钟前`
+    return t('dateTime.minutesAgo', { count: diffInMinutes })
   } else if (diffInHours < 24) {
-    return `${diffInHours}小时前`
+    return t('dateTime.hoursAgo', { count: diffInHours })
   } else if (diffInDays < 3) {
-    return `${diffInDays}天前`
+    return t('dateTime.daysAgo', { count: diffInDays })
   } else {
-    const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-    const weekDay = weekDays[date.getDay()]
-
-    return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 · ${weekDay}`
+    const formatter = new Intl.DateTimeFormat(locale, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      weekday: 'short',
+    })
+    return formatter.format(date)
   }
 }
 

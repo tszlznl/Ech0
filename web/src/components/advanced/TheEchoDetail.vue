@@ -97,10 +97,10 @@
       <!-- 操作按钮 -->
       <div ref="menuRef" class="relative flex items-center justify-center gap-2 h-auto">
         <!-- 分享 -->
-        <div class="flex items-center justify-end" title="分享">
+        <div class="flex items-center justify-end" :title="t('echoDetail.share')">
           <button
             @click="handleShareEcho(props.echo.id)"
-            title="分享"
+            :title="t('echoDetail.share')"
             :class="[
               'transform transition-transform duration-150',
               isShareAnimating ? 'scale-160' : 'scale-100',
@@ -111,10 +111,10 @@
         </div>
 
         <!-- 打印 -->
-        <div class="flex items-center justify-end" title="打印">
+        <div class="flex items-center justify-end" :title="t('echoDetail.print')">
           <button
             @click="handlePrintEcho(props.echo)"
-            title="打印"
+            :title="t('echoDetail.print')"
             :class="[
               'transform transition-transform duration-150',
               isPrintAnimating ? 'scale-160' : 'scale-100',
@@ -125,12 +125,12 @@
         </div>
 
         <!-- 点赞 -->
-        <div class="flex items-center justify-end" title="点赞">
+        <div class="flex items-center justify-end" :title="t('echoDetail.like')">
           <div class="flex items-center gap-1">
             <!-- 点赞按钮   -->
             <button
               @click="handleLikeEcho(props.echo.id)"
-              title="点赞"
+              :title="t('echoDetail.like')"
               :class="[
                 'transform transition-transform duration-150',
                 isLikeAnimating ? 'scale-160' : 'scale-100',
@@ -172,7 +172,9 @@ import { ExtensionType, ImageLayout } from '@/enums/enums'
 import { formatDate } from '@/utils/other'
 import { getEchoFilesBy } from '@/utils/echo'
 import TheMdPreview from './TheMdPreview.vue'
+import { useI18n } from 'vue-i18n'
 const emit = defineEmits(['updateLikeCount', 'printEcho'])
+const { t } = useI18n()
 
 type Echo = App.Api.Ech0.Echo
 
@@ -200,7 +202,7 @@ const handleLikeEcho = (echoId: string) => {
 
   // 检查LocalStorage中是否已经点赞过
   if (hasLikedEcho(echoId)) {
-    theToast.info('你已经点赞过了,感谢你的喜欢！')
+    theToast.info(String(t('echoDetail.alreadyLiked')))
     return
   }
 
@@ -210,7 +212,7 @@ const handleLikeEcho = (echoId: string) => {
       localStg.setItem(LIKE_LIST_KEY, likedEchoIds)
       // 发送更新事件
       emit('updateLikeCount', echoId)
-      theToast.info('点赞成功！')
+      theToast.info(String(t('echoDetail.likeSuccess')))
     }
   })
 }
@@ -221,9 +223,9 @@ const handleShareEcho = (echoId: string) => {
     isShareAnimating.value = false
   }, 250) // 对应 duration-250
 
-  const shareUrl = `${window.location.origin}/echo/${echoId}\n ———— 来自 Ech0 分享`
+  const shareUrl = `${window.location.origin}/echo/${echoId}\n ———— ${t('echoDetail.shareSuffix')}`
   navigator.clipboard.writeText(shareUrl).then(() => {
-    theToast.info('已复制到剪贴板！')
+    theToast.info(String(t('echoDetail.copied')))
   })
 }
 
@@ -234,7 +236,7 @@ const handlePrintEcho = (echo: Echo) => {
   }, 250)
 
   if (!echo.content?.trim()) {
-    theToast.info('仅支持打印带有文本内容的 Echo！')
+    theToast.info(String(t('echoDetail.printTextOnly')))
     return
   }
 

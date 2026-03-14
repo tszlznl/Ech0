@@ -5,10 +5,10 @@
       <div class="flex justify-start items-center gap-2">
         <BaseInput
           v-if="!isFilteringMode"
-          title="搜索"
+          :title="t('homeTop.searchTitle')"
           type="text"
           v-model="searchContent"
-          placeholder="搜索..."
+          :placeholder="t('homeTop.searchPlaceholder')"
           class="w-42! h-10 bg-[var(--input-bg-color)]"
           @keyup.enter="$event.target.blur()"
           @blur="handleSearch"
@@ -78,6 +78,7 @@ import { RouterLink } from 'vue-router'
 import { useEchoStore, useZenStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Close from '@/components/icons/close.vue'
 import Filter from '@/components/icons/filter.vue'
 const echoStore = useEchoStore()
@@ -85,6 +86,7 @@ const zenStore = useZenStore()
 const { refreshForSearch, getEchosByPage } = echoStore
 const { searchingMode, filteredTag, isFilteringMode } = storeToRefs(echoStore)
 const { isZenMode } = storeToRefs(zenStore)
+const { t } = useI18n()
 
 const searchContent = ref<string>('')
 

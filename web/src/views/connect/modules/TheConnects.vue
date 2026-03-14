@@ -13,7 +13,7 @@
       </div>
       <div v-if="!loading">
         <div v-if="!connectsInfo.length" class="text-[var(--color-text-muted)] text-sm mb-2">
-          当前暂无连接
+          {{ t('connectWidget.noConnections') }}
         </div>
         <div v-else class="flex flex-wrap gap-3">
           <div
@@ -41,16 +41,18 @@
               class="absolute z-10 left-1/2 -translate-x-1/2 top-10 min-w-max bg-gray-800 text-white text-xs rounded px-3 py-2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-lg"
             >
               <div class="font-bold mb-1">{{ connect.server_name }}</div>
-              <div>Owner: {{ connect.sys_username || '-' }}</div>
-              <div>共有: {{ connect.total_echos ?? 0 }}</div>
-              <div>今日: {{ connect.today_echos ?? 0 }}</div>
-              <div>版本: {{ connect.version || '-' }}</div>
+              <div>{{ t('connectWidget.tooltipOwner') }}: {{ connect.sys_username || '-' }}</div>
+              <div>{{ t('connectWidget.tooltipTotal') }}: {{ connect.total_echos ?? 0 }}</div>
+              <div>{{ t('connectWidget.tooltipToday') }}: {{ connect.today_echos ?? 0 }}</div>
+              <div>{{ t('connectWidget.tooltipVersion') }}: {{ connect.version || '-' }}</div>
             </div>
           </div>
         </div>
       </div>
       <div v-else>
-        <div class="text-[var(--color-text-secondary)] text-sm mb-2">加载中...</div>
+        <div class="text-[var(--color-text-secondary)] text-sm mb-2">
+          {{ t('connectWidget.loading') }}
+        </div>
       </div>
 
       <div class="comment-teaser mt-8">
@@ -73,13 +75,15 @@
               v-if="canJumpToEchoDetail"
               type="button"
               class="comment-jump-btn"
-              title="查看对应 Echo 详情"
-              aria-label="查看对应 Echo 详情"
+              :title="t('connectWidget.jumpToEchoDetail')"
+              :aria-label="t('connectWidget.jumpToEchoDetail')"
               @click="handleJumpToEchoDetail"
             >
               <LinkTo class="w-4 h-4" />
             </button>
-            <p v-if="commentLoading" class="comment-teaser-content">正在挑选一条精选评论...</p>
+            <p v-if="commentLoading" class="comment-teaser-content">
+              {{ t('connectWidget.randomCommentLoading') }}
+            </p>
             <p v-else class="comment-teaser-content">{{ randomCommentContent }}</p>
           </div>
         </div>
@@ -96,9 +100,11 @@ import { useConnectStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 const connectStore = useConnectStore()
 const router = useRouter()
+const { t } = useI18n()
 const { getConnectInfo } = connectStore
 const { loading, connectsInfo } = storeToRefs(connectStore)
 const randomComment = ref<App.Api.Comment.CommentItem | null>(null)
@@ -109,7 +115,7 @@ const canJumpToEchoDetail = computed(
 
 const randomCommentContent = computed(() => {
   const content = randomComment.value?.content?.trim()
-  if (!content) return '暂无精选评论可展示。'
+  if (!content) return String(t('connectWidget.noFeaturedComment'))
   return content.replace(/\s+/g, ' ').slice(0, 120)
 })
 

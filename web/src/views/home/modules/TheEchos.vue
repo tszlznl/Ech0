@@ -33,7 +33,9 @@
           @click="handleLoadMore"
           class="rounded-full bg-[var(--btn-bg-color)] !active:bg-[var(--btn-hover-bg-color)] mr-2"
         >
-          <span class="text-[var(--btn-text-color)] text-md text-center px-2 py-1">继续装填</span>
+          <span class="text-[var(--btn-text-color)] text-md text-center px-2 py-1">{{
+            t('homeFeed.loadMore')
+          }}</span>
         </BaseButton>
         <TheBackTop class="w-8 h-8 p-1" :target="scrollTarget" />
       </div>
@@ -45,14 +47,14 @@
         class="mx-auto my-5 text-center echos-toolbar"
       >
         <p class="text-xl text-[var(--color-text-muted)] flex items-center justify-center">
-          没有啦！<Flowers />
+          {{ t('homeFeed.noMore') }}<Flowers />
         </p>
       </div>
     </Transition>
     <!-- 加载中 -->
     <Transition name="fade">
       <div v-if="echoStore.isLoading" class="mx-auto my-5 text-center echos-toolbar">
-        <span class="text-xl text-[var(--color-text-muted)]">加载中...</span>
+        <span class="text-xl text-[var(--color-text-muted)]">{{ t('homeFeed.loading') }}</span>
       </div>
     </Transition>
     <!-- 自定义页脚 -->
@@ -77,6 +79,7 @@ import BaseButton from '@/components/common/BaseButton.vue'
 import { storeToRefs } from 'pinia'
 import TheBackTop from '@/components/advanced/TheBackTop.vue'
 import Flowers from '@/components/icons/flowers.vue'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
   scrollTarget?: HTMLElement | null
@@ -85,6 +88,7 @@ const props = defineProps<{
 const echoStore = useEchoStore()
 const settingStore = useSettingStore()
 const zenStore = useZenStore()
+const { t } = useI18n()
 const { SystemSetting } = storeToRefs(settingStore)
 const { isZenMode } = storeToRefs(zenStore)
 const footerContent = computed(

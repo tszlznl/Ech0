@@ -3,6 +3,7 @@ import PanelCard from '@/layout/PanelCard.vue'
 import { FILE_STORAGE_TYPE } from '@/constants/file'
 import { fetchDownloadFileById, fetchDownloadFileByPath, fetchFileTree } from '@/service/api'
 import { nextTick, reactive, ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { theToast } from '@/utils/toast'
 import DownloadIcon from '@/components/icons/download.vue'
 import ViewIcon from '@/components/icons/view.vue'
@@ -39,9 +40,11 @@ type LoadChildrenOptions = {
   preserveOnError?: boolean
 }
 
+const { t } = useI18n()
+
 const sections = reactive<Record<RootStorageType, FileSectionState>>({
   [FILE_STORAGE_TYPE.LOCAL]: {
-    title: '本地存储',
+    title: '',
     expanded: false,
     loaded: false,
     loading: false,
@@ -49,7 +52,7 @@ const sections = reactive<Record<RootStorageType, FileSectionState>>({
     nodes: [],
   },
   [FILE_STORAGE_TYPE.OBJECT]: {
-    title: '对象存储',
+    title: '',
     expanded: false,
     loaded: false,
     loading: false,
@@ -153,13 +156,13 @@ const loadChildren = async (
       section.error = ''
     }
   } else if (parentNode) {
-    parentNode.error = res.msg || '加载失败'
+    parentNode.error = res.msg || String(t('storageFileList.loadFailed'))
     if (preserveOnError && backupChildren.length > 0) {
       parentNode.children = backupChildren
       parentNode.loaded = true
     }
   } else {
-    section.error = res.msg || '加载失败'
+    section.error = res.msg || String(t('storageFileList.loadFailed'))
     if (preserveOnError && backupChildren.length > 0) {
       section.nodes = backupChildren
       section.loaded = true
@@ -248,6 +251,12 @@ const rootMark = (storageType: RootStorageType) => {
   return storageType === FILE_STORAGE_TYPE.LOCAL ? 'L' : 'O'
 }
 
+const rootTitle = (storageType: RootStorageType) => {
+  return storageType === FILE_STORAGE_TYPE.LOCAL
+    ? String(t('storageFileList.localStorage'))
+    : String(t('storageFileList.objectStorage'))
+}
+
 const refreshCurrentRoot = async () => {
   const activeRoot = getActiveRoot()
   if (!activeRoot) return
@@ -276,7 +285,7 @@ const triggerDownload = async (storageType: RootStorageType, node: TreeNode) => 
           content_type: node.content_type,
         })
     if (await isErrorLikeBlob(blob)) {
-      theToast.error('下载失败：服务端返回异常内容')
+      theToast.error(String(t('storageFileList.downloadFailedResponse')))
       return
     }
     const objectUrl = window.URL.createObjectURL(blob)
@@ -288,7 +297,7 @@ const triggerDownload = async (storageType: RootStorageType, node: TreeNode) => 
     link.remove()
     window.URL.revokeObjectURL(objectUrl)
   } catch {
-    theToast.error('下载失败')
+    theToast.error(String(t('storageFileList.downloadFailed')))
   } finally {
     downloadingId.value = ''
   }
@@ -307,7 +316,7 @@ const triggerPreview = async (storageType: RootStorageType, node: TreeNode) => {
           content_type: node.content_type,
         })
     if (await isErrorLikeBlob(blob)) {
-      theToast.error('预览失败：服务端返回异常内容')
+      theToast.error(String(t('storageFileList.previewFailedResponse')))
       return
     }
     const objectUrl = window.URL.createObjectURL(blob)
@@ -316,7 +325,7 @@ const triggerPreview = async (storageType: RootStorageType, node: TreeNode) => {
       window.URL.revokeObjectURL(objectUrl)
     }, 60_000)
   } catch {
-    theToast.error('预览失败')
+    theToast.error(String(t('storageFileList.previewFailed')))
   } finally {
     previewingId.value = ''
   }
@@ -409,13 +418,15 @@ onMounted(() => {
   <PanelCard class="mt-3">
     <div class="storage-file-list">
       <div class="header">
-        <h1 class="title">文件管理</h1>
+        <h1 class="title">{{ t('storageFileList.title') }}</h1>
         <button
           class="refresh-btn"
           :disabled="!getActiveRoot() || refreshingRoot !== ''"
           @click="refreshCurrentRoot"
         >
-          {{ refreshingRoot !== '' ? '刷新中...' : '刷新' }}
+          {{
+            refreshingRoot !== '' ? t('storageFileList.refreshing') : t('storageFileList.refresh')
+          }}
         </button>
       </div>
       <div class="explorer-panel">
@@ -425,11 +436,13 @@ onMounted(() => {
               <div class="tree-left">
                 <span class="node-icon">{{ sections[storageType].expanded ? '▾' : '▸' }}</span>
                 <span class="root-mark">{{ rootMark(storageType) }}</span>
-                <span class="node-name">{{ sections[storageType].title }}</span>
+                <span class="node-name">{{ rootTitle(storageType) }}</span>
               </div>
               <div class="tree-right">
                 <span class="count">{{
-                  sections[storageType].expanded ? '已展开' : '已折叠'
+                  sections[storageType].expanded
+                    ? t('storageFileList.expanded')
+                    : t('storageFileList.collapsed')
                 }}</span>
               </div>
             </div>
@@ -450,7 +463,7 @@ onMounted(() => {
                 :class="{ 'is-collapsed': !sections[storageType].expanded }"
               >
                 <div v-if="sections[storageType].loading" class="status-text nested-status">
-                  正在加载...
+                  {{ t('storageFileList.loading') }}
                 </div>
                 <div
                   v-else-if="sections[storageType].error"
@@ -458,7 +471,7 @@ onMounted(() => {
                 >
                   {{ sections[storageType].error }}
                   <button class="retry-btn" @click.stop="loadChildren(storageType, '')">
-                    重试
+                    {{ t('storageFileList.retry') }}
                   </button>
                 </div>
                 <div
@@ -467,7 +480,7 @@ onMounted(() => {
                   "
                   class="status-text nested-status"
                 >
-                  暂无文件
+                  {{ t('storageFileList.emptyFiles') }}
                 </div>
                 <template v-else>
                   <div>
@@ -497,14 +510,14 @@ onMounted(() => {
                           v-if="row.node.node_type === 'folder' && row.node.loading"
                           class="node-status"
                         >
-                          加载中...
+                          {{ t('storageFileList.loading') }}
                         </span>
                         <button
                           v-else-if="row.node.node_type === 'folder' && row.node.error"
                           class="retry-btn"
                           @click.stop="loadChildren(storageType, row.node.path, row.node)"
                         >
-                          重试
+                          {{ t('storageFileList.retry') }}
                         </button>
                         <div
                           v-else-if="row.node.node_type === 'file'"
@@ -523,8 +536,8 @@ onMounted(() => {
                             "
                             :title="
                               previewingId === actionKeyOf(storageType, row.node)
-                                ? '预览中'
-                                : '预览'
+                                ? t('storageFileList.previewing')
+                                : t('storageFileList.preview')
                             "
                             @click.stop="triggerPreview(storageType, row.node)"
                           >
@@ -541,8 +554,8 @@ onMounted(() => {
                             "
                             :title="
                               downloadingId === actionKeyOf(storageType, row.node)
-                                ? '下载中'
-                                : '下载'
+                                ? t('storageFileList.downloading')
+                                : t('storageFileList.download')
                             "
                             @click.stop="triggerDownload(storageType, row.node)"
                           >

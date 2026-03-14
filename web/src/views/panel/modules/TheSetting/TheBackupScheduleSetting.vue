@@ -20,7 +20,7 @@
 
       <!-- 开启自动备份 -->
       <div class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] h-10">
-        <h2 class="font-semibold w-30 shrink-0">
+        <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">
           {{ t('backupScheduleSetting.enableAutoBackup') }}:
         </h2>
         <BaseSwitch v-model="BackupSchedule.enable" :disabled="!scheduleEditMode" />
@@ -30,10 +30,12 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-38 shrink-0">{{ t('backupScheduleSetting.crontab') }}:</h2>
+        <h2 class="font-semibold min-w-38 w-max shrink-0 whitespace-nowrap">
+          {{ t('backupScheduleSetting.crontab') }}:
+        </h2>
         <span
           v-if="!scheduleEditMode"
-          class="truncate max-w-40 inline-block align-middle"
+          class="flex-1 min-w-0 truncate inline-block align-middle"
           :title="BackupSchedule.cron_expression"
           style="vertical-align: middle"
         >

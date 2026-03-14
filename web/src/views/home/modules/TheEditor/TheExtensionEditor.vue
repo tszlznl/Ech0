@@ -2,15 +2,17 @@
   <div>
     <!-- 音乐分享 -->
     <div v-if="editorStore.currentExtensionType === ExtensionType.MUSIC">
-      <h2 class="text-[var(--color-text-secondary)] font-bold mb-1">音乐分享</h2>
-      <p class="text-[var(--color-text-muted)] text-sm">支持网易云/QQ音乐/Apple Music</p>
+      <h2 class="text-[var(--color-text-secondary)] font-bold mb-1">
+        {{ t('editor.musicShare') }}
+      </h2>
+      <p class="text-[var(--color-text-muted)] text-sm">{{ t('editor.musicSupportHint') }}</p>
       <p class="text-[var(--color-text-muted)] text-sm mb-1">
-        注意：不支持VIP歌曲，建议使用自建API
+        {{ t('editor.musicVipHint') }}
       </p>
       <BaseInput
         v-model="editorStore.extensionToAdd.extension"
         class="rounded-lg h-auto w-full"
-        placeholder="音乐链接..."
+        :placeholder="t('editor.musicUrlPlaceholder')"
       />
       <div
         v-if="
@@ -19,60 +21,64 @@
         "
         class="mt-1 text-[var(--color-text-muted)] text-md"
       >
-        解析结果：
+        {{ t('editor.parseResult') }}:
         <span
           v-if="parseMusicURL(editorStore.extensionToAdd.extension)"
           class="text-[var(--color-accent)]"
-          >成功</span
+          >{{ t('editor.parseSuccess') }}</span
         >
-        <span v-else class="text-[var(--color-danger)]">失败</span>
+        <span v-else class="text-[var(--color-danger)]">{{ t('editor.parseFailed') }}</span>
       </div>
     </div>
     <!-- Bilibili/YouTube视频分享 -->
     <div v-if="editorStore.currentExtensionType === ExtensionType.VIDEO">
       <div class="text-[var(--color-text-secondary)] font-bold mb-1">
-        视频分享（支持Bilibili、YouTube）
+        {{ t('editor.videoShare') }}
       </div>
-      <div class="text-[var(--color-text-muted)] mb-1">粘贴自动提取ID</div>
+      <div class="text-[var(--color-text-muted)] mb-1">{{ t('editor.videoExtractHint') }}</div>
       <BaseInput
         v-model="editorStore.videoURL"
         class="rounded-lg h-auto w-full my-2"
-        placeholder="B站/YouTube链接..."
+        :placeholder="t('editor.videoUrlPlaceholder')"
       />
       <div class="text-[var(--color-text-secondary)] my-1">
-        Video ID：{{ editorStore.extensionToAdd.extension }}
+        {{ t('editor.videoId') }}: {{ editorStore.extensionToAdd.extension }}
       </div>
     </div>
     <!-- Github项目分享 -->
     <div v-if="editorStore.currentExtensionType === ExtensionType.GITHUBPROJ">
-      <div class="text-[var(--color-text-secondary)] font-bold mb-1">Github项目分享</div>
+      <div class="text-[var(--color-text-secondary)] font-bold mb-1">
+        {{ t('editor.githubShare') }}
+      </div>
       <BaseInput
         v-model="editorStore.extensionToAdd.extension"
         class="rounded-lg h-auto w-full"
-        placeholder="https://github.com/username/repo"
+        :placeholder="t('editor.githubUrlPlaceholder')"
       />
     </div>
     <!-- 网站链接分享 -->
     <div v-if="editorStore.currentExtensionType === ExtensionType.WEBSITE">
-      <div class="text-[var(--color-text-secondary)] font-bold mb-1">网站链接分享</div>
+      <div class="text-[var(--color-text-secondary)] font-bold mb-1">
+        {{ t('editor.websiteShare') }}
+      </div>
       <!-- 网站标题 -->
       <BaseInput
         v-model="editorStore.websiteToAdd.title"
         class="rounded-lg h-auto w-full mb-2"
-        placeholder="网站标题..."
+        :placeholder="t('editor.websiteTitlePlaceholder')"
       />
       <div class="flex items-center gap-2">
         <BaseInput
           v-model="editorStore.websiteToAdd.site"
           class="rounded-lg h-auto flex-1"
-          placeholder="https://example.com"
+          :placeholder="t('editor.websiteUrlPlaceholder')"
         />
         <BaseButton
           class="rounded-lg px-3 py-2 text-sm whitespace-nowrap"
           :disabled="isFetchingWebsiteTitle"
           @click="handleFetchWebsiteTitle"
         >
-          {{ isFetchingWebsiteTitle ? '获取中…' : '获取标题' }}
+          {{ isFetchingWebsiteTitle ? t('editor.fetchingTitle') : t('editor.fetchTitle') }}
         </BaseButton>
       </div>
     </div>
@@ -88,14 +94,16 @@ import { useEditorStore } from '@/stores'
 import { ref, watch } from 'vue' // 从 vue 导入 watch
 import { fetchGetWebsiteTitle } from '@/service/api'
 import { theToast } from '@/utils/toast'
+import { useI18n } from 'vue-i18n'
 
 const editorStore = useEditorStore()
 const isFetchingWebsiteTitle = ref(false)
+const { t } = useI18n()
 
 const handleFetchWebsiteTitle = async () => {
   const websiteURL = (editorStore.websiteToAdd.site || '').trim()
   if (!websiteURL) {
-    theToast.warning('请先输入网站链接')
+    theToast.warning(String(t('editor.websiteInputRequired')))
     return
   }
 
@@ -104,13 +112,13 @@ const handleFetchWebsiteTitle = async () => {
     const res = await fetchGetWebsiteTitle(websiteURL)
     if (res.code === 1) {
       editorStore.websiteToAdd.title = res.data
-      theToast.success('已获取网站标题')
+      theToast.success(String(t('editor.fetchTitleSuccess')))
     } else {
-      theToast.error(res.msg || '获取网站标题失败')
+      theToast.error(res.msg || String(t('editor.fetchTitleFailed')))
     }
   } catch (error) {
     console.error('Failed to fetch website title', error)
-    theToast.error('获取网站标题失败')
+    theToast.error(String(t('editor.fetchTitleFailed')))
   } finally {
     isFetchingWebsiteTitle.value = false
   }

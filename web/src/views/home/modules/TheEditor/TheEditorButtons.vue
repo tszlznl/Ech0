@@ -7,7 +7,7 @@
           :icon="currentMode === Mode.ECH0 ? Advance : Back"
           @click="handleChangeMode"
           :class="['w-8 h-8 sm:w-9 sm:h-9 rounded-md'].join(' ')"
-          title="其它"
+          :title="currentMode === Mode.ECH0 ? t('editor.gotoTagManage') : t('editor.backToEditor')"
         />
       </div>
       <!-- Photo Upload -->
@@ -16,7 +16,7 @@
           :icon="ImageUpload"
           @click="handleAddImageMode"
           class="w-8 h-8 sm:w-9 sm:h-9 rounded-md"
-          title="添加图片"
+          :title="t('editor.addImage')"
         />
       </div>
       <!-- Privacy Set -->
@@ -25,7 +25,7 @@
           :icon="echoToAdd.private ? Private : Public"
           @click="handlePrivate"
           class="w-8 h-8 sm:w-9 sm:h-9 rounded-md"
-          title="是否私密"
+          :title="t('editor.togglePrivacy')"
         />
       </div>
       <!-- Tag Add or Select -->
@@ -39,7 +39,7 @@
             v-model="tagToAdd"
             :multiple="false"
             :options="tagOptions"
-            placeholder="标签"
+            :placeholder="t('editor.tagPlaceholder')"
             wrapper-class="border-transparent shadow-none bg-transparent"
             input-class="w-16 h-7 text-[var(--color-text-secondary)]"
           />
@@ -82,7 +82,7 @@
           :icon="Publish"
           @click="handleAddorUpdate"
           class="w-8 h-8 sm:w-9 sm:h-9 rounded-md"
-          title="发布Echo"
+          :title="t('editor.publishEcho')"
         />
       </div>
       <!-- Exit Update -->
@@ -91,7 +91,7 @@
           :icon="ExitUpdate"
           @click="handleExitUpdateMode"
           class="w-8 h-8 sm:w-9 sm:h-9 rounded-md"
-          title="退出更新模式"
+          :title="t('editor.exitUpdateMode')"
         />
       </div>
       <!-- Update -->
@@ -100,7 +100,7 @@
           :icon="Update"
           @click="handleAddorUpdate"
           class="w-8 h-8 sm:w-9 sm:h-9 rounded-md"
-          title="更新Echo"
+          :title="t('editor.updateEcho')"
         />
       </div>
     </div>
@@ -132,6 +132,7 @@ import { useEditorStore, useEchoStore } from '@/stores'
 import { theToast } from '@/utils/toast'
 import { localStg } from '@/utils/storage'
 import { computed, type Component } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const editorStore = useEditorStore()
 const {
@@ -147,27 +148,28 @@ const {
 } = storeToRefs(editorStore)
 const echoStore = useEchoStore()
 const { tagOptions } = storeToRefs(echoStore)
+const { t } = useI18n()
 
 type TooltipLine = { label: string; icon?: Component }
 
 const infoTooltipLines = computed<TooltipLine[]>(() => {
   const extType = extensionToAdd.value.extension_type || echoToAdd.value.extension?.type
   const extMap: Record<ExtensionType, { label: string; icon: Component }> = {
-    [ExtensionType.MUSIC]: { label: '音乐', icon: Music },
-    [ExtensionType.VIDEO]: { label: '视频', icon: Video },
-    [ExtensionType.GITHUBPROJ]: { label: 'GitHub 项目', icon: GithubProj },
-    [ExtensionType.WEBSITE]: { label: '网站链接', icon: Website },
+    [ExtensionType.MUSIC]: { label: String(t('editor.extMusic')), icon: Music },
+    [ExtensionType.VIDEO]: { label: String(t('editor.extVideo')), icon: Video },
+    [ExtensionType.GITHUBPROJ]: { label: String(t('editor.extGithubProject')), icon: GithubProj },
+    [ExtensionType.WEBSITE]: { label: String(t('editor.extWebsiteLink')), icon: Website },
   }
 
   const parts: TooltipLine[] = []
-  if (hasContent.value) parts.push({ label: '文字', icon: Write })
-  if (hasFile.value) parts.push({ label: '图片', icon: ImageIcon })
+  if (hasContent.value) parts.push({ label: String(t('editor.extText')), icon: Write })
+  if (hasFile.value) parts.push({ label: String(t('editor.extImage')), icon: ImageIcon })
   if (hasExtension.value)
     parts.push({
       label:
         extType && extMap[extType as ExtensionType]?.label
           ? extMap[extType as ExtensionType].label
-          : '扩展',
+          : String(t('editor.extGeneric')),
       icon:
         extType && extMap[extType as ExtensionType]?.icon
           ? extMap[extType as ExtensionType].icon
@@ -199,7 +201,13 @@ const handleAddImageMode = () => {
 
 const handlePrivate = () => {
   editorStore.togglePrivate()
-  theToast.info('已切换为 ' + (echoToAdd.value.private ? '私密' : '公开') + ' 状态')
+  theToast.info(
+    String(
+      t('editor.privacySwitched', {
+        mode: echoToAdd.value.private ? t('editor.privacyPrivate') : t('editor.privacyPublic'),
+      }),
+    ),
+  )
 }
 
 const handleExitUpdateMode = () => {

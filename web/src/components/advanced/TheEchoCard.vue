@@ -45,7 +45,7 @@
           class="flex items-center gap-4 bg-[var(--color-bg-surface)] rounded-full px-2 py-1 shadow-sm ring-1 ring-[var(--color-border-subtle)] ring-inset"
         >
           <!-- 是否隐私 -->
-          <span v-if="props.echo.private" title="私密状态">
+          <span v-if="props.echo.private" :title="t('echoCard.privateStatus')">
             <Lock />
           </span>
 
@@ -53,7 +53,7 @@
           <button
             v-if="userStore.isLogin"
             @click="handleDeleteEcho(props.echo.id)"
-            title="删除"
+            :title="t('echoCard.delete')"
             class="transform transition-transform duration-200 hover:scale-120"
           >
             <Roll />
@@ -63,7 +63,7 @@
           <button
             v-if="userStore.isLogin"
             @click="handleUpdateEcho()"
-            title="更新"
+            :title="t('echoCard.update')"
             class="transform transition-transform duration-200 hover:scale-120"
           >
             <EditEcho />
@@ -72,19 +72,19 @@
           <!-- 展开内容 -->
           <button
             @click="handleExpandEcho(echo.id)"
-            title="展开Echo"
+            :title="t('echoCard.expand')"
             class="transform transition-transform duration-200 hover:scale-120"
           >
             <Expand />
           </button>
 
           <!-- 点赞 -->
-          <div class="flex items-center justify-end" title="点赞">
+          <div class="flex items-center justify-end" :title="t('echoCard.like')">
             <div class="flex items-center gap-1">
               <!-- 点赞按钮   -->
               <button
                 @click="handleLikeEcho(props.echo.id)"
-                title="点赞"
+                :title="t('echoCard.like')"
                 :class="[
                   'transform transition-transform duration-200 hover:scale-120',
                   isLikeAnimating ? 'scale-110' : 'scale-100',
@@ -186,7 +186,9 @@ import { ExtensionType, ImageLayout } from '@/enums/enums'
 import { formatDate } from '@/utils/other'
 import { getEchoFilesBy } from '@/utils/echo'
 import { useBaseDialog } from '@/composables/useBaseDialog'
+import { useI18n } from 'vue-i18n'
 const { openConfirm } = useBaseDialog()
+const { t } = useI18n()
 
 const emit = defineEmits(['refresh', 'updateLikeCount'])
 
@@ -210,11 +212,11 @@ const router = useRouter()
 
 const handleDeleteEcho = (echoId: string) => {
   openConfirm({
-    title: '确定要删除吗？',
-    description: '删除后将无法恢复，请谨慎操作',
+    title: String(t('echoCard.deleteConfirmTitle')),
+    description: String(t('echoCard.deleteConfirmDesc')),
     onConfirm: () => {
       fetchDeleteEcho(echoId).then(() => {
-        theToast.success('删除成功！')
+        theToast.success(String(t('echoCard.deleteSuccess')))
         // 触发父组件的刷新事件emit
         emit('refresh')
       })
@@ -226,7 +228,7 @@ const handleUpdateEcho = async () => {
   if (editorStore.isUpdateMode) {
     // 如果已经在更新模式，返回顶部并提示用户先退出更新模式
     window.scrollTo({ top: 0, behavior: 'smooth' })
-    theToast.warning('请先退出更新模式！')
+    theToast.warning(String(t('echoCard.exitUpdateModeFirst')))
     return
   }
 
@@ -255,7 +257,7 @@ const handleLikeEcho = (echoId: string) => {
 
   // 检查LocalStorage中是否已经点赞过
   if (hasLikedEcho(echoId)) {
-    theToast.success('你已经点赞过了,感谢你的喜欢！')
+    theToast.success(String(t('echoCard.alreadyLiked')))
     return
   }
 
@@ -265,7 +267,7 @@ const handleLikeEcho = (echoId: string) => {
       localStg.setItem(LIKE_LIST_KEY, likedEchoIds)
       // 发送更新事件
       emit('updateLikeCount', echoId)
-      theToast.success('点赞成功！')
+      theToast.success(String(t('echoCard.likeSuccess')))
     }
   })
 }

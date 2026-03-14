@@ -39,13 +39,13 @@
                 @click="cancel"
                 class="cursor-pointer px-3 py-2 rounded-[var(--radius-md)] bg-[var(--dialog-cancel-btn-bg-color)] shadow-[var(--shadow-sm)] ring-1 ring-inset ring-[var(--color-border-subtle)] text-[var(--dialog-btn-text-color)] hover:text-[var(--dialog-hover-text-color)]"
               >
-                取消
+                {{ t('commonUi.cancel') }}
               </button>
               <button
                 @click="confirm"
                 class="cursor-pointer px-3 py-2 rounded-[var(--radius-md)] bg-[var(--dialog-confirm-btn-bg-color)] text-[var(--dialog-confirm-text-color)] shadow-[var(--shadow-sm)] hover:opacity-90"
               >
-                确认
+                {{ t('commonUi.confirm') }}
               </button>
             </div>
           </DialogPanel>
@@ -57,6 +57,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
   Dialog,
   DialogPanel,
@@ -72,6 +73,7 @@ defineProps({
 })
 
 const emit = defineEmits(['confirm', 'cancel'])
+const { t } = useI18n()
 
 const isOpen = ref(false)
 

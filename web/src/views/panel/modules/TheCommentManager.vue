@@ -129,12 +129,12 @@
           <thead>
             <tr class="bg-[var(--color-bg-muted)]/70 text-left text-[var(--color-text-muted)]">
               <th class="py-2 pl-3"><input v-model="allChecked" type="checkbox" /></th>
-              <th class="py-2">昵称</th>
-              <th class="py-2">邮箱</th>
-              <th class="py-2">状态</th>
-              <th class="py-2">Hot</th>
-              <th class="py-2">时间</th>
-              <th class="py-2 pr-3">操作</th>
+              <th class="py-2">{{ t('commentManager.nickname') }}</th>
+              <th class="py-2">{{ t('commentManager.email') }}</th>
+              <th class="py-2">{{ t('commentManager.status') }}</th>
+              <th class="py-2">{{ t('commentManager.hotColumn') }}</th>
+              <th class="py-2">{{ t('commentManager.time') }}</th>
+              <th class="py-2 pr-3">{{ t('commonUi.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -155,43 +155,45 @@
               </td>
               <td class="py-2">
                 <span class="status-pill" :class="hotClass(item.hot)">
-                  {{ item.hot ? '精选' : '普通' }}
+                  {{ item.hot ? t('commentManager.hotPicked') : t('commentManager.hotNormal') }}
                 </span>
               </td>
               <td class="py-2">{{ formatDate(item.created_at) }}</td>
               <td class="py-2 pr-3">
                 <div class="flex items-center gap-2">
                   <button class="table-action text-cyan-500" @click="openEcho(item.echo_id)">
-                    查看
+                    {{ t('commentManager.view') }}
                   </button>
                   <button class="table-action text-sky-500" @click="openDetail(item.id)">
-                    详情
+                    {{ t('commentManager.detail') }}
                   </button>
                   <button
                     class="table-action text-violet-500"
                     @click="updateHot(item.id, !item.hot)"
                   >
-                    {{ item.hot ? '取消 hot' : '设为 hot' }}
+                    {{ item.hot ? t('commentManager.hotUnset') : t('commentManager.hotSet') }}
                   </button>
                   <button
                     class="table-action text-emerald-500"
                     @click="updateStatus(item.id, 'approved')"
                   >
-                    通过
+                    {{ t('commentManager.approve') }}
                   </button>
                   <button
                     class="table-action text-amber-500"
                     @click="updateStatus(item.id, 'rejected')"
                   >
-                    拒绝
+                    {{ t('commentManager.reject') }}
                   </button>
-                  <button class="table-action text-red-500" @click="remove(item.id)">删除</button>
+                  <button class="table-action text-red-500" @click="remove(item.id)">
+                    {{ t('commentManager.delete') }}
+                  </button>
                 </div>
               </td>
             </tr>
             <tr v-if="list.items.length === 0">
               <td colspan="7" class="px-3 py-8 text-center text-[var(--color-text-muted)]">
-                暂无评论数据
+                {{ t('commentManager.empty') }}
               </td>
             </tr>
           </tbody>
@@ -199,24 +201,26 @@
       </div>
 
       <div class="mt-3 flex items-center justify-between text-sm">
-        <span class="text-[var(--color-text-muted)]">共 {{ list.total }} 条</span>
+        <span class="text-[var(--color-text-muted)]">{{
+          t('commentManager.total', { total: list.total })
+        }}</span>
         <div class="flex items-center gap-2">
           <BaseButton
             class="comment-btn px-2 py-1 text-sm"
             :disabled="query.page <= 1"
             @click="prevPage"
           >
-            上一页
+            {{ t('commentManager.prevPage') }}
           </BaseButton>
-          <span class="text-[var(--color-text-secondary)]"
-            >第 {{ query.page }} / {{ totalPages }} 页</span
-          >
+          <span class="text-[var(--color-text-secondary)]">{{
+            t('commentManager.pageInfo', { page: query.page, total: totalPages })
+          }}</span>
           <BaseButton
             class="comment-btn px-2 py-1 text-sm"
             :disabled="query.page * query.page_size >= list.total"
             @click="nextPage"
           >
-            下一页
+            {{ t('commentManager.nextPage') }}
           </BaseButton>
         </div>
       </div>
@@ -231,22 +235,40 @@
         class="w-full max-w-lg rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-canvas)] p-4 shadow-[var(--shadow-md)]"
       >
         <div class="mb-2 flex items-center justify-between">
-          <h3 class="text-base font-semibold text-[var(--color-text-primary)]">评论详情</h3>
+          <h3 class="text-base font-semibold text-[var(--color-text-primary)]">
+            {{ t('commentManager.detailTitle') }}
+          </h3>
           <button
             class="table-action text-sm text-[var(--color-text-muted)]"
             @click="detailOpen = false"
           >
-            关闭
+            {{ t('commentManager.close') }}
           </button>
         </div>
         <div class="space-y-1 text-sm text-[var(--color-text-secondary)]">
-          <p><b>昵称：</b>{{ current.nickname }}</p>
-          <p><b>邮箱：</b>{{ current.email }}</p>
-          <p><b>网址：</b>{{ current.website || '-' }}</p>
-          <p><b>状态：</b>{{ statusLabelMap[current.status] || current.status }}</p>
-          <p><b>Hot：</b>{{ current.hot ? '是' : '否' }}</p>
-          <p><b>来源：</b>{{ current.source }}</p>
-          <p><b>时间：</b>{{ formatDate(current.created_at) }}</p>
+          <p>
+            <b>{{ t('commentManager.nickname') }}：</b>{{ current.nickname }}
+          </p>
+          <p>
+            <b>{{ t('commentManager.email') }}：</b>{{ current.email }}
+          </p>
+          <p>
+            <b>{{ t('commentManager.website') }}：</b>{{ current.website || '-' }}
+          </p>
+          <p>
+            <b>{{ t('commentManager.status') }}：</b
+            >{{ statusLabelMap[current.status] || current.status }}
+          </p>
+          <p>
+            <b>{{ t('commentManager.hotColumn') }}：</b
+            >{{ current.hot ? t('commentManager.yes') : t('commentManager.no') }}
+          </p>
+          <p>
+            <b>{{ t('commentManager.source') }}：</b>{{ current.source }}
+          </p>
+          <p>
+            <b>{{ t('commentManager.time') }}：</b>{{ formatDate(current.created_at) }}
+          </p>
           <p
             class="mt-2 whitespace-pre-wrap break-words rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-muted)]/50 p-2"
           >
@@ -311,19 +333,19 @@ const detailOpen = ref(false)
 const current = ref<App.Api.Comment.CommentItem | null>(null)
 const statusOptions = computed(() => [
   { label: t('commentManager.statusAll'), value: '' },
-  { label: '待审核', value: 'pending' },
-  { label: '已通过', value: 'approved' },
-  { label: '已拒绝', value: 'rejected' },
+  { label: t('commentManager.statusPending'), value: 'pending' },
+  { label: t('commentManager.statusApproved'), value: 'approved' },
+  { label: t('commentManager.statusRejected'), value: 'rejected' },
 ])
 const hotOptions = computed(() => [
-  { label: '全部 Hot', value: '' },
-  { label: '仅 Hot', value: 'true' },
-  { label: '仅非 Hot', value: 'false' },
+  { label: t('commentManager.hotAll'), value: '' },
+  { label: t('commentManager.hotOnly'), value: 'true' },
+  { label: t('commentManager.hotOnlyNot'), value: 'false' },
 ])
 const statusLabelMap = computed<Record<string, string>>(() => ({
-  pending: '待审核',
-  approved: '已通过',
-  rejected: '已拒绝',
+  pending: String(t('commentManager.statusPending')),
+  approved: String(t('commentManager.statusApproved')),
+  rejected: String(t('commentManager.statusRejected')),
 }))
 const totalPages = computed(() => Math.max(1, Math.ceil(list.total / query.page_size)))
 
@@ -352,7 +374,7 @@ const saveSetting = async () => {
   try {
     const res = await fetchUpdateCommentSystemSetting(setting)
     if (res.code === 1) {
-      theToast.success('评论设置已更新')
+      theToast.success(String(t('commentManager.settingUpdated')))
     }
   } finally {
     settingSaving.value = false
@@ -379,12 +401,12 @@ const reload = async () => {
 
 const runBatch = async (action: App.Api.Comment.BatchAction) => {
   if (selectedIds.value.length === 0) {
-    theToast.info('请先选择评论')
+    theToast.info(String(t('commentManager.selectFirst')))
     return
   }
   const res = await fetchBatchPanelComments(action, selectedIds.value)
   if (res.code === 1) {
-    theToast.success('批量操作成功')
+    theToast.success(String(t('commentManager.batchSuccess')))
     await loadList()
   }
 }
@@ -413,7 +435,7 @@ const remove = async (id: string) => {
 const openEcho = (echoId: string) => {
   const id = echoId?.trim()
   if (!id) {
-    theToast.info('未找到原贴 ID')
+    theToast.info(String(t('commentManager.echoIdMissing')))
     return
   }
   const target = router.resolve({

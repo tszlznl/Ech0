@@ -20,7 +20,9 @@
 
       <!-- 启用 Agent -->
       <div class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] h-10">
-        <h2 class="font-semibold w-24 shrink-0">{{ t('agentSetting.enableAgent') }}:</h2>
+        <h2 class="font-semibold min-w-24 w-max shrink-0 whitespace-nowrap">
+          {{ t('agentSetting.enableAgent') }}:
+        </h2>
         <BaseSwitch v-model="AgentSetting.enable" :disabled="!agentEditMode" />
       </div>
 
@@ -28,7 +30,9 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-24 shrink-0">{{ t('agentSetting.provider') }}:</h2>
+        <h2 class="font-semibold min-w-24 w-max shrink-0 whitespace-nowrap">
+          {{ t('agentSetting.provider') }}:
+        </h2>
         <BaseSelect
           v-model="AgentSetting.provider"
           :options="agentProviderOptions"
@@ -41,10 +45,12 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-24 shrink-0">{{ t('agentSetting.modelName') }}:</h2>
+        <h2 class="font-semibold min-w-24 w-max shrink-0 whitespace-nowrap">
+          {{ t('agentSetting.modelName') }}:
+        </h2>
         <span
           v-if="!agentEditMode"
-          class="truncate max-w-60 inline-block align-middle"
+          class="flex-1 min-w-0 truncate inline-block align-middle"
           :title="AgentSetting.model"
         >
           {{ AgentSetting.model || t('commonUi.none') }}
@@ -63,8 +69,10 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-24 shrink-0">{{ t('agentSetting.apiKey') }}:</h2>
-        <span v-if="!agentEditMode" class="truncate max-w-60 inline-block align-middle">
+        <h2 class="font-semibold min-w-24 w-max shrink-0 whitespace-nowrap">
+          {{ t('agentSetting.apiKey') }}:
+        </h2>
+        <span v-if="!agentEditMode" class="flex-1 min-w-0 truncate inline-block align-middle">
           {{ AgentSetting.api_key ? '********' : t('commonUi.none') }}
         </span>
         <BaseInput
@@ -78,8 +86,10 @@
 
       <!-- 自定义 Base URL -->
       <div class="flex justify-start text-[var(--color-text-secondary)] gap-2 mt-2">
-        <h2 class="font-semibold w-24 shrink-0">{{ t('agentSetting.baseUrl') }}:</h2>
-        <span v-if="!agentEditMode" class="truncate max-w-60 inline-block align-middle">
+        <h2 class="font-semibold min-w-24 w-max shrink-0 whitespace-nowrap">
+          {{ t('agentSetting.baseUrl') }}:
+        </h2>
+        <span v-if="!agentEditMode" class="flex-1 min-w-0 truncate inline-block align-middle">
           {{ AgentSetting.base_url.length == 0 ? t('commonUi.none') : AgentSetting.base_url }}
         </span>
         <BaseInput
@@ -92,8 +102,10 @@
 
       <!-- Prompt -->
       <div class="flex justify-start text-[var(--color-text-secondary)] gap-2 mt-2">
-        <h2 class="font-semibold w-24 shrink-0">{{ t('agentSetting.prompt') }}:</h2>
-        <span v-if="!agentEditMode" class="truncate max-w-60 inline-block align-middle">
+        <h2 class="font-semibold min-w-24 w-max shrink-0 whitespace-nowrap">
+          {{ t('agentSetting.prompt') }}:
+        </h2>
+        <span v-if="!agentEditMode" class="flex-1 min-w-0 truncate inline-block align-middle">
           {{ AgentSetting.prompt.length == 0 ? t('commonUi.none') : '' }}
         </span>
         <BaseTextArea

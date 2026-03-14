@@ -20,13 +20,17 @@
 
       <!-- 开启S3 -->
       <div class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] h-10">
-        <h2 class="font-semibold w-30 shrink-0">{{ t('storageSetting.enableS3') }}:</h2>
+        <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">
+          {{ t('storageSetting.enableS3') }}:
+        </h2>
         <BaseSwitch v-model="S3Setting.enable" :disabled="!storageEditMode" />
       </div>
 
       <!-- 使用 SSL -->
       <div class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] h-10">
-        <h2 class="font-semibold w-30 shrink-0">{{ t('storageSetting.enableSsl') }}:</h2>
+        <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">
+          {{ t('storageSetting.enableSsl') }}:
+        </h2>
         <BaseSwitch v-model="S3Setting.use_ssl" :disabled="!storageEditMode" />
       </div>
 
@@ -34,7 +38,9 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30 shrink-0">{{ t('storageSetting.s3Provider') }}:</h2>
+        <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">
+          {{ t('storageSetting.s3Provider') }}:
+        </h2>
         <BaseSelect
           v-model="S3Setting.provider"
           :options="S3ServiceOptions"
@@ -47,10 +53,12 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30 shrink-0">{{ t('storageSetting.endpoint') }}:</h2>
+        <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">
+          {{ t('storageSetting.endpoint') }}:
+        </h2>
         <span
           v-if="!storageEditMode"
-          class="truncate max-w-40 inline-block align-middle"
+          class="flex-1 min-w-0 truncate inline-block align-middle"
           :title="S3Setting.endpoint"
           style="vertical-align: middle"
         >
@@ -69,10 +77,12 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30 shrink-0">{{ t('storageSetting.accessKey') }}:</h2>
+        <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">
+          {{ t('storageSetting.accessKey') }}:
+        </h2>
         <span
           v-if="!storageEditMode"
-          class="truncate max-w-40 inline-block align-middle"
+          class="flex-1 min-w-0 truncate inline-block align-middle"
           :title="S3Setting.access_key"
           style="vertical-align: middle"
         >
@@ -91,10 +101,12 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30 shrink-0">{{ t('storageSetting.secretKey') }}:</h2>
+        <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">
+          {{ t('storageSetting.secretKey') }}:
+        </h2>
         <span
           v-if="!storageEditMode"
-          class="truncate max-w-40 inline-block align-middle"
+          class="flex-1 min-w-0 truncate inline-block align-middle"
           :title="S3Setting.secret_key"
           style="vertical-align: middle"
         >
@@ -113,10 +125,12 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30 shrink-0">{{ t('storageSetting.bucket') }}:</h2>
+        <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">
+          {{ t('storageSetting.bucket') }}:
+        </h2>
         <span
           v-if="!storageEditMode"
-          class="truncate max-w-40 inline-block align-middle"
+          class="flex-1 min-w-0 truncate inline-block align-middle"
           :title="S3Setting.bucket_name"
           style="vertical-align: middle"
         >
@@ -135,10 +149,12 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30 shrink-0">{{ t('storageSetting.pathPrefix') }}:</h2>
+        <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">
+          {{ t('storageSetting.pathPrefix') }}:
+        </h2>
         <span
           v-if="!storageEditMode"
-          class="truncate max-w-40 inline-block align-middle"
+          class="flex-1 min-w-0 truncate inline-block align-middle"
           :title="S3Setting.path_prefix"
           style="vertical-align: middle"
         >
@@ -158,10 +174,12 @@
         v-if="S3Setting.provider !== S3Provider.MINIO"
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30 shrink-0">{{ t('storageSetting.region') }}:</h2>
+        <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">
+          {{ t('storageSetting.region') }}:
+        </h2>
         <span
           v-if="!storageEditMode"
-          class="truncate max-w-40 inline-block align-middle"
+          class="flex-1 min-w-0 truncate inline-block align-middle"
           :title="S3Setting.region"
           style="vertical-align: middle"
         >
@@ -180,10 +198,12 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30 shrink-0">{{ t('storageSetting.cdnDomain') }}:</h2>
+        <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">
+          {{ t('storageSetting.cdnDomain') }}:
+        </h2>
         <span
           v-if="!storageEditMode"
-          class="truncate max-w-40 inline-block align-middle"
+          class="flex-1 min-w-0 truncate inline-block align-middle"
           :title="S3Setting.cdn_url"
           style="vertical-align: middle"
         >

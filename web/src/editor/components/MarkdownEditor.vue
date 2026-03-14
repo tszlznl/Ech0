@@ -41,8 +41,8 @@
             <button
               type="button"
               class="toolbar-btn"
-              :title="isPreviewMode ? '显示预览' : '隐藏预览'"
-              :aria-label="isPreviewMode ? '显示预览' : '隐藏预览'"
+              :title="isPreviewMode ? t('editor.showPreview') : t('editor.hidePreview')"
+              :aria-label="isPreviewMode ? t('editor.showPreview') : t('editor.hidePreview')"
               @click="isPreviewMode = !isPreviewMode"
             >
               <Preview class="w-3.5 h-3.5" />
@@ -85,6 +85,7 @@ import type { MarkdownEditorAction } from '../types'
 import Full from '@/components/icons/full.vue'
 import Closefull from '@/components/icons/closefull.vue'
 import Preview from '@/components/icons/preview.vue'
+import { useI18n } from 'vue-i18n'
 
 defineProps<{
   modelValue: string
@@ -99,6 +100,7 @@ const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const isFullMode = ref(false)
 const isPreviewMode = ref(false)
 const FULL_MODE_LOCK_CLASS = 'md-editor-full-open'
+const { t } = useI18n()
 
 const toolbarItems: Array<{ label: string; icon: string; action: MarkdownEditorAction }> = [
   { label: '粗体', icon: 'B', action: 'bold' },

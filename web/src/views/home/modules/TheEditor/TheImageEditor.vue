@@ -1,24 +1,24 @@
 <template>
   <div>
     <h2 class="text-[var(--color-text-secondary)] font-bold my-2">
-      插入图片（支持直链、本地、S3存储）
+      {{ t('editor.imageSectionTitle') }}
     </h2>
     <div v-if="!fileUploading" class="flex items-center gap-2 mb-3">
       <div class="flex items-center gap-2">
-        <span class="text-[var(--color-text-secondary)]">选择添加方式：</span>
+        <span class="text-[var(--color-text-secondary)]">{{ t('editor.imageAddMethod') }}</span>
         <!-- 直链 -->
         <BaseButton
           :icon="Url"
           class="w-7 h-7 sm:w-7 sm:h-7 rounded-md"
           @click="handleSetFileSource(FILE_STORAGE_TYPE.EXTERNAL)"
-          title="插入图片链接"
+          :title="t('editor.imageSourceExternal')"
         />
         <!-- 上传本地 -->
         <BaseButton
           :icon="Upload"
           class="w-7 h-7 sm:w-7 sm:h-7 rounded-md"
           @click="handleSetFileSource(FILE_STORAGE_TYPE.LOCAL)"
-          title="上传本地图片"
+          :title="t('editor.imageSourceLocal')"
         />
         <!-- S3 存储 -->
         <BaseButton
@@ -26,19 +26,19 @@
           :icon="Bucket"
           class="w-7 h-7 sm:w-7 sm:h-7 rounded-md"
           @click="handleSetFileSource(FILE_STORAGE_TYPE.OBJECT)"
-          title="S3存储图片"
+          :title="t('editor.imageSourceObject')"
         />
       </div>
     </div>
 
     <!-- 布局方式选择 -->
     <div class="mb-2 flex items-center gap-2">
-      <span class="text-[var(--color-text-secondary)]">选择布局方式：</span>
+      <span class="text-[var(--color-text-secondary)]">{{ t('editor.imageLayout') }}</span>
       <BaseSelect
         v-model="echoToAdd.layout"
         :options="layoutOptions"
         class="w-32 h-7"
-        placeholder="请选择布局方式"
+        :placeholder="t('editor.imageLayoutPlaceholder')"
       />
     </div>
 
@@ -47,23 +47,23 @@
       v-if="fileToAdd.storage_type !== FILE_STORAGE_TYPE.EXTERNAL"
       class="mb-3 flex items-center"
     >
-      <span class="text-[var(--color-text-secondary)]">智能压缩：</span>
+      <span class="text-[var(--color-text-secondary)]">{{ t('editor.imageSmartCompress') }}</span>
       <BaseSwitch v-model="enableCompressor" />
     </div>
 
     <!-- 当前上传方式与状态 -->
     <div class="text-[var(--color-text-muted)] text-sm mb-2">
-      当前上传方式为
+      {{ t('editor.currentUploadMode') }}
       <span class="font-bold">
         {{
           fileToAdd.storage_type === FILE_STORAGE_TYPE.EXTERNAL
-            ? '直链'
+            ? t('editor.imageSourceExternal')
             : fileToAdd.storage_type === FILE_STORAGE_TYPE.LOCAL
-              ? '本地存储'
-              : 'S3存储'
+              ? t('editor.imageSourceLocal')
+              : t('editor.imageSourceObject')
         }}</span
       >
-      {{ !fileUploading ? '' : '，正在上传中...' }}
+      {{ !fileUploading ? '' : t('editor.uploadingSuffix') }}
     </div>
 
     <div class="my-1">
@@ -82,14 +82,14 @@
         <BaseInput
           v-model="fileToAdd.url"
           class="rounded-lg h-auto flex-1"
-          placeholder="请输入图片链接..."
+          :placeholder="t('editor.imageUrlPlaceholder')"
         />
         <BaseButton
           v-if="fileToAdd.url != ''"
           :icon="Addmore"
           class="w-8 h-8 sm:w-8 sm:h-8 rounded-md shrink-0"
           @click="editorStore.handleAddMoreFile"
-          title="添加更多图片"
+          :title="t('editor.addMoreImages')"
         />
       </div>
     </div>
@@ -97,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useEditorStore, useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { ImageLayout } from '@/enums/enums'
@@ -112,12 +112,14 @@ import BaseSwitch from '@/components/common/BaseSwitch.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import TheUppy from '@/components/advanced/TheUppy.vue'
 import { localStg } from '@/utils/storage'
+import { useI18n } from 'vue-i18n'
 
 const editorStore = useEditorStore()
 const { fileToAdd, fileUploading, echoToAdd } = storeToRefs(editorStore)
 const settingStore = useSettingStore()
 const { S3Setting } = storeToRefs(settingStore)
 const enableCompressor = ref<boolean>(false)
+const { t } = useI18n()
 
 const handleSetFileSource = (source: App.Api.File.StorageType) => {
   fileToAdd.value.storage_type = source
@@ -127,12 +129,12 @@ const handleSetFileSource = (source: App.Api.File.StorageType) => {
 }
 
 // 布局选择
-const layoutOptions = [
-  { label: '瀑布流', value: ImageLayout.WATERFALL },
-  { label: '九宫格', value: ImageLayout.GRID },
-  { label: '单图轮播', value: ImageLayout.CAROUSEL },
-  { label: '水平轮播', value: ImageLayout.HORIZONTAL },
-]
+const layoutOptions = computed(() => [
+  { label: String(t('editor.layoutWaterfall')), value: ImageLayout.WATERFALL },
+  { label: String(t('editor.layoutGrid')), value: ImageLayout.GRID },
+  { label: String(t('editor.layoutCarousel')), value: ImageLayout.CAROUSEL },
+  { label: String(t('editor.layoutHorizontal')), value: ImageLayout.HORIZONTAL },
+])
 </script>
 
 <style scoped></style>

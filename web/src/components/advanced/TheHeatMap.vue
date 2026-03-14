@@ -39,14 +39,16 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { fetchGetHeatMap } from '@/service/api'
+import { useI18n } from 'vue-i18n'
 
 // const props = defineProps<{
 //   heatmapData: (App.Api.Ech0.HeatMap[0] | null)[]
 // }>()
 
 const heatmapData = ref<App.Api.Ech0.HeatMap>([])
+const { t, locale } = useI18n()
 const displayDate = computed(() => {
-  return new Date().toLocaleDateString('en-US', {
+  return new Date().toLocaleDateString(locale.value, {
     month: 'short',
     day: '2-digit',
     year: 'numeric',
@@ -87,7 +89,7 @@ const tooltip = ref({
 function showTooltip(row: number, col: number, event: MouseEvent) {
   const cell = getCell(row, col)
   if (cell) {
-    tooltip.value.text = `${cell.date ?? ''}: ${cell.count ?? 0} 条`
+    tooltip.value.text = t('heatmap.tooltip', { date: cell.date ?? '', count: cell.count ?? 0 })
     tooltip.value.visible = true
 
     // 获取触发事件的目标元素

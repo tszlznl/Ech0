@@ -4,19 +4,25 @@
       v-if="formMeta && !formMeta.enable_comment"
       class="rounded-lg border border-[var(--color-border-subtle)] p-3 text-sm text-[var(--color-text-muted)]"
     >
-      评论功能未开启。
+      {{ t('commentSection.disabled') }}
     </div>
 
     <template v-else>
       <div class="mb-4 comment-list-board">
         <div class="mb-2 flex items-center justify-between">
-          <h3 class="font-semibold text-[var(--color-text-primary)]">评论</h3>
-          <span class="text-xs text-[var(--color-text-muted)]">{{ comments.length }} 条</span>
+          <h3 class="font-semibold text-[var(--color-text-primary)]">
+            {{ t('commentSection.title') }}
+          </h3>
+          <span class="text-xs text-[var(--color-text-muted)]">{{
+            t('commentSection.count', { total: comments.length })
+          }}</span>
         </div>
 
-        <div v-if="loading" class="text-sm text-[var(--color-text-muted)]">评论加载中...</div>
+        <div v-if="loading" class="text-sm text-[var(--color-text-muted)]">
+          {{ t('commentSection.loading') }}
+        </div>
         <div v-else-if="comments.length === 0" class="text-sm text-[var(--color-text-muted)]">
-          暂无评论，来做第一个留言的人吧。
+          {{ t('commentSection.empty') }}
         </div>
         <div v-else class="space-y-4 pt-1">
           <article
@@ -69,7 +75,7 @@
         @click="commentFormExpanded = true"
       >
         <span class="comment-pill-btn__icon" aria-hidden="true">+</span>
-        <span>发表评论</span>
+        <span>{{ t('commentSection.publishComment') }}</span>
       </button>
 
       <form
@@ -79,10 +85,12 @@
       >
         <div class="mb-2 flex items-center justify-between">
           <div class="flex items-center gap-1.5">
-            <h3 class="font-semibold text-[var(--color-text-primary)]">发表评论</h3>
+            <h3 class="font-semibold text-[var(--color-text-primary)]">
+              {{ t('commentSection.publishComment') }}
+            </h3>
             <span
               class="inline-flex items-center gap-1 rounded-full border border-[var(--color-border-subtle)] px-2 py-[2px] text-[11px] text-[var(--color-text-muted)]"
-              title="支持 Markdown 语法"
+              :title="t('commentSection.markdownSupported')"
             >
               <MarkdownIcon class="h-3.5 w-3.5" />
               <span>Markdown</span>
@@ -99,10 +107,10 @@
             <button
               type="button"
               class="comment-collapse-btn"
-              aria-label="收起发表评论"
+              :aria-label="t('commentSection.collapsePublishComment')"
               @click="commentFormExpanded = false"
             >
-              收起
+              {{ t('commentSection.collapse') }}
             </button>
           </div>
         </div>
@@ -122,12 +130,14 @@
               <div class="truncate text-sm font-medium text-[var(--color-text-primary)]">
                 {{ previewNickname }}
               </div>
-              <div class="text-xs text-[var(--color-text-muted)]">实时预览</div>
+              <div class="text-xs text-[var(--color-text-muted)]">
+                {{ t('commentSection.livePreview') }}
+              </div>
             </div>
           </div>
           <TheMdPreview
             class="comment-md-content"
-            :content="form.content || '在这里输入评论内容，将实时预览贴纸效果。'"
+            :content="form.content || t('commentSection.previewPlaceholder')"
           />
         </article>
 
@@ -136,26 +146,26 @@
             v-model.trim="form.nickname"
             type="text"
             class="comment-input-field w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
-            placeholder="昵称（必填）"
+            :placeholder="t('commentSection.nicknameRequired')"
           />
           <input
             v-model.trim="form.email"
             type="email"
             class="comment-input-field w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
-            placeholder="邮箱（必填）"
+            :placeholder="t('commentSection.emailRequired')"
           />
           <input
             v-model.trim="form.website"
             type="url"
             class="comment-input-field w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
-            placeholder="网址（可选）"
+            :placeholder="t('commentSection.websiteOptional')"
           />
         </div>
 
         <textarea
           v-model.trim="form.content"
           class="comment-input-field comment-textarea mt-2 min-h-24 w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
-          placeholder="写下你的评论..."
+          :placeholder="t('commentSection.commentPlaceholder')"
           maxlength="200"
         />
         <div
@@ -186,7 +196,7 @@
             class="comment-submit-btn rounded-md bg-[var(--color-text-primary)] px-4 py-1 text-sm text-[var(--color-bg-canvas)]"
             :disabled="submitting || !canSubmit"
           >
-            {{ submitting ? '提交中...' : '提交评论' }}
+            {{ submitting ? t('commentSection.submitting') : t('commentSection.submitComment') }}
           </button>
         </div>
 
@@ -195,7 +205,11 @@
           class="mt-3 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-canvas)] p-3 text-sm"
         >
           <div class="font-medium text-[var(--color-text-primary)]">
-            {{ submitNotice.status === 'approved' ? '评论已发布' : '评论已提交，等待审核' }}
+            {{
+              submitNotice.status === 'approved'
+                ? t('commentSection.commentPublished')
+                : t('commentSection.commentSubmittedPending')
+            }}
           </div>
           <div class="mt-1 text-xs text-[var(--color-text-muted)]">
             {{ submitNoticeText }}
@@ -223,6 +237,7 @@ import BaseAvatar from '@/components/common/BaseAvatar.vue'
 import TheMdPreview from './TheMdPreview.vue'
 import Verified from '../icons/verified.vue'
 import MarkdownIcon from '../icons/markdown.vue'
+import { useI18n } from 'vue-i18n'
 
 type CapSolveDetail = {
   token?: string
@@ -244,6 +259,7 @@ type SubmitNotice = {
 
 const route = useRoute()
 const userStore = useUserStore()
+const { t } = useI18n()
 const loading = ref(false)
 const submitting = ref(false)
 const comments = ref<App.Api.Comment.CommentItem[]>([])
@@ -293,8 +309,8 @@ const profileReady = computed(() => {
 })
 
 const previewNickname = computed(() => {
-  if (isPrivilegedUser.value) return userStore.user?.username || '你'
-  return form.nickname || '你'
+  if (isPrivilegedUser.value) return userStore.user?.username || String(t('commentSection.you'))
+  return form.nickname || String(t('commentSection.you'))
 })
 
 const previewAvatarSeed = computed(() => {
@@ -321,9 +337,9 @@ const submitNoticeText = computed(() => {
   if (!submitNotice.value) return ''
   const timeLabel = formatDate(submitNotice.value.submittedAt)
   if (submitNotice.value.status === 'approved') {
-    return `已于 ${timeLabel} 发布到评论列表。`
+    return String(t('commentSection.publishedAt', { time: timeLabel }))
   }
-  return `已于 ${timeLabel} 提交，审核通过后会显示在评论列表中。`
+  return String(t('commentSection.submittedAtPending', { time: timeLabel }))
 })
 
 const clearCaptchaWidget = () => {
@@ -367,7 +383,7 @@ const mountCaptchaWidget = async () => {
   try {
     await ensureCapWidgetScript()
   } catch {
-    captchaError.value = '验证码组件加载失败，请稍后重试'
+    captchaError.value = String(t('commentSection.captchaLoadFailed'))
     return
   }
   captchaError.value = ''
@@ -377,7 +393,7 @@ const mountCaptchaWidget = async () => {
     const token = (event as CustomEvent<CapSolveDetail>).detail?.token
     form.captcha_token = token || ''
     if (!token) {
-      captchaError.value = '验证码验证失败，请重试'
+      captchaError.value = String(t('commentSection.captchaVerifyFailed'))
       return
     }
     captchaError.value = ''
@@ -386,7 +402,7 @@ const mountCaptchaWidget = async () => {
     const detail = 'detail' in event ? (event as CustomEvent<CapErrorDetail>).detail : undefined
     const message = detail?.error
     form.captcha_token = ''
-    captchaError.value = message || '验证码组件异常，请刷新后重试'
+    captchaError.value = message || String(t('commentSection.captchaWidgetError'))
   })
   captchaMountRef.value.appendChild(widget)
   captchaWidget.value = widget
@@ -396,11 +412,11 @@ const ensureCaptchaToken = async () => {
   if (!needCaptcha.value) return true
   if (form.captcha_token) return true
   if (!captchaWidget.value) {
-    captchaError.value = '验证码组件加载中，请稍后重试'
+    captchaError.value = String(t('commentSection.captchaLoading'))
     return false
   }
   if (!captchaWidget.value.solve) {
-    captchaError.value = '请先完成验证码验证'
+    captchaError.value = String(t('commentSection.completeCaptchaFirst'))
     return false
   }
   solvingCaptcha.value = true
@@ -410,12 +426,12 @@ const ensureCaptchaToken = async () => {
     const token = result?.token || ''
     form.captcha_token = token
     if (!token) {
-      captchaError.value = '请先完成验证码验证'
+      captchaError.value = String(t('commentSection.completeCaptchaFirst'))
       return false
     }
     return true
   } catch {
-    captchaError.value = '请先完成验证码验证'
+    captchaError.value = String(t('commentSection.completeCaptchaFirst'))
     return false
   } finally {
     solvingCaptcha.value = false
@@ -456,7 +472,7 @@ const submitComment = async () => {
   if (!canSubmit.value || submitting.value) return
   if (solvingCaptcha.value) return
   if (!(await ensureCaptchaToken())) {
-    theToast.error('请先完成验证码验证')
+    theToast.error(String(t('commentSection.completeCaptchaFirst')))
     return
   }
   submitting.value = true
@@ -471,9 +487,9 @@ const submitComment = async () => {
         submittedAt: Date.now(),
       }
       if (status === 'approved') {
-        theToast.success('评论已发布')
+        theToast.success(String(t('commentSection.commentPublished')))
       } else {
-        theToast.success('评论已提交，等待审核')
+        theToast.success(String(t('commentSection.commentSubmittedPending')))
       }
       resetForm()
       if (status === 'approved') {

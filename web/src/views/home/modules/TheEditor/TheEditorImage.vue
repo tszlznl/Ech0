@@ -11,7 +11,7 @@
     <button
       @click="handleRemoveImage"
       class="absolute -top-3 -right-4 bg-[var(--color-accent-soft)] hover:bg-[var(--color-danger)]/30 text-[var(--color-text-secondary)] rounded-lg w-7 h-7 flex items-center justify-center shadow-[var(--shadow-sm)]"
-      title="移除图片"
+      :title="t('editor.removeImage')"
     >
       <Close class="w-4 h-4" />
     </button>
@@ -63,8 +63,10 @@ import { Fancybox } from '@fancyapps/ui'
 import '@fancyapps/ui/dist/fancybox/fancybox.css'
 import { FILE_STORAGE_TYPE } from '@/constants/file'
 import { useBaseDialog } from '@/composables/useBaseDialog'
+import { useI18n } from 'vue-i18n'
 
 const { openConfirm } = useBaseDialog()
+const { t } = useI18n()
 
 // const images = defineModel<App.Api.Ech0.ImageToAdd[]>('imagesToAdd', { required: true })
 
@@ -86,13 +88,13 @@ const handleRemoveImage = () => {
     fileIndex.value >= filesToAdd.value.length ||
     filesToAdd.value.length === 0
   ) {
-    theToast.error('当前图片索引无效，无法删除！')
+    theToast.error(String(t('editor.invalidImageIndex')))
     return
   }
   const index = fileIndex.value
 
   openConfirm({
-    title: '确定要移除图片吗？',
+    title: String(t('editor.removeImageConfirmTitle')),
     description: '',
     onConfirm: () => {
       const fileToDelete: App.Api.Ech0.FileToDelete = {

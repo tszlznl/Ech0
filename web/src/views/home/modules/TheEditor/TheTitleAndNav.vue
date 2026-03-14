@@ -21,8 +21,8 @@
       >
         <button
           type="button"
-          :title="`切换主题（下一个：${nextThemeModeLabel}）`"
-          :aria-label="`切换主题（下一个：${nextThemeModeLabel}）`"
+          :title="t('homeNav.themeToggleTitle', { mode: nextThemeModeLabel })"
+          :aria-label="t('homeNav.themeToggleTitle', { mode: nextThemeModeLabel })"
           class="h-8 px-3 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-border-subtle)] transition-colors duration-200"
           @click="handleThemeToggle"
         >
@@ -30,8 +30,8 @@
         </button>
         <button
           type="button"
-          title="进入 Zen Mode"
-          aria-label="进入 Zen Mode"
+          :title="t('homeNav.enterZenMode')"
+          :aria-label="t('homeNav.enterZenMode')"
           :disabled="isZenMode"
           class="hidden sm:flex items-center justify-center h-8 px-3 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-border-subtle)] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[var(--color-text-muted)]"
           @click="handleEnterZenMode"
@@ -40,8 +40,8 @@
         </button>
         <button
           type="button"
-          title="Hello 请求"
-          aria-label="Hello 请求"
+          :title="t('homeNav.helloRequest')"
+          :aria-label="t('homeNav.helloRequest')"
           class="h-8 px-2.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-border-subtle)] transition-colors duration-200"
           @click="handleHelloOnly"
         >
@@ -68,6 +68,7 @@ import AutoIcon from '@/components/icons/auto.vue'
 import Zen from '@/components/icons/zen.vue'
 import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { fetchHelloEch0 } from '@/service/api'
 import { useSettingStore, useThemeStore, useUserStore, useZenStore } from '@/stores'
 import { resolveAvatarUrl } from '@/service/request/shared'
@@ -81,6 +82,7 @@ const zenStore = useZenStore()
 const { SystemSetting } = storeToRefs(settingStore)
 const { user, isLogin } = storeToRefs(userStore)
 const { isZenMode } = storeToRefs(zenStore)
+const { t } = useI18n()
 
 const logo = computed(() => {
   if (isLogin.value && user.value?.avatar) {
@@ -102,21 +104,21 @@ const themeIcon = computed(() => {
 })
 
 const nextThemeModeLabel = computed(() => {
-  if (nextThemeMode.value === 'light') return 'Light'
-  if (nextThemeMode.value === 'dark') return 'Dark'
-  return 'Auto'
+  if (nextThemeMode.value === 'light') return String(t('homeNav.themeLight'))
+  if (nextThemeMode.value === 'dark') return String(t('homeNav.themeDark'))
+  return String(t('homeNav.themeAuto'))
 })
 
 const getThemeModeLabel = () => {
-  if (themeStore.mode === 'light') return 'Light'
-  if (themeStore.mode === 'dark') return 'Dark'
-  return 'Auto'
+  if (themeStore.mode === 'light') return String(t('homeNav.themeLight'))
+  if (themeStore.mode === 'dark') return String(t('homeNav.themeDark'))
+  return String(t('homeNav.themeAuto'))
 }
 
 const handleThemeToggle = async (event: MouseEvent) => {
   await themeStore.toggleTheme(event)
-  theToast.success('主题已切换', {
-    description: `当前主题为：${getThemeModeLabel()}`,
+  theToast.success(String(t('homeNav.themeSwitched')), {
+    description: String(t('homeNav.themeCurrent', { mode: getThemeModeLabel() })),
     duration: 1500,
   })
 }
@@ -133,11 +135,13 @@ const handleHelloOnly = () => {
   fetchHelloEch0().then((res) => {
     if (res.code === 1) {
       hello.value = res.data
-      theToast.success('你好呀！ 👋', {
-        description: `当前版本：v${hello.value.version} | ${modeText}`,
+      theToast.success(String(t('homeNav.helloToastTitle')), {
+        description: String(
+          t('homeNav.helloToastDesc', { version: hello.value.version, mode: modeText }),
+        ),
         duration: 2000,
         action: {
-          label: 'Github',
+          label: String(t('homeNav.githubAction')),
           onClick: () => {
             window.open(hello.value?.github, '_blank')
           },

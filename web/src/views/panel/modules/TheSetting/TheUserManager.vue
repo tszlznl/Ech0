@@ -1,7 +1,9 @@
 <template>
   <PanelCard>
     <div class="flex flex-row items-center justify-between mb-3">
-      <h1 class="text-[var(--color-text-primary)] font-bold text-lg">用户管理</h1>
+      <h1 class="text-[var(--color-text-primary)] font-bold text-lg">
+        {{ t('userManager.title') }}
+      </h1>
       <div class="flex flex-row items-center justify-end gap-2 w-14">
         <!-- <button @click="userEditMode = !userEditMode" title="编辑">
           <Edit v-if="!userEditMode" class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
@@ -12,12 +14,12 @@
 
     <!-- 用户列表 -->
     <div v-if="loading" class="flex justify-center py-4 text-[var(--color-text-muted)]">
-      加载中...
+      {{ t('userManager.loading') }}
     </div>
 
     <div v-else>
       <div v-if="allusers.length === 0" class="flex flex-col items-center justify-center mt-2">
-        <span class="text-[var(--color-text-muted)]">暂无其它用户...</span>
+        <span class="text-[var(--color-text-muted)]">{{ t('userManager.empty') }}</span>
       </div>
 
       <div
@@ -35,17 +37,17 @@
               <th
                 class="px-3 min-w-18 py-2 text-left text-sm font-semibold text-[var(--color-text-primary)]"
               >
-                用户名
+                {{ t('userManager.username') }}
               </th>
               <th
                 class="px-3 py-2 text-center text-sm font-semibold text-[var(--color-text-primary)]"
               >
-                权限更改
+                {{ t('userManager.permissionChange') }}
               </th>
               <th
                 class="px-3 min-w-18 py-2 text-right text-sm font-semibold text-[var(--color-text-primary)]"
               >
-                操作
+                {{ t('commonUi.actions') }}
               </th>
             </tr>
           </thead>
@@ -62,7 +64,7 @@
                 <button
                   class="p-1 hover:bg-[var(--color-accent-soft)] rounded"
                   @click="handleDeleteUser(user.id)"
-                  title="删除用户"
+                  :title="t('userManager.deleteUser')"
                 >
                   <Deluser class="w-5 h-5 text-[var(--color-danger)]" />
                 </button>
@@ -80,11 +82,13 @@ import PanelCard from '@/layout/PanelCard.vue'
 // import Edit from '@/components/icons/edit.vue'
 // import Close from '@/components/icons/close.vue'
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import BaseSwitch from '@/components/common/BaseSwitch.vue'
 import Deluser from '@/components/icons/deluser.vue'
 import { theToast } from '@/utils/toast'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 const { openConfirm } = useBaseDialog()
+const { t } = useI18n()
 
 const loading = ref<boolean>(true)
 
@@ -95,8 +99,8 @@ const allusers = ref<App.Api.User.User[]>([])
 
 const handleDeleteUser = async (userId: string) => {
   openConfirm({
-    title: '确定要删除该用户吗？',
-    description: '删除后将无法恢复，请谨慎操作',
+    title: String(t('userManager.deleteConfirmTitle')),
+    description: String(t('userManager.deleteConfirmDesc')),
     onConfirm: () => {
       fetchDeleteUser(userId).then((res) => {
         if (res.code === 1) {

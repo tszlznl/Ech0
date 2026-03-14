@@ -50,8 +50,10 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.siteTitle') }}:</h2>
-        <span v-if="!editMode">{{
+        <h2 class="font-semibold min-w-26 w-max shrink-0 whitespace-nowrap">
+          {{ t('systemSetting.siteTitle') }}:
+        </h2>
+        <span v-if="!editMode" class="flex-1 min-w-0 truncate" :title="SystemSetting.site_title">{{
           SystemSetting?.site_title.length === 0 ? t('commonUi.none') : SystemSetting.site_title
         }}</span>
         <BaseInput
@@ -66,8 +68,10 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.serverName') }}:</h2>
-        <span v-if="!editMode">{{
+        <h2 class="font-semibold min-w-26 w-max shrink-0 whitespace-nowrap">
+          {{ t('systemSetting.serverName') }}:
+        </h2>
+        <span v-if="!editMode" class="flex-1 min-w-0 truncate" :title="SystemSetting.server_name">{{
           SystemSetting?.server_name.length === 0 ? t('commonUi.none') : SystemSetting.server_name
         }}</span>
         <BaseInput
@@ -82,8 +86,10 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.serverUrl') }}:</h2>
-        <span v-if="!editMode">{{
+        <h2 class="font-semibold min-w-26 w-max shrink-0 whitespace-nowrap">
+          {{ t('systemSetting.serverUrl') }}:
+        </h2>
+        <span v-if="!editMode" class="flex-1 min-w-0 truncate" :title="SystemSetting.server_url">{{
           SystemSetting?.server_name.length === 0 ? t('commonUi.none') : SystemSetting.server_url
         }}</span>
         <BaseInput
@@ -98,10 +104,12 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.footerContent') }}:</h2>
+        <h2 class="font-semibold min-w-26 w-max shrink-0 whitespace-nowrap">
+          {{ t('systemSetting.footerContent') }}:
+        </h2>
         <span
           v-if="!editMode"
-          class="truncate max-w-40 inline-block align-middle"
+          class="flex-1 min-w-0 truncate inline-block align-middle"
           :title="SystemSetting.footer_content"
           style="vertical-align: middle"
         >
@@ -123,10 +131,12 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.footerLink') }}:</h2>
+        <h2 class="font-semibold min-w-26 w-max shrink-0 whitespace-nowrap">
+          {{ t('systemSetting.footerLink') }}:
+        </h2>
         <span
           v-if="!editMode"
-          class="truncate max-w-40 inline-block align-middle"
+          class="flex-1 min-w-0 truncate inline-block align-middle"
           :title="SystemSetting.footer_link"
           style="vertical-align: middle"
         >
@@ -146,10 +156,12 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.metingApi') }}:</h2>
+        <h2 class="font-semibold min-w-26 w-max shrink-0 whitespace-nowrap">
+          {{ t('systemSetting.metingApi') }}:
+        </h2>
         <span
           v-if="!editMode"
-          class="truncate max-w-40 inline-block align-middle"
+          class="flex-1 min-w-0 truncate inline-block align-middle"
           :title="SystemSetting.meting_api"
           style="vertical-align: middle"
         >
@@ -167,10 +179,12 @@
       </div>
       <!-- 自定义 CSS -->
       <div class="flex flex-row justify-start text-[var(--color-text-secondary)] gap-2 mb-1">
-        <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.customCss') }}:</h2>
+        <h2 class="font-semibold min-w-26 w-max shrink-0 whitespace-nowrap">
+          {{ t('systemSetting.customCss') }}:
+        </h2>
         <span
           v-if="!editMode"
-          class="truncate max-w-full inline-block align-middle"
+          class="flex-1 min-w-0 truncate inline-block align-middle"
           :title="SystemSetting.custom_css"
           style="vertical-align: middle"
           >{{ SystemSetting?.custom_css?.length === 0 ? t('commonUi.none') : '******' }}</span
@@ -185,10 +199,12 @@
       </div>
       <!-- 自定义 Script -->
       <div class="flex flex-row justify-start text-[var(--color-text-secondary)] gap-2 mb-1">
-        <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.customJs') }}:</h2>
+        <h2 class="font-semibold min-w-26 w-max shrink-0 whitespace-nowrap">
+          {{ t('systemSetting.customJs') }}:
+        </h2>
         <span
           v-if="!editMode"
-          class="truncate max-w-full inline-block align-middle"
+          class="flex-1 min-w-0 truncate inline-block align-middle"
           :title="SystemSetting.custom_js"
           style="vertical-align: middle"
           >{{ SystemSetting?.custom_js?.length === 0 ? t('commonUi.none') : '******' }}</span
@@ -205,9 +221,15 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.defaultLocale') }}:</h2>
-        <span v-if="!editMode">
-          {{ SystemSetting.default_locale === 'en-US' ? t('commonUi.localeEnUS') : t('commonUi.localeZhCN') }}
+        <h2 class="font-semibold min-w-26 w-max shrink-0 whitespace-nowrap">
+          {{ t('systemSetting.defaultLocale') }}:
+        </h2>
+        <span v-if="!editMode" class="flex-1 min-w-0 truncate">
+          {{
+            SystemSetting.default_locale === 'en-US'
+              ? t('commonUi.localeEnUS')
+              : t('commonUi.localeZhCN')
+          }}
         </span>
         <BaseSelect
           v-else
@@ -218,7 +240,9 @@
       </div>
       <!-- 允许注册 -->
       <div class="flex flex-row items-center justify-start text-[var(--color-text-secondary)]">
-        <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.allowRegister') }}:</h2>
+        <h2 class="font-semibold min-w-26 w-max shrink-0 whitespace-nowrap">
+          {{ t('systemSetting.allowRegister') }}:
+        </h2>
         <BaseSwitch v-model="SystemSetting.allow_register" :disabled="!editMode" />
       </div>
     </div>

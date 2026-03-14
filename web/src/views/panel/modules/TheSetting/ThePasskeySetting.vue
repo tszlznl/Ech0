@@ -66,8 +66,8 @@
         <div
           class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
-          <h3 class="font-semibold w-40 shrink-0">WebAuthn RP ID:</h3>
-          <span v-if="!passkeyEditMode" class="truncate max-w-80 inline-block align-middle">
+          <h3 class="font-semibold min-w-40 w-max shrink-0 whitespace-nowrap">WebAuthn RP ID:</h3>
+          <span v-if="!passkeyEditMode" class="flex-1 min-w-0 truncate inline-block align-middle">
             {{ passkeySetting.webauthn_rp_id || t('commonUi.none') }}
           </span>
           <BaseInput
@@ -81,8 +81,8 @@
         <div
           class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
-          <h3 class="font-semibold w-40 shrink-0">WebAuthn Origins:</h3>
-          <span v-if="!passkeyEditMode" class="truncate max-w-80 inline-block align-middle">
+          <h3 class="font-semibold min-w-40 w-max shrink-0 whitespace-nowrap">WebAuthn Origins:</h3>
+          <span v-if="!passkeyEditMode" class="flex-1 min-w-0 truncate inline-block align-middle">
             {{
               passkeySetting.webauthn_allowed_origins.length === 0
                 ? t('commonUi.none')

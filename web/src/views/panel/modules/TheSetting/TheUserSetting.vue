@@ -49,8 +49,12 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30">{{ t('userSetting.username') }}:</h2>
-        <span v-if="!editMode">{{ user?.username }}</span>
+        <h2 class="font-semibold min-w-36 w-max shrink-0 whitespace-nowrap">
+          {{ t('userSetting.username') }}:
+        </h2>
+        <span v-if="!editMode" class="flex-1 min-w-0 truncate" :title="user?.username">{{
+          user?.username
+        }}</span>
         <BaseInput
           v-else
           v-model="userInfo.username"
@@ -64,8 +68,10 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30">{{ t('userSetting.password') }}:</h2>
-        <span v-if="!editMode">******</span>
+        <h2 class="font-semibold min-w-36 w-max shrink-0 whitespace-nowrap">
+          {{ t('userSetting.password') }}:
+        </h2>
+        <span v-if="!editMode" class="flex-1 min-w-0 truncate">******</span>
         <BaseInput
           v-else
           v-model="userInfo.password"
@@ -79,14 +85,13 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30">{{ t('userSetting.locale') }}:</h2>
-        <span v-if="!editMode">{{ localeLabel }}</span>
-        <BaseSelect
-          v-else
-          v-model="userInfo.locale"
-          :options="localeOptions"
-          class="w-fit h-8"
-        />
+        <h2 class="font-semibold min-w-36 w-max shrink-0 whitespace-nowrap">
+          {{ t('userSetting.locale') }}:
+        </h2>
+        <span v-if="!editMode" class="flex-1 min-w-0 truncate">{{ localeLabel }}</span>
+        <div v-else class="w-36">
+          <BaseSelect v-model="userInfo.locale" :options="localeOptions" class="w-full h-8" />
+        </div>
       </div>
     </div>
   </PanelCard>
@@ -124,11 +129,13 @@ const userInfo = ref<App.Api.User.UserInfo>({
 const editMode = ref<boolean>(false)
 const avatarSrc = computed(() => resolveAvatarUrl(user.value?.avatar))
 const localeOptions = computed(() => [
-  { label: String(t('commonUi.localeZhCN')), value: 'zh-CN' },
-  { label: String(t('commonUi.localeEnUS')), value: 'en-US' },
+  { label: String(t('userSetting.localeZhShort')), value: 'zh-CN' },
+  { label: String(t('userSetting.localeEnShort')), value: 'en-US' },
 ])
 const localeLabel = computed(() =>
-  userInfo.value.locale === 'en-US' ? t('commonUi.localeEnUS') : t('commonUi.localeZhCN'),
+  userInfo.value.locale === 'en-US'
+    ? t('userSetting.localeEnShort')
+    : t('userSetting.localeZhShort'),
 )
 const { enqueueUpload, waitForTask, clearFinishedUploads } = useFileQueue()
 

@@ -1,18 +1,18 @@
 <template>
   <div>
-    <h2 class="text-[var(--color-text-secondary)] font-bold mb-1">收件箱模式</h2>
+    <h2 class="text-[var(--color-text-secondary)] font-bold mb-1">{{ t('editor.inboxMode') }}</h2>
 
     <!-- 当前共有 -->
     <div class="text-[var(--color-text-muted)] my-2 inbox-mode-metrics">
       <p>
-        当前消息共有 <span class="font-bold">{{ total }}</span> 条
+        {{ t('editor.inboxTotal', { total }) }}
       </p>
     </div>
 
     <!-- 未读消息共有 -->
     <div class="text-[var(--color-text-muted)] my-2 inbox-mode-metrics">
       <p>
-        未读消息共有 <span class="font-bold">{{ unreadItems.length }}</span> 条
+        {{ t('editor.inboxUnread', { total: unreadItems.length }) }}
       </p>
     </div>
   </div>
@@ -21,9 +21,11 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { useInboxStore } from '@/stores'
+import { useI18n } from 'vue-i18n'
 
 const inboxStore = useInboxStore()
 const { unreadItems, total } = storeToRefs(inboxStore)
+const { t } = useI18n()
 </script>
 
 <style scoped>

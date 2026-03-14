@@ -4,20 +4,20 @@
       <section class="panel-welcome mb-5 md:mb-2">
         <div class="panel-welcome-main">
           <h1 class="panel-welcome-username">
-            {{ username }}，欢迎回来 <span class="wave-hand">👋</span>
+            {{ t('panelPage.welcomeBack', { username }) }} <span class="wave-hand">👋</span>
           </h1>
           <div class="panel-welcome-meta">
             <p class="panel-welcome-date">{{ dateText }}</p>
             <p class="panel-welcome-greeting">{{ greeting }}</p>
           </div>
-          <p class="panel-welcome-tip">今天也来记录一点新的灵感</p>
+          <p class="panel-welcome-tip">{{ t('panelPage.welcomeTip') }}</p>
         </div>
         <div class="panel-welcome-actions">
           <BaseButton
             :icon="BackHand"
             @click="router.push('/')"
             class="panel-home-btn"
-            title="返回首页"
+            :title="t('panelPage.backHome')"
           />
         </div>
       </section>
@@ -29,7 +29,7 @@
             class="!focus:ring-0 h-9"
             v-model="selectedRoute"
             :options="routeOptions"
-            placeholder="选择页面"
+            :placeholder="t('panelPage.selectPage')"
             @change="handleRouteChange"
           />
         </div>
@@ -41,7 +41,7 @@
             :icon="Logout"
             @click="handleLogout"
             class="w-9 h-9 rounded-md"
-            title="退出"
+            :title="t('panelPage.logout')"
           >
           </BaseButton>
           <!-- 登录 / 注册 -->
@@ -50,7 +50,7 @@
             :icon="Auth"
             @click="router.push('/auth')"
             class="w-9 h-9 rounded-md"
-            title="登录 / 注册"
+            :title="t('panelPage.loginOrSignup')"
           >
           </BaseButton>
         </div>
@@ -59,15 +59,15 @@
       <!-- 主内容区 -->
       <div class="mx-auto flex my-4 w-full max-w-screen-lg rounded-md panel-main">
         <!-- 桌面端侧边栏 -->
-        <div class="hidden md:flex flex-col gap-2 w-48 pr-8 shrink-0 panel-nav">
+        <div class="hidden md:flex flex-col gap-2 w-52 pr-4 shrink-0 panel-nav">
           <!-- Dashboard -->
           <BaseButton
             :icon="Dashboard"
             @click="router.push('/panel/dashboard')"
             :class="getButtonClasses('panel-dashboard')"
-            title="Dashboard"
+            :title="t('panelPageNav.dashboard')"
           >
-            控制台
+            {{ t('panelPageNav.dashboard') }}
           </BaseButton>
 
           <!-- 偏好设置 -->
@@ -75,9 +75,9 @@
             :icon="Setting"
             @click="router.push('/panel/setting')"
             :class="getButtonClasses('panel-setting')"
-            title="偏好设置"
+            :title="t('panelPageNav.setting')"
           >
-            偏好设置
+            {{ t('panelPageNav.setting') }}
           </BaseButton>
 
           <!-- 用户中心 -->
@@ -85,9 +85,9 @@
             :icon="User"
             @click="router.push('/panel/user')"
             :class="getButtonClasses('panel-user')"
-            title="用户中心"
+            :title="t('panelPageNav.userCenter')"
           >
-            用户中心
+            {{ t('panelPageNav.userCenter') }}
           </BaseButton>
 
           <!-- 存储管理 -->
@@ -95,9 +95,9 @@
             :icon="Storage"
             @click="router.push('/panel/storage')"
             :class="getButtonClasses('panel-storage')"
-            title="存储管理"
+            :title="t('panelPageNav.storage')"
           >
-            存储管理
+            {{ t('panelPageNav.storage') }}
           </BaseButton>
 
           <!-- 数据管理 -->
@@ -105,18 +105,18 @@
             :icon="Data"
             @click="router.push('/panel/data-management')"
             :class="getButtonClasses('panel-data-management')"
-            title="数据管理"
+            :title="t('panelPageNav.dataManagement')"
           >
-            数据管理
+            {{ t('panelPageNav.dataManagement') }}
           </BaseButton>
 
           <BaseButton
             :icon="Extension"
             @click="router.push('/panel/comment')"
             :class="getButtonClasses('panel-comment')"
-            title="评论管理"
+            :title="t('panelPageNav.comment')"
           >
-            评论管理
+            {{ t('panelPageNav.comment') }}
           </BaseButton>
 
           <!-- 单点登录 -->
@@ -124,9 +124,9 @@
             :icon="Sso"
             @click="router.push('/panel/sso')"
             :class="getButtonClasses('panel-sso')"
-            title="单点登录"
+            :title="t('panelPageNav.sso')"
           >
-            单点登录
+            {{ t('panelPageNav.sso') }}
           </BaseButton>
 
           <!-- 功能扩展 -->
@@ -134,9 +134,9 @@
             :icon="Extension"
             @click="router.push('/panel/extension')"
             :class="getButtonClasses('panel-extension')"
-            title="功能扩展"
+            :title="t('panelPageNav.extension')"
           >
-            功能扩展
+            {{ t('panelPageNav.extension') }}
           </BaseButton>
 
           <!-- 外部集成 -->
@@ -144,9 +144,9 @@
             :icon="Others"
             @click="router.push('/panel/advance')"
             :class="getButtonClasses('panel-advance')"
-            title="外部集成"
+            :title="t('panelPageNav.advance')"
           >
-            外部集成
+            {{ t('panelPageNav.advance') }}
           </BaseButton>
 
           <!-- 系统日志 -->
@@ -154,9 +154,9 @@
             :icon="Log"
             @click="router.push('/panel/system-log')"
             :class="getButtonClasses('panel-system-log')"
-            title="系统日志"
+            :title="t('panelPageNav.systemLog')"
           >
-            系统日志
+            {{ t('panelPageNav.systemLog') }}
           </BaseButton>
 
           <div class="h-px bg-[var(--color-border-subtle)] mx-2" />
@@ -166,9 +166,9 @@
             :icon="Logout"
             @click="handleLogout"
             :class="getBottomButtonClasses()"
-            title="退出登录"
+            :title="t('panelPage.logout')"
           >
-            登出
+            {{ t('panelPage.logout') }}
           </BaseButton>
 
           <!-- 登录 / 注册 -->
@@ -176,12 +176,14 @@
             :icon="Auth"
             @click="router.push('/auth')"
             :class="getBottomButtonClasses()"
-            title="登录 / 注册"
+            :title="t('panelPage.login')"
           >
-            登录
+            {{ t('panelPage.login') }}
           </BaseButton>
 
-          <div class="panel-version my-2 ml-3">Version: {{ settingStore.hello?.version }}</div>
+          <div class="panel-version my-2 ml-3">
+            {{ t('panelPage.version', { version: settingStore.hello?.version || '--' }) }}
+          </div>
         </div>
 
         <!-- 路由内容 -->
@@ -209,12 +211,14 @@ import Sso from '@/components/icons/sso.vue'
 import Logout from '@/components/icons/logout.vue'
 import Log from '@/components/icons/log.vue'
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useUserStore, useSettingStore } from '@/stores'
 import { useRouter, useRoute } from 'vue-router'
 import { theToast } from '@/utils/toast'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 
 const { openConfirm } = useBaseDialog()
+const { t, locale } = useI18n()
 
 const userStore = useUserStore()
 const settingStore = useSettingStore()
@@ -223,16 +227,16 @@ const route = useRoute()
 
 const currentRoute = computed(() => route.name as string)
 const selectedRoute = ref(route.path)
-const username = computed(() => userStore.user?.username || '朋友')
+const username = computed(() => userStore.user?.username || String(t('panelPage.friend')))
 const greeting = computed(() => {
   const hour = new Date().getHours()
-  if (hour < 6) return '凌晨好'
-  if (hour < 12) return '早上好'
-  if (hour < 18) return '下午好'
-  return '晚上好'
+  if (hour < 6) return String(t('panelPage.greetingEarlyMorning'))
+  if (hour < 12) return String(t('panelPage.greetingMorning'))
+  if (hour < 18) return String(t('panelPage.greetingAfternoon'))
+  return String(t('panelPage.greetingEvening'))
 })
 const dateText = computed(() => {
-  return new Intl.DateTimeFormat('zh-CN', {
+  return new Intl.DateTimeFormat(locale.value, {
     month: 'long',
     day: 'numeric',
     weekday: 'long',
@@ -242,7 +246,7 @@ const dateText = computed(() => {
 // 统一的按钮样式计算函数
 const getButtonClasses = (routeName: string) => {
   const baseClasses =
-    'flex items-center gap-2 pl-3 py-1.5 rounded-[var(--radius-md)] transition-all duration-200 border-none !shadow-none !ring-0 justify-start bg-transparent hover:bg-[var(--color-bg-muted)]'
+    'w-full flex items-center gap-2 pl-3 py-1.5 rounded-[var(--radius-md)] transition-all duration-200 border-none !shadow-none !ring-0 justify-start bg-transparent hover:bg-[var(--color-bg-muted)] whitespace-nowrap'
   const activeClasses =
     currentRoute.value === routeName
       ? 'text-[var(--color-nav-active-text)]! bg-[var(--color-nav-active-bg)]!'
@@ -253,22 +257,22 @@ const getButtonClasses = (routeName: string) => {
 
 // 底部按钮样式
 const getBottomButtonClasses = () => {
-  return 'flex items-center gap-2 pl-3 py-1.5 rounded-[var(--radius-md)] transition-all duration-200 border-none !shadow-none !ring-0 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)] justify-start bg-transparent'
+  return 'w-full flex items-center gap-2 pl-3 py-1.5 rounded-[var(--radius-md)] transition-all duration-200 border-none !shadow-none !ring-0 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)] justify-start bg-transparent whitespace-nowrap'
 }
 
 // 路由选项
-const routeOptions = [
-  { label: '控制台', value: '/panel/dashboard' },
-  { label: '偏好设置', value: '/panel/setting' },
-  { label: '用户中心', value: '/panel/user' },
-  { label: '存储管理', value: '/panel/storage' },
-  { label: '数据管理', value: '/panel/data-management' },
-  { label: '评论管理', value: '/panel/comment' },
-  { label: '单点登录', value: '/panel/sso' },
-  { label: '功能扩展', value: '/panel/extension' },
-  { label: '外部集成', value: '/panel/advance' },
-  { label: '系统日志', value: '/panel/system-log' },
-]
+const routeOptions = computed(() => [
+  { label: String(t('panelPageNav.dashboard')), value: '/panel/dashboard' },
+  { label: String(t('panelPageNav.setting')), value: '/panel/setting' },
+  { label: String(t('panelPageNav.userCenter')), value: '/panel/user' },
+  { label: String(t('panelPageNav.storage')), value: '/panel/storage' },
+  { label: String(t('panelPageNav.dataManagement')), value: '/panel/data-management' },
+  { label: String(t('panelPageNav.comment')), value: '/panel/comment' },
+  { label: String(t('panelPageNav.sso')), value: '/panel/sso' },
+  { label: String(t('panelPageNav.extension')), value: '/panel/extension' },
+  { label: String(t('panelPageNav.advance')), value: '/panel/advance' },
+  { label: String(t('panelPageNav.systemLog')), value: '/panel/system-log' },
+])
 
 // 监听路由变化，更新选择器
 watch(
@@ -286,20 +290,20 @@ const handleRouteChange = () => {
 const handleLogout = () => {
   // 检查是否登录
   if (!userStore.isLogin) {
-    theToast.info('当前未登录')
+    theToast.info(String(t('panelPage.notLogin')))
     return
   }
 
   // 弹出浏览器确认框
   openConfirm({
-    title: '确定要退出登录吗？',
+    title: String(t('panelPage.logoutConfirmTitle')),
     description: '',
     onConfirm: () => {
       // 清除用户信息
       userStore.logout()
       // 跳转到首页
       router.push('/')
-      theToast.success('已退出登录')
+      theToast.success(String(t('panelPage.logoutSuccess')))
     },
   })
 }
