@@ -2,10 +2,12 @@ package model
 
 // Result 定义统一的API响应格式
 type Result[T any] struct {
-	Code      int    `json:"code"`
-	Message   string `json:"msg"`
-	ErrorCode string `json:"error_code,omitempty"`
-	Data      T      `json:"data"`
+	Code          int            `json:"code"`
+	Message       string         `json:"msg"`
+	ErrorCode     string         `json:"error_code,omitempty"`
+	MessageKey    string         `json:"message_key,omitempty"`
+	MessageParams map[string]any `json:"message_params,omitempty"`
+	Data          T              `json:"data"`
 }
 
 const (
@@ -32,16 +34,24 @@ func OK[T any](data T, messages ...string) Result[T] {
 func Fail[T any](message string) Result[T] {
 	var zero T
 	return Result[T]{
-		Code:      DEFAULT_FAILED_CODE,
-		Message:   message,
-		ErrorCode: "",
-		Data:      zero,
+		Code:       DEFAULT_FAILED_CODE,
+		Message:    message,
+		ErrorCode:  "",
+		MessageKey: "",
+		Data:       zero,
 	}
 }
 
 func FailWithErrorCode[T any](message, errorCode string) Result[T] {
 	res := Fail[T](message)
 	res.ErrorCode = errorCode
+	return res
+}
+
+func FailWithLocalized[T any](message, errorCode, messageKey string, params map[string]any) Result[T] {
+	res := FailWithErrorCode[T](message, errorCode)
+	res.MessageKey = messageKey
+	res.MessageParams = params
 	return res
 }
 

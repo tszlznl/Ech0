@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	i18nUtil "github.com/lin-snow/ech0/internal/i18n"
 	"github.com/lin-snow/ech0/internal/middleware"
 )
 
@@ -11,6 +12,8 @@ func setupMiddleware(r *gin.Engine) {
 	r.Use(gin.Recovery())
 	// Cors middleware
 	r.Use(middleware.Cors())
+	// Locale and request localizer middleware
+	r.Use(i18nUtil.Middleware())
 	// Global write guard middleware
 	r.Use(middleware.WriteGuard())
 }

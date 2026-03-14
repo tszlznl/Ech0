@@ -6,6 +6,7 @@ import { localStg } from '@/utils/storage'
 import { theToast } from '@/utils/toast'
 import router from '@/router'
 import { useEchoStore } from './echo'
+import { i18n } from '@/locales'
 
 export const useUserStore = defineStore('userStore', () => {
   /**
@@ -31,7 +32,7 @@ export const useUserStore = defineStore('userStore', () => {
         refreshCurrentUser()
 
         // 登录成功
-        theToast.success('登录成功,欢迎回来！🎉')
+        theToast.success(String(i18n.global.t('auth.loginSuccess')))
 
         // 清除echo数据
         const echoStore = useEchoStore()
@@ -53,7 +54,7 @@ export const useUserStore = defineStore('userStore', () => {
       await refreshCurrentUser()
 
       // 登录成功
-      theToast.success('登录成功,欢迎回来！🎉')
+      theToast.success(String(i18n.global.t('auth.loginSuccess')))
 
       // 清除echo数据
       const echoStore = useEchoStore()
@@ -69,7 +70,7 @@ export const useUserStore = defineStore('userStore', () => {
     return await fetchSignup(userInfo).then((res) => {
       // 注册成功，前往登录
       if (res.code === 1) {
-        theToast.success('注册成功,请登录！')
+        theToast.success(String(i18n.global.t('auth.signupSuccess')))
         return true
       }
 

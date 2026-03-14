@@ -4,13 +4,15 @@
       <!-- OAuth2 设置 -->
       <div class="w-full">
         <div class="flex flex-row items-center justify-between mb-3">
-          <h1 class="text-[var(--color-text-primary)] font-bold text-lg">OAuth2设置</h1>
+          <h1 class="text-[var(--color-text-primary)] font-bold text-lg">
+            {{ t('oauth2Setting.title') }}
+          </h1>
           <div class="flex flex-row items-center justify-end">
             <BaseEditCapsule
               :editing="oauth2EditMode"
-              apply-title="应用"
-              cancel-title="取消"
-              edit-title="编辑"
+              :apply-title="t('commonUi.apply')"
+              :cancel-title="t('commonUi.cancel')"
+              :edit-title="t('commonUi.edit')"
               @apply="handleUpdateOAuth2Setting"
               @toggle="oauth2EditMode = !oauth2EditMode"
             />
@@ -21,10 +23,14 @@
           v-if="OAuth2Setting.enable"
           class="mb-3 border border-dashed border-[var(--color-border-strong)] rounded-md p-3"
         >
-          <h2 class="text-[var(--color-text-primary)] font-semibold mb-2">配置健康检查</h2>
+          <h2 class="text-[var(--color-text-primary)] font-semibold mb-2">
+            {{ t('oauth2Setting.healthCheck') }}
+          </h2>
           <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2 text-sm">
             <div class="flex items-center gap-2">
-              <span class="text-[var(--color-text-secondary)]">OAuth就绪:</span>
+              <span class="text-[var(--color-text-secondary)]"
+                >{{ t('oauth2Setting.oauthReady') }}:</span
+              >
               <span
                 class="px-2 py-0.5 rounded-md"
                 :class="
@@ -33,7 +39,11 @@
                     : 'bg-yellow-500/15 text-yellow-500'
                 "
               >
-                {{ oauthRuntimeStatus?.oauth_ready ? '已就绪' : '未就绪' }}
+                {{
+                  oauthRuntimeStatus?.oauth_ready
+                    ? t('oauth2Setting.ready')
+                    : t('oauth2Setting.notReady')
+                }}
               </span>
             </div>
           </div>
@@ -41,7 +51,7 @@
             v-if="missingBoundaryItems.length > 0"
             class="mt-2 text-xs text-[var(--color-text-muted)] break-all"
           >
-            缺失项: {{ missingBoundaryItems.join('、') }}
+            {{ t('oauth2Setting.missingItems') }}: {{ missingBoundaryItems.join('、') }}
           </p>
           <div class="mt-2">
             <BaseButton
@@ -49,7 +59,7 @@
               @click="handleAutoFillBoundary"
               :disabled="missingBoundaryItems.length === 0"
             >
-              一键填充推荐配置
+              {{ t('oauth2Setting.autofill') }}
             </BaseButton>
           </div>
         </div>
@@ -58,7 +68,7 @@
         <div
           class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] h-10"
         >
-          <h2 class="font-semibold w-30 shrink-0">启用OAuth2:</h2>
+          <h2 class="font-semibold w-30 shrink-0">{{ t('oauth2Setting.enableOAuth2') }}:</h2>
           <BaseSwitch v-model="OAuth2Setting.enable" :disabled="!oauth2EditMode" />
         </div>
 
@@ -66,7 +76,7 @@
         <div
           class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
-          <h2 class="font-semibold w-30 shrink-0">OAuth2 模板:</h2>
+          <h2 class="font-semibold w-30 shrink-0">{{ t('oauth2Setting.template') }}:</h2>
           <BaseSelect
             v-model="OAuth2Setting.provider"
             :options="OAuth2ProviderOptions"
@@ -86,13 +96,15 @@
             :title="OAuth2Setting.client_id"
             style="vertical-align: middle"
           >
-            {{ OAuth2Setting.client_id.length === 0 ? '暂无' : OAuth2Setting.client_id }}
+            {{
+              OAuth2Setting.client_id.length === 0 ? t('commonUi.none') : OAuth2Setting.client_id
+            }}
           </span>
           <BaseInput
             v-else
             v-model="OAuth2Setting.client_id"
             type="text"
-            placeholder="请输入Client ID"
+            :placeholder="t('oauth2Setting.clientIdPlaceholder')"
             class="w-full py-1!"
           />
         </div>
@@ -108,13 +120,17 @@
             :title="OAuth2Setting.client_secret"
             style="vertical-align: middle"
           >
-            {{ OAuth2Setting.client_secret.length === 0 ? '暂无' : OAuth2Setting.client_secret }}
+            {{
+              OAuth2Setting.client_secret.length === 0
+                ? t('commonUi.none')
+                : OAuth2Setting.client_secret
+            }}
           </span>
           <BaseInput
             v-else
             v-model="OAuth2Setting.client_secret"
             type="text"
-            placeholder="请输入Client Secret"
+            :placeholder="t('oauth2Setting.clientSecretPlaceholder')"
             class="w-full py-1!"
           />
         </div>
@@ -130,13 +146,13 @@
             :title="OAuth2Setting.redirect_uri"
             style="vertical-align: middle"
           >
-            {{ redirect_uri.length === 0 ? '暂无' : redirect_uri }}
+            {{ redirect_uri.length === 0 ? t('commonUi.none') : redirect_uri }}
           </span>
           <BaseInput
             v-else
             v-model="redirect_uri"
             type="text"
-            placeholder="请输入回调地址"
+            :placeholder="t('oauth2Setting.callbackPlaceholder')"
             class="w-full py-1!"
           />
         </div>
@@ -152,13 +168,13 @@
             :title="OAuth2Setting.auth_url"
             style="vertical-align: middle"
           >
-            {{ OAuth2Setting.auth_url.length === 0 ? '暂无' : OAuth2Setting.auth_url }}
+            {{ OAuth2Setting.auth_url.length === 0 ? t('commonUi.none') : OAuth2Setting.auth_url }}
           </span>
           <BaseInput
             v-else
             v-model="OAuth2Setting.auth_url"
             type="text"
-            placeholder="请输入授权地址"
+            :placeholder="t('oauth2Setting.authUrlPlaceholder')"
             class="w-full py-1!"
           />
         </div>
@@ -174,13 +190,15 @@
             :title="OAuth2Setting.token_url"
             style="vertical-align: middle"
           >
-            {{ OAuth2Setting.token_url.length === 0 ? '暂无' : OAuth2Setting.token_url }}
+            {{
+              OAuth2Setting.token_url.length === 0 ? t('commonUi.none') : OAuth2Setting.token_url
+            }}
           </span>
           <BaseInput
             v-else
             v-model="OAuth2Setting.token_url"
             type="text"
-            placeholder="请输入Token地址"
+            :placeholder="t('oauth2Setting.tokenUrlPlaceholder')"
             class="w-full py-1!"
           />
         </div>
@@ -196,13 +214,17 @@
             :title="OAuth2Setting.user_info_url"
             style="vertical-align: middle"
           >
-            {{ OAuth2Setting.user_info_url.length === 0 ? '暂无' : OAuth2Setting.user_info_url }}
+            {{
+              OAuth2Setting.user_info_url.length === 0
+                ? t('commonUi.none')
+                : OAuth2Setting.user_info_url
+            }}
           </span>
           <BaseInput
             v-else
             v-model="OAuth2Setting.user_info_url"
             type="text"
-            placeholder="请输入用户信息地址"
+            :placeholder="t('oauth2Setting.userInfoUrlPlaceholder')"
             class="w-full py-1!"
           />
         </div>
@@ -218,13 +240,17 @@
             :title="OAuth2Setting.scopes.join(', ')"
             style="vertical-align: middle"
           >
-            {{ OAuth2Setting.scopes.length === 0 ? '暂无' : OAuth2Setting.scopes.join(', ') }}
+            {{
+              OAuth2Setting.scopes.length === 0
+                ? t('commonUi.none')
+                : OAuth2Setting.scopes.join(', ')
+            }}
           </span>
           <BaseInput
             v-else
             v-model="scopeString"
             type="text"
-            placeholder="请输入Scopes，多个用逗号分隔"
+            :placeholder="t('oauth2Setting.scopesPlaceholder')"
             class="w-full py-1!"
             @blur="OAuth2Setting.scopes = scopeString.split(',').map((s) => s.trim())"
           />
@@ -235,7 +261,7 @@
           v-if="OAuth2Setting.enable"
           class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] h-10"
         >
-          <h2 class="font-semibold w-30 shrink-0">启用OIDC:</h2>
+          <h2 class="font-semibold w-30 shrink-0">{{ t('oauth2Setting.enableOidc') }}:</h2>
           <BaseSwitch v-model="OAuth2Setting.is_oidc" :disabled="!oauth2EditMode" />
         </div>
 
@@ -251,13 +277,13 @@
             :title="OAuth2Setting.issuer"
             style="vertical-align: middle"
           >
-            {{ OAuth2Setting.issuer.length === 0 ? '暂无' : OAuth2Setting.issuer }}
+            {{ OAuth2Setting.issuer.length === 0 ? t('commonUi.none') : OAuth2Setting.issuer }}
           </span>
           <BaseInput
             v-else
             v-model="OAuth2Setting.issuer"
             type="text"
-            placeholder="请输入Issuer"
+            :placeholder="t('oauth2Setting.issuerPlaceholder')"
             class="w-full py-1!"
           />
         </div>
@@ -274,20 +300,22 @@
             :title="OAuth2Setting.jwks_url"
             style="vertical-align: middle"
           >
-            {{ OAuth2Setting.jwks_url.length === 0 ? '暂无' : OAuth2Setting.jwks_url }}
+            {{ OAuth2Setting.jwks_url.length === 0 ? t('commonUi.none') : OAuth2Setting.jwks_url }}
           </span>
           <BaseInput
             v-else
             v-model="OAuth2Setting.jwks_url"
             type="text"
-            placeholder="请输入JWKS URL"
+            :placeholder="t('oauth2Setting.jwksPlaceholder')"
             class="w-full py-1!"
           />
         </div>
 
         <!-- 认证安全边界（Panel 主配置） -->
         <div class="mt-3 border border-dashed border-[var(--color-border-strong)] rounded-md p-3">
-          <h3 class="text-[var(--color-text-primary)] font-semibold mb-2">认证安全边界</h3>
+          <h3 class="text-[var(--color-text-primary)] font-semibold mb-2">
+            {{ t('oauth2Setting.securityBoundary') }}
+          </h3>
           <div
             class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
           >
@@ -295,7 +323,7 @@
             <span v-if="!oauth2EditMode" class="truncate max-w-80 inline-block align-middle">
               {{
                 OAuth2Setting.auth_redirect_allowed_return_urls.length === 0
-                  ? '暂无'
+                  ? t('commonUi.none')
                   : OAuth2Setting.auth_redirect_allowed_return_urls.join(', ')
               }}
             </span>
@@ -303,7 +331,7 @@
               v-else
               v-model="redirectAllowlistString"
               type="text"
-              placeholder="多个URL用逗号分隔"
+              :placeholder="t('oauth2Setting.multiUrlPlaceholder')"
               class="w-full py-1!"
             />
           </div>
@@ -314,7 +342,7 @@
             <span v-if="!oauth2EditMode" class="truncate max-w-80 inline-block align-middle">
               {{
                 OAuth2Setting.cors_allowed_origins.length === 0
-                  ? '暂无'
+                  ? t('commonUi.none')
                   : OAuth2Setting.cors_allowed_origins.join(', ')
               }}
             </span>
@@ -322,7 +350,7 @@
               v-else
               v-model="corsOriginsString"
               type="text"
-              placeholder="多个Origin用逗号分隔"
+              :placeholder="t('oauth2Setting.multiOriginPlaceholder')"
               class="w-full py-1!"
             />
           </div>
@@ -334,8 +362,12 @@
       <!-- OAuth2 账号绑定 -->
       <div class="w-full border border-dashed border-[var(--color-border-strong)] rounded-md p-3">
         <div>
-          <h1 class="text-[var(--color-text-primary)] font-semibold text-lg">账号绑定</h1>
-          <p class="text-[var(--color-text-muted)] text-sm mt-1">注意：需先配置OAuth2信息</p>
+          <h1 class="text-[var(--color-text-primary)] font-semibold text-lg">
+            {{ t('oauth2Setting.accountBind') }}
+          </h1>
+          <p class="text-[var(--color-text-muted)] text-sm mt-1">
+            {{ t('oauth2Setting.bindNotice') }}
+          </p>
           <div
             v-if="oauthInfo && isBound"
             class="mt-2 border border-dashed border-[var(--color-border-strong)] rounded-md p-3 flex items-center justify-center"
@@ -360,9 +392,11 @@
                     ? 'Google'
                     : oauthInfo.provider === OAuth2Provider.QQ
                       ? 'QQ'
-                      : `自定义 ${oauthInfo?.auth_type === 'oidc' ? 'OIDC' : 'OAuth2'}  账号`
+                      : t('oauth2Setting.customAccount', {
+                          type: oauthInfo?.auth_type === 'oidc' ? 'OIDC' : 'OAuth2',
+                        })
               }}</span>
-              已绑定
+              {{ t('oauth2Setting.bound') }}
             </p>
           </div>
           <BaseButton v-else class="rounded-md mt-3" @click="handleBindOAuth2()">
@@ -382,12 +416,14 @@
               <span class="flex-1 text-left">
                 {{
                   OAuth2Setting.provider === OAuth2Provider.GITHUB
-                    ? '绑定 GitHub 账号'
+                    ? t('oauth2Setting.bindGithub')
                     : OAuth2Setting.provider === OAuth2Provider.GOOGLE
-                      ? '绑定 Google 账号'
+                      ? t('oauth2Setting.bindGoogle')
                       : OAuth2Setting.provider === OAuth2Provider.QQ
-                        ? '绑定 QQ 账号'
-                        : `绑定自定义 ${OAuth2Setting.is_oidc ? 'OIDC' : 'OAuth2'} 账号`
+                        ? t('oauth2Setting.bindQQ')
+                        : t('oauth2Setting.bindCustom', {
+                            type: OAuth2Setting.is_oidc ? 'OIDC' : 'OAuth2',
+                          })
                 }}
               </span>
             </div>
@@ -406,6 +442,7 @@ import BaseSelect from '@/components/common/BaseSelect.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
 import { ref, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useSettingStore } from '@/stores'
 import { theToast } from '@/utils/toast'
 import { OAuth2Provider } from '@/enums/enums'
@@ -422,6 +459,7 @@ import Custom from '@/components/icons/customoauth.vue'
 import { storeToRefs } from 'pinia'
 
 const settingStore = useSettingStore()
+const { t } = useI18n()
 const { getOAuth2Setting } = settingStore
 const { OAuth2Setting } = storeToRefs(settingStore)
 
@@ -431,7 +469,7 @@ const OAuth2ProviderOptions = [
   { label: 'GitHub', value: OAuth2Provider.GITHUB },
   { label: 'Google', value: OAuth2Provider.GOOGLE },
   { label: 'QQ', value: OAuth2Provider.QQ },
-  { label: 'Custom(支持 OIDC)', value: OAuth2Provider.CUSTOM },
+  { label: String(t('oauth2Setting.customTemplate')), value: OAuth2Provider.CUSTOM },
 ]
 
 const redirect_uri = ref<string>(OAuth2Setting.value.redirect_uri)
@@ -458,11 +496,11 @@ const handleUpdateOAuth2Setting = async () => {
   OAuth2Setting.value.cors_allowed_origins = parseList(corsOriginsString.value)
 
   if (OAuth2Setting.value.auth_redirect_allowed_return_urls.some((u) => !/^https?:\/\//.test(u))) {
-    theToast.error('Redirect Allowlist 需为 http/https URL')
+    theToast.error(String(t('oauth2Setting.redirectAllowlistInvalid')))
     return
   }
   if (OAuth2Setting.value.cors_allowed_origins.some((u) => !/^https?:\/\//.test(u))) {
-    theToast.error('CORS Origins 需为 http/https URL')
+    theToast.error(String(t('oauth2Setting.corsOriginsInvalid')))
     return
   }
 
@@ -532,7 +570,7 @@ const handleAutoFillBoundary = () => {
   corsOriginsString.value = OAuth2Setting.value.cors_allowed_origins.join(', ')
   oauth2EditMode.value = true
   void refreshHealthCheck()
-  theToast.success('已填充推荐配置，请点击“应用”保存')
+  theToast.success(String(t('oauth2Setting.autofillDone')))
 }
 
 // 监听 OAuth2Setting.provider 变化，更新必填设置模板

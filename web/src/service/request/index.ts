@@ -3,6 +3,7 @@
 import { ofetch } from 'ofetch'
 import { getAuthToken, getInitReadyStatus } from './shared'
 import { theToast } from '@/utils/toast'
+import { i18n } from '@/locales'
 
 interface RequestOptions {
   dirrectUrl?: string
@@ -30,6 +31,7 @@ const ofetchInstance = ofetch.create({
     }
     if (!isDirectUrl) {
       options.headers.set('X-Timezone', timezone)
+      options.headers.set('X-Locale', i18n.global.locale.value)
     }
 
     // 清空请求头
@@ -71,7 +73,13 @@ export const request = async <T>(requestOptions: RequestOptions): Promise<App.Ap
   }).then((res) => {
     if (res.code !== 1) {
       if (isSystemReady) {
-        theToast.error(res.msg ? String(res.msg) : '请求失败')
+        const translated =
+          res.message_key && i18n.global.te(res.message_key)
+            ? i18n.global.t(res.message_key, (res.message_params || {}) as Record<string, unknown>)
+            : res.msg
+        theToast.error(
+          translated ? String(translated) : String(i18n.global.t('common.requestFailed')),
+        )
       }
     }
 
@@ -96,7 +104,13 @@ export const requestWithDirectUrl = async <T>(
   ).then((res) => {
     if (res.code !== 1) {
       if (isSystemReady) {
-        theToast.error(res.msg ? String(res.msg) : '请求失败')
+        const translated =
+          res.message_key && i18n.global.te(res.message_key)
+            ? i18n.global.t(res.message_key, (res.message_params || {}) as Record<string, unknown>)
+            : res.msg
+        theToast.error(
+          translated ? String(translated) : String(i18n.global.t('common.requestFailed')),
+        )
       }
     }
 
@@ -141,7 +155,8 @@ export const downloadFile = async (requestOptions: RequestOptions): Promise<Blob
     if (res instanceof Blob) {
       return res
     }
-    theToast.error('下载失败')
-    throw new Error('下载失败')
+    const msg = String(i18n.global.t('common.requestFailed'))
+    theToast.error(msg)
+    throw new Error(msg)
   })
 }

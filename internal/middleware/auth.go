@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	i18nUtil "github.com/lin-snow/ech0/internal/i18n"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	errUtil "github.com/lin-snow/ech0/internal/util/err"
 	jwtUtil "github.com/lin-snow/ech0/internal/util/jwt"
@@ -74,10 +75,15 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			// 如果 Authorization 头部信息为空，或者格式不正确，或者 token 为空，则返回错误
 			ctx.JSON(
 				http.StatusUnauthorized,
-				commonModel.Fail[any](errUtil.HandleError(&commonModel.ServerError{
-					Msg: commonModel.TOKEN_NOT_FOUND,
-					Err: nil,
-				})),
+				commonModel.FailWithLocalized[any](
+					i18nUtil.Localize(i18nUtil.LocalizerFromGin(ctx), commonModel.MsgKeyAuthTokenMissing, errUtil.HandleError(&commonModel.ServerError{
+						Msg: commonModel.TOKEN_NOT_FOUND,
+						Err: nil,
+					}), nil),
+					commonModel.ErrCodeTokenMissing,
+					commonModel.MsgKeyAuthTokenMissing,
+					nil,
+				),
 			)
 			ctx.Abort()
 			return
@@ -87,10 +93,15 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		if len(parts) != 2 || parts[0] != "Bearer" {
 			ctx.JSON(
 				http.StatusUnauthorized,
-				commonModel.Fail[any](errUtil.HandleError(&commonModel.ServerError{
-					Msg: commonModel.TOKEN_NOT_VALID,
-					Err: nil,
-				})),
+				commonModel.FailWithLocalized[any](
+					i18nUtil.Localize(i18nUtil.LocalizerFromGin(ctx), commonModel.MsgKeyAuthTokenInvalid, errUtil.HandleError(&commonModel.ServerError{
+						Msg: commonModel.TOKEN_NOT_VALID,
+						Err: nil,
+					}), nil),
+					commonModel.ErrCodeTokenInvalid,
+					commonModel.MsgKeyAuthTokenInvalid,
+					nil,
+				),
 			)
 			ctx.Abort()
 			return
@@ -102,10 +113,15 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			// 如果 token 解析失败，则返回错误
 			ctx.JSON(
 				http.StatusUnauthorized,
-				commonModel.Fail[any](errUtil.HandleError(&commonModel.ServerError{
-					Msg: commonModel.TOKEN_PARSE_ERROR,
-					Err: err,
-				})),
+				commonModel.FailWithLocalized[any](
+					i18nUtil.Localize(i18nUtil.LocalizerFromGin(ctx), commonModel.MsgKeyAuthTokenParse, errUtil.HandleError(&commonModel.ServerError{
+						Msg: commonModel.TOKEN_PARSE_ERROR,
+						Err: err,
+					}), nil),
+					commonModel.ErrCodeTokenParse,
+					commonModel.MsgKeyAuthTokenParse,
+					nil,
+				),
 			)
 			ctx.Abort()
 			return

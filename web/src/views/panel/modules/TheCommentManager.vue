@@ -3,9 +3,11 @@
     <PanelCard class="mb-4">
       <div class="mb-4 flex items-center justify-between gap-3">
         <div>
-          <h1 class="text-lg font-bold text-[var(--color-text-primary)]">评论系统设置</h1>
+          <h1 class="text-lg font-bold text-[var(--color-text-primary)]">
+            {{ t('commentManager.title') }}
+          </h1>
           <p class="text-xs text-[var(--color-text-muted)]">
-            统一管理评论开关、审核策略与验证码配置。
+            {{ t('commentManager.subtitle') }}
           </p>
         </div>
         <BaseButton
@@ -13,7 +15,7 @@
           @click="saveSetting"
           :disabled="settingSaving"
         >
-          {{ settingSaving ? '保存中...' : '保存' }}
+          {{ settingSaving ? t('common.saving') : t('common.save') }}
         </BaseButton>
       </div>
 
@@ -22,22 +24,22 @@
       >
         <div class="setting-row">
           <div>
-            <h3 class="setting-title">启用评论系统</h3>
-            <p class="setting-desc">关闭后前台将不展示评论区。</p>
+            <h3 class="setting-title">{{ t('commentManager.enableCommentTitle') }}</h3>
+            <p class="setting-desc">{{ t('commentManager.enableCommentDesc') }}</p>
           </div>
           <BaseSwitch v-model="setting.enable_comment" />
         </div>
         <div class="setting-row">
           <div>
-            <h3 class="setting-title">游客评论需审核</h3>
-            <p class="setting-desc">开启后游客评论默认进入待审核状态。</p>
+            <h3 class="setting-title">{{ t('commentManager.requireApprovalTitle') }}</h3>
+            <p class="setting-desc">{{ t('commentManager.requireApprovalDesc') }}</p>
           </div>
           <BaseSwitch v-model="setting.require_approval" :disabled="!setting.enable_comment" />
         </div>
         <div class="setting-row">
           <div>
-            <h3 class="setting-title">启用验证码</h3>
-            <p class="setting-desc">按需接入第三方验证码服务。</p>
+            <h3 class="setting-title">{{ t('commentManager.enableCaptchaTitle') }}</h3>
+            <p class="setting-desc">{{ t('commentManager.enableCaptchaDesc') }}</p>
           </div>
           <BaseSwitch v-model="setting.captcha_enabled" :disabled="!setting.enable_comment" />
         </div>
@@ -48,20 +50,20 @@
           v-model.trim="setting.captcha_verify_url"
           type="text"
           :disabled="!setting.enable_comment"
-          placeholder="Cap siteverify 地址（例如 https://your-cap-service/<key_id>/siteverify）"
+          :placeholder="t('commentManager.captchaVerifyPlaceholder')"
         />
         <BaseInput
           v-model.trim="setting.captcha_secret"
           type="text"
           :disabled="!setting.enable_comment"
-          placeholder="Cap key secret（用于 siteverify 校验）"
+          :placeholder="t('commentManager.captchaSecretPlaceholder')"
         />
       </div>
       <div
         v-else
         class="mt-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-muted)]/60 px-3 py-2 text-xs text-[var(--color-text-muted)]"
       >
-        当前未开启验证码。项目使用
+        {{ t('commentManager.captchaDisabledPrefix') }}
         <a
           href="https://github.com/tiagozip/cap"
           target="_blank"
@@ -70,7 +72,7 @@
         >
           cap
         </a>
-        验证服务，启用前需要你先自行部署并配置 siteverify 地址与 key secret。
+        {{ t('commentManager.captchaDisabledSuffix') }}
       </div>
     </PanelCard>
 
@@ -80,43 +82,45 @@
           v-model.trim="query.keyword"
           type="text"
           class="min-w-56 md:w-64"
-          placeholder="搜索昵称、邮箱、内容"
+          :placeholder="t('commentManager.searchPlaceholder')"
         />
         <BaseSelect
           v-model="query.status"
           class="h-9 min-w-28"
           :options="statusOptions"
-          placeholder="全部状态"
+          :placeholder="t('commentManager.statusAll')"
         >
         </BaseSelect>
         <BaseSelect
           v-model="hotFilter"
           class="h-9 min-w-28"
           :options="hotOptions"
-          placeholder="Hot 筛选"
+          :placeholder="t('commentManager.hotFilter')"
         >
         </BaseSelect>
-        <BaseButton class="comment-btn px-3 py-1.5 text-sm" @click="reload"> 查询 </BaseButton>
+        <BaseButton class="comment-btn px-3 py-1.5 text-sm" @click="reload">
+          {{ t('commentManager.query') }}
+        </BaseButton>
         <BaseButton
           class="comment-btn px-3 py-1.5 text-sm"
           @click="runBatch('approve')"
           :disabled="selectedIds.length === 0"
         >
-          批量通过
+          {{ t('commentManager.batchApprove') }}
         </BaseButton>
         <BaseButton
           class="comment-btn px-3 py-1.5 text-sm"
           @click="runBatch('reject')"
           :disabled="selectedIds.length === 0"
         >
-          批量拒绝
+          {{ t('commentManager.batchReject') }}
         </BaseButton>
         <BaseButton
           class="comment-btn-danger px-3 py-1.5 text-sm"
           @click="runBatch('delete')"
           :disabled="selectedIds.length === 0"
         >
-          批量删除
+          {{ t('commentManager.batchDelete') }}
         </BaseButton>
       </div>
 
@@ -257,6 +261,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   fetchBatchPanelComments,
   fetchDeletePanelComment,
@@ -276,6 +281,7 @@ import { theToast } from '@/utils/toast'
 import { formatDate } from '@/utils/other'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const setting = reactive<App.Api.Comment.SystemSetting>({
   enable_comment: true,
@@ -303,22 +309,22 @@ const hotFilter = ref('')
 const selectedIds = ref<string[]>([])
 const detailOpen = ref(false)
 const current = ref<App.Api.Comment.CommentItem | null>(null)
-const statusOptions = [
-  { label: '全部状态', value: '' },
+const statusOptions = computed(() => [
+  { label: t('commentManager.statusAll'), value: '' },
   { label: '待审核', value: 'pending' },
   { label: '已通过', value: 'approved' },
   { label: '已拒绝', value: 'rejected' },
-]
-const hotOptions = [
+])
+const hotOptions = computed(() => [
   { label: '全部 Hot', value: '' },
   { label: '仅 Hot', value: 'true' },
   { label: '仅非 Hot', value: 'false' },
-]
-const statusLabelMap: Record<string, string> = {
+])
+const statusLabelMap = computed<Record<string, string>>(() => ({
   pending: '待审核',
   approved: '已通过',
   rejected: '已拒绝',
-}
+}))
 const totalPages = computed(() => Math.max(1, Math.ceil(list.total / query.page_size)))
 
 const allChecked = computed({

@@ -13,6 +13,7 @@ type (
 	AgentProvider  string
 	InboxType      string
 	InboxSource    string
+	Locale         string
 )
 
 const (
@@ -57,6 +58,13 @@ const (
 	SystemSource InboxSource = "system"
 	AgentSource  InboxSource = "agent"
 	UserSource   InboxSource = "user"
+)
+
+const (
+	LocaleZhCN     Locale = "zh-CN"
+	LocaleEnUS     Locale = "en-US"
+	DefaultLocale         = LocaleZhCN
+	FallbackLocale        = LocaleEnUS
 )
 
 // key value表

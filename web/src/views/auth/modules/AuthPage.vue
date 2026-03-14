@@ -10,26 +10,38 @@
       <div v-if="AuthMode === 'login'">
         <!-- 模式切换 -->
         <div class="flex justify-between items-center">
-          <h2 class="text-lg font-bold text-[var(--color-text-muted)] mb-3">登录</h2>
+          <h2 class="text-lg font-bold text-[var(--color-text-muted)] mb-3">
+            {{ t('authPage.login') }}
+          </h2>
           <div class="mb-3">
             <button
               @click="AuthMode = 'register'"
               class="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition duration-200"
             >
               <div class="flex flex-row gap-0 items-center">
-                注册
+                {{ t('authPage.register') }}
                 <Arrow class="text-2xl" />
               </div>
             </button>
           </div>
         </div>
         <!-- 账号密码输入 -->
-        <BaseInput v-model="username" type="text" placeholder="请输入用户名" class="mb-4" />
-        <BaseInput v-model="password" type="password" placeholder="请输入密码" class="mb-4" />
+        <BaseInput
+          v-model="username"
+          type="text"
+          :placeholder="t('authPage.usernamePlaceholder')"
+          class="mb-4"
+        />
+        <BaseInput
+          v-model="password"
+          type="password"
+          :placeholder="t('authPage.passwordPlaceholder')"
+          class="mb-4"
+        />
         <div class="flex justify-between items-center">
           <BaseButton
             @click="router.push({ name: 'home' })"
-            title="返回首页"
+            :title="t('authPage.backHome')"
             :icon="Home"
             class="rounded-md w-9 h-9 flex-shrink-0"
           />
@@ -41,7 +53,7 @@
               @click="handlePasskeyLogin"
               :disabled="!!passkeyStatus && !passkeyStatus.passkey_ready"
               class="rounded-md w-9 h-9"
-              title="使用 Passkey 登录"
+              :title="t('authPage.passkeyLoginTitle')"
             />
             <!-- OAuth2 登录 -->
             <BaseButton
@@ -58,42 +70,54 @@
               @click="gotoOAuth2URL"
               :disabled="!oauth2Status.oauth_ready"
               class="w-9 h-9 rounded-md"
-              title="使用 OAuth2 登录"
+              :title="t('authPage.oauth2LoginTitle')"
             />
           </div>
           <!-- 账号密码登录 -->
           <BaseButton @click="handleLogin" class="w-12 h-9 rounded-md ml-1 flex-shrink-0">
-            <span class="text-[var(--color-text-secondary)]">登录</span>
+            <span class="text-[var(--color-text-secondary)]">{{ t('authPage.login') }}</span>
           </BaseButton>
         </div>
       </div>
       <!-- 注册 -->
       <div v-else-if="AuthMode === 'register'">
         <div class="flex justify-between items-center">
-          <h2 class="text-lg font-bold text-[var(--color-text-muted)] mb-3">注册</h2>
+          <h2 class="text-lg font-bold text-[var(--color-text-muted)] mb-3">
+            {{ t('authPage.register') }}
+          </h2>
           <div class="mb-3">
             <button
               @click="AuthMode = 'login'"
               class="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition duration-200"
             >
               <div class="flex flex-row gap-0 items-center">
-                登录
+                {{ t('authPage.login') }}
                 <Arrow class="text-2xl rotate-180" />
               </div>
             </button>
           </div>
         </div>
-        <BaseInput v-model="username" type="text" placeholder="请输入用户名" class="mb-4" />
-        <BaseInput v-model="password" type="password" placeholder="请输入密码" class="mb-4" />
+        <BaseInput
+          v-model="username"
+          type="text"
+          :placeholder="t('authPage.usernamePlaceholder')"
+          class="mb-4"
+        />
+        <BaseInput
+          v-model="password"
+          type="password"
+          :placeholder="t('authPage.passwordPlaceholder')"
+          class="mb-4"
+        />
         <div class="flex justify-between items-center px-0.5">
           <BaseButton
             @click="router.push({ name: 'home' })"
-            title="返回首页"
+            :title="t('authPage.backHome')"
             :icon="Home"
             class="rounded-md w-9 h-9"
           />
           <BaseButton @click="handleRegister" class="rounded-md">
-            <span class="text-[var(--color-text-secondary)]">注册</span>
+            <span class="text-[var(--color-text-secondary)]">{{ t('authPage.register') }}</span>
           </BaseButton>
         </div>
       </div>
@@ -119,11 +143,13 @@ import { OAuth2Provider } from '@/enums/enums'
 import { fetchPasskeyLoginBegin, fetchPasskeyLoginFinish } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { base64urlToUint8Array, uint8ArrayToBase64url } from '@/utils/other'
+import { useI18n } from 'vue-i18n'
 
 const AuthMode = ref<'login' | 'register'>('login') // login / register
 const username = ref<string>('')
 const password = ref<string>('')
 const userStore = useUserStore()
+const { t } = useI18n()
 const passkeySupported = !!(window.PublicKeyCredential && navigator.credentials)
 
 const oauth2Status = ref<App.Api.Setting.OAuth2Status | null>(null)
@@ -136,11 +162,11 @@ const oauthURL = ref<string>(`${baseURL}/oauth/github/login`)
 
 const gotoOAuth2URL = () => {
   if (!oauth2Status.value?.oauth_ready) {
-    theToast.warning('OAuth2 配置未就绪，请先在 Panel 完成认证边界配置')
+    theToast.warning(String(t('authPage.oauth2NotReady')))
     return
   }
   if (!oauthURL.value) {
-    theToast.error('OAuth2 登录地址不可用')
+    theToast.error(String(t('authPage.oauth2UrlUnavailable')))
     return
   }
   window.location.href = oauthURL.value
@@ -186,7 +212,7 @@ type RequestOptionsJSON = Omit<
 }
 
 function normalizeRequestOptions(raw: unknown): PublicKeyCredentialRequestOptions {
-  if (!raw || typeof raw !== 'object') throw new Error('服务端返回的 publicKey 不合法')
+  if (!raw || typeof raw !== 'object') throw new Error(String(t('authPage.invalidPublicKey')))
   const o = raw as RequestOptionsJSON
   const { challenge, allowCredentials, ...rest } = o
 
@@ -230,7 +256,7 @@ function credentialToJSON(cred: PublicKeyCredential) {
 
 const handlePasskeyLogin = async () => {
   if (passkeyStatus.value && !passkeyStatus.value.passkey_ready) {
-    theToast.warning('Passkey 配置未就绪，请先在 Panel 完成认证边界配置')
+    theToast.warning(String(t('authPage.passkeyNotReady')))
     return
   }
   if (!passkeySupported) return
@@ -240,7 +266,7 @@ const handlePasskeyLogin = async () => {
 
     const options = normalizeRequestOptions(begin.data.publicKey)
     const got = await navigator.credentials.get({ publicKey: options })
-    if (!got) throw new Error('获取凭证失败')
+    if (!got) throw new Error(String(t('authPage.getCredentialFailed')))
     const cred = got as PublicKeyCredential
 
     const finish = await fetchPasskeyLoginFinish(begin.data.nonce, credentialToJSON(cred))
@@ -248,7 +274,7 @@ const handlePasskeyLogin = async () => {
 
     await userStore.loginWithToken(finish.data)
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Passkey 登录失败'
+    const msg = e instanceof Error ? e.message : String(t('authPage.passkeyLoginFailed'))
     theToast.error(msg)
   }
 }

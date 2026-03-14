@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/lin-snow/ech0/internal/config"
+	i18nUtil "github.com/lin-snow/ech0/internal/i18n"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
@@ -26,6 +27,7 @@ func (settingService *SettingService) GetSetting(setting *model.SystemSetting) e
 			setting.ServerName = config.Config().Setting.Servername
 			setting.ServerURL = config.Config().Setting.Serverurl
 			setting.AllowRegister = config.Config().Setting.AllowRegister
+			setting.DefaultLocale = string(commonModel.DefaultLocale)
 			setting.ICPNumber = config.Config().Setting.Icpnumber
 			setting.FooterContent = config.Config().Setting.FooterContent
 			setting.FooterLink = config.Config().Setting.FooterLink
@@ -58,6 +60,7 @@ func (settingService *SettingService) GetSetting(setting *model.SystemSetting) e
 		if err := jsonUtil.JSONUnmarshal([]byte(systemSetting), setting); err != nil {
 			return err
 		}
+		setting.DefaultLocale = i18nUtil.ResolveLocale(setting.DefaultLocale)
 
 		return nil
 	})
@@ -84,6 +87,7 @@ func (settingService *SettingService) UpdateSetting(
 		setting.ServerName = newSetting.ServerName
 		setting.ServerURL = httpUtil.TrimURL(newSetting.ServerURL)
 		setting.AllowRegister = newSetting.AllowRegister
+		setting.DefaultLocale = i18nUtil.ResolveLocale(newSetting.DefaultLocale)
 		setting.ICPNumber = newSetting.ICPNumber
 		setting.FooterContent = newSetting.FooterContent
 		setting.FooterLink = httpUtil.TrimURL(newSetting.FooterLink)

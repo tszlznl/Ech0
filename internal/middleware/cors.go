@@ -22,7 +22,7 @@ func Cors() gin.HandlerFunc {
 
 		c.Header(
 			"Access-Control-Allow-Headers",
-			"Content-Type,AccessToken,X-CSRF-Token,Authorization,Token,x-token,X-Timezone",
+			"Content-Type,AccessToken,X-CSRF-Token,Authorization,Token,x-token,X-Timezone,X-Locale,x-locale",
 		)
 		c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE, PATCH, PUT")
 		c.Header(

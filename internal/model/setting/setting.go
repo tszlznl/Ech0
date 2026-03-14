@@ -20,6 +20,7 @@ type SystemSetting struct {
 	ServerName    string `json:"server_name"`    // 服务器名称
 	ServerURL     string `json:"server_url"`     // 服务器地址
 	AllowRegister bool   `json:"allow_register"` // 是否允许注册'
+	DefaultLocale string `json:"default_locale"` // 站点默认语言（如 zh-CN / en-US）
 	ICPNumber     string `json:"ICP_number"`     // 备案号
 	FooterContent string `json:"footer_content"` // 自定义页脚内容
 	FooterLink    string `json:"footer_link"`    // 自定义页脚链接

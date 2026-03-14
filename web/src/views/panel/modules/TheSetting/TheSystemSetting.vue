@@ -3,13 +3,15 @@
     <!-- 系统设置 -->
     <div class="w-full">
       <div class="flex flex-row items-center justify-between mb-3">
-        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">系统设置</h1>
+        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">
+          {{ t('systemSetting.title') }}
+        </h1>
         <div class="flex flex-row items-center justify-end">
           <BaseEditCapsule
             :editing="editMode"
-            apply-title="应用"
-            cancel-title="取消"
-            edit-title="编辑"
+            :apply-title="t('commonUi.apply')"
+            :cancel-title="t('commonUi.cancel')"
+            :edit-title="t('commonUi.edit')"
             @apply="handleUpdateSystemSetting"
             @toggle="editMode = !editMode"
           />
@@ -20,7 +22,7 @@
         <div class="w-28 sm:w-23">
           <img
             :src="systemLogoSrc"
-            alt="头像"
+            :alt="t('systemSetting.logoAlt')"
             class="w-12 h-12 rounded-full ml-2 mr-9 ring-1 ring-[var(--color-border-subtle)] shadow-[var(--shadow-sm)]"
           />
         </div>
@@ -39,7 +41,7 @@
             class="rounded-md text-center w-auto text-align-center h-8 md:ml-5"
             @click="handTriggerUpload"
           >
-            更改
+            {{ t('systemSetting.changeLogo') }}
           </BaseButton>
         </div>
       </div>
@@ -48,15 +50,15 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold w-26 shrink-0">站点标题:</h2>
+        <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.siteTitle') }}:</h2>
         <span v-if="!editMode">{{
-          SystemSetting?.site_title.length === 0 ? '暂无' : SystemSetting.site_title
+          SystemSetting?.site_title.length === 0 ? t('commonUi.none') : SystemSetting.site_title
         }}</span>
         <BaseInput
           v-else
           v-model="SystemSetting.site_title"
           type="text"
-          placeholder="请输入站点标题"
+          :placeholder="t('systemSetting.siteTitlePlaceholder')"
           class="w-full py-1!"
         />
       </div>
@@ -64,15 +66,15 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold w-26 shrink-0">服务名称:</h2>
+        <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.serverName') }}:</h2>
         <span v-if="!editMode">{{
-          SystemSetting?.server_name.length === 0 ? '暂无' : SystemSetting.server_name
+          SystemSetting?.server_name.length === 0 ? t('commonUi.none') : SystemSetting.server_name
         }}</span>
         <BaseInput
           v-else
           v-model="SystemSetting.server_name"
           type="text"
-          placeholder="请输入服务名称"
+          :placeholder="t('systemSetting.serverNamePlaceholder')"
           class="w-full py-1!"
         />
       </div>
@@ -80,15 +82,15 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold w-26 shrink-0">服务地址:</h2>
+        <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.serverUrl') }}:</h2>
         <span v-if="!editMode">{{
-          SystemSetting?.server_name.length === 0 ? '暂无' : SystemSetting.server_url
+          SystemSetting?.server_name.length === 0 ? t('commonUi.none') : SystemSetting.server_url
         }}</span>
         <BaseInput
           v-else
           v-model="SystemSetting.server_url"
           type="text"
-          placeholder="请输入服务地址,带http(s)"
+          :placeholder="t('systemSetting.serverUrlPlaceholder')"
           class="w-full py-1!"
         />
       </div>
@@ -96,20 +98,24 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold w-26 shrink-0">页脚内容:</h2>
+        <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.footerContent') }}:</h2>
         <span
           v-if="!editMode"
           class="truncate max-w-40 inline-block align-middle"
           :title="SystemSetting.footer_content"
           style="vertical-align: middle"
         >
-          {{ SystemSetting.footer_content.length === 0 ? '暂无' : SystemSetting.footer_content }}
+          {{
+            SystemSetting.footer_content.length === 0
+              ? t('commonUi.none')
+              : SystemSetting.footer_content
+          }}
         </span>
         <BaseInput
           v-else
           v-model="SystemSetting.footer_content"
           type="text"
-          placeholder="请输入页脚文案"
+          :placeholder="t('systemSetting.footerContentPlaceholder')"
           class="w-full py-1!"
         />
       </div>
@@ -117,20 +123,22 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold w-26 shrink-0">页脚链接:</h2>
+        <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.footerLink') }}:</h2>
         <span
           v-if="!editMode"
           class="truncate max-w-40 inline-block align-middle"
           :title="SystemSetting.footer_link"
           style="vertical-align: middle"
         >
-          {{ SystemSetting.footer_link.length === 0 ? '暂无' : SystemSetting.footer_link }}
+          {{
+            SystemSetting.footer_link.length === 0 ? t('commonUi.none') : SystemSetting.footer_link
+          }}
         </span>
         <BaseInput
           v-else
           v-model="SystemSetting.footer_link"
           type="text"
-          placeholder="可选，带 http(s)"
+          :placeholder="t('systemSetting.footerLinkPlaceholder')"
           class="w-full py-1!"
         />
       </div>
@@ -138,62 +146,64 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold w-26 shrink-0">MetingAPI:</h2>
+        <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.metingApi') }}:</h2>
         <span
           v-if="!editMode"
           class="truncate max-w-40 inline-block align-middle"
           :title="SystemSetting.meting_api"
           style="vertical-align: middle"
         >
-          {{ SystemSetting.meting_api.length === 0 ? '暂无' : SystemSetting.meting_api }}
+          {{
+            SystemSetting.meting_api.length === 0 ? t('commonUi.none') : SystemSetting.meting_api
+          }}
         </span>
         <BaseInput
           v-else
           v-model="SystemSetting.meting_api"
           type="text"
-          placeholder="Meting API地址,带http(s)"
+          :placeholder="t('systemSetting.metingApiPlaceholder')"
           class="w-full py-1!"
         />
       </div>
       <!-- 自定义 CSS -->
       <div class="flex flex-row justify-start text-[var(--color-text-secondary)] gap-2 mb-1">
-        <h2 class="font-semibold w-26 shrink-0">自定义 CSS:</h2>
+        <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.customCss') }}:</h2>
         <span
           v-if="!editMode"
           class="truncate max-w-full inline-block align-middle"
           :title="SystemSetting.custom_css"
           style="vertical-align: middle"
-          >{{ SystemSetting?.custom_css?.length === 0 ? '暂无' : '******' }}</span
+          >{{ SystemSetting?.custom_css?.length === 0 ? t('commonUi.none') : '******' }}</span
         >
         <BaseTextArea
           v-else
           v-model="SystemSetting.custom_css"
           type="text"
-          placeholder="请输入自定义 CSS"
+          :placeholder="t('systemSetting.customCssPlaceholder')"
           class="w-full py-1!"
         />
       </div>
       <!-- 自定义 Script -->
       <div class="flex flex-row justify-start text-[var(--color-text-secondary)] gap-2 mb-1">
-        <h2 class="font-semibold w-26 shrink-0">自定义 JS:</h2>
+        <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.customJs') }}:</h2>
         <span
           v-if="!editMode"
           class="truncate max-w-full inline-block align-middle"
           :title="SystemSetting.custom_js"
           style="vertical-align: middle"
-          >{{ SystemSetting?.custom_js?.length === 0 ? '暂无' : '******' }}</span
+          >{{ SystemSetting?.custom_js?.length === 0 ? t('commonUi.none') : '******' }}</span
         >
         <BaseTextArea
           v-else
           v-model="SystemSetting.custom_js"
           type="text"
-          placeholder="请输入自定义 Script"
+          :placeholder="t('systemSetting.customJsPlaceholder')"
           class="w-full py-1!"
         />
       </div>
       <!-- 允许注册 -->
       <div class="flex flex-row items-center justify-start text-[var(--color-text-secondary)]">
-        <h2 class="font-semibold w-26 shrink-0">允许注册:</h2>
+        <h2 class="font-semibold w-26 shrink-0">{{ t('systemSetting.allowRegister') }}:</h2>
         <BaseSwitch v-model="SystemSetting.allow_register" :disabled="!editMode" />
       </div>
     </div>
@@ -208,6 +218,7 @@ import BaseButton from '@/components/common/BaseButton.vue'
 import BaseTextArea from '@/components/common/BaseTextArea.vue'
 import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
 import { computed, ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { fetchUpdateSettings } from '@/service/api'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { theToast } from '@/utils/toast'
@@ -217,6 +228,7 @@ import { resolveAvatarUrl } from '@/service/request/shared'
 import { useFileQueue } from '@/lib/file'
 
 const settingStore = useSettingStore()
+const { t } = useI18n()
 const { getSystemSetting } = settingStore
 const { SystemSetting } = storeToRefs(settingStore)
 
@@ -256,9 +268,9 @@ const handleUploadImage = async (event: Event) => {
       category: FILE_CATEGORY.IMAGE,
     })
     const task = await theToast.promise(waitForTask(taskId), {
-      loading: '服务器 Logo 上传中...',
-      success: '服务器 Logo 上传成功！',
-      error: '上传失败，请稍后再试',
+      loading: String(t('systemSetting.logoUploading')),
+      success: String(t('systemSetting.logoUploadSuccess')),
+      error: String(t('systemSetting.uploadFailed')),
     })
 
     if (task.result?.url) {

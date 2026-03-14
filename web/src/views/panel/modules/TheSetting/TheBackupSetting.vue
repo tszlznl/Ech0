@@ -2,13 +2,17 @@
   <PanelCard>
     <div class="backup-wrap">
       <div class="backup-header">
-        <h1 class="backup-title">数据导出</h1>
-        <p class="backup-desc">导出当前系统快照，便于离线归档与迁移。</p>
+        <h1 class="backup-title">{{ t('backupSetting.title') }}</h1>
+        <p class="backup-desc">{{ t('backupSetting.description') }}</p>
       </div>
 
       <div class="backup-action">
-        <BaseButton @click="handleBackupExport" class="backup-export-btn" title="导出快照">
-          导出快照
+        <BaseButton
+          @click="handleBackupExport"
+          class="backup-export-btn"
+          :title="t('backupSetting.exportSnapshot')"
+        >
+          {{ t('backupSetting.exportSnapshot') }}
         </BaseButton>
       </div>
     </div>
@@ -21,18 +25,20 @@ import BaseButton from '@/components/common/BaseButton.vue'
 import { theToast } from '@/utils/toast'
 import { useUserStore } from '@/stores'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 
 const userStore = useUserStore()
 const { isLogin } = storeToRefs(userStore)
+const { t } = useI18n()
 
 const handleBackupExport = async () => {
   if (!isLogin.value) {
-    theToast.info('请登录后使用', { duration: 3000 })
+    theToast.info(String(t('backupSetting.loginRequired')), { duration: 3000 })
     return
   }
 
   try {
-    theToast.info('导出中...请稍等', {
+    theToast.info(String(t('backupSetting.exporting')), {
       duration: 4000,
     })
 
@@ -52,10 +58,10 @@ const handleBackupExport = async () => {
     link.click()
     document.body.removeChild(link)
 
-    theToast.success('备份导出开始！')
+    theToast.success(String(t('backupSetting.exportStarted')))
   } catch (error) {
-    theToast.error('导出失败')
-    console.error('导出备份失败:', error)
+    theToast.error(String(t('backupSetting.exportFailed')))
+    console.error(String(t('backupSetting.exportFailed')), error)
   }
 }
 </script>

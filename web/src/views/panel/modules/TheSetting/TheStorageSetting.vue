@@ -3,13 +3,15 @@
     <!-- 存储设置 -->
     <div class="w-full">
       <div class="flex flex-row items-center justify-between mb-3">
-        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">对象存储设置</h1>
+        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">
+          {{ t('storageSetting.title') }}
+        </h1>
         <div class="flex flex-row items-center justify-end">
           <BaseEditCapsule
             :editing="storageEditMode"
-            apply-title="应用"
-            cancel-title="取消"
-            edit-title="编辑"
+            :apply-title="t('commonUi.apply')"
+            :cancel-title="t('commonUi.cancel')"
+            :edit-title="t('commonUi.edit')"
             @apply="handleUpdateS3Setting"
             @toggle="storageEditMode = !storageEditMode"
           />
@@ -18,13 +20,13 @@
 
       <!-- 开启S3 -->
       <div class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] h-10">
-        <h2 class="font-semibold w-30 shrink-0">启用S3存储:</h2>
+        <h2 class="font-semibold w-30 shrink-0">{{ t('storageSetting.enableS3') }}:</h2>
         <BaseSwitch v-model="S3Setting.enable" :disabled="!storageEditMode" />
       </div>
 
       <!-- 使用 SSL -->
       <div class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] h-10">
-        <h2 class="font-semibold w-30 shrink-0">启用SSL:</h2>
+        <h2 class="font-semibold w-30 shrink-0">{{ t('storageSetting.enableSsl') }}:</h2>
         <BaseSwitch v-model="S3Setting.use_ssl" :disabled="!storageEditMode" />
       </div>
 
@@ -32,7 +34,7 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30 shrink-0">S3 服务:</h2>
+        <h2 class="font-semibold w-30 shrink-0">{{ t('storageSetting.s3Provider') }}:</h2>
         <BaseSelect
           v-model="S3Setting.provider"
           :options="S3ServiceOptions"
@@ -45,20 +47,20 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30 shrink-0">S3 Endpoint:</h2>
+        <h2 class="font-semibold w-30 shrink-0">{{ t('storageSetting.endpoint') }}:</h2>
         <span
           v-if="!storageEditMode"
           class="truncate max-w-40 inline-block align-middle"
           :title="S3Setting.endpoint"
           style="vertical-align: middle"
         >
-          {{ S3Setting.endpoint.length === 0 ? '暂无' : S3Setting.endpoint }}
+          {{ S3Setting.endpoint.length === 0 ? t('commonUi.none') : S3Setting.endpoint }}
         </span>
         <BaseInput
           v-else
           v-model="S3Setting.endpoint"
           type="text"
-          placeholder="S3 Endpoint地址"
+          :placeholder="t('storageSetting.endpointPlaceholder')"
           class="w-full py-1!"
         />
       </div>
@@ -67,20 +69,20 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30 shrink-0">Access Key:</h2>
+        <h2 class="font-semibold w-30 shrink-0">{{ t('storageSetting.accessKey') }}:</h2>
         <span
           v-if="!storageEditMode"
           class="truncate max-w-40 inline-block align-middle"
           :title="S3Setting.access_key"
           style="vertical-align: middle"
         >
-          {{ S3Setting.access_key.length === 0 ? '暂无' : S3Setting.access_key }}
+          {{ S3Setting.access_key.length === 0 ? t('commonUi.none') : S3Setting.access_key }}
         </span>
         <BaseInput
           v-else
           v-model="S3Setting.access_key"
           type="text"
-          placeholder="S3 Access Key"
+          :placeholder="t('storageSetting.accessKeyPlaceholder')"
           class="w-full py-1!"
         />
       </div>
@@ -89,20 +91,20 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30 shrink-0">Secret Key:</h2>
+        <h2 class="font-semibold w-30 shrink-0">{{ t('storageSetting.secretKey') }}:</h2>
         <span
           v-if="!storageEditMode"
           class="truncate max-w-40 inline-block align-middle"
           :title="S3Setting.secret_key"
           style="vertical-align: middle"
         >
-          {{ S3Setting.secret_key.length === 0 ? '暂无' : S3Setting.secret_key }}
+          {{ S3Setting.secret_key.length === 0 ? t('commonUi.none') : S3Setting.secret_key }}
         </span>
         <BaseInput
           v-else
           v-model="S3Setting.secret_key"
           type="text"
-          placeholder="S3 Secret Key"
+          :placeholder="t('storageSetting.secretKeyPlaceholder')"
           class="w-full py-1!"
         />
       </div>
@@ -111,20 +113,20 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30 shrink-0">S3 Bucket:</h2>
+        <h2 class="font-semibold w-30 shrink-0">{{ t('storageSetting.bucket') }}:</h2>
         <span
           v-if="!storageEditMode"
           class="truncate max-w-40 inline-block align-middle"
           :title="S3Setting.bucket_name"
           style="vertical-align: middle"
         >
-          {{ S3Setting.bucket_name.length === 0 ? '暂无' : S3Setting.bucket_name }}
+          {{ S3Setting.bucket_name.length === 0 ? t('commonUi.none') : S3Setting.bucket_name }}
         </span>
         <BaseInput
           v-else
           v-model="S3Setting.bucket_name"
           type="text"
-          placeholder="S3 Bucket Name"
+          :placeholder="t('storageSetting.bucketPlaceholder')"
           class="w-full py-1!"
         />
       </div>
@@ -133,20 +135,20 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30 shrink-0">Path Prefix:</h2>
+        <h2 class="font-semibold w-30 shrink-0">{{ t('storageSetting.pathPrefix') }}:</h2>
         <span
           v-if="!storageEditMode"
           class="truncate max-w-40 inline-block align-middle"
           :title="S3Setting.path_prefix"
           style="vertical-align: middle"
         >
-          {{ S3Setting.path_prefix.length === 0 ? '暂无' : S3Setting.path_prefix }}
+          {{ S3Setting.path_prefix.length === 0 ? t('commonUi.none') : S3Setting.path_prefix }}
         </span>
         <BaseInput
           v-else
           v-model="S3Setting.path_prefix"
           type="text"
-          placeholder="S3 Path Prefix（可选）"
+          :placeholder="t('storageSetting.pathPrefixPlaceholder')"
           class="w-full py-1!"
         />
       </div>
@@ -156,20 +158,20 @@
         v-if="S3Setting.provider !== S3Provider.MINIO"
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30 shrink-0">S3 Region:</h2>
+        <h2 class="font-semibold w-30 shrink-0">{{ t('storageSetting.region') }}:</h2>
         <span
           v-if="!storageEditMode"
           class="truncate max-w-40 inline-block align-middle"
           :title="S3Setting.region"
           style="vertical-align: middle"
         >
-          {{ S3Setting.region.length === 0 ? '暂无' : S3Setting.region }}
+          {{ S3Setting.region.length === 0 ? t('commonUi.none') : S3Setting.region }}
         </span>
         <BaseInput
           v-else
           v-model="S3Setting.region"
           type="text"
-          placeholder="S3 Region"
+          :placeholder="t('storageSetting.regionPlaceholder')"
           class="w-full py-1!"
         />
       </div>
@@ -178,20 +180,20 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30 shrink-0">CDN 域名:</h2>
+        <h2 class="font-semibold w-30 shrink-0">{{ t('storageSetting.cdnDomain') }}:</h2>
         <span
           v-if="!storageEditMode"
           class="truncate max-w-40 inline-block align-middle"
           :title="S3Setting.cdn_url"
           style="vertical-align: middle"
         >
-          {{ S3Setting.cdn_url.length === 0 ? '暂无' : S3Setting.cdn_url }}
+          {{ S3Setting.cdn_url.length === 0 ? t('commonUi.none') : S3Setting.cdn_url }}
         </span>
         <BaseInput
           v-else
           v-model="S3Setting.cdn_url"
           type="text"
-          placeholder="S3 CDN 域名（可选）"
+          :placeholder="t('storageSetting.cdnPlaceholder')"
           class="w-full py-1!"
         />
       </div>
@@ -206,6 +208,7 @@ import BaseSwitch from '@/components/common/BaseSwitch.vue'
 import BaseSelect from '@/components/common/BaseSelect.vue'
 import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { S3Provider } from '@/enums/enums'
 import { fetchUpdateS3Settings } from '@/service/api'
 import { theToast } from '@/utils/toast'
@@ -213,6 +216,7 @@ import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 
 const settingStore = useSettingStore()
+const { t } = useI18n()
 const { getS3Setting } = settingStore
 const { S3Setting } = storeToRefs(settingStore)
 

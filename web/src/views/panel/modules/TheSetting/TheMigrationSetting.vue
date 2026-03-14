@@ -2,8 +2,8 @@
   <PanelCard>
     <div class="migration-wrap">
       <div class="migration-header">
-        <h1 class="migration-title">数据导入</h1>
-        <p class="migration-desc">支持从 Ech0 v4、Ech0 v3及以下、Memos 导入数据。</p>
+        <h1 class="migration-title">{{ t('migrationSetting.title') }}</h1>
+        <p class="migration-desc">{{ t('migrationSetting.description') }}</p>
       </div>
 
       <div class="migration-source-grid">
@@ -16,7 +16,9 @@
         >
           <div class="migration-source-title-wrap">
             <h3>{{ source.title }}</h3>
-            <span v-if="source.inDevelopment" class="migration-dev-badge">开发中</span>
+            <span v-if="source.inDevelopment" class="migration-dev-badge">{{
+              t('migrationSetting.inDevelopment')
+            }}</span>
           </div>
           <p>{{ source.desc }}</p>
         </button>
@@ -24,59 +26,67 @@
 
       <div class="migration-form">
         <div class="migration-row migration-row-top">
-          <span class="migration-label">来源压缩包</span>
+          <span class="migration-label">{{ t('migrationSetting.sourceZip') }}</span>
           <div class="migration-upload-wrap">
             <BaseButton
-              title="选择 zip 文件"
+              :title="t('migrationSetting.pickZip')"
               :disabled="isSubmittingMigration"
               @click="handlePickZip"
             >
-              选择 zip 文件
+              {{ t('migrationSetting.pickZip') }}
             </BaseButton>
-            <p class="migration-file-name">{{ selectedZipName || '未选择文件' }}</p>
+            <p class="migration-file-name">
+              {{ selectedZipName || t('migrationSetting.noFileSelected') }}
+            </p>
           </div>
         </div>
       </div>
 
       <div class="migration-actions">
         <BaseButton
-          title="开始迁移"
+          :title="t('migrationSetting.startMigration')"
           :disabled="isSubmittingMigration"
           @click="handleStartMigration"
         >
           {{ startActionText }}
         </BaseButton>
-        <BaseButton title="刷新状态" :disabled="isSubmittingMigration" @click="handleRefreshJob">
-          刷新状态
+        <BaseButton
+          :title="t('migrationSetting.refreshStatus')"
+          :disabled="isSubmittingMigration"
+          @click="handleRefreshJob"
+        >
+          {{ t('migrationSetting.refreshStatus') }}
         </BaseButton>
         <BaseButton
           v-if="migrationStore.isRunning"
-          title="取消任务"
+          :title="t('migrationSetting.cancelJob')"
           :disabled="isSubmittingMigration"
           @click="handleCancelJob"
         >
-          取消任务
+          {{ t('migrationSetting.cancelJob') }}
         </BaseButton>
         <BaseButton
           v-if="migrationStore.canCleanup"
-          :title="migrationStore.isSuccess ? '完成' : '结束/清理迁移'"
+          :title="migrationStore.isSuccess ? t('commonUi.done') : t('migrationSetting.cleanup')"
           :disabled="isSubmittingMigration"
           @click="handleCleanupMigration"
         >
-          {{ migrationStore.isSuccess ? '完成' : '结束/清理迁移' }}
+          {{ migrationStore.isSuccess ? t('commonUi.done') : t('migrationSetting.cleanup') }}
         </BaseButton>
       </div>
-      <p v-if="isUploadingZip" class="migration-progress-tip">正在上传并解压文件，请耐心等待...</p>
+      <p v-if="isUploadingZip" class="migration-progress-tip">
+        {{ t('migrationSetting.uploadingTip') }}
+      </p>
       <p v-else-if="isCreatingMigration" class="migration-progress-tip">
-        上传完成，正在创建迁移任务...
+        {{ t('migrationSetting.creatingTip') }}
       </p>
 
       <div class="migration-job" v-if="migrationStore.hasJob">
         <div class="migration-job-header">
           <div class="migration-job-title-wrap">
-            <h3 class="migration-job-title">迁移任务</h3>
+            <h3 class="migration-job-title">{{ t('migrationSetting.jobTitle') }}</h3>
             <p class="migration-job-subtitle">
-              来源
+              {{ t('migrationSetting.source') }}
               {{
                 sourceLabelMap[migrationStore.state.source_type] || migrationStore.state.source_type
               }}
@@ -93,23 +103,27 @@
 
         <div class="migration-job-metrics" v-if="hasMetrics">
           <div class="metric-item">
-            <span class="metric-label">总处理</span>
+            <span class="metric-label">{{ t('migrationSetting.totalProcessed') }}</span>
             <span class="metric-value">{{ migrationProcessed }}</span>
           </div>
           <div class="metric-item">
-            <span class="metric-label">成功</span>
+            <span class="metric-label">{{ t('migrationSetting.success') }}</span>
             <span class="metric-value">{{ migrationSuccess }}</span>
           </div>
           <div class="metric-item">
-            <span class="metric-label">失败</span>
+            <span class="metric-label">{{ t('migrationSetting.failed') }}</span>
             <span class="metric-value">{{ migrationFail }}</span>
           </div>
         </div>
 
         <div class="migration-job-meta">
-          <p v-if="migrationJobId">任务ID: {{ migrationJobId }}</p>
-          <p v-if="formattedStartedAt">开始时间: {{ formattedStartedAt }}</p>
-          <p v-if="formattedFinishedAt">结束时间: {{ formattedFinishedAt }}</p>
+          <p v-if="migrationJobId">{{ t('migrationSetting.jobId') }}: {{ migrationJobId }}</p>
+          <p v-if="formattedStartedAt">
+            {{ t('migrationSetting.startedAt') }}: {{ formattedStartedAt }}
+          </p>
+          <p v-if="formattedFinishedAt">
+            {{ t('migrationSetting.finishedAt') }}: {{ formattedFinishedAt }}
+          </p>
         </div>
       </div>
     </div>
@@ -118,6 +132,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import PanelCard from '@/layout/PanelCard.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import { fetchUploadMigrationSourceZip } from '@/service/api'
@@ -133,11 +148,16 @@ interface SourceCard {
   inDevelopment?: boolean
 }
 
-const sourceCards = [
-  { value: 'ech0_v4', title: 'Ech0', desc: '支持最新版 Ech0 v4 及以后' },
-  { value: 'ech0_v3', title: 'Ech0 v3', desc: '支持 Ech0 v3及更早版本' },
-  { value: 'memos', title: 'Memos', desc: '支持 Memos（开发中）', inDevelopment: true },
-] satisfies SourceCard[]
+const sourceCards = computed<SourceCard[]>(() => [
+  { value: 'ech0_v4', title: 'Ech0', desc: String(t('migrationSetting.sourceEch0v4')) },
+  { value: 'ech0_v3', title: 'Ech0 v3', desc: String(t('migrationSetting.sourceEch0v3')) },
+  {
+    value: 'memos',
+    title: 'Memos',
+    desc: String(t('migrationSetting.sourceMemos')),
+    inDevelopment: true,
+  },
+])
 
 const sourceType = ref<MigrationSourceType>('ech0_v4')
 const selectedZip = ref<File | null>(null)
@@ -145,19 +165,20 @@ const selectedZipName = ref('')
 const isUploadingZip = ref(false)
 const isCreatingMigration = ref(false)
 const migrationStore = useMigrationStore()
-const statusLabelMap: Record<string, string> = {
-  idle: '空闲',
-  pending: '等待中',
-  running: '迁移中',
-  success: '已完成',
-  failed: '失败',
-  cancelled: '已取消',
-}
-const sourceLabelMap: Record<string, string> = {
+const { t, locale } = useI18n()
+const statusLabelMap = computed<Record<string, string>>(() => ({
+  idle: String(t('migrationSetting.statusIdle')),
+  pending: String(t('migrationSetting.statusPending')),
+  running: String(t('migrationSetting.statusRunning')),
+  success: String(t('migrationSetting.statusSuccess')),
+  failed: String(t('migrationSetting.statusFailed')),
+  cancelled: String(t('migrationSetting.statusCancelled')),
+}))
+const sourceLabelMap = computed<Record<string, string>>(() => ({
   ech0_v4: 'Ech0',
   ech0_v3: 'Ech0 v3',
   memos: 'Memos',
-}
+}))
 const migrationReport = computed(
   () => (migrationStore.state.source_payload?.report as Record<string, unknown> | undefined) ?? {},
 )
@@ -179,9 +200,9 @@ const formattedStartedAt = computed(() => formatTime(migrationStore.state.starte
 const formattedFinishedAt = computed(() => formatTime(migrationStore.state.finished_at))
 const isSubmittingMigration = computed(() => isUploadingZip.value || isCreatingMigration.value)
 const startActionText = computed(() => {
-  if (isUploadingZip.value) return '上传中...'
-  if (isCreatingMigration.value) return '创建任务中...'
-  return '开始迁移'
+  if (isUploadingZip.value) return String(t('migrationSetting.uploading'))
+  if (isCreatingMigration.value) return String(t('migrationSetting.creating'))
+  return String(t('migrationSetting.startMigration'))
 })
 
 const resetSelectedZip = () => {
@@ -191,11 +212,11 @@ const resetSelectedZip = () => {
 
 const handleSelectSource = (source: SourceCard) => {
   if (isSubmittingMigration.value) {
-    theToast.info('正在处理迁移请求，请稍候')
+    theToast.info(String(t('migrationSetting.processing')))
     return
   }
   if (source.inDevelopment) {
-    theToast.info(`${source.title} 迁移功能开发中，敬请期待`)
+    theToast.info(String(t('migrationSetting.sourceInDevelopment', { source: source.title })))
     return
   }
   sourceType.value = source.value
@@ -204,7 +225,7 @@ const handleSelectSource = (source: SourceCard) => {
 
 const handlePickZip = () => {
   if (isSubmittingMigration.value) {
-    theToast.info('正在处理迁移请求，请稍候')
+    theToast.info(String(t('migrationSetting.processing')))
     return
   }
   const input = document.createElement('input')
@@ -215,7 +236,7 @@ const handlePickZip = () => {
     const file = target.files?.[0]
     if (!file) return
     if (!file.name.toLowerCase().endsWith('.zip')) {
-      theToast.error('仅支持上传 zip 文件')
+      theToast.error(String(t('migrationSetting.onlyZip')))
       return
     }
     selectedZip.value = file
@@ -226,28 +247,28 @@ const handlePickZip = () => {
 
 const handleStartMigration = async () => {
   if (isSubmittingMigration.value) {
-    theToast.info('正在处理迁移请求，请稍候')
+    theToast.info(String(t('migrationSetting.processing')))
     return
   }
   if (sourceType.value === 'memos') {
-    theToast.info('Memos 迁移功能开发中，暂不可用')
+    theToast.info(String(t('migrationSetting.memosUnavailable')))
     return
   }
   if (migrationStore.hasJob) {
-    theToast.info('请先结束/清理当前迁移任务')
+    theToast.info(String(t('migrationSetting.cleanupFirst')))
     return
   }
   if (!selectedZip.value) {
-    theToast.info('请先选择 zip 文件')
+    theToast.info(String(t('migrationSetting.selectZipFirst')))
     return
   }
 
   try {
     isUploadingZip.value = true
-    theToast.info('正在上传并处理迁移压缩包，请勿关闭页面')
+    theToast.info(String(t('migrationSetting.uploadingRequest')))
     const uploadRes = await fetchUploadMigrationSourceZip(sourceType.value, selectedZip.value)
     if (uploadRes.code !== 1) {
-      theToast.error(uploadRes.msg || '上传迁移压缩包失败')
+      theToast.error(uploadRes.msg || String(t('migrationSetting.uploadFailed')))
       return
     }
     const sourcePayload = uploadRes.data?.source_payload ?? {}
@@ -259,13 +280,13 @@ const handleStartMigration = async () => {
       source_payload: sourcePayload,
     })
     if (res.code !== 1) {
-      theToast.error(res.msg || '创建迁移任务失败')
+      theToast.error(res.msg || String(t('migrationSetting.createJobFailed')))
       return
     }
-    theToast.success('迁移已开始')
+    theToast.success(String(t('migrationSetting.started')))
   } catch (error) {
     console.error('Upload migration source zip failed:', error)
-    theToast.error('上传请求失败，请检查网络或反向代理上传限制')
+    theToast.error(String(t('migrationSetting.requestFailed')))
   } finally {
     isUploadingZip.value = false
     isCreatingMigration.value = false
@@ -274,52 +295,52 @@ const handleStartMigration = async () => {
 
 const handleRefreshJob = async () => {
   if (isSubmittingMigration.value) {
-    theToast.info('正在处理迁移请求，请稍候')
+    theToast.info(String(t('migrationSetting.processing')))
     return
   }
   const ok = await migrationStore.fetchStatus()
   if (!ok) {
-    theToast.error('查询迁移状态失败')
+    theToast.error(String(t('migrationSetting.refreshFailed')))
     return
   }
-  theToast.success('状态已更新')
+  theToast.success(String(t('migrationSetting.refreshed')))
 }
 
 const handleCancelJob = async () => {
   if (isSubmittingMigration.value) {
-    theToast.info('正在处理迁移请求，请稍候')
+    theToast.info(String(t('migrationSetting.processing')))
     return
   }
   if (!migrationStore.isRunning) {
-    theToast.info('当前没有进行中的迁移')
+    theToast.info(String(t('migrationSetting.noRunningJob')))
     return
   }
   const res = await migrationStore.cancelMigration()
   if (res.code !== 1) {
-    theToast.error(res.msg || '取消任务失败')
+    theToast.error(res.msg || String(t('migrationSetting.cancelFailed')))
     return
   }
-  theToast.success('迁移已取消')
+  theToast.success(String(t('migrationSetting.cancelled')))
 }
 
 const handleCleanupMigration = async () => {
   if (isSubmittingMigration.value) {
-    theToast.info('正在处理迁移请求，请稍候')
+    theToast.info(String(t('migrationSetting.processing')))
     return
   }
   const res = await migrationStore.cleanupMigration()
   if (res.code !== 1) {
-    theToast.error(res.msg || '清理迁移失败')
+    theToast.error(res.msg || String(t('migrationSetting.cleanupFailed')))
     return
   }
-  theToast.success('迁移记录已清理')
+  theToast.success(String(t('migrationSetting.cleaned')))
 }
 
 const formatTime = (iso?: string) => {
   if (!iso) return ''
   const dt = new Date(iso)
   if (Number.isNaN(dt.getTime())) return iso
-  return dt.toLocaleString('zh-CN', { hour12: false })
+  return dt.toLocaleString(locale.value, { hour12: false })
 }
 
 void migrationStore.init()

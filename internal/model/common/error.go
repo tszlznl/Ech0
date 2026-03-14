@@ -9,9 +9,11 @@ type ServerError struct {
 }
 
 type BizError struct {
-	Code string
-	Msg  string
-	Err  error
+	Code       string
+	Msg        string
+	MessageKey string
+	Params     map[string]any
+	Err        error
 }
 
 func (e *BizError) Error() string {
@@ -26,6 +28,15 @@ func (e *BizError) Error() string {
 
 func NewBizError(code, msg string) *BizError {
 	return &BizError{Code: code, Msg: msg}
+}
+
+func NewBizErrorWithMessageKey(code, msg, messageKey string, params map[string]any) *BizError {
+	return &BizError{
+		Code:       code,
+		Msg:        msg,
+		MessageKey: messageKey,
+		Params:     params,
+	}
 }
 
 // 失败相关的常量
@@ -44,6 +55,10 @@ const (
 	ErrCodeInitAlreadyDone  = "INIT_ALREADY_DONE"
 	ErrCodeInitOwnerExists  = "INIT_OWNER_EXISTS"
 	ErrCodeInitInvalidState = "INIT_INVALID_STATE"
+	ErrCodeInvalidQuery     = "INVALID_QUERY"
+	ErrCodeTokenMissing     = "TOKEN_MISSING"
+	ErrCodeTokenInvalid     = "TOKEN_INVALID"
+	ErrCodeTokenParse       = "TOKEN_PARSE_ERROR"
 )
 
 // Auth 错误相关常量

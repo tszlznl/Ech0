@@ -3,12 +3,12 @@
     <div class="mb-3 log-toolbar">
       <div class="log-toolbar-grid">
         <label class="toolbar-field">
-          <span class="field-label">日志级别</span>
+          <span class="field-label">{{ t('systemLog.level') }}</span>
           <select
             v-model="level"
             class="h-9 rounded-[var(--radius-md)] px-2 bg-[var(--input-bg-color)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]"
           >
-            <option value="all">全部级别</option>
+            <option value="all">{{ t('systemLog.allLevels') }}</option>
             <option value="debug">debug</option>
             <option value="info">info</option>
             <option value="warn">warn</option>
@@ -17,38 +17,44 @@
         </label>
 
         <label class="toolbar-field field-grow">
-          <span class="field-label">关键词</span>
+          <span class="field-label">{{ t('systemLog.keyword') }}</span>
           <input
             v-model="keyword"
-            placeholder="输入关键词进行过滤"
+            :placeholder="t('systemLog.keywordPlaceholder')"
             class="h-9 rounded-[var(--radius-md)] px-2 bg-[var(--input-bg-color)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]"
           />
         </label>
 
         <label class="toolbar-field field-tail">
-          <span class="field-label">显示条数</span>
+          <span class="field-label">{{ t('systemLog.tail') }}</span>
           <input
             v-model.number="tail"
             type="number"
             min="50"
             max="1000"
             step="50"
-            title="读取最近日志条数，范围 50-1000"
+            :title="t('systemLog.tailTitle')"
             @blur="normalizeTail"
             class="h-9 rounded-[var(--radius-md)] px-2 bg-[var(--input-bg-color)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]"
           />
-          <span class="field-hint">读取最近 N 条（50-1000）</span>
+          <span class="field-hint">{{ t('systemLog.tailHint') }}</span>
         </label>
       </div>
 
       <div class="log-toolbar-actions">
-        <button class="h-9 px-3 rounded-md log-btn" @click="reload">应用过滤</button>
-        <button class="h-9 px-3 rounded-md log-btn" @click="clearLogs">清屏</button>
+        <button class="h-9 px-3 rounded-md log-btn" @click="reload">
+          {{ t('systemLog.applyFilter') }}
+        </button>
+        <button class="h-9 px-3 rounded-md log-btn" @click="clearLogs">
+          {{ t('systemLog.clear') }}
+        </button>
         <label class="inline-flex items-center gap-1 text-sm text-[var(--color-text-secondary)]">
           <input v-model="autoScroll" type="checkbox" />
-          自动滚动
+          {{ t('systemLog.autoScroll') }}
         </label>
-        <span class="text-xs text-[var(--color-text-muted)]">连接: {{ connectionText }}</span>
+        <span class="text-xs text-[var(--color-text-muted)]"
+          >{{ t('systemLog.connection') }}: {{ connectionText }}</span
+        >
       </div>
     </div>
 
@@ -60,13 +66,14 @@
           <span class="msg">{{ line.msg }}</span>
         </div>
       </template>
-      <div v-else class="text-[var(--color-text-muted)]">暂无日志</div>
+      <div v-else class="text-[var(--color-text-muted)]">{{ t('systemLog.empty') }}</div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { fetchSystemLogs } from '@/service/api'
 import { useOWebSocket } from '@/service/request/websocket'
 import { getApiUrl, getWsUrl } from '@/service/request/shared'
@@ -80,6 +87,7 @@ const autoScroll = ref(true)
 const logContainer = ref<HTMLElement>()
 const transport = ref<'ws' | 'sse'>('ws')
 let es: EventSource | null = null
+const { t } = useI18n()
 
 const { onMessage, open, close, status } = useOWebSocket<App.Api.Response<App.Api.SystemLog.Entry>>(
   {
@@ -97,7 +105,7 @@ const { onMessage, open, close, status } = useOWebSocket<App.Api.Response<App.Ap
 )
 
 const connectionText = computed(() => {
-  if (transport.value === 'sse') return 'sse-fallback'
+  if (transport.value === 'sse') return String(t('systemLog.sseFallback'))
   return String(status.value)
 })
 
@@ -200,7 +208,7 @@ const startSSE = () => {
         await pushLog(payload.data)
       }
     } catch {
-      theToast.error('SSE 日志解析失败')
+      theToast.error(String(t('systemLog.sseParseFailed')))
     }
   }
   es.onerror = () => {
@@ -228,7 +236,7 @@ onMounted(async () => {
     try {
       await pushLog(payload.data)
     } catch {
-      theToast.error('系统日志处理失败')
+      theToast.error(String(t('systemLog.processFailed')))
     }
   })
 })

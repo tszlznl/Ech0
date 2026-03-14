@@ -3,13 +3,15 @@
     <!-- 备份计划设置 -->
     <div class="w-full">
       <div class="flex flex-row items-center justify-between mb-3">
-        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">备份计划设置</h1>
+        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">
+          {{ t('backupScheduleSetting.title') }}
+        </h1>
         <div class="flex flex-row items-center justify-end">
           <BaseEditCapsule
             :editing="scheduleEditMode"
-            apply-title="应用"
-            cancel-title="取消"
-            edit-title="编辑"
+            :apply-title="t('commonUi.apply')"
+            :cancel-title="t('commonUi.cancel')"
+            :edit-title="t('commonUi.edit')"
             @apply="handleUpdateBackupSchedule"
             @toggle="scheduleEditMode = !scheduleEditMode"
           />
@@ -18,7 +20,9 @@
 
       <!-- 开启自动备份 -->
       <div class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] h-10">
-        <h2 class="font-semibold w-30 shrink-0">启用自动备份:</h2>
+        <h2 class="font-semibold w-30 shrink-0">
+          {{ t('backupScheduleSetting.enableAutoBackup') }}:
+        </h2>
         <BaseSwitch v-model="BackupSchedule.enable" :disabled="!scheduleEditMode" />
       </div>
 
@@ -26,7 +30,7 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-38 shrink-0">备份计划Crontab:</h2>
+        <h2 class="font-semibold w-38 shrink-0">{{ t('backupScheduleSetting.crontab') }}:</h2>
         <span
           v-if="!scheduleEditMode"
           class="truncate max-w-40 inline-block align-middle"
@@ -34,14 +38,16 @@
           style="vertical-align: middle"
         >
           {{
-            BackupSchedule.cron_expression.length === 0 ? '暂无' : BackupSchedule.cron_expression
+            BackupSchedule.cron_expression.length === 0
+              ? t('commonUi.none')
+              : BackupSchedule.cron_expression
           }}
         </span>
         <BaseInput
           v-else
           v-model="BackupSchedule.cron_expression"
           type="text"
-          placeholder="备份计划Crontab表达式"
+          :placeholder="t('backupScheduleSetting.crontabPlaceholder')"
           class="w-full py-1!"
         />
       </div>
@@ -55,12 +61,14 @@ import BaseInput from '@/components/common/BaseInput.vue'
 import BaseSwitch from '@/components/common/BaseSwitch.vue'
 import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { fetchUpdateBackupScheduleSetting } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 
 const settingStore = useSettingStore()
+const { t } = useI18n()
 const { getBackupSchedule } = settingStore
 const { BackupSchedule } = storeToRefs(settingStore)
 

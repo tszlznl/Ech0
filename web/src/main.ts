@@ -3,6 +3,8 @@ import '@/themes/index.scss'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
 import { initStores } from './stores'
+import { useSettingStore } from './stores/setting'
+import { setupI18n } from './locales'
 
 // 自定义组件
 import BaseDialog from '@/components/common/BaseDialog.vue'
@@ -23,7 +25,11 @@ await initStores().catch((e) => {
   console.error('Failed to initialize stores:', e)
 })
 
+const settingStore = useSettingStore()
+const i18n = await setupI18n(settingStore.SystemSetting.default_locale)
+
 app.use(router)
+app.use(i18n)
 
 // 全局注册组件
 app.component('BaseDialog', BaseDialog)

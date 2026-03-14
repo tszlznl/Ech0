@@ -7,6 +7,8 @@ declare namespace App {
       code: number
       msg: string
       error_code?: string
+      message_key?: string
+      message_params?: Record<string, unknown>
       data: T
     }
 
@@ -301,6 +303,7 @@ declare namespace App {
         server_name: string
         server_url: string
         allow_register: boolean
+        default_locale: string
         ICP_number: string
         footer_content: string
         footer_link: string

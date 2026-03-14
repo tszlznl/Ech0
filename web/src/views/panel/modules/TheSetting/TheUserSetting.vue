@@ -3,13 +3,15 @@
     <!-- 用户设置 -->
     <div class="w-full">
       <div class="flex flex-row items-center justify-between mb-3">
-        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">用户中心</h1>
+        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">
+          {{ t('userSetting.title') }}
+        </h1>
         <div class="flex flex-row items-center justify-end">
           <BaseEditCapsule
             :editing="editMode"
-            apply-title="应用"
-            cancel-title="取消"
-            edit-title="编辑"
+            :apply-title="t('commonUi.apply')"
+            :cancel-title="t('commonUi.cancel')"
+            :edit-title="t('commonUi.edit')"
             @apply="handleUpdateUser"
             @toggle="editMode = !editMode"
           />
@@ -20,7 +22,7 @@
       <div class="flex justify-start items-center mb-2">
         <img
           :src="avatarSrc"
-          alt="头像"
+          :alt="t('userSetting.avatarAlt')"
           class="w-12 h-12 rounded-full ml-2 mr-9 ring-1 ring-[var(--color-border-subtle)] shadow-[var(--shadow-sm)]"
         />
         <div>
@@ -38,7 +40,7 @@
             class="rounded-md text-center w-auto text-align-center h-8 md:ml-5"
             @click="handTriggerUpload"
           >
-            更改
+            {{ t('userSetting.changeAvatar') }}
           </BaseButton>
         </div>
       </div>
@@ -47,13 +49,13 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30">用户名:</h2>
+        <h2 class="font-semibold w-30">{{ t('userSetting.username') }}:</h2>
         <span v-if="!editMode">{{ user?.username }}</span>
         <BaseInput
           v-else
           v-model="userInfo.username"
           type="text"
-          placeholder="请输入用户名"
+          :placeholder="t('userSetting.usernamePlaceholder')"
           class="w-36 py-1!"
         />
       </div>
@@ -62,13 +64,13 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
-        <h2 class="font-semibold w-30">密码:</h2>
+        <h2 class="font-semibold w-30">{{ t('userSetting.password') }}:</h2>
         <span v-if="!editMode">******</span>
         <BaseInput
           v-else
           v-model="userInfo.password"
           type="password"
-          placeholder="请输入密码"
+          :placeholder="t('userSetting.passwordPlaceholder')"
           class="w-36 py-1!"
           autocomplete="off"
         />
@@ -90,8 +92,10 @@ import { useUserStore } from '@/stores'
 import { resolveAvatarUrl } from '@/service/request/shared'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { useFileQueue } from '@/lib/file'
+import { useI18n } from 'vue-i18n'
 
 const userStore = useUserStore()
+const { t } = useI18n()
 const { refreshCurrentUser } = userStore
 const { user } = storeToRefs(userStore)
 const userInfo = ref<App.Api.User.UserInfo>({
@@ -140,9 +144,9 @@ const handleUploadImage = async (event: Event) => {
       category: FILE_CATEGORY.IMAGE,
     })
     const task = await theToast.promise(waitForTask(taskId), {
-      loading: '头像上传中...',
-      success: '头像上传成功！',
-      error: '上传失败，请稍后再试',
+      loading: String(t('userSetting.avatarUploading')),
+      success: String(t('userSetting.avatarUploadSuccess')),
+      error: String(t('userSetting.uploadFailed')),
     })
 
     if (task.result?.url) {

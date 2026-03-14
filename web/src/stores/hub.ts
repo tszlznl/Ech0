@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useFetch } from '@vueuse/core'
 import { theToast } from '@/utils/toast'
 import { useConnectStore } from './connect'
+import { i18n } from '@/locales'
 
 // 每个 Hub 的独立状态
 interface HubState {
@@ -53,7 +54,7 @@ export const useHubStore = defineStore('hubStore', () => {
   // 2. 根据hubList 获取每个item的info
   const getHubInfoList = async () => {
     if (hubList.value.length === 0) {
-      theToast.info('Hub列表为空，请到设置中添加Connect吧~')
+      theToast.info(String(i18n.global.t('hub.emptyList')))
       isPreparing.value = false
       return
     }
@@ -164,7 +165,7 @@ export const useHubStore = defineStore('hubStore', () => {
 
     // 处理结果
     if (hubList.value.length === 0) {
-      theToast.info('当前Hub暂无可连接的实例。')
+      theToast.info(String(i18n.global.t('hub.noAvailableInstance')))
       isPreparing.value = false
       return
     }
@@ -183,7 +184,7 @@ export const useHubStore = defineStore('hubStore', () => {
     }
 
     isPreparing.value = false
-    theToast.success(`成功连接 ${hubList.value.length} 个实例，开始加载 Echos`)
+    theToast.success(String(i18n.global.t('hub.connectedCount', { count: hubList.value.length })))
 
     // 并行请求所有 Hub 的第一页，填充缓冲池
     await Promise.all(Array.from(hubStates.value.keys()).map((url) => fetchHubPage(url)))

@@ -3,13 +3,15 @@
     <!-- Webhook 设置 -->
     <div class="w-full">
       <div class="flex flex-row items-center justify-between mb-4">
-        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">Webhook</h1>
+        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">
+          {{ t('webhookSetting.title') }}
+        </h1>
         <div class="flex flex-row items-center justify-end">
           <BaseEditCapsule
             :editing="webhookEdit"
-            apply-title="完成"
-            cancel-title="取消"
-            edit-title="编辑"
+            :apply-title="t('commonUi.done')"
+            :cancel-title="t('commonUi.cancel')"
+            :edit-title="t('commonUi.edit')"
             @apply="webhookEdit = false"
             @toggle="webhookEdit = !webhookEdit"
           />
@@ -22,16 +24,20 @@
         class="mb-2 border border-[var(--color-border-subtle)] border-dashed rounded-[var(--radius-md)] flex flex-col gap-2 p-2 text-[var(--color-text-muted)]"
       >
         <div>
-          <span>Webhook 名称：</span>
-          <BaseInput class="w-full" v-model="webhookToAdd.name" placeholder="Webhook 名称" />
+          <span>{{ t('webhookSetting.name') }}：</span>
+          <BaseInput
+            class="w-full"
+            v-model="webhookToAdd.name"
+            :placeholder="t('webhookSetting.namePlaceholder')"
+          />
         </div>
 
         <div>
-          <span>Webhook 地址：</span>
+          <span>{{ t('webhookSetting.url') }}：</span>
           <BaseInput
             class="w-full"
             v-model="webhookToAdd.url"
-            placeholder="Webhook 地址（带https/http）"
+            :placeholder="t('webhookSetting.urlPlaceholder')"
           />
         </div>
 
@@ -40,18 +46,18 @@
             :disabled="isSubmitting"
             @click="handleCancelAddWebhook"
             class="w-1/3 h-8 rounded-md flex justify-center mr-2"
-            title="取消添加"
+            :title="t('webhookSetting.cancelAdd')"
           >
-            <span>取消</span>
+            <span>{{ t('commonUi.cancel') }}</span>
           </BaseButton>
 
           <BaseButton
             :loading="isSubmitting"
             @click="handleAddWebhook"
             class="w-1/3 h-8 rounded-md flex justify-center"
-            title="添加 Webhook"
+            :title="t('webhookSetting.addWebhook')"
           >
-            <span class="text-[var(--color-text-primary)]">添加</span>
+            <span class="text-[var(--color-text-primary)]">{{ t('commonUi.add') }}</span>
           </BaseButton>
         </div>
       </div>
@@ -59,7 +65,7 @@
       <!-- Webhook 列表 -->
       <div v-else>
         <div v-if="Webhooks.length === 0" class="flex flex-col items-center justify-center mt-2">
-          <span class="text-[var(--color-text-muted)]">暂无 Webhook...</span>
+          <span class="text-[var(--color-text-muted)]">{{ t('webhookSetting.empty') }}</span>
         </div>
 
         <div
@@ -72,7 +78,7 @@
                 <th
                   class="px-3 py-2 text-left text-sm font-semibold text-[var(--color-text-primary)]"
                 >
-                  名称
+                  {{ t('webhookSetting.name') }}
                 </th>
                 <th
                   class="px-3 py-2 text-left text-sm font-semibold text-[var(--color-text-primary)]"
@@ -82,7 +88,7 @@
                 <th
                   class="px-3 py-2 text-right text-sm font-semibold text-[var(--color-text-primary)]"
                 >
-                  操作
+                  {{ t('commonUi.actions') }}
                 </th>
               </tr>
             </thead>
@@ -103,7 +109,7 @@
                   <button
                     class="p-1 hover:bg-[var(--color-bg-surface)] rounded"
                     @click="handleDeleteWebhook(webhook.id)"
-                    title="删除 Webhook"
+                    :title="t('webhookSetting.delete')"
                   >
                     <Trashbin class="w-5 h-5 text-[var(--color-danger)]" />
                   </button>
@@ -124,6 +130,7 @@ import BaseButton from '@/components/common/BaseButton.vue'
 import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
 import Trashbin from '@/components/icons/trashbin.vue'
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { fetchDeleteWebhook, fetchCreateWebhook } from '@/service/api'
@@ -131,6 +138,7 @@ import { useBaseDialog } from '@/composables/useBaseDialog'
 import { theToast } from '@/utils/toast'
 
 const webhookEdit = ref<boolean>(false)
+const { t } = useI18n()
 
 const settingStore = useSettingStore()
 const { Webhooks } = storeToRefs(settingStore)
@@ -148,7 +156,7 @@ const handleAddWebhook = () => {
   isSubmitting.value = true
 
   if (!webhookToAdd.value?.name || !webhookToAdd.value?.url) {
-    theToast.error('请填写完整的 Webhook 信息')
+    theToast.error(String(t('webhookSetting.fillRequired')))
     isSubmitting.value = false
     return
   }
@@ -156,7 +164,7 @@ const handleAddWebhook = () => {
   fetchCreateWebhook(webhookToAdd.value)
     .then((res) => {
       if (res.code === 1) {
-        theToast.success('添加 Webhook 成功')
+        theToast.success(String(t('webhookSetting.addSuccess')))
         webhookToAdd.value = { name: '', url: '', is_active: true }
         settingStore.getAllWebhooks()
       }
@@ -177,12 +185,12 @@ const handleCancelAddWebhook = () => {
 
 const handleDeleteWebhook = (id: string) => {
   openConfirm({
-    title: '确认删除此 Webhook 吗？',
-    description: '删除后将无法恢复，请谨慎操作！',
+    title: String(t('webhookSetting.deleteConfirmTitle')),
+    description: String(t('webhookSetting.deleteConfirmDesc')),
     onConfirm: () => {
       fetchDeleteWebhook(id).then((res) => {
         if (res.code === 1) {
-          theToast.success('删除 Webhook 成功')
+          theToast.success(String(t('webhookSetting.deleteSuccess')))
           settingStore.getAllWebhooks()
         }
       })

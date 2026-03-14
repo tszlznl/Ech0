@@ -36,8 +36,10 @@ func (dashboardHandler *DashboardHandler) GetSystemLogs() gin.HandlerFunc {
 					err = errors.New("tail must be greater than zero")
 				}
 				return res.Response{
-					Msg: commonModel.INVALID_QUERY_PARAMS,
-					Err: err,
+					Msg:        commonModel.INVALID_QUERY_PARAMS,
+					ErrorCode:  commonModel.ErrCodeInvalidQuery,
+					MessageKey: commonModel.MsgKeyDashboardTailBad,
+					Err:        err,
 				}
 			}
 			tail = n
@@ -52,8 +54,9 @@ func (dashboardHandler *DashboardHandler) GetSystemLogs() gin.HandlerFunc {
 			return res.Response{Err: err}
 		}
 		return res.Response{
-			Data: logs,
-			Msg:  "获取系统日志成功",
+			Data:       logs,
+			Msg:        "获取系统日志成功",
+			MessageKey: commonModel.MsgKeyDashboardLogsOk,
 		}
 	})
 }

@@ -5,23 +5,27 @@
         <h1 class="text-[var(--color-text-primary)] font-bold text-lg">Passkey</h1>
         <BaseEditCapsule
           :editing="passkeyEditMode"
-          apply-title="应用"
-          cancel-title="取消"
-          edit-title="编辑"
+          :apply-title="t('commonUi.apply')"
+          :cancel-title="t('commonUi.cancel')"
+          :edit-title="t('commonUi.edit')"
           @apply="handleUpdatePasskeySetting"
           @toggle="passkeyEditMode = !passkeyEditMode"
         />
       </div>
 
       <div class="text-[var(--color-text-muted)] text-sm mb-3">
-        使用 Passkey（WebAuthn）可在不同设备上无密码登录
+        {{ t('passkeySetting.description') }}
       </div>
 
       <div class="mb-3 border border-dashed border-[var(--color-border-strong)] rounded-md p-3">
-        <h2 class="text-[var(--color-text-primary)] font-semibold mb-2">配置健康检查</h2>
+        <h2 class="text-[var(--color-text-primary)] font-semibold mb-2">
+          {{ t('passkeySetting.healthCheck') }}
+        </h2>
         <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2 text-sm">
           <div class="flex items-center gap-2">
-            <span class="text-[var(--color-text-secondary)]">Passkey就绪:</span>
+            <span class="text-[var(--color-text-secondary)]"
+              >{{ t('passkeySetting.passkeyReady') }}:</span
+            >
             <span
               class="px-2 py-0.5 rounded-md"
               :class="
@@ -30,7 +34,11 @@
                   : 'bg-yellow-500/15 text-yellow-500'
               "
             >
-              {{ passkeyRuntimeStatus?.passkey_ready ? '已就绪' : '未就绪' }}
+              {{
+                passkeyRuntimeStatus?.passkey_ready
+                  ? t('passkeySetting.ready')
+                  : t('passkeySetting.notReady')
+              }}
             </span>
           </div>
         </div>
@@ -38,7 +46,7 @@
           v-if="missingBoundaryItems.length > 0"
           class="mt-2 text-xs text-[var(--color-text-muted)] break-all"
         >
-          缺失项: {{ missingBoundaryItems.join('、') }}
+          {{ t('passkeySetting.missingItems') }}: {{ missingBoundaryItems.join('、') }}
         </p>
         <div class="mt-2">
           <BaseButton
@@ -46,25 +54,27 @@
             @click="handleAutoFillBoundary"
             :disabled="missingBoundaryItems.length === 0"
           >
-            一键填充推荐配置
+            {{ t('passkeySetting.autofill') }}
           </BaseButton>
         </div>
       </div>
 
       <div class="mb-3 border border-dashed border-[var(--color-border-strong)] rounded-md p-3">
-        <h2 class="text-[var(--color-text-primary)] font-semibold mb-2">Passkey 安全边界</h2>
+        <h2 class="text-[var(--color-text-primary)] font-semibold mb-2">
+          {{ t('passkeySetting.securityBoundary') }}
+        </h2>
         <div
           class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
         >
           <h3 class="font-semibold w-40 shrink-0">WebAuthn RP ID:</h3>
           <span v-if="!passkeyEditMode" class="truncate max-w-80 inline-block align-middle">
-            {{ passkeySetting.webauthn_rp_id || '暂无' }}
+            {{ passkeySetting.webauthn_rp_id || t('commonUi.none') }}
           </span>
           <BaseInput
             v-else
             v-model="passkeySetting.webauthn_rp_id"
             type="text"
-            placeholder="例如：example.com"
+            :placeholder="t('passkeySetting.rpIdPlaceholder')"
             class="w-full py-1!"
           />
         </div>
@@ -75,7 +85,7 @@
           <span v-if="!passkeyEditMode" class="truncate max-w-80 inline-block align-middle">
             {{
               passkeySetting.webauthn_allowed_origins.length === 0
-                ? '暂无'
+                ? t('commonUi.none')
                 : passkeySetting.webauthn_allowed_origins.join(', ')
             }}
           </span>
@@ -83,7 +93,7 @@
             v-else
             v-model="webauthnOriginsString"
             type="text"
-            placeholder="多个Origin用逗号分隔"
+            :placeholder="t('passkeySetting.originsPlaceholder')"
             class="w-full py-1!"
           />
         </div>
@@ -95,7 +105,7 @@
           <BaseInput
             v-model="newDeviceName"
             type="text"
-            placeholder="设备名称（可选）"
+            :placeholder="t('passkeySetting.deviceNamePlaceholder')"
             class="py-1 text-sm"
           />
         </div>
@@ -104,17 +114,21 @@
           :disabled="busy || !supported"
           @click="handleBind"
         >
-          绑定
+          {{ t('passkeySetting.bind') }}
         </BaseButton>
       </div>
 
       <div v-if="!supported" class="text-[var(--color-text-muted)] text-sm mb-3">
-        当前浏览器不支持 Passkey / WebAuthn。
+        {{ t('passkeySetting.notSupported') }}
       </div>
 
       <!-- 多设备管理 -->
-      <div class="text-[var(--color-text-muted)] font-semibold mb-2">已绑定设备</div>
-      <div v-if="devices.length === 0" class="text-[var(--color-text-muted)] text-sm">暂无设备</div>
+      <div class="text-[var(--color-text-muted)] font-semibold mb-2">
+        {{ t('passkeySetting.boundDevices') }}
+      </div>
+      <div v-if="devices.length === 0" class="text-[var(--color-text-muted)] text-sm">
+        {{ t('passkeySetting.noDevices') }}
+      </div>
       <div
         v-else
         class="mt-2 overflow-x-auto border border-[var(--color-border-subtle)] rounded-lg"
@@ -125,7 +139,7 @@
               <th
                 class="px-3 py-2 text-left text-sm font-semibold text-[var(--color-text-primary)]"
               >
-                设备名称
+                {{ t('passkeySetting.deviceName') }}
               </th>
               <th
                 class="px-3 py-2 text-left text-sm font-semibold text-[var(--color-text-primary)]"
@@ -135,12 +149,12 @@
               <th
                 class="px-3 py-2 text-left text-sm font-semibold text-[var(--color-text-primary)]"
               >
-                时间
+                {{ t('passkeySetting.time') }}
               </th>
               <th
                 class="px-3 py-2 text-right text-sm font-semibold text-[var(--color-text-primary)]"
               >
-                操作
+                {{ t('commonUi.actions') }}
               </th>
             </tr>
           </thead>
@@ -150,11 +164,11 @@
                 {{ d.device_name || 'Passkey' }}
               </td>
               <td class="px-3 py-2 text-sm text-[var(--color-text-secondary)]">
-                {{ d.aaguid || '未知' }}
+                {{ d.aaguid || t('passkeySetting.unknown') }}
               </td>
               <td class="px-3 py-2 text-xs text-[var(--color-text-secondary)]">
-                <div>最近使用：{{ formatTime(d.last_used_at) }}</div>
-                <div>创建：{{ formatTime(d.created_at) }}</div>
+                <div>{{ t('passkeySetting.lastUsed') }}：{{ formatTime(d.last_used_at) }}</div>
+                <div>{{ t('passkeySetting.createdAt') }}：{{ formatTime(d.created_at) }}</div>
               </td>
               <td class="px-3 py-2 text-right">
                 <div class="flex flex-row items-center justify-end gap-2">
@@ -162,7 +176,7 @@
                     class="rounded-md"
                     :disabled="busy"
                     @click="promptRename(d)"
-                    title="改名"
+                    :title="t('passkeySetting.rename')"
                   >
                     <Rename class="w-5 h-5" />
                   </BaseButton>
@@ -170,7 +184,7 @@
                     class="rounded-md"
                     :disabled="busy"
                     @click="handleDelete(d.id)"
-                    title="删除"
+                    :title="t('passkeySetting.delete')"
                   >
                     <Trashbin class="w-5 h-5" />
                   </BaseButton>
@@ -185,6 +199,7 @@
 </template>
 <script setup lang="ts">
 import { watch, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import PanelCard from '@/layout/PanelCard.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
@@ -205,6 +220,7 @@ import { theToast } from '@/utils/toast'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { base64urlToUint8Array, uint8ArrayToBase64url } from '@/utils/other'
 const { openConfirm } = useBaseDialog()
+const { t } = useI18n()
 
 const supported = !!(window.PublicKeyCredential && navigator.credentials)
 const busy = ref(false)
@@ -250,7 +266,7 @@ const parseList = (input: string) =>
 
 // 断言服务端返回的 publicKey 合法
 function assertCreationOptionsJSON(raw: unknown): CreationOptionsJSON {
-  if (!raw || typeof raw !== 'object') throw new Error('服务端返回的 publicKey 不合法')
+  if (!raw || typeof raw !== 'object') throw new Error(String(t('passkeySetting.invalidPublicKey')))
   return raw as CreationOptionsJSON
 }
 
@@ -311,7 +327,7 @@ function credentialToJSON(cred: PublicKeyCredential) {
 
 // 格式化时间
 function formatTime(v: string) {
-  if (!v) return '暂无'
+  if (!v) return String(t('commonUi.none'))
   const d = new Date(v)
   if (Number.isNaN(d.getTime())) return v
   return d.toLocaleString()
@@ -349,7 +365,7 @@ async function refreshHealthCheck() {
 async function handleUpdatePasskeySetting() {
   passkeySetting.value.webauthn_allowed_origins = parseList(webauthnOriginsString.value)
   if (passkeySetting.value.webauthn_allowed_origins.some((u) => !/^https?:\/\//.test(u))) {
-    theToast.error('WebAuthn Origins 需为 http/https URL')
+    theToast.error(String(t('passkeySetting.originsMustBeHttp')))
     return
   }
   const res = await fetchUpdatePasskeySettings(passkeySetting.value)
@@ -373,7 +389,7 @@ function handleAutoFillBoundary() {
   webauthnOriginsString.value = passkeySetting.value.webauthn_allowed_origins.join(', ')
   passkeyEditMode.value = true
   void refreshHealthCheck()
-  theToast.success('已填充推荐配置，请点击“应用”保存')
+  theToast.success(String(t('passkeySetting.autofillDone')))
 }
 
 // 绑定设备
@@ -381,21 +397,23 @@ async function handleBind() {
   if (!supported) return
   busy.value = true
   try {
-    const begin = await fetchPasskeyRegisterBegin(newDeviceName.value || 'Passkey')
+    const begin = await fetchPasskeyRegisterBegin(
+      newDeviceName.value || String(t('passkeySetting.defaultDeviceName')),
+    )
     if (begin.code !== 1) return
 
     const options = normalizeCreationOptions(begin.data.publicKey)
     const created = await navigator.credentials.create({ publicKey: options })
-    if (!created) throw new Error('创建凭证失败')
+    if (!created) throw new Error(String(t('passkeySetting.createCredentialFailed')))
     const cred = created as PublicKeyCredential
 
     const finish = await fetchPasskeyRegisterFinish(begin.data.nonce, credentialToJSON(cred))
     if (finish.code !== 1) return
 
-    theToast.success('绑定成功')
+    theToast.success(String(t('passkeySetting.bindSuccess')))
     await refresh()
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : '绑定失败'
+    const msg = e instanceof Error ? e.message : String(t('passkeySetting.bindFailed'))
     theToast.error(msg)
   } finally {
     busy.value = false
@@ -405,14 +423,14 @@ async function handleBind() {
 // 删除设备
 async function handleDelete(id: string) {
   openConfirm({
-    title: '确定要删除该设备吗？',
-    description: '删除后该设备将无法登录，请谨慎操作',
+    title: String(t('passkeySetting.deleteConfirmTitle')),
+    description: String(t('passkeySetting.deleteConfirmDesc')),
     onConfirm: async () => {
       busy.value = true
       try {
         const res = await fetchDeletePasskeyDevice(id)
         if (res.code !== 1) return
-        theToast.success('已删除')
+        theToast.success(String(t('passkeySetting.deleted')))
         await refresh()
       } finally {
         busy.value = false
@@ -423,13 +441,16 @@ async function handleDelete(id: string) {
 
 // 改名
 async function promptRename(d: App.Api.Auth.PasskeyDevice) {
-  const name = window.prompt('新的设备名称', d.device_name || 'Passkey')
+  const name = window.prompt(
+    String(t('passkeySetting.newDeviceNamePrompt')),
+    d.device_name || String(t('passkeySetting.defaultDeviceName')),
+  )
   if (!name) return
   busy.value = true
   try {
     const res = await fetchUpdatePasskeyDeviceName(d.id, name)
     if (res.code !== 1) return
-    theToast.success('已更新')
+    theToast.success(String(t('passkeySetting.updated')))
     await refresh()
   } finally {
     busy.value = false

@@ -7,7 +7,7 @@
         :model-value="username"
         @update:model-value="emit('update:username', String($event))"
         type="text"
-        placeholder="Owner 用户名"
+        :placeholder="t('init.ownerUsernamePlaceholder')"
         autocomplete="username"
         required
       />
@@ -16,7 +16,7 @@
         :model-value="password"
         @update:model-value="emit('update:password', String($event))"
         type="password"
-        placeholder="Owner 密码"
+        :placeholder="t('init.ownerPasswordPlaceholder')"
         autocomplete="new-password"
         required
       />
@@ -27,7 +27,7 @@
         class="w-full h-8.5 rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
       >
         <span class="text-[var(--color-text-secondary)]">
-          {{ submitting ? '初始化中...' : '初始化' }}
+          {{ submitting ? t('init.initializing') : t('init.initialize') }}
         </span>
       </BaseButton>
     </form>
@@ -37,6 +37,9 @@
 <script setup lang="ts">
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 defineProps<{
   username: string

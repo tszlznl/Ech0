@@ -9,6 +9,7 @@ import {
 } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useUserStore } from './user'
+import { i18n } from '@/locales'
 
 export const useInboxStore = defineStore('inboxStore', () => {
   const inboxMode = ref<boolean>(false)
@@ -146,7 +147,7 @@ export const useInboxStore = defineStore('inboxStore', () => {
     const res = await fetchClearInbox()
     if (res.code === 1) {
       resetState()
-      theToast.success('收件箱已清空')
+      theToast.success(String(i18n.global.t('inbox.cleared')))
       return true
     }
     return false
