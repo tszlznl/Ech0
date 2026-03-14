@@ -59,7 +59,9 @@
         v-else-if="echoList.length === 0 && hasTriedInitialLoad && !isPreparing && !isLoading"
         class="my-6"
       >
-        <p class="text-[var(--color-text-secondary)] text-center">{{ t('hub.emptyConnectHint') }}</p>
+        <p class="text-[var(--color-text-secondary)] text-center">
+          {{ t('hub.emptyConnectHint') }}
+        </p>
       </div>
 
       <div v-if="echoList.length > 0 && !hasMore" class="my-6">
