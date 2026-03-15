@@ -30,30 +30,28 @@
         <table class="w-full min-w-[760px] table-fixed text-sm">
           <thead>
             <tr class="bg-[var(--color-bg-muted)]/70 text-left text-[var(--color-text-muted)]">
-              <th class="w-[170px] px-2 py-2 whitespace-nowrap">
-                Token
-              </th>
-              <th class="w-[144px] px-2 py-2 whitespace-nowrap">
+              <th class="w-[170px] px-2 py-2 whitespace-nowrap">Token</th>
+              <th class="w-[100px] px-2 py-2 whitespace-nowrap">
                 {{ t('accessTokenSetting.name') }}
               </th>
-              <th class="w-[156px] px-1 py-2 whitespace-nowrap">
+              <th class="w-[156px] px-2 py-2 whitespace-nowrap">
                 {{ t('accessTokenSetting.createdAt') }}
               </th>
-              <th class="w-[156px] px-1 py-2 whitespace-nowrap">
+              <th class="w-[156px] px-2 py-2 whitespace-nowrap">
                 {{ t('accessTokenSetting.expiry') }}
               </th>
-              <th class="w-[56px] px-1 py-2 text-right whitespace-nowrap">
+              <th class="w-[56px] px-2 py-2 text-right whitespace-nowrap">
                 {{ t('commonUi.actions') }}
               </th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="tokenItem in AccessTokens" :key="tokenItem.id">
-              <td
-                class="px-2 py-2 font-mono text-[var(--color-text-primary)]"
-              >
+              <td class="px-2 py-2 font-mono text-[var(--color-text-primary)]">
                 <div class="flex items-center gap-1">
-                  <span class="truncate" :title="tokenItem.token">{{ maskToken(tokenItem.token) }}</span>
+                  <span class="truncate" :title="tokenItem.token">{{
+                    maskToken(tokenItem.token)
+                  }}</span>
                   <button
                     class="p-1 hover:bg-[var(--color-bg-surface)] rounded"
                     @click="copyAccessToken(tokenItem.token)"
@@ -68,17 +66,17 @@
                   tokenItem.name
                 }}</span>
               </td>
-              <td class="px-2 py-2 text-[var(--color-text-secondary)] whitespace-nowrap">
+              <td class="px-1 py-2 text-[var(--color-text-secondary)] whitespace-nowrap">
                 {{ new Date(tokenItem.created_at).toLocaleString() }}
               </td>
-              <td class="px-2 py-2 text-[var(--color-text-secondary)] whitespace-nowrap">
+              <td class="px-1 py-2 text-[var(--color-text-secondary)] whitespace-nowrap">
                 {{
                   tokenItem.expiry
                     ? new Date(tokenItem.expiry).toLocaleString()
                     : t('accessTokenSetting.neverExpire')
                 }}
               </td>
-              <td class="px-2 py-2 text-right">
+              <td class="px-1 py-2 text-right">
                 <BaseButton
                   class="h-8 w-8 !p-1.5"
                   :icon="Trashbin"

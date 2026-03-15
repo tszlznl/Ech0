@@ -124,7 +124,9 @@
         </BaseButton>
       </div>
 
-      <div class="x-scrollbar overflow-x-auto rounded-lg border border-[var(--color-border-subtle)]">
+      <div
+        class="x-scrollbar overflow-x-auto rounded-lg border border-[var(--color-border-subtle)]"
+      >
         <table class="w-full min-w-[820px] text-sm">
           <thead>
             <tr class="bg-[var(--color-bg-muted)]/70 text-left text-[var(--color-text-muted)]">
@@ -133,11 +135,13 @@
                   <input v-model="allChecked" type="checkbox" />
                 </div>
               </th>
-              <th class="min-w-[120px] px-2 py-2">{{ t('commentManager.nickname') }}</th>
+              <th class="min-w-[100px] px-2 py-2">{{ t('commentManager.nickname') }}</th>
               <th class="min-w-[160px] px-2 py-2">{{ t('commentManager.email') }}</th>
-              <th class="min-w-[96px] px-2 py-2">{{ t('commentManager.status') }}</th>
-              <th class="min-w-[96px] px-2 py-2">{{ t('commentManager.hotColumn') }}</th>
-              <th class="min-w-[120px] px-2 py-2 whitespace-nowrap">{{ t('commentManager.time') }}</th>
+              <th class="min-w-[68px] px-2 py-2">{{ t('commentManager.status') }}</th>
+              <th class="min-w-[68px] px-2 py-2">{{ t('commentManager.hotColumn') }}</th>
+              <th class="min-w-[120px] px-2 py-2 whitespace-nowrap">
+                {{ t('commentManager.time') }}
+              </th>
               <th class="min-w-[200px] px-2 py-2">{{ t('commonUi.actions') }}</th>
             </tr>
           </thead>
@@ -154,12 +158,12 @@
               </td>
               <td class="px-2 py-2">{{ item.nickname }}</td>
               <td class="px-2 py-2">{{ item.email }}</td>
-              <td class="px-2 py-2">
+              <td class="px-1 py-2">
                 <span class="status-pill" :class="statusClass(item.status)">
                   {{ statusLabelMap[item.status] || item.status }}
                 </span>
               </td>
-              <td class="px-2 py-2">
+              <td class="px-1 py-2">
                 <span class="status-pill" :class="hotClass(item.hot)">
                   {{ item.hot ? t('commentManager.hotPicked') : t('commentManager.hotNormal') }}
                 </span>

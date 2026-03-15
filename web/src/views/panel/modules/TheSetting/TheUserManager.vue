@@ -29,16 +29,14 @@
         <table class="w-full min-w-[520px] table-fixed text-sm">
           <thead>
             <tr class="bg-[var(--color-bg-muted)]/70 text-left text-[var(--color-text-muted)]">
-              <th class="w-[52px] px-2 py-2 whitespace-nowrap">
-                #
-              </th>
+              <th class="w-[52px] px-2 py-2 whitespace-nowrap">#</th>
               <th class="px-2 py-2 whitespace-nowrap">
                 {{ t('userManager.username') }}
               </th>
-              <th class="w-[120px] px-2 py-2 text-center whitespace-nowrap">
+              <th class="w-[60px] px-2 py-2 text-center whitespace-nowrap">
                 {{ t('userManager.permissionChange') }}
               </th>
-              <th class="w-[84px] px-2 py-2 text-right whitespace-nowrap">
+              <th class="w-[60px] px-2 py-2 text-right whitespace-nowrap">
                 {{ t('commonUi.actions') }}
               </th>
             </tr>

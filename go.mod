@@ -28,6 +28,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lin-snow/Busen v0.3.0
 	github.com/lin-snow/VireFS v0.1.3
+	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/cobra v1.10.2
 	github.com/swaggo/files v1.0.1
@@ -38,6 +39,7 @@ require (
 	golang.org/x/net v0.51.0
 	golang.org/x/oauth2 v0.35.0
 	golang.org/x/sync v0.19.0
+	golang.org/x/text v0.34.0
 	google.golang.org/genai v1.48.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gorm.io/driver/sqlite v1.6.0
@@ -147,7 +149,6 @@ require (
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
-	github.com/nicksnyder/go-i18n/v2 v2.6.1 // indirect
 	github.com/nikolalohinski/gonja v1.5.3 // indirect
 	github.com/ollama/ollama v0.17.4 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
@@ -181,7 +182,6 @@ require (
 	golang.org/x/crypto v0.48.0 // indirect
 	golang.org/x/exp v0.0.0-20260218203240-3dfff04db8fa // indirect
 	golang.org/x/sys v0.41.0 // indirect
-	golang.org/x/text v0.34.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/tools v0.42.0 // indirect
 	google.golang.org/api v0.269.0 // indirect

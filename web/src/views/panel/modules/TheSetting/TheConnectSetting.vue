@@ -10,7 +10,7 @@
         </div>
         <BaseButton
           v-if="!connectsEdit"
-          class="h-9 rounded-md px-4"
+          class="top-action-btn top-action-btn-primary shrink-0 whitespace-nowrap px-2.5 py-1 text-xs"
           @click="connectsEdit = true"
         >
           {{ t('connectSetting.addConnect') }}
@@ -32,10 +32,7 @@
             class="h-9 flex-1"
           />
         </div>
-        <p
-          v-if="connectUrlError"
-          class="mt-1 text-xs text-[var(--color-danger)]"
-        >
+        <p v-if="connectUrlError" class="mt-1 text-xs text-[var(--color-danger)]">
           {{ connectUrlError }}
         </p>
         <p class="mt-1 text-xs text-[var(--color-text-muted)]">
@@ -50,11 +47,7 @@
           >
             {{ t('commonUi.cancel') }}
           </BaseButton>
-          <BaseButton
-            class="h-9 rounded-md px-4"
-            :loading="isSubmitting"
-            @click="handleAddConnect"
-          >
+          <BaseButton class="h-9 rounded-md px-4" :loading="isSubmitting" @click="handleAddConnect">
             {{ t('connectSetting.connect') }}
           </BaseButton>
         </div>
@@ -71,9 +64,7 @@
         <table class="w-full min-w-[520px] table-fixed text-sm">
           <thead>
             <tr class="bg-[var(--color-bg-muted)]/70 text-left text-[var(--color-text-muted)]">
-              <th class="w-[56px] px-2 py-2 whitespace-nowrap">
-                #
-              </th>
+              <th class="w-[56px] px-2 py-2 whitespace-nowrap">#</th>
               <th class="px-2 py-2 whitespace-nowrap">
                 {{ t('connectSetting.connectUrl') }}
               </th>
@@ -98,7 +89,7 @@
               >
                 {{ connect.connect_url }}
               </td>
-              <td class="px-2 py-2">
+              <td class="px-1 py-2">
                 <span :class="['status-pill', statusClass(connect.id)]">
                   {{ statusLabel(connect.id) }}
                 </span>
@@ -225,17 +216,19 @@ const handleAddConnect = async () => {
     return
   }
   isSubmitting.value = true
-  await fetchAddConnect(target).then((res) => {
-    if (res.code === 1) {
-      theToast.success(res.msg)
-      connectUrl.value = ''
-      connectUrlError.value = ''
-      connectsEdit.value = false
-      refreshConnectData()
-    }
-  }).finally(() => {
-    isSubmitting.value = false
-  })
+  await fetchAddConnect(target)
+    .then((res) => {
+      if (res.code === 1) {
+        theToast.success(res.msg)
+        connectUrl.value = ''
+        connectUrlError.value = ''
+        connectsEdit.value = false
+        refreshConnectData()
+      }
+    })
+    .finally(() => {
+      isSubmitting.value = false
+    })
 }
 
 const handleDisconnect = async (connect_id: string) => {
@@ -260,6 +253,21 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.top-action-btn {
+  border: 1px solid var(--color-border-subtle) !important;
+  background: var(--color-bg-surface) !important;
+  color: var(--color-text-secondary) !important;
+}
+
+.top-action-btn:hover {
+  border-color: var(--color-border-strong) !important;
+  background: var(--color-bg-muted) !important;
+}
+
+.top-action-btn-primary {
+  border-color: var(--color-border-strong) !important;
+}
+
 .status-pill {
   display: inline-flex;
   align-items: center;
