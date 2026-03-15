@@ -83,7 +83,6 @@
             <p class="guide-section-desc">{{ t('webhookSetting.guideExampleDesc') }}</p>
             <pre class="guide-code mt-3">{{ webhookPayloadExample }}</pre>
           </section>
-
         </div>
       </div>
 
