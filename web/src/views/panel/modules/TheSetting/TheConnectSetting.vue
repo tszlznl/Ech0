@@ -44,43 +44,40 @@
           v-else
           class="mt-2 x-scrollbar overflow-x-auto border border-[var(--color-border-subtle)] rounded-lg"
         >
-          <table class="min-w-full divide-y divide-[var(--color-border-subtle)]">
+          <table class="w-full min-w-[520px] table-fixed text-sm">
             <thead>
-              <tr class="bg-[var(--color-bg-surface)] opacity-70">
-                <th
-                  class="px-3 py-2 text-left text-sm font-semibold text-[var(--color-text-primary)]"
-                >
+              <tr class="bg-[var(--color-bg-muted)]/70 text-left text-[var(--color-text-muted)]">
+                <th class="w-[56px] px-2 py-2 whitespace-nowrap">
                   #
                 </th>
-                <th
-                  class="px-3 py-2 text-left text-sm font-semibold text-[var(--color-text-primary)]"
-                >
+                <th class="px-2 py-2 whitespace-nowrap">
                   {{ t('connectSetting.connectUrl') }}
                 </th>
-                <th
-                  class="px-3 min-w-18 py-2 text-right text-sm font-semibold text-[var(--color-text-primary)]"
-                >
+                <th class="w-[88px] px-2 py-2 text-right whitespace-nowrap">
                   {{ t('commonUi.actions') }}
                 </th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-[var(--color-border-subtle)] text-nowrap">
-              <tr v-for="(connect, index) in connects" :key="connect.id">
-                <td class="px-3 py-2 text-sm text-[var(--color-text-primary)]">{{ index + 1 }}</td>
+            <tbody>
+              <tr
+                v-for="(connect, index) in connects"
+                :key="connect.id"
+                class="border-t border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]"
+              >
+                <td class="px-2 py-2 text-[var(--color-text-primary)]">{{ index + 1 }}</td>
                 <td
-                  class="px-3 py-2 text-sm text-[var(--color-text-primary)] font-mono truncate max-w-xs"
+                  class="px-2 py-2 text-[var(--color-text-primary)] font-mono truncate"
                   :title="connect.connect_url"
                 >
                   {{ connect.connect_url }}
                 </td>
-                <td class="px-3 py-2 text-right">
-                  <button
-                    class="p-1 hover:bg-[var(--color-bg-surface)] rounded"
+                <td class="px-2 py-2 text-right">
+                  <BaseButton
+                    class="h-8 w-8 !p-1.5"
+                    :icon="Disconnect"
                     @click="handleDisconnect(connect.id)"
                     :title="t('connectSetting.disconnect')"
-                  >
-                    <Disconnect class="w-5 h-5 text-[var(--color-danger)]" />
-                  </button>
+                  />
                 </td>
               </tr>
             </tbody>

@@ -26,48 +26,43 @@
         v-else
         class="mt-2 x-scrollbar overflow-x-auto border border-[var(--color-border-subtle)] rounded-lg"
       >
-        <table class="min-w-full divide-y divide-[var(--color-border-subtle)]">
+        <table class="w-full min-w-[520px] table-fixed text-sm">
           <thead>
-            <tr class="bg-[var(--color-bg-surface)] opacity-70">
-              <th
-                class="px-3 py-2 text-left text-sm font-semibold text-[var(--color-text-primary)]"
-              >
+            <tr class="bg-[var(--color-bg-muted)]/70 text-left text-[var(--color-text-muted)]">
+              <th class="w-[52px] px-2 py-2 whitespace-nowrap">
                 #
               </th>
-              <th
-                class="px-3 min-w-18 py-2 text-left text-sm font-semibold text-[var(--color-text-primary)]"
-              >
+              <th class="px-2 py-2 whitespace-nowrap">
                 {{ t('userManager.username') }}
               </th>
-              <th
-                class="px-3 py-2 text-center text-sm font-semibold text-[var(--color-text-primary)]"
-              >
+              <th class="w-[120px] px-2 py-2 text-center whitespace-nowrap">
                 {{ t('userManager.permissionChange') }}
               </th>
-              <th
-                class="px-3 min-w-18 py-2 text-right text-sm font-semibold text-[var(--color-text-primary)]"
-              >
+              <th class="w-[84px] px-2 py-2 text-right whitespace-nowrap">
                 {{ t('commonUi.actions') }}
               </th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-[var(--color-border-subtle)] text-nowrap">
-            <tr v-for="(user, index) in allusers" :key="user.id" class="">
-              <td class="px-3 py-2 text-sm text-[var(--color-text-primary)]">{{ index + 1 }}</td>
-              <td class="px-3 py-2 text-sm text-[var(--color-text-primary)] font-semibold">
+          <tbody>
+            <tr
+              v-for="(user, index) in allusers"
+              :key="user.id"
+              class="border-t border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]"
+            >
+              <td class="px-2 py-2 text-[var(--color-text-primary)]">{{ index + 1 }}</td>
+              <td class="px-2 py-2 text-[var(--color-text-primary)] font-semibold truncate">
                 {{ user.username }}
               </td>
-              <td class="px-3 py-2 text-center">
+              <td class="px-2 py-2 text-center">
                 <BaseSwitch v-model="user.is_admin" @click="handleUpdateUserPermission(user.id)" />
               </td>
-              <td class="px-3 py-2 text-right">
-                <button
-                  class="p-1 hover:bg-[var(--color-accent-soft)] rounded"
+              <td class="px-2 py-2 text-right">
+                <BaseButton
+                  class="h-8 w-8 !p-1.5"
+                  :icon="Deluser"
                   @click="handleDeleteUser(user.id)"
                   :title="t('userManager.deleteUser')"
-                >
-                  <Deluser class="w-5 h-5 text-[var(--color-danger)]" />
-                </button>
+                />
               </td>
             </tr>
           </tbody>
@@ -83,6 +78,7 @@ import PanelCard from '@/layout/PanelCard.vue'
 // import Close from '@/components/icons/close.vue'
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import BaseButton from '@/components/common/BaseButton.vue'
 import BaseSwitch from '@/components/common/BaseSwitch.vue'
 import Deluser from '@/components/icons/deluser.vue'
 import { theToast } from '@/utils/toast'
