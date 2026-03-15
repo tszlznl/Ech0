@@ -266,8 +266,8 @@ func (userService *UserService) UpdateUser(ctx context.Context, userdto model.Us
 	// 检查是否需要更新用户名
 	if userdto.Username != "" && userdto.Username != user.Username {
 		// 检查用户名是否已存在
-		existingUser, _ := userService.userRepository.GetUserByUsername(ctx, userdto.Username)
-		if existingUser.ID != model.USER_NOT_EXISTS_ID {
+		existingUser, err := userService.userRepository.GetUserByUsername(ctx, userdto.Username)
+		if err == nil && existingUser.ID != user.ID {
 			return errors.New(commonModel.USERNAME_ALREADY_EXISTS)
 		}
 		user.Username = userdto.Username

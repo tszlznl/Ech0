@@ -174,15 +174,29 @@ func (userRepository *UserRepository) MarkInitialized(ctx context.Context) error
 
 // UpdateUser 更新用户信息
 func (userRepository *UserRepository) UpdateUser(ctx context.Context, user *model.User) error {
+	var existing model.User
+	if err := userRepository.getDB(ctx).Where("id = ?", user.ID).First(&existing).Error; err != nil {
+		return err
+	}
+
 	err := userRepository.getDB(ctx).Save(user).Error
 	if err != nil {
 		return err
 	}
 
 	userRepository.cache.Set(GetUserIDKey(user.ID), *user, 1)
+	if existing.Username != "" && existing.Username != user.Username {
+		userRepository.cache.Delete(GetUsernameKey(existing.Username))
+	}
 	userRepository.cache.Set(GetUsernameKey(user.Username), *user, 1)
+	if existing.IsAdmin && !user.IsAdmin {
+		userRepository.cache.Delete(GetAdminKey(user.ID))
+	}
 	if user.IsAdmin {
 		userRepository.cache.Set(GetAdminKey(user.ID), *user, 1)
+	}
+	if existing.IsOwner && !user.IsOwner {
+		userRepository.cache.Delete(GetOwnerKey())
 	}
 	if user.IsOwner {
 		userRepository.cache.Set(GetOwnerKey(), *user, 1)

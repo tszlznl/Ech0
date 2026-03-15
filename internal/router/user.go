@@ -1,20 +1,28 @@
 package router
 
-import "github.com/lin-snow/ech0/internal/handler"
+import (
+	"github.com/lin-snow/ech0/internal/handler"
+	"github.com/lin-snow/ech0/internal/middleware"
+)
 
 // setupUserRoutes 设置用户路由
 func setupUserRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	// OAuth2/OIDC (统一 provider 路由)
-	appRouterGroup.ResourceGroup.GET("/oauth/:provider/login", h.UserHandler.OAuthLogin())
-	appRouterGroup.ResourceGroup.GET("/oauth/:provider/callback", h.UserHandler.OAuthCallback())
+	appRouterGroup.ResourceGroup.GET("/oauth/:provider/login", middleware.NoCache(), h.UserHandler.OAuthLogin())
+	appRouterGroup.ResourceGroup.GET("/oauth/:provider/callback", middleware.NoCache(), h.UserHandler.OAuthCallback())
 
 	// Public
-	appRouterGroup.PublicRouterGroup.POST("/login", h.UserHandler.Login())
-	appRouterGroup.PublicRouterGroup.POST("/register", h.UserHandler.Register())
+	appRouterGroup.PublicRouterGroup.POST("/login", middleware.NoCache(), h.UserHandler.Login())
+	appRouterGroup.PublicRouterGroup.POST("/register", middleware.NoCache(), h.UserHandler.Register())
 	appRouterGroup.PublicRouterGroup.GET("/allusers", h.UserHandler.GetAllUsers())
-	appRouterGroup.PublicRouterGroup.POST("/passkey/login/begin", h.UserHandler.PasskeyLoginBeginV2())
+	appRouterGroup.PublicRouterGroup.POST(
+		"/passkey/login/begin",
+		middleware.NoCache(),
+		h.UserHandler.PasskeyLoginBeginV2(),
+	)
 	appRouterGroup.PublicRouterGroup.POST(
 		"/passkey/login/finish",
+		middleware.NoCache(),
 		h.UserHandler.PasskeyLoginFinishV2(),
 	)
 

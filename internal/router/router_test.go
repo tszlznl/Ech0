@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lin-snow/ech0/internal/database"
 	"github.com/lin-snow/ech0/internal/handler"
 	agentHandler "github.com/lin-snow/ech0/internal/handler/agent"
 	backupHandler "github.com/lin-snow/ech0/internal/handler/backup"
@@ -21,10 +22,13 @@ import (
 	settingHandler "github.com/lin-snow/ech0/internal/handler/setting"
 	userHandler "github.com/lin-snow/ech0/internal/handler/user"
 	webHandler "github.com/lin-snow/ech0/internal/handler/web"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func TestSetupRouter_RegistersKeyRoutes(t *testing.T) {
 	gin.SetMode(gin.TestMode)
+	initTestDatabase(t)
 	engine := gin.New()
 	SetupRouter(engine, buildTestHandlers())
 
@@ -53,6 +57,7 @@ func TestSetupRouter_RegistersKeyRoutes(t *testing.T) {
 
 func TestSetupRouter_AuthGroupProtected(t *testing.T) {
 	gin.SetMode(gin.TestMode)
+	initTestDatabase(t)
 	engine := gin.New()
 	SetupRouter(engine, buildTestHandlers())
 
@@ -92,4 +97,14 @@ func buildTestHandlers() *handler.Bundle {
 		dashboardHandler.NewDashboardHandler(nil),
 		agentHandler.NewAgentHandler(nil),
 	)
+}
+
+func initTestDatabase(t *testing.T) {
+	t.Helper()
+
+	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("init test db failed: %v", err)
+	}
+	database.SetDB(db)
 }
