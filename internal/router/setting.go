@@ -23,8 +23,9 @@ func setupSettingRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 
 	appRouterGroup.AuthRouterGroup.GET("/webhook", h.SettingHandler.GetWebhook())
 	appRouterGroup.AuthRouterGroup.POST("/webhook", h.SettingHandler.CreateWebhook())
-	appRouterGroup.AuthRouterGroup.PUT("/webhook", h.SettingHandler.UpdateWebhook())
+	appRouterGroup.AuthRouterGroup.PUT("/webhook/:id", h.SettingHandler.UpdateWebhook())
 	appRouterGroup.AuthRouterGroup.DELETE("/webhook/:id", h.SettingHandler.DeleteWebhook())
+	appRouterGroup.AuthRouterGroup.POST("/webhook/:id/test", h.SettingHandler.TestWebhook())
 
 	appRouterGroup.AuthRouterGroup.GET("/access-tokens", h.SettingHandler.ListAccessTokens())
 	appRouterGroup.AuthRouterGroup.POST("/access-tokens", h.SettingHandler.CreateAccessToken())

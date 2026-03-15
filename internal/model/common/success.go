@@ -62,6 +62,7 @@ const (
 	DELETE_WEBHOOK_SUCCESS          = "删除 Webhook 成功"
 	UPDATE_WEBHOOK_SUCCESS          = "更新 Webhook 成功"
 	CREATE_WEBHOOK_SUCCESS          = "创建 Webhook 成功"
+	TEST_WEBHOOK_SUCCESS            = "测试 Webhook 成功"
 	LIST_ACCESS_TOKENS_SUCCESS      = "列出访问令牌成功"
 	CREATE_ACCESS_TOKEN_SUCCESS     = "创建访问令牌成功"
 	DELETE_ACCESS_TOKEN_SUCCESS     = "删除访问令牌成功"

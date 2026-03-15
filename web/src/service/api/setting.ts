@@ -126,6 +126,14 @@ export function fetchDeleteWebhook(webhookId: string) {
   })
 }
 
+// 测试 Webhook
+export function fetchTestWebhook(webhookId: string) {
+  return request({
+    url: `/webhook/${webhookId}/test`,
+    method: 'POST',
+  })
+}
+
 // 列出访问令牌
 export function fetchListAccessTokens() {
   return request<App.Api.Setting.AccessToken[]>({

@@ -355,7 +355,7 @@ func (settingHandler *SettingHandler) GetWebhook() gin.HandlerFunc {
 //	@Tags			系统设置
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		int				true	"要删除的 Webhook ID"
+//	@Param			id	path		string			true	"要删除的 Webhook ID (UUID)"
 //	@Success		200	{object}	res.Response	"删除 Webhook 成功"
 //	@Failure		200	{object}	res.Response	"删除 Webhook 失败"
 //	@Router			/webhook/{id} [delete]
@@ -389,7 +389,7 @@ func (settingHandler *SettingHandler) DeleteWebhook() gin.HandlerFunc {
 //	@Tags			系统设置
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		int					true	"要更新的 Webhook ID"
+//	@Param			id		path		string				true	"要更新的 Webhook ID (UUID)"
 //	@Param			webhook	body		model.WebhookDto	true	"新的 Webhook 配置"
 //	@Success		200		{object}	res.Response		"更新 Webhook 成功"
 //	@Failure		200		{object}	res.Response		"更新 Webhook 失败"
@@ -457,6 +457,39 @@ func (settingHandler *SettingHandler) CreateWebhook() gin.HandlerFunc {
 
 		return res.Response{
 			Msg: commonModel.CREATE_WEBHOOK_SUCCESS,
+		}
+	})
+}
+
+// TestWebhook 测试 Webhook 连接
+//
+//	@Summary		测试 Webhook
+//	@Description	根据 ID 触发一次 Webhook 测试请求
+//	@Tags			系统设置
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string			true	"要测试的 Webhook ID (UUID)"
+//	@Success		200	{object}	res.Response	"测试 Webhook 成功"
+//	@Failure		200	{object}	res.Response	"测试 Webhook 失败"
+//	@Router			/webhook/{id}/test [post]
+func (settingHandler *SettingHandler) TestWebhook() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		id := ctx.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
+			return res.Response{
+				Msg: commonModel.INVALID_PARAMS,
+			}
+		}
+
+		if err := settingHandler.settingService.TestWebhook(ctx.Request.Context(), id); err != nil {
+			return res.Response{
+				Msg: "",
+				Err: err,
+			}
+		}
+
+		return res.Response{
+			Msg: commonModel.TEST_WEBHOOK_SUCCESS,
 		}
 	})
 }

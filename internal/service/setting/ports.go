@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"time"
 
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
@@ -23,6 +24,7 @@ type Service interface {
 	DeleteWebhook(ctx context.Context, id string) error
 	UpdateWebhook(ctx context.Context, id string, newWebhook *model.WebhookDto) error
 	CreateWebhook(ctx context.Context, newWebhook *model.WebhookDto) error
+	TestWebhook(ctx context.Context, id string) error
 	ListAccessTokens(ctx context.Context) ([]model.AccessTokenSetting, error)
 	CreateAccessToken(ctx context.Context, newToken *model.AccessTokenSettingDto) (string, error)
 	DeleteAccessToken(ctx context.Context, id string) error
@@ -51,6 +53,9 @@ type SettingRepository interface {
 
 type WebhookRepository interface {
 	GetAllWebhooks(ctx context.Context) ([]webhookModel.Webhook, error)
+	GetWebhookByID(ctx context.Context, id string) (*webhookModel.Webhook, error)
 	CreateWebhook(ctx context.Context, webhook *webhookModel.Webhook) error
+	UpdateWebhookByID(ctx context.Context, id string, webhook *webhookModel.Webhook) error
+	UpdateWebhookDeliveryStatus(ctx context.Context, id string, status string, lastTrigger time.Time) error
 	DeleteWebhookByID(ctx context.Context, id string) error
 }

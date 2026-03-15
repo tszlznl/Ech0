@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"errors"
+	"time"
 
 	model "github.com/lin-snow/ech0/internal/model/webhook"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
@@ -40,6 +42,30 @@ func (webhookRepository *WebhookRepository) CreateWebhook(
 	return nil
 }
 
+// UpdateWebhookByID 根据ID更新 webhook
+func (webhookRepository *WebhookRepository) UpdateWebhookByID(
+	ctx context.Context,
+	id string,
+	webhook *model.Webhook,
+) error {
+	tx := webhookRepository.getDB(ctx).
+		Model(&model.Webhook{}).
+		Where("id = ?", id).
+		Updates(map[string]any{
+			"name":      webhook.Name,
+			"url":       webhook.URL,
+			"secret":    webhook.Secret,
+			"is_active": webhook.IsActive,
+		})
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return errors.New("webhook not found")
+	}
+	return nil
+}
+
 // GetAllWebhooks 获取所有webhooks
 func (webhookRepository *WebhookRepository) GetAllWebhooks(ctx context.Context) ([]model.Webhook, error) {
 	var webhooks []model.Webhook
@@ -48,6 +74,16 @@ func (webhookRepository *WebhookRepository) GetAllWebhooks(ctx context.Context) 
 	}
 
 	return webhooks, nil
+}
+
+// GetWebhookByID 根据 ID 获取 webhook
+func (webhookRepository *WebhookRepository) GetWebhookByID(ctx context.Context, id string) (*model.Webhook, error) {
+	var webhook model.Webhook
+	err := webhookRepository.getDB(ctx).Where("id = ?", id).First(&webhook).Error
+	if err != nil {
+		return nil, err
+	}
+	return &webhook, nil
 }
 
 // DeleteWebhookByID 根据ID删除webhook
@@ -67,4 +103,21 @@ func (webhookRepository *WebhookRepository) ListActiveWebhooks(ctx context.Conte
 	}
 
 	return webhooks, nil
+}
+
+// UpdateWebhookDeliveryStatus 更新 webhook 最近投递状态
+func (webhookRepository *WebhookRepository) UpdateWebhookDeliveryStatus(
+	ctx context.Context,
+	id string,
+	status string,
+	lastTrigger time.Time,
+) error {
+	tx := webhookRepository.getDB(ctx).
+		Model(&model.Webhook{}).
+		Where("id = ?", id).
+		Updates(map[string]any{
+			"last_status":  status,
+			"last_trigger": lastTrigger,
+		})
+	return tx.Error
 }

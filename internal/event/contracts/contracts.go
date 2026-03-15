@@ -28,6 +28,21 @@ const (
 	TopicEch0UpdateCheck      = "ech0.update.check"
 )
 
+var webhookTopicWhitelist = map[string]struct{}{
+	TopicUserCreated:          {},
+	TopicUserUpdated:          {},
+	TopicUserDeleted:          {},
+	TopicEchoCreated:          {},
+	TopicEchoUpdated:          {},
+	TopicEchoDeleted:          {},
+	TopicResourceUploaded:     {},
+	TopicSystemBackup:         {},
+	TopicSystemExport:         {},
+	TopicBackupScheduleUpdate: {},
+	TopicInboxClear:           {},
+	TopicEch0UpdateCheck:      {},
+}
+
 type (
 	UserCreatedEvent struct{ User userModel.User }
 	UserUpdatedEvent struct{ User userModel.User }
@@ -113,4 +128,9 @@ func eventNameOf(payload any) string {
 		return t.Name()
 	}
 	return t.String()
+}
+
+func IsWebhookTopicAllowed(topic string) bool {
+	_, ok := webhookTopicWhitelist[topic]
+	return ok
 }

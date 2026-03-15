@@ -39,10 +39,21 @@ func (dlr *DeadLetterResolver) Handle(ctx context.Context, event contracts.DeadL
 
 	switch deadLetter.Status {
 	case queueModel.DeadLetterStatusPending:
+		fallthrough
+	case queueModel.DeadLetterStatusFailed:
+		if deadLetter.Status == queueModel.DeadLetterStatusFailed && deadLetter.RetryCount >= 3 {
+			deadLetter.Status = queueModel.DeadLetterStatusDiscarded
+			deadLetter.UpdatedAt = time.Now().UTC()
+			if err := dlr.queueRepo.UpdateDeadLetter(ctx, &deadLetter); err != nil {
+				return fmt.Errorf("failed to update dead letter to discarded: %v", err)
+			}
+			return nil
+		}
+
 		deadLetter.Status = queueModel.DeadLetterStatusProcessing
 		deadLetter.RetryCount += 1
 		deadLetter.UpdatedAt = time.Now().UTC()
-		deadLetter.NextRetry = time.Now().UTC().Add(6 * time.Hour)
+		deadLetter.NextRetry = time.Now().UTC().Add(5 * time.Minute)
 
 		if err := dlr.queueRepo.UpdateDeadLetter(ctx, &deadLetter); err != nil {
 			return fmt.Errorf("failed to update dead letter to processing: %v", err)
@@ -52,6 +63,7 @@ func (dlr *DeadLetterResolver) Handle(ctx context.Context, event contracts.DeadL
 			deadLetter.ErrorMsg = err.Error()
 			deadLetter.Status = queueModel.DeadLetterStatusFailed
 			deadLetter.UpdatedAt = time.Now().UTC()
+			deadLetter.NextRetry = time.Now().UTC().Add(15 * time.Minute)
 			if err := dlr.queueRepo.UpdateDeadLetter(ctx, &deadLetter); err != nil {
 				return fmt.Errorf("failed to update dead letter to failed: %v", err)
 			}
@@ -66,18 +78,6 @@ func (dlr *DeadLetterResolver) Handle(ctx context.Context, event contracts.DeadL
 		return nil
 
 	case queueModel.DeadLetterStatusProcessing:
-		return nil
-
-	case queueModel.DeadLetterStatusFailed:
-		if deadLetter.RetryCount <= 3 {
-			deadLetter.Status = queueModel.DeadLetterStatusPending
-		} else {
-			deadLetter.Status = queueModel.DeadLetterStatusDiscarded
-		}
-		deadLetter.UpdatedAt = time.Now().UTC()
-		if err := dlr.queueRepo.UpdateDeadLetter(ctx, &deadLetter); err != nil {
-			return fmt.Errorf("failed to update dead letter: %v", err)
-		}
 		return nil
 
 	case queueModel.DeadLetterStatusDiscarded:

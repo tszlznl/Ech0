@@ -62,6 +62,8 @@ export const useSettingStore = defineStore('settingStore', () => {
     cors_allowed_origins: [],
   })
   const Webhooks = ref<App.Api.Setting.Webhook[]>([])
+  const webhooksLoading = ref<boolean>(false)
+  const webhooksError = ref<string>('')
   const AccessTokens = ref<App.Api.Setting.AccessToken[]>([])
   const BackupSchedule = ref<App.Api.Setting.BackupSchedule>({
     enable: false,
@@ -107,13 +109,19 @@ export const useSettingStore = defineStore('settingStore', () => {
   }
 
   const getAllWebhooks = async () => {
-    const res = await fetchGetAllWebhooks()
-    if (res.code === 1) {
-      if (res.data) {
-        Webhooks.value = res.data
-      } else {
-        Webhooks.value = []
+    webhooksLoading.value = true
+    webhooksError.value = ''
+    try {
+      const res = await fetchGetAllWebhooks()
+      if (res.code === 1) {
+        Webhooks.value = res.data || []
+        return
       }
+      webhooksError.value = res.msg || 'Failed to load webhooks'
+    } catch (error) {
+      webhooksError.value = error instanceof Error ? error.message : 'Failed to load webhooks'
+    } finally {
+      webhooksLoading.value = false
     }
   }
 
@@ -170,6 +178,8 @@ export const useSettingStore = defineStore('settingStore', () => {
     S3Setting,
     OAuth2Setting,
     Webhooks,
+    webhooksLoading,
+    webhooksError,
     AccessTokens,
     BackupSchedule,
     AgentSetting,

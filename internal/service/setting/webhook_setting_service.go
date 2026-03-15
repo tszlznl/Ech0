@@ -3,11 +3,18 @@ package service
 import (
 	"context"
 	"errors"
+	"net"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
 
+	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
+	webhookclient "github.com/lin-snow/ech0/internal/webhookclient"
 	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
@@ -71,10 +78,12 @@ func (settingService *SettingService) UpdateWebhook(
 	if newWebhook.Name == "" || newWebhook.URL == "" {
 		return errors.New(commonModel.WEBHOOK_NAME_OR_URL_CANNOT_BE_EMPTY)
 	}
+	if err := validateWebhookURL(newWebhook.URL); err != nil {
+		return err
+	}
 
 	// 保存到数据库
 	webhook := &webhookModel.Webhook{
-		ID:       id,
 		Name:     newWebhook.Name,
 		URL:      newWebhook.URL,
 		Secret:   newWebhook.Secret,
@@ -82,11 +91,7 @@ func (settingService *SettingService) UpdateWebhook(
 	}
 
 	return settingService.transactor.Run(ctx, func(ctx context.Context) error {
-		// 先删除再创建，避免部分字段无法更新的问题
-		if err := settingService.webhookRepository.DeleteWebhookByID(ctx, webhook.ID); err != nil {
-			return err
-		}
-		return settingService.webhookRepository.CreateWebhook(ctx, webhook)
+		return settingService.webhookRepository.UpdateWebhookByID(ctx, id, webhook)
 	})
 }
 
@@ -112,6 +117,9 @@ func (settingService *SettingService) CreateWebhook(
 	if newWebhook.Name == "" || newWebhook.URL == "" {
 		return errors.New(commonModel.WEBHOOK_NAME_OR_URL_CANNOT_BE_EMPTY)
 	}
+	if err := validateWebhookURL(newWebhook.URL); err != nil {
+		return err
+	}
 
 	// 保存到数据库
 	webhook := &webhookModel.Webhook{
@@ -124,4 +132,68 @@ func (settingService *SettingService) CreateWebhook(
 	return settingService.transactor.Run(ctx, func(ctx context.Context) error {
 		return settingService.webhookRepository.CreateWebhook(ctx, webhook)
 	})
+}
+
+// TestWebhook 测试单个 Webhook
+func (settingService *SettingService) TestWebhook(ctx context.Context, id string) error {
+	// 鉴权
+	userid := viewer.MustFromContext(ctx).UserID()
+	user, err := settingService.commonService.CommonGetUserByUserId(ctx, userid)
+	if err != nil {
+		return err
+	}
+	if !user.IsAdmin {
+		return errors.New(commonModel.NO_PERMISSION_DENIED)
+	}
+
+	webhook, err := settingService.webhookRepository.GetWebhookByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if err := validateWebhookURL(webhook.URL); err != nil {
+		return err
+	}
+
+	payload := map[string]any{
+		"message": "webhook connectivity test from ech0",
+		"webhook": webhook.Name,
+		"time":    time.Now().UTC().Format(time.RFC3339),
+	}
+	obs, err := contracts.NewWebhookObservation("webhook.test", payload, map[string]string{
+		"source": "setting.test",
+	})
+	if err != nil {
+		return err
+	}
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	triggerAt := time.Now().UTC()
+	sendErr := webhookclient.SendWithRetry(client, webhook, obs, 2, 300*time.Millisecond)
+	status := "success"
+	if sendErr != nil {
+		status = "failed"
+	}
+	_ = settingService.webhookRepository.UpdateWebhookDeliveryStatus(ctx, webhook.ID, status, triggerAt)
+	return sendErr
+}
+
+func validateWebhookURL(rawURL string) error {
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		return errors.New(commonModel.INVALID_WEBHOOK_URL)
+	}
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return errors.New(commonModel.INVALID_WEBHOOK_URL)
+	}
+	host := strings.ToLower(parsed.Hostname())
+	if host == "" || host == "localhost" || strings.HasSuffix(host, ".local") {
+		return errors.New(commonModel.INVALID_WEBHOOK_URL)
+	}
+	if ip := net.ParseIP(host); ip != nil {
+		if ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalMulticast() ||
+			ip.IsLinkLocalUnicast() || ip.IsUnspecified() {
+			return errors.New(commonModel.INVALID_WEBHOOK_URL)
+		}
+	}
+	return nil
 }

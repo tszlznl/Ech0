@@ -131,7 +131,7 @@
       </div>
       <div
         v-else
-        class="mt-2 overflow-x-auto border border-[var(--color-border-subtle)] rounded-lg"
+        class="mt-2 x-scrollbar overflow-x-auto border border-[var(--color-border-subtle)] rounded-lg"
       >
         <table class="min-w-full divide-y divide-[var(--color-border-subtle)]">
           <thead>

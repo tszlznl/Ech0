@@ -1,11 +1,9 @@
 package subscriber
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"time"
 
@@ -16,11 +14,18 @@ import (
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 	"github.com/lin-snow/ech0/internal/transaction"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	webhookclient "github.com/lin-snow/ech0/internal/webhookclient"
 	"go.uber.org/zap"
 )
 
 type WebhookStore interface {
 	ListActiveWebhooks(ctx context.Context) ([]webhookModel.Webhook, error)
+	UpdateWebhookDeliveryStatus(
+		ctx context.Context,
+		id string,
+		status string,
+		lastTrigger time.Time,
+	) error
 }
 
 type DeadLetterStore interface {
@@ -76,24 +81,10 @@ func (wd *WebhookDispatcher) HandleObservation(ctx context.Context, obs contract
 }
 
 func (wd *WebhookDispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webhook, obs contracts.WebhookObservation) {
-	err := wd.retryWithBackoff(3, 500*time.Millisecond, func() error {
-		req, err := wd.buildRequest(wh, obs)
-		if err != nil {
-			return err
-		}
-
-		resp, err := wd.client.Do(req)
-		if err != nil {
-			return err
-		}
-		defer func() { _ = resp.Body.Close() }()
-
-		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-			return nil
-		}
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	})
+	triggerAt := time.Now().UTC()
+	err := webhookclient.SendWithRetry(wd.client, wh, obs, 3, 500*time.Millisecond)
 	if err != nil {
+		wd.updateWebhookStatus(ctx, wh.ID, "failed", triggerAt)
 		logUtil.GetLogger().Error("Webhook Handle Failed", zap.String("name", wh.Name), zap.String("url", wh.URL), zap.Error(err))
 
 		payloadData := contracts.WebhookReplayPayload{
@@ -117,60 +108,9 @@ func (wd *WebhookDispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webh
 		}); err != nil {
 			logUtil.GetLogger().Error("Failed to save dead letter", zap.Error(err))
 		}
+		return
 	}
-}
-
-func (wd *WebhookDispatcher) buildRequest(
-	wh *webhookModel.Webhook,
-	obs contracts.WebhookObservation,
-) (*http.Request, error) {
-	eventID := fmt.Sprintf("%d", time.Now().UTC().UnixNano())
-	headers := make(http.Header)
-	headers.Set("Content-Type", "application/json")
-	headers.Set("X-Ech0-Event", obs.Topic)
-	headers.Set("User-Agent", "Ech0-Webhook-Client")
-	headers.Set("E-Ech0-Event-ID", eventID)
-
-	body, err := json.Marshal(map[string]any{
-		"topic":       obs.Topic,
-		"event_name":  obs.EventName,
-		"payload_raw": obs.Payload,
-		"metadata":    obs.Metadata,
-		"occurred_at": obs.OccurredAt,
-	})
-	if err != nil {
-		return nil, err
-	}
-	bodyReader := io.NopCloser(bytes.NewReader(body))
-
-	req, err := http.NewRequest("POST", wh.URL, bodyReader)
-	if err != nil {
-		return nil, err
-	}
-	req.Header = headers
-	req.GetBody = func() (io.ReadCloser, error) {
-		return io.NopCloser(bytes.NewReader(body)), nil
-	}
-
-	return req, nil
-}
-
-func (wd *WebhookDispatcher) retryWithBackoff(
-	maxRetries int,
-	initialBackoff time.Duration,
-	fn func() error,
-) error {
-	var err error
-	delay := initialBackoff
-	for i := 0; i < maxRetries; i++ {
-		err = fn()
-		if err == nil {
-			return nil
-		}
-		time.Sleep(delay)
-		delay *= 2
-	}
-	return err
+	wd.updateWebhookStatus(ctx, wh.ID, "success", triggerAt)
 }
 
 func (wd *WebhookDispatcher) Wait() {
@@ -191,26 +131,32 @@ func (wd *WebhookDispatcher) HandleDeadLetter(
 	}
 	webhook := payload.Webhook
 	obs := payload.Event
+	triggerAt := time.Now().UTC()
 
-	err := wd.retryWithBackoff(3, 500*time.Millisecond, func() error {
-		req, err := wd.buildRequest(&webhook, obs)
-		if err != nil {
-			return err
-		}
-
-		resp, err := wd.client.Do(req)
-		if err != nil {
-			return err
-		}
-		defer func() { _ = resp.Body.Close() }()
-
-		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-			return nil
-		}
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	})
+	err := webhookclient.SendWithRetry(wd.client, &webhook, obs, 3, 500*time.Millisecond)
 	if err != nil {
+		wd.updateWebhookStatus(ctx, webhook.ID, "failed", triggerAt)
 		return err
 	}
+	wd.updateWebhookStatus(ctx, webhook.ID, "success", triggerAt)
 	return nil
+}
+
+func (wd *WebhookDispatcher) updateWebhookStatus(
+	ctx context.Context,
+	webhookID string,
+	status string,
+	triggerAt time.Time,
+) {
+	if webhookID == "" {
+		return
+	}
+	if err := wd.repo.UpdateWebhookDeliveryStatus(ctx, webhookID, status, triggerAt); err != nil {
+		logUtil.GetLogger().Warn(
+			"update webhook delivery status failed",
+			zap.String("webhook_id", webhookID),
+			zap.String("status", status),
+			zap.Error(err),
+		)
+	}
 }

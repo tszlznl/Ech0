@@ -57,7 +57,7 @@ func (er *EventRegistrar) Register() error {
 
 	err := er.bus.UseObserver(
 		func(ctx context.Context, obs busen.Observation) {
-			if obs.Topic == contracts.TopicDeadLetterRetried {
+			if !contracts.IsWebhookTopicAllowed(obs.Topic) {
 				return
 			}
 			evt, err := contracts.NewWebhookObservation(obs.Topic, obs.Value, obs.Meta)

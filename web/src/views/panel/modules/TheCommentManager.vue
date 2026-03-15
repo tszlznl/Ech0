@@ -124,17 +124,21 @@
         </BaseButton>
       </div>
 
-      <div class="overflow-x-auto rounded-lg border border-[var(--color-border-subtle)]">
-        <table class="w-full min-w-[760px] text-sm">
+      <div class="x-scrollbar overflow-x-auto rounded-lg border border-[var(--color-border-subtle)]">
+        <table class="w-full min-w-[820px] text-sm">
           <thead>
             <tr class="bg-[var(--color-bg-muted)]/70 text-left text-[var(--color-text-muted)]">
-              <th class="py-2 pl-3"><input v-model="allChecked" type="checkbox" /></th>
-              <th class="py-2">{{ t('commentManager.nickname') }}</th>
-              <th class="py-2">{{ t('commentManager.email') }}</th>
-              <th class="py-2">{{ t('commentManager.status') }}</th>
-              <th class="py-2">{{ t('commentManager.hotColumn') }}</th>
-              <th class="py-2">{{ t('commentManager.time') }}</th>
-              <th class="py-2 pr-3">{{ t('commonUi.actions') }}</th>
+              <th class="w-10 px-2 py-2 align-middle">
+                <div class="flex items-center justify-center">
+                  <input v-model="allChecked" type="checkbox" />
+                </div>
+              </th>
+              <th class="min-w-[120px] px-2 py-2">{{ t('commentManager.nickname') }}</th>
+              <th class="min-w-[160px] px-2 py-2">{{ t('commentManager.email') }}</th>
+              <th class="min-w-[96px] px-2 py-2">{{ t('commentManager.status') }}</th>
+              <th class="min-w-[96px] px-2 py-2">{{ t('commentManager.hotColumn') }}</th>
+              <th class="min-w-[120px] px-2 py-2 whitespace-nowrap">{{ t('commentManager.time') }}</th>
+              <th class="min-w-[200px] px-2 py-2">{{ t('commonUi.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -143,23 +147,25 @@
               :key="item.id"
               class="border-t border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]"
             >
-              <td class="py-2 pl-3">
-                <input v-model="selectedIds" type="checkbox" :value="item.id" />
+              <td class="px-2 py-2 align-middle">
+                <div class="flex items-center justify-center">
+                  <input v-model="selectedIds" type="checkbox" :value="item.id" />
+                </div>
               </td>
-              <td class="py-2">{{ item.nickname }}</td>
-              <td class="py-2">{{ item.email }}</td>
-              <td class="py-2">
+              <td class="px-2 py-2">{{ item.nickname }}</td>
+              <td class="px-2 py-2">{{ item.email }}</td>
+              <td class="px-2 py-2">
                 <span class="status-pill" :class="statusClass(item.status)">
                   {{ statusLabelMap[item.status] || item.status }}
                 </span>
               </td>
-              <td class="py-2">
+              <td class="px-2 py-2">
                 <span class="status-pill" :class="hotClass(item.hot)">
                   {{ item.hot ? t('commentManager.hotPicked') : t('commentManager.hotNormal') }}
                 </span>
               </td>
-              <td class="py-2">{{ formatDate(item.created_at) }}</td>
-              <td class="py-2 pr-3">
+              <td class="px-2 py-2 whitespace-nowrap">{{ formatDate(item.created_at) }}</td>
+              <td class="px-2 py-2">
                 <div class="flex items-center gap-2">
                   <button class="table-action text-cyan-500" @click="openEcho(item.echo_id)">
                     {{ t('commentManager.view') }}
@@ -570,6 +576,8 @@ onMounted(async () => {
 
 .table-action {
   transition: opacity 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .table-action:hover {
