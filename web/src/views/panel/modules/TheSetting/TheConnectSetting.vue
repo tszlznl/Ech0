@@ -151,14 +151,6 @@ const handleCancelConnect = () => {
   connectsEdit.value = false
 }
 
-const normalizeUrl = (value: string) => {
-  try {
-    return new URL(value).origin
-  } catch {
-    return value.trim().replace(/\/+$/, '')
-  }
-}
-
 const statusClass = (id: string) => {
   const current = statusById.value[id] || 'checking'
   if (current === 'online') return 'status-success'
@@ -185,12 +177,7 @@ const refreshConnectivityStatus = async () => {
     list.map(async (connect) => {
       try {
         const res = await fetchGetConnect(connect.connect_url, true)
-        const inputOrigin = normalizeUrl(connect.connect_url)
-        const serverOrigin = normalizeUrl(res?.data?.server_url || '')
-        statusById.value[connect.id] =
-          res.code === 1 && !!res.data?.server_url && serverOrigin === inputOrigin
-            ? 'online'
-            : 'offline'
+        statusById.value[connect.id] = res.code === 1 ? 'online' : 'offline'
       } catch {
         statusById.value[connect.id] = 'offline'
       }

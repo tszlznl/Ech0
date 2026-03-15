@@ -116,7 +116,7 @@ export const useEditorStore = defineStore('editorStore', () => {
 
   const hasDraftContent = () => {
     const hasText = !!echoToAdd.value.content?.trim()
-    const hasTag = !!tagToAdd.value.trim()
+    const hasTag = !!String(tagToAdd.value ?? '').trim()
     const hasFiles = filesToAdd.value.length > 0
     const hasWebsiteInput = !!websiteToAdd.value.title.trim() || !!websiteToAdd.value.site.trim()
     const hasExtInput =

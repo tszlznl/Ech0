@@ -184,12 +184,12 @@ const onSelect = (val: object | string) => {
 }
 
 const onInputChange = (e: Event) => {
-  const value = (e.target as HTMLInputElement).value.trim()
+  const value = ((e.target as HTMLInputElement | null)?.value ?? '').trim()
   query.value = value
 
   // 输入框被清空时 -> 清空绑定值
   if (value === '') {
-    internalValue.value = multiple ? [] : null
+    internalValue.value = multiple ? [] : ''
     emit('update:modelValue', internalValue.value)
     dropdownOpen.value = true
     return
@@ -223,7 +223,7 @@ const onBlurOutside = (e: FocusEvent) => {
   if (!currentTarget.contains(e.relatedTarget as Node)) {
     dropdownOpen.value = false
     if (query.value.trim() === '') {
-      internalValue.value = multiple ? [] : null
+      internalValue.value = multiple ? [] : ''
       emit('update:modelValue', internalValue.value)
     }
   }
