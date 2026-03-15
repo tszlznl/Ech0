@@ -642,6 +642,8 @@
     "guideBodyPayloadRaw": "事件原始业务数据",
     "guideBodyMetadata": "附加元信息",
     "guideBodyOccurredAt": "事件发生时间（UTC 时间戳）",
+    "guideExampleTitle": "请求示例",
+    "guideExampleDesc": "下面是一个典型的 Webhook JSON 请求体示例：",
     "guideDeliveryTitle": "投递与重试",
     "guideDeliveryRetry": "单次投递内使用指数退避重试；测试发送也会短重试。",
     "guideDeliverySuccess": "接收端返回 2xx 视为成功，状态会更新为 success。",

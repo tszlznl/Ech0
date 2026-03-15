@@ -642,6 +642,8 @@
     "guideBodyPayloadRaw": "Raw business payload",
     "guideBodyMetadata": "Additional metadata",
     "guideBodyOccurredAt": "Event occurrence time (UTC timestamp)",
+    "guideExampleTitle": "Request Example",
+    "guideExampleDesc": "A typical webhook JSON payload looks like this:",
     "guideDeliveryTitle": "Delivery and Retry",
     "guideDeliveryRetry": "Delivery uses exponential backoff retry; test send also retries briefly.",
     "guideDeliverySuccess": "A 2xx response is considered success and updates status to success.",

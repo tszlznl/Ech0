@@ -78,34 +78,12 @@
             </ul>
           </section>
 
-          <section class="guide-section">
-            <h3 class="guide-section-title">{{ t('webhookSetting.guideDeliveryTitle') }}</h3>
-            <ul class="guide-checklist mt-2">
-              <li>{{ t('webhookSetting.guideDeliveryRetry') }}</li>
-              <li>{{ t('webhookSetting.guideDeliverySuccess') }}</li>
-              <li>{{ t('webhookSetting.guideDeliveryDeadletter') }}</li>
-            </ul>
-          </section>
-
-          <section class="guide-section">
-            <h3 class="guide-section-title">{{ t('webhookSetting.guideSecurityTitle') }}</h3>
-            <ul class="guide-checklist mt-2">
-              <li>{{ t('webhookSetting.guideSecuritySignature') }}</li>
-              <li>{{ t('webhookSetting.guideSecurityTimestamp') }}</li>
-              <li>{{ t('webhookSetting.guideSecurityIdempotency') }}</li>
-            </ul>
-          </section>
-
           <section class="guide-section lg:col-span-2">
-            <h3 class="guide-section-title">{{ t('webhookSetting.guideTroubleshootingTitle') }}</h3>
-            <ul class="guide-checklist mt-2">
-              <li>{{ t('webhookSetting.guideTroubleReachability') }}</li>
-              <li>{{ t('webhookSetting.guideTrouble2xx') }}</li>
-              <li>{{ t('webhookSetting.guideTroubleSecret') }}</li>
-              <li>{{ t('webhookSetting.guideTroubleWhitelist') }}</li>
-            </ul>
+            <h3 class="guide-section-title">{{ t('webhookSetting.guideExampleTitle') }}</h3>
+            <p class="guide-section-desc">{{ t('webhookSetting.guideExampleDesc') }}</p>
             <pre class="guide-code mt-3">{{ webhookPayloadExample }}</pre>
           </section>
+
         </div>
       </div>
 
@@ -364,11 +342,17 @@ const webhookGuideBodyFields = computed(() => [
 const webhookPayloadExample = `{
   "topic": "echo.created",
   "event_name": "EchoCreatedEvent",
-  "payload_raw": { "...": "..." },
-  "metadata": { "source": "ech0" },
+  "payload_raw": {
+    "echo": {
+      "id": "018f5e24-0fb7-7af0-a31b-a7ac0ad5e731",
+      "content": "Hello from Ech0 webhook"
+    }
+  },
+  "metadata": {
+    "source": "ech0"
+  },
   "occurred_at": 1710000000
 }`
-
 const onFormActiveChange = (value: boolean) => {
   webhookForm.value.is_active = value
 }
