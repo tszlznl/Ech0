@@ -291,7 +291,7 @@
     "extension": "功能扩展",
     "advance": "外部集成",
     "systemLog": "系统日志",
-    "logout": "退出登录",
+    "logout": "登出",
     "loginOrSignup": "登录 / 注册",
     "login": "登录",
     "version": "版本: {version}",
@@ -699,12 +699,20 @@
     "statusCancelled": "已取消"
   },
   "connectSetting": {
+    "description": "连接到其他 Ech0 节点，实现跨站互联。",
+    "addConnect": "连接",
     "urlPlaceholder": "请输入 Connect 地址（带https/http）",
+    "connectHint": "仅支持 http/https 地址。",
     "connect": "连接",
+    "status": "状态",
+    "statusOnline": "在线",
+    "statusOffline": "离线",
+    "statusChecking": "检测中",
     "empty": "暂无连接...",
     "connectUrl": "Connect 地址",
     "disconnect": "断开连接",
     "enterAddress": "请输入Connect地址",
+    "invalidUrl": "Connect 地址格式无效，仅支持 http/https",
     "disconnectConfirmTitle": "确定要断开连接吗？"
   },
   "backupScheduleSetting": {

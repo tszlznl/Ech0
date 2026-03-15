@@ -11,6 +11,7 @@ interface RequestOptions {
   url: string
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   timeout?: number
+  silentError?: boolean
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any
 }
@@ -71,7 +72,7 @@ export const request = async <T>(requestOptions: RequestOptions): Promise<App.Ap
     body: requestOptions.data,
     timeout: requestOptions.timeout,
   }).then((res) => {
-    if (res.code !== 1) {
+    if (res.code !== 1 && !requestOptions.silentError) {
       if (isSystemReady) {
         const translated =
           res.message_key && i18n.global.te(res.message_key)
@@ -102,7 +103,7 @@ export const requestWithDirectUrl = async <T>(
       timeout: requestOptions.timeout,
     },
   ).then((res) => {
-    if (res.code !== 1) {
+    if (res.code !== 1 && !requestOptions.silentError) {
       if (isSystemReady) {
         const translated =
           res.message_key && i18n.global.te(res.message_key)

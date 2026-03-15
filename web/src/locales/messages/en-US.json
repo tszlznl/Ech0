@@ -699,12 +699,20 @@
     "statusCancelled": "Cancelled"
   },
   "connectSetting": {
+    "description": "Connect to other Ech0 nodes for federation.",
+    "addConnect": "Connect",
     "urlPlaceholder": "Enter Connect URL (with https/http)",
+    "connectHint": "Only http/https URLs are supported.",
     "connect": "Connect",
+    "status": "Status",
+    "statusOnline": "Online",
+    "statusOffline": "Offline",
+    "statusChecking": "Checking",
     "empty": "No connections...",
     "connectUrl": "Connect URL",
     "disconnect": "Disconnect",
     "enterAddress": "Please enter a Connect URL",
+    "invalidUrl": "Invalid Connect URL format, only http/https is supported",
     "disconnectConfirmTitle": "Are you sure you want to disconnect?"
   },
   "backupScheduleSetting": {

@@ -9,11 +9,12 @@ export function fetchGetConnectList() {
 }
 
 // 获取Connect详情 (直接根据URL获取，不需要request的url)
-export function fetchGetConnect(connectUrl: string) {
+export function fetchGetConnect(connectUrl: string, silentError = false) {
   return requestWithDirectUrl<App.Api.Connect.Connect>({
     dirrectUrl: `${connectUrl}/api/connect`,
     url: '/',
     method: 'GET',
+    silentError,
   })
 }
 

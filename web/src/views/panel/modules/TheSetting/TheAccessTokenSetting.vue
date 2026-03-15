@@ -33,16 +33,16 @@
               <th class="w-[170px] px-2 py-2 whitespace-nowrap">
                 Token
               </th>
-              <th class="w-[150px] px-2 py-2 whitespace-nowrap">
+              <th class="w-[144px] px-2 py-2 whitespace-nowrap">
                 {{ t('accessTokenSetting.name') }}
               </th>
-              <th class="w-[170px] px-2 py-2 whitespace-nowrap">
+              <th class="w-[156px] px-1 py-2 whitespace-nowrap">
                 {{ t('accessTokenSetting.createdAt') }}
               </th>
-              <th class="w-[170px] px-2 py-2 whitespace-nowrap">
+              <th class="w-[156px] px-1 py-2 whitespace-nowrap">
                 {{ t('accessTokenSetting.expiry') }}
               </th>
-              <th class="w-[96px] px-2 py-2 text-right whitespace-nowrap">
+              <th class="w-[56px] px-1 py-2 text-right whitespace-nowrap">
                 {{ t('commonUi.actions') }}
               </th>
             </tr>
