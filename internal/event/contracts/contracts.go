@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"time"
 
+	commentModel "github.com/lin-snow/ech0/internal/model/comment"
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	queueModel "github.com/lin-snow/ech0/internal/model/queue"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
@@ -19,6 +20,9 @@ const (
 	TopicEchoCreated          = "echo.created"
 	TopicEchoUpdated          = "echo.updated"
 	TopicEchoDeleted          = "echo.deleted"
+	TopicCommentCreated       = "comment.created"
+	TopicCommentStatusUpdated = "comment.status.updated"
+	TopicCommentDeleted       = "comment.deleted"
 	TopicResourceUploaded     = "resource.uploaded"
 	TopicSystemBackup         = "system.backup"
 	TopicSystemExport         = "system.export"
@@ -35,6 +39,9 @@ var webhookTopicWhitelist = map[string]struct{}{
 	TopicEchoCreated:          {},
 	TopicEchoUpdated:          {},
 	TopicEchoDeleted:          {},
+	TopicCommentCreated:       {},
+	TopicCommentStatusUpdated: {},
+	TopicCommentDeleted:       {},
 	TopicResourceUploaded:     {},
 	TopicSystemBackup:         {},
 	TopicSystemExport:         {},
@@ -59,6 +66,15 @@ type (
 	EchoDeletedEvent struct {
 		Echo echoModel.Echo
 		User userModel.User
+	}
+	CommentCreatedEvent struct {
+		Comment commentModel.Comment
+	}
+	CommentStatusUpdatedEvent struct {
+		Comment commentModel.Comment
+	}
+	CommentDeletedEvent struct {
+		Comment commentModel.Comment
 	}
 
 	ResourceUploadedEvent struct {

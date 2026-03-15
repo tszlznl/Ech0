@@ -18,6 +18,7 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/lin-snow/ech0/internal/config"
+	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	model "github.com/lin-snow/ech0/internal/model/comment"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
@@ -36,17 +37,20 @@ type CommentService struct {
 	commonService      CommonService
 	repo               Repository
 	keyvalueRepository KeyValueRepository
+	publisher          EventPublisher
 }
 
 func NewCommentService(
 	commonService CommonService,
 	repo Repository,
 	keyvalueRepository KeyValueRepository,
+	publisher EventPublisher,
 ) *CommentService {
 	return &CommentService{
 		commonService:      commonService,
 		repo:               repo,
 		keyvalueRepository: keyvalueRepository,
+		publisher:          publisher,
 	}
 }
 
@@ -182,6 +186,7 @@ func (s *CommentService) CreateComment(
 	if err := s.repo.CreateComment(ctx, &comment); err != nil {
 		return model.CreateCommentResult{}, err
 	}
+	s.emitCommentCreated(ctx, comment)
 	return model.CreateCommentResult{
 		ID:     comment.ID,
 		Status: comment.Status,
@@ -246,7 +251,13 @@ func (s *CommentService) UpdateCommentStatus(ctx context.Context, id string, sta
 	if status != model.StatusPending && status != model.StatusApproved && status != model.StatusRejected {
 		return commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "无效的评论状态")
 	}
-	return s.repo.UpdateCommentStatus(ctx, id, status)
+	if err := s.repo.UpdateCommentStatus(ctx, id, status); err != nil {
+		return err
+	}
+	if updated, err := s.repo.GetCommentByID(ctx, id); err == nil && updated.ID != "" {
+		s.emitCommentStatusUpdated(ctx, updated)
+	}
+	return nil
 }
 
 func (s *CommentService) UpdateCommentHot(ctx context.Context, id string, hot bool) error {
@@ -260,7 +271,14 @@ func (s *CommentService) DeleteComment(ctx context.Context, id string) error {
 	if err := s.requireAdmin(ctx); err != nil {
 		return err
 	}
-	return s.repo.DeleteComment(ctx, id)
+	beforeDelete, _ := s.repo.GetCommentByID(ctx, id)
+	if err := s.repo.DeleteComment(ctx, id); err != nil {
+		return err
+	}
+	if beforeDelete.ID != "" {
+		s.emitCommentDeleted(ctx, beforeDelete)
+	}
+	return nil
 }
 
 func (s *CommentService) BatchAction(ctx context.Context, action string, ids []string) error {
@@ -272,14 +290,63 @@ func (s *CommentService) BatchAction(ctx context.Context, action string, ids []s
 	}
 	switch action {
 	case "approve":
-		return s.repo.BatchUpdateStatus(ctx, ids, model.StatusApproved)
+		if err := s.repo.BatchUpdateStatus(ctx, ids, model.StatusApproved); err != nil {
+			return err
+		}
+		for _, id := range ids {
+			if updated, err := s.repo.GetCommentByID(ctx, id); err == nil && updated.ID != "" {
+				s.emitCommentStatusUpdated(ctx, updated)
+			}
+		}
+		return nil
 	case "reject":
-		return s.repo.BatchUpdateStatus(ctx, ids, model.StatusRejected)
+		if err := s.repo.BatchUpdateStatus(ctx, ids, model.StatusRejected); err != nil {
+			return err
+		}
+		for _, id := range ids {
+			if updated, err := s.repo.GetCommentByID(ctx, id); err == nil && updated.ID != "" {
+				s.emitCommentStatusUpdated(ctx, updated)
+			}
+		}
+		return nil
 	case "delete":
-		return s.repo.BatchDelete(ctx, ids)
+		beforeDelete := make([]model.Comment, 0, len(ids))
+		for _, id := range ids {
+			if comment, err := s.repo.GetCommentByID(ctx, id); err == nil && comment.ID != "" {
+				beforeDelete = append(beforeDelete, comment)
+			}
+		}
+		if err := s.repo.BatchDelete(ctx, ids); err != nil {
+			return err
+		}
+		for _, comment := range beforeDelete {
+			s.emitCommentDeleted(ctx, comment)
+		}
+		return nil
 	default:
 		return commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "无效的批量动作")
 	}
+}
+
+func (s *CommentService) emitCommentCreated(ctx context.Context, comment model.Comment) {
+	if s.publisher == nil || comment.ID == "" {
+		return
+	}
+	_ = s.publisher.CommentCreated(ctx, contracts.CommentCreatedEvent{Comment: comment})
+}
+
+func (s *CommentService) emitCommentStatusUpdated(ctx context.Context, comment model.Comment) {
+	if s.publisher == nil || comment.ID == "" {
+		return
+	}
+	_ = s.publisher.CommentStatusUpdated(ctx, contracts.CommentStatusUpdatedEvent{Comment: comment})
+}
+
+func (s *CommentService) emitCommentDeleted(ctx context.Context, comment model.Comment) {
+	if s.publisher == nil || comment.ID == "" {
+		return
+	}
+	_ = s.publisher.CommentDeleted(ctx, contracts.CommentDeletedEvent{Comment: comment})
 }
 
 func (s *CommentService) GetSystemSetting(ctx context.Context) (model.SystemSetting, error) {

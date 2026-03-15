@@ -317,6 +317,9 @@ const webhookGuideTopics = [
   'echo.created',
   'echo.updated',
   'echo.deleted',
+  'comment.created',
+  'comment.status.updated',
+  'comment.deleted',
   'resource.uploaded',
   'system.backup',
   'system.export',
@@ -345,11 +348,13 @@ const webhookPayloadExample = `{
     "echo": {
       "id": "018f5e24-0fb7-7af0-a31b-a7ac0ad5e731",
       "content": "Hello from Ech0 webhook"
+    },
+    "user": {
+      "id": "018f5e24-12f7-70e5-8a87-cf03a12bf10c",
+      "username": "admin"
     }
   },
-  "metadata": {
-    "source": "ech0"
-  },
+  "metadata": null,
   "occurred_at": 1710000000
 }`
 const onFormActiveChange = (value: boolean) => {

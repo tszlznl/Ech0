@@ -20,6 +20,7 @@ import (
 	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
 	"github.com/lin-snow/ech0/internal/server"
 	"github.com/lin-snow/ech0/internal/service"
+	commentService "github.com/lin-snow/ech0/internal/service/comment"
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/task"
 	"github.com/lin-snow/ech0/internal/transaction"
@@ -70,6 +71,7 @@ var EventGraphSet = wire.NewSet(
 
 var HandlerGraphSet = wire.NewSet(
 	eventpublisher.New,
+	wire.Bind(new(commentService.EventPublisher), new(*eventpublisher.Publisher)),
 	storage.ProviderSet,
 	wire.Bind(new(storage.S3SettingStore), new(*keyvalueRepository.KeyValueRepository)),
 	repository.FileSet,

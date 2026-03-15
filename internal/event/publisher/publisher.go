@@ -52,6 +52,24 @@ func (p *Publisher) EchoDeleted(ctx context.Context, evt contracts.EchoDeletedEv
 		busen.WithKey(evt.Echo.ID))
 }
 
+func (p *Publisher) CommentCreated(ctx context.Context, evt contracts.CommentCreatedEvent) error {
+	return busen.Publish(ctx, p.bus, evt,
+		busen.WithTopic(contracts.TopicCommentCreated),
+		busen.WithKey(evt.Comment.ID))
+}
+
+func (p *Publisher) CommentStatusUpdated(ctx context.Context, evt contracts.CommentStatusUpdatedEvent) error {
+	return busen.Publish(ctx, p.bus, evt,
+		busen.WithTopic(contracts.TopicCommentStatusUpdated),
+		busen.WithKey(evt.Comment.ID))
+}
+
+func (p *Publisher) CommentDeleted(ctx context.Context, evt contracts.CommentDeletedEvent) error {
+	return busen.Publish(ctx, p.bus, evt,
+		busen.WithTopic(contracts.TopicCommentDeleted),
+		busen.WithKey(evt.Comment.ID))
+}
+
 func (p *Publisher) ResourceUploaded(ctx context.Context, evt contracts.ResourceUploadedEvent, key string) error {
 	return busen.Publish(ctx, p.bus, evt,
 		busen.WithTopic(contracts.TopicResourceUploaded),
