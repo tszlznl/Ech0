@@ -149,7 +149,7 @@
             </div>
           </div>
 
-          <div class="mt-4 flex flex-col-reverse items-center justify-center gap-2 sm:flex-row">
+          <div class="mt-4 flex flex-nowrap items-center justify-center gap-2">
             <BaseButton class="h-9 rounded-md px-4" :disabled="formSubmitting" @click="resetForm">
               {{ t('commonUi.cancel') }}
             </BaseButton>
