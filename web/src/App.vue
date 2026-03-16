@@ -10,6 +10,7 @@ import BaseDialog from './components/common/BaseDialog.vue'
 
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useBfCacheRestore } from '@/composables/useBfCacheRestore'
+import { useSeoHead } from '@/composables/useSeoHead'
 
 const { register, title, description, handleConfirm, handleCancel } = useBaseDialog()
 const dialogRef = ref()
@@ -71,6 +72,7 @@ const DEFAULT_FAVICON = '/favicon.ico'
 const API_URL = getApiUrl()
 const CUSTOM_STYLE_ID = 'ech0-custom-style'
 const CUSTOM_SCRIPT_ID = 'ech0-custom-script'
+useSeoHead(SystemSetting)
 
 const updateFavicon = (logo?: string) => {
   const head = document.head
@@ -91,14 +93,6 @@ const updateFavicon = (logo?: string) => {
   newFavicon.href = href
   head.appendChild(newFavicon)
 }
-
-watch(
-  () => SystemSetting.value.site_title,
-  (title) => {
-    if (title) document.title = title
-  },
-  { immediate: true },
-)
 
 watch(
   () => SystemSetting.value.server_logo,

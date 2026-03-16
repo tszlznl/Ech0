@@ -12,6 +12,8 @@ func setupResourceRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	// Swagger UI
 	appRouterGroup.ResourceGroup.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	appRouterGroup.ResourceGroup.GET("/robots.txt", h.CommonHandler.GetRobotsTxt)
+	appRouterGroup.ResourceGroup.GET("/sitemap.xml", h.CommonHandler.GetSitemap)
 	appRouterGroup.ResourceGroup.GET("/rss", h.CommonHandler.GetRss)
 	appRouterGroup.ResourceGroup.GET("/healthz", h.CommonHandler.Healthz())
 }

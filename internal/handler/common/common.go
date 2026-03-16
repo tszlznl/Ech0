@@ -1,7 +1,11 @@
 package handler
 
 import (
+	"bytes"
+	"encoding/xml"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	res "github.com/lin-snow/ech0/internal/handler/response"
@@ -13,6 +17,18 @@ import (
 
 type CommonHandler struct {
 	commonService service.Service
+}
+
+type siteMapURLSet struct {
+	XMLName xml.Name     `xml:"urlset"`
+	XMLNS   string       `xml:"xmlns,attr"`
+	URLs    []siteMapURL `xml:"url"`
+}
+
+type siteMapURL struct {
+	Loc        string `xml:"loc"`
+	ChangeFreq string `xml:"changefreq,omitempty"`
+	Priority   string `xml:"priority,omitempty"`
 }
 
 func NewCommonHandler(commonService service.Service) *CommonHandler {
@@ -108,4 +124,70 @@ func (commonHandler *CommonHandler) GetWebsiteTitle() gin.HandlerFunc {
 			Msg:  commonModel.GET_WEBSITE_TITLE_SUCCESS,
 		}
 	})
+}
+
+func resolveBaseURL(ctx *gin.Context) string {
+	scheme := "http"
+	if ctx.Request.TLS != nil {
+		scheme = "https"
+	}
+
+	if forwardedProto := strings.TrimSpace(ctx.GetHeader("X-Forwarded-Proto")); forwardedProto != "" {
+		scheme = strings.TrimSpace(strings.Split(forwardedProto, ",")[0])
+	}
+
+	host := strings.TrimSpace(ctx.Request.Host)
+	if forwardedHost := strings.TrimSpace(ctx.GetHeader("X-Forwarded-Host")); forwardedHost != "" {
+		host = strings.TrimSpace(strings.Split(forwardedHost, ",")[0])
+	}
+
+	return fmt.Sprintf("%s://%s", scheme, host)
+}
+
+func (commonHandler *CommonHandler) GetRobotsTxt(ctx *gin.Context) {
+	baseURL := resolveBaseURL(ctx)
+	content := strings.Join([]string{
+		"User-agent: *",
+		"Allow: /",
+		"Disallow: /api/",
+		"Disallow: /auth",
+		"Disallow: /panel",
+		"Disallow: /init",
+		"Disallow: /swagger/",
+		"Disallow: /healthz",
+		fmt.Sprintf("Sitemap: %s/sitemap.xml", strings.TrimRight(baseURL, "/")),
+		"",
+	}, "\n")
+
+	ctx.Data(http.StatusOK, "text/plain; charset=utf-8", []byte(content))
+}
+
+func (commonHandler *CommonHandler) GetSitemap(ctx *gin.Context) {
+	baseURL := strings.TrimRight(resolveBaseURL(ctx), "/")
+	urlSet := siteMapURLSet{
+		XMLNS: "http://www.sitemaps.org/schemas/sitemap/0.9",
+		URLs: []siteMapURL{
+			{Loc: baseURL + "/", ChangeFreq: "daily", Priority: "1.0"},
+			{Loc: baseURL + "/hub", ChangeFreq: "daily", Priority: "0.8"},
+			{Loc: baseURL + "/zone", ChangeFreq: "daily", Priority: "0.8"},
+			{Loc: baseURL + "/rss", ChangeFreq: "hourly", Priority: "0.6"},
+		},
+	}
+
+	var buf bytes.Buffer
+	buf.WriteString(xml.Header)
+	encoder := xml.NewEncoder(&buf)
+	encoder.Indent("", "  ")
+	if err := encoder.Encode(urlSet); err != nil {
+		ctx.JSON(
+			http.StatusOK,
+			commonModel.Fail[string](errorUtil.HandleError(&commonModel.ServerError{
+				Msg: "",
+				Err: err,
+			})),
+		)
+		return
+	}
+
+	ctx.Data(http.StatusOK, "application/xml; charset=utf-8", buf.Bytes())
 }

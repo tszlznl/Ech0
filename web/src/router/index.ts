@@ -11,6 +11,7 @@ const router = createRouter({
       component: () => import('../views/home/HomeView.vue'),
       meta: {
         title: 'Home',
+        description: 'Ech0 home timeline for publishing and browsing thoughts, notes, and links.',
         optionalAuth: true,
       },
     },
@@ -20,7 +21,10 @@ const router = createRouter({
       component: () => import('../views/panel/PanelView.vue'),
       redirect: '/panel/dashboard',
       meta: {
+        title: 'Panel',
+        description: 'Ech0 management panel.',
         requiresAuth: true,
+        noindex: true,
       },
       children: [
         {
@@ -87,41 +91,78 @@ const router = createRouter({
       path: '/auth',
       name: 'auth',
       component: () => import('../views/auth/AuthView.vue'),
+      meta: {
+        title: 'Sign In',
+        description: 'Sign in to your Ech0 workspace.',
+        noindex: true,
+      },
     },
     {
       path: '/widget',
       name: 'widget',
       component: () => import('../views/widget/WidgetView.vue'),
+      meta: {
+        title: 'Widget',
+        description: 'Ech0 embeddable widget.',
+        noindex: true,
+      },
     },
     {
       path: '/init',
       name: 'init',
       component: () => import('../views/init/InitView.vue'),
+      meta: {
+        title: 'Initialize',
+        description: 'Initialize your Ech0 instance.',
+        noindex: true,
+      },
     },
     {
       path: '/connect',
       name: 'connect',
       component: () => import('../views/connect/ConnectView.vue'),
+      meta: {
+        title: 'Connect',
+        description: 'Connect external platforms to Ech0.',
+        noindex: true,
+      },
     },
     {
       path: '/hub',
       name: 'hub',
       component: () => import('../views/hub/HubView.vue'),
+      meta: {
+        title: 'Hub',
+        description: 'Discover and explore curated content in Ech0 hub.',
+      },
     },
     {
       path: '/zone/:echoId?',
       name: 'zone',
       component: () => import('../views/zone/ZoneView.vue'),
+      meta: {
+        title: 'Zone',
+        description: 'Explore grouped posts and related content in Ech0.',
+      },
     },
     {
       path: '/echo/:echoId',
       name: 'echo',
       component: () => import('../views/echo/EchoView.vue'),
+      meta: {
+        title: 'Echo',
+        description: 'Read a shared Ech0 post.',
+      },
     },
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('../views/404/NotFoundView.vue'),
+      meta: {
+        title: '404',
+        description: 'Requested page was not found.',
+        noindex: true,
+      },
     },
   ],
 })
