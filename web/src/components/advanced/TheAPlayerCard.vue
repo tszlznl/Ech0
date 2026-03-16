@@ -1,9 +1,12 @@
 <template>
   <!-- 网易云 / QQ 音乐使用 Meting JS来展示 -->
-  <div
+  <TheExtensionCardShell
     v-if="musicInfo && musicInfo.server !== MusicProvider.APPLE && metingAPI.length > 0 && !loading"
+    size="wide"
+    padding="compact"
   >
     <meting-js
+      class="block w-full"
       :api="metingAPI"
       :server="musicInfo.server"
       :type="musicInfo.type"
@@ -11,27 +14,28 @@
       :auto="musicAuto"
     >
     </meting-js>
-  </div>
+  </TheExtensionCardShell>
   <!-- Apple Music 使用官方IFrame -->
-  <div
+  <TheExtensionCardShell
     v-else-if="musicInfo && musicInfo.server === MusicProvider.APPLE && musicInfo.id"
-    class="shadow-sm rounded-xl overflow-hidden"
+    size="wide"
   >
     <iframe
       allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write"
       frameborder="0"
       height="175"
-      style="width: 100%; max-width: 660px; overflow: hidden; border-radius: 10px"
+      class="apple-frame"
       sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
       :src="`https://embed.music.apple.com/cn/${musicInfo.type}/${musicInfo.id}`"
     >
     </iframe>
-  </div>
-  <div
-    v-else
-    class="max-w-sm flex justify-center items-center bg-[var(--color-bg-surface)] rounded-lg shadow-sm ring-1 ring-inset ring-[var(--color-border-subtle)] p-2 gap-2 text-[var(--color-text-muted)]"
-  >
-    <Music />非常抱歉，该音乐播放源已失效😭
+  </TheExtensionCardShell>
+  <div v-else class="extension-card-invalid">
+    <Music class="w-4 h-4" />
+    <div class="invalid-copy">
+      <p class="invalid-title">该音乐播放源已失效</p>
+      <p class="invalid-subtitle">请检查链接或更换平台来源</p>
+    </div>
   </div>
 </template>
 
@@ -42,6 +46,7 @@ import { storeToRefs } from 'pinia'
 import { parseMusicURL } from '@/utils/other'
 import { useSettingStore } from '@/stores'
 import { ExtensionType, MusicProvider } from '@/enums/enums'
+import TheExtensionCardShell from './TheExtensionCardShell.vue'
 
 const { SystemSetting, loading } = storeToRefs(useSettingStore())
 type Echo = App.Api.Ech0.Echo
@@ -68,12 +73,49 @@ const metingAPI = computed(() => {
 </script>
 
 <style scoped>
-:deep(.aplayer) {
-  border-radius: 5px;
-  box-shadow: 0 1px 3px rgba(27, 27, 27, 0.075);
-  transition: box-shadow 0.2s;
+.apple-frame {
+  width: 100%;
+  max-width: 660px;
+  overflow: hidden;
+  border-radius: inherit;
+  display: block;
 }
-:deep(.aplayer):hover {
-  box-shadow: 0 2px 5px rgba(19, 19, 19, 0.075);
+
+.extension-card-invalid {
+  width: 100%;
+  max-width: 24rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.invalid-copy {
+  min-width: 0;
+}
+
+.invalid-title {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.35;
+  color: var(--color-text-secondary);
+}
+
+.invalid-subtitle {
+  margin: 0.12rem 0 0;
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+:deep(.aplayer) {
+  border-radius: calc(var(--radius-md) - 0.15rem);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s ease;
 }
 </style>

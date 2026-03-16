@@ -1,43 +1,41 @@
 <template>
-  <div
-    v-if="safeGithubURL"
-    class="w-full max-w-sm min-w-0 flex justify-center items-center bg-[var(--color-bg-surface)] rounded-lg shadow-sm ring-1 ring-inset ring-[var(--color-border-subtle)] p-2 gap-2 overflow-hidden"
-  >
-    <a :href="safeGithubURL" target="_blank" rel="noopener noreferrer" class="block w-full min-w-0">
-      <div class="flex justify-between items-center">
-        <div class="shrink-0 px-6">
+  <TheExtensionCardShell v-if="safeGithubURL">
+    <a :href="safeGithubURL" target="_blank" rel="noopener noreferrer" class="github-card__link">
+      <div class="github-card__body">
+        <div class="github-avatar-wrap">
           <img
             v-if="CardData?.owner?.avatar_url"
             :src="CardData?.owner?.avatar_url"
             :alt="t('githubCard.avatarAlt')"
-            class="w-14 h-14 rounded-full shadow"
+            class="w-12 h-12 rounded-full ring-1 ring-[var(--color-border-subtle)] object-cover"
           />
-          <Githubproj v-else class="w-14 h-14" />
+          <Githubproj v-else class="w-12 h-12 text-[var(--color-text-muted)]" />
         </div>
 
-        <div v-if="CardData" class="py-1 min-w-0">
-          <span class="block text-lg font-bold text-[var(--color-text-secondary)] truncate">{{
-            CardData?.name || repo
-          }}</span>
-          <p
-            class="text-sm text-[var(--color-text-muted)] font-mono line-clamp-2 break-all"
-            :title="CardData?.description"
-          >
-            {{ CardData?.description }}
+        <div class="github-meta">
+          <span class="github-title">{{ CardData?.name || repo }}</span>
+          <p class="github-desc line-clamp-2 break-all" :title="CardData?.description">
+            {{ CardData?.description || `${owner}/${repo}` }}
           </p>
-          <div class="flex justify-start items-center h-auto text-[var(--color-text-muted)]">
-            <!-- star -->
-            <Star class="w-4 h-4 mr-1" /> <span> {{ CardData?.stargazers_count }} </span>
-            <!-- fork -->
-            <Fork class="w-4 h-4 mx-1" /> <span> {{ CardData?.forks_count }} </span>
+          <div v-if="CardData" class="github-stats">
+            <span class="github-stat">
+              <Star class="w-4 h-4" />
+              <span>{{ CardData?.stargazers_count }}</span>
+            </span>
+            <span class="github-stat-divider" aria-hidden="true"></span>
+            <span class="github-stat">
+              <Fork class="w-4 h-4" />
+              <span>{{ CardData?.forks_count }}</span>
+            </span>
           </div>
         </div>
       </div>
     </a>
-  </div>
+  </TheExtensionCardShell>
 </template>
 
 <script setup lang="ts">
+import TheExtensionCardShell from './TheExtensionCardShell.vue'
 import Githubproj from '../icons/githubproj.vue'
 import Star from '../icons/star.vue'
 import Fork from '../icons/fork.vue'
@@ -97,4 +95,80 @@ onMounted(() => {
 })
 </script>
 
-<style scoped></style>
+<style scoped>
+.github-card__link {
+  display: block;
+  border-radius: inherit;
+}
+
+.github-card__link:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 1px var(--color-focus-ring),
+    0 0 0 4px color-mix(in srgb, var(--color-focus-ring) 35%, transparent);
+}
+
+.github-card__body {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  min-width: 0;
+}
+
+.github-avatar-wrap {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 9999px;
+  background: var(--color-bg-muted);
+}
+
+.github-meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.github-title {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.github-desc {
+  margin-top: 0.15rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-family: var(--font-family-mono);
+  line-height: 1.45;
+}
+
+.github-stats {
+  margin-top: 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.github-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.github-stat-divider {
+  width: 1px;
+  height: 0.75rem;
+  background: var(--color-border-subtle);
+}
+</style>

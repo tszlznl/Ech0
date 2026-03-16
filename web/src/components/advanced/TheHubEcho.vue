@@ -68,10 +68,7 @@
             <TheAPlayerCard :echo="props.echo" />
           </div>
           <div v-if="props.echo.extension.type === ExtensionType.VIDEO">
-            <TheVideoCard
-              :videoId="props.echo.extension.payload.videoId"
-              class="px-2 mx-auto hover:shadow-md"
-            />
+            <TheVideoCard :videoId="props.echo.extension.payload.videoId" class="px-2 mx-auto" />
           </div>
           <TheGithubCard
             v-if="
@@ -79,12 +76,12 @@
               props.echo.extension.payload?.repoUrl
             "
             :GithubURL="props.echo.extension.payload.repoUrl"
-            class="px-2 mx-auto hover:shadow-md"
+            class="px-2 mx-auto"
           />
           <TheWebsiteCard
             v-if="props.echo.extension.type === ExtensionType.WEBSITE"
             :website="props.echo.extension.payload"
-            class="px-2 mx-auto hover:shadow-md"
+            class="px-2 mx-auto"
           />
         </div>
       </div>
