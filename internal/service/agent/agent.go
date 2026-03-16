@@ -112,11 +112,11 @@ func (agentService *AgentService) buildRecentSummary(ctx context.Context) (strin
 		{
 			Role: schema.System,
 			Content: `
-				你只能输出纯文本。
-				不能输出代码块、格式化标记、Markdown 符号（如井号、星号、反引号、方括号、尖括号）。
-				不能输出任何结构化格式（如列表、表格）。
-				回复中只能出现正常文字、标点符号和 Emoji 和 换行。
-				确保输出始终是自然语言连续文本。`,
+				这是“近况总结”场景，请使用简洁自然的中文表达。
+				不使用复杂格式：不要标题、列表、表格、代码块、链接。
+				不要输出任何原始 HTML 标签。
+				可使用纯文字、Emoji 和正常换行来增强可读性。
+				回复保持简洁，聚焦作者最近的活动和状态。`,
 		},
 		{
 			Role:    schema.User,
