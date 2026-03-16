@@ -553,6 +553,7 @@ onMounted(async () => {
   border-radius: 0.75rem;
   padding: 0.9rem 1rem;
   background: color-mix(in srgb, var(--color-bg-muted) 45%, transparent);
+  min-width: 0;
 }
 
 .guide-kicker {
@@ -560,6 +561,9 @@ onMounted(async () => {
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .guide-title {
@@ -567,12 +571,16 @@ onMounted(async () => {
   font-size: 1rem;
   font-weight: 700;
   color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .guide-desc {
   margin-top: 0.25rem;
   font-size: 0.875rem;
   color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .guide-section {
@@ -580,23 +588,29 @@ onMounted(async () => {
   border-radius: 0.75rem;
   padding: 0.85rem;
   background: color-mix(in srgb, var(--color-bg-surface) 70%, transparent);
+  min-width: 0;
 }
 
 .guide-section-title {
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .guide-section-desc {
   margin-top: 0.2rem;
   font-size: 0.8rem;
   color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .topic-chip {
   display: inline-flex;
   align-items: center;
+  max-width: 100%;
   border-radius: 9999px;
   border: 1px solid var(--color-border-subtle);
   padding: 0.2rem 0.55rem;
@@ -604,6 +618,9 @@ onMounted(async () => {
   line-height: 1rem;
   color: var(--color-text-secondary);
   background: color-mix(in srgb, var(--color-bg-muted) 60%, transparent);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .guide-list {
@@ -613,10 +630,14 @@ onMounted(async () => {
 
 .guide-list li {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   align-items: flex-start;
   font-size: 0.8125rem;
   color: var(--color-text-secondary);
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .guide-list code {
@@ -627,7 +648,9 @@ onMounted(async () => {
   line-height: 1.1rem;
   color: var(--color-text-primary);
   background: color-mix(in srgb, var(--color-bg-muted) 65%, transparent);
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .guide-checklist {
