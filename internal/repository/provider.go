@@ -26,6 +26,7 @@ import (
 	initService "github.com/lin-snow/ech0/internal/service/init"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	userService "github.com/lin-snow/ech0/internal/service/user"
+	webhookmodule "github.com/lin-snow/ech0/internal/webhook"
 )
 
 var (
@@ -73,7 +74,7 @@ var (
 	WebhookSet = wire.NewSet(
 		webhookRepository.NewWebhookRepository,
 		wire.Bind(new(settingService.WebhookRepository), new(*webhookRepository.WebhookRepository)),
-		wire.Bind(new(eventsubscriber.WebhookStore), new(*webhookRepository.WebhookRepository)),
+		wire.Bind(new(webhookmodule.WebhookStore), new(*webhookRepository.WebhookRepository)),
 	)
 	InboxSet = wire.NewSet(
 		inboxRepository.NewInboxRepository,
@@ -82,7 +83,7 @@ var (
 	)
 	QueueSet = wire.NewSet(
 		queueRepository.NewQueueRepository,
-		wire.Bind(new(eventsubscriber.DeadLetterStore), new(*queueRepository.QueueRepository)),
+		wire.Bind(new(webhookmodule.DeadLetterStore), new(*queueRepository.QueueRepository)),
 		wire.Bind(new(eventsubscriber.DeadLetterRepo), new(*queueRepository.QueueRepository)),
 	)
 	MigrationSet = wire.NewSet(

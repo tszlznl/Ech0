@@ -24,6 +24,7 @@ import (
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/task"
 	"github.com/lin-snow/ech0/internal/transaction"
+	"github.com/lin-snow/ech0/internal/webhook"
 	"gorm.io/gorm"
 )
 
@@ -57,10 +58,10 @@ var EventGraphSet = wire.NewSet(
 	repository.QueueSet,
 	repository.WebhookSet,
 
-	wire.Bind(new(eventregistry.WebhookObserver), new(*eventsubscriber.WebhookDispatcher)),
-	wire.Bind(new(eventsubscriber.DeadLetterProcessor), new(*eventsubscriber.WebhookDispatcher)),
+	wire.Bind(new(eventregistry.WebhookObserver), new(*webhook.Dispatcher)),
+	wire.Bind(new(eventsubscriber.DeadLetterProcessor), new(*webhook.Dispatcher)),
 
-	eventsubscriber.NewWebhookDispatcher,
+	webhook.NewDispatcher,
 	eventsubscriber.NewBackupScheduler,
 	eventsubscriber.NewDeadLetterResolver,
 	eventsubscriber.NewAgentProcessor,

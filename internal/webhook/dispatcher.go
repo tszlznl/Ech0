@@ -1,4 +1,4 @@
-package subscriber
+package webhook
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 	"github.com/lin-snow/ech0/internal/transaction"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
-	webhookclient "github.com/lin-snow/ech0/internal/webhookclient"
+	webhookclient "github.com/lin-snow/ech0/internal/webhook/infra/httpclient"
 	"go.uber.org/zap"
 )
 
@@ -32,7 +32,7 @@ type DeadLetterStore interface {
 	SaveDeadLetter(ctx context.Context, deadLetter *queueModel.DeadLetter) error
 }
 
-type WebhookDispatcher struct {
+type Dispatcher struct {
 	client     *http.Client
 	repo       WebhookStore
 	pool       *async.WorkerPool
@@ -40,12 +40,12 @@ type WebhookDispatcher struct {
 	transactor transaction.Transactor
 }
 
-func NewWebhookDispatcher(
+func NewDispatcher(
 	repo WebhookStore,
 	queueRepo DeadLetterStore,
 	tx transaction.Transactor,
-) *WebhookDispatcher {
-	return &WebhookDispatcher{
+) *Dispatcher {
+	return &Dispatcher{
 		repo:      repo,
 		queueRepo: queueRepo,
 		client: &http.Client{
@@ -64,7 +64,7 @@ func NewWebhookDispatcher(
 	}
 }
 
-func (wd *WebhookDispatcher) HandleObservation(ctx context.Context, obs contracts.WebhookObservation) error {
+func (wd *Dispatcher) HandleObservation(ctx context.Context, obs contracts.WebhookObservation) error {
 	webhooks, err := wd.repo.ListActiveWebhooks(ctx)
 	if err != nil {
 		return err
@@ -80,7 +80,7 @@ func (wd *WebhookDispatcher) HandleObservation(ctx context.Context, obs contract
 	return nil
 }
 
-func (wd *WebhookDispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webhook, obs contracts.WebhookObservation) {
+func (wd *Dispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webhook, obs contracts.WebhookObservation) {
 	triggerAt := time.Now().UTC()
 	err := webhookclient.SendWithRetry(wd.client, wh, obs, 3, 500*time.Millisecond)
 	if err != nil {
@@ -113,15 +113,15 @@ func (wd *WebhookDispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webh
 	wd.updateWebhookStatus(ctx, wh.ID, "success", triggerAt)
 }
 
-func (wd *WebhookDispatcher) Wait() {
+func (wd *Dispatcher) Wait() {
 	wd.pool.Wait()
 }
 
-func (wd *WebhookDispatcher) Stop() {
+func (wd *Dispatcher) Stop() {
 	wd.pool.Stop()
 }
 
-func (wd *WebhookDispatcher) HandleDeadLetter(
+func (wd *Dispatcher) HandleDeadLetter(
 	ctx context.Context,
 	deadLetter *queueModel.DeadLetter,
 ) error {
@@ -142,7 +142,7 @@ func (wd *WebhookDispatcher) HandleDeadLetter(
 	return nil
 }
 
-func (wd *WebhookDispatcher) updateWebhookStatus(
+func (wd *Dispatcher) updateWebhookStatus(
 	ctx context.Context,
 	webhookID string,
 	status string,

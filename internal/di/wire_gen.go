@@ -44,7 +44,7 @@ import (
 	repository2 "github.com/lin-snow/ech0/internal/repository/queue"
 	repository6 "github.com/lin-snow/ech0/internal/repository/setting"
 	repository4 "github.com/lin-snow/ech0/internal/repository/user"
-	"github.com/lin-snow/ech0/internal/repository/webhook"
+	webhookrepo "github.com/lin-snow/ech0/internal/repository/webhook"
 	"github.com/lin-snow/ech0/internal/server"
 	service14 "github.com/lin-snow/ech0/internal/service"
 	service13 "github.com/lin-snow/ech0/internal/service/agent"
@@ -63,6 +63,7 @@ import (
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/task"
 	"github.com/lin-snow/ech0/internal/transaction"
+	webhookmodule "github.com/lin-snow/ech0/internal/webhook"
 	"gorm.io/gorm"
 )
 
@@ -103,9 +104,9 @@ func BuildApp() (*app.App, error) {
 }
 
 func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() *busen.Bus, appCache cache.ICache[string, any], tx transaction.Transactor, backupScheduleApplier subscriber.BackupScheduleApplier) (*registry.EventRegistrar, error) {
-	webhookRepository := repository.NewWebhookRepository(dbProvider)
+	webhookRepository := webhookrepo.NewWebhookRepository(dbProvider)
 	queueRepository := repository2.NewQueueRepository(dbProvider)
-	webhookDispatcher := subscriber.NewWebhookDispatcher(webhookRepository, queueRepository, tx)
+	webhookDispatcher := webhookmodule.NewDispatcher(webhookRepository, queueRepository, tx)
 	deadLetterResolver := subscriber.NewDeadLetterResolver(queueRepository, webhookDispatcher)
 	backupScheduler := subscriber.NewBackupScheduler(backupScheduleApplier)
 	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
@@ -126,7 +127,7 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
 	manager := storage.ProvideStorageManager(keyValueRepository)
 	settingRepository := repository6.NewSettingRepository(dbProvider)
-	webhookRepository := repository.NewWebhookRepository(dbProvider)
+	webhookRepository := webhookrepo.NewWebhookRepository(dbProvider)
 	publisherPublisher := publisher.New(ebProvider)
 	settingService := service2.NewSettingService(tx, commonService, manager, keyValueRepository, settingRepository, webhookRepository, publisherPublisher)
 	userService := service3.NewUserService(tx, userRepository, settingService, publisherPublisher)
@@ -190,7 +191,7 @@ func BuildTasker(dbProvider func() *gorm.DB, appCache cache.ICache[string, any],
 	fileService := service4.NewFileService(tx, commonRepository, keyValueRepository, fileRepository, manager, publisherPublisher)
 	commonService := service.NewCommonService(commonRepository)
 	settingRepository := repository6.NewSettingRepository(dbProvider)
-	webhookRepository := repository.NewWebhookRepository(dbProvider)
+	webhookRepository := webhookrepo.NewWebhookRepository(dbProvider)
 	settingService := service2.NewSettingService(tx, commonService, manager, keyValueRepository, settingRepository, webhookRepository, publisherPublisher)
 	queueRepository := repository2.NewQueueRepository(dbProvider)
 	tasker := task.NewTasker(fileService, settingService, publisherPublisher, queueRepository)
@@ -218,7 +219,7 @@ var InfraSet = wire.NewSet(database.ProviderSet, bus.ProvideProvider, cache.Prov
 
 var RuntimeSet = server.ProviderSet
 
-var EventGraphSet = wire.NewSet(repository12.EchoSet, repository12.UserSet, repository12.InboxSet, repository12.KeyValueSet, repository12.QueueSet, repository12.WebhookSet, wire.Bind(new(registry.WebhookObserver), new(*subscriber.WebhookDispatcher)), wire.Bind(new(subscriber.DeadLetterProcessor), new(*subscriber.WebhookDispatcher)), subscriber.NewWebhookDispatcher, subscriber.NewBackupScheduler, subscriber.NewDeadLetterResolver, subscriber.NewAgentProcessor, subscriber.NewInboxDispatcher, ProvideSubscriptionProviders, registry.NewEventRegistry)
+var EventGraphSet = wire.NewSet(repository12.EchoSet, repository12.UserSet, repository12.InboxSet, repository12.KeyValueSet, repository12.QueueSet, repository12.WebhookSet, wire.Bind(new(registry.WebhookObserver), new(*webhookmodule.Dispatcher)), wire.Bind(new(subscriber.DeadLetterProcessor), new(*webhookmodule.Dispatcher)), webhookmodule.NewDispatcher, subscriber.NewBackupScheduler, subscriber.NewDeadLetterResolver, subscriber.NewAgentProcessor, subscriber.NewInboxDispatcher, ProvideSubscriptionProviders, registry.NewEventRegistry)
 
 var HandlerGraphSet = wire.NewSet(publisher.New, wire.Bind(new(service6.EventPublisher), new(*publisher.Publisher)), storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository12.FileSet, handler.WebSet, repository12.UserSet, service14.UserSet, handler.UserSet, repository12.EchoSet, service14.EchoSet, handler.EchoSet, repository12.CommentSet, service14.CommentSet, handler.CommentSet, repository12.CommonSet, service14.FileSet, handler.FileSet, repository12.InitSet, service14.InitSet, handler.InitSet, service14.CommonSet, handler.CommonSet, repository12.WebhookSet, repository12.KeyValueSet, repository12.SettingSet, service14.SettingSet, handler.SettingSet, repository12.InboxSet, service14.InboxSet, handler.InboxSet, repository12.ConnectSet, service14.ConnectSet, handler.ConnectSet, service14.DashboardSet, handler.DashboardSet, service14.AgentSet, handler.AgentSet, service14.BackupSet, handler.BackupSet, repository12.MigrationSet, service14.MigratorSet, handler.MigrationSet, handler.NewBundle)
 

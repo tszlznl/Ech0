@@ -1,4 +1,4 @@
-package webhookclient
+package httpclient
 
 import (
 	"bytes"

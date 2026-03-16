@@ -14,7 +14,7 @@ import (
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
-	webhookclient "github.com/lin-snow/ech0/internal/webhookclient"
+	webhookclient "github.com/lin-snow/ech0/internal/webhook/infra/httpclient"
 	"github.com/lin-snow/ech0/pkg/viewer"
 )
 

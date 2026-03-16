@@ -6,8 +6,6 @@ import (
 
 	busen "github.com/lin-snow/Busen"
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
-	"go.uber.org/zap"
 )
 
 type WebhookObserver interface {
@@ -55,28 +53,13 @@ func (er *EventRegistrar) Register() error {
 		}
 	}
 
-	err := er.bus.UseObserver(
-		func(ctx context.Context, obs busen.Observation) {
-			if !contracts.IsWebhookTopicAllowed(obs.Topic) {
-				return
-			}
-			evt, err := contracts.NewWebhookObservation(obs.Topic, obs.Value, obs.Meta)
-			if err != nil {
-				logUtil.GetLogger().Warn("build webhook observation failed",
-					zap.String("topic", obs.Topic),
-					zap.Error(err))
-				return
-			}
-			if err := er.observer.HandleObservation(ctx, evt); err != nil {
-				logUtil.GetLogger().Warn("dispatch webhook observation failed",
-					zap.String("topic", obs.Topic),
-					zap.Error(err))
-			}
-		},
-	)
-	if err != nil {
-		er.stopSubscriptions()
-		return err
+	for _, subscription := range webhookSubscriptions(er.observer) {
+		unsub, err := subscription.Register(er.bus)
+		if err != nil {
+			er.stopSubscriptions()
+			return err
+		}
+		er.unsub = append(er.unsub, unsub)
 	}
 
 	er.registered.Store(true)
