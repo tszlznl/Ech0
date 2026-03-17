@@ -522,7 +522,12 @@ onMounted(() => {
 
 watch(
   () =>
-    [needCaptcha.value, formMeta.value?.captcha_api_endpoint, captchaMountRef.value, locale.value] as const,
+    [
+      needCaptcha.value,
+      formMeta.value?.captcha_api_endpoint,
+      captchaMountRef.value,
+      locale.value,
+    ] as const,
   async () => {
     form.captcha_token = ''
     captchaError.value = ''
