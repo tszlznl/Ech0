@@ -1,6 +1,6 @@
 <template>
   <div class="flex justify-center items-center h-screen">
-    <div class="h-1/2 max-w-sm sm:max-w-md md:max-w-lg">
+    <div class="h-1/2 w-[min(86vw,20rem)] sm:w-[min(82vw,22rem)]">
       <h1
         class="text-6xl italic font-bold text-center text-[var(--color-text-muted)] mb-4 font-serif"
       >
@@ -9,21 +9,19 @@
       <!-- 登录  -->
       <div v-if="AuthMode === 'login'">
         <!-- 模式切换 -->
-        <div class="flex justify-between items-center">
-          <h2 class="text-lg font-bold text-[var(--color-text-muted)] mb-3">
+        <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+          <h2 class="text-lg font-bold text-[var(--color-text-muted)] leading-tight">
             {{ t('authPage.login') }}
           </h2>
-          <div class="mb-3">
-            <button
-              @click="AuthMode = 'register'"
-              class="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition duration-200"
-            >
-              <div class="flex flex-row gap-0 items-center">
-                {{ t('authPage.register') }}
-                <Arrow class="text-2xl" />
-              </div>
-            </button>
-          </div>
+          <button
+            @click="AuthMode = 'register'"
+            class="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition duration-200"
+          >
+            <div class="flex flex-row gap-1 items-center leading-tight">
+              <span>{{ t('authPage.register') }}</span>
+              <Arrow class="text-xl" />
+            </div>
+          </button>
         </div>
         <!-- 账号密码输入 -->
         <BaseInput
@@ -74,28 +72,26 @@
             />
           </div>
           <!-- 账号密码登录 -->
-          <BaseButton @click="handleLogin" class="w-12 h-9 rounded-md ml-1 flex-shrink-0">
+          <BaseButton @click="handleLogin" class="min-w-fit px-3 h-9 rounded-md ml-1 flex-shrink-0">
             <span class="text-[var(--color-text-secondary)]">{{ t('authPage.login') }}</span>
           </BaseButton>
         </div>
       </div>
       <!-- 注册 -->
       <div v-else-if="AuthMode === 'register'">
-        <div class="flex justify-between items-center">
-          <h2 class="text-lg font-bold text-[var(--color-text-muted)] mb-3">
+        <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+          <h2 class="text-lg font-bold text-[var(--color-text-muted)] leading-tight">
             {{ t('authPage.register') }}
           </h2>
-          <div class="mb-3">
-            <button
-              @click="AuthMode = 'login'"
-              class="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition duration-200"
-            >
-              <div class="flex flex-row gap-0 items-center">
-                {{ t('authPage.login') }}
-                <Arrow class="text-2xl rotate-180" />
-              </div>
-            </button>
-          </div>
+          <button
+            @click="AuthMode = 'login'"
+            class="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition duration-200"
+          >
+            <div class="flex flex-row gap-1 items-center leading-tight">
+              <span>{{ t('authPage.login') }}</span>
+              <Arrow class="text-xl rotate-180" />
+            </div>
+          </button>
         </div>
         <BaseInput
           v-model="username"
@@ -116,7 +112,7 @@
             :icon="Home"
             class="rounded-md w-9 h-9"
           />
-          <BaseButton @click="handleRegister" class="rounded-md">
+          <BaseButton @click="handleRegister" class="rounded-md min-w-fit px-3">
             <span class="text-[var(--color-text-secondary)]">{{ t('authPage.register') }}</span>
           </BaseButton>
         </div>

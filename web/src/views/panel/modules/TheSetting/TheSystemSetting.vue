@@ -50,7 +50,7 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold min-w-26 w-max shrink-0 whitespace-nowrap">
+        <h2 class="font-semibold min-w-28 md:min-w-32 shrink-0 break-words leading-5">
           {{ t('systemSetting.siteTitle') }}:
         </h2>
         <span v-if="!editMode" class="flex-1 min-w-0 truncate" :title="SystemSetting.site_title">{{
@@ -68,7 +68,7 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold min-w-26 w-max shrink-0 whitespace-nowrap">
+        <h2 class="font-semibold min-w-28 md:min-w-32 shrink-0 break-words leading-5">
           {{ t('systemSetting.serverName') }}:
         </h2>
         <span v-if="!editMode" class="flex-1 min-w-0 truncate" :title="SystemSetting.server_name">{{
@@ -86,7 +86,7 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold min-w-26 w-max shrink-0 whitespace-nowrap">
+        <h2 class="font-semibold min-w-28 md:min-w-32 shrink-0 break-words leading-5">
           {{ t('systemSetting.serverUrl') }}:
         </h2>
         <span v-if="!editMode" class="flex-1 min-w-0 truncate" :title="SystemSetting.server_url">{{
@@ -104,7 +104,7 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold min-w-26 w-max shrink-0 whitespace-nowrap">
+        <h2 class="font-semibold min-w-28 md:min-w-32 shrink-0 break-words leading-5">
           {{ t('systemSetting.footerContent') }}:
         </h2>
         <span
@@ -131,7 +131,7 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold min-w-26 w-max shrink-0 whitespace-nowrap">
+        <h2 class="font-semibold min-w-28 md:min-w-32 shrink-0 break-words leading-5">
           {{ t('systemSetting.footerLink') }}:
         </h2>
         <span
@@ -156,7 +156,7 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold min-w-26 w-max shrink-0 whitespace-nowrap">
+        <h2 class="font-semibold min-w-28 md:min-w-32 shrink-0 break-words leading-5">
           {{ t('systemSetting.metingApi') }}:
         </h2>
         <span
@@ -179,7 +179,7 @@
       </div>
       <!-- 自定义 CSS -->
       <div class="flex flex-row justify-start text-[var(--color-text-secondary)] gap-2 mb-1">
-        <h2 class="font-semibold min-w-26 w-max shrink-0 whitespace-nowrap">
+        <h2 class="font-semibold min-w-28 md:min-w-32 shrink-0 break-words leading-5">
           {{ t('systemSetting.customCss') }}:
         </h2>
         <span
@@ -199,7 +199,7 @@
       </div>
       <!-- 自定义 Script -->
       <div class="flex flex-row justify-start text-[var(--color-text-secondary)] gap-2 mb-1">
-        <h2 class="font-semibold min-w-26 w-max shrink-0 whitespace-nowrap">
+        <h2 class="font-semibold min-w-28 md:min-w-32 shrink-0 break-words leading-5">
           {{ t('systemSetting.customJs') }}:
         </h2>
         <span
@@ -221,7 +221,7 @@
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
       >
-        <h2 class="font-semibold min-w-26 w-max shrink-0 whitespace-nowrap">
+        <h2 class="font-semibold min-w-28 md:min-w-32 shrink-0 break-words leading-5">
           {{ t('systemSetting.defaultLocale') }}:
         </h2>
         <span v-if="!editMode" class="flex-1 min-w-0 truncate">
@@ -242,7 +242,7 @@
       </div>
       <!-- 允许注册 -->
       <div class="flex flex-row items-center justify-start text-[var(--color-text-secondary)]">
-        <h2 class="font-semibold min-w-26 w-max shrink-0 whitespace-nowrap">
+        <h2 class="font-semibold min-w-28 md:min-w-32 shrink-0 break-words leading-5">
           {{ t('systemSetting.allowRegister') }}:
         </h2>
         <BaseSwitch v-model="SystemSetting.allow_register" :disabled="!editMode" />

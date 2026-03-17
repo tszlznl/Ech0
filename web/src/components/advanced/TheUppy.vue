@@ -24,6 +24,8 @@ import AwsS3 from '@uppy/aws-s3'
 import '@uppy/core/css/style.min.css'
 import '@uppy/dashboard/css/style.min.css'
 import zh_CN from '@uppy/locales/lib/zh_CN'
+import en_US from '@uppy/locales/lib/en_US'
+import de_DE from '@uppy/locales/lib/de_DE'
 
 let uppy: Uppy | null = null
 
@@ -46,11 +48,18 @@ const editorStore = useEditorStore()
 const { isLogin } = storeToRefs(userStore)
 const envURL = import.meta.env.VITE_SERVICE_BASE_URL as string
 const backendURL = envURL.endsWith('/') ? envURL.slice(0, -1) : envURL
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const outputMimeType = isSafari() ? 'image/jpeg' : 'image/webp'
 const currentCategory = props.fileCategory || FILE_CATEGORY.IMAGE
 const currentAllowedTypes = props.allowedFileTypes?.length ? props.allowedFileTypes : ['image/*']
+
+function getUppyLocale(currentLocale: string) {
+  const normalized = String(currentLocale || '').toLowerCase()
+  if (normalized.startsWith('de')) return de_DE
+  if (normalized.startsWith('en')) return en_US
+  return zh_CN
+}
 
 function inferFileExtFromType(contentType: string): string {
   const normalized = String(contentType || '').toLowerCase()
@@ -182,7 +191,7 @@ const initUppy = () => {
     hidePauseResumeButton: false,
     proudlyDisplayPoweredByUppy: false,
     height: 200,
-    locale: zh_CN,
+    locale: getUppyLocale(locale.value),
     note: String(t('uppy.dashboardNote')),
   })
 
@@ -456,6 +465,21 @@ const initUppy = () => {
 }
 
 // 监听 props.fileStorageType 变化
+watch(
+  () => locale.value,
+  (newLocale, oldLocale) => {
+    if (newLocale === oldLocale) return
+    if (isUploading.value) return
+
+    uppy?.destroy()
+    uppy = null
+    files.value = []
+    tempFiles.value.clear()
+    pendingUploadTasks.value.clear()
+    initUppy()
+  },
+)
+
 watch(
   () => props.fileStorageType,
   (newSource, oldSource) => {

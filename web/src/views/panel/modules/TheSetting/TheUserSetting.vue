@@ -47,9 +47,9 @@
 
       <!-- 用户名 -->
       <div
-        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
+        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 min-h-10 py-1"
       >
-        <h2 class="font-semibold min-w-36 w-max shrink-0 whitespace-nowrap">
+        <h2 class="font-semibold min-w-28 md:min-w-36 shrink-0 break-words leading-5">
           {{ t('userSetting.username') }}:
         </h2>
         <span v-if="!editMode" class="flex-1 min-w-0 truncate" :title="user?.username">{{
@@ -60,15 +60,15 @@
           v-model="userInfo.username"
           type="text"
           :placeholder="t('userSetting.usernamePlaceholder')"
-          class="w-36 py-1!"
+          class="w-full max-w-52 py-1!"
         />
       </div>
 
       <!-- 密码 -->
       <div
-        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
+        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 min-h-10 py-1"
       >
-        <h2 class="font-semibold min-w-36 w-max shrink-0 whitespace-nowrap">
+        <h2 class="font-semibold min-w-28 md:min-w-36 shrink-0 break-words leading-5">
           {{ t('userSetting.password') }}:
         </h2>
         <span v-if="!editMode" class="flex-1 min-w-0 truncate">******</span>
@@ -77,19 +77,19 @@
           v-model="userInfo.password"
           type="password"
           :placeholder="t('userSetting.passwordPlaceholder')"
-          class="w-36 py-1!"
+          class="w-full max-w-52 py-1!"
           autocomplete="off"
         />
       </div>
       <!-- 界面语言 -->
       <div
-        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
+        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 min-h-10 py-1"
       >
-        <h2 class="font-semibold min-w-36 w-max shrink-0 whitespace-nowrap">
+        <h2 class="font-semibold min-w-28 md:min-w-36 shrink-0 break-words leading-5">
           {{ t('userSetting.locale') }}:
         </h2>
         <span v-if="!editMode" class="flex-1 min-w-0 truncate">{{ localeLabel }}</span>
-        <div v-else class="w-36">
+        <div v-else class="w-full max-w-52">
           <BaseSelect v-model="userInfo.locale" :options="localeOptions" class="w-full h-8" />
         </div>
       </div>

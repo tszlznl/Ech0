@@ -70,13 +70,24 @@ func Execute(fn func(ctx *gin.Context) Response) gin.HandlerFunc {
 				return
 			}
 
+			messageKey := commonModel.MessageKeyFromMessage(msg)
+			msg = i18nUtil.Localize(localizer, messageKey, msg, nil)
+			if messageKey != "" {
+				ctx.JSON(http.StatusBadRequest, commonModel.FailWithLocalized[string](msg, "", messageKey, nil))
+				return
+			}
+
 			ctx.JSON(http.StatusBadRequest, commonModel.Fail[string](msg))
 			return
 		}
 
 		successMsg := res.Msg
-		if strings.TrimSpace(res.MessageKey) != "" {
-			successMsg = i18nUtil.Localize(i18nUtil.LocalizerFromGin(ctx), res.MessageKey, res.Msg, res.MessageParams)
+		messageKey := strings.TrimSpace(res.MessageKey)
+		if messageKey == "" {
+			messageKey = commonModel.MessageKeyFromMessage(res.Msg)
+		}
+		if messageKey != "" {
+			successMsg = i18nUtil.Localize(i18nUtil.LocalizerFromGin(ctx), messageKey, res.Msg, res.MessageParams)
 		}
 
 		// 支持自定义 code
