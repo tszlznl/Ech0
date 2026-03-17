@@ -260,7 +260,7 @@ Run the target binary directly. For example, on Windows, double-click `Ech0.exe`
 ## FAQ
 
 1. **What is Ech0?**  
-   Ech0 is a lightweight open-source self-hosted platform designed for quickly publishing and sharing personal thoughts, writing, and links. It provides a clean interface and distraction-free experience, and all data is stored locally for full user control.
+   Ech0 is a lightweight open-source self-hosted platform designed for quickly publishing and sharing personal thoughts, writing, and links. It provides a clean interface and distraction-free experience, with your data remaining under your control.
 
 2. **What is Ech0 not?**  
    Ech0 is not a traditional professional note-taking app (such as Obsidian or Notion). Its core usage is closer to a social feed / microblog stream.
@@ -269,36 +269,33 @@ Run the target binary directly. For example, on Windows, double-click `Ech0.exe`
    Yes. Ech0 is fully free and open source under AGPL-3.0, with no ads, tracking, subscriptions, or service lock-in.
 
 4. **How do I back up and import data?**  
-   Since all content is stored in local SQLite files, regularly back up `/opt/ech0/data` (or your mapped data path). Online data management supports "Snapshot Export" and "Migration Import": export for offline archiving, import through migration.
+   Ech0 supports data recovery/migration through "Snapshot Export" and "Migration Import". At deployment level, regularly back up your mapped data directory (for example `/opt/ech0/data`). By default, core data is stored in the local database; if object storage is enabled, media assets are written to the configured storage backend.
 
 5. **Does Ech0 support RSS?**  
    Yes. Ech0 supports RSS subscriptions so you can follow updates in RSS readers.
 
 6. **Why does publishing fail with "contact administrator"?**  
-   In the current design, only administrators can publish content. After deployment, the first registered user is automatically assigned as system administrator. Other users cannot publish unless granted permission.
+   Publishing is restricted to privileged accounts by default. During initialization, the first account becomes Owner (with management privileges). Regular users cannot publish until explicitly granted permission by a privileged account.
 
 7. **Why is there no detailed permission matrix?**  
-   Ech0 keeps things simple and lightweight by design. Instead of a complex permission system, it currently distinguishes only admin and non-admin roles to keep usage smooth.
+   Ech0 currently uses a lightweight role model (Owner / Admin / regular user) to keep operation simple and predictable. The permission model will continue to evolve based on community feedback.
 
 8. **Why can't others see their Connect avatar?**  
    Set your current instance URL in `System Settings - Service URL`, for example `https://memo.vaaat.com` (must include `http://` or `https://`).
 
 9. **What is the MetingAPI option in settings?**  
-   It is the API service used to resolve direct music streaming links for shared music cards. If not configured, it defaults to the API provided by Ech0 (deployed on Vercel).
+   It is the API endpoint used by music cards to resolve playable stream metadata. You can provide your own trusted endpoint; when left empty, Ech0 falls back to a default resolver endpoint. For production, a self-controlled endpoint is recommended.
 
 10. **Why does a newly added Connect show only partial results?**  
     The backend tries to fetch instance information for all Connect entries. If an instance is down or unreachable, it is discarded, and only valid/accessible Connect data is returned to the frontend.
 
-11. **What content is not recommended for Ech0?**  
-    Ech0 content is composed of text, images, and extension content (such as music/video cards). Dense posts that combine `text + images + extension content` are not recommended because they conflict with some Ech0 design principles. In general, posting extension-heavy content or long-form articles is also discouraged.
+11. **How do I enable comments?**  
+    Enable comments in the panel comment manager, then configure moderation and captcha options as needed. Ech0 now uses a built-in comment system, so no third-party comment provider is required.
 
-12. **How do I enable comments?**  
-    In `Comment Settings`, choose a comment service and fill in the required parameters. Currently supports `Twikoo / Waline / Artalk / Giscus`; required fields are shown dynamically in the UI.
+12. **How do I configure S3 storage?**  
+    Fill in provider, endpoint, bucket, access key, secret key, and related fields in storage settings. It is recommended to provide endpoint without `http://` or `https://`. If media is accessed directly by browsers, ensure objects are readable through your chosen policy (for example public-read or equivalent CDN/gateway setup).
 
-13. **How do I configure S3 storage?**  
-    Fill in required values in storage settings. Note: endpoint should not include `http://` or `https://`, and the bucket must allow public access.
-
-14. **How do I enable passkey login?**  
+13. **How do I enable passkey login?**  
     In `SSO - Passkey`, configure `WebAuthn RP ID` and `WebAuthn Origins`. After saving and seeing "Passkey ready", follow browser prompts to bind biometrics or a security key.
 
 ---
