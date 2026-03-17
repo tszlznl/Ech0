@@ -89,11 +89,10 @@
               {{ t('commentSection.publishComment') }}
             </h3>
             <span
-              class="inline-flex items-center gap-1 rounded-full border border-[var(--color-border-subtle)] px-2 py-[2px] text-[11px] text-[var(--color-text-muted)]"
+              class="inline-flex items-center gap-1 rounded-full px-2 py-[2px] text-[11px] text-[var(--color-text-muted)]"
               :title="t('commentSection.markdownSupported')"
             >
               <MarkdownIcon class="h-3.5 w-3.5" />
-              <span>Markdown</span>
             </span>
           </div>
           <div class="flex items-center gap-2">
@@ -192,6 +191,7 @@
             </p>
           </div>
           <button
+            v-if="showSubmitButton"
             type="submit"
             class="comment-submit-btn rounded-md bg-[var(--color-text-primary)] px-4 py-1 text-sm text-[var(--color-bg-canvas)]"
             :disabled="submitting || !canSubmit"
@@ -245,6 +245,7 @@ type CapSolveDetail = {
 
 type CapErrorDetail = {
   error?: string
+  message?: string
 }
 
 type CapWidgetElement = HTMLElement & {
@@ -259,7 +260,7 @@ type SubmitNotice = {
 
 const route = useRoute()
 const userStore = useUserStore()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const loading = ref(false)
 const submitting = ref(false)
 const comments = ref<App.Api.Comment.CommentItem[]>([])
@@ -299,6 +300,7 @@ const canSubmit = computed(() => {
 const needCaptcha = computed(() =>
   Boolean(formMeta.value?.captcha_enabled && formMeta.value?.captcha_api_endpoint),
 )
+const showSubmitButton = computed(() => !needCaptcha.value || Boolean(form.captcha_token))
 
 const contentLength = computed(() => form.content.length)
 const contentTooLong = computed(() => contentLength.value > 200)
@@ -389,6 +391,19 @@ const mountCaptchaWidget = async () => {
   captchaError.value = ''
   const widget = document.createElement('cap-widget') as CapWidgetElement
   widget.setAttribute('data-cap-api-endpoint', formMeta.value?.captcha_api_endpoint || '')
+  const i18nAttrs: Record<string, string> = {
+    'data-cap-i18n-initial-state': String(t('commentSection.capInitialState')),
+    'data-cap-i18n-verifying-label': String(t('commentSection.capVerifyingLabel')),
+    'data-cap-i18n-solved-label': String(t('commentSection.capSolvedLabel')),
+    'data-cap-i18n-error-label': String(t('commentSection.capErrorLabel')),
+    'data-cap-i18n-troubleshooting-label': String(t('commentSection.capTroubleshootingLabel')),
+    'data-cap-i18n-wasm-disabled': String(t('commentSection.capWasmDisabled')),
+    'data-cap-i18n-verify-aria-label': String(t('commentSection.capVerifyAriaLabel')),
+    'data-cap-i18n-verifying-aria-label': String(t('commentSection.capVerifyingAriaLabel')),
+    'data-cap-i18n-verified-aria-label': String(t('commentSection.capVerifiedAriaLabel')),
+    'data-cap-i18n-error-aria-label': String(t('commentSection.capErrorAriaLabel')),
+  }
+  Object.entries(i18nAttrs).forEach(([key, value]) => widget.setAttribute(key, value))
   widget.addEventListener('solve', (event) => {
     const token = (event as CustomEvent<CapSolveDetail>).detail?.token
     form.captcha_token = token || ''
@@ -400,7 +415,7 @@ const mountCaptchaWidget = async () => {
   })
   widget.addEventListener('error', (event: Event) => {
     const detail = 'detail' in event ? (event as CustomEvent<CapErrorDetail>).detail : undefined
-    const message = detail?.error
+    const message = detail?.message || detail?.error
     form.captcha_token = ''
     captchaError.value = message || String(t('commentSection.captchaWidgetError'))
   })
@@ -506,7 +521,8 @@ onMounted(() => {
 })
 
 watch(
-  () => [needCaptcha.value, formMeta.value?.captcha_api_endpoint, captchaMountRef.value] as const,
+  () =>
+    [needCaptcha.value, formMeta.value?.captcha_api_endpoint, captchaMountRef.value, locale.value] as const,
   async () => {
     form.captcha_token = ''
     captchaError.value = ''
@@ -733,24 +749,27 @@ onBeforeUnmount(() => {
 
 .comment-submit-row {
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
+  flex-direction: column;
+  align-items: stretch;
   gap: 0.75rem;
 }
 
 .comment-captcha-wrap {
-  margin-right: auto;
-  min-width: 0;
-  max-width: 320px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .comment-captcha-mount {
-  min-height: 40px;
+  min-height: 48px;
 }
 
 .comment-captcha-mount :deep(cap-widget) {
+  box-sizing: border-box;
   display: block;
-  max-width: 100%;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0;
+  --cap-widget-width: 100%;
 }
 
 .comment-captcha-error {
@@ -758,12 +777,14 @@ onBeforeUnmount(() => {
 }
 
 .comment-submit-btn {
-  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 100%;
   min-height: 48px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding-inline: 1rem;
+  white-space: nowrap;
 }
 
 .comment-input-field {
@@ -809,25 +830,31 @@ onBeforeUnmount(() => {
   }
 
   .comment-submit-row {
+    display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 0.5rem;
   }
 
   .comment-captcha-wrap {
+    flex: 1 1 auto;
     width: 100%;
-    max-width: 320px;
     margin-right: 0;
-    margin-inline: auto;
   }
 
   .comment-captcha-mount {
-    display: flex;
-    justify-content: center;
+    min-height: 40px;
+  }
+
+  .comment-captcha-mount :deep(cap-widget) {
+    width: 100% !important;
+    max-width: 100% !important;
+    --cap-widget-height: 40px;
   }
 
   .comment-submit-btn {
     width: 100%;
+    margin-left: 0;
     min-height: 40px;
   }
 }
