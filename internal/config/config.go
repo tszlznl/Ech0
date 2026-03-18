@@ -119,8 +119,7 @@ type SettingConfig struct {
 }
 
 type CommentConfig struct {
-	EnableComment         bool   // 是否启用评论
-	Provider              string // 评论提供者
+	EnableComment         bool // 是否启用评论
 	CaptchaSiteKey        string
 	CaptchaSecret         string
 	CaptchaDifficulty     int
@@ -268,7 +267,6 @@ func defaultConfig() *AppConfig {
 		},
 		Comment: CommentConfig{
 			EnableComment:         false,
-			Provider:              "twikoo",
 			CaptchaSiteKey:        "ech0-comment",
 			CaptchaSecret:         "",
 			CaptchaDifficulty:     4,
@@ -371,7 +369,6 @@ func applyEnvOverrides(cfg *AppConfig) {
 
 	// Comment
 	setBoolEnv("ECH0_COMMENT_ENABLE", &cfg.Comment.EnableComment)
-	setStringEnv("ECH0_COMMENT_PROVIDER", &cfg.Comment.Provider)
 	setStringEnv("ECH0_COMMENT_CAPTCHA_SITE_KEY", &cfg.Comment.CaptchaSiteKey)
 	setStringEnv("ECH0_COMMENT_CAPTCHA_SECRET", &cfg.Comment.CaptchaSecret)
 	setIntEnv("ECH0_COMMENT_CAPTCHA_DIFFICULTY", &cfg.Comment.CaptchaDifficulty)
