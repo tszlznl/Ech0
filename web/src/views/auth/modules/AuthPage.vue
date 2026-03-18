@@ -292,7 +292,6 @@ onMounted(async () => {
   const url = new URL(window.location.href)
   const token = url.searchParams.get('token')
   if (token) {
-    console.log('检测到 token，尝试使用 token 登录', token)
     // 有 token，直接登录
     await userStore.loginWithToken(token)
     return

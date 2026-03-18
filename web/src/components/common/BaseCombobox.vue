@@ -146,7 +146,6 @@ const { t } = useI18n()
 
 const toggleManaging = () => {
   isManaging.value = !isManaging.value
-  console.log(isManaging.value)
   editorStore.setMode(Mode.TagManage)
 }
 

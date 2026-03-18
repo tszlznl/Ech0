@@ -432,7 +432,6 @@ export const useEditorStore = defineStore('editorStore', () => {
 
       // ========= 添加模式 =========
       if (!isUpdateMode.value) {
-        console.log('adding echo:', echoToAdd.value)
         theToast.promise(fetchAddEcho(echoToAdd.value), {
           loading: t('editor.publishing'),
           success: (res) => {

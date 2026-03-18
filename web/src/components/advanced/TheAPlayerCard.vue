@@ -41,7 +41,7 @@
 
 <script setup lang="ts">
 import Music from '@/components/icons/music.vue'
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { parseMusicURL } from '@/utils/other'
 import { useSettingStore } from '@/stores'
@@ -69,6 +69,32 @@ const metingAPI = computed(() => {
   } else {
     return 'https://meting.soopy.cn/api?server=:server&type=:type&id=:id&auth=:auth&r=:r'
   }
+})
+
+let metingDisconnectPatched = false
+
+const patchMetingDisconnectGuard = () => {
+  if (typeof window === 'undefined' || metingDisconnectPatched) return
+  const ctor = customElements.get('meting-js') as
+    | (CustomElementConstructor & {
+        prototype?: { disconnectedCallback?: (...args: unknown[]) => void }
+      })
+    | undefined
+  const original = ctor?.prototype?.disconnectedCallback
+  if (!ctor?.prototype || !original) return
+
+  ctor.prototype.disconnectedCallback = function (...args: unknown[]) {
+    try {
+      original.apply(this, args)
+    } catch {
+      // swallow meting-js teardown error to avoid polluting console during route transitions
+    }
+  }
+  metingDisconnectPatched = true
+}
+
+onMounted(() => {
+  patchMetingDisconnectGuard()
 })
 </script>
 

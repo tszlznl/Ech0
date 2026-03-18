@@ -205,7 +205,6 @@ const initUppy = () => {
 
   // 根据 props.fileStorageType 动态切换上传插件
   if (memorySource.value == FILE_STORAGE_TYPE.LOCAL) {
-    console.log('使用本地存储')
     uppy.setMeta({
       category: currentCategory,
       storage_type: FILE_STORAGE_TYPE.LOCAL,
@@ -219,7 +218,6 @@ const initUppy = () => {
       },
     })
   } else if (memorySource.value == FILE_STORAGE_TYPE.OBJECT) {
-    console.log('使用 S3 存储')
     uppy.use(AwsS3, {
       endpoint: '', // 走自定义的签名接口
       shouldUseMultipart: false, // 禁用分块上传
@@ -229,14 +227,11 @@ const initUppy = () => {
         const contentType = String(file.type || 'application/octet-stream')
         const rawName = String(file.name || '').trim()
         const fileName = rawName || `upload_${Date.now()}${inferFileExtFromType(contentType)}`
-        console.log('获取预签名fileName, contentType', fileName, contentType)
-
         const data = await getPresign({
           fileName,
           contentType,
           storageType: FILE_STORAGE_TYPE.OBJECT,
         })
-        console.log('获取预签名成功!')
         const uppyFileId = String((file as unknown as Record<string, unknown>)?.id || '')
         if (uppyFileId) {
           tempFiles.value.set(uppyFileId, {
@@ -484,10 +479,8 @@ watch(
   () => props.fileStorageType,
   (newSource, oldSource) => {
     if (newSource !== oldSource) {
-      console.log('fileStorageType changed:', newSource, oldSource)
       if (!isUploading.value) {
         memorySource.value = newSource
-        console.log('当前没有上传任务，可以切换上传方式')
         // 销毁旧的 Uppy 实例
         uppy?.destroy()
         uppy?.clear()
@@ -511,8 +504,6 @@ watch(
       return
     }
 
-    console.log('EnableCompressor changed:', newVal)
-
     uppy?.destroy()
     uppy = null
     files.value = []
@@ -523,7 +514,6 @@ watch(
 )
 
 onMounted(() => {
-  console.log('fileStorageType:', props.fileStorageType)
   initUppy()
 })
 
