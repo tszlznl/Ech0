@@ -492,8 +492,6 @@ declare namespace App {
         enable_comment: boolean
         require_approval: boolean
         captcha_enabled: boolean
-        captcha_verify_url: string
-        captcha_secret: string
       }
     }
 

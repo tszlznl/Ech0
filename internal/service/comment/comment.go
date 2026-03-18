@@ -17,6 +17,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/bytedance/sonic"
+	captchaCfg "github.com/lin-snow/ech0/internal/captcha"
 	"github.com/lin-snow/ech0/internal/config"
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	model "github.com/lin-snow/ech0/internal/model/comment"
@@ -54,15 +55,15 @@ func NewCommentService(
 	}
 }
 
-func (s *CommentService) GetFormMeta(ctx context.Context, clientIP string) (model.FormMeta, error) {
+func (s *CommentService) GetFormMeta(ctx context.Context, clientIP, apiBaseURL string) (model.FormMeta, error) {
 	setting, err := s.GetSystemSetting(ctx)
 	if err != nil {
 		return model.FormMeta{}, err
 	}
-	captchaAPIEndpoint := deriveCaptchaAPIEndpoint(setting.CaptchaVerify)
+	captchaAPIEndpoint := captchaCfg.APIEndpointWithBase(apiBaseURL)
 	captchaReady := setting.CaptchaEnabled &&
 		captchaAPIEndpoint != "" &&
-		strings.TrimSpace(setting.CaptchaSecret) != ""
+		strings.TrimSpace(captchaCfg.Secret()) != ""
 	issuedAt := time.Now().UnixMilli()
 	token := s.signFormToken(clientIP, issuedAt)
 	return model.FormMeta{
@@ -98,8 +99,8 @@ func (s *CommentService) CreateComment(
 			commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "评论功能未启用")
 	}
 
-	if setting.CaptchaEnabled && strings.TrimSpace(setting.CaptchaVerify) != "" {
-		if err := s.verifyCaptcha(dto.CaptchaToken, clientIP, setting); err != nil {
+	if setting.CaptchaEnabled {
+		if err := s.verifyCaptcha(dto.CaptchaToken, clientIP); err != nil {
 			return model.CreateCommentResult{},
 				commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "验证码验证失败")
 		}
@@ -356,8 +357,6 @@ func (s *CommentService) GetSystemSetting(ctx context.Context) (model.SystemSett
 			EnableComment:   true,
 			RequireApproval: true,
 			CaptchaEnabled:  false,
-			CaptchaVerify:   "",
-			CaptchaSecret:   "",
 		}
 		buf, _ := sonic.Marshal(defaultSetting)
 		_ = s.keyvalueRepository.AddKeyValue(ctx, model.CommentSystemSettingKey, string(buf))
@@ -374,8 +373,6 @@ func (s *CommentService) UpdateSystemSetting(ctx context.Context, setting model.
 	if err := s.requireAdmin(ctx); err != nil {
 		return err
 	}
-	setting.CaptchaVerify = strings.TrimSpace(setting.CaptchaVerify)
-	setting.CaptchaSecret = strings.TrimSpace(setting.CaptchaSecret)
 	buf, err := sonic.Marshal(setting)
 	if err != nil {
 		return err
@@ -420,13 +417,13 @@ func (s *CommentService) checkRateLimit(ctx context.Context, ipHash, email, user
 	return nil
 }
 
-func (s *CommentService) verifyCaptcha(token, _ string, setting model.SystemSetting) error {
+func (s *CommentService) verifyCaptcha(token, _ string) error {
 	if strings.TrimSpace(token) == "" {
 		return errors.New("captcha token missing")
 	}
 	payload := map[string]string{
 		"response": strings.TrimSpace(token),
-		"secret":   setting.CaptchaSecret,
+		"secret":   captchaCfg.Secret(),
 	}
 	body, err := sonic.Marshal(payload)
 	if err != nil {
@@ -435,7 +432,7 @@ func (s *CommentService) verifyCaptcha(token, _ string, setting model.SystemSett
 	req, err := http.NewRequestWithContext(
 		context.Background(),
 		http.MethodPost,
-		setting.CaptchaVerify,
+		captchaCfg.SiteVerifyURL(),
 		strings.NewReader(string(body)),
 	)
 	if err != nil {
@@ -558,27 +555,4 @@ func buildDiceBearURL(seed string) string {
 		trimmed = "guest"
 	}
 	return "https://api.dicebear.com/9.x/fun-emoji/svg?seed=" + url.QueryEscape(trimmed)
-}
-
-func deriveCaptchaAPIEndpoint(verifyURL string) string {
-	trimmed := strings.TrimSpace(verifyURL)
-	if trimmed == "" {
-		return ""
-	}
-	parsed, err := url.Parse(trimmed)
-	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
-		return ""
-	}
-	path := strings.TrimSuffix(parsed.Path, "/")
-	path = strings.TrimSuffix(path, "/siteverify")
-	if path == "" || path == "/" {
-		return ""
-	}
-	if !strings.HasSuffix(path, "/") {
-		path += "/"
-	}
-	parsed.Path = path
-	parsed.RawQuery = ""
-	parsed.Fragment = ""
-	return parsed.String()
 }

@@ -136,6 +136,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
+	github.com/lin-snow/gocap v0.1.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/mailru/easyjson v0.9.1 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect

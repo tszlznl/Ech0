@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -25,7 +26,11 @@ func NewCommentHandler(commentService service.Service) *CommentHandler {
 func (h *CommentHandler) GetFormMeta() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		h.attachOptionalViewer(ctx)
-		data, err := h.commentService.GetFormMeta(ctx.Request.Context(), ctx.ClientIP())
+		data, err := h.commentService.GetFormMeta(
+			ctx.Request.Context(),
+			ctx.ClientIP(),
+			resolveRequestBaseURL(ctx.Request),
+		)
 		if err != nil {
 			return res.Response{Err: err}
 		}
@@ -213,4 +218,23 @@ func parseQueryBool(ctx *gin.Context, key string) *bool {
 		return nil
 	}
 	return &v
+}
+
+func resolveRequestBaseURL(r *http.Request) string {
+	if r == nil {
+		return ""
+	}
+	host := strings.TrimSpace(r.Host)
+	if host == "" {
+		return ""
+	}
+	scheme := strings.TrimSpace(r.Header.Get("X-Forwarded-Proto"))
+	if scheme == "" {
+		if r.TLS != nil {
+			scheme = "https"
+		} else {
+			scheme = "http"
+		}
+	}
+	return scheme + "://" + host
 }

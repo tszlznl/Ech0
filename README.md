@@ -290,7 +290,7 @@ Run the target binary directly. For example, on Windows, double-click `Ech0.exe`
     The backend tries to fetch instance information for all Connect entries. If an instance is down or unreachable, it is discarded, and only valid/accessible Connect data is returned to the frontend.
 
 11. **How do I enable comments?**  
-    Enable comments in the panel comment manager, then configure moderation and captcha options as needed. Ech0 now uses a built-in comment system, so no third-party comment provider is required.
+    Enable comments in the panel comment manager, then configure moderation and captcha toggles as needed. Ech0 now embeds `gocap` for captcha verification, so no standalone captcha service deployment is required.
 
 12. **How do I configure S3 storage?**  
     Fill in provider, endpoint, bucket, access key, secret key, and related fields in storage settings. It is recommended to provide endpoint without `http://` or `https://`. If media is accessed directly by browsers, ensure objects are readable through your chosen policy (for example public-read or equivalent CDN/gateway setup).

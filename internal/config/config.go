@@ -119,8 +119,13 @@ type SettingConfig struct {
 }
 
 type CommentConfig struct {
-	EnableComment bool   // 是否启用评论
-	Provider      string // 评论提供者
+	EnableComment         bool   // 是否启用评论
+	Provider              string // 评论提供者
+	CaptchaSiteKey        string
+	CaptchaSecret         string
+	CaptchaDifficulty     int
+	CaptchaChallengeCount int
+	CaptchaSaltSize       int
 }
 
 type SecurityConfig struct {
@@ -262,8 +267,13 @@ func defaultConfig() *AppConfig {
 			CustomJS:      "",
 		},
 		Comment: CommentConfig{
-			EnableComment: false,
-			Provider:      "twikoo",
+			EnableComment:         false,
+			Provider:              "twikoo",
+			CaptchaSiteKey:        "ech0-comment",
+			CaptchaSecret:         "",
+			CaptchaDifficulty:     4,
+			CaptchaChallengeCount: 80,
+			CaptchaSaltSize:       32,
 		},
 		Web: WebConfig{
 			CORS: CORSConfig{
@@ -362,6 +372,11 @@ func applyEnvOverrides(cfg *AppConfig) {
 	// Comment
 	setBoolEnv("ECH0_COMMENT_ENABLE", &cfg.Comment.EnableComment)
 	setStringEnv("ECH0_COMMENT_PROVIDER", &cfg.Comment.Provider)
+	setStringEnv("ECH0_COMMENT_CAPTCHA_SITE_KEY", &cfg.Comment.CaptchaSiteKey)
+	setStringEnv("ECH0_COMMENT_CAPTCHA_SECRET", &cfg.Comment.CaptchaSecret)
+	setIntEnv("ECH0_COMMENT_CAPTCHA_DIFFICULTY", &cfg.Comment.CaptchaDifficulty)
+	setIntEnv("ECH0_COMMENT_CAPTCHA_CHALLENGE_COUNT", &cfg.Comment.CaptchaChallengeCount)
+	setIntEnv("ECH0_COMMENT_CAPTCHA_SALT_SIZE", &cfg.Comment.CaptchaSaltSize)
 
 	// Web/CORS
 	setStringSliceEnv("ECH0_WEB_CORS_ALLOWED_ORIGINS", &cfg.Web.CORS.AllowedOrigins)

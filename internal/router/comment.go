@@ -1,12 +1,19 @@
 package router
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/lin-snow/ech0/internal/handler"
 	"github.com/lin-snow/ech0/internal/middleware"
 )
 
 func setupCommentRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
+	captchaHandler, err := commentCaptchaHTTPHandler()
+	if err != nil {
+		panic(err)
+	}
+
 	// Public
+	appRouterGroup.PublicRouterGroup.Any("/cap/*any", gin.WrapH(captchaHandler))
 	appRouterGroup.PublicRouterGroup.GET("/comments/form", middleware.NoCache(), h.CommentHandler.GetFormMeta())
 	appRouterGroup.PublicRouterGroup.GET("/comments", middleware.NoCache(), h.CommentHandler.ListCommentsByEchoID())
 	appRouterGroup.PublicRouterGroup.GET(

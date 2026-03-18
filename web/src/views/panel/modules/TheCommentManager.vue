@@ -45,35 +45,6 @@
         </div>
       </div>
 
-      <div v-if="setting.captcha_enabled" class="mt-3 grid gap-2">
-        <BaseInput
-          v-model.trim="setting.captcha_verify_url"
-          type="text"
-          :disabled="!setting.enable_comment"
-          :placeholder="t('commentManager.captchaVerifyPlaceholder')"
-        />
-        <BaseInput
-          v-model.trim="setting.captcha_secret"
-          type="text"
-          :disabled="!setting.enable_comment"
-          :placeholder="t('commentManager.captchaSecretPlaceholder')"
-        />
-      </div>
-      <div
-        v-else
-        class="mt-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-muted)]/60 px-3 py-2 text-xs text-[var(--color-text-muted)]"
-      >
-        {{ t('commentManager.captchaDisabledPrefix') }}
-        <a
-          href="https://github.com/tiagozip/cap"
-          target="_blank"
-          rel="noreferrer"
-          class="underline underline-offset-2 hover:text-[var(--color-text-secondary)]"
-        >
-          cap
-        </a>
-        {{ t('commentManager.captchaDisabledSuffix') }}
-      </div>
     </PanelCard>
 
     <PanelCard>
@@ -319,8 +290,6 @@ const setting = reactive<App.Api.Comment.SystemSetting>({
   enable_comment: true,
   require_approval: true,
   captcha_enabled: false,
-  captcha_verify_url: '',
-  captcha_secret: '',
 })
 const settingSaving = ref(false)
 

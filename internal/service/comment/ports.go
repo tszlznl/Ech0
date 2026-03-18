@@ -10,7 +10,7 @@ import (
 )
 
 type Service interface {
-	GetFormMeta(ctx context.Context, clientIP string) (model.FormMeta, error)
+	GetFormMeta(ctx context.Context, clientIP, apiBaseURL string) (model.FormMeta, error)
 	CreateComment(
 		ctx context.Context,
 		clientIP,
