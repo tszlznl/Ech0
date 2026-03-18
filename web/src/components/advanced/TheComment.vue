@@ -271,7 +271,7 @@ const captchaError = ref('')
 const solvingCaptcha = ref(false)
 const commentFormExpanded = ref(false)
 const submitNotice = ref<SubmitNotice | null>(null)
-const CAP_WIDGET_SCRIPT_ID = 'cap-widget-script'
+let capWidgetLoadPromise: Promise<unknown> | null = null
 
 const form = reactive<App.Api.Comment.CreateCommentDto>({
   echo_id: '',
@@ -354,29 +354,8 @@ const clearCaptchaWidget = () => {
 const ensureCapWidgetScript = async () => {
   if (typeof window === 'undefined') return
   if (customElements.get('cap-widget')) return
-  const existingScript = document.getElementById(CAP_WIDGET_SCRIPT_ID) as HTMLScriptElement | null
-  if (existingScript) {
-    await new Promise<void>((resolve, reject) => {
-      if (customElements.get('cap-widget')) {
-        resolve()
-        return
-      }
-      existingScript.addEventListener('load', () => resolve(), { once: true })
-      existingScript.addEventListener('error', () => reject(new Error('load cap widget failed')), {
-        once: true,
-      })
-    })
-    return
-  }
-  await new Promise<void>((resolve, reject) => {
-    const script = document.createElement('script')
-    script.id = CAP_WIDGET_SCRIPT_ID
-    script.src = 'https://cdn.jsdelivr.net/npm/@cap.js/widget'
-    script.async = true
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error('load cap widget failed'))
-    document.head.appendChild(script)
-  })
+  capWidgetLoadPromise ??= import('@cap.js/widget')
+  await capWidgetLoadPromise
 }
 
 const mountCaptchaWidget = async () => {

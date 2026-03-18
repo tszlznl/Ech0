@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@cap.js/widget':
+        specifier: ^0.1.41
+        version: 0.1.41
       '@dicebear/core':
         specifier: ^9.4.0
         version: 9.4.0
@@ -295,6 +298,9 @@ packages:
 
   '@bufbuild/protobuf@2.11.0':
     resolution: {integrity: sha512-sBXGT13cpmPR5BMgHE6UEEfEaShh5Ror6rfN3yEK5si7QVrtZg8LEPQb0VVhiLRUslD2yLnXtnRzG035J/mZXQ==}
+
+  '@cap.js/widget@0.1.41':
+    resolution: {integrity: sha512-M3z3lnHGvTIY9WMxzeuXAJVDnpxkadjMzxjmEVeq6bN/eESxoDY7+lvkvkrn8xhCnEMMMuifPdNSNwKDHdD7BQ==}
 
   '@dicebear/core@9.4.0':
     resolution: {integrity: sha512-uoAG5mPBX+kQTtVerWUoH5e7rezG+DV/vJ5icd/kGooGyylH0nuJIlA6todkKGQv+/b0QNo+EzNF6Nc4UTE3wQ==}
@@ -2814,6 +2820,8 @@ snapshots:
       '@babel/helper-validator-identifier': 7.28.5
 
   '@bufbuild/protobuf@2.11.0': {}
+
+  '@cap.js/widget@0.1.41': {}
 
   '@dicebear/core@9.4.0':
     dependencies:
