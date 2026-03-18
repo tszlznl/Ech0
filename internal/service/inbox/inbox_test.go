@@ -56,7 +56,7 @@ func (r *testInboxRepo) UpdateInbox(_ context.Context, inbox *model.Inbox) error
 }
 
 func (r *testInboxRepo) DeleteInbox(_ context.Context, _ string) error { return nil }
-func (r *testInboxRepo) ClearInbox(_ context.Context) error             { return nil }
+func (r *testInboxRepo) ClearInbox(_ context.Context) error            { return nil }
 
 func TestInboxServiceMarkAsReadSetsReadTrue(t *testing.T) {
 	repo := &testInboxRepo{

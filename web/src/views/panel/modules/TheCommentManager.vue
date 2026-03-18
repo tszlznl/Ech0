@@ -44,7 +44,6 @@
           <BaseSwitch v-model="setting.captcha_enabled" :disabled="!setting.enable_comment" />
         </div>
       </div>
-
     </PanelCard>
 
     <PanelCard>
