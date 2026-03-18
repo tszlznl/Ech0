@@ -2,12 +2,13 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/lin-snow/ech0/internal/captcha"
 	"github.com/lin-snow/ech0/internal/handler"
 	"github.com/lin-snow/ech0/internal/middleware"
 )
 
 func setupCommentRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
-	captchaHandler, err := commentCaptchaHTTPHandler()
+	captchaHandler, err := captcha.NewHTTPHandler("/api")
 	if err != nil {
 		panic(err)
 	}

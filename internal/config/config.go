@@ -125,6 +125,17 @@ type CommentConfig struct {
 	CaptchaDifficulty     int
 	CaptchaChallengeCount int
 	CaptchaSaltSize       int
+	CaptchaChallengeTTL   int
+	CaptchaRedeemTTL      int
+	CaptchaGCInterval     int
+	CaptchaEnableCORS     bool
+	CaptchaIPHeader       string
+	CaptchaMaxBodyBytes   int
+	CaptchaRateLimitMax   int
+	CaptchaRateLimitWin   int
+	CaptchaRateLimitScope string
+	CaptchaLimitOnRedeem  bool
+	CaptchaLimitOnVerify  bool
 }
 
 type SecurityConfig struct {
@@ -272,6 +283,17 @@ func defaultConfig() *AppConfig {
 			CaptchaDifficulty:     4,
 			CaptchaChallengeCount: 80,
 			CaptchaSaltSize:       32,
+			CaptchaChallengeTTL:   900,
+			CaptchaRedeemTTL:      7200,
+			CaptchaGCInterval:     2,
+			CaptchaEnableCORS:     true,
+			CaptchaIPHeader:       "",
+			CaptchaMaxBodyBytes:   1048576,
+			CaptchaRateLimitMax:   30,
+			CaptchaRateLimitWin:   5,
+			CaptchaRateLimitScope: "cap",
+			CaptchaLimitOnRedeem:  false,
+			CaptchaLimitOnVerify:  false,
 		},
 		Web: WebConfig{
 			CORS: CORSConfig{
@@ -374,6 +396,17 @@ func applyEnvOverrides(cfg *AppConfig) {
 	setIntEnv("ECH0_COMMENT_CAPTCHA_DIFFICULTY", &cfg.Comment.CaptchaDifficulty)
 	setIntEnv("ECH0_COMMENT_CAPTCHA_CHALLENGE_COUNT", &cfg.Comment.CaptchaChallengeCount)
 	setIntEnv("ECH0_COMMENT_CAPTCHA_SALT_SIZE", &cfg.Comment.CaptchaSaltSize)
+	setIntEnv("ECH0_COMMENT_CAPTCHA_CHALLENGE_TTL", &cfg.Comment.CaptchaChallengeTTL)
+	setIntEnv("ECH0_COMMENT_CAPTCHA_REDEEM_TTL", &cfg.Comment.CaptchaRedeemTTL)
+	setIntEnv("ECH0_COMMENT_CAPTCHA_GC_INTERVAL", &cfg.Comment.CaptchaGCInterval)
+	setBoolEnv("ECH0_COMMENT_CAPTCHA_ENABLE_CORS", &cfg.Comment.CaptchaEnableCORS)
+	setStringEnv("ECH0_COMMENT_CAPTCHA_IP_HEADER", &cfg.Comment.CaptchaIPHeader)
+	setIntEnv("ECH0_COMMENT_CAPTCHA_MAX_BODY_BYTES", &cfg.Comment.CaptchaMaxBodyBytes)
+	setIntEnv("ECH0_COMMENT_CAPTCHA_RATE_LIMIT_MAX", &cfg.Comment.CaptchaRateLimitMax)
+	setIntEnv("ECH0_COMMENT_CAPTCHA_RATE_LIMIT_WINDOW", &cfg.Comment.CaptchaRateLimitWin)
+	setStringEnv("ECH0_COMMENT_CAPTCHA_RATE_LIMIT_SCOPE", &cfg.Comment.CaptchaRateLimitScope)
+	setBoolEnv("ECH0_COMMENT_CAPTCHA_RATE_LIMIT_ON_REDEEM", &cfg.Comment.CaptchaLimitOnRedeem)
+	setBoolEnv("ECH0_COMMENT_CAPTCHA_RATE_LIMIT_ON_SITEVERIFY", &cfg.Comment.CaptchaLimitOnVerify)
 
 	// Web/CORS
 	setStringSliceEnv("ECH0_WEB_CORS_ALLOWED_ORIGINS", &cfg.Web.CORS.AllowedOrigins)
