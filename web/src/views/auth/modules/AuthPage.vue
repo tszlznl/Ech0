@@ -1,6 +1,6 @@
 <template>
   <div class="flex justify-center items-center h-screen">
-    <div class="h-1/2 w-[min(86vw,20rem)] sm:w-[min(82vw,22rem)]">
+    <div class="h-1/2 w-[min(86vw,12rem)] sm:w-[min(82vw,18rem)] md:w-[15rem]">
       <h1
         class="text-6xl italic font-bold text-center text-[var(--color-text-muted)] mb-4 font-serif"
       >
@@ -9,13 +9,13 @@
       <!-- 登录  -->
       <div v-if="AuthMode === 'login'">
         <!-- 模式切换 -->
-        <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+        <div class="flex items-center justify-between gap-3 mb-3">
           <h2 class="text-lg font-bold text-[var(--color-text-muted)] leading-tight">
             {{ t('authPage.login') }}
           </h2>
           <button
             @click="AuthMode = 'register'"
-            class="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition duration-200"
+            class="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition duration-200 whitespace-nowrap flex-shrink-0"
           >
             <div class="flex flex-row gap-1 items-center leading-tight">
               <span>{{ t('authPage.register') }}</span>
@@ -79,13 +79,13 @@
       </div>
       <!-- 注册 -->
       <div v-else-if="AuthMode === 'register'">
-        <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+        <div class="flex items-center justify-between gap-3 mb-3">
           <h2 class="text-lg font-bold text-[var(--color-text-muted)] leading-tight">
             {{ t('authPage.register') }}
           </h2>
           <button
             @click="AuthMode = 'login'"
-            class="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition duration-200"
+            class="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition duration-200 whitespace-nowrap flex-shrink-0"
           >
             <div class="flex flex-row gap-1 items-center leading-tight">
               <span>{{ t('authPage.login') }}</span>
