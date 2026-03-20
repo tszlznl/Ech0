@@ -29,9 +29,22 @@
 
 </div>
 
-> A next-generation, open-source, self-hosted, lightweight platform for sharing personal ideas.
+> A self-hosted personal microblog where your timeline can be shared, discussed, and fully owned.
 
-Ech0 is a next-generation open-source self-hosted platform built for individuals. It is lightweight and low-cost, making it easy to publish and share your ideas, writing, and links. A clean UI plus practical command-line tools keeps content management simple and flexible. Your data stays fully under your control.
+Tools like Memos are great for capturing quick thoughts. Ech0 is built for what comes next: publishing those ideas to a personal timeline that others can follow and interact with.
+Run it on your own server, keep full control of your content, and keep a personal space that still feels connected through optional comments and sharing.
+It stays lightweight, easy to deploy, and fully open-source.
+
+**Great fit if you want to:**
+- run a personal public or semi-public timeline on your own domain
+- publish short posts, links, and media from one clean interface
+- keep data ownership while still getting RSS and optional comments
+- keep a personal space that supports lightweight social interaction without becoming a full social network
+
+**Probably not for you if you need:**
+- a bi-directional knowledge base workflow (for example Obsidian-style PKM)
+- a team-first collaborative docs workspace (for example Notion-style docs)
+- a private-only memo app with no publishing or timeline focus
 
 ![Interface Preview](./docs/imgs/screenshot.png)
 
@@ -41,7 +54,9 @@ Ech0 is a next-generation open-source self-hosted platform built for individuals
    <summary><strong>Table of Contents</strong></summary>
 
 - [Ech0](#ech0)
-  - [Highlights](#highlights)
+  - [Try in 60 Seconds](#try-in-60-seconds)
+  - [Why Ech0](#why-ech0)
+  - [Full Feature List](#full-feature-list)
   - [Quick Deployment](#quick-deployment)
     - [🐳 Docker Deployment (Recommended)](#-docker-deployment-recommended)
     - [🐋 Docker Compose](#-docker-compose)
@@ -67,14 +82,47 @@ Ech0 is a next-generation open-source self-hosted platform built for individuals
 
 ---
 
-## Highlights
+## Try in 60 Seconds
+
+```shell
+docker run -d \
+  --name ech0 \
+  -p 6277:6277 \
+  -v /opt/ech0/data:/app/data \
+  -e JWT_SECRET="Hello Echos" \
+  sn0wl1n/ech0:latest
+```
+
+Then open `http://ip:6277`:
+
+1. Register your first account.
+2. The first account becomes Owner (admin privileges).
+3. By default, publishing is restricted to privileged accounts.
+
+See [Quick Deployment](#quick-deployment) for Docker Compose and Helm options.  
+If publishing fails with "contact administrator", check [FAQ](#faq).
+
+## Why Ech0
+
+- 📝 **Built for personal publishing**: Timeline-first microblog flow for thoughts, links, and short writing.  
+- 🤝 **Lightweight social by design**: Posts can be shared and discussed through optional comments and interactions.  
+- 🧘 **Clean reading experience**: Zen-like timeline browsing with minimal distraction.  
+- ⚡ **Markdown and media in one place**: Markdown editor, rich cards, and embedded video support.  
+- 🔒 **Personal first with full ownership**: Best as a personal instance with optional multi-user roles, while staying self-hosted, RSS-ready, and AGPL-3.0 open-source.  
+
+## Full Feature List
+
+<details>
+  <summary><strong>Expand full capabilities</strong></summary>
+
+### Highlights
 
 - ☁️ **Lightweight, Efficient Architecture**: Low resource usage and compact images, suitable from personal servers to ARM devices.  
 - 🚀 **Fast Deployment Experience**: Out-of-the-box Docker deployment from install to first run with a single command.  
 - 📦 **Self-Contained Distribution**: Complete binaries and container images, with no extra runtime dependencies.  
 - 💻 **Cross-Platform Support**: Supports Linux, Windows, and ARM devices (for example, Raspberry Pi).  
 
-## Storage & Data
+### Storage & Data
 
 - 🗂️ **VireFS Unified Storage Layer**: Uses **VireFS** to unify mounting and management for local storage and S3-compatible object storage.  
 - ☁️ **S3 Object Storage Support**: Native support for S3-compatible object storage for cloud resource expansion.  
@@ -82,7 +130,7 @@ Ech0 is a next-generation open-source self-hosted platform built for individuals
 - 🔄 **Data Migration Workflow**: Supports migration import for historical data and snapshot export for migration and archiving.  
 - 🔐 **Automated Backup System**: Supports export/backup via Web, CLI, and TUI, plus background automatic backups.  
 
-## Writing & Content
+### Writing & Content
 
 - ✍️ **Markdown Writing Experience**: A **markdown-it** based editing/rendering engine with plugin extension and live preview.  
 - 🧘 **Zen Mode Immersive Reading**: A minimal-distraction Timeline browsing mode.  
@@ -90,23 +138,23 @@ Ech0 is a next-generation open-source self-hosted platform built for individuals
 - 🃏 **Rich Media Cards**: Supports card rendering for website links, GitHub projects, and more.  
 - 🎥 **Video Content Parsing**: Supports embedded parsing/display for Bilibili and YouTube videos.  
 
-## Media & Assets
+### Media & Assets
 
 - 📁 **Visual File Manager**: Built-in capabilities for file upload, browsing, and asset management.  
 
-## Social & Interaction
+### Social & Interaction
 
 - 💬 **Built-in Comment System**: Supports comments and moderation configuration.  
 - 🃏 **Content Interaction**: Supports social interactions such as likes and sharing.  
 
-## Auth & Security
+### Auth & Security
 
 - 🔑 **OAuth2 / OIDC Authentication**: Supports OAuth2 and OIDC for third-party login integration.  
 - 🙈 **Passkey Passwordless Login**: Supports biometric or hardware security key sign-in.  
 - 🔑 **Access Token Management**: Supports generating and revoking tokens for API calls and third-party integration.  
 - 👤 **Multi-Account Permission Management**: Supports multi-user collaboration and permission control.  
 
-## System & Developer
+### System & Developer
 
 - 🧱 **Busen Data Bus Architecture**: Uses in-house Busen to provide decoupled module communication and reliable message delivery.  
 - 📊 **Structured Logging System**: System logs are standardized in structured format for readability and analysis.  
@@ -115,16 +163,18 @@ Ech0 is a next-generation open-source self-hosted platform built for individuals
 - 🧰 **CLI Toolchain**: CLI tools for automation and script integration.  
 - 🔗 **Open API & Webhook**: Full API and Webhook support for external integration and automation workflows.  
 
-## Experience
+### Experience
 
 - 🌍 **Cross-Device Adaptation**: Responsive design for desktop, tablet, and mobile browsers.  
 - 🌐 **i18n Multi-Language Support**: Multi-language UI switching for different usage scenarios.  
 - 👾 **PWA Support**: Installable as a web app for a more native-like experience.  
 - 🌗 **Themes & Dark Mode**: Supports dark mode and theme extension.  
 
-## License
+### License
 
 - 🎉 **Fully Open Source**: Released under **AGPL-3.0**, with no tracking, no subscription, and no SaaS dependency.  
+
+</details>
 
 ---
 
@@ -275,7 +325,7 @@ Run the target binary directly. For example, on Windows, double-click `Ech0.exe`
    Yes. Ech0 supports RSS subscriptions so you can follow updates in RSS readers.
 
 6. **Why does publishing fail with "contact administrator"?**  
-   Publishing is restricted to privileged accounts by default. During initialization, the first account becomes Owner (with management privileges). Regular users cannot publish until explicitly granted permission by a privileged account.
+   Publishing is restricted to privileged accounts by default. During initialization, the first account becomes Owner (with management privileges). Regular users cannot publish until explicitly granted permission by a privileged account. If this is your first setup, review [Try in 60 Seconds](#try-in-60-seconds) and confirm which account is Owner.
 
 7. **Why is there no detailed permission matrix?**  
    Ech0 currently uses a lightweight role model (Owner / Admin / regular user) to keep operation simple and predictable. The permission model will continue to evolve based on community feedback.
