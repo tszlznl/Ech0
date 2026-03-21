@@ -52,11 +52,11 @@ func buildNotifyContent(kind string, comment model.Comment, serverURL string) no
         <div style="display:inline-block;padding:3px 10px;border-radius:0;font-size:12px;font-weight:600;color:%s;background:%s;border:1px solid %s;">%s</div>
         <div style="margin-top:12px;font-size:18px;font-weight:700;color:#3a3329;">%s</div>
         <div style="margin-top:14px;padding:14px;border:1px solid #e8e2d8;border-radius:0;background:#fffcf8;line-height:1.7;font-size:14px;color:#4f473b;word-break:break-word;">%s</div>
-        <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="margin-top:14px;border-collapse:collapse;background:#faf7f2;border:1px solid #e8e2d8;border-radius:0;">
-          <tr><td style="padding:10px 12px;font-size:13px;color:#8b8377;width:100px;">动作</td><td style="padding:10px 12px;font-size:13px;color:#5f574a;">%s</td></tr>
-          <tr><td style="padding:10px 12px;font-size:13px;color:#8b8377;">时间</td><td style="padding:10px 12px;font-size:13px;color:#5f574a;">%s</td></tr>
-          <tr><td style="padding:10px 12px;font-size:13px;color:#8b8377;">昵称</td><td style="padding:10px 12px;font-size:13px;color:#5f574a;">%s</td></tr>
-          <tr><td style="padding:10px 12px;font-size:13px;color:#8b8377;">邮箱</td><td style="padding:10px 12px;font-size:13px;color:#5f574a;">%s</td></tr>
+        <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="margin-top:10px;border-collapse:collapse;background:#faf7f2;border:1px solid #e8e2d8;border-radius:0;">
+          <tr><td style="padding:7px 10px;font-size:12px;line-height:1.45;color:#8b8377;width:72px;">动作</td><td style="padding:7px 10px;font-size:12px;line-height:1.45;color:#5f574a;">%s</td></tr>
+          <tr><td style="padding:7px 10px;font-size:12px;line-height:1.45;color:#8b8377;">时间</td><td style="padding:7px 10px;font-size:12px;line-height:1.45;color:#5f574a;">%s</td></tr>
+          <tr><td style="padding:7px 10px;font-size:12px;line-height:1.45;color:#8b8377;">昵称</td><td style="padding:7px 10px;font-size:12px;line-height:1.45;color:#5f574a;">%s</td></tr>
+          <tr><td style="padding:7px 10px;font-size:12px;line-height:1.45;color:#8b8377;">邮箱</td><td style="padding:7px 10px;font-size:12px;line-height:1.45;color:#5f574a;">%s</td></tr>
         </table>
         %s
         <div style="margin-top:14px;font-size:12px;line-height:1.6;color:#958d80;">此邮件由 Ech0 评论系统自动发送。</div>

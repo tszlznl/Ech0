@@ -452,9 +452,22 @@ func (s *CommentService) notifyOwnerAsync(ctx context.Context, kind string, comm
 	if !shouldNotify(setting, kind, comment.Status) {
 		return
 	}
-	ownerEmail, err := s.resolveOwnerEmail()
-	if err != nil {
-		return
+	recipient := ""
+	if useCommentRecipient(kind) {
+		var ok bool
+		recipient, ok = parseValidEmail(comment.Email)
+		if !ok {
+			zap.L().Info("skip comment notify mail due to invalid commenter email",
+				zap.String("kind", kind),
+				zap.String("comment_id", comment.ID))
+			return
+		}
+	} else {
+		ownerEmail, ownerErr := s.resolveOwnerEmail()
+		if ownerErr != nil {
+			return
+		}
+		recipient = ownerEmail
 	}
 	serverURL := s.resolveServerURL(ctx)
 	content := buildNotifyContent(kind, comment, serverURL)
@@ -465,11 +478,26 @@ func (s *CommentService) notifyOwnerAsync(ctx context.Context, kind string, comm
 			zap.L().Warn("comment notify mail failed", zap.Error(err), zap.String("comment_id", comment.ID))
 		}
 	}(setting.EmailNotify, MailMessage{
-		To:       ownerEmail,
+		To:       recipient,
 		Subject:  content.Subject,
 		TextBody: content.TextBody,
 		HTMLBody: content.HTMLBody,
 	})
+}
+
+func useCommentRecipient(kind string) bool {
+	return kind == "status" || kind == "hot"
+}
+
+func parseValidEmail(raw string) (string, bool) {
+	email := strings.TrimSpace(raw)
+	if email == "" {
+		return "", false
+	}
+	if _, err := mail.ParseAddress(email); err != nil {
+		return "", false
+	}
+	return email, true
 }
 
 func (s *CommentService) sendOwnerMail(ctx context.Context, cfg model.EmailNotifySetting, msg MailMessage) error {
