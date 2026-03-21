@@ -18,9 +18,9 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "@cap.js/widget": "^0.1.41",
-    "@dicebear/core": "^9.4.0",
-    "@dicebear/micah": "^9.4.0",
+    "@cap.js/widget": "^0.1.42",
+    "@dicebear/core": "^9.4.2",
+    "@dicebear/micah": "^9.4.2",
     "@headlessui/vue": "^1.7.23",
     "@uppy/aws-s3": "^5.1.0",
     "@uppy/compressor": "^3.1.0",
@@ -41,7 +41,7 @@
     "vditor": "^3.11.2",
     "vue": "^3.5.30",
     "vue-i18n": "^11.3.0",
-    "vue-router": "^5.0.3",
+    "vue-router": "^5.0.4",
     "vue-sonner": "^2.0.9",
     "vue-virtual-scroller": "2.0.0-beta.10"
   },
@@ -54,7 +54,7 @@
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.7.0",
     "@vue/tsconfig": "^0.9.0",
-    "eslint": "^10.0.3",
+    "eslint": "^10.1.0",
     "eslint-plugin-vue": "~10.8.0",
     "jiti": "^2.6.1",
     "npm-run-all2": "^8.0.4",
