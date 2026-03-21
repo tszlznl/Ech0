@@ -1,5 +1,5 @@
 <template>
-  <TheExtensionCardShell>
+  <ExtensionCardShell>
     <a
       :href="websiteInfo.site"
       target="_blank"
@@ -14,13 +14,13 @@
         <span class="website-domain">{{ displayDomain }}</span>
       </div>
     </a>
-  </TheExtensionCardShell>
+  </ExtensionCardShell>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import Link from '../icons/link.vue'
-import TheExtensionCardShell from './TheExtensionCardShell.vue'
+import Link from '@/components/icons/link.vue'
+import ExtensionCardShell from '../shared/ExtensionCardShell.vue'
 
 const props = defineProps<{
   website: { title: string; site: string }

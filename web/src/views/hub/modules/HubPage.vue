@@ -23,7 +23,7 @@
         </BaseButton>
       </div>
 
-      <div v-if="echoList.length > 0 && !isPreparing">
+      <div v-if="echoList.length > 0 && !isPreparing && !hasMusicExtension">
         <DynamicScroller
           class="hub-dynamic-scroller"
           :items="echoList"
@@ -45,11 +45,21 @@
             ]"
             :data-index="index"
           >
-            <div class="flex justify-center items-center py-3">
-              <TheHubEcho :key="item.virtual_key" :echo="item" class="hover:shadow-md" />
+            <div class="hub-item-wrap flex justify-center items-center py-3">
+              <TheHubEcho :echo="item" />
             </div>
           </DynamicScrollerItem>
         </DynamicScroller>
+      </div>
+
+      <div v-else-if="echoList.length > 0 && !isPreparing && hasMusicExtension" class="w-full">
+        <div
+          v-for="item in echoList"
+          :key="item.virtual_key"
+          class="hub-item-wrap flex justify-center items-center py-3"
+        >
+          <TheHubEcho :echo="item" />
+        </div>
       </div>
 
       <div v-if="isLoading || isPreparing" class="my-6">
@@ -85,7 +95,7 @@
 import BaseButton from '@/components/common/BaseButton.vue'
 import Arrow from '@/components/icons/arrow.vue'
 import TheBackTop from '@/components/advanced/TheBackTop.vue'
-import TheHubEcho from '@/components/advanced/TheHubEcho.vue'
+import TheHubEcho from '@/components/advanced/echo/cards/TheHubEcho.vue'
 import Flowers from '@/components/icons/flowers.vue'
 import { onMounted, watch, computed, ref, onBeforeUnmount, nextTick } from 'vue'
 import { useHubStore } from '@/stores'
@@ -94,6 +104,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useBfCacheRestore } from '@/composables/useBfCacheRestore'
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
 import { getEchoFilesBy } from '@/utils/echo'
+import { ExtensionType } from '@/enums/enums'
 import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
@@ -118,6 +129,9 @@ const getButtonClasses = (routeName: string, isBackButton = false) => {
 
 const hubStore = useHubStore()
 const { echoList, isLoading, isPreparing, hasMore, hasTriedInitialLoad } = storeToRefs(hubStore)
+const hasMusicExtension = computed(() =>
+  echoList.value.some((item) => item.extension?.type === ExtensionType.MUSIC),
+)
 
 const mainColumn = ref<HTMLElement | null>(null)
 const backTopStyle = ref({ right: '100px' }) // 默认 fallback
@@ -261,5 +275,9 @@ onBeforeUnmount(() => {
 <style scoped>
 .hub-dynamic-scroller {
   width: 100%;
+}
+
+.hub-item-wrap {
+  contain: layout paint;
 }
 </style>

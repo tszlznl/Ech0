@@ -72,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import TheEchoCard from '@/components/advanced/TheEchoCard.vue'
+import TheEchoCard from '@/components/advanced/echo/cards/TheEchoCard.vue'
 import { computed, onBeforeUnmount, onMounted, nextTick, watch } from 'vue'
 import { useEchoStore, useSettingStore, useZenStore } from '@/stores'
 import BaseButton from '@/components/common/BaseButton.vue'

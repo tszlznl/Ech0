@@ -1,15 +1,11 @@
 <template>
   <div class="echo-timeline w-full">
-    <!-- 日期时间 && 操作按钮 -->
     <div class="echo-header-sticky flex justify-between items-center">
-      <!-- 日期时间 -->
       <div class="flex justify-start items-center h-9">
         <div class="flex items-center h-full pr-1">
-          <!-- 小点 -->
           <div class="timeline-marker" :class="{ 'is-first': props.index === 0 }">
             <div class="w-2 h-2 rounded-full bg-[var(--color-accent)]"></div>
           </div>
-          <!-- 具体日期时间 -->
           <div
             @click="handleExpandEcho(echo.id)"
             class="flex items-center h-full justify-start leading-none text-sm text-nowrap text-[var(--color-text-secondary)] hover:underline hover:decoration-offset-3 hover:decoration-1 mr-1"
@@ -17,7 +13,6 @@
             {{ formatDate(props.echo.created_at) }}
           </div>
         </div>
-        <!-- 标签 -->
         <div
           v-if="!showMenu"
           @click="handleFilterByTag"
@@ -27,29 +22,23 @@
         </div>
       </div>
 
-      <!-- 操作按钮 -->
       <div ref="menuRef" class="relative flex items-center justify-center gap-1 h-auto">
-        <!-- 更多操作 -->
         <div
           v-if="!showMenu"
           @click.stop="toggleMenu"
           class="w-7 h-7 flex items-center justify-center bg-[var(--color-bg-surface)] ring-1 ring-[var(--color-border-subtle)] ring-inset rounded-full shadow-sm transition"
         >
-          <!-- 默认图标，展开后隐藏 -->
           <More class="w-5 h-5" />
         </div>
 
-        <!-- 展开后的按钮组 -->
         <div
           v-if="showMenu"
           class="flex items-center gap-4 bg-[var(--color-bg-surface)] rounded-full px-2 py-1 shadow-sm ring-1 ring-[var(--color-border-subtle)] ring-inset"
         >
-          <!-- 是否隐私 -->
           <span v-if="props.echo.private" :title="t('echoCard.privateStatus')">
             <Lock />
           </span>
 
-          <!-- 删除 -->
           <button
             v-if="userStore.isLogin"
             @click="handleDeleteEcho(props.echo.id)"
@@ -59,7 +48,6 @@
             <Roll />
           </button>
 
-          <!-- 更新 -->
           <button
             v-if="userStore.isLogin"
             @click="handleUpdateEcho()"
@@ -69,7 +57,6 @@
             <EditEcho />
           </button>
 
-          <!-- 展开内容 -->
           <button
             @click="handleExpandEcho(echo.id)"
             :title="t('echoCard.expand')"
@@ -78,10 +65,8 @@
             <Expand />
           </button>
 
-          <!-- 点赞 -->
           <div class="flex items-center justify-end" :title="t('echoCard.like')">
             <div class="flex items-center gap-1">
-              <!-- 点赞按钮   -->
               <button
                 @click="handleLikeEcho(props.echo.id)"
                 :title="t('echoCard.like')"
@@ -95,9 +80,7 @@
                 />
               </button>
 
-              <!-- 点赞数量   -->
               <span class="text-sm text-[var(--color-text-muted)]">
-                <!-- 如果点赞数不超过99，则显示数字，否则显示99+ -->
                 {{ props.echo.fav_count > 99 ? '99+' : props.echo.fav_count }}
               </span>
             </div>
@@ -106,17 +89,13 @@
       </div>
     </div>
 
-    <!-- 图片 && 内容 -->
     <div class="timeline-content">
       <div class="px-4 py-3">
-        <!-- 根据布局决定文字与图片顺序 -->
-        <!-- grid 和 horizontal 时，文字在图片上；其他布局（waterfall/carousel/null/undefined）文字在图片下 -->
         <template
           v-if="
             props.echo.layout === ImageLayout.GRID || props.echo.layout === ImageLayout.HORIZONTAL
           "
         >
-          <!-- 文字在上 -->
           <div class="mx-auto w-11/12 pl-1 mb-3">
             <TheMdPreview :content="props.echo.content" />
           </div>
@@ -125,7 +104,6 @@
         </template>
 
         <template v-else>
-          <!-- 图片在上，文字在下（瀑布流 / 单图轮播 等） -->
           <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" />
 
           <div class="mx-auto w-11/12 pl-1 mt-3">
@@ -133,27 +111,8 @@
           </div>
         </template>
 
-        <!-- 扩展内容 -->
         <div v-if="props.echo.extension" class="my-2">
-          <div v-if="props.echo.extension.type === ExtensionType.MUSIC">
-            <TheAPlayerCard :echo="props.echo" />
-          </div>
-          <div v-if="props.echo.extension.type === ExtensionType.VIDEO">
-            <TheVideoCard :videoId="props.echo.extension.payload.videoId" class="px-2 mx-auto" />
-          </div>
-          <TheGithubCard
-            v-if="
-              props.echo.extension.type === ExtensionType.GITHUBPROJ &&
-              props.echo.extension.payload?.repoUrl
-            "
-            :GithubURL="props.echo.extension.payload.repoUrl"
-            class="px-2 mx-auto"
-          />
-          <TheWebsiteCard
-            v-if="props.echo.extension.type === ExtensionType.WEBSITE"
-            :website="props.echo.extension.payload"
-            class="px-2 mx-auto"
-          />
+          <TheExtensionRenderer :echo="props.echo" />
         </div>
       </div>
     </div>
@@ -165,25 +124,23 @@ import { onMounted, ref, onBeforeUnmount, computed } from 'vue'
 import { fetchDeleteEcho, fetchLikeEcho, fetchGetEchoById } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useUserStore, useEchoStore, useEditorStore } from '@/stores'
-import TheGithubCard from './TheGithubCard.vue'
-import TheVideoCard from './TheVideoCard.vue'
-import TheImageGallery from './TheImageGallery.vue'
-import TheMdPreview from './TheMdPreview.vue'
-import Roll from '../icons/roll.vue'
-import Lock from '../icons/lock.vue'
-import More from '../icons/more.vue'
-import Expand from '../icons/expand.vue'
-import GrayLike from '../icons/graylike.vue'
-import EditEcho from '../icons/editecho.vue'
-import TheAPlayerCard from './TheAPlayerCard.vue'
-import TheWebsiteCard from './TheWebsiteCard.vue'
+import TheImageGallery from '@/components/advanced/gallery/TheImageGallery.vue'
+import TheMdPreview from '@/components/advanced/TheMdPreview.vue'
+import Roll from '@/components/icons/roll.vue'
+import Lock from '@/components/icons/lock.vue'
+import More from '@/components/icons/more.vue'
+import Expand from '@/components/icons/expand.vue'
+import GrayLike from '@/components/icons/graylike.vue'
+import EditEcho from '@/components/icons/editecho.vue'
+import TheExtensionRenderer from '@/components/advanced/extension/TheExtensionRenderer.vue'
 import { localStg } from '@/utils/storage'
 import { useRouter } from 'vue-router'
-import { ExtensionType, ImageLayout } from '@/enums/enums'
+import { ImageLayout } from '@/enums/enums'
 import { formatDate } from '@/utils/other'
 import { getEchoFilesBy } from '@/utils/echo'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useI18n } from 'vue-i18n'
+
 const { openConfirm } = useBaseDialog()
 const { t } = useI18n()
 
@@ -214,7 +171,6 @@ const handleDeleteEcho = (echoId: string) => {
     onConfirm: () => {
       fetchDeleteEcho(echoId).then(() => {
         theToast.success(String(t('echoCard.deleteSuccess')))
-        // 触发父组件的刷新事件emit
         emit('refresh')
       })
     },
@@ -223,14 +179,11 @@ const handleDeleteEcho = (echoId: string) => {
 
 const handleUpdateEcho = async () => {
   if (editorStore.isUpdateMode) {
-    // 如果已经在更新模式，返回顶部并提示用户先退出更新模式
     window.scrollTo({ top: 0, behavior: 'smooth' })
     theToast.warning(String(t('echoCard.exitUpdateModeFirst')))
     return
   }
 
-  // 进入更新模式
-  // echoStore.echoToUpdate = props.echo // 直接传对象会有可能没有拉取到最新数据
   const res = await fetchGetEchoById(String(props.echo.id))
   if (res.code === 1 && res.data) {
     echoStore.echoToUpdate = res.data
@@ -250,9 +203,8 @@ const handleLikeEcho = (echoId: string) => {
   isLikeAnimating.value = true
   setTimeout(() => {
     isLikeAnimating.value = false
-  }, 150) // 对应 duration-150
+  }, 150)
 
-  // 检查LocalStorage中是否已经点赞过
   if (hasLikedEcho(echoId)) {
     theToast.success(String(t('echoCard.alreadyLiked')))
     return
@@ -262,7 +214,6 @@ const handleLikeEcho = (echoId: string) => {
     if (res.code === 1) {
       likedEchoIds.push(echoId)
       localStg.setItem(LIKE_LIST_KEY, likedEchoIds)
-      // 发送更新事件
       emit('updateLikeCount', echoId)
       theToast.success(String(t('echoCard.likeSuccess')))
     }
@@ -270,7 +221,6 @@ const handleLikeEcho = (echoId: string) => {
 }
 
 const handleExpandEcho = (echoId: string) => {
-  // 跳转到Echo详情
   router.push({
     name: 'echo',
     params: { echoId: echoId },

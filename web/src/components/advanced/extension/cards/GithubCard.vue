@@ -1,11 +1,11 @@
 <template>
-  <TheExtensionCardShell v-if="safeGithubURL">
+  <ExtensionCardShell v-if="safeGithubURL">
     <a :href="safeGithubURL" target="_blank" rel="noopener noreferrer" class="github-card__link">
       <div class="github-card__body">
         <div class="github-avatar-wrap">
           <img
-            v-if="CardData?.owner?.avatar_url"
-            :src="CardData?.owner?.avatar_url"
+            v-if="cardData?.owner?.avatar_url"
+            :src="cardData?.owner?.avatar_url"
             :alt="t('githubCard.avatarAlt')"
             class="w-12 h-12 rounded-full ring-1 ring-[var(--color-border-subtle)] object-cover"
           />
@@ -13,62 +13,58 @@
         </div>
 
         <div class="github-meta">
-          <span class="github-title">{{ CardData?.name || repo }}</span>
-          <p class="github-desc line-clamp-2 break-all" :title="CardData?.description">
-            {{ CardData?.description || `${owner}/${repo}` }}
+          <span class="github-title">{{ cardData?.name || repo }}</span>
+          <p class="github-desc line-clamp-2 break-all" :title="cardData?.description">
+            {{ cardData?.description || `${owner}/${repo}` }}
           </p>
-          <div v-if="CardData" class="github-stats">
+          <div v-if="cardData" class="github-stats">
             <span class="github-stat">
               <Star class="w-4 h-4" />
-              <span>{{ CardData?.stargazers_count }}</span>
+              <span>{{ cardData?.stargazers_count }}</span>
             </span>
             <span class="github-stat-divider" aria-hidden="true"></span>
             <span class="github-stat">
               <Fork class="w-4 h-4" />
-              <span>{{ CardData?.forks_count }}</span>
+              <span>{{ cardData?.forks_count }}</span>
             </span>
           </div>
         </div>
       </div>
     </a>
-  </TheExtensionCardShell>
+  </ExtensionCardShell>
 </template>
 
 <script setup lang="ts">
-import TheExtensionCardShell from './TheExtensionCardShell.vue'
-import Githubproj from '../icons/githubproj.vue'
-import Star from '../icons/star.vue'
-import Fork from '../icons/fork.vue'
-import { fetchGetGithubRepo } from '@/service/api'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { fetchGetGithubRepo } from '@/service/api'
+import Githubproj from '@/components/icons/githubproj.vue'
+import Star from '@/components/icons/star.vue'
+import Fork from '@/components/icons/fork.vue'
+import ExtensionCardShell from '../shared/ExtensionCardShell.vue'
 
 const githubRepoCache = new Map<string, App.Api.Ech0.GithubCardData | null>()
 const githubRepoInFlight = new Map<string, Promise<App.Api.Ech0.GithubCardData | null>>()
 
 const props = defineProps<{
-  GithubURL?: string
+  githubUrl?: string
 }>()
 const { t } = useI18n()
 
-const safeGithubURL = computed(() => String(props.GithubURL ?? '').trim())
-
-// 处理GithubURL(提取owner和repo)
+const safeGithubURL = computed(() => String(props.githubUrl ?? '').trim())
 const githubUrlSegments = computed(() => safeGithubURL.value.split('/').filter(Boolean))
 const owner = computed(() => githubUrlSegments.value.slice(-2)[0] ?? '')
 const repo = computed(() => githubUrlSegments.value.slice(-2)[1] ?? '')
-const CardData = ref<App.Api.Ech0.GithubCardData>()
+const cardData = ref<App.Api.Ech0.GithubCardData>()
 const repoKey = computed(() => `${owner.value}/${repo.value}`)
 
 const loadGithubRepo = async () => {
-  if (!owner.value || !repo.value) {
-    return
-  }
+  if (!owner.value || !repo.value) return
 
   if (githubRepoCache.has(repoKey.value)) {
     const cachedData = githubRepoCache.get(repoKey.value)
     if (cachedData) {
-      CardData.value = cachedData
+      cardData.value = cachedData
     }
     return
   }
@@ -86,7 +82,7 @@ const loadGithubRepo = async () => {
   const repoData = await githubRepoInFlight.get(repoKey.value)
   githubRepoCache.set(repoKey.value, repoData ?? null)
   if (repoData) {
-    CardData.value = repoData
+    cardData.value = repoData
   }
 }
 

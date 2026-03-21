@@ -1,0 +1,57 @@
+<template>
+  <div class="imgwidth mx-auto mb-4">
+    <div class="grid grid-cols-3 gap-2">
+      <GalleryImageItem
+        v-for="(image, idx) in displayedImages"
+        :key="getImageKey(image, idx)"
+        :image="image"
+        :src="resolvedSrcs[idx] || ''"
+        :alt="getAlt(idx)"
+        :loaded="isLoaded(image, idx)"
+        button-class="w-full overflow-hidden aspect-square relative"
+        frame-class="h-full"
+        img-class="w-full h-full object-cover"
+        @click="open(idx, $event)"
+        @load="markLoaded(image, idx)"
+        @error="markLoaded(image, idx)"
+      >
+        <div v-if="extraCount > 0 && idx === 8" class="more-overlay" aria-hidden="true">
+          +{{ extraCount }}
+        </div>
+      </GalleryImageItem>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import GalleryImageItem from '../parts/GalleryImageItem.vue'
+
+const props = defineProps<{
+  images: App.Api.Ech0.FileObject[]
+  resolvedSrcs: string[]
+  getAlt: (idx: number) => string
+  getImageKey: (image: App.Api.Ech0.FileObject, idx: number) => string
+  isLoaded: (image: App.Api.Ech0.FileObject, idx: number) => boolean
+  markLoaded: (image: App.Api.Ech0.FileObject, idx: number) => void
+  open: (startIndex: number, sourceElement?: HTMLElement | null) => void
+}>()
+
+const displayedImages = computed(() => props.images.slice(0, 9))
+const extraCount = computed(() => (props.images.length > 9 ? props.images.length - 9 : 0))
+</script>
+
+<style scoped>
+.more-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 600;
+  border-radius: 8px;
+}
+</style>

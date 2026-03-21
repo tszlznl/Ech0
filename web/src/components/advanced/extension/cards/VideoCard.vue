@@ -1,8 +1,7 @@
 <template>
-  <TheExtensionCardShell>
+  <ExtensionCardShell>
     <div class="video-shell">
       <span class="video-provider-badge">{{ providerLabel }}</span>
-      <!-- 使用移动端外链播放器（解决跳转） -->
       <div class="video-frame-wrap">
         <iframe
           v-if="isBilibili"
@@ -33,12 +32,12 @@
         ></iframe>
       </div>
     </div>
-  </TheExtensionCardShell>
+  </ExtensionCardShell>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import TheExtensionCardShell from './TheExtensionCardShell.vue'
+import ExtensionCardShell from '../shared/ExtensionCardShell.vue'
 
 const props = defineProps<{
   videoId: string

@@ -17,12 +17,11 @@
     </button>
     <div class="rounded-lg overflow-hidden">
       <template v-for="(img, idx) in filesToAdd" :key="idx">
-        <a
-          :href="getImageToAddUrl(img)"
-          data-fancybox="gallery"
-          :data-thumb="getImageToAddUrl(img)"
-          class="block w-full"
+        <button
+          type="button"
+          class="block w-full bg-transparent border-0 p-0 cursor-zoom-in"
           :class="{ hidden: idx !== fileIndex }"
+          @click="openPreview(fileIndex)"
         >
           <img
             :src="getImageToAddUrl(img)"
@@ -30,7 +29,7 @@
             class="w-full h-auto max-w-full object-cover"
             loading="lazy"
           />
-        </a>
+        </button>
       </template>
     </div>
   </div>
@@ -49,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import Next from '@/components/icons/next.vue'
 import Prev from '@/components/icons/prev.vue'
@@ -59,11 +58,10 @@ import { deleteFileById } from '@/lib/file'
 import { theToast } from '@/utils/toast'
 import { useEchoStore, useEditorStore } from '@/stores'
 import { Mode } from '@/enums/enums'
-import { Fancybox } from '@fancyapps/ui'
-import '@fancyapps/ui/dist/fancybox/fancybox.css'
 import { FILE_STORAGE_TYPE } from '@/constants/file'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useI18n } from 'vue-i18n'
+import { usePhotoSwipeGallery } from '@/components/advanced/gallery/composables/usePhotoSwipeGallery'
 
 const { openConfirm } = useBaseDialog()
 const { t } = useI18n()
@@ -81,6 +79,15 @@ const echoStore = useEchoStore()
 const { echoToUpdate } = storeToRefs(echoStore)
 const editorStore = useEditorStore()
 const { filesToAdd, currentMode, isUpdateMode } = storeToRefs(editorStore)
+const previewItems = computed(() =>
+  filesToAdd.value.map((image, idx) => ({
+    src: getImageToAddUrl(image),
+    width: image.width,
+    height: image.height,
+    alt: t('imageGallery.previewImage', { index: idx + 1 }),
+  })),
+)
+const { open: openPreview } = usePhotoSwipeGallery(previewItems)
 
 const handleRemoveImage = () => {
   if (
@@ -125,9 +132,6 @@ const handleRemoveImage = () => {
   })
 }
 
-onMounted(() => {
-  Fancybox.bind('[data-fancybox]', {})
-})
 </script>
 
 <style scoped></style>

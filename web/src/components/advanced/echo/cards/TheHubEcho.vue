@@ -1,8 +1,6 @@
 <template>
   <div class="w-full max-w-sm bg-[var(--color-bg-surface)] h-auto p-5 shadow rounded-lg mx-auto">
-    <!-- 顶部Logo 和 用户名 -->
     <div class="flex flex-row items-center gap-2 mt-2 mb-4">
-      <!-- <div class="text-xl">👾</div> -->
       <div>
         <img
           :src="echo.logo"
@@ -28,16 +26,13 @@
       </div>
     </div>
 
-    <!-- 图片 && 内容 -->
     <div>
       <div class="py-4">
-        <!-- grid 和 horizontal 时，文字在图片上；其他布局（waterfall/carousel/null/undefined）文字在图片下 -->
         <template
           v-if="
             props.echo.layout === ImageLayout.GRID || props.echo.layout === ImageLayout.HORIZONTAL
           "
         >
-          <!-- 文字在上 -->
           <div class="mx-auto w-11/12 pl-1 mb-3">
             <TheMdPreview :content="props.echo.content" />
           </div>
@@ -50,7 +45,6 @@
         </template>
 
         <template v-else>
-          <!-- 图片在上，文字在下（瀑布流 / 单图轮播 等） -->
           <TheImageGallery
             :images="echoImageFiles"
             :baseUrl="echo.server_url"
@@ -62,32 +56,12 @@
           </div>
         </template>
 
-        <!-- 扩展内容 -->
         <div v-if="props.echo.extension" class="my-4">
-          <div v-if="props.echo.extension.type === ExtensionType.MUSIC">
-            <TheAPlayerCard :echo="props.echo" />
-          </div>
-          <div v-if="props.echo.extension.type === ExtensionType.VIDEO">
-            <TheVideoCard :videoId="props.echo.extension.payload.videoId" class="px-2 mx-auto" />
-          </div>
-          <TheGithubCard
-            v-if="
-              props.echo.extension.type === ExtensionType.GITHUBPROJ &&
-              props.echo.extension.payload?.repoUrl
-            "
-            :GithubURL="props.echo.extension.payload.repoUrl"
-            class="px-2 mx-auto"
-          />
-          <TheWebsiteCard
-            v-if="props.echo.extension.type === ExtensionType.WEBSITE"
-            :website="props.echo.extension.payload"
-            class="px-2 mx-auto"
-          />
+          <TheExtensionRenderer :echo="props.echo" />
         </div>
       </div>
     </div>
 
-    <!-- 日期时间 && 操作按钮 -->
     <div class="flex items-center justify-between gap-2">
       <div class="min-w-0 flex flex-1 items-center overflow-hidden">
         <div class="min-w-0 truncate whitespace-nowrap text-sm text-slate-500">
@@ -101,14 +75,11 @@
         </div>
       </div>
 
-      <!-- 操作按钮 -->
       <div ref="menuRef" class="relative flex h-auto flex-none items-center justify-center gap-2">
-        <!-- 跳转 -->
         <a :href="`${server_url}/echo/${echo_id}`" target="_blank" :title="t('hubEcho.jumpToEcho')">
           <LinkTo class="w-4 h-4" />
         </a>
 
-        <!-- 打印 -->
         <div class="flex items-center justify-end" :title="t('hubEcho.print')">
           <button
             @click="handlePrintEcho()"
@@ -122,10 +93,8 @@
           </button>
         </div>
 
-        <!-- 点赞 -->
         <div class="flex items-center justify-end" :title="t('hubEcho.like')">
           <div class="flex items-center gap-1">
-            <!-- 点赞按钮   -->
             <button
               @click="handleLikeEcho()"
               :title="t('hubEcho.like')"
@@ -137,9 +106,7 @@
               <GrayLike class="w-4 h-4" />
             </button>
 
-            <!-- 点赞数量   -->
             <span class="text-sm text-[var(--color-text-muted)]">
-              <!-- 如果点赞数不超过99，则显示数字，否则显示99+ -->
               {{ fav_count > 99 ? '99+' : fav_count }}
             </span>
           </div>
@@ -150,18 +117,15 @@
 </template>
 
 <script setup lang="ts">
-import TheGithubCard from './TheGithubCard.vue'
-import TheVideoCard from './TheVideoCard.vue'
-import Verified from '../icons/verified.vue'
-import GrayLike from '../icons/graylike.vue'
-import LinkTo from '../icons/linkto.vue'
-import Print from '../icons/print.vue'
-import TheAPlayerCard from './TheAPlayerCard.vue'
-import TheWebsiteCard from './TheWebsiteCard.vue'
-import TheImageGallery from './TheImageGallery.vue'
-import TheMdPreview from './TheMdPreview.vue'
+import Verified from '@/components/icons/verified.vue'
+import GrayLike from '@/components/icons/graylike.vue'
+import LinkTo from '@/components/icons/linkto.vue'
+import Print from '@/components/icons/print.vue'
+import TheExtensionRenderer from '@/components/advanced/extension/TheExtensionRenderer.vue'
+import TheImageGallery from '@/components/advanced/gallery/TheImageGallery.vue'
+import TheMdPreview from '@/components/advanced/TheMdPreview.vue'
 import { computed, ref, watch } from 'vue'
-import { ExtensionType, ImageLayout } from '@/enums/enums'
+import { ImageLayout } from '@/enums/enums'
 import { formatDate } from '@/utils/other'
 import { getEchoFilesBy } from '@/utils/echo'
 import { useZoneStore } from '@/stores'
@@ -203,14 +167,12 @@ const handleLikeEcho = async () => {
     isLikeAnimating.value = false
   }, 250)
 
-  // 如果已经点赞过，不再重复点赞
   const likedEchoIds: string[] = localStg.getItem(LIKE_LIST_KEY.value) || []
   if (likedEchoIds.includes(echo_id.value)) {
     theToast.info(String(t('hubEcho.alreadyLiked')))
     return
   }
 
-  // 调用后端接口，点赞
   const { error, data } = await useFetch<App.Api.Response<null>>(
     `${server_url.value}/api/echo/like/${echo_id.value}`,
   )
