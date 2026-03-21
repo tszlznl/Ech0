@@ -36,7 +36,7 @@ func buildNotifyContent(kind string, comment model.Comment, serverURL string) no
 	actionHTML := ""
 	if echoLink != "" {
 		actionHTML = fmt.Sprintf(
-			`<div style="margin-top:16px;"><a href="%s" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:8px 14px;border-radius:12px;background:#ffffff;border:1px solid #cbc4b8;color:#5f574a;text-decoration:none;font-size:13px;font-weight:600;">查看 Echo</a></div>`,
+			`<div style="margin-top:16px;"><a href="%s" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:8px 14px;border-radius:0;background:#ffffff;border:1px solid #cbc4b8;color:#5f574a;text-decoration:none;font-size:13px;font-weight:600;">查看 Echo</a></div>`,
 			stdhtml.EscapeString(echoLink),
 		)
 	}
@@ -44,15 +44,15 @@ func buildNotifyContent(kind string, comment model.Comment, serverURL string) no
 		`<!doctype html><html><body style="margin:0;padding:0;background:#f4f1ec;font-family:'SF Pro Text','PingFang SC','Hiragino Sans GB','Microsoft YaHei',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#3a3329;">
 <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="padding:28px 14px;">
   <tr><td align="center">
-    <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#ffffff;border:1px solid #e6dfd4;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(58,51,41,0.08);">
+    <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#ffffff;border:1px solid #e6dfd4;border-radius:0;overflow:hidden;">
       <tr><td style="padding:16px 20px;border-bottom:1px solid #ebe5db;">
         <div style="font-size:16px;font-weight:700;color:#3a3329;">Ech0 评论通知</div>
       </td></tr>
       <tr><td style="padding:20px;">
-        <div style="display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;color:%s;background:%s;border:1px solid %s;">%s</div>
+        <div style="display:inline-block;padding:3px 10px;border-radius:0;font-size:12px;font-weight:600;color:%s;background:%s;border:1px solid %s;">%s</div>
         <div style="margin-top:12px;font-size:18px;font-weight:700;color:#3a3329;">%s</div>
-        <div style="margin-top:14px;padding:14px;border:1px solid #e8e2d8;border-radius:12px;background:#fffcf8;line-height:1.7;font-size:14px;color:#4f473b;word-break:break-word;">%s</div>
-        <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="margin-top:14px;border-collapse:collapse;background:#faf7f2;border:1px solid #e8e2d8;border-radius:12px;">
+        <div style="margin-top:14px;padding:14px;border:1px solid #e8e2d8;border-radius:0;background:#fffcf8;line-height:1.7;font-size:14px;color:#4f473b;word-break:break-word;">%s</div>
+        <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="margin-top:14px;border-collapse:collapse;background:#faf7f2;border:1px solid #e8e2d8;border-radius:0;">
           <tr><td style="padding:10px 12px;font-size:13px;color:#8b8377;width:100px;">动作</td><td style="padding:10px 12px;font-size:13px;color:#5f574a;">%s</td></tr>
           <tr><td style="padding:10px 12px;font-size:13px;color:#8b8377;">时间</td><td style="padding:10px 12px;font-size:13px;color:#5f574a;">%s</td></tr>
           <tr><td style="padding:10px 12px;font-size:13px;color:#8b8377;">昵称</td><td style="padding:10px 12px;font-size:13px;color:#5f574a;">%s</td></tr>
