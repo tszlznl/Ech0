@@ -47,7 +47,6 @@ router.afterEach((to, from) => {
     zone: 1,
     panel: 1,
     auth: 1,
-    connect: 1,
     hub: 1,
     widget: 1,
     'not-found': 2,

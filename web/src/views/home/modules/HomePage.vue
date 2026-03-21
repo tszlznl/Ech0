@@ -18,7 +18,8 @@
         <div class="hidden sm:flex sm:flex-col sm:gap-4">
           <TheHeatMap />
           <TheRecentCard v-if="AgentSetting.enable" />
-          <TheConnects />
+          <TheConnectWidget />
+          <TheCommentWidget />
         </div>
       </div>
     </div>
@@ -49,9 +50,12 @@ import TheBoard from './TheBoard.vue'
 import TheEchos from './TheEchos.vue'
 import TheFilteredEchos from './TheFilteredEchos.vue'
 import TheInbox from './TheInbox.vue'
-import TheConnects from '@/views/connect/modules/TheConnects.vue'
-import TheRecentCard from '@/components/advanced/TheRecentCard.vue'
-import TheHeatMap from '@/components/advanced/TheHeatMap.vue'
+import {
+  TheCommentWidget,
+  TheConnectWidget,
+  TheHeatMap,
+  TheRecentCard,
+} from '@/components/advanced/widget'
 import { onMounted, ref, onBeforeUnmount } from 'vue'
 import { useUserStore, useEchoStore, useSettingStore, useInboxStore, useZenStore } from '@/stores'
 import { storeToRefs } from 'pinia'

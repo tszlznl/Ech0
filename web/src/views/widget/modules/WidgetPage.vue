@@ -21,7 +21,8 @@
     <div class="flex flex-col gap-4">
       <TheHeatMap />
       <TheRecentCard v-if="AgentSetting.enable" />
-      <TheConnects />
+      <TheConnectWidget />
+      <TheCommentWidget />
     </div>
   </div>
 </template>
@@ -29,9 +30,12 @@
 <script setup lang="ts">
 import BaseButton from '@/components/common/BaseButton.vue'
 import Arrow from '@/components/icons/arrow.vue'
-import TheConnects from '@/views/connect/modules/TheConnects.vue'
-import TheHeatMap from '@/components/advanced/TheHeatMap.vue'
-import TheRecentCard from '@/components/advanced/TheRecentCard.vue'
+import {
+  TheCommentWidget,
+  TheConnectWidget,
+  TheHeatMap,
+  TheRecentCard,
+} from '@/components/advanced/widget'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'

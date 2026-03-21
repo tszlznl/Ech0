@@ -118,16 +118,6 @@ const router = createRouter({
       },
     },
     {
-      path: '/connect',
-      name: 'connect',
-      component: () => import('../views/connect/ConnectView.vue'),
-      meta: {
-        title: 'Connect',
-        description: 'Connect external platforms to Ech0.',
-        noindex: true,
-      },
-    },
-    {
       path: '/hub',
       name: 'hub',
       component: () => import('../views/hub/HubView.vue'),

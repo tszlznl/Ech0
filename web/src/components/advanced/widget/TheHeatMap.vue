@@ -24,7 +24,6 @@
           </div>
         </div>
       </div>
-      <!-- 自定义 tooltip -->
       <div
         v-if="tooltip.visible"
         class="fixed z-50 px-2 py-1 bg-orange-500 text-white text-xs rounded shadow"
@@ -40,10 +39,6 @@
 import { computed, onMounted, ref } from 'vue'
 import { fetchGetHeatMap } from '@/service/api'
 import { useI18n } from 'vue-i18n'
-
-// const props = defineProps<{
-//   heatmapData: (App.Api.Ech0.HeatMap[0] | null)[]
-// }>()
 
 const heatmapData = ref<App.Api.Ech0.HeatMap>([])
 const { t, locale } = useI18n()
@@ -78,7 +73,6 @@ const getColor = (count: number): string => {
   return 'var(--color-bg-surface)'
 }
 
-// Tooltip 相关
 const tooltip = ref({
   visible: false,
   text: '',
@@ -92,18 +86,14 @@ function showTooltip(row: number, col: number, event: MouseEvent) {
     tooltip.value.text = t('heatmap.tooltip', { date: cell.date ?? '', count: cell.count ?? 0 })
     tooltip.value.visible = true
 
-    // 获取触发事件的目标元素
     const target = event.target as HTMLElement
     const rect = target.getBoundingClientRect()
 
-    // 计算 tooltip 的位置
     tooltip.value.x = rect.left
-
-    // 智能调整垂直位置，防止顶部被遮挡
     if (rect.top < 40) {
-      tooltip.value.y = rect.bottom + 10 // 显示在下方
+      tooltip.value.y = rect.bottom + 10
     } else {
-      tooltip.value.y = rect.top - 30 // 显示在上方
+      tooltip.value.y = rect.top - 30
     }
   }
 }
