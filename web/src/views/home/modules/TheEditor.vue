@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import TheMdEditor from '@/components/advanced/TheMdEditor.vue'
+import { TheMdEditor } from '@/components/advanced/md'
 import TheModePanel from './TheEditor/TheModePanel.vue'
 import TheTitleAndNav from './TheEditor/TheTitleAndNav.vue'
 import TheImageEditor from './TheEditor/TheImageEditor.vue'

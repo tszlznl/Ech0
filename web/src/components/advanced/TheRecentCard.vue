@@ -28,7 +28,7 @@
 import { fetchGetRecent } from '@/service/api'
 import { onMounted, ref } from 'vue'
 import RecentIcon from '../icons/recent.vue'
-import TheMdPreview from './TheMdPreview.vue'
+import { TheMdPreview } from '@/components/advanced/md'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'

@@ -129,7 +129,7 @@ import { resolveAvatarUrl } from '@/service/request/shared'
 import { ImageLayout } from '@/enums/enums'
 import { formatDate } from '@/utils/other'
 import { getEchoFilesBy } from '@/utils/echo'
-import TheMdPreview from '@/components/advanced/TheMdPreview.vue'
+import { TheMdPreview } from '@/components/advanced/md'
 import { useI18n } from 'vue-i18n'
 
 const emit = defineEmits(['updateLikeCount', 'printEcho'])

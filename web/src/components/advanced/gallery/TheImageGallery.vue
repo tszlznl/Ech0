@@ -97,7 +97,9 @@ const openGallery = (index: number, sourceElement?: HTMLElement | null) => {
 const getImageKey = (image: App.Api.Ech0.FileObject, idx: number) =>
   image.id || `${image.url}-${idx}`
 
-const getAspectRatioStyle = (image: App.Api.Ech0.FileObject): Record<string, string> | undefined => {
+const getAspectRatioStyle = (
+  image: App.Api.Ech0.FileObject,
+): Record<string, string> | undefined => {
   if (!image.width || !image.height) return undefined
   return { aspectRatio: `${image.width} / ${image.height}` }
 }

@@ -35,9 +35,7 @@ defineProps<{
   isLoaded: (image: App.Api.Ech0.FileObject, idx: number) => boolean
   markLoaded: (image: App.Api.Ech0.FileObject, idx: number) => void
   open: (startIndex: number, sourceElement?: HTMLElement | null) => void
-  getHorizontalAspectStyle: (
-    image: App.Api.Ech0.FileObject,
-  ) => Record<string, string> | undefined
+  getHorizontalAspectStyle: (image: App.Api.Ech0.FileObject) => Record<string, string> | undefined
 }>()
 </script>
 

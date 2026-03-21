@@ -78,7 +78,8 @@ withDefaults(
   inset: 0;
   border-radius: 8px;
   pointer-events: none;
-  background: radial-gradient(
+  background:
+    radial-gradient(
       120% 120% at 50% 30%,
       rgba(160, 160, 160, 0.18) 0%,
       rgba(160, 160, 160, 0.1) 55%,

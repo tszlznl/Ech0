@@ -8,13 +8,26 @@ import { useEditorStore } from '@/stores'
 import { MarkdownEditor } from '@/editor'
 import { useI18n } from 'vue-i18n'
 
+const props = defineProps<{
+  modelValue?: string
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: string): void
+}>()
+
 const editorStore = useEditorStore()
 const { t } = useI18n()
 
+const isControlled = computed(() => props.modelValue !== undefined)
+
 const content = computed<string>({
-  get: () => editorStore.echoToAdd.content,
+  get: () => (isControlled.value ? props.modelValue || '' : editorStore.echoToAdd.content),
   set: (val: string) => {
-    editorStore.echoToAdd.content = val
+    emit('update:modelValue', val)
+    if (!isControlled.value) {
+      editorStore.echoToAdd.content = val
+    }
   },
 })
 </script>
