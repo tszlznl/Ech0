@@ -423,7 +423,7 @@ func (s *CommentService) SendTestEmail(ctx context.Context, setting model.System
 	if err := validateEmailNotifySetting(setting.EmailNotify, ownerEmail); err != nil {
 		return commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, err.Error())
 	}
-	subject, body := buildNotifyMessage("test", model.Comment{
+	content := buildNotifyContent("test", model.Comment{
 		ID:       "test",
 		Nickname: "comment-test",
 		Status:   model.StatusPending,
@@ -431,8 +431,9 @@ func (s *CommentService) SendTestEmail(ctx context.Context, setting model.System
 	})
 	return s.sendOwnerMail(ctx, setting.EmailNotify, MailMessage{
 		To:       ownerEmail,
-		Subject:  subject,
-		TextBody: body,
+		Subject:  content.Subject,
+		TextBody: content.TextBody,
+		HTMLBody: content.HTMLBody,
 	})
 }
 
@@ -448,17 +449,18 @@ func (s *CommentService) notifyOwnerAsync(ctx context.Context, kind string, comm
 	if err != nil {
 		return
 	}
-	subject, body := buildNotifyMessage(kind, comment)
-	go func(cfg model.EmailNotifySetting, to string, msg MailMessage) {
+	content := buildNotifyContent(kind, comment)
+	go func(cfg model.EmailNotifySetting, msg MailMessage) {
 		notifyCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		if err := s.sendOwnerMail(notifyCtx, cfg, msg); err != nil {
 			zap.L().Warn("comment notify mail failed", zap.Error(err), zap.String("comment_id", comment.ID))
 		}
-	}(setting.EmailNotify, ownerEmail, MailMessage{
+	}(setting.EmailNotify, MailMessage{
 		To:       ownerEmail,
-		Subject:  subject,
-		TextBody: body,
+		Subject:  content.Subject,
+		TextBody: content.TextBody,
+		HTMLBody: content.HTMLBody,
 	})
 }
 
@@ -495,29 +497,6 @@ func shouldNotify(setting model.SystemSetting, kind string, status model.Status)
 		}
 	}
 	return false
-}
-
-func buildNotifyMessage(kind string, comment model.Comment) (string, string) {
-	prefix := "[Ech0评论通知]"
-	base := fmt.Sprintf("评论ID: %s\n昵称: %s\n状态: %s\n来源: %s\n内容:\n%s",
-		comment.ID, comment.Nickname, comment.Status, comment.Source, comment.Content,
-	)
-	switch kind {
-	case "created":
-		return prefix + " 新评论待处理", base
-	case "status":
-		if comment.Status == model.StatusApproved {
-			return prefix + " 评论审核通过", base
-		}
-		if comment.Status == model.StatusRejected {
-			return prefix + " 评论审核拒绝", base
-		}
-		return prefix + " 评论状态变更", base
-	case "hot":
-		return prefix + " 评论被设为Hot", base
-	default:
-		return prefix + " 测试邮件", "这是一封来自 Ech0 的评论通知测试邮件。"
-	}
 }
 
 func validateEmailNotifySetting(cfg model.EmailNotifySetting, ownerEmail string) error {

@@ -54,7 +54,11 @@ func (s *GoMailSender) Send(ctx context.Context, cfg MailerConfig, msg MailMessa
 		return err
 	}
 	m.Subject(strings.TrimSpace(msg.Subject))
-	m.SetBodyString(mail.TypeTextPlain, msg.TextBody)
+	if strings.TrimSpace(msg.HTMLBody) != "" {
+		m.SetBodyString(mail.TypeTextHTML, msg.HTMLBody)
+	} else {
+		m.SetBodyString(mail.TypeTextPlain, msg.TextBody)
+	}
 	return client.Send(m)
 }
 
