@@ -424,15 +424,18 @@ func (s *CommentService) SendTestEmail(ctx context.Context, setting model.System
 	if err != nil {
 		return err
 	}
+	serverURL := s.resolveServerURL(ctx)
 	if err := validateEmailNotifySetting(setting.EmailNotify, ownerEmail); err != nil {
 		return commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, err.Error())
 	}
 	content := buildNotifyContent("test", model.Comment{
-		ID:       "test",
-		Nickname: "comment-test",
-		Status:   model.StatusPending,
-		Source:   model.SourceSystem,
-	})
+		EchoID:    "demo",
+		Nickname:  "comment-test",
+		Email:     "author@example.com",
+		Content:   "这是一条测试评论内容，用于预览 Ech0 邮件通知样式。",
+		Status:    model.StatusPending,
+		CreatedAt: time.Now(),
+	}, serverURL)
 	return s.sendOwnerMail(ctx, setting.EmailNotify, MailMessage{
 		To:       ownerEmail,
 		Subject:  content.Subject,
@@ -453,7 +456,8 @@ func (s *CommentService) notifyOwnerAsync(ctx context.Context, kind string, comm
 	if err != nil {
 		return
 	}
-	content := buildNotifyContent(kind, comment)
+	serverURL := s.resolveServerURL(ctx)
+	content := buildNotifyContent(kind, comment, serverURL)
 	go func(cfg model.EmailNotifySetting, msg MailMessage) {
 		notifyCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
@@ -554,6 +558,19 @@ func (s *CommentService) resolveOwnerEmail() (string, error) {
 		return "", errors.New("owner 邮箱未设置")
 	}
 	return email, nil
+}
+
+func (s *CommentService) resolveServerURL(ctx context.Context) string {
+	if s.keyvalueRepository != nil {
+		serverURL, err := s.keyvalueRepository.GetKeyValue(ctx, commonModel.ServerURLKey)
+		if err == nil {
+			value := strings.TrimSuffix(strings.TrimSpace(serverURL), "/")
+			if value != "" {
+				return value
+			}
+		}
+	}
+	return strings.TrimSuffix(strings.TrimSpace(config.Config().Setting.Serverurl), "/")
 }
 
 func (s *CommentService) checkRateLimit(ctx context.Context, ipHash, email, userID string) error {

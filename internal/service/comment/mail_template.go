@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	stdhtml "html"
+	"net/url"
 	"strings"
 	"time"
 
@@ -15,64 +16,114 @@ type notifyContent struct {
 	HTMLBody string
 }
 
-func buildNotifyContent(kind string, comment model.Comment) notifyContent {
+func buildNotifyContent(kind string, comment model.Comment, serverURL string) notifyContent {
 	subject := notifySubject(kind, comment.Status)
 	eventTitle := notifyEventTitle(kind, comment.Status)
 	statusLabel, statusColor, statusBg := notifyStatusStyle(kind, comment.Status)
 	createdAt := notifyTime(comment.CreatedAt)
+	nickname := fallbackText(comment.Nickname, "匿名用户")
+	authorEmail := fallbackText(comment.Email, "未提供")
 	contentText := strings.TrimSpace(comment.Content)
 	if contentText == "" && kind == "test" {
-		contentText = "这是一封来自 Ech0 的评论通知测试邮件。"
+		contentText = "这是一封来自 Ech0 的评论通知测试邮件，用于验证 SMTP 与模板渲染是否正常。"
 	}
+	if contentText == "" {
+		contentText = "（无正文）"
+	}
+	echoLink := buildEchoLink(serverURL, comment.EchoID)
 	contentHTML := strings.ReplaceAll(stdhtml.EscapeString(contentText), "\n", "<br/>")
-	text := fmt.Sprintf(
-		"Ech0 评论通知\n\n事件: %s\n评论ID: %s\n昵称: %s\n状态: %s\n来源: %s\n时间: %s\n\n内容:\n%s",
-		eventTitle,
-		strings.TrimSpace(comment.ID),
-		strings.TrimSpace(comment.Nickname),
-		statusLabel,
-		strings.TrimSpace(string(comment.Source)),
-		createdAt,
-		contentText,
-	)
+	text := buildNotifyText(eventTitle, statusLabel, createdAt, nickname, authorEmail, contentText, echoLink)
+	actionHTML := ""
+	if echoLink != "" {
+		actionHTML = fmt.Sprintf(
+			`<div style="margin-top:16px;"><a href="%s" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:8px 14px;border-radius:12px;background:#ffffff;border:1px solid #cbc4b8;color:#5f574a;text-decoration:none;font-size:13px;font-weight:600;">查看 Echo</a></div>`,
+			stdhtml.EscapeString(echoLink),
+		)
+	}
 	htmlBody := fmt.Sprintf(
-		`<!doctype html><html><body style="margin:0;padding:0;background:#f3f6fb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1f2937;">
-<table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="padding:24px 12px;">
+		`<!doctype html><html><body style="margin:0;padding:0;background:#f4f1ec;font-family:'SF Pro Text','PingFang SC','Hiragino Sans GB','Microsoft YaHei',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#3a3329;">
+<table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="padding:28px 14px;">
   <tr><td align="center">
-    <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
-      <tr><td style="padding:18px 20px;background:#0f172a;color:#f8fafc;font-size:16px;font-weight:700;">Ech0 评论通知</td></tr>
-      <tr><td style="padding:18px 20px;">
-        <div style="font-size:18px;font-weight:700;margin-bottom:10px;color:#111827;">%s</div>
+    <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#ffffff;border:1px solid #e6dfd4;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(58,51,41,0.08);">
+      <tr><td style="padding:16px 20px;border-bottom:1px solid #ebe5db;">
+        <div style="font-size:16px;font-weight:700;color:#3a3329;">Ech0 评论通知</div>
+      </td></tr>
+      <tr><td style="padding:20px;">
         <div style="display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;color:%s;background:%s;border:1px solid %s;">%s</div>
-        <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="margin-top:14px;border-collapse:collapse;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;">
-          <tr><td style="padding:10px 12px;font-size:13px;color:#475569;width:100px;">评论ID</td><td style="padding:10px 12px;font-size:13px;color:#111827;">%s</td></tr>
-          <tr><td style="padding:10px 12px;font-size:13px;color:#475569;">昵称</td><td style="padding:10px 12px;font-size:13px;color:#111827;">%s</td></tr>
-          <tr><td style="padding:10px 12px;font-size:13px;color:#475569;">来源</td><td style="padding:10px 12px;font-size:13px;color:#111827;">%s</td></tr>
-          <tr><td style="padding:10px 12px;font-size:13px;color:#475569;">时间</td><td style="padding:10px 12px;font-size:13px;color:#111827;">%s</td></tr>
+        <div style="margin-top:12px;font-size:18px;font-weight:700;color:#3a3329;">%s</div>
+        <div style="margin-top:14px;padding:14px;border:1px solid #e8e2d8;border-radius:12px;background:#fffcf8;line-height:1.7;font-size:14px;color:#4f473b;word-break:break-word;">%s</div>
+        <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="margin-top:14px;border-collapse:collapse;background:#faf7f2;border:1px solid #e8e2d8;border-radius:12px;">
+          <tr><td style="padding:10px 12px;font-size:13px;color:#8b8377;width:100px;">动作</td><td style="padding:10px 12px;font-size:13px;color:#5f574a;">%s</td></tr>
+          <tr><td style="padding:10px 12px;font-size:13px;color:#8b8377;">时间</td><td style="padding:10px 12px;font-size:13px;color:#5f574a;">%s</td></tr>
+          <tr><td style="padding:10px 12px;font-size:13px;color:#8b8377;">昵称</td><td style="padding:10px 12px;font-size:13px;color:#5f574a;">%s</td></tr>
+          <tr><td style="padding:10px 12px;font-size:13px;color:#8b8377;">邮箱</td><td style="padding:10px 12px;font-size:13px;color:#5f574a;">%s</td></tr>
         </table>
-        <div style="margin-top:14px;font-size:13px;color:#475569;margin-bottom:6px;">评论内容</div>
-        <div style="padding:12px;border:1px solid #e5e7eb;border-radius:10px;background:#ffffff;line-height:1.65;font-size:14px;color:#111827;word-break:break-word;">%s</div>
+        %s
+        <div style="margin-top:14px;font-size:12px;line-height:1.6;color:#958d80;">此邮件由 Ech0 评论系统自动发送。</div>
       </td></tr>
     </table>
   </td></tr>
 </table>
 </body></html>`,
-		stdhtml.EscapeString(eventTitle),
 		statusColor,
 		statusBg,
 		statusBg,
 		stdhtml.EscapeString(statusLabel),
-		stdhtml.EscapeString(strings.TrimSpace(comment.ID)),
-		stdhtml.EscapeString(strings.TrimSpace(comment.Nickname)),
-		stdhtml.EscapeString(strings.TrimSpace(string(comment.Source))),
-		stdhtml.EscapeString(createdAt),
+		stdhtml.EscapeString(eventTitle),
 		contentHTML,
+		stdhtml.EscapeString(eventTitle),
+		stdhtml.EscapeString(createdAt),
+		stdhtml.EscapeString(nickname),
+		stdhtml.EscapeString(authorEmail),
+		actionHTML,
 	)
 	return notifyContent{
 		Subject:  subject,
 		TextBody: text,
 		HTMLBody: htmlBody,
 	}
+}
+
+func buildNotifyText(
+	eventTitle string,
+	statusLabel string,
+	createdAt string,
+	nickname string,
+	authorEmail string,
+	contentText string,
+	echoLink string,
+) string {
+	text := fmt.Sprintf(
+		"Ech0 评论通知\n\n动作: %s\n状态: %s\n时间: %s\n作者: %s <%s>\n\n评论正文:\n%s",
+		eventTitle,
+		statusLabel,
+		createdAt,
+		nickname,
+		authorEmail,
+		contentText,
+	)
+	if echoLink != "" {
+		text += fmt.Sprintf("\n\n查看 Echo:\n%s", echoLink)
+	}
+	return text
+}
+
+func buildEchoLink(serverURL string, echoID string) string {
+	base := strings.TrimSpace(serverURL)
+	id := strings.TrimSpace(echoID)
+	if base == "" || id == "" {
+		return ""
+	}
+	base = strings.TrimSuffix(base, "/")
+	return base + "/echo/" + url.PathEscape(id)
+}
+
+func fallbackText(value string, fallback string) string {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return fallback
+	}
+	return trimmed
 }
 
 func notifySubject(kind string, status model.Status) string {
@@ -117,25 +168,25 @@ func notifyEventTitle(kind string, status model.Status) string {
 func notifyStatusStyle(kind string, status model.Status) (label, color, bg string) {
 	switch kind {
 	case "hot":
-		return "HOT", "#7c3aed", "#ede9fe"
+		return "HOT", "#7c3aed", "#f3e8ff"
 	case "status":
 		if status == model.StatusApproved {
-			return "已通过", "#047857", "#d1fae5"
+			return "已通过", "#059669", "#ecfdf5"
 		}
 		if status == model.StatusRejected {
-			return "已拒绝", "#b45309", "#fef3c7"
+			return "已拒绝", "#d97706", "#fff7ed"
 		}
 	}
 	if status == model.StatusPending {
 		return "待审核", "#0369a1", "#e0f2fe"
 	}
 	if status == model.StatusApproved {
-		return "已通过", "#047857", "#d1fae5"
+		return "已通过", "#059669", "#ecfdf5"
 	}
 	if status == model.StatusRejected {
-		return "已拒绝", "#b45309", "#fef3c7"
+		return "已拒绝", "#d97706", "#fff7ed"
 	}
-	return "通知", "#334155", "#e2e8f0"
+	return "通知", "#6b6458", "#f5f1ea"
 }
 
 func notifyTime(ts time.Time) string {
