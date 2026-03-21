@@ -21,7 +21,11 @@
             class="relative flex flex-col items-center justify-center w-8 h-8 min-w-[2rem] min-h-[2rem] flex-none border-2 border-[var(--color-border-subtle)] shadow-sm rounded-full hover:shadow-md transition duration-200 ease-in-out group"
           >
             <a :href="connect.server_url" target="_blank" class="block w-full h-full">
-              <img :src="connect.logo" alt="avatar" class="w-full h-full rounded-full object-cover" />
+              <img
+                :src="connect.logo"
+                alt="avatar"
+                class="w-full h-full rounded-full object-cover"
+              />
               <span
                 class="absolute top-0 right-0 w-2.5 h-2.5 border-2 border-[var(--color-bg-surface)] rounded-full"
                 :style="{
