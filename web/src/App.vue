@@ -4,7 +4,7 @@ import { onMounted, ref, watch } from 'vue'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { Toaster } from 'vue-sonner'
-import { getApiUrl } from './service/request/shared'
+import { resolveAvatarUrl } from './service/request/shared'
 import 'vue-sonner/style.css'
 import BaseDialog from './components/common/BaseDialog.vue'
 
@@ -68,7 +68,6 @@ const settingStore = useSettingStore()
 const { SystemSetting } = storeToRefs(settingStore)
 
 const DEFAULT_FAVICON = '/favicon.ico'
-const API_URL = getApiUrl()
 const CUSTOM_STYLE_ID = 'ech0-custom-style'
 const CUSTOM_SCRIPT_ID = 'ech0-custom-script'
 useSeoHead(SystemSetting)
@@ -77,7 +76,7 @@ const updateFavicon = (logo?: string) => {
   const head = document.head
   if (!head) return
 
-  const href = logo?.trim() ? API_URL + logo : DEFAULT_FAVICON
+  const href = resolveAvatarUrl(logo, DEFAULT_FAVICON)
   const iconLinks = head.querySelectorAll<HTMLLinkElement>('link[rel*="icon"]')
 
   if (iconLinks.length > 0) {
