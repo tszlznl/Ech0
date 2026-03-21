@@ -13,6 +13,7 @@ const (
 type User struct {
 	ID       string `gorm:"type:char(36);primaryKey" json:"id"`
 	Username string `gorm:"size:255;not null;unique" json:"username"`
+	Email    string `gorm:"size:255;index"            json:"email"`
 	Password string `gorm:"size:255;not null"        json:"-"`
 	IsAdmin  bool   `gorm:"bool"                     json:"is_admin"`
 	IsOwner  bool   `gorm:"bool"                     json:"is_owner"`

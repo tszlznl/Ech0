@@ -25,6 +25,7 @@ import (
 	userModel "github.com/lin-snow/ech0/internal/model/user"
 	jwtUtil "github.com/lin-snow/ech0/internal/util/jwt"
 	"github.com/lin-snow/ech0/pkg/viewer"
+	"go.uber.org/zap"
 )
 
 const (
@@ -39,6 +40,7 @@ type CommentService struct {
 	repo               Repository
 	keyvalueRepository KeyValueRepository
 	publisher          EventPublisher
+	mailer             Mailer
 }
 
 func NewCommentService(
@@ -46,12 +48,14 @@ func NewCommentService(
 	repo Repository,
 	keyvalueRepository KeyValueRepository,
 	publisher EventPublisher,
+	mailer Mailer,
 ) *CommentService {
 	return &CommentService{
 		commonService:      commonService,
 		repo:               repo,
 		keyvalueRepository: keyvalueRepository,
 		publisher:          publisher,
+		mailer:             mailer,
 	}
 }
 
@@ -188,6 +192,7 @@ func (s *CommentService) CreateComment(
 		return model.CreateCommentResult{}, err
 	}
 	s.emitCommentCreated(ctx, comment)
+	s.notifyOwnerAsync(ctx, "created", comment)
 	return model.CreateCommentResult{
 		ID:     comment.ID,
 		Status: comment.Status,
@@ -257,6 +262,7 @@ func (s *CommentService) UpdateCommentStatus(ctx context.Context, id string, sta
 	}
 	if updated, err := s.repo.GetCommentByID(ctx, id); err == nil && updated.ID != "" {
 		s.emitCommentStatusUpdated(ctx, updated)
+		s.notifyOwnerAsync(ctx, "status", updated)
 	}
 	return nil
 }
@@ -265,7 +271,15 @@ func (s *CommentService) UpdateCommentHot(ctx context.Context, id string, hot bo
 	if err := s.requireAdmin(ctx); err != nil {
 		return err
 	}
-	return s.repo.UpdateCommentHot(ctx, id, hot)
+	if err := s.repo.UpdateCommentHot(ctx, id, hot); err != nil {
+		return err
+	}
+	if hot {
+		if updated, err := s.repo.GetCommentByID(ctx, id); err == nil && updated.ID != "" {
+			s.notifyOwnerAsync(ctx, "hot", updated)
+		}
+	}
+	return nil
 }
 
 func (s *CommentService) DeleteComment(ctx context.Context, id string) error {
@@ -297,6 +311,7 @@ func (s *CommentService) BatchAction(ctx context.Context, action string, ids []s
 		for _, id := range ids {
 			if updated, err := s.repo.GetCommentByID(ctx, id); err == nil && updated.ID != "" {
 				s.emitCommentStatusUpdated(ctx, updated)
+				s.notifyOwnerAsync(ctx, "status", updated)
 			}
 		}
 		return nil
@@ -307,6 +322,7 @@ func (s *CommentService) BatchAction(ctx context.Context, action string, ids []s
 		for _, id := range ids {
 			if updated, err := s.repo.GetCommentByID(ctx, id); err == nil && updated.ID != "" {
 				s.emitCommentStatusUpdated(ctx, updated)
+				s.notifyOwnerAsync(ctx, "status", updated)
 			}
 		}
 		return nil
@@ -351,6 +367,14 @@ func (s *CommentService) emitCommentDeleted(ctx context.Context, comment model.C
 }
 
 func (s *CommentService) GetSystemSetting(ctx context.Context) (model.SystemSetting, error) {
+	setting, err := s.getSystemSettingRaw(ctx)
+	if err != nil {
+		return model.SystemSetting{}, err
+	}
+	return sanitizeSettingForOutput(setting), nil
+}
+
+func (s *CommentService) getSystemSettingRaw(ctx context.Context) (model.SystemSetting, error) {
 	raw, err := s.keyvalueRepository.GetKeyValue(ctx, model.CommentSystemSettingKey)
 	if err != nil {
 		defaultSetting := model.SystemSetting{
@@ -358,6 +382,7 @@ func (s *CommentService) GetSystemSetting(ctx context.Context) (model.SystemSett
 			RequireApproval: true,
 			CaptchaEnabled:  false,
 		}
+		applySettingDefaults(&defaultSetting)
 		buf, _ := sonic.Marshal(defaultSetting)
 		_ = s.keyvalueRepository.AddKeyValue(ctx, model.CommentSystemSettingKey, string(buf))
 		return defaultSetting, nil
@@ -366,6 +391,7 @@ func (s *CommentService) GetSystemSetting(ctx context.Context) (model.SystemSett
 	if err := sonic.Unmarshal([]byte(raw), &setting); err != nil {
 		return model.SystemSetting{}, err
 	}
+	applySettingDefaults(&setting)
 	return setting, nil
 }
 
@@ -373,11 +399,178 @@ func (s *CommentService) UpdateSystemSetting(ctx context.Context, setting model.
 	if err := s.requireAdmin(ctx); err != nil {
 		return err
 	}
+	applySettingDefaults(&setting)
+	current, err := s.getSystemSettingRaw(ctx)
+	if err == nil && strings.TrimSpace(setting.EmailNotify.SMTPPassword) == "" {
+		setting.EmailNotify.SMTPPassword = current.EmailNotify.SMTPPassword
+	}
 	buf, err := sonic.Marshal(setting)
 	if err != nil {
 		return err
 	}
 	return s.keyvalueRepository.AddOrUpdateKeyValue(ctx, model.CommentSystemSettingKey, string(buf))
+}
+
+func (s *CommentService) SendTestEmail(ctx context.Context, setting model.SystemSetting) error {
+	if err := s.requireAdmin(ctx); err != nil {
+		return err
+	}
+	applySettingDefaults(&setting)
+	ownerEmail, err := s.resolveOwnerEmail()
+	if err != nil {
+		return err
+	}
+	if err := validateEmailNotifySetting(setting.EmailNotify, ownerEmail); err != nil {
+		return commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, err.Error())
+	}
+	subject, body := buildNotifyMessage("test", model.Comment{
+		ID:       "test",
+		Nickname: "comment-test",
+		Status:   model.StatusPending,
+		Source:   model.SourceSystem,
+	})
+	return s.sendOwnerMail(ctx, setting.EmailNotify, MailMessage{
+		To:       ownerEmail,
+		Subject:  subject,
+		TextBody: body,
+	})
+}
+
+func (s *CommentService) notifyOwnerAsync(ctx context.Context, kind string, comment model.Comment) {
+	setting, err := s.getSystemSettingRaw(ctx)
+	if err != nil {
+		return
+	}
+	if !shouldNotify(setting, kind, comment.Status) {
+		return
+	}
+	ownerEmail, err := s.resolveOwnerEmail()
+	if err != nil {
+		return
+	}
+	subject, body := buildNotifyMessage(kind, comment)
+	go func(cfg model.EmailNotifySetting, to string, msg MailMessage) {
+		notifyCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := s.sendOwnerMail(notifyCtx, cfg, msg); err != nil {
+			zap.L().Warn("comment notify mail failed", zap.Error(err), zap.String("comment_id", comment.ID))
+		}
+	}(setting.EmailNotify, ownerEmail, MailMessage{
+		To:       ownerEmail,
+		Subject:  subject,
+		TextBody: body,
+	})
+}
+
+func (s *CommentService) sendOwnerMail(ctx context.Context, cfg model.EmailNotifySetting, msg MailMessage) error {
+	if s.mailer == nil {
+		return errors.New("mailer unavailable")
+	}
+	if err := validateEmailNotifySetting(cfg, msg.To); err != nil {
+		return err
+	}
+	return s.mailer.Send(ctx, MailerConfig{
+		Host:     strings.TrimSpace(cfg.SMTPHost),
+		Port:     cfg.SMTPPort,
+		Username: strings.TrimSpace(cfg.SMTPUsername),
+		Password: cfg.SMTPPassword,
+	}, msg)
+}
+
+func shouldNotify(setting model.SystemSetting, kind string, status model.Status) bool {
+	if !setting.EmailNotify.Enabled {
+		return false
+	}
+	switch kind {
+	case "created":
+		return true
+	case "hot":
+		return true
+	case "status":
+		if status == model.StatusRejected {
+			return true
+		}
+		if status == model.StatusApproved {
+			return setting.RequireApproval
+		}
+	}
+	return false
+}
+
+func buildNotifyMessage(kind string, comment model.Comment) (string, string) {
+	prefix := "[Ech0评论通知]"
+	base := fmt.Sprintf("评论ID: %s\n昵称: %s\n状态: %s\n来源: %s\n内容:\n%s",
+		comment.ID, comment.Nickname, comment.Status, comment.Source, comment.Content,
+	)
+	switch kind {
+	case "created":
+		return prefix + " 新评论待处理", base
+	case "status":
+		if comment.Status == model.StatusApproved {
+			return prefix + " 评论审核通过", base
+		}
+		if comment.Status == model.StatusRejected {
+			return prefix + " 评论审核拒绝", base
+		}
+		return prefix + " 评论状态变更", base
+	case "hot":
+		return prefix + " 评论被设为Hot", base
+	default:
+		return prefix + " 测试邮件", "这是一封来自 Ech0 的评论通知测试邮件。"
+	}
+}
+
+func validateEmailNotifySetting(cfg model.EmailNotifySetting, ownerEmail string) error {
+	if strings.TrimSpace(ownerEmail) == "" {
+		return errors.New("owner 邮箱不能为空")
+	}
+	if _, err := mail.ParseAddress(strings.TrimSpace(ownerEmail)); err != nil {
+		return errors.New("owner 邮箱格式无效")
+	}
+	if strings.TrimSpace(cfg.SMTPHost) == "" {
+		return errors.New("SMTP Host 不能为空")
+	}
+	if cfg.SMTPPort <= 0 {
+		return errors.New("SMTP Port 无效")
+	}
+	if strings.TrimSpace(cfg.SMTPUsername) == "" {
+		return errors.New("SMTP Username 不能为空")
+	}
+	if _, err := mail.ParseAddress(strings.TrimSpace(cfg.SMTPUsername)); err != nil {
+		return errors.New("SMTP Username 邮箱格式无效")
+	}
+	if strings.TrimSpace(cfg.SMTPPassword) == "" {
+		return errors.New("SMTP Password 不能为空")
+	}
+	return nil
+}
+
+func applySettingDefaults(setting *model.SystemSetting) {
+	if setting == nil {
+		return
+	}
+	if setting.EmailNotify.SMTPPort <= 0 {
+		setting.EmailNotify.SMTPPort = 587
+	}
+}
+
+func sanitizeSettingForOutput(in model.SystemSetting) model.SystemSetting {
+	out := in
+	out.EmailNotify.SMTPPasswordSet = strings.TrimSpace(out.EmailNotify.SMTPPassword) != ""
+	out.EmailNotify.SMTPPassword = ""
+	return out
+}
+
+func (s *CommentService) resolveOwnerEmail() (string, error) {
+	owner, err := s.commonService.GetOwner()
+	if err != nil {
+		return "", err
+	}
+	email := strings.TrimSpace(owner.Email)
+	if email == "" {
+		return "", errors.New("owner 邮箱未设置")
+	}
+	return email, nil
 }
 
 func (s *CommentService) checkRateLimit(ctx context.Context, ipHash, email, userID string) error {

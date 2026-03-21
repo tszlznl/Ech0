@@ -4,6 +4,15 @@
   >
     <form class="space-y-3" @submit.prevent="emit('submit')">
       <BaseInput
+        :model-value="email"
+        @update:model-value="emit('update:email', String($event))"
+        type="email"
+        :placeholder="t('init.ownerEmailPlaceholder')"
+        autocomplete="email"
+        required
+      />
+
+      <BaseInput
         :model-value="username"
         @update:model-value="emit('update:username', String($event))"
         type="text"
@@ -42,12 +51,14 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
 defineProps<{
+  email: string
   username: string
   password: string
   submitting: boolean
 }>()
 
 const emit = defineEmits<{
+  (e: 'update:email', value: string): void
   (e: 'update:username', value: string): void
   (e: 'update:password', value: string): void
   (e: 'submit'): void

@@ -33,4 +33,5 @@ func setupCommentRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	appRouterGroup.AuthRouterGroup.POST("/panel/comments/batch", h.CommentHandler.BatchAction())
 	appRouterGroup.AuthRouterGroup.GET("/panel/comments/settings", h.CommentHandler.GetCommentSetting())
 	appRouterGroup.AuthRouterGroup.PUT("/panel/comments/settings", h.CommentHandler.UpdateCommentSetting())
+	appRouterGroup.AuthRouterGroup.POST("/panel/comments/settings/test-email", h.CommentHandler.TestCommentEmail())
 }

@@ -81,6 +81,24 @@
           autocomplete="off"
         />
       </div>
+      <!-- 邮箱 -->
+      <div
+        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 min-h-10 py-1"
+      >
+        <h2 class="font-semibold min-w-28 md:min-w-36 shrink-0 break-words leading-5">
+          {{ t('userSetting.email') }}:
+        </h2>
+        <span v-if="!editMode" class="flex-1 min-w-0 truncate" :title="user?.email || ''">{{
+          user?.email || '-'
+        }}</span>
+        <BaseInput
+          v-else
+          v-model="userInfo.email"
+          type="email"
+          :placeholder="t('userSetting.emailPlaceholder')"
+          class="w-full max-w-52 py-1!"
+        />
+      </div>
       <!-- 界面语言 -->
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 min-h-10 py-1"
@@ -121,6 +139,7 @@ const { user } = storeToRefs(userStore)
 const userInfo = ref<App.Api.User.UserInfo>({
   username: '',
   password: '',
+  email: '',
   is_admin: false,
   avatar: '',
   locale: 'zh-CN',
@@ -201,6 +220,7 @@ onMounted(() => {
       userInfo.value.username = res.data.username
       userInfo.value.password = res.data.password || ''
       userInfo.value.avatar = res.data.avatar || ''
+      userInfo.value.email = res.data.email || ''
       userInfo.value.is_admin = res.data.is_admin
       userInfo.value.locale = res.data.locale || 'zh-CN'
     }

@@ -97,3 +97,11 @@ export function fetchUpdateCommentSystemSetting(setting: App.Api.Comment.SystemS
     data: setting,
   })
 }
+
+export function fetchTestCommentEmail(setting: App.Api.Comment.SystemSetting) {
+  return request({
+    url: '/panel/comments/settings/test-email',
+    method: 'POST',
+    data: { setting },
+  })
+}

@@ -12,6 +12,10 @@ type UserInfoDto struct {
 	// example: 123456
 	Password string `json:"password"`
 
+	// 邮箱
+	// example: owner@example.com
+	Email string `json:"email"`
+
 	// 是否为管理员
 	// example: false
 	IsAdmin bool `json:"is_admin"`

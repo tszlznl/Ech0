@@ -10,13 +10,23 @@
             {{ t('commentManager.subtitle') }}
           </p>
         </div>
-        <BaseButton
-          class="comment-btn comment-btn-primary shrink-0 whitespace-nowrap px-2.5 py-1 text-xs"
-          @click="saveSetting"
-          :disabled="settingSaving"
-        >
-          {{ settingSaving ? t('common.saving') : t('common.save') }}
-        </BaseButton>
+        <div class="flex items-center gap-2 shrink-0">
+          <BaseButton
+            class="comment-btn comment-btn-primary whitespace-nowrap px-2.5 py-1 text-xs"
+            @click="saveSetting"
+            :disabled="settingSaving"
+          >
+            {{ settingSaving ? t('common.saving') : t('common.save') }}
+          </BaseButton>
+          <BaseButton
+            v-if="setting.email_notify.enabled"
+            class="comment-btn whitespace-nowrap px-2.5 py-1 text-xs"
+            @click="testEmail"
+            :disabled="settingSaving || testingEmail"
+          >
+            {{ testingEmail ? t('common.saving') : t('commentManager.testEmail') }}
+          </BaseButton>
+        </div>
       </div>
 
       <div
@@ -42,6 +52,40 @@
             <p class="setting-desc">{{ t('commentManager.enableCaptchaDesc') }}</p>
           </div>
           <BaseSwitch v-model="setting.captcha_enabled" :disabled="!setting.enable_comment" />
+        </div>
+
+        <div class="mt-3">
+          <div class="setting-row">
+            <div>
+              <h3 class="setting-title">{{ t('commentManager.emailNotifyTitle') }}</h3>
+              <p class="setting-desc">{{ t('commentManager.emailNotifyDesc') }}</p>
+            </div>
+            <BaseSwitch v-model="setting.email_notify.enabled" />
+          </div>
+          <div v-if="setting.email_notify.enabled" class="mt-3 grid gap-2 md:grid-cols-2">
+            <BaseInput
+              v-model.trim="setting.email_notify.smtp_host"
+              :placeholder="t('commentManager.smtpHostPlaceholder')"
+            />
+            <BaseInput
+              v-model.number="setting.email_notify.smtp_port"
+              type="number"
+              :placeholder="t('commentManager.smtpPortPlaceholder')"
+            />
+            <BaseInput
+              v-model.trim="setting.email_notify.smtp_username"
+              :placeholder="t('commentManager.smtpUsernamePlaceholder')"
+            />
+            <BaseInput
+              v-model="setting.email_notify.smtp_password"
+              type="password"
+              :placeholder="
+                setting.email_notify.smtp_password_set
+                  ? t('commentManager.smtpPasswordKeepPlaceholder')
+                  : t('commentManager.smtpPasswordPlaceholder')
+              "
+            />
+          </div>
         </div>
       </div>
     </PanelCard>
@@ -270,6 +314,7 @@ import {
   fetchGetCommentSystemSetting,
   fetchGetPanelCommentById,
   fetchGetPanelComments,
+  fetchTestCommentEmail,
   fetchUpdateCommentSystemSetting,
   fetchUpdatePanelCommentHot,
   fetchUpdatePanelCommentStatus,
@@ -289,8 +334,17 @@ const setting = reactive<App.Api.Comment.SystemSetting>({
   enable_comment: true,
   require_approval: true,
   captcha_enabled: false,
+  email_notify: {
+    enabled: false,
+    smtp_host: '',
+    smtp_port: 587,
+    smtp_username: '',
+    smtp_password: '',
+    smtp_password_set: false,
+  },
 })
 const settingSaving = ref(false)
+const testingEmail = ref(false)
 
 const query = reactive<App.Api.Comment.PanelListQuery>({
   page: 1,
@@ -344,18 +398,57 @@ const loadSetting = async () => {
   const res = await fetchGetCommentSystemSetting()
   if (res.code === 1) {
     Object.assign(setting, res.data)
+    setting.email_notify = {
+      ...setting.email_notify,
+      ...(res.data.email_notify || {}),
+      smtp_password: '',
+    }
   }
 }
 
 const saveSetting = async () => {
   settingSaving.value = true
   try {
-    const res = await fetchUpdateCommentSystemSetting(setting)
+    const res = await fetchUpdateCommentSystemSetting(buildSettingPayload())
     if (res.code === 1) {
       theToast.success(String(t('commentManager.settingUpdated')))
     }
   } finally {
     settingSaving.value = false
+  }
+}
+
+const testEmail = async () => {
+  if (!setting.email_notify.enabled) {
+    theToast.info(String(t('commentManager.emailNotifyEnableFirst')))
+    return
+  }
+  testingEmail.value = true
+  try {
+    const res = await fetchTestCommentEmail(buildSettingPayload())
+    if (res.code === 1) {
+      theToast.success(String(t('commentManager.testEmailSuccess')))
+    }
+  } finally {
+    testingEmail.value = false
+  }
+}
+
+const buildSettingPayload = (): App.Api.Comment.SystemSetting => {
+  const rawPort = Number(setting.email_notify.smtp_port)
+  const safePort = Number.isFinite(rawPort) && rawPort > 0 ? Math.trunc(rawPort) : 587
+  return {
+    enable_comment: setting.enable_comment,
+    require_approval: setting.require_approval,
+    captcha_enabled: setting.captcha_enabled,
+    email_notify: {
+      enabled: Boolean(setting.email_notify.enabled),
+      smtp_host: String(setting.email_notify.smtp_host || '').trim(),
+      smtp_port: safePort,
+      smtp_username: String(setting.email_notify.smtp_username || '').trim(),
+      smtp_password: String(setting.email_notify.smtp_password || ''),
+      smtp_password_set: Boolean(setting.email_notify.smtp_password_set),
+    },
   }
 }
 

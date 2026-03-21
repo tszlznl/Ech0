@@ -3,9 +3,11 @@
     <div class="w-full max-w-[18rem]">
       <TheInitIntro />
       <TheInitForm
+        :email="form.email"
         :username="form.username"
         :password="form.password"
         :submitting="submitting"
+        @update:email="form.email = $event"
         @update:username="form.username = $event"
         @update:password="form.password = $event"
         @submit="onSubmit"
@@ -28,6 +30,7 @@ const initStore = useInitStore()
 const { t } = useI18n()
 const submitting = ref(false)
 const form = reactive({
+  email: '',
   username: '',
   password: '',
 })
@@ -40,13 +43,14 @@ onMounted(async () => {
 })
 
 const onSubmit = async () => {
-  if (!form.username || !form.password || submitting.value) {
+  if (!form.email || !form.username || !form.password || submitting.value) {
     return
   }
 
   submitting.value = true
   try {
     const res = await initStore.initOwner({
+      email: form.email,
       username: form.username,
       password: form.password,
     })

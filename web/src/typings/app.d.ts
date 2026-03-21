@@ -25,6 +25,7 @@ declare namespace App {
       type SignupParams = {
         username: string
         password: string
+        email?: string
       }
 
       // Passkey / WebAuthn
@@ -51,6 +52,7 @@ declare namespace App {
       type User = {
         id: string
         username: string
+        email?: string
         password?: string
         is_admin: boolean
         is_owner?: boolean
@@ -61,6 +63,7 @@ declare namespace App {
       type UserInfo = {
         username: string
         password: string
+        email?: string
         is_admin: boolean
         is_owner?: boolean
         avatar: string
@@ -492,6 +495,14 @@ declare namespace App {
         enable_comment: boolean
         require_approval: boolean
         captcha_enabled: boolean
+        email_notify: {
+          enabled: boolean
+          smtp_host: string
+          smtp_port: number
+          smtp_username: string
+          smtp_password?: string
+          smtp_password_set?: boolean
+        }
       }
     }
 

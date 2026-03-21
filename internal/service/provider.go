@@ -31,6 +31,8 @@ var (
 		wire.Bind(new(fileService.Service), new(*fileService.FileService)),
 	)
 	CommentSet = wire.NewSet(
+		commentService.NewGoMailSender,
+		wire.Bind(new(commentService.Mailer), new(*commentService.GoMailSender)),
 		commentService.NewCommentService,
 		wire.Bind(new(commentService.Service), new(*commentService.CommentService)),
 	)

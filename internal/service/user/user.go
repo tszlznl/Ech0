@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/mail"
 	"net/url"
 	"strconv"
 	"strings"
@@ -114,6 +115,13 @@ func (userService *UserService) InitOwner(registerDto *authModel.RegisterDto) er
 	if registerDto.Username == "" || registerDto.Password == "" {
 		return errors.New(commonModel.USERNAME_OR_PASSWORD_NOT_BE_EMPTY)
 	}
+	email := strings.TrimSpace(registerDto.Email)
+	if email == "" {
+		return errors.New("邮箱不能为空")
+	}
+	if _, err := mail.ParseAddress(email); err != nil {
+		return errors.New("邮箱格式无效")
+	}
 
 	var owner model.User
 	if err := userService.transactor.Run(context.Background(), func(ctx context.Context) error {
@@ -141,6 +149,7 @@ func (userService *UserService) InitOwner(registerDto *authModel.RegisterDto) er
 
 		owner = model.User{
 			Username: registerDto.Username,
+			Email:    email,
 			Password: cryptoUtil.MD5Encrypt(registerDto.Password),
 			IsAdmin:  true,
 			IsOwner:  true,
@@ -197,9 +206,16 @@ func (userService *UserService) Register(registerDto *authModel.RegisterDto) err
 
 	// 将密码进行 MD5 加密
 	registerDto.Password = cryptoUtil.MD5Encrypt(registerDto.Password)
+	email := strings.TrimSpace(registerDto.Email)
+	if email != "" {
+		if _, err := mail.ParseAddress(email); err != nil {
+			return errors.New("邮箱格式无效")
+		}
+	}
 
 	newUser := model.User{
 		Username: registerDto.Username,
+		Email:    email,
 		Password: registerDto.Password,
 		IsAdmin:  false,
 		IsOwner:  false,
@@ -290,6 +306,12 @@ func (userService *UserService) UpdateUser(ctx context.Context, userdto model.Us
 	}
 	if userdto.Locale != "" {
 		user.Locale = i18nUtil.ResolveLocale(userdto.Locale)
+	}
+	if strings.TrimSpace(userdto.Email) != "" {
+		if _, err := mail.ParseAddress(strings.TrimSpace(userdto.Email)); err != nil {
+			return errors.New("邮箱格式无效")
+		}
+		user.Email = strings.TrimSpace(userdto.Email)
 	}
 	if err := userService.transactor.Run(ctx, func(txCtx context.Context) error {
 		// 更新用户信息

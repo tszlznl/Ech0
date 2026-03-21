@@ -27,6 +27,7 @@ type Service interface {
 	BatchAction(ctx context.Context, action string, ids []string) error
 	GetSystemSetting(ctx context.Context) (model.SystemSetting, error)
 	UpdateSystemSetting(ctx context.Context, setting model.SystemSetting) error
+	SendTestEmail(ctx context.Context, setting model.SystemSetting) error
 }
 
 type Repository interface {
@@ -67,4 +68,21 @@ type EventPublisher interface {
 	CommentCreated(ctx context.Context, evt contracts.CommentCreatedEvent) error
 	CommentStatusUpdated(ctx context.Context, evt contracts.CommentStatusUpdatedEvent) error
 	CommentDeleted(ctx context.Context, evt contracts.CommentDeletedEvent) error
+}
+
+type MailMessage struct {
+	To       string
+	Subject  string
+	TextBody string
+}
+
+type MailerConfig struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+}
+
+type Mailer interface {
+	Send(ctx context.Context, cfg MailerConfig, msg MailMessage) error
 }

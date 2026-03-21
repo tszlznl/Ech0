@@ -186,6 +186,19 @@ func (h *CommentHandler) UpdateCommentSetting() gin.HandlerFunc {
 	})
 }
 
+func (h *CommentHandler) TestCommentEmail() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		var dto model.TestEmailRequest
+		if err := ctx.ShouldBindJSON(&dto); err != nil {
+			return res.Response{Msg: commonModel.INVALID_REQUEST_BODY, Err: err}
+		}
+		if err := h.commentService.SendTestEmail(ctx.Request.Context(), dto.Setting); err != nil {
+			return res.Response{Err: err}
+		}
+		return res.Response{Msg: commonModel.SUCCESS_MESSAGE}
+	})
+}
+
 func (h *CommentHandler) attachOptionalViewer(ctx *gin.Context) {
 	auth := strings.TrimSpace(ctx.GetHeader("Authorization"))
 	userID := service.ParseOptionalUserIDFromAuthHeader(auth)

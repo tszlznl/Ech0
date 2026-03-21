@@ -185,7 +185,17 @@
     "query": "Suchen",
     "batchApprove": "Auswahl freigeben",
     "batchReject": "Auswahl ablehnen",
-    "batchDelete": "Auswahl löschen"
+    "batchDelete": "Auswahl löschen",
+    "testEmail": "Test-E-Mail",
+    "testEmailSuccess": "Test-E-Mail gesendet",
+    "emailNotifyTitle": "E-Mail-Benachrichtigungen",
+    "emailNotifyDesc": "Benachrichtigt nur den Owner über neue Kommentare, Moderationsänderungen und Hot-Markierungen.",
+    "emailNotifyEnableFirst": "Bitte zuerst E-Mail-Benachrichtigungen aktivieren",
+    "smtpHostPlaceholder": "SMTP-Host",
+    "smtpPortPlaceholder": "SMTP-Port",
+    "smtpUsernamePlaceholder": "SMTP-Benutzername",
+    "smtpPasswordPlaceholder": "SMTP-Passwort",
+    "smtpPasswordKeepPlaceholder": "Leer lassen, um aktuelles Passwort beizubehalten"
   },
   "storageFileList": {
     "title": "Dateiverwaltung",
@@ -228,6 +238,7 @@
     "passkeyLoginFailed": "Passkey-Anmeldung fehlgeschlagen"
   },
   "init": {
+    "ownerEmailPlaceholder": "Owner-E-Mail",
     "ownerUsernamePlaceholder": "Owner-Benutzername",
     "ownerPasswordPlaceholder": "Owner-Passwort",
     "initializing": "Wird initialisiert…",
@@ -431,12 +442,14 @@
     "avatarAlt": "Avatar",
     "changeAvatar": "Ändern",
     "username": "Benutzername",
+    "email": "E-Mail",
     "password": "Passwort",
     "locale": "Sprache",
     "localeZhShort": "简中",
     "localeEnShort": "EN",
     "localeDeShort": "DE",
     "usernamePlaceholder": "Benutzername eingeben",
+    "emailPlaceholder": "E-Mail eingeben",
     "passwordPlaceholder": "Passwort eingeben",
     "avatarUploading": "Avatar wird hochgeladen…",
     "avatarUploadSuccess": "Avatar hochgeladen!",
