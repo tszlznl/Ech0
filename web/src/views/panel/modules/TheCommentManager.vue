@@ -24,7 +24,7 @@
             @click="testEmail"
             :disabled="settingSaving || testingEmail"
           >
-            {{ testingEmail ? t('common.saving') : t('commentManager.testEmail') }}
+            {{ testingEmail ? t('commentManager.testEmailSending') : t('commentManager.testEmail') }}
           </BaseButton>
         </div>
       </div>
@@ -85,6 +85,12 @@
                   : t('commentManager.smtpPasswordPlaceholder')
               "
             />
+            <p
+              v-if="setting.email_notify.smtp_password_set && !setting.email_notify.smtp_password"
+              class="md:col-span-2 text-xs text-[var(--color-text-muted)]"
+            >
+              {{ t('commentManager.smtpPasswordSavedHint') }}
+            </p>
           </div>
         </div>
       </div>

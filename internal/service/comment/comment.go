@@ -416,6 +416,10 @@ func (s *CommentService) SendTestEmail(ctx context.Context, setting model.System
 		return err
 	}
 	applySettingDefaults(&setting)
+	current, err := s.getSystemSettingRaw(ctx)
+	if err == nil && strings.TrimSpace(setting.EmailNotify.SMTPPassword) == "" {
+		setting.EmailNotify.SMTPPassword = current.EmailNotify.SMTPPassword
+	}
 	ownerEmail, err := s.resolveOwnerEmail()
 	if err != nil {
 		return err
