@@ -24,7 +24,9 @@
             @click="testEmail"
             :disabled="settingSaving || testingEmail"
           >
-            {{ testingEmail ? t('commentManager.testEmailSending') : t('commentManager.testEmail') }}
+            {{
+              testingEmail ? t('commentManager.testEmailSending') : t('commentManager.testEmail')
+            }}
           </BaseButton>
         </div>
       </div>

@@ -39,15 +39,19 @@
           {{ t('connectSetting.connectHint') }}
         </p>
 
-        <div class="mt-4 flex flex-col-reverse items-center justify-center gap-2 sm:flex-row">
+        <div class="mt-4 flex flex-nowrap items-center justify-center gap-2">
           <BaseButton
-            class="h-9 rounded-md px-4"
+            class="h-9 rounded-md px-4 whitespace-nowrap"
             :disabled="isSubmitting"
             @click="handleCancelConnect"
           >
             {{ t('commonUi.cancel') }}
           </BaseButton>
-          <BaseButton class="h-9 rounded-md px-4" :loading="isSubmitting" @click="handleAddConnect">
+          <BaseButton
+            class="h-9 rounded-md px-4 whitespace-nowrap"
+            :loading="isSubmitting"
+            @click="handleAddConnect"
+          >
             {{ t('connectSetting.connect') }}
           </BaseButton>
         </div>
