@@ -81,3 +81,4 @@ quality-report.md
 .cursor-go
 
 .DS_Store
+.cache/
