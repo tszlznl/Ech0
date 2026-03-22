@@ -1,7 +1,4 @@
-export type GalleryOpenHandler = (
-  startIndex: number,
-  sourceElement?: HTMLElement | null,
-) => void
+export type GalleryOpenHandler = (startIndex: number, sourceElement?: HTMLElement | null) => void
 
 export type GalleryImageHelperProps = {
   images: App.Api.Ech0.FileObject[]
@@ -22,9 +19,7 @@ export type GalleryWithAspectRatioProps = GalleryImageHelperProps & {
 
 export type GalleryHorizontalProps = GalleryWithImageKeyProps & {
   scrollHintText: string
-  getHorizontalAspectStyle: (
-    image: App.Api.Ech0.FileObject,
-  ) => Record<string, string> | undefined
+  getHorizontalAspectStyle: (image: App.Api.Ech0.FileObject) => Record<string, string> | undefined
 }
 
 export type GalleryWaterfallProps = GalleryWithImageKeyProps & {
