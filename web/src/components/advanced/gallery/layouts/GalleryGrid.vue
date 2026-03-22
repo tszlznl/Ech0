@@ -1,5 +1,5 @@
 <template>
-  <div class="imgwidth mx-auto mb-4">
+  <div class="w-[88%] mx-auto mb-4">
     <div class="grid grid-cols-3 gap-2">
       <GalleryImageItem
         v-for="(image, idx) in displayedImages"
@@ -26,16 +26,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import GalleryImageItem from '../parts/GalleryImageItem.vue'
+import type { GalleryWithImageKeyProps } from './types'
 
-const props = defineProps<{
-  images: App.Api.Ech0.FileObject[]
-  resolvedSrcs: string[]
-  getAlt: (idx: number) => string
-  getImageKey: (image: App.Api.Ech0.FileObject, idx: number) => string
-  isLoaded: (image: App.Api.Ech0.FileObject, idx: number) => boolean
-  markLoaded: (image: App.Api.Ech0.FileObject, idx: number) => void
-  open: (startIndex: number, sourceElement?: HTMLElement | null) => void
-}>()
+const props = defineProps<GalleryWithImageKeyProps>()
 
 const displayedImages = computed(() => props.images.slice(0, 9))
 const extraCount = computed(() => (props.images.length > 9 ? props.images.length - 9 : 0))

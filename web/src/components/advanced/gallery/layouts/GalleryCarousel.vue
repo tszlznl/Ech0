@@ -1,5 +1,5 @@
 <template>
-  <div class="imgwidth mx-auto mb-4">
+  <div class="w-[88%] mx-auto mb-4">
     <div class="carousel-container rounded-lg overflow-hidden">
       <GalleryImageItem
         v-if="images[carouselIndex]"
@@ -48,16 +48,9 @@ import { computed, ref, watch } from 'vue'
 import Prev from '@/components/icons/prev.vue'
 import Next from '@/components/icons/next.vue'
 import GalleryImageItem from '../parts/GalleryImageItem.vue'
+import type { GalleryWithAspectRatioProps } from './types'
 
-const props = defineProps<{
-  images: App.Api.Ech0.FileObject[]
-  resolvedSrcs: string[]
-  getAlt: (idx: number) => string
-  isLoaded: (image: App.Api.Ech0.FileObject, idx: number) => boolean
-  markLoaded: (image: App.Api.Ech0.FileObject, idx: number) => void
-  open: (startIndex: number, sourceElement?: HTMLElement | null) => void
-  getAspectRatioStyle: (image: App.Api.Ech0.FileObject) => Record<string, string> | undefined
-}>()
+const props = defineProps<GalleryWithAspectRatioProps>()
 
 const carouselIndex = ref(0)
 const imagesLength = computed(() => props.images.length)

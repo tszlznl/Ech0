@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { getImageUrl, getHubImageUrl } from '@/utils/other'
 import { ImageLayout } from '@/enums/enums'
 import { useI18n } from 'vue-i18n'
@@ -69,7 +69,14 @@ const props = defineProps<{
 const { t } = useI18n()
 
 const images = computed(() => props.images || [])
-const layoutValue = computed(() => props.layout || ImageLayout.WATERFALL)
+const isValidLayout = (layout?: ImageLayout | string): layout is ImageLayout => {
+  if (!layout) return false
+  return (Object.values(ImageLayout) as string[]).includes(layout)
+}
+
+const layoutValue = computed(() =>
+  isValidLayout(props.layout) ? props.layout : ImageLayout.WATERFALL,
+)
 const loadedImages = ref<Record<string, boolean>>({})
 const resolvedSrcs = computed(() =>
   images.value.map((image) =>
@@ -117,14 +124,27 @@ const isImageLoaded = (image: App.Api.Ech0.FileObject, idx: number) =>
 const markImageLoaded = (image: App.Api.Ech0.FileObject, idx: number) => {
   loadedImages.value[getImageKey(image, idx)] = true
 }
+
+watch(
+  images,
+  (nextImages) => {
+    const nextKeys = new Set(nextImages.map((image, idx) => getImageKey(image, idx)))
+    const nextLoadedMap: Record<string, boolean> = {}
+
+    Object.keys(loadedImages.value).forEach((key) => {
+      if (nextKeys.has(key)) {
+        nextLoadedMap[key] = true
+      }
+    })
+
+    loadedImages.value = nextLoadedMap
+  },
+  { immediate: true },
+)
 </script>
 
 <style scoped>
 .image-gallery-container {
   position: relative;
-}
-
-.imgwidth {
-  width: 88%;
 }
 </style>

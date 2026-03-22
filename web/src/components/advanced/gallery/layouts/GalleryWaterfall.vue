@@ -1,7 +1,7 @@
 <template>
   <div
     :class="[
-      'imgwidth mx-auto grid gap-2 mb-4',
+      'w-[88%] mx-auto grid gap-2 mb-4',
       images.length === 1 ? 'grid-cols-1 justify-items-center' : 'grid-cols-2',
     ]"
   >
@@ -24,17 +24,9 @@
 
 <script setup lang="ts">
 import GalleryImageItem from '../parts/GalleryImageItem.vue'
+import type { GalleryWaterfallProps } from './types'
 
-defineProps<{
-  images: App.Api.Ech0.FileObject[]
-  resolvedSrcs: string[]
-  getAlt: (idx: number) => string
-  getImageKey: (image: App.Api.Ech0.FileObject, idx: number) => string
-  isLoaded: (image: App.Api.Ech0.FileObject, idx: number) => boolean
-  markLoaded: (image: App.Api.Ech0.FileObject, idx: number) => void
-  open: (startIndex: number, sourceElement?: HTMLElement | null) => void
-  getAspectRatioStyle: (image: App.Api.Ech0.FileObject) => Record<string, string> | undefined
-}>()
+defineProps<GalleryWaterfallProps>()
 
 const getColSpan = (idx: number, total: number) => {
   if (total === 1) return 'col-span-1 justify-self-center'

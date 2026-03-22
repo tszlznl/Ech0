@@ -1,5 +1,5 @@
 <template>
-  <div class="imgwidth mx-auto mb-4">
+  <div class="w-[88%] mx-auto mb-4">
     <div class="horizontal-scroll-container">
       <div class="horizontal-scroll-wrapper">
         <GalleryImageItem
@@ -25,18 +25,9 @@
 
 <script setup lang="ts">
 import GalleryImageItem from '../parts/GalleryImageItem.vue'
+import type { GalleryHorizontalProps } from './types'
 
-defineProps<{
-  images: App.Api.Ech0.FileObject[]
-  resolvedSrcs: string[]
-  scrollHintText: string
-  getAlt: (idx: number) => string
-  getImageKey: (image: App.Api.Ech0.FileObject, idx: number) => string
-  isLoaded: (image: App.Api.Ech0.FileObject, idx: number) => boolean
-  markLoaded: (image: App.Api.Ech0.FileObject, idx: number) => void
-  open: (startIndex: number, sourceElement?: HTMLElement | null) => void
-  getHorizontalAspectStyle: (image: App.Api.Ech0.FileObject) => Record<string, string> | undefined
-}>()
+defineProps<GalleryHorizontalProps>()
 </script>
 
 <style scoped>

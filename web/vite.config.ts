@@ -1,10 +1,11 @@
+/// <reference types="vitest/config" />
 import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import UnoCSS from 'unocss/vite'
-import viteCompression from 'vite-plugin-compression';
+import viteCompression from 'vite-plugin-compression'
 
 import { welcomePlugin } from './src/plugins/welcome-plugin'
 
@@ -30,6 +31,14 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./tests/setup.ts'],
+    include: ['tests/**/*.{test,spec}.ts'],
+    clearMocks: true,
+    restoreMocks: true,
   },
   build: {
     // 当使用embed时则调整构建输出到后端的template/dist目录
