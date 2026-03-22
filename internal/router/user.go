@@ -14,7 +14,6 @@ func setupUserRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	// Public
 	appRouterGroup.PublicRouterGroup.POST("/login", middleware.NoCache(), h.UserHandler.Login())
 	appRouterGroup.PublicRouterGroup.POST("/register", middleware.NoCache(), h.UserHandler.Register())
-	appRouterGroup.PublicRouterGroup.GET("/allusers", h.UserHandler.GetAllUsers())
 	appRouterGroup.PublicRouterGroup.POST(
 		"/passkey/login/begin",
 		middleware.NoCache(),
@@ -27,6 +26,7 @@ func setupUserRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	)
 
 	// Auth
+	appRouterGroup.AuthRouterGroup.GET("/allusers", h.UserHandler.GetAllUsers())
 	appRouterGroup.AuthRouterGroup.GET("/user", h.UserHandler.GetUserInfo())
 	appRouterGroup.AuthRouterGroup.PUT("/user", h.UserHandler.UpdateUser())
 	appRouterGroup.AuthRouterGroup.DELETE("/user/:id", h.UserHandler.DeleteUser())

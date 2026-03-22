@@ -70,6 +70,21 @@ func TestSetupRouter_AuthGroupProtected(t *testing.T) {
 	}
 }
 
+func TestSetupRouter_AllUsersRouteProtected(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	initTestDatabase(t)
+	engine := gin.New()
+	SetupRouter(engine, buildTestHandlers())
+
+	req := httptest.NewRequest(http.MethodGet, "/api/allusers", nil)
+	rec := httptest.NewRecorder()
+	engine.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status %d, got %d", http.StatusUnauthorized, rec.Code)
+	}
+}
+
 func containsRoute(routes []gin.RouteInfo, method, path string) bool {
 	for _, route := range routes {
 		if route.Method == method && route.Path == path {
