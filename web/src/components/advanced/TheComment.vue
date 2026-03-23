@@ -180,7 +180,6 @@
           tabindex="-1"
           autocomplete="off"
           class="hidden"
-          aria-hidden="true"
         />
 
         <div class="comment-submit-row mt-3">

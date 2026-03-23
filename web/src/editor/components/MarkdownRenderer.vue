@@ -17,6 +17,7 @@ const html = computed(() =>
   renderMarkdown(props.content, {
     expandLabel: String(t('markdown.expand')),
     collapseLabel: String(t('markdown.collapse')),
+    taskCheckboxLabel: String(t('markdown.taskCheckboxLabel')),
   }),
 )
 

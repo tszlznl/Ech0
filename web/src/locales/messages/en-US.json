@@ -842,7 +842,8 @@
   },
   "markdown": {
     "expand": "Expand",
-    "collapse": "Collapse"
+    "collapse": "Collapse",
+    "taskCheckboxLabel": "Task checkbox"
   },
   "baseSelect": {
     "empty": "No options",
@@ -868,6 +869,8 @@
   },
   "imageGallery": {
     "previewImage": "Preview image {index}",
+    "prevImage": "Previous image",
+    "nextImage": "Next image",
     "scrollHint": "← Swipe left/right to see more →"
   },
   "zone": {

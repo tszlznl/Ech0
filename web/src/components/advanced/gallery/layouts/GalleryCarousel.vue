@@ -25,19 +25,21 @@
       <button
         class="nav-btn flex items-center justify-center w-8 h-8 rounded-full transition disabled:opacity-40 disabled:cursor-not-allowed"
         type="button"
+        :aria-label="t('imageGallery.prevImage')"
         @click.stop="prevCarousel"
         :disabled="carouselIndex === 0"
       >
-        <Prev class="w-5 h-5 text-[var(--color-text-secondary)]" />
+        <Prev class="w-5 h-5 text-[var(--color-text-secondary)]" aria-hidden="true" />
       </button>
       <span class="text-sm"> {{ carouselIndex + 1 }} / {{ images.length }} </span>
       <button
         class="nav-btn flex items-center justify-center w-8 h-8 rounded-full transition disabled:opacity-40 disabled:cursor-not-allowed"
         type="button"
+        :aria-label="t('imageGallery.nextImage')"
         @click.stop="nextCarousel"
         :disabled="carouselIndex === images.length - 1"
       >
-        <Next class="w-5 h-5 text-[var(--color-text-secondary)]" />
+        <Next class="w-5 h-5 text-[var(--color-text-secondary)]" aria-hidden="true" />
       </button>
     </div>
   </div>
@@ -45,12 +47,14 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Prev from '@/components/icons/prev.vue'
 import Next from '@/components/icons/next.vue'
 import GalleryImageItem from '../parts/GalleryImageItem.vue'
 import type { GalleryWithAspectRatioProps } from './types'
 
 const props = defineProps<GalleryWithAspectRatioProps>()
+const { t } = useI18n()
 
 const carouselIndex = ref(0)
 const imagesLength = computed(() => props.images.length)

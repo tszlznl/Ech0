@@ -8,6 +8,7 @@ describe('renderMarkdown task list', () => {
     const html = renderMarkdown(source)
 
     expect(html).toContain('type="checkbox"')
+    expect(html).toContain('aria-label="Task item"')
     expect(html).toContain('task-list-item')
     expect(html).toContain('checked')
   })
@@ -19,6 +20,7 @@ describe('renderMarkdown task list', () => {
 
     expect(html).toContain('task-list-item-checkbox')
     expect(html).toContain('<input class="task-list-item-checkbox"')
+    expect(html).toContain('aria-label="Task item"')
     expect(html).toContain('checked')
   })
 })

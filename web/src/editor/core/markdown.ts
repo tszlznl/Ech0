@@ -6,6 +6,7 @@ const CODE_BLOCK_COLLAPSE_THRESHOLD = 18
 const CODE_BLOCK_COLLAPSED_LINES = 10
 const EXPAND_PLACEHOLDER = '__ECHO_MD_EXPAND__'
 const COLLAPSE_PLACEHOLDER = '__ECHO_MD_COLLAPSE__'
+const TASK_CHECKBOX_LABEL_PLACEHOLDER = '__ECHO_MD_TASK_CHECKBOX_LABEL__'
 const TASK_LIST_MARKER_RE = /^\[( |x|X)\]\s+/
 const RENDER_CACHE_MAX_SIZE = 120
 const renderCache = new Map<string, string>()
@@ -77,7 +78,7 @@ function taskListPlugin(md: MarkdownIt): void {
       appendClass(listItemToken, 'task-list-item')
 
       const checkbox = new state.Token('html_inline', '', 0)
-      checkbox.content = `<input class="task-list-item-checkbox" type="checkbox" disabled${checked ? ' checked' : ''}> `
+      checkbox.content = `<input class="task-list-item-checkbox" type="checkbox" aria-label="${TASK_CHECKBOX_LABEL_PLACEHOLDER}" disabled${checked ? ' checked' : ''}> `
       inlineToken.children?.unshift(checkbox)
     }
   })
@@ -146,12 +147,13 @@ markdown.renderer.rules.link_open = (...args: Parameters<LinkOpenRule>) => {
 
 export function renderMarkdown(
   source: string,
-  labels?: { expandLabel?: string; collapseLabel?: string },
+  labels?: { expandLabel?: string; collapseLabel?: string; taskCheckboxLabel?: string },
 ): string {
   if (!source) return ''
   const expandLabel = escapeHtml(String(labels?.expandLabel || 'Expand'))
   const collapseLabel = escapeHtml(String(labels?.collapseLabel || 'Collapse'))
-  const cacheKey = `${source}\u241f${expandLabel}\u241f${collapseLabel}`
+  const taskCheckboxLabel = escapeHtml(String(labels?.taskCheckboxLabel || 'Task item'))
+  const cacheKey = `${source}\u241f${expandLabel}\u241f${collapseLabel}\u241f${taskCheckboxLabel}`
   const cached = getFromRenderCache(cacheKey)
   if (cached) return cached
 
@@ -159,6 +161,7 @@ export function renderMarkdown(
   const finalHtml = rendered
     .replaceAll(EXPAND_PLACEHOLDER, expandLabel)
     .replaceAll(COLLAPSE_PLACEHOLDER, collapseLabel)
+    .replaceAll(TASK_CHECKBOX_LABEL_PLACEHOLDER, taskCheckboxLabel)
   setRenderCache(cacheKey, finalHtml)
   return finalHtml
 }

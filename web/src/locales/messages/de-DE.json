@@ -842,7 +842,8 @@
   },
   "markdown": {
     "expand": "Ausklappen",
-    "collapse": "Einklappen"
+    "collapse": "Einklappen",
+    "taskCheckboxLabel": "Aufgaben-Kontrollkästchen"
   },
   "baseSelect": {
     "empty": "Keine Optionen",
@@ -868,6 +869,8 @@
   },
   "imageGallery": {
     "previewImage": "Bild {index} anzeigen",
+    "prevImage": "Vorheriges Bild",
+    "nextImage": "Nächstes Bild",
     "scrollHint": "← Wischen, um mehr zu sehen →"
   },
   "zone": {

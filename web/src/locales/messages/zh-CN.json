@@ -842,7 +842,8 @@
   },
   "markdown": {
     "expand": "展开",
-    "collapse": "收起"
+    "collapse": "收起",
+    "taskCheckboxLabel": "任务复选框"
   },
   "baseSelect": {
     "empty": "暂无选项",
@@ -868,6 +869,8 @@
   },
   "imageGallery": {
     "previewImage": "预览图片{index}",
+    "prevImage": "上一张图片",
+    "nextImage": "下一张图片",
     "scrollHint": "← 左右滑动查看更多 →"
   },
   "zone": {
