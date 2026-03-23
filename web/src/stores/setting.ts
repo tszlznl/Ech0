@@ -12,8 +12,11 @@ import {
   fetchHelloEch0,
 } from '@/service/api'
 import { S3Provider, OAuth2Provider, AgentProvider } from '@/enums/enums'
+import { useUserStore } from './user'
 
 export const useSettingStore = defineStore('settingStore', () => {
+  const userStore = useUserStore()
+
   /**
    * State
    */
@@ -168,7 +171,9 @@ export const useSettingStore = defineStore('settingStore', () => {
 
   const init = async () => {
     await getSystemSetting()
-    getS3Setting()
+    if (userStore.isLogin && userStore.user?.is_admin) {
+      getS3Setting()
+    }
     getAgentInfo()
     getHelloEch0()
   }

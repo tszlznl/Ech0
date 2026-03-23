@@ -34,10 +34,6 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			if strings.HasPrefix(path, "/api/echo") && method == http.MethodGet {
 				return true
 			}
-			// 获取 S3 存储设置
-			if strings.HasPrefix(path, "/api/s3/settings") && method == http.MethodGet {
-				return true
-			}
 			// 根据 Tag ID 获取 Echo 列表
 			if strings.HasPrefix(path, "/api/echo/tag/") && method == http.MethodGet {
 				return true

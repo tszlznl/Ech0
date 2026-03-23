@@ -62,6 +62,22 @@ func TestJWTAuthMiddleware_AllowsAnonymousPublicEchoEvenWithInvalidToken(t *test
 	}
 }
 
+func TestJWTAuthMiddleware_RejectsAnonymousS3Settings(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(JWTAuthMiddleware())
+	r.GET("/api/s3/settings", func(c *gin.Context) {
+		c.Status(http.StatusOK)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/s3/settings", nil)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status %d, got %d", http.StatusUnauthorized, rec.Code)
+	}
+}
+
 func TestJWTAuthMiddleware_RejectsAdminScopeTokenFromQuery(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
