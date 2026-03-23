@@ -38,9 +38,9 @@
 .echo-markdown ul,
 .echo-markdown ol {
   margin: 0.5rem 0;
-  padding-left: 1.4rem;
+  padding-inline-start: 1.4rem;
   max-width: 100%;
-  overflow-x: hidden;
+  overflow-x: visible;
 }
 
 .echo-markdown ul li {
@@ -233,7 +233,12 @@
 
   .echo-markdown ul,
   .echo-markdown ol {
-    padding-left: 1.15rem;
+    padding-inline-start: 1.15rem;
+  }
+
+  /* Ordered list markers are wider on narrow screens; reserve extra start space. */
+  .echo-markdown ol {
+    padding-inline-start: 1.35rem;
   }
 
   .echo-markdown table {
