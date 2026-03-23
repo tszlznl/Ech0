@@ -37,7 +37,10 @@ function renderCodeBlock(code: string, rendered: string, language?: string): str
   return `<div class="code-block code-block--collapsible code-block--collapsed" style="--code-max-lines:${CODE_BLOCK_COLLAPSED_LINES};"><button type="button" class="code-block-toggle" data-expand-label="${EXPAND_PLACEHOLDER}" data-collapse-label="${COLLAPSE_PLACEHOLDER}" aria-expanded="false">${EXPAND_PLACEHOLDER}</button>${pre}</div>`
 }
 
-function appendClass(token: { attrJoin: (name: string, value: string) => void }, className: string): void {
+function appendClass(
+  token: { attrJoin: (name: string, value: string) => void },
+  className: string,
+): void {
   token.attrJoin('class', className)
 }
 

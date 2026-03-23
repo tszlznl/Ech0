@@ -114,7 +114,9 @@
 
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div class="space-y-2">
-            <span class="text-[var(--color-text-primary)]">{{ t('accessTokenSetting.expiry') }}：</span>
+            <span class="text-[var(--color-text-primary)]"
+              >{{ t('accessTokenSetting.expiry') }}：</span
+            >
             <BaseSelect
               v-model="accessTokenToAdd.expiry"
               :options="expirationOptions"
@@ -135,7 +137,9 @@
         </div>
 
         <div class="space-y-2">
-          <span class="text-[var(--color-text-primary)]">{{ t('accessTokenSetting.scopes') }}：</span>
+          <span class="text-[var(--color-text-primary)]"
+            >{{ t('accessTokenSetting.scopes') }}：</span
+          >
           <p class="text-xs text-[var(--color-text-muted)]">
             {{ t('accessTokenSetting.scopesHint') }}
           </p>
@@ -164,7 +168,9 @@
               </button>
             </div>
           </div>
-          <span v-if="scopesError" class="text-xs text-[var(--color-danger)]">{{ scopesError }}</span>
+          <span v-if="scopesError" class="text-xs text-[var(--color-danger)]">{{
+            scopesError
+          }}</span>
         </div>
 
         <p class="text-xs text-[var(--color-text-muted)]">
