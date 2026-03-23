@@ -142,6 +142,7 @@
 
 .echo-markdown pre {
   display: block;
+  font-family: var(--font-family-mono);
   box-sizing: border-box;
   border-radius: 0.5rem;
   max-width: 100%;
@@ -155,6 +156,7 @@
 .echo-markdown pre code.hljs,
 .echo-markdown pre .hljs {
   display: block;
+  font-family: var(--font-family-mono);
   box-sizing: border-box;
   max-width: 100%;
 }
@@ -225,6 +227,7 @@
 }
 
 .echo-markdown :not(pre) > code {
+  font-family: var(--font-family-mono);
   padding: 0.1rem 0.35rem;
   border-radius: 0.35rem;
   background-color: var(--md-inline-code-bg);
