@@ -13,7 +13,7 @@
 - 将 access token 从“身份票据”改为“能力票据（capability token）”。
 - 引入固定白名单 scope，实现最小权限授权（least privilege）。
 - 保持 Ech0 轻量定位，不引入完整 OAuth2 Server 复杂度。
-- 支持平滑迁移（允许一次迁移成本）。
+- 旧 JWT 不兼容（含旧 access token 与旧 session token），直接失效并重新签发。
 
 非目标：
 
@@ -31,7 +31,7 @@
 补充边界定义：
 
 - 本文“默认拒绝”仅针对 `typ=access` 的 API token 生效。
-- `typ=session`（站内登录态）在本阶段保持现有授权模型，确保站内行为不破坏。
+- `typ=session`（站内登录态）在本阶段保持现有授权模型；升级后旧 session token 需重新登录获取新 token。
 
 ## 3. 权限模型
 
@@ -46,20 +46,13 @@
 
 - 当 `typ=session` 时：不进入 `RequireScopes`，继续使用现有业务授权逻辑（如 `user.IsAdmin`）。
 - 当 `typ=access` 时：必须经过 `RequireScopes`；缺少 scope 一律 `403`。
-
-历史无 `typ` token 的过渡判定（可执行）：
-
-1. 先验签并解析基础 claims；
-2. 再以 token 或 `jti` 到 `access_token_settings` 查询：
-   - 命中：按 `legacy access token` 处理（最小兼容 scope）；
-   - 未命中：按历史 `session` 处理（仅在兼容窗口内允许）；
-3. 兼容窗口结束后：拒绝所有“无 `typ` 且未命中 access token 表”的请求，要求重新登录获取 `typ=session` 新 token。
+- 当 token 缺失 `typ` 或 `typ` 不在允许集合（`session`、`access`）时：直接 `401`。
 
 上线前置要求：
 
 - 新签发登录 token 必须写入 `typ=session`；
 - 新签发 API token 必须写入 `typ=access`；
-- 通过该前置要求确保“无 `typ`”仅是短期迁移状态，而非长期常态。
+- 旧 JWT（含旧 access token 与旧 session token）在切换后全部失效，不提供兼容窗口。
 
 ### 3.2 Scope 词表（第一批）
 
@@ -95,7 +88,7 @@ claim 来源统一策略：
 
 ## 4. Claims 与数据结构改造
 
-## 4.1 JWT Claims（`internal/model/auth`）
+### 4.1 JWT Claims（`internal/model/auth`）
 
 在现有 `MyClaims` 上新增：
 
@@ -116,7 +109,6 @@ claim 来源统一策略：
 - `Audience string`（单值或 JSON，首版可单值）
 - `JTI string`（唯一索引）
 - `LastUsedAt *time.Time`
-- `Legacy bool`（迁移窗口期可选）
 
 ### 4.3 创建 DTO（`AccessTokenSettingDto`）
 
@@ -133,7 +125,7 @@ claim 来源统一策略：
 
 ## 5. 鉴权流程与路由边界
 
-## 5.1 中间件拆分
+### 5.1 中间件拆分
 
 建议在现有 `JWTAuthMiddleware` 基础上拆分职责：
 
@@ -190,41 +182,25 @@ viewer 扩展约定：
   - `ErrCodeAudienceForbidden`
   - `ErrCodeTokenTransportForbidden`
 
-## 7. 迁移方案（允许一次迁移）
+## 7. 切换方案（旧 token 不兼容）
 
-三阶段迁移：
+一次性切换：
 
-1. **兼容窗口**
-   - 老 token 标记为 `legacy`；
-   - 统一映射最小兼容能力（建议：`echo:read`、`profile:read`、`file:read`），明确不允许任何 `admin:*`。
+1. **结构升级**
+   - 为 `access_token_settings` 增列：`token_type`、`scopes`、`audience`、`jti`、`last_used_at`；
+   - 给 `jti` 建唯一索引。
 
-2. **强制换发**
-   - 管理后台提示批量重建 token；
-   - 新 token 必填 scopes + audience。
+2. **强制失效**
+   - 发布切换版本时，服务端拒绝所有“无 `typ` 或 `typ` 非法”的旧 JWT（含旧 access 与旧 session）；
+   - 管理端仅支持创建新格式 token（必须带 scopes + audience + `typ=access`）。
 
-3. **清理收口**
-   - 关闭 legacy 支持路径；
-   - 清理兼容分支代码和文案。
+3. **重新签发**
+   - 管理后台提示“旧 token 已失效，请重新创建”；
+   - 由管理员按最小权限重新生成并分发 token。
 
-建议增加开关：
-
-- `security.access_token_scoped_enabled`
-- `security.access_token_legacy_grace_period_days`
-
-数据库迁移与回填顺序（可执行）：
-
-1. schema migration：
-   - 为 `access_token_settings` 增列：`token_type`、`scopes`、`audience`、`jti`、`last_used_at`、`legacy`；
-   - 给 `jti` 建唯一索引（允许空值阶段性存在）。
-2. data backfill：
-   - 历史 token 行回填：`token_type=access`、`legacy=true`、`audience=public-client`、`scopes` 为最小兼容集合；
-   - 为可识别 token 生成并回填 `jti`（无法回填时在校验侧降级到 token 字符串哈希比对）。
-3. runtime switch：
-   - 先上线“记录告警不拦截”；
-   - 再开启 `access_token_scoped_enabled`；
-   - 兼容窗口到期后拒绝 `legacy=true`。
-4. rollback：
-   - 仅关闭 `access_token_scoped_enabled`，保留新增列，避免来回 DDL。
+4. **回滚策略**
+   - 回滚到旧版本可恢复旧鉴权行为；
+   - 新版本内不保留 legacy 分支，避免长期双轨维护。
 
 ## 8. 测试策略
 
@@ -251,16 +227,16 @@ viewer 扩展约定：
 
 ### 8.3 回归测试
 
-- session 登录链路行为不变；
+- 对新签发的 `typ=session` token，登录/鉴权代码路径与升级前一致；不含合法 `typ` 的旧 session token 应返回 `401` 并引导重新登录；
 - 匿名公开接口行为不变；
 - 现有基础功能（发布、评论、文件、设置）在授权正确时行为不变。
-- legacy token 在兼容窗口内按“最小兼容能力”行为稳定，窗口结束后稳定拒绝。
+- 旧 access token 在切换后稳定返回 `401`，且新 token 行为符合 scope 约束。
 
 ## 9. 交付拆分建议
 
 - **里程碑 A**：Claims + 数据模型 + 新建 token API 入参校验
 - **里程碑 B**：中间件扩展 + 路由挂载 `RequireScopes`
-- **里程碑 C**：legacy 迁移逻辑 + 管理端提示
+- **里程碑 C**：旧 token 强制失效 + 管理端重建提示
 - **里程碑 D**：测试补齐 + 文档更新（README / API 文档）
 
 ## 10. 风险与应对
@@ -268,8 +244,8 @@ viewer 扩展约定：
 - 风险：scope 词表过粗导致“看似细粒度，实则过权”  
   应对：首版小词表 + 真实集成反馈后迭代。
 
-- 风险：迁移窗口过长导致 legacy 风险持续  
-  应对：默认短窗口并在后台可见倒计时。
+- 风险：切换当日第三方集成全部失效  
+  应对：发布公告 + 版本说明 + 管理后台显式提示“先创建新 token 再升级”。
 
 - 风险：授权逻辑分散导致漏检  
   应对：统一使用 `RequireScopes`，减少 service 内手写鉴权分支。
@@ -284,6 +260,6 @@ viewer 扩展约定：
 - 固定白名单 scope + audience + 短时效 access token；
 - 与 session token 分型管理；
 - 通过中间件统一授权与错误语义；
-- 以分阶段迁移替代一次性破坏式切换。
+- 采用一次性切换，旧 JWT（含旧 access 与旧 session）直接失效并重建。
 
 该方案在安全收益、实现复杂度和维护成本之间达到平衡，适合作为当前版本的权限粒度升级路径。
