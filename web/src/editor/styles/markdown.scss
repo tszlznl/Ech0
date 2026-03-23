@@ -78,6 +78,15 @@
   word-break: break-word;
 }
 
+.echo-markdown li.task-list-item {
+  list-style: none;
+}
+
+.echo-markdown .task-list-item-checkbox {
+  margin-inline-end: 0.45rem;
+  vertical-align: middle;
+}
+
 .echo-markdown table {
   width: 100%;
   max-width: 100%;
