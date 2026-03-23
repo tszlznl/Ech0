@@ -117,9 +117,8 @@ import Verified from '@/components/icons/verified.vue'
 import GrayLike from '@/components/icons/graylike.vue'
 import Print from '@/components/icons/print.vue'
 import Share from '@/components/icons/share.vue'
-import TheExtensionRenderer from '@/components/advanced/extension/TheExtensionRenderer.vue'
 import TheImageGallery from '@/components/advanced/gallery/TheImageGallery.vue'
-import { computed, ref } from 'vue'
+import { computed, defineAsyncComponent, ref } from 'vue'
 import { fetchLikeEcho } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { localStg } from '@/utils/storage'
@@ -131,6 +130,10 @@ import { formatDate } from '@/utils/other'
 import { getEchoFilesBy } from '@/utils/echo'
 import { TheMdPreview } from '@/components/advanced/md'
 import { useI18n } from 'vue-i18n'
+
+const TheExtensionRenderer = defineAsyncComponent(
+  () => import('@/components/advanced/extension/TheExtensionRenderer.vue'),
+)
 
 const emit = defineEmits(['updateLikeCount', 'printEcho'])
 const { t } = useI18n()

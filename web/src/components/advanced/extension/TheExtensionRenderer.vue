@@ -22,11 +22,12 @@
 </template>
 
 <script setup lang="ts">
+import { defineAsyncComponent } from 'vue'
 import { ExtensionType } from '@/enums/enums'
-import APlayerCard from './cards/APlayerCard.vue'
-import VideoCard from './cards/VideoCard.vue'
-import GithubCard from './cards/GithubCard.vue'
-import WebsiteCard from './cards/WebsiteCard.vue'
+const APlayerCard = defineAsyncComponent(() => import('./cards/APlayerCard.vue'))
+const VideoCard = defineAsyncComponent(() => import('./cards/VideoCard.vue'))
+const GithubCard = defineAsyncComponent(() => import('./cards/GithubCard.vue'))
+const WebsiteCard = defineAsyncComponent(() => import('./cards/WebsiteCard.vue'))
 
 defineProps<{
   echo: {

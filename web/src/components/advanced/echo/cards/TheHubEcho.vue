@@ -121,10 +121,9 @@ import Verified from '@/components/icons/verified.vue'
 import GrayLike from '@/components/icons/graylike.vue'
 import LinkTo from '@/components/icons/linkto.vue'
 import Print from '@/components/icons/print.vue'
-import TheExtensionRenderer from '@/components/advanced/extension/TheExtensionRenderer.vue'
 import TheImageGallery from '@/components/advanced/gallery/TheImageGallery.vue'
 import { TheMdPreview } from '@/components/advanced/md'
-import { computed, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { ImageLayout } from '@/enums/enums'
 import { formatDate } from '@/utils/other'
 import { getEchoFilesBy } from '@/utils/echo'
@@ -134,6 +133,10 @@ import { theToast } from '@/utils/toast'
 import { localStg } from '@/utils/storage'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+
+const TheExtensionRenderer = defineAsyncComponent(
+  () => import('@/components/advanced/extension/TheExtensionRenderer.vue'),
+)
 
 type Echo = App.Api.Hub.Echo
 

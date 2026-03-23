@@ -48,6 +48,7 @@ func (webHandler *WebHandler) Templates() gin.HandlerFunc {
 			defer func() { _ = fallback.Close() }()
 			fallbackStat, _ := fallback.Stat()
 			ctx.Header("Content-Type", "text/html; charset=utf-8")
+			ctx.Header("Cache-Control", "no-cache")
 			http.ServeContent(
 				ctx.Writer,
 				ctx.Request,
@@ -72,13 +73,25 @@ func (webHandler *WebHandler) Templates() gin.HandlerFunc {
 				stat, _ := gzFile.Stat()
 				ctx.Header("Content-Encoding", "gzip")
 				ctx.Header("Content-Type", getMimeType(fullPath))
+				setCacheControlHeader(ctx, requestPath)
 				http.ServeContent(ctx.Writer, ctx.Request, gzPath, stat.ModTime(), gzFile)
 				return
 			}
 		}
 
 		ctx.Header("Content-Type", getMimeType(fullPath))
+		setCacheControlHeader(ctx, requestPath)
 		http.ServeContent(ctx.Writer, ctx.Request, fullPath, stat.ModTime(), f)
+	}
+}
+
+func setCacheControlHeader(ctx *gin.Context, requestPath string) {
+	if strings.HasPrefix(requestPath, "/assets/") {
+		ctx.Header("Cache-Control", "public, max-age=31536000, immutable")
+		return
+	}
+	if requestPath == "/index.html" || requestPath == "/" {
+		ctx.Header("Cache-Control", "no-cache")
 	}
 }
 

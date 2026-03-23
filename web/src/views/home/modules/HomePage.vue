@@ -49,17 +49,22 @@ import TheEditor from './TheEditor.vue'
 import TheBoard from './TheBoard.vue'
 import TheEchos from './TheEchos.vue'
 import TheFilteredEchos from './TheFilteredEchos.vue'
-import TheInbox from './TheInbox.vue'
-import {
-  TheCommentWidget,
-  TheConnectWidget,
-  TheHeatMap,
-  TheRecentCard,
-} from '@/components/advanced/widget'
-import { onMounted, ref, onBeforeUnmount } from 'vue'
+import { defineAsyncComponent, onMounted, ref, onBeforeUnmount } from 'vue'
 import { useUserStore, useEchoStore, useSettingStore, useInboxStore, useZenStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { useBfCacheRestore } from '@/composables/useBfCacheRestore'
+
+const TheHeatMap = defineAsyncComponent(() => import('@/components/advanced/widget/TheHeatMap.vue'))
+const TheInbox = defineAsyncComponent(() => import('./TheInbox.vue'))
+const TheRecentCard = defineAsyncComponent(
+  () => import('@/components/advanced/widget/TheRecentCard.vue'),
+)
+const TheConnectWidget = defineAsyncComponent(
+  () => import('@/components/advanced/widget/TheConnectWidget.vue'),
+)
+const TheCommentWidget = defineAsyncComponent(
+  () => import('@/components/advanced/widget/TheCommentWidget.vue'),
+)
 
 const userStore = useUserStore()
 const echoStore = useEchoStore()

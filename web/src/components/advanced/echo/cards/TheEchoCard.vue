@@ -120,7 +120,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, onBeforeUnmount, computed } from 'vue'
+import { onMounted, ref, onBeforeUnmount, computed, defineAsyncComponent } from 'vue'
 import { fetchDeleteEcho, fetchLikeEcho, fetchGetEchoById } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useUserStore, useEchoStore, useEditorStore } from '@/stores'
@@ -132,7 +132,6 @@ import More from '@/components/icons/more.vue'
 import Expand from '@/components/icons/expand.vue'
 import GrayLike from '@/components/icons/graylike.vue'
 import EditEcho from '@/components/icons/editecho.vue'
-import TheExtensionRenderer from '@/components/advanced/extension/TheExtensionRenderer.vue'
 import { localStg } from '@/utils/storage'
 import { useRouter } from 'vue-router'
 import { ImageLayout } from '@/enums/enums'
@@ -140,6 +139,10 @@ import { formatDate } from '@/utils/other'
 import { getEchoFilesBy } from '@/utils/echo'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useI18n } from 'vue-i18n'
+
+const TheExtensionRenderer = defineAsyncComponent(
+  () => import('@/components/advanced/extension/TheExtensionRenderer.vue'),
+)
 
 const { openConfirm } = useBaseDialog()
 const { t } = useI18n()
