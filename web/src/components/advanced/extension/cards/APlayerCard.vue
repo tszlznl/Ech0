@@ -1,6 +1,11 @@
 <template>
   <ExtensionCardShell
-    v-if="musicInfo && musicInfo.server !== MusicProvider.APPLE && metingAPI.length > 0"
+    v-if="
+      musicInfo &&
+      musicInfo.server !== MusicProvider.APPLE &&
+      metingAPI.length > 0 &&
+      !metingAssetLoadFailed
+    "
     size="wide"
     padding="compact"
   >
@@ -9,7 +14,7 @@
       <meting-js
         ref="metingRef"
         class="block w-full transition-opacity duration-200"
-        :class="isMetingReady ? 'opacity-100' : 'opacity-0'"
+        :class="isMetingReady && isMetingAssetsReady ? 'opacity-100' : 'opacity-0'"
         :api="metingAPI"
         :server="musicInfo.server"
         :type="musicInfo.type"
@@ -19,6 +24,16 @@
       </meting-js>
     </div>
   </ExtensionCardShell>
+  <div
+    v-else-if="musicInfo && musicInfo.server !== MusicProvider.APPLE && metingAssetLoadFailed"
+    class="extension-card-invalid"
+  >
+    <Music class="w-4 h-4" />
+    <div class="invalid-copy">
+      <p class="invalid-title">播放器资源加载失败</p>
+      <p class="invalid-subtitle">请刷新页面后重试</p>
+    </div>
+  </div>
   <ExtensionCardShell
     v-else-if="musicInfo && musicInfo.server === MusicProvider.APPLE && musicInfo.id"
     size="wide"
@@ -52,6 +67,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import Music from '@/components/icons/music.vue'
 import { parseMusicURL } from '@/utils/other'
+import { loadExternalScript, loadExternalStyle } from '@/utils/loadExternalAsset'
 import { useSettingStore } from '@/stores'
 import { ExtensionType, MusicProvider } from '@/enums/enums'
 import ExtensionCardShell from '../shared/ExtensionCardShell.vue'
@@ -67,6 +83,8 @@ const props = defineProps<{
 
 const metingRef = ref<HTMLElement | null>(null)
 const isMetingReady = ref(false)
+const isMetingAssetsReady = ref(false)
+const metingAssetLoadFailed = ref(false)
 const isAppleReady = ref(false)
 let metingObserver: MutationObserver | null = null
 
@@ -87,7 +105,7 @@ const metingAPI = computed(() => {
   return 'https://meting.soopy.cn/api?server=:server&type=:type&id=:id&auth=:auth&r=:r'
 })
 
-const showMetingSkeleton = computed(() => !isMetingReady.value)
+const showMetingSkeleton = computed(() => !isMetingAssetsReady.value || !isMetingReady.value)
 const showAppleSkeleton = computed(() => !isAppleReady.value)
 const musicSourceKey = computed(() => {
   const type = musicInfo.value?.type ?? ''
@@ -98,6 +116,8 @@ const musicSourceKey = computed(() => {
 
 const resetReadyState = () => {
   isMetingReady.value = false
+  isMetingAssetsReady.value = false
+  metingAssetLoadFailed.value = false
   isAppleReady.value = false
 }
 
@@ -110,6 +130,7 @@ const syncMetingReady = () => {
 }
 
 const observeMetingReady = () => {
+  if (!isMetingAssetsReady.value) return
   metingObserver?.disconnect()
   metingObserver = null
 
@@ -152,10 +173,27 @@ const patchMetingDisconnectGuard = () => {
   metingDisconnectPatched = true
 }
 
+const ensureMetingAssets = async () => {
+  if (typeof window === 'undefined') return
+  await loadExternalStyle('/others/styles/APlayer.min.css')
+  await loadExternalScript('/others/scripts/APlayer.min.js')
+  await loadExternalScript('/others/scripts/Meting.min.js')
+  isMetingAssetsReady.value = true
+  patchMetingDisconnectGuard()
+}
+
 watch(
   musicSourceKey,
   async () => {
     resetReadyState()
+    const currentMusicInfo = musicInfo.value
+    if (!currentMusicInfo || currentMusicInfo.server === MusicProvider.APPLE) return
+    try {
+      await ensureMetingAssets()
+    } catch {
+      metingAssetLoadFailed.value = true
+      return
+    }
     await nextTick()
     observeMetingReady()
   },
@@ -163,7 +201,6 @@ watch(
 )
 
 onMounted(() => {
-  patchMetingDisconnectGuard()
   observeMetingReady()
 })
 
