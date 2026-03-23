@@ -396,13 +396,20 @@ declare namespace App {
         user_id: string
         token: string
         name: string
+        token_type?: string
+        scopes?: string | string[]
+        audience?: 'public-client' | 'cli' | 'integration'
+        jti?: string
         expiry: string | null
+        last_used_at?: string | null
         created_at: string
       }
 
       type AccessTokenDto = {
         name: string
         expiry: string
+        scopes: string[]
+        audience: 'public-client' | 'cli' | 'integration'
       }
 
       type BackupSchedule = {
