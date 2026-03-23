@@ -176,8 +176,8 @@ const patchMetingDisconnectGuard = () => {
 const ensureMetingAssets = async () => {
   if (typeof window === 'undefined') return
   await loadExternalStyle('/others/styles/APlayer.min.css')
-  await loadExternalScript('/others/scripts/APlayer.min.js')
-  await loadExternalScript('/others/scripts/Meting.min.js')
+  await loadExternalScript('/others/scripts/APlayer.min.js', { timeoutMs: 8_000, retries: 1 })
+  await loadExternalScript('/others/scripts/Meting.min.js', { timeoutMs: 8_000, retries: 1 })
   isMetingAssetsReady.value = true
   patchMetingDisconnectGuard()
 }

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { loadExternalScript, loadExternalStyle } from '../../src/utils/loadExternalAsset'
 
@@ -40,5 +40,41 @@ describe('loadExternalAsset', () => {
     await expect(promiseA).resolves.toBeUndefined()
     await expect(loadExternalStyle(href)).resolves.toBeUndefined()
     expect(document.querySelectorAll(styleSelector(href))).toHaveLength(1)
+  })
+
+  it('retries script loading once and succeeds on second attempt', async () => {
+    const src = `/others/scripts/Meting.min.js?retry=${Date.now()}`
+    const appendChild = document.head.appendChild.bind(document.head)
+    let attempts = 0
+
+    const appendSpy = vi.spyOn(document.head, 'appendChild').mockImplementation((node: Node) => {
+      const result = appendChild(node)
+      if (node instanceof HTMLScriptElement && node.getAttribute('data-external-script') === src) {
+        attempts += 1
+        queueMicrotask(() => {
+          node.dispatchEvent(new Event(attempts === 1 ? 'error' : 'load'))
+        })
+      }
+      return result
+    })
+
+    await expect(loadExternalScript(src, { timeoutMs: 8_000, retries: 1 })).resolves.toBeUndefined()
+    expect(attempts).toBe(2)
+    appendSpy.mockRestore()
+  })
+
+  it('fails after timeout and retry exhaustion', async () => {
+    vi.useFakeTimers()
+    try {
+      const src = `/others/scripts/APlayer.min.js?timeout=${Date.now()}`
+      const expectation = expect(loadExternalScript(src, { timeoutMs: 10, retries: 1 })).rejects.toThrow(
+        'Timed out loading external asset',
+      )
+      await vi.advanceTimersByTimeAsync(25)
+      await expectation
+      expect(document.querySelectorAll(scriptSelector(src))).toHaveLength(0)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
