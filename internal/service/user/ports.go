@@ -34,8 +34,10 @@ type Service interface {
 	UpdatePasskeyDeviceName(ctx context.Context, passkeyID string, deviceName string) error
 }
 
-type SettingService = settingService.Service
-type FileService = fileService.Service
+type (
+	SettingService = settingService.Service
+	FileService    = fileService.Service
+)
 
 type UserRepo interface {
 	GetUserByID(ctx context.Context, id string) (model.User, error)

@@ -36,8 +36,10 @@ type Service interface {
 	UpdateAgentSettings(ctx context.Context, newSetting *model.AgentSettingDto) error
 }
 
-type CommonService = commonService.Service
-type FileService = fileService.Service
+type (
+	CommonService = commonService.Service
+	FileService   = fileService.Service
+)
 
 type KeyValueRepository interface {
 	GetKeyValue(ctx context.Context, key string) (string, error)
