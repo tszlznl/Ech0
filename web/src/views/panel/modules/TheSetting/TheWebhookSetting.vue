@@ -15,7 +15,7 @@
             v-if="panelMode === 'manage'"
             type="button"
             class="inline-flex h-8 w-8 items-center justify-center rounded-[var(--btn-radius)] bg-transparent p-1.5 text-[var(--color-text-secondary)] transition-colors duration-200 hover:bg-[var(--color-bg-muted)]"
-            :title="t('webhookSetting.openGuide')"
+            v-tooltip="t('webhookSetting.openGuide')"
             @click="openGuide"
           >
             <InfoIcon class="h-full w-full" />
@@ -222,7 +222,7 @@
                   </td>
                   <td
                     class="max-w-[260px] truncate px-2 py-3 font-mono text-[var(--color-text-primary)]"
-                    :title="webhook.url"
+                    v-tooltip="webhook.url"
                   >
                     {{ webhook.url }}
                   </td>
@@ -244,14 +244,14 @@
                         class="h-8 w-8 !p-1.5"
                         :icon="EditIcon"
                         :disabled="isRowBusy(webhook.id)"
-                        :title="t('commonUi.edit')"
+                        :tooltip="t('commonUi.edit')"
                         @click="openEditForm(webhook)"
                       />
                       <BaseButton
                         class="h-8 w-8 !p-1.5"
                         :icon="Trashbin"
                         :disabled="isRowBusy(webhook.id)"
-                        :title="t('webhookSetting.delete')"
+                        :tooltip="t('webhookSetting.delete')"
                         @click="handleDeleteWebhook(webhook.id)"
                       />
                     </div>

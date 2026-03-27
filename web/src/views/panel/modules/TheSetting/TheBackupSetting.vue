@@ -10,7 +10,7 @@
         <BaseButton
           @click="handleBackupExport"
           class="backup-export-btn"
-          :title="t('backupSetting.exportSnapshot')"
+          :tooltip="t('backupSetting.exportSnapshot')"
         >
           {{ t('backupSetting.exportSnapshot') }}
         </BaseButton>

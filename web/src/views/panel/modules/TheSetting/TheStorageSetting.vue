@@ -59,7 +59,7 @@
         <span
           v-if="!storageEditMode"
           class="flex-1 min-w-0 truncate inline-block align-middle"
-          :title="S3Setting.endpoint"
+          v-tooltip="S3Setting.endpoint"
           style="vertical-align: middle"
         >
           {{ S3Setting.endpoint.length === 0 ? t('commonUi.none') : S3Setting.endpoint }}
@@ -83,7 +83,7 @@
         <span
           v-if="!storageEditMode"
           class="flex-1 min-w-0 truncate inline-block align-middle"
-          :title="S3Setting.access_key"
+          v-tooltip="S3Setting.access_key"
           style="vertical-align: middle"
         >
           {{ S3Setting.access_key.length === 0 ? t('commonUi.none') : S3Setting.access_key }}
@@ -107,7 +107,7 @@
         <span
           v-if="!storageEditMode"
           class="flex-1 min-w-0 truncate inline-block align-middle"
-          :title="S3Setting.secret_key"
+          v-tooltip="S3Setting.secret_key"
           style="vertical-align: middle"
         >
           {{ S3Setting.secret_key.length === 0 ? t('commonUi.none') : S3Setting.secret_key }}
@@ -131,7 +131,7 @@
         <span
           v-if="!storageEditMode"
           class="flex-1 min-w-0 truncate inline-block align-middle"
-          :title="S3Setting.bucket_name"
+          v-tooltip="S3Setting.bucket_name"
           style="vertical-align: middle"
         >
           {{ S3Setting.bucket_name.length === 0 ? t('commonUi.none') : S3Setting.bucket_name }}
@@ -155,7 +155,7 @@
         <span
           v-if="!storageEditMode"
           class="flex-1 min-w-0 truncate inline-block align-middle"
-          :title="S3Setting.path_prefix"
+          v-tooltip="S3Setting.path_prefix"
           style="vertical-align: middle"
         >
           {{ S3Setting.path_prefix.length === 0 ? t('commonUi.none') : S3Setting.path_prefix }}
@@ -180,7 +180,7 @@
         <span
           v-if="!storageEditMode"
           class="flex-1 min-w-0 truncate inline-block align-middle"
-          :title="S3Setting.region"
+          v-tooltip="S3Setting.region"
           style="vertical-align: middle"
         >
           {{ S3Setting.region.length === 0 ? t('commonUi.none') : S3Setting.region }}
@@ -204,7 +204,7 @@
         <span
           v-if="!storageEditMode"
           class="flex-1 min-w-0 truncate inline-block align-middle"
-          :title="S3Setting.cdn_url"
+          v-tooltip="S3Setting.cdn_url"
           style="vertical-align: middle"
         >
           {{ S3Setting.cdn_url.length === 0 ? t('commonUi.none') : S3Setting.cdn_url }}

@@ -8,28 +8,28 @@
         <BaseButton
           :icon="Music"
           class="w-7 h-7 rounded-md"
-          :title="t('editor.addMusic')"
+          :tooltip="t('editor.addMusic')"
           @click="handleAddExtension(ExtensionType.MUSIC)"
         />
         <!-- 添加视频 -->
         <BaseButton
           :icon="Video"
           class="w-7 h-7 rounded-md"
-          :title="t('editor.addVideo')"
+          :tooltip="t('editor.addVideo')"
           @click="handleAddExtension(ExtensionType.VIDEO)"
         />
         <!-- 添加Github项目 -->
         <BaseButton
           :icon="Githubproj"
           class="w-7 h-7 rounded-md"
-          :title="t('editor.addGithubProject')"
+          :tooltip="t('editor.addGithubProject')"
           @click="handleAddExtension(ExtensionType.GITHUBPROJ)"
         />
         <!-- 添加网站链接 -->
         <BaseButton
           :icon="Weblink"
           class="w-7 h-7 rounded-md"
-          :title="t('editor.addWebsiteLink')"
+          :tooltip="t('editor.addWebsiteLink')"
           @click="handleAddExtension(ExtensionType.WEBSITE)"
         />
       </div>
@@ -44,7 +44,7 @@
           :icon="Inbox"
           @click="handleInbox"
           class="w-7 h-7 rounded-md"
-          :title="t('editor.inboxMode')"
+          :tooltip="t('editor.inboxMode')"
         />
       </div>
     </div>

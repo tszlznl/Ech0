@@ -20,7 +20,7 @@
             v-if="canJumpToEchoDetail"
             type="button"
             class="comment-jump-btn"
-            :title="t('connectWidget.jumpToEchoDetail')"
+            v-tooltip="t('connectWidget.jumpToEchoDetail')"
             :aria-label="t('connectWidget.jumpToEchoDetail')"
             @click="handleJumpToEchoDetail"
           >

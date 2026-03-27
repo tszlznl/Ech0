@@ -15,7 +15,7 @@
         <BaseButton
           @click="router.push('/')"
           :class="getButtonClasses('', true)"
-          :title="t('commonNav.backHome')"
+          :tooltip="t('commonNav.backHome')"
         >
           <Arrow
             class="w-9 h-9 rotate-180 transition-transform duration-200 group-hover:-translate-x-1"

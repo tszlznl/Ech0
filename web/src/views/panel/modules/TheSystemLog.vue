@@ -33,7 +33,7 @@
             min="50"
             max="1000"
             step="50"
-            :title="t('systemLog.tailTitle')"
+            v-tooltip="t('systemLog.tailTitle')"
             @blur="normalizeTail"
             class="h-9 rounded-[var(--radius-md)] px-2 bg-[var(--input-bg-color)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]"
           />

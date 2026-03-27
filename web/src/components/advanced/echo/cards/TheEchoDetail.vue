@@ -63,10 +63,9 @@
       </div>
 
       <div ref="menuRef" class="relative flex items-center justify-center gap-2 h-auto">
-        <div class="flex items-center justify-end" :title="t('echoDetail.share')">
+        <div class="flex items-center justify-end" v-tooltip="t('echoDetail.share')">
           <button
             @click="handleShareEcho(props.echo.id)"
-            :title="t('echoDetail.share')"
             :class="[
               'transform transition-transform duration-150',
               isShareAnimating ? 'scale-160' : 'scale-100',
@@ -76,10 +75,9 @@
           </button>
         </div>
 
-        <div class="flex items-center justify-end" :title="t('echoDetail.print')">
+        <div class="flex items-center justify-end" v-tooltip="t('echoDetail.print')">
           <button
             @click="handlePrintEcho(props.echo)"
-            :title="t('echoDetail.print')"
             :class="[
               'transform transition-transform duration-150',
               isPrintAnimating ? 'scale-160' : 'scale-100',
@@ -89,11 +87,10 @@
           </button>
         </div>
 
-        <div class="flex items-center justify-end" :title="t('echoDetail.like')">
+        <div class="flex items-center justify-end" v-tooltip="t('echoDetail.like')">
           <div class="flex items-center gap-1">
             <button
               @click="handleLikeEcho(props.echo.id)"
-              :title="t('echoDetail.like')"
               :class="[
                 'transform transition-transform duration-150',
                 isLikeAnimating ? 'scale-160' : 'scale-100',

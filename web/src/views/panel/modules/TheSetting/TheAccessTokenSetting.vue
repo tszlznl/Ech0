@@ -51,20 +51,20 @@
             <tr v-for="tokenItem in AccessTokens" :key="tokenItem.id">
               <td class="px-2 py-2 font-mono text-[var(--color-text-primary)]">
                 <div class="flex items-center gap-1">
-                  <span class="truncate" :title="tokenItem.token">{{
+                  <span class="truncate" v-tooltip="tokenItem.token">{{
                     maskToken(tokenItem.token)
                   }}</span>
                   <button
                     class="p-1 hover:bg-[var(--color-bg-surface)] rounded"
                     @click="copyAccessToken(tokenItem.token)"
-                    :title="t('accessTokenSetting.copyToken')"
+                    v-tooltip="t('accessTokenSetting.copyToken')"
                   >
                     <Clipboard class="w-4 h-4" />
                   </button>
                 </div>
               </td>
               <td class="px-2 py-2 text-[var(--color-text-primary)]">
-                <span :title="tokenItem.name" class="truncate block max-w-xs">{{
+                <span v-tooltip="tokenItem.name" class="truncate block max-w-xs">{{
                   tokenItem.name
                 }}</span>
               </td>
@@ -83,7 +83,7 @@
                   <BaseButton
                     class="h-8 rounded-md px-2 text-xs whitespace-nowrap"
                     @click="openTokenDetail(tokenItem)"
-                    :title="t('accessTokenSetting.viewDetail')"
+                    :tooltip="t('accessTokenSetting.viewDetail')"
                   >
                     <span>{{ t('accessTokenSetting.detail') }}</span>
                   </BaseButton>
@@ -91,7 +91,7 @@
                     class="h-8 w-8 !p-1.5"
                     :icon="Trashbin"
                     @click="handleDeleteAccessToken(tokenItem)"
-                    :title="t('accessTokenSetting.deleteToken')"
+                    :tooltip="t('accessTokenSetting.deleteToken')"
                   />
                 </div>
               </td>
@@ -183,7 +183,7 @@
           :disabled="isSubmitting"
           @click="handleCancelAddAccessToken"
           class="h-9 rounded-md px-4 bg-[var(--color-bg-surface)]! bg-op-80"
-          :title="t('accessTokenSetting.cancelAdd')"
+          :tooltip="t('accessTokenSetting.cancelAdd')"
         >
           <span>{{ t('commonUi.cancel') }}</span>
         </BaseButton>
@@ -192,7 +192,7 @@
           :loading="isSubmitting"
           @click="handleAddAccessToken"
           class="h-9 rounded-md px-4 bg-[var(--color-bg-surface)]! bg-op-80"
-          :title="t('accessTokenSetting.addToken')"
+          :tooltip="t('accessTokenSetting.addToken')"
         >
           <span class="text-[var(--color-text-primary)]">{{ t('commonUi.add') }}</span>
         </BaseButton>

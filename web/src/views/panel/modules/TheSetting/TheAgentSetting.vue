@@ -51,7 +51,7 @@
         <span
           v-if="!agentEditMode"
           class="flex-1 min-w-0 truncate inline-block align-middle"
-          :title="AgentSetting.model"
+          v-tooltip="AgentSetting.model"
         >
           {{ AgentSetting.model || t('commonUi.none') }}
         </span>

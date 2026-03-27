@@ -74,7 +74,7 @@
         <div class="mt-5 grid grid-cols-5 gap-3 items-center">
           <button
             class="console-round-btn col-span-1 aspect-square rounded-full active:shadow-none active:translate-y-1 transition-all border-t flex items-center justify-center group relative overflow-hidden"
-            :title="stampEnabled ? 'Stamp Enabled' : 'Enable Stamp'"
+            v-tooltip="stampEnabled ? 'Stamp Enabled' : 'Enable Stamp'"
             @click="stampEnabled = !stampEnabled"
           >
             <div
@@ -94,7 +94,7 @@
 
           <button
             class="console-round-btn col-span-1 aspect-square rounded-full active:shadow-none active:translate-y-1 transition-all border-t flex items-center justify-center group relative overflow-hidden"
-            :title="deleteConfirm ? 'Click again to confirm' : 'Clear all prints'"
+            v-tooltip="deleteConfirm ? 'Click again to confirm' : 'Clear all prints'"
             @click="handleDeleteClick"
           >
             <div

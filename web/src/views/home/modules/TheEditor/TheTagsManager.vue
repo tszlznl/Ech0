@@ -38,7 +38,7 @@
                       close()
                     }
                   "
-                  :title="t('editor.filterByTag')"
+                  v-tooltip="t('editor.filterByTag')"
                   class="flex items-center justify-center rounded-md p-1 transition duration-150 ease-in-out hover:bg-[var(--color-bg-surface)] focus:outline-none focus-visible:ring focus-visible:ring-[var(--input-focus-color-border-subtle)]"
                 >
                   <Filter class="w-5 h-5" />
@@ -51,7 +51,7 @@
                       close()
                     }
                   "
-                  :title="t('editor.deleteTag')"
+                  v-tooltip="t('editor.deleteTag')"
                   class="flex items-center justify-center rounded-md p-1 transition duration-150 ease-in-out hover:bg-[var(--color-accent-soft)] focus:outline-none focus-visible:ring focus-visible:ring-[var(--input-focus-color-border-subtle)]"
                 >
                   <Trashbin class="w-5 h-5" />

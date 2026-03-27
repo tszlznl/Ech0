@@ -503,7 +503,7 @@ onMounted(() => {
                             row.node.node_type === 'folder' ? (row.node.expanded ? '▾' : '▸') : '•'
                           }}
                         </span>
-                        <span class="node-name" :title="row.node.name">{{ row.node.name }}</span>
+                        <span class="node-name" v-tooltip="row.node.name">{{ row.node.name }}</span>
                       </div>
                       <div class="tree-right">
                         <span
@@ -534,7 +534,7 @@ onMounted(() => {
                               downloadingId === actionKeyOf(storageType, row.node) ||
                               previewingId === actionKeyOf(storageType, row.node)
                             "
-                            :title="
+                            v-tooltip="
                               previewingId === actionKeyOf(storageType, row.node)
                                 ? t('storageFileList.previewing')
                                 : t('storageFileList.preview')
@@ -552,7 +552,7 @@ onMounted(() => {
                               downloadingId === actionKeyOf(storageType, row.node) ||
                               previewingId === actionKeyOf(storageType, row.node)
                             "
-                            :title="
+                            v-tooltip="
                               downloadingId === actionKeyOf(storageType, row.node)
                                 ? t('storageFileList.downloading')
                                 : t('storageFileList.download')

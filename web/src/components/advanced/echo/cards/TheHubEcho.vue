@@ -76,14 +76,17 @@
       </div>
 
       <div ref="menuRef" class="relative flex h-auto flex-none items-center justify-center gap-2">
-        <a :href="`${server_url}/echo/${echo_id}`" target="_blank" :title="t('hubEcho.jumpToEcho')">
+        <a
+          :href="`${server_url}/echo/${echo_id}`"
+          target="_blank"
+          v-tooltip="t('hubEcho.jumpToEcho')"
+        >
           <LinkTo class="w-4 h-4" />
         </a>
 
-        <div class="flex items-center justify-end" :title="t('hubEcho.print')">
+        <div class="flex items-center justify-end" v-tooltip="t('hubEcho.print')">
           <button
             @click="handlePrintEcho()"
-            :title="t('hubEcho.print')"
             :class="[
               'transform transition-transform duration-150',
               isPrintAnimating ? 'scale-160' : 'scale-100',
@@ -93,11 +96,10 @@
           </button>
         </div>
 
-        <div class="flex items-center justify-end" :title="t('hubEcho.like')">
+        <div class="flex items-center justify-end" v-tooltip="t('hubEcho.like')">
           <div class="flex items-center gap-1">
             <button
               @click="handleLikeEcho()"
-              :title="t('hubEcho.like')"
               :class="[
                 'transform transition-transform duration-150',
                 isLikeAnimating ? 'scale-160' : 'scale-100',

@@ -97,7 +97,7 @@
           <span
             v-if="!oauth2EditMode"
             class="flex-1 min-w-0 truncate inline-block align-middle"
-            :title="OAuth2Setting.client_id"
+            v-tooltip="OAuth2Setting.client_id"
             style="vertical-align: middle"
           >
             {{
@@ -121,7 +121,7 @@
           <span
             v-if="!oauth2EditMode"
             class="flex-1 min-w-0 truncate inline-block align-middle"
-            :title="OAuth2Setting.client_secret"
+            v-tooltip="OAuth2Setting.client_secret"
             style="vertical-align: middle"
           >
             {{
@@ -147,7 +147,7 @@
           <span
             v-if="!oauth2EditMode"
             class="flex-1 min-w-0 truncate inline-block align-middle"
-            :title="OAuth2Setting.redirect_uri"
+            v-tooltip="OAuth2Setting.redirect_uri"
             style="vertical-align: middle"
           >
             {{ redirect_uri.length === 0 ? t('commonUi.none') : redirect_uri }}
@@ -169,7 +169,7 @@
           <span
             v-if="!oauth2EditMode"
             class="flex-1 min-w-0 truncate inline-block align-middle"
-            :title="OAuth2Setting.auth_url"
+            v-tooltip="OAuth2Setting.auth_url"
             style="vertical-align: middle"
           >
             {{ OAuth2Setting.auth_url.length === 0 ? t('commonUi.none') : OAuth2Setting.auth_url }}
@@ -191,7 +191,7 @@
           <span
             v-if="!oauth2EditMode"
             class="flex-1 min-w-0 truncate inline-block align-middle"
-            :title="OAuth2Setting.token_url"
+            v-tooltip="OAuth2Setting.token_url"
             style="vertical-align: middle"
           >
             {{
@@ -215,7 +215,7 @@
           <span
             v-if="!oauth2EditMode"
             class="flex-1 min-w-0 truncate inline-block align-middle"
-            :title="OAuth2Setting.user_info_url"
+            v-tooltip="OAuth2Setting.user_info_url"
             style="vertical-align: middle"
           >
             {{
@@ -241,7 +241,7 @@
           <span
             v-if="!oauth2EditMode"
             class="flex-1 min-w-0 truncate inline-block align-middle"
-            :title="OAuth2Setting.scopes.join(', ')"
+            v-tooltip="OAuth2Setting.scopes.join(', ')"
             style="vertical-align: middle"
           >
             {{
@@ -280,7 +280,7 @@
           <span
             v-if="!oauth2EditMode"
             class="flex-1 min-w-0 truncate inline-block align-middle"
-            :title="OAuth2Setting.issuer"
+            v-tooltip="OAuth2Setting.issuer"
             style="vertical-align: middle"
           >
             {{ OAuth2Setting.issuer.length === 0 ? t('commonUi.none') : OAuth2Setting.issuer }}
@@ -303,7 +303,7 @@
           <span
             v-if="!oauth2EditMode"
             class="flex-1 min-w-0 truncate inline-block align-middle"
-            :title="OAuth2Setting.jwks_url"
+            v-tooltip="OAuth2Setting.jwks_url"
             style="vertical-align: middle"
           >
             {{ OAuth2Setting.jwks_url.length === 0 ? t('commonUi.none') : OAuth2Setting.jwks_url }}

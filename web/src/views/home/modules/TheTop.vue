@@ -5,7 +5,7 @@
       <div class="flex justify-start items-center gap-2">
         <BaseInput
           v-if="!isFilteringMode"
-          :title="t('homeTop.searchTitle')"
+          v-tooltip="t('homeTop.searchTitle')"
           type="text"
           v-model="searchContent"
           :placeholder="t('homeTop.searchPlaceholder')"
@@ -26,7 +26,7 @@
         <button
           v-if="isZenMode"
           type="button"
-          :title="t('homeTop.exitZenMode')"
+          v-tooltip="t('homeTop.exitZenMode')"
           class="h-8 px-2 text-xs text-[var(--color-text-muted)] border border-[var(--color-border-subtle)] rounded-md hover:line-through hover:text-[var(--color-text-secondary)] hover:border-[var(--color-text-muted)] transition-colors duration-200"
           @click="handleExitZenMode"
         >
@@ -38,27 +38,27 @@
       <div class="flex justify-end items-center gap-1">
         <!-- RSS -->
         <div>
-          <a href="/rss" :title="t('homeTop.rssTitle')">
+          <a href="/rss" v-tooltip="t('homeTop.rssTitle')">
             <!-- icon -->
             <Rss class="w-8 h-8 text-[var(--color-text-muted)]" />
           </a>
         </div>
         <!-- Ech0 Widget（移动端入口） -->
         <div class="sm:hidden">
-          <RouterLink to="/widget" :title="t('homeTop.widgetTitle')">
+          <RouterLink to="/widget" v-tooltip="t('homeTop.widgetTitle')">
             <Widget class="w-8 h-8 text-[var(--color-text-muted)]" />
           </RouterLink>
         </div>
         <!-- Ech0 Hub -->
         <div>
-          <RouterLink to="/hub" :title="t('homeTop.hubTitle')">
+          <RouterLink to="/hub" v-tooltip="t('homeTop.hubTitle')">
             <!-- icon -->
             <HubIcon class="w-8 h-8 text-[var(--color-text-muted)]" />
           </RouterLink>
         </div>
         <!-- PanelPage -->
         <div>
-          <RouterLink to="/panel" :title="t('homeTop.panelTitle')">
+          <RouterLink to="/panel" v-tooltip="t('homeTop.panelTitle')">
             <!-- icon -->
             <Panel class="w-8 h-8 text-[var(--color-text-muted)]" />
           </RouterLink>

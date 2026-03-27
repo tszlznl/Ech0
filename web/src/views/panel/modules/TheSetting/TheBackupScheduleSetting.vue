@@ -36,7 +36,7 @@
         <span
           v-if="!scheduleEditMode"
           class="flex-1 min-w-0 truncate inline-block align-middle"
-          :title="BackupSchedule.cron_expression"
+          v-tooltip="BackupSchedule.cron_expression"
           style="vertical-align: middle"
         >
           {{

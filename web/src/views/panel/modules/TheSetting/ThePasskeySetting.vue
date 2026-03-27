@@ -176,7 +176,7 @@
                     class="rounded-md"
                     :disabled="busy"
                     @click="promptRename(d)"
-                    :title="t('passkeySetting.rename')"
+                    :tooltip="t('passkeySetting.rename')"
                   >
                     <Rename class="w-5 h-5" />
                   </BaseButton>
@@ -184,7 +184,7 @@
                     class="rounded-md"
                     :disabled="busy"
                     @click="handleDelete(d.id)"
-                    :title="t('passkeySetting.delete')"
+                    :tooltip="t('passkeySetting.delete')"
                   >
                     <Trashbin class="w-5 h-5" />
                   </BaseButton>

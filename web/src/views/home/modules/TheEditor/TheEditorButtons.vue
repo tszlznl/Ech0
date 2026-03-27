@@ -7,7 +7,9 @@
           :icon="currentMode === Mode.ECH0 ? Advance : Back"
           @click="handleChangeMode"
           :class="['w-8 h-8 sm:w-9 sm:h-9 rounded-md'].join(' ')"
-          :title="currentMode === Mode.ECH0 ? t('editor.gotoTagManage') : t('editor.backToEditor')"
+          :tooltip="
+            currentMode === Mode.ECH0 ? t('editor.gotoTagManage') : t('editor.backToEditor')
+          "
         />
       </div>
       <!-- Photo Upload -->
@@ -16,7 +18,7 @@
           :icon="ImageUpload"
           @click="handleAddImageMode"
           class="w-8 h-8 sm:w-9 sm:h-9 rounded-md"
-          :title="t('editor.addImage')"
+          :tooltip="t('editor.addImage')"
         />
       </div>
       <!-- Privacy Set -->
@@ -25,7 +27,7 @@
           :icon="echoToAdd.private ? Private : Public"
           @click="handlePrivate"
           class="w-8 h-8 sm:w-9 sm:h-9 rounded-md"
-          :title="t('editor.togglePrivacy')"
+          :tooltip="t('editor.togglePrivacy')"
         />
       </div>
       <!-- Tag Add or Select -->
@@ -84,7 +86,7 @@
           :icon="Publish"
           @click="handleAddorUpdate"
           class="w-8 h-8 sm:w-9 sm:h-9 rounded-md"
-          :title="t('editor.publishEcho')"
+          :tooltip="t('editor.publishEcho')"
         />
       </div>
       <!-- Exit Update -->
@@ -93,7 +95,7 @@
           :icon="ExitUpdate"
           @click="handleExitUpdateMode"
           class="w-8 h-8 sm:w-9 sm:h-9 rounded-md"
-          :title="t('editor.exitUpdateMode')"
+          :tooltip="t('editor.exitUpdateMode')"
         />
       </div>
       <!-- Update -->
@@ -102,7 +104,7 @@
           :icon="Update"
           @click="handleAddorUpdate"
           class="w-8 h-8 sm:w-9 sm:h-9 rounded-md"
-          :title="t('editor.updateEcho')"
+          :tooltip="t('editor.updateEcho')"
         />
       </div>
     </div>

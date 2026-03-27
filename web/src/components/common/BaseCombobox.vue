@@ -42,7 +42,7 @@
             <ComboboxButton
               class="ml-1 text-[var(--color-text-muted)]"
               aria-label="展开选项列表"
-              title="展开选项列表"
+              v-tooltip="'展开选项列表'"
             >
               <!-- <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24">
                 <path

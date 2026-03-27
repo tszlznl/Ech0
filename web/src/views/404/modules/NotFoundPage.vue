@@ -9,7 +9,7 @@
       </div>
       <BaseButton
         @click="$router.push({ name: 'home' })"
-        :title="t('commonNav.backHome')"
+        :tooltip="t('commonNav.backHome')"
         class="rounded-md absolute top-10 left-10"
       >
         <Arrow class="text-3xl rotate-180" />

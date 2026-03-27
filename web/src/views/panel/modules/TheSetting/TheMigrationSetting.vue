@@ -29,7 +29,7 @@
           <span class="migration-label">{{ t('migrationSetting.sourceZip') }}</span>
           <div class="migration-upload-wrap">
             <BaseButton
-              :title="t('migrationSetting.pickZip')"
+              :tooltip="t('migrationSetting.pickZip')"
               :disabled="isSubmittingMigration"
               @click="handlePickZip"
             >
@@ -44,14 +44,14 @@
 
       <div class="migration-actions">
         <BaseButton
-          :title="t('migrationSetting.startMigration')"
+          :tooltip="t('migrationSetting.startMigration')"
           :disabled="isSubmittingMigration"
           @click="handleStartMigration"
         >
           {{ startActionText }}
         </BaseButton>
         <BaseButton
-          :title="t('migrationSetting.refreshStatus')"
+          :tooltip="t('migrationSetting.refreshStatus')"
           :disabled="isSubmittingMigration"
           @click="handleRefreshJob"
         >
@@ -59,7 +59,7 @@
         </BaseButton>
         <BaseButton
           v-if="migrationStore.isRunning"
-          :title="t('migrationSetting.cancelJob')"
+          :tooltip="t('migrationSetting.cancelJob')"
           :disabled="isSubmittingMigration"
           @click="handleCancelJob"
         >
@@ -67,7 +67,7 @@
         </BaseButton>
         <BaseButton
           v-if="migrationStore.canCleanup"
-          :title="migrationStore.isSuccess ? t('commonUi.done') : t('migrationSetting.cleanup')"
+          :tooltip="migrationStore.isSuccess ? t('commonUi.done') : t('migrationSetting.cleanup')"
           :disabled="isSubmittingMigration"
           @click="handleCleanupMigration"
         >

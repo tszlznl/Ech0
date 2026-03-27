@@ -89,7 +89,7 @@
               <td class="px-2 py-2 text-[var(--color-text-primary)]">{{ index + 1 }}</td>
               <td
                 class="px-2 py-2 text-[var(--color-text-primary)] font-mono truncate"
-                :title="connect.connect_url"
+                v-tooltip="connect.connect_url"
               >
                 {{ connect.connect_url }}
               </td>
@@ -103,7 +103,7 @@
                   class="h-8 w-8 !p-1.5"
                   :icon="Disconnect"
                   @click="handleDisconnect(connect.id)"
-                  :title="t('connectSetting.disconnect')"
+                  :tooltip="t('connectSetting.disconnect')"
                 />
               </td>
             </tr>

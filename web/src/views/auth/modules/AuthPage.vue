@@ -39,7 +39,7 @@
         <div class="flex justify-between items-center">
           <BaseButton
             @click="router.push({ name: 'home' })"
-            :title="t('authPage.backHome')"
+            :tooltip="t('authPage.backHome')"
             :icon="Home"
             class="rounded-md w-9 h-9 flex-shrink-0"
           />
@@ -51,7 +51,7 @@
               @click="handlePasskeyLogin"
               :disabled="!!passkeyStatus && !passkeyStatus.passkey_ready"
               class="rounded-md w-9 h-9"
-              :title="t('authPage.passkeyLoginTitle')"
+              :tooltip="t('authPage.passkeyLoginTitle')"
             />
             <!-- OAuth2 登录 -->
             <BaseButton
@@ -68,7 +68,7 @@
               @click="gotoOAuth2URL"
               :disabled="!oauth2Status.oauth_ready"
               class="w-9 h-9 rounded-md"
-              :title="t('authPage.oauth2LoginTitle')"
+              :tooltip="t('authPage.oauth2LoginTitle')"
             />
           </div>
           <!-- 账号密码登录 -->
@@ -108,7 +108,7 @@
         <div class="flex justify-between items-center px-0.5">
           <BaseButton
             @click="router.push({ name: 'home' })"
-            :title="t('authPage.backHome')"
+            :tooltip="t('authPage.backHome')"
             :icon="Home"
             class="rounded-md w-9 h-9"
           />

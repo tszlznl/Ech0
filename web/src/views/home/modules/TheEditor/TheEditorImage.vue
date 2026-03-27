@@ -11,7 +11,7 @@
     <button
       @click="handleRemoveImage"
       class="absolute -top-3 -right-4 bg-[var(--color-accent-soft)] hover:bg-[var(--color-danger)]/30 text-[var(--color-text-secondary)] rounded-lg w-7 h-7 flex items-center justify-center shadow-[var(--shadow-sm)]"
-      :title="t('editor.removeImage')"
+      v-tooltip="t('editor.removeImage')"
     >
       <Close class="w-4 h-4" />
     </button>

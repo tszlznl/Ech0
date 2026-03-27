@@ -35,14 +35,14 @@
           v-if="showMenu"
           class="flex items-center gap-4 bg-[var(--color-bg-surface)] rounded-full px-2 py-1 shadow-sm ring-1 ring-[var(--color-border-subtle)] ring-inset"
         >
-          <span v-if="props.echo.private" :title="t('echoCard.privateStatus')">
+          <span v-if="props.echo.private" v-tooltip="t('echoCard.privateStatus')">
             <Lock />
           </span>
 
           <button
             v-if="userStore.isLogin"
             @click="handleDeleteEcho(props.echo.id)"
-            :title="t('echoCard.delete')"
+            v-tooltip="t('echoCard.delete')"
             class="transform transition-transform duration-200 hover:scale-120"
           >
             <Roll />
@@ -51,7 +51,7 @@
           <button
             v-if="userStore.isLogin"
             @click="handleUpdateEcho()"
-            :title="t('echoCard.update')"
+            v-tooltip="t('echoCard.update')"
             class="transform transition-transform duration-200 hover:scale-120"
           >
             <EditEcho />
@@ -59,17 +59,16 @@
 
           <button
             @click="handleExpandEcho(echo.id)"
-            :title="t('echoCard.expand')"
+            v-tooltip="t('echoCard.expand')"
             class="transform transition-transform duration-200 hover:scale-120"
           >
             <Expand />
           </button>
 
-          <div class="flex items-center justify-end" :title="t('echoCard.like')">
+          <div class="flex items-center justify-end" v-tooltip="t('echoCard.like')">
             <div class="flex items-center gap-1">
               <button
                 @click="handleLikeEcho(props.echo.id)"
-                :title="t('echoCard.like')"
                 :class="[
                   'transform transition-transform duration-200 hover:scale-120',
                   isLikeAnimating ? 'scale-110' : 'scale-100',

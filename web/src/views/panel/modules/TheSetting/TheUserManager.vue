@@ -5,7 +5,7 @@
         {{ t('userManager.title') }}
       </h1>
       <div class="flex flex-row items-center justify-end gap-2 w-14">
-        <!-- <button @click="userEditMode = !userEditMode" title="编辑">
+        <!-- <button @click="userEditMode = !userEditMode">
           <Edit v-if="!userEditMode" class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
           <Close v-else class="w-5 h-5 text-[var(--color-text-muted)] hover:w-6 hover:h-6" />
         </button> -->
@@ -59,7 +59,7 @@
                   class="h-8 w-8 !p-1.5"
                   :icon="Deluser"
                   @click="handleDeleteUser(user.id)"
-                  :title="t('userManager.deleteUser')"
+                  :tooltip="t('userManager.deleteUser')"
                 />
               </td>
             </tr>

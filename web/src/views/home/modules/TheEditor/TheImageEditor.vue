@@ -11,14 +11,14 @@
           :icon="Url"
           class="w-7 h-7 sm:w-7 sm:h-7 rounded-md"
           @click="handleSetFileSource(FILE_STORAGE_TYPE.EXTERNAL)"
-          :title="t('editor.imageSourceExternal')"
+          :tooltip="t('editor.imageSourceExternal')"
         />
         <!-- 上传本地 -->
         <BaseButton
           :icon="Upload"
           class="w-7 h-7 sm:w-7 sm:h-7 rounded-md"
           @click="handleSetFileSource(FILE_STORAGE_TYPE.LOCAL)"
-          :title="t('editor.imageSourceLocal')"
+          :tooltip="t('editor.imageSourceLocal')"
         />
         <!-- S3 存储 -->
         <BaseButton
@@ -26,7 +26,7 @@
           :icon="Bucket"
           class="w-7 h-7 sm:w-7 sm:h-7 rounded-md"
           @click="handleSetFileSource(FILE_STORAGE_TYPE.OBJECT)"
-          :title="t('editor.imageSourceObject')"
+          :tooltip="t('editor.imageSourceObject')"
         />
       </div>
     </div>
@@ -89,7 +89,7 @@
           :icon="Addmore"
           class="w-8 h-8 sm:w-8 sm:h-8 rounded-md shrink-0"
           @click="editorStore.handleAddMoreFile"
-          :title="t('editor.addMoreImages')"
+          :tooltip="t('editor.addMoreImages')"
         />
       </div>
     </div>

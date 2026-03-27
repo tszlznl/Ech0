@@ -21,7 +21,7 @@
       >
         <button
           type="button"
-          :title="t('homeNav.themeToggleTitle', { mode: nextThemeModeLabel })"
+          v-tooltip="t('homeNav.themeToggleTitle', { mode: nextThemeModeLabel })"
           :aria-label="t('homeNav.themeToggleTitle', { mode: nextThemeModeLabel })"
           class="h-8 px-3 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-border-subtle)] transition-colors duration-200"
           @click="handleThemeToggle"
@@ -30,7 +30,7 @@
         </button>
         <button
           type="button"
-          :title="t('homeNav.enterZenMode')"
+          v-tooltip="t('homeNav.enterZenMode')"
           :aria-label="t('homeNav.enterZenMode')"
           :disabled="isZenMode"
           class="hidden sm:flex items-center justify-center h-8 px-3 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-border-subtle)] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[var(--color-text-muted)]"
@@ -40,7 +40,7 @@
         </button>
         <button
           type="button"
-          :title="t('homeNav.helloRequest')"
+          v-tooltip="t('homeNav.helloRequest')"
           :aria-label="t('homeNav.helloRequest')"
           class="h-8 px-2.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-border-subtle)] transition-colors duration-200"
           @click="handleHelloOnly"
@@ -51,7 +51,7 @@
       <!-- Github -->
       <!--
       <div>
-        <a href="https://github.com/lin-snow/Ech0" target="_blank" title="Github">
+        <a href="https://github.com/lin-snow/Ech0" target="_blank">
           <Github class="w-6 sm:w-7 h-6 sm:h-7 text-[var(--color-text-muted)]" />
         </a>
       </div>

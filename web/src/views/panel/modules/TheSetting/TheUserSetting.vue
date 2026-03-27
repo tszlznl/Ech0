@@ -52,7 +52,7 @@
         <h2 class="font-semibold min-w-28 md:min-w-36 shrink-0 break-words leading-5">
           {{ t('userSetting.username') }}:
         </h2>
-        <span v-if="!editMode" class="flex-1 min-w-0 truncate" :title="user?.username">{{
+        <span v-if="!editMode" class="flex-1 min-w-0 truncate" v-tooltip="user?.username">{{
           user?.username
         }}</span>
         <BaseInput
@@ -88,7 +88,7 @@
         <h2 class="font-semibold min-w-28 md:min-w-36 shrink-0 break-words leading-5">
           {{ t('userSetting.email') }}:
         </h2>
-        <span v-if="!editMode" class="flex-1 min-w-0 truncate" :title="user?.email || ''">{{
+        <span v-if="!editMode" class="flex-1 min-w-0 truncate" v-tooltip="user?.email || ''">{{
           user?.email || '-'
         }}</span>
         <BaseInput

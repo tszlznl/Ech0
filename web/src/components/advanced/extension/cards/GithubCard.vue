@@ -14,7 +14,7 @@
 
         <div class="github-meta">
           <span class="github-title">{{ cardData?.name || repo }}</span>
-          <p class="github-desc line-clamp-2 break-all" :title="cardData?.description">
+          <p class="github-desc line-clamp-2 break-all" v-tooltip="cardData?.description">
             {{ cardData?.description || `${owner}/${repo}` }}
           </p>
           <div v-if="cardData" class="github-stats">

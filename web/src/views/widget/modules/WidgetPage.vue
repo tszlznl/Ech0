@@ -10,7 +10,7 @@
       <BaseButton
         @click="router.push('/')"
         class="text-[var(--color-text-primary)] rounded-md shadow-none! border-none! ring-0! bg-transparent! group"
-        :title="t('commonNav.backHome')"
+        :tooltip="t('commonNav.backHome')"
       >
         <Arrow
           class="w-9 h-9 rotate-180 transition-transform duration-200 group-hover:-translate-x-1"

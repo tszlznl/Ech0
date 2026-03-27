@@ -5,7 +5,7 @@
     <button
       v-if="editing"
       type="button"
-      :title="applyTitle"
+      v-tooltip="applyTitle"
       :aria-label="applyTitle"
       class="w-7 h-7 flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-border-subtle)] transition-colors duration-200"
       @click="$emit('apply')"
@@ -14,7 +14,7 @@
     </button>
     <button
       type="button"
-      :title="editing ? cancelTitle : editTitle"
+      v-tooltip="editing ? cancelTitle : editTitle"
       :aria-label="editing ? cancelTitle : editTitle"
       class="w-7 h-7 flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-border-subtle)] transition-colors duration-200"
       @click="handleSecondaryClick"

@@ -13,12 +13,7 @@
           <p class="panel-welcome-tip">{{ t('panelPage.welcomeTip') }}</p>
         </div>
         <div class="panel-welcome-actions">
-          <BaseButton
-            :icon="BackHand"
-            @click="router.push('/')"
-            class="panel-home-btn"
-            :title="t('panelPage.backHome')"
-          />
+          <BaseButton :icon="BackHand" @click="router.push('/')" class="panel-home-btn" />
         </div>
       </section>
 
@@ -41,7 +36,7 @@
             :icon="Logout"
             @click="handleLogout"
             class="w-9 h-9 rounded-md"
-            :title="t('panelPage.logout')"
+            :tooltip="t('panelPage.logout')"
           >
           </BaseButton>
           <!-- 登录 / 注册 -->
@@ -50,7 +45,7 @@
             :icon="Auth"
             @click="router.push('/auth')"
             class="w-9 h-9 rounded-md"
-            :title="t('panelPage.loginOrSignup')"
+            :tooltip="t('panelPage.loginOrSignup')"
           >
           </BaseButton>
         </div>
@@ -65,7 +60,6 @@
             :icon="Dashboard"
             @click="router.push('/panel/dashboard')"
             :class="getButtonClasses('panel-dashboard')"
-            :title="t('panelPageNav.dashboard')"
           >
             {{ t('panelPageNav.dashboard') }}
           </BaseButton>
@@ -75,7 +69,6 @@
             :icon="Setting"
             @click="router.push('/panel/setting')"
             :class="getButtonClasses('panel-setting')"
-            :title="t('panelPageNav.setting')"
           >
             {{ t('panelPageNav.setting') }}
           </BaseButton>
@@ -85,7 +78,6 @@
             :icon="User"
             @click="router.push('/panel/user')"
             :class="getButtonClasses('panel-user')"
-            :title="t('panelPageNav.userCenter')"
           >
             {{ t('panelPageNav.userCenter') }}
           </BaseButton>
@@ -95,7 +87,6 @@
             :icon="Storage"
             @click="router.push('/panel/storage')"
             :class="getButtonClasses('panel-storage')"
-            :title="t('panelPageNav.storage')"
           >
             {{ t('panelPageNav.storage') }}
           </BaseButton>
@@ -105,7 +96,6 @@
             :icon="Data"
             @click="router.push('/panel/data-management')"
             :class="getButtonClasses('panel-data-management')"
-            :title="t('panelPageNav.dataManagement')"
           >
             {{ t('panelPageNav.dataManagement') }}
           </BaseButton>
@@ -114,7 +104,6 @@
             :icon="Extension"
             @click="router.push('/panel/comment')"
             :class="getButtonClasses('panel-comment')"
-            :title="t('panelPageNav.comment')"
           >
             {{ t('panelPageNav.comment') }}
           </BaseButton>
@@ -124,7 +113,6 @@
             :icon="Sso"
             @click="router.push('/panel/sso')"
             :class="getButtonClasses('panel-sso')"
-            :title="t('panelPageNav.sso')"
           >
             {{ t('panelPageNav.sso') }}
           </BaseButton>
@@ -134,7 +122,6 @@
             :icon="Extension"
             @click="router.push('/panel/extension')"
             :class="getButtonClasses('panel-extension')"
-            :title="t('panelPageNav.extension')"
           >
             {{ t('panelPageNav.extension') }}
           </BaseButton>
@@ -144,7 +131,6 @@
             :icon="Others"
             @click="router.push('/panel/advance')"
             :class="getButtonClasses('panel-advance')"
-            :title="t('panelPageNav.advance')"
           >
             {{ t('panelPageNav.advance') }}
           </BaseButton>
@@ -154,7 +140,6 @@
             :icon="Log"
             @click="router.push('/panel/system-log')"
             :class="getButtonClasses('panel-system-log')"
-            :title="t('panelPageNav.systemLog')"
           >
             {{ t('panelPageNav.systemLog') }}
           </BaseButton>
@@ -162,22 +147,12 @@
           <div class="h-px bg-[var(--color-border-subtle)] mx-2" />
 
           <!-- 退出登录 -->
-          <BaseButton
-            :icon="Logout"
-            @click="handleLogout"
-            :class="getBottomButtonClasses()"
-            :title="t('panelPage.logout')"
-          >
+          <BaseButton :icon="Logout" @click="handleLogout" :class="getBottomButtonClasses()">
             {{ t('panelPage.logout') }}
           </BaseButton>
 
           <!-- 登录 / 注册 -->
-          <BaseButton
-            :icon="Auth"
-            @click="router.push('/auth')"
-            :class="getBottomButtonClasses()"
-            :title="t('panelPage.login')"
-          >
+          <BaseButton :icon="Auth" @click="router.push('/auth')" :class="getBottomButtonClasses()">
             {{ t('panelPage.login') }}
           </BaseButton>
 

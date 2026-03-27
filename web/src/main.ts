@@ -1,10 +1,12 @@
 import 'virtual:uno.css'
 import '@/themes/index.scss'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
+import 'floating-vue/dist/style.css'
 
 import { initStores } from './stores'
 import { useSettingStore } from './stores/setting'
 import { setupI18n } from './locales'
+import FloatingVue from 'floating-vue'
 
 // 自定义组件
 import BaseDialog from '@/components/common/BaseDialog.vue'
@@ -30,6 +32,19 @@ const i18n = await setupI18n(settingStore.SystemSetting.default_locale)
 
 app.use(router)
 app.use(i18n)
+app.use(FloatingVue, {
+  themes: {
+    tooltip: {
+      triggers: ['hover', 'focus'],
+      hideTriggers: ['hover', 'focus', 'click'],
+      placement: 'top',
+      delay: { show: 450, hide: 80 },
+      distance: 10,
+      container: 'body',
+      autoHide: true,
+    },
+  },
+})
 
 // 全局注册组件
 app.component('BaseDialog', BaseDialog)

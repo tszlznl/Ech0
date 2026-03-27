@@ -6,7 +6,7 @@
       <button
         type="button"
         class="mode-toggle-btn"
-        :title="t('editor.fullscreenEdit')"
+        v-tooltip="t('editor.fullscreenEdit')"
         :aria-label="t('editor.fullscreenEdit')"
         @click="enterFullMode"
       >
@@ -31,7 +31,7 @@
             :key="item.action"
             type="button"
             class="toolbar-btn"
-            :title="item.label"
+            v-tooltip="item.label"
             :aria-label="item.label"
             @click="onToolbarClick(item.action)"
           >
@@ -41,7 +41,7 @@
             <button
               type="button"
               class="toolbar-btn"
-              :title="isPreviewMode ? t('editor.showPreview') : t('editor.hidePreview')"
+              v-tooltip="isPreviewMode ? t('editor.showPreview') : t('editor.hidePreview')"
               :aria-label="isPreviewMode ? t('editor.showPreview') : t('editor.hidePreview')"
               @click="isPreviewMode = !isPreviewMode"
             >
@@ -50,7 +50,7 @@
             <button
               type="button"
               class="toolbar-btn mode-toggle-btn-inline"
-              :title="t('editor.exitFullscreen')"
+              v-tooltip="t('editor.exitFullscreen')"
               :aria-label="t('editor.exitFullscreen')"
               @click="exitFullMode"
             >

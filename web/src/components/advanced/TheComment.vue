@@ -90,7 +90,7 @@
             </h3>
             <span
               class="inline-flex items-center gap-1 rounded-full px-2 py-[2px] text-[11px] text-[var(--color-text-muted)]"
-              :title="t('commentSection.markdownSupported')"
+              v-tooltip="t('commentSection.markdownSupported')"
             >
               <MarkdownIcon class="h-3.5 w-3.5" />
             </span>

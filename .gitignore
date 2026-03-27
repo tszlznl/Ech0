@@ -83,3 +83,4 @@ quality-report.md
 .DS_Store
 .cache/
 .worktrees/
+.pnpm-store/

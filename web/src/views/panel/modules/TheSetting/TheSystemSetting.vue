@@ -53,9 +53,14 @@
         <h2 class="font-semibold min-w-28 md:min-w-32 shrink-0 break-words leading-5">
           {{ t('systemSetting.siteTitle') }}:
         </h2>
-        <span v-if="!editMode" class="flex-1 min-w-0 truncate" :title="SystemSetting.site_title">{{
-          SystemSetting?.site_title.length === 0 ? t('commonUi.none') : SystemSetting.site_title
-        }}</span>
+        <span
+          v-if="!editMode"
+          class="flex-1 min-w-0 truncate"
+          v-tooltip="SystemSetting.site_title"
+          >{{
+            SystemSetting?.site_title.length === 0 ? t('commonUi.none') : SystemSetting.site_title
+          }}</span
+        >
         <BaseInput
           v-else
           v-model="SystemSetting.site_title"
@@ -71,9 +76,14 @@
         <h2 class="font-semibold min-w-28 md:min-w-32 shrink-0 break-words leading-5">
           {{ t('systemSetting.serverName') }}:
         </h2>
-        <span v-if="!editMode" class="flex-1 min-w-0 truncate" :title="SystemSetting.server_name">{{
-          SystemSetting?.server_name.length === 0 ? t('commonUi.none') : SystemSetting.server_name
-        }}</span>
+        <span
+          v-if="!editMode"
+          class="flex-1 min-w-0 truncate"
+          v-tooltip="SystemSetting.server_name"
+          >{{
+            SystemSetting?.server_name.length === 0 ? t('commonUi.none') : SystemSetting.server_name
+          }}</span
+        >
         <BaseInput
           v-else
           v-model="SystemSetting.server_name"
@@ -89,9 +99,14 @@
         <h2 class="font-semibold min-w-28 md:min-w-32 shrink-0 break-words leading-5">
           {{ t('systemSetting.serverUrl') }}:
         </h2>
-        <span v-if="!editMode" class="flex-1 min-w-0 truncate" :title="SystemSetting.server_url">{{
-          SystemSetting?.server_name.length === 0 ? t('commonUi.none') : SystemSetting.server_url
-        }}</span>
+        <span
+          v-if="!editMode"
+          class="flex-1 min-w-0 truncate"
+          v-tooltip="SystemSetting.server_url"
+          >{{
+            SystemSetting?.server_name.length === 0 ? t('commonUi.none') : SystemSetting.server_url
+          }}</span
+        >
         <BaseInput
           v-else
           v-model="SystemSetting.server_url"
@@ -110,7 +125,7 @@
         <span
           v-if="!editMode"
           class="flex-1 min-w-0 truncate inline-block align-middle"
-          :title="SystemSetting.footer_content"
+          v-tooltip="SystemSetting.footer_content"
           style="vertical-align: middle"
         >
           {{
@@ -137,7 +152,7 @@
         <span
           v-if="!editMode"
           class="flex-1 min-w-0 truncate inline-block align-middle"
-          :title="SystemSetting.footer_link"
+          v-tooltip="SystemSetting.footer_link"
           style="vertical-align: middle"
         >
           {{
@@ -162,7 +177,7 @@
         <span
           v-if="!editMode"
           class="flex-1 min-w-0 truncate inline-block align-middle"
-          :title="SystemSetting.meting_api"
+          v-tooltip="SystemSetting.meting_api"
           style="vertical-align: middle"
         >
           {{
@@ -185,7 +200,7 @@
         <span
           v-if="!editMode"
           class="flex-1 min-w-0 truncate inline-block align-middle"
-          :title="SystemSetting.custom_css"
+          v-tooltip="SystemSetting.custom_css"
           style="vertical-align: middle"
           >{{ SystemSetting?.custom_css?.length === 0 ? t('commonUi.none') : '******' }}</span
         >
@@ -205,7 +220,7 @@
         <span
           v-if="!editMode"
           class="flex-1 min-w-0 truncate inline-block align-middle"
-          :title="SystemSetting.custom_js"
+          v-tooltip="SystemSetting.custom_js"
           style="vertical-align: middle"
           >{{ SystemSetting?.custom_js?.length === 0 ? t('commonUi.none') : '******' }}</span
         >
