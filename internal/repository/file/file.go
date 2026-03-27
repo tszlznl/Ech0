@@ -163,15 +163,25 @@ func (r *FileRepository) DeleteByRoute(
 		Delete(&model.File{}).Error
 }
 
-func (r *FileRepository) GetOrphanFiles(ctx context.Context, olderThan time.Time) ([]model.File, error) {
-	var files []model.File
+func (r *FileRepository) CreateTemp(ctx context.Context, temp *model.TempFile) error {
+	return r.getDB(ctx).Create(temp).Error
+}
+
+func (r *FileRepository) DeleteTempByFileID(ctx context.Context, fileID string) error {
+	return r.getDB(ctx).Where("file_id = ?", fileID).Delete(&model.TempFile{}).Error
+}
+
+func (r *FileRepository) DeleteTempByID(ctx context.Context, id string) error {
+	return r.getDB(ctx).Where("id = ?", id).Delete(&model.TempFile{}).Error
+}
+
+func (r *FileRepository) ListExpiredTemps(ctx context.Context, olderThan time.Time) ([]model.TempFile, error) {
+	var temps []model.TempFile
 	err := r.getDB(ctx).
-		Where("created_at < ?", olderThan).
-		Where("id NOT IN (?)",
-			r.getDB(ctx).Table("echo_files").Select("file_id"),
-		).
-		Find(&files).Error
-	return files, err
+		Where("expire_at < ?", olderThan).
+		Order("created_at ASC").
+		Find(&temps).Error
+	return temps, err
 }
 
 func (r *FileRepository) GetByCategory(ctx context.Context, category string) ([]model.File, error) {

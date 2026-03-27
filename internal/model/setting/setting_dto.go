@@ -2,18 +2,19 @@ package model
 
 // SystemSettingDto 定义系统设置数据传输对象
 type SystemSettingDto struct {
-	SiteTitle     string `json:"site_title"`     // 站点标题
-	ServerLogo    string `json:"server_logo"`    // 服务器Logo
-	ServerName    string `json:"server_name"`    // 服务器名称
-	ServerURL     string `json:"server_url"`     // 服务器地址
-	AllowRegister bool   `json:"allow_register"` // 是否允许注册
-	DefaultLocale string `json:"default_locale"` // 站点默认语言（如 zh-CN / en-US）
-	ICPNumber     string `json:"ICP_number"`     // 备案号
-	FooterContent string `json:"footer_content"` // 自定义页脚内容
-	FooterLink    string `json:"footer_link"`    // 自定义页脚链接
-	MetingAPI     string `json:"meting_api"`     // Meting API 地址
-	CustomCSS     string `json:"custom_css"`     // 自定义 CSS
-	CustomJS      string `json:"custom_js"`      // 自定义 JS
+	SiteTitle        string `json:"site_title"`          // 站点标题
+	ServerLogo       string `json:"server_logo"`         // 服务器Logo
+	ServerLogoFileID string `json:"server_logo_file_id"` // 服务器Logo文件ID（用于确认临时文件）
+	ServerName       string `json:"server_name"`         // 服务器名称
+	ServerURL        string `json:"server_url"`          // 服务器地址
+	AllowRegister    bool   `json:"allow_register"`      // 是否允许注册
+	DefaultLocale    string `json:"default_locale"`      // 站点默认语言（如 zh-CN / en-US）
+	ICPNumber        string `json:"ICP_number"`          // 备案号
+	FooterContent    string `json:"footer_content"`      // 自定义页脚内容
+	FooterLink       string `json:"footer_link"`         // 自定义页脚链接
+	MetingAPI        string `json:"meting_api"`          // Meting API 地址
+	CustomCSS        string `json:"custom_css"`          // 自定义 CSS
+	CustomJS         string `json:"custom_js"`           // 自定义 JS
 }
 
 type S3SettingDto struct {

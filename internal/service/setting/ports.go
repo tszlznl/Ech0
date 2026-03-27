@@ -7,6 +7,7 @@ import (
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
+	fileService "github.com/lin-snow/ech0/internal/service/file"
 )
 
 type Service interface {
@@ -36,6 +37,7 @@ type Service interface {
 }
 
 type CommonService = commonService.Service
+type FileService = fileService.Service
 
 type KeyValueRepository interface {
 	GetKeyValue(ctx context.Context, key string) (string, error)

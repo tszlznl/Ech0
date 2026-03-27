@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/lin-snow/ech0/internal/config"
 	i18nUtil "github.com/lin-snow/ech0/internal/i18n"
@@ -10,7 +11,9 @@ import (
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	jsonUtil "github.com/lin-snow/ech0/internal/util/json"
+	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
+	"go.uber.org/zap"
 )
 
 // GetSetting 获取设置
@@ -72,7 +75,14 @@ func (settingService *SettingService) UpdateSetting(
 	newSetting *model.SystemSettingDto,
 ) error {
 	userid := viewer.MustFromContext(ctx).UserID()
-	return settingService.transactor.Run(ctx, func(ctx context.Context) error {
+	serverLogoChanged := false
+	if newSetting != nil {
+		var current model.SystemSetting
+		if err := settingService.GetSetting(&current); err == nil {
+			serverLogoChanged = strings.TrimSpace(current.ServerLogo) != strings.TrimSpace(newSetting.ServerLogo)
+		}
+	}
+	if err := settingService.transactor.Run(ctx, func(ctx context.Context) error {
 		user, err := settingService.commonService.CommonGetUserByUserId(ctx, userid)
 		if err != nil {
 			return err
@@ -113,5 +123,13 @@ func (settingService *SettingService) UpdateSetting(
 		}
 
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+	if serverLogoChanged && strings.TrimSpace(newSetting.ServerLogoFileID) != "" {
+		if err := settingService.fileService.ConfirmTempFiles(ctx, []string{newSetting.ServerLogoFileID}); err != nil {
+			logUtil.GetLogger().Warn("confirm temp server logo file failed", zap.Error(err))
+		}
+	}
+	return nil
 }

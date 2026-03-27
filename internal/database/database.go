@@ -118,6 +118,7 @@ func MigrateDB() error {
 		&echoModel.EchoExtension{},
 		&fileModel.File{},
 		&fileModel.EchoFile{},
+		&fileModel.TempFile{},
 		&commonModel.KeyValue{},
 		&connectModel.Connected{},
 		&userModel.OAuthBinding{},

@@ -41,6 +41,7 @@ type UserService struct {
 	transactor     transaction.Transactor // 事务执行器
 	userRepository Repository             // 用户数据层接口
 	settingService SettingService         // 系统设置数据层接口
+	fileService    FileService            // 文件服务（用于确认临时文件）
 	publisher      *publisher.Publisher   // 事件发布器
 }
 
@@ -56,12 +57,14 @@ func NewUserService(
 	tx transaction.Transactor,
 	userRepository Repository,
 	settingService SettingService,
+	fileService FileService,
 	publisher *publisher.Publisher,
 ) *UserService {
 	return &UserService{
 		transactor:     tx,
 		userRepository: userRepository,
 		settingService: settingService,
+		fileService:    fileService,
 		publisher:      publisher,
 	}
 }
@@ -299,10 +302,12 @@ func (userService *UserService) UpdateUser(ctx context.Context, userdto model.Us
 		user.Password = cryptoUtil.MD5Encrypt(userdto.Password)
 	}
 
+	avatarChanged := false
 	// 检查是否需要更新头像
 	if userdto.Avatar != "" && userdto.Avatar != user.Avatar {
 		// 更新头像
 		user.Avatar = userdto.Avatar
+		avatarChanged = true
 	}
 	if userdto.Locale != "" {
 		user.Locale = i18nUtil.ResolveLocale(userdto.Locale)
@@ -318,6 +323,11 @@ func (userService *UserService) UpdateUser(ctx context.Context, userdto model.Us
 		return userService.userRepository.UpdateUser(txCtx, &user)
 	}); err != nil {
 		return err
+	}
+	if avatarChanged && strings.TrimSpace(userdto.AvatarFileID) != "" {
+		if err := userService.fileService.ConfirmTempFiles(ctx, []string{userdto.AvatarFileID}); err != nil {
+			logUtil.GetLogger().Warn("confirm temp avatar file failed", zap.Error(err))
+		}
 	}
 
 	// 发布用户更新事件

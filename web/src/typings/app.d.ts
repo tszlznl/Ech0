@@ -67,6 +67,7 @@ declare namespace App {
         is_admin: boolean
         is_owner?: boolean
         avatar: string
+        avatar_file_id?: string
         locale: string
       }
     }
@@ -305,6 +306,7 @@ declare namespace App {
       type SystemSetting = {
         site_title: string
         server_logo: string
+        server_logo_file_id?: string
         server_name: string
         server_url: string
         allow_register: boolean

@@ -96,6 +96,9 @@ func (echoService *EchoService) PostEcho(ctx context.Context, newEcho *model.Ech
 			logUtil.GetLogger().Error("publish echo created event failed", zap.Error(pubErr))
 		}
 	}
+	if err := echoService.fileService.ConfirmTempFiles(ctx, collectEchoFileIDs(newEcho)); err != nil {
+		logUtil.GetLogger().Warn("confirm temp files after post echo failed", zap.Error(err))
+	}
 
 	return nil
 }
@@ -251,6 +254,9 @@ func (echoService *EchoService) UpdateEcho(ctx context.Context, echo *model.Echo
 		contracts.EchoUpdatedEvent{Echo: *echo, User: user},
 	); pubErr != nil {
 		logUtil.GetLogger().Error("publish echo updated event failed", zap.Error(pubErr))
+	}
+	if err := echoService.fileService.ConfirmTempFiles(ctx, collectEchoFileIDs(echo)); err != nil {
+		logUtil.GetLogger().Warn("confirm temp files after update echo failed", zap.Error(err))
 	}
 
 	return nil
@@ -456,4 +462,21 @@ func isEchoEmpty(echo *model.Echo) bool {
 	}
 	content := strings.TrimSpace(echo.Content)
 	return content == "" && len(echo.EchoFiles) == 0 && echo.Extension == nil
+}
+
+func collectEchoFileIDs(echo *model.Echo) []string {
+	if echo == nil || len(echo.EchoFiles) == 0 {
+		return nil
+	}
+	ids := make([]string, 0, len(echo.EchoFiles))
+	for _, ef := range echo.EchoFiles {
+		if strings.TrimSpace(ef.FileID) != "" {
+			ids = append(ids, ef.FileID)
+			continue
+		}
+		if strings.TrimSpace(ef.File.ID) != "" {
+			ids = append(ids, ef.File.ID)
+		}
+	}
+	return ids
 }

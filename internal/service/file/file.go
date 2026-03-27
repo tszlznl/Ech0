@@ -9,8 +9,10 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -32,10 +34,12 @@ import (
 )
 
 const (
-	externalKeyPrefix   = "external/"
-	externalDefaultName = "external"
-	treeNodeTypeFile    = "file"
-	treeNodeTypeFolder  = "folder"
+	externalKeyPrefix    = "external/"
+	externalDefaultName  = "external"
+	treeNodeTypeFile     = "file"
+	treeNodeTypeFolder   = "folder"
+	tempFileTTL          = 24 * time.Hour
+	tempCleanupDryRunEnv = "ECH0_FILE_TEMP_CLEANUP_DRY_RUN"
 )
 
 type FileService struct {
@@ -147,6 +151,15 @@ func (s *FileService) UploadFile(
 		UserID:      user.ID,
 	}
 	if err := s.fileRepository.Create(context.Background(), fileRecord); err != nil {
+		return commonModel.FileDto{}, err
+	}
+	if err := s.fileRepository.CreateTemp(context.Background(), &fileModel.TempFile{
+		FileID:     fileRecord.ID,
+		UploaderID: user.ID,
+		ExpireAt:   time.Now().UTC().Add(tempFileTTL),
+	}); err != nil {
+		_ = s.fileRepository.Delete(context.Background(), fileRecord.ID)
+		_ = s.DeleteStoredFile(fileRecord.StorageType, fileRecord.Key)
 		return commonModel.FileDto{}, err
 	}
 
@@ -783,6 +796,14 @@ func (s *FileService) GetFilePresignURL(
 	if err := s.fileRepository.Create(context.Background(), fileRecord); err != nil {
 		return result, err
 	}
+	if err := s.fileRepository.CreateTemp(context.Background(), &fileModel.TempFile{
+		FileID:     fileRecord.ID,
+		UploaderID: userid,
+		ExpireAt:   time.Now().UTC().Add(tempFileTTL),
+	}); err != nil {
+		_ = s.fileRepository.Delete(context.Background(), fileRecord.ID)
+		return result, err
+	}
 
 	result.ID = fileRecord.ID
 	result.FileName = dto.FileName
@@ -795,20 +816,96 @@ func (s *FileService) GetFilePresignURL(
 
 func (s *FileService) CleanupOrphanFiles() error {
 	ctx := context.Background()
-	threshold := time.Now().UTC().Add(-24 * time.Hour)
+	threshold := time.Now().UTC()
+	dryRun := isTempCleanupDryRun()
 
-	files, err := s.fileRepository.GetOrphanFiles(ctx, threshold)
+	temps, err := s.fileRepository.ListExpiredTemps(ctx, threshold)
 	if err != nil {
 		return err
 	}
 
-	for _, file := range files {
-		if file.Key != "" && storage.NormalizeStorageType(file.StorageType) != storage.StorageTypeExternal {
-			_ = s.DeleteStoredFile(file.StorageType, file.Key)
-		}
-		_ = s.fileRepository.Delete(ctx, file.ID)
+	if len(temps) == 0 {
+		return nil
 	}
 
+	var deletedCount int
+	for _, temp := range temps {
+		fileRecord, err := s.fileRepository.GetByID(ctx, temp.FileID)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				_ = s.fileRepository.DeleteTempByID(ctx, temp.ID)
+				continue
+			}
+			logUtil.GetLogger().Warn("Failed to load temp file record", zap.String("temp_id", temp.ID), zap.Error(err))
+			continue
+		}
+
+		if dryRun {
+			logUtil.GetLogger().Info(
+				"Temp cleanup candidate(dry-run)",
+				zap.String("temp_id", temp.ID),
+				zap.String("file_id", temp.FileID),
+				zap.String("file_key", fileRecord.Key),
+				zap.String("storage_type", fileRecord.StorageType),
+			)
+			continue
+		}
+
+		if fileRecord.Key != "" && storage.NormalizeStorageType(fileRecord.StorageType) != storage.StorageTypeExternal {
+			if err := s.DeleteStoredFile(fileRecord.StorageType, fileRecord.Key); err != nil {
+				logUtil.GetLogger().Warn(
+					"Failed to delete temp stored file",
+					zap.String("temp_id", temp.ID),
+					zap.String("file_id", temp.FileID),
+					zap.Error(err),
+				)
+				continue
+			}
+		}
+		if err := s.fileRepository.Delete(ctx, temp.FileID); err != nil {
+			logUtil.GetLogger().Warn(
+				"Failed to delete temp file record",
+				zap.String("temp_id", temp.ID),
+				zap.String("file_id", temp.FileID),
+				zap.Error(err),
+			)
+			continue
+		}
+		if err := s.fileRepository.DeleteTempByID(ctx, temp.ID); err != nil {
+			logUtil.GetLogger().Warn(
+				"Failed to delete temp tracking record",
+				zap.String("temp_id", temp.ID),
+				zap.String("file_id", temp.FileID),
+				zap.Error(err),
+			)
+			continue
+		}
+		deletedCount++
+	}
+	if dryRun {
+		logUtil.GetLogger().Info("Temp cleanup dry-run completed", zap.Int("candidates", len(temps)))
+		return nil
+	}
+	logUtil.GetLogger().Info("Temp cleanup completed", zap.Int("deleted", deletedCount), zap.Int("candidates", len(temps)))
+
+	return nil
+}
+
+func (s *FileService) ConfirmTempFiles(ctx context.Context, fileIDs []string) error {
+	seen := make(map[string]struct{}, len(fileIDs))
+	for _, id := range fileIDs {
+		trimmed := strings.TrimSpace(id)
+		if trimmed == "" {
+			continue
+		}
+		if _, ok := seen[trimmed]; ok {
+			continue
+		}
+		seen[trimmed] = struct{}{}
+		if err := s.fileRepository.DeleteTempByFileID(ctx, trimmed); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -831,6 +928,18 @@ func (s *FileService) keyGenForCategory(category storage.Category, fileName stri
 	_ = category
 	_ = fileName
 	return s.keyGen
+}
+
+func isTempCleanupDryRun() bool {
+	raw := strings.TrimSpace(os.Getenv(tempCleanupDryRunEnv))
+	if raw == "" {
+		return false
+	}
+	enabled, err := strconv.ParseBool(raw)
+	if err != nil {
+		return false
+	}
+	return enabled
 }
 
 func isAllowedType(contentType string, allowedTypes []string) bool {

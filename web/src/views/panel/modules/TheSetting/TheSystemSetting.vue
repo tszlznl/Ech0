@@ -322,8 +322,10 @@ const handleUploadImage = async (event: Event) => {
 
     if (task.result?.url) {
       SystemSetting.value.server_logo = task.result.url
+      SystemSetting.value.server_logo_file_id = task.result.id
     } else {
       SystemSetting.value.server_logo = '/Ech0.svg'
+      SystemSetting.value.server_logo_file_id = ''
     }
   } catch (err) {
     console.error('上传异常', err)

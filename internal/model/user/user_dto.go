@@ -28,6 +28,10 @@ type UserInfoDto struct {
 	// example: https://example.com/avatar.png
 	Avatar string `json:"avatar"`
 
+	// 头像文件ID（用于确认临时文件转正）
+	// example: 0195e2a7-54a9-7bcf-8df5-6d81d671f5c7
+	AvatarFileID string `json:"avatar_file_id"`
+
 	// 语言偏好
 	// example: zh-CN
 	Locale string `json:"locale"`

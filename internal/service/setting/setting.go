@@ -9,6 +9,7 @@ import (
 type SettingService struct {
 	transactor         transaction.Transactor
 	commonService      CommonService
+	fileService        FileService
 	storageManager     *storage.Manager
 	keyvalueRepository KeyValueRepository
 	settingRepository  SettingRepository
@@ -19,6 +20,7 @@ type SettingService struct {
 func NewSettingService(
 	tx transaction.Transactor,
 	commonService CommonService,
+	fileService FileService,
 	storageManager *storage.Manager,
 	keyvalueRepository KeyValueRepository,
 	settingRepository SettingRepository,
@@ -28,6 +30,7 @@ func NewSettingService(
 	return &SettingService{
 		transactor:         tx,
 		commonService:      commonService,
+		fileService:        fileService,
 		storageManager:     storageManager,
 		keyvalueRepository: keyvalueRepository,
 		webhookRepository:  webhookRepository,

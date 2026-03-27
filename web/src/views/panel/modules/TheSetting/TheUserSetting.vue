@@ -142,6 +142,7 @@ const userInfo = ref<App.Api.User.UserInfo>({
   email: '',
   is_admin: false,
   avatar: '',
+  avatar_file_id: '',
   locale: 'zh-CN',
 })
 
@@ -203,6 +204,7 @@ const handleUploadImage = async (event: Event) => {
 
     if (task.result?.url) {
       userInfo.value.avatar = task.result.url
+      userInfo.value.avatar_file_id = task.result.id
       if (user.value) user.value.avatar = task.result.url
     }
   } catch (err) {

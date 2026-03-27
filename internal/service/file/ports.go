@@ -29,6 +29,7 @@ type Service interface {
 	StreamFileByPath(ctx *gin.Context, query commonModel.FilePathStreamQueryDto)
 	GetFilePresignURL(ctx context.Context, dto *commonModel.GetPresignURLDto) (commonModel.PresignDto, error)
 	CleanupOrphanFiles() error
+	ConfirmTempFiles(ctx context.Context, fileIDs []string) error
 	DeleteFileRecord(ctx context.Context, id string) error
 	DeleteStoredFile(storageType string, key string) error
 }
@@ -65,7 +66,10 @@ type FileRepository interface {
 		height *int,
 		contentType *string,
 	) (*fileModel.File, error)
-	GetOrphanFiles(ctx context.Context, before time.Time) ([]fileModel.File, error)
+	CreateTemp(ctx context.Context, temp *fileModel.TempFile) error
+	DeleteTempByFileID(ctx context.Context, fileID string) error
+	DeleteTempByID(ctx context.Context, id string) error
+	ListExpiredTemps(ctx context.Context, before time.Time) ([]fileModel.TempFile, error)
 	Delete(ctx context.Context, id string) error
 	DeleteByRoute(ctx context.Context, storageType, provider, bucket, key string) error
 }

@@ -38,6 +38,16 @@ type EchoFile struct {
 	SortOrder int    `gorm:"default:0"                                   json:"sort_order"`
 }
 
+// TempFile tracks uploaded files that are pending business confirmation.
+type TempFile struct {
+	ID         string    `gorm:"type:char(36);primaryKey"               json:"id"`
+	FileID     string    `gorm:"type:char(36);not null;uniqueIndex"     json:"file_id"`
+	File       File      `gorm:"foreignKey:FileID;constraint:OnDelete:CASCADE" json:"file,omitempty"`
+	UploaderID string    `gorm:"type:char(36);index;not null"            json:"uploader_id"`
+	ExpireAt   time.Time `gorm:"index;not null"                          json:"expire_at"`
+	CreatedAt  time.Time `gorm:"index"                                   json:"created_at"`
+}
+
 func (f *File) BeforeCreate(_ *gorm.DB) error {
 	if f.ID == "" {
 		f.ID = uuidUtil.MustNewV7()
@@ -48,6 +58,13 @@ func (f *File) BeforeCreate(_ *gorm.DB) error {
 func (e *EchoFile) BeforeCreate(_ *gorm.DB) error {
 	if e.ID == "" {
 		e.ID = uuidUtil.MustNewV7()
+	}
+	return nil
+}
+
+func (t *TempFile) BeforeCreate(_ *gorm.DB) error {
+	if t.ID == "" {
+		t.ID = uuidUtil.MustNewV7()
 	}
 	return nil
 }
