@@ -6,6 +6,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { renderMarkdown } from '../core/markdown'
 import { useI18n } from 'vue-i18n'
+import '../styles/markdown.scss'
 
 const props = defineProps<{
   content: string

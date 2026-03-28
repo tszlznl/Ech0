@@ -10,7 +10,7 @@ import viteCompression from 'vite-plugin-compression'
 import { welcomePlugin } from './src/plugins/welcome-plugin'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [
     vue({
       template: {
@@ -19,13 +19,13 @@ export default defineConfig({
         },
       },
     }),
-    vueDevTools(),
+    ...(command === 'serve' ? [vueDevTools()] : []),
     UnoCSS(),
     viteCompression({
       deleteOriginFile: false,
     }),
 
-    welcomePlugin() // 欢迎横幅插件
+    welcomePlugin(), // 欢迎横幅插件
   ],
   resolve: {
     alias: {
@@ -49,9 +49,9 @@ export default defineConfig({
         // 代码分割：将重型库打包到单独的 chunk 中，利用浏览器缓存
         manualChunks: {
           // 代码高亮
-          'highlight': ['highlight.js'],
+          highlight: ['highlight.js'],
         },
       },
     },
-  }
-})
+  },
+}))
