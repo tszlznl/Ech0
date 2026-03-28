@@ -41,7 +41,9 @@ app.use(FloatingVue, {
       delay: { show: 300, hide: 80 },
       distance: 10,
       container: 'body',
-      autoHide: true,
+      // floating-vue sets tabindex="0" on popper when autoHide=true, which can cause
+      // hidden tooltip poppers to retain focus and trigger aria-hidden warnings.
+      autoHide: false,
     },
   },
 })
