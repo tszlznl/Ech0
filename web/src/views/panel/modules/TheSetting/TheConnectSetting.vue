@@ -190,7 +190,7 @@ const refreshConnectivityStatus = async () => {
 }
 
 const refreshConnectData = async () => {
-  await getConnect()
+  await getConnect({ force: true })
   await refreshConnectivityStatus()
 }
 

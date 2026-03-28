@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { fetchGetEchosByPage, fetchGetConnectList, fetchUnreadInbox } from '@/service/api'
-import { useSettingStore } from '@/stores'
+import { fetchGetEchosByPage, fetchUnreadInbox } from '@/service/api'
+import { useConnectStore, useSettingStore } from '@/stores'
 import PanelCard from '@/layout/PanelCard.vue'
 
 type StatCard = {
@@ -20,6 +20,7 @@ type StatusCard = {
 }
 
 const settingStore = useSettingStore()
+const connectStore = useConnectStore()
 const { t, locale } = useI18n()
 
 const loading = ref(true)
@@ -102,10 +103,10 @@ const dashboardStatus = computed<StatusCard[]>(() => {
 
 const loadDashboardStats = async () => {
   loading.value = true
-  const [echoRes, unreadRes, connectRes] = await Promise.allSettled([
+  const [echoRes, unreadRes] = await Promise.allSettled([
     fetchGetEchosByPage({ page: 1, pageSize: 1, search: '' }),
     fetchUnreadInbox(),
-    fetchGetConnectList(),
+    connectStore.getConnect(),
   ])
 
   if (echoRes.status === 'fulfilled' && echoRes.value.code === 1) {
@@ -116,9 +117,7 @@ const loadDashboardStats = async () => {
     unreadInboxCount.value = Array.isArray(unreadRes.value.data) ? unreadRes.value.data.length : 0
   }
 
-  if (connectRes.status === 'fulfilled' && connectRes.value.code === 1) {
-    connectCount.value = Array.isArray(connectRes.value.data) ? connectRes.value.data.length : 0
-  }
+  connectCount.value = connectStore.connects.length
 
   loading.value = false
 }

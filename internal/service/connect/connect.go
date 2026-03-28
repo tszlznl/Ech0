@@ -17,6 +17,13 @@ import (
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
+	"golang.org/x/sync/singleflight"
+)
+
+const (
+	connectsInfoCacheTTL        = 30 * time.Minute
+	connectFanoutMaxConcurrency = 8
+	connectsInfoSingleflightKey = "connects_info"
 )
 
 type ConnectService struct {
@@ -25,6 +32,12 @@ type ConnectService struct {
 	echoRepository    EchoRepository
 	commonService     CommonService
 	settingService    SettingService
+
+	connectsInfoCacheMu      sync.RWMutex
+	connectsInfoCache        []model.Connect
+	connectsInfoCacheExpires time.Time
+	connectsInfoCacheValid   bool
+	connectsInfoFetcher      singleflight.Group
 }
 
 func NewConnectService(
@@ -46,7 +59,7 @@ func NewConnectService(
 // AddConnect 添加连接
 func (connectService *ConnectService) AddConnect(ctx context.Context, connected model.Connected) error {
 	userid := viewer.MustFromContext(ctx).UserID()
-	return connectService.transactor.Run(ctx, func(txCtx context.Context) error {
+	if err := connectService.transactor.Run(ctx, func(txCtx context.Context) error {
 		user, err := connectService.commonService.CommonGetUserByUserId(txCtx, userid)
 		if err != nil {
 			return err
@@ -83,13 +96,18 @@ func (connectService *ConnectService) AddConnect(ctx context.Context, connected 
 		}
 
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+
+	connectService.invalidateConnectsInfoCache()
+	return nil
 }
 
 // DeleteConnect 删除连接
 func (connectService *ConnectService) DeleteConnect(ctx context.Context, id string) error {
 	userid := viewer.MustFromContext(ctx).UserID()
-	return connectService.transactor.Run(ctx, func(txCtx context.Context) error {
+	if err := connectService.transactor.Run(ctx, func(txCtx context.Context) error {
 		user, err := connectService.commonService.CommonGetUserByUserId(txCtx, userid)
 		if err != nil {
 			return err
@@ -105,7 +123,12 @@ func (connectService *ConnectService) DeleteConnect(ctx context.Context, id stri
 		}
 
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+
+	connectService.invalidateConnectsInfoCache()
+	return nil
 }
 
 // GetConnect 提供当前实例的连接信息
@@ -155,6 +178,37 @@ func (connectService *ConnectService) GetConnect() (model.Connect, error) {
 
 // GetConnectsInfo 获取实例获取到的其它实例的连接信息
 func (connectService *ConnectService) GetConnectsInfo() ([]model.Connect, error) {
+	if cached, ok := connectService.getCachedConnectsInfo(); ok {
+		return cached, nil
+	}
+
+	result, err, _ := connectService.connectsInfoFetcher.Do(connectsInfoSingleflightKey, func() (any, error) {
+		// double-check，避免在等待 singleflight 期间其它请求已回填缓存
+		if cached, ok := connectService.getCachedConnectsInfo(); ok {
+			return cached, nil
+		}
+
+		connectList, fetchErr := connectService.fetchConnectsInfo()
+		if fetchErr != nil {
+			return nil, fetchErr
+		}
+
+		connectService.setCachedConnectsInfo(connectList)
+		return cloneConnects(connectList), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	connects, ok := result.([]model.Connect)
+	if !ok {
+		return nil, fmt.Errorf("invalid cache result type")
+	}
+
+	return cloneConnects(connects), nil
+}
+
+func (connectService *ConnectService) fetchConnectsInfo() ([]model.Connect, error) {
 	// 总超时时间：给予足够的缓冲，避免单个慢连接导致整体超时
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
@@ -174,6 +228,7 @@ func (connectService *ConnectService) GetConnectsInfo() ([]model.Connect, error)
 
 	var wg sync.WaitGroup
 	connectChan := make(chan model.Connect, len(connects))
+	semaphore := make(chan struct{}, connectFanoutMaxConcurrency)
 
 	seenURLs := make(map[string]struct{})
 	var seenMutex sync.Mutex
@@ -187,6 +242,13 @@ func (connectService *ConnectService) GetConnectsInfo() ([]model.Connect, error)
 		wg.Add(1)
 		go func(conn model.Connected) {
 			defer wg.Done()
+			select {
+			case semaphore <- struct{}{}:
+			case <-ctx.Done():
+				return
+			}
+			defer func() { <-semaphore }()
+
 			url := httpUtil.TrimURL(conn.ConnectURL) + "/api/connect"
 
 			var lastErr error
@@ -381,6 +443,44 @@ func (connectService *ConnectService) GetConnectsInfo() ([]model.Connect, error)
 	mu.Lock()
 	defer mu.Unlock()
 	return connectList, nil
+}
+
+func (connectService *ConnectService) invalidateConnectsInfoCache() {
+	connectService.connectsInfoCacheMu.Lock()
+	defer connectService.connectsInfoCacheMu.Unlock()
+	connectService.connectsInfoCache = nil
+	connectService.connectsInfoCacheExpires = time.Time{}
+	connectService.connectsInfoCacheValid = false
+}
+
+func (connectService *ConnectService) getCachedConnectsInfo() ([]model.Connect, bool) {
+	connectService.connectsInfoCacheMu.RLock()
+	defer connectService.connectsInfoCacheMu.RUnlock()
+
+	if !connectService.connectsInfoCacheValid {
+		return nil, false
+	}
+	if time.Now().After(connectService.connectsInfoCacheExpires) {
+		return nil, false
+	}
+	return cloneConnects(connectService.connectsInfoCache), true
+}
+
+func (connectService *ConnectService) setCachedConnectsInfo(connects []model.Connect) {
+	connectService.connectsInfoCacheMu.Lock()
+	defer connectService.connectsInfoCacheMu.Unlock()
+	connectService.connectsInfoCache = cloneConnects(connects)
+	connectService.connectsInfoCacheExpires = time.Now().Add(connectsInfoCacheTTL)
+	connectService.connectsInfoCacheValid = true
+}
+
+func cloneConnects(connects []model.Connect) []model.Connect {
+	if len(connects) == 0 {
+		return []model.Connect{}
+	}
+	cloned := make([]model.Connect, len(connects))
+	copy(cloned, connects)
+	return cloned
 }
 
 // GetConnects 获取当前实例添加的所有连接
