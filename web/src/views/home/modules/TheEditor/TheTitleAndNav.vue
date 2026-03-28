@@ -21,7 +21,7 @@
       >
         <button
           type="button"
-          v-tooltip="t('homeNav.themeToggleTitle', { mode: nextThemeModeLabel })"
+          v-tooltip="themeToggleTooltip"
           :aria-label="t('homeNav.themeToggleTitle', { mode: nextThemeModeLabel })"
           class="h-8 px-3 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-border-subtle)] transition-colors duration-200"
           @click="handleThemeToggle"
@@ -108,6 +108,12 @@ const nextThemeModeLabel = computed(() => {
   if (nextThemeMode.value === 'dark') return String(t('homeNav.themeDark'))
   return String(t('homeNav.themeAuto'))
 })
+
+const themeToggleTooltip = computed(() => ({
+  content: String(t('homeNav.themeToggleTitle', { mode: nextThemeModeLabel.value })),
+  triggers: ['hover'],
+  hideTriggers: ['hover', 'click'],
+}))
 
 const getThemeModeLabel = () => {
   if (themeStore.mode === 'light') return String(t('homeNav.themeLight'))
