@@ -24,6 +24,8 @@
               <img
                 :src="connect.logo"
                 alt="avatar"
+                loading="lazy"
+                decoding="async"
                 class="w-full h-full rounded-full object-cover"
               />
               <span

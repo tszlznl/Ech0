@@ -13,6 +13,7 @@
         :width="image.width || undefined"
         :height="image.height || undefined"
         :loading="loading"
+        decoding="async"
         class="echoimg transition-opacity duration-300"
         :class="[imgClass, loaded ? 'opacity-100' : 'opacity-0']"
         @load="$emit('load')"

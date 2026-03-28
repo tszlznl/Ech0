@@ -1,5 +1,5 @@
 <template>
-  <img :src="avatarSrc" :alt="alt" />
+  <img :src="avatarSrc" :alt="alt" decoding="async" />
 </template>
 
 <script setup lang="ts">

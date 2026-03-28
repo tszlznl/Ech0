@@ -23,6 +23,8 @@
           <img
             :src="systemLogoSrc"
             :alt="t('systemSetting.logoAlt')"
+            loading="lazy"
+            decoding="async"
             class="w-12 h-12 rounded-full ml-2 mr-9 ring-1 ring-[var(--color-border-subtle)] shadow-[var(--shadow-sm)]"
           />
         </div>

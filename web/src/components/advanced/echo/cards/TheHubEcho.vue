@@ -5,6 +5,8 @@
         <img
           :src="echo.logo"
           alt="logo"
+          loading="lazy"
+          decoding="async"
           class="w-10 h-10 sm:w-12 sm:h-12 rounded-full ring-1 ring-[var(--color-border-subtle)] shadow-[var(--shadow-sm)] object-cover"
         />
       </div>
