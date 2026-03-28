@@ -1,6 +1,10 @@
 <template>
   <div ref="rootRef" class="echo-markdown">
-    <div v-if="!rendererReady && props.content" class="markdown-renderer-placeholder" aria-hidden="true"></div>
+    <div
+      v-if="!rendererReady && props.content"
+      class="markdown-renderer-placeholder"
+      aria-hidden="true"
+    ></div>
     <div v-else v-html="html"></div>
   </div>
 </template>
@@ -10,7 +14,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import '../styles/markdown.scss'
 
-type RenderMarkdown = typeof import('../core/markdown')['renderMarkdown']
+type RenderMarkdown = (typeof import('../core/markdown'))['renderMarkdown']
 
 let renderMarkdownFn: RenderMarkdown | null = null
 let renderMarkdownPromise: Promise<RenderMarkdown> | null = null
@@ -85,9 +89,13 @@ onBeforeUnmount(() => {
   rootRef.value?.removeEventListener('click', onRootClick)
 })
 
-watch([() => props.content, expandLabel, collapseLabel, taskCheckboxLabel], () => {
-  void renderContent()
-}, { immediate: true })
+watch(
+  [() => props.content, expandLabel, collapseLabel, taskCheckboxLabel],
+  () => {
+    void renderContent()
+  },
+  { immediate: true },
+)
 </script>
 
 <style scoped>
@@ -95,18 +103,29 @@ watch([() => props.content, expandLabel, collapseLabel, taskCheckboxLabel], () =
   min-height: 2.75rem;
   border-radius: 0.5rem;
   background:
-    linear-gradient(90deg, rgba(140, 140, 140, 0.08) 25%, rgba(140, 140, 140, 0.18) 37%, rgba(140, 140, 140, 0.08) 63%),
+    linear-gradient(
+      90deg,
+      rgba(140, 140, 140, 0.08) 25%,
+      rgba(140, 140, 140, 0.18) 37%,
+      rgba(140, 140, 140, 0.08) 63%
+    ),
     linear-gradient(180deg, rgba(120, 120, 120, 0.05), rgba(120, 120, 120, 0.08));
-  background-size: 240% 100%, 100% 100%;
+  background-size:
+    240% 100%,
+    100% 100%;
   animation: markdown-placeholder-wave 1.6s ease-in-out infinite;
 }
 
 @keyframes markdown-placeholder-wave {
   0% {
-    background-position: 100% 0, 0 0;
+    background-position:
+      100% 0,
+      0 0;
   }
   100% {
-    background-position: -100% 0, 0 0;
+    background-position:
+      -100% 0,
+      0 0;
   }
 }
 
