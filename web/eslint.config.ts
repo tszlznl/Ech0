@@ -14,7 +14,7 @@ export default defineConfigWithVueTs(
     files: ['**/*.{ts,mts,tsx,vue}'],
   },
 
-  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**', '**/Meting.min.js', '**/APlayer.min.js', '**/twikoo.all.min.js']),
+  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**', '**/Meting.min.js', '**/APlayer.min.js']),
 
   pluginVue.configs['flat/essential'],
   vueTsConfigs.recommended,
