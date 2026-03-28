@@ -47,9 +47,20 @@ export default defineConfig(({ command }) => ({
     rollupOptions: {
       output: {
         // 代码分割：将重型库打包到单独的 chunk 中，利用浏览器缓存
-        manualChunks: {
-          // 代码高亮
-          highlight: ['highlight.js'],
+        manualChunks(id) {
+          const normalizedId = id.replaceAll('\\', '/')
+          if (normalizedId.includes('/node_modules/highlight.js/')) {
+            return 'highlight'
+          }
+          if (
+            normalizedId.includes('/node_modules/markdown-it/') ||
+            normalizedId.includes('/node_modules/linkify-it/') ||
+            normalizedId.includes('/node_modules/mdurl/') ||
+            normalizedId.includes('/node_modules/uc.micro/')
+          ) {
+            return 'markdown'
+          }
+          return undefined
         },
       },
     },

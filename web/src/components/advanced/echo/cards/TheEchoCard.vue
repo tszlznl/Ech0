@@ -123,7 +123,6 @@ import { onMounted, ref, onBeforeUnmount, computed, defineAsyncComponent } from 
 import { fetchDeleteEcho, fetchLikeEcho, fetchGetEchoById } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useUserStore, useEchoStore, useEditorStore } from '@/stores'
-import TheImageGallery from '@/components/advanced/gallery/TheImageGallery.vue'
 import { TheMdPreview } from '@/components/advanced/md'
 import Roll from '@/components/icons/roll.vue'
 import Lock from '@/components/icons/lock.vue'
@@ -139,6 +138,9 @@ import { getEchoFilesBy } from '@/utils/echo'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useI18n } from 'vue-i18n'
 
+const TheImageGallery = defineAsyncComponent(
+  () => import('@/components/advanced/gallery/TheImageGallery.vue'),
+)
 const TheExtensionRenderer = defineAsyncComponent(
   () => import('@/components/advanced/extension/TheExtensionRenderer.vue'),
 )

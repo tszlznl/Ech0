@@ -45,7 +45,6 @@
 
 <script setup lang="ts">
 import TheTop from './TheTop.vue'
-import TheEditor from './TheEditor.vue'
 import TheBoard from './TheBoard.vue'
 import TheEchos from './TheEchos.vue'
 import TheFilteredEchos from './TheFilteredEchos.vue'
@@ -54,6 +53,7 @@ import { useUserStore, useEchoStore, useSettingStore, useInboxStore, useZenStore
 import { storeToRefs } from 'pinia'
 import { useBfCacheRestore } from '@/composables/useBfCacheRestore'
 
+const TheEditor = defineAsyncComponent(() => import('./TheEditor.vue'))
 const TheHeatMap = defineAsyncComponent(() => import('@/components/advanced/widget/TheHeatMap.vue'))
 const TheInbox = defineAsyncComponent(() => import('./TheInbox.vue'))
 const TheRecentCard = defineAsyncComponent(

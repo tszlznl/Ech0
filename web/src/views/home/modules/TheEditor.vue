@@ -38,23 +38,24 @@
 </template>
 
 <script setup lang="ts">
-import { TheMdEditor } from '@/components/advanced/md'
-import TheModePanel from './TheEditor/TheModePanel.vue'
 import TheTitleAndNav from './TheEditor/TheTitleAndNav.vue'
-import TheImageEditor from './TheEditor/TheImageEditor.vue'
 import TheEditorImage from './TheEditor/TheEditorImage.vue'
 import TheEditorButtons from './TheEditor/TheEditorButtons.vue'
-import TheInboxModeEditor from './TheEditor/TheInboxModeEditor.vue'
-import TheExtensionEditor from './TheEditor/TheExtensionEditor.vue'
-import TheTagsManager from './TheEditor/TheTagsManager.vue'
 
 import { theToast } from '@/utils/toast'
-import { watch } from 'vue'
+import { defineAsyncComponent, watch } from 'vue'
 import { useEchoStore, useEditorStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { Mode, ExtensionType, ImageLayout } from '@/enums/enums'
 import { getEchoFiles } from '@/utils/echo'
 import { useI18n } from 'vue-i18n'
+
+const TheMdEditor = defineAsyncComponent(() => import('@/components/advanced/md/TheMdEditor.vue'))
+const TheModePanel = defineAsyncComponent(() => import('./TheEditor/TheModePanel.vue'))
+const TheImageEditor = defineAsyncComponent(() => import('./TheEditor/TheImageEditor.vue'))
+const TheInboxModeEditor = defineAsyncComponent(() => import('./TheEditor/TheInboxModeEditor.vue'))
+const TheExtensionEditor = defineAsyncComponent(() => import('./TheEditor/TheExtensionEditor.vue'))
+const TheTagsManager = defineAsyncComponent(() => import('./TheEditor/TheTagsManager.vue'))
 
 /* --------------- 与Pinia相关 ---------------- */
 const echoStore = useEchoStore()
