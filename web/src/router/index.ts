@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useInitStore, useUserStore } from '@/stores'
+import { useInitStore } from '@/stores/init'
+import { useUserStore } from '@/stores/user'
 
 // 所有路由组件使用懒加载，优化首屏加载性能
 const router = createRouter({

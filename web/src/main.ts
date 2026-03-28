@@ -1,12 +1,10 @@
 import 'virtual:uno.css'
 import '@/themes/index.scss'
-import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import 'floating-vue/dist/style.css'
 
-import { initStores } from './stores'
+import { initStores } from './stores/store-init'
 import { useSettingStore } from './stores/setting'
 import { setupI18n } from './locales'
-import FloatingVue from 'floating-vue'
 
 // 自定义组件
 import BaseDialog from '@/components/common/BaseDialog.vue'
@@ -29,6 +27,7 @@ await initStores().catch((e) => {
 
 const settingStore = useSettingStore()
 const i18n = await setupI18n(settingStore.SystemSetting.default_locale)
+const { default: FloatingVue } = await import('floating-vue')
 
 app.use(router)
 app.use(i18n)

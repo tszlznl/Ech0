@@ -92,6 +92,8 @@
 </template>
 
 <script setup lang="ts">
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
+
 import BaseButton from '@/components/common/BaseButton.vue'
 import Arrow from '@/components/icons/arrow.vue'
 import TheBackTop from '@/components/advanced/TheBackTop.vue'
