@@ -34,8 +34,9 @@ app.use(i18n)
 app.use(FloatingVue, {
   themes: {
     tooltip: {
-      triggers: ['hover', 'focus'],
-      hideTriggers: ['hover', 'focus', 'click'],
+      // Avoid focus staying on hidden popper (aria-hidden + focused descendant warning).
+      triggers: ['hover'],
+      hideTriggers: ['hover', 'click'],
       placement: 'top',
       delay: { show: 300, hide: 80 },
       distance: 10,
