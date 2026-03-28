@@ -38,7 +38,7 @@ app.use(FloatingVue, {
       triggers: ['hover', 'focus'],
       hideTriggers: ['hover', 'focus', 'click'],
       placement: 'top',
-      delay: { show: 450, hide: 80 },
+      delay: { show: 300, hide: 80 },
       distance: 10,
       container: 'body',
       autoHide: true,

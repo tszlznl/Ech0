@@ -7,9 +7,7 @@
           :icon="currentMode === Mode.ECH0 ? Advance : Back"
           @click="handleChangeMode"
           :class="['w-8 h-8 sm:w-9 sm:h-9 rounded-md'].join(' ')"
-          :tooltip="
-            currentMode === Mode.ECH0 ? t('editor.gotoTagManage') : t('editor.backToEditor')
-          "
+          :tooltip="currentMode === Mode.ECH0 ? t('editor.more') : t('editor.backToEditor')"
         />
       </div>
       <!-- Photo Upload -->

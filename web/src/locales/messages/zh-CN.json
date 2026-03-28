@@ -74,7 +74,7 @@
     "modeSwitch": "模式切换",
     "inboxMode": "收件箱模式",
     "switchedToInboxMode": "已切换到收件箱模式",
-    "more": "其它",
+    "more": "更多",
     "gotoTagManage": "跳转标签管理",
     "backToEditor": "返回编辑器",
     "addImage": "添加图片",
@@ -343,7 +343,7 @@
   "homeNav": {
     "themeToggleTitle": "切换主题（下一个：{mode}）",
     "enterZenMode": "进入 Zen Mode",
-    "helloRequest": "Hello 请求",
+    "helloRequest": "Hello",
     "themeLight": "浅色",
     "themeDark": "深色",
     "themeAuto": "自动",
