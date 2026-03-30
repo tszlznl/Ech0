@@ -151,31 +151,26 @@ const handlePaste = async (e: ClipboardEvent) => {
     if (item.type.startsWith('image/')) {
       const file = item.getAsFile()
       if (file) {
-        // 保留原始文件的 lastModified，避免同一图片因时间戳不同被当作不同文件
+        // 保留原始文件的 lastModified，与其他上传方式保持一致
+        // Uppy 会基于 name, type, size, lastModified 生成 file ID 来检测重复
         const pasteFile = new File([file], file.name, {
           type: file.type,
           lastModified: file.lastModified,
         })
 
-        // 检查是否可能是重复文件：同一 Uppy 实例中是否存在 name、type、size 都相同的文件
-        const existingFile = uppy?.getFiles().find(
-          (f) =>
-            f.name === pasteFile.name &&
-            f.type === pasteFile.type &&
-            f.size === pasteFile.size,
-        )
-        if (existingFile) {
-          // 检测到重复文件，静默跳过，继续处理下一个
-          continue
+        // 调用 addFile 时 Uppy 内部会自动检测重复文件，如果重复会抛出 RestrictionError
+        // 这里不传自定义 id，让 Uppy 自动生成（基于 name + type + size + lastModified）
+        try {
+          uppy?.addFile({
+            name: pasteFile.name,
+            type: pasteFile.type,
+            data: pasteFile,
+            source: 'PastedImage',
+          })
+        } catch (err: unknown) {
+          // Uppy 检测到重复文件时抛出 RestrictionError，静默跳过
+          // 不需要额外处理，与其他上传方式的重复检测行为保持一致
         }
-
-        uppy?.addFile({
-          id: `pasted-image-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-          name: pasteFile.name,
-          type: pasteFile.type,
-          data: pasteFile,
-          source: 'PastedImage',
-        })
         // 注意：不再手动调用 upload()
         // 因为 Uppy 配置了 autoProceed: true，会自动开始上传
       }
