@@ -1,16 +1,16 @@
 <template>
   <div
     v-if="ShowEditor"
-    class="bg-[var(--color-bg-surface)] ring-1 ring-[var(--color-border-subtle)] ring-inset rounded-lg mx-auto shadow-xs hover:shadow-sm"
+    class="bg-[var(--color-bg-surface)] ring-1 ring-[var(--color-border-subtle)] ring-inset rounded-[var(--radius-lg)] mx-auto shadow-xs hover:shadow-sm"
   >
     <div class="mx-auto w-full px-3 py-4">
       <!-- The Title && Nav -->
       <TheTitleAndNav />
 
       <!-- The Editor -->
-      <div class="rounded-lg p-2 sm:p-3 mb-1">
+      <div class="rounded-[var(--radius-md)] p-2 sm:p-3 mb-1">
         <!-- EchoMode : TheMdEditor -->
-        <TheMdEditor v-if="currentMode === Mode.ECH0" class="rounded-lg" />
+        <TheMdEditor v-if="currentMode === Mode.ECH0" class="rounded-[var(--radius-md)]" />
 
         <!-- ImageMode : TheImageEditor -->
         <TheImageEditor v-if="currentMode === Mode.Image" />

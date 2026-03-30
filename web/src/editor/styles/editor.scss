@@ -37,7 +37,7 @@ body.md-editor-full-open {
   width: 100%;
   background-color: var(--md-editor-bg-color);
   border: 1px solid var(--md-editor-border-color);
-  border-radius: 0.75rem;
+  border-radius: var(--radius-md);
 }
 
 .markdown-full-shell {
@@ -124,7 +124,7 @@ body.md-editor-full-open {
 
 .markdown-editor .toolbar-btn {
   border: 1px solid var(--md-editor-border-color);
-  border-radius: 0.5rem;
+  border-radius: var(--radius-sm);
   padding: 0.22rem 0.5rem;
   min-width: 1.9rem;
   font-size: 0.75rem;
@@ -314,7 +314,7 @@ body.md-editor-full-open {
 
   .markdown-editor.is-full {
     box-shadow: none;
-    border-radius: 0.7rem;
+    border-radius: var(--radius-md);
   }
 
   .markdown-full-shell.no-preview {
