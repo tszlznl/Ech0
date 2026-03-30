@@ -12,23 +12,27 @@ import (
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	publisher "github.com/lin-snow/ech0/internal/event/publisher"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
+	"github.com/lin-snow/ech0/internal/storage"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
 )
 
 type BackupService struct {
-	commonService CommonService
-	publisher     *publisher.Publisher
+	commonService  CommonService
+	publisher      *publisher.Publisher
+	storageManager *storage.Manager
 }
 
 func NewBackupService(
 	commonService CommonService,
 	publisher *publisher.Publisher,
+	storageManager *storage.Manager,
 ) *BackupService {
 	return &BackupService{
-		commonService: commonService,
-		publisher:     publisher,
+		commonService:  commonService,
+		publisher:      publisher,
+		storageManager: storageManager,
 	}
 }
 
@@ -42,10 +46,12 @@ func (bs *BackupService) ExportBackup(ctx *gin.Context, reqCtx context.Context) 
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	backupFilePath, _, err := backup.ExecuteBackup()
+	backupFilePath, backupFileName, err := backup.ExecuteBackup()
 	if err != nil {
 		return err
 	}
+
+	bs.tryUploadBackupToS3(reqCtx, backupFilePath, backupFileName)
 
 	fileInfo, err := os.Stat(backupFilePath)
 	if err != nil {
@@ -73,4 +79,25 @@ func (bs *BackupService) ExportBackup(ctx *gin.Context, reqCtx context.Context) 
 	}
 
 	return nil
+}
+
+func (bs *BackupService) tryUploadBackupToS3(ctx context.Context, backupPath, fileName string) {
+	if bs.storageManager == nil {
+		return
+	}
+	selector := bs.storageManager.GetSelector()
+	if selector == nil || !selector.ObjectEnabled() {
+		return
+	}
+
+	cfg := bs.storageManager.GetStorageConfig(ctx)
+	s3FS, err := backup.BuildBackupS3FS(cfg)
+	if err != nil {
+		logUtil.GetLogger().Warn("Failed to build S3 FS for backup upload", zap.Error(err))
+		return
+	}
+
+	if err := backup.UploadToS3(ctx, backupPath, fileName, s3FS); err != nil {
+		logUtil.GetLogger().Warn("Failed to upload backup to S3", zap.Error(err))
+	}
 }

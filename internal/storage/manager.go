@@ -40,6 +40,12 @@ func (m *Manager) GetSelector() *StorageSelector {
 	return m.selector
 }
 
+// GetStorageConfig returns the current merged storage configuration.
+func (m *Manager) GetStorageConfig(ctx context.Context) config.StorageConfig {
+	dbSetting, _ := m.loadS3SettingFromDB(ctx)
+	return MergeStorageConfig(m.defaultCfg, dbSetting)
+}
+
 func (m *Manager) ReloadFromConfigAndDB(ctx context.Context) error {
 	dbSetting, err := m.loadS3SettingFromDB(ctx)
 	if err != nil {

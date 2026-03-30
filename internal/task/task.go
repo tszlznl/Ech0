@@ -16,6 +16,7 @@ import (
 	queueRepository "github.com/lin-snow/ech0/internal/repository/queue"
 	fileService "github.com/lin-snow/ech0/internal/service/file"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
+	"github.com/lin-snow/ech0/internal/storage"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"go.uber.org/zap"
 )
@@ -26,6 +27,7 @@ type Tasker struct {
 	settingService settingService.Service
 	publisher      *publisher.Publisher
 	queueRepo      *queueRepository.QueueRepository
+	storageManager *storage.Manager
 	started        bool
 	mu             sync.Mutex
 }
@@ -41,6 +43,7 @@ func NewTasker(
 	settingService settingService.Service,
 	publisher *publisher.Publisher,
 	queueRepo *queueRepository.QueueRepository,
+	storageManager *storage.Manager,
 ) *Tasker {
 	scheduler, err := gocron.NewScheduler()
 	if err != nil {
@@ -53,6 +56,7 @@ func NewTasker(
 		settingService: settingService,
 		publisher:      publisher,
 		queueRepo:      queueRepo,
+		storageManager: storageManager,
 	}
 }
 
@@ -185,19 +189,21 @@ func (t *Tasker) ScheduleBackupTask(cronExpression string) error {
 		gocron.CronJob(cronExpression, withSeconds),
 		gocron.NewTask(
 			func() {
-				// 执行备份
-				path, fileName, err := backup.ExecuteBackup()
+				ctx := context.Background()
+
+				backupPath, fileName, err := backup.ExecuteBackup()
 				if err != nil {
 					logUtil.GetLogger().Error("Failed to execute scheduled backup",
-						zap.String("path", path),
+						zap.String("path", backupPath),
 						zap.String("fileName", fileName),
 						zap.Error(err))
 					return
 				}
 
-				// 发布备份完成事件
+				t.tryUploadBackupToS3(ctx, backupPath, fileName)
+
 				if err := t.publisher.SystemBackup(
-					context.Background(),
+					ctx,
 					contracts.SystemBackupEvent{Info: "System scheduled backup completed"},
 				); err != nil {
 					logUtil.GetLogger().
@@ -245,6 +251,27 @@ func (t *Tasker) ApplyBackupSchedule(schedule settingModel.BackupSchedule) error
 	}
 	logUtil.GetLogger().Info("Backup schedule applied successfully")
 	return nil
+}
+
+func (t *Tasker) tryUploadBackupToS3(ctx context.Context, backupPath, fileName string) {
+	if t.storageManager == nil {
+		return
+	}
+	selector := t.storageManager.GetSelector()
+	if selector == nil || !selector.ObjectEnabled() {
+		return
+	}
+
+	cfg := t.storageManager.GetStorageConfig(ctx)
+	s3FS, err := backup.BuildBackupS3FS(cfg)
+	if err != nil {
+		logUtil.GetLogger().Warn("Failed to build S3 FS for backup upload", zap.Error(err))
+		return
+	}
+
+	if err := backup.UploadToS3(ctx, backupPath, fileName, s3FS); err != nil {
+		logUtil.GetLogger().Warn("Failed to upload backup to S3", zap.Error(err))
+	}
 }
 
 // InboxTask 定时处理Inbox任务

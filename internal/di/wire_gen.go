@@ -153,7 +153,7 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 	connectRepository := repository11.NewConnectRepository(dbProvider)
 	connectService := service9.NewConnectService(tx, connectRepository, echoRepository, commonService, settingService)
 	connectHandler := handler11.NewConnectHandler(connectService)
-	backupService := service10.NewBackupService(commonService, publisherPublisher)
+	backupService := service10.NewBackupService(commonService, publisherPublisher, manager)
 	backupHandler := handler12.NewBackupHandler(backupService)
 	migratorService := service11.NewMigratorService(commonService, keyValueRepository, manager, appCache)
 	migrationHandler := handler13.NewMigrationHandler(migratorService)
@@ -195,7 +195,7 @@ func BuildTasker(dbProvider func() *gorm.DB, appCache cache.ICache[string, any],
 	webhookRepository := repository.NewWebhookRepository(dbProvider)
 	settingService := service2.NewSettingService(tx, commonService, fileService, manager, keyValueRepository, settingRepository, webhookRepository, publisherPublisher)
 	queueRepository := repository2.NewQueueRepository(dbProvider)
-	tasker := task.NewTasker(fileService, settingService, publisherPublisher, queueRepository)
+	tasker := task.NewTasker(fileService, settingService, publisherPublisher, queueRepository, manager)
 	return tasker, nil
 }
 
