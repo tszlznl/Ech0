@@ -83,23 +83,11 @@ const { openConfirm } = useBaseDialog()
 
 // 按标签过滤内容
 const handleFilterByTag = (tag: App.Api.Ech0.Tag) => {
-  const wasFiltering = echoStore.isFilteringMode
+  if (!tag) return
 
-  // 重置状态
-  echoStore.filteredTag = null
-  echoStore.refreshEchosForFilter()
-
-  if (tag) {
-    // 开始过滤
-    echoStore.filteredTag = tag
-    echoStore.isFilteringMode = true
-
-    // 如果已经在过滤模式下（组件已挂载），需要手动触发获取数据
-    // 如果不是在过滤模式下，切换会导致组件挂载，onMounted会自动获取数据
-    if (wasFiltering) {
-      echoStore.getEchosByPageForFilter()
-    }
-  }
+  echoStore.filteredTag = tag
+  echoStore.isFilteringMode = true
+  echoStore.refreshEchos()
 }
 
 // 删除标签

@@ -20,6 +20,7 @@ type Service interface {
 	GetAllTags() ([]model.Tag, error)
 	DeleteTag(ctx context.Context, id string) error
 	GetEchosByTagId(ctx context.Context, tagId string, pageQueryDto commonModel.PageQueryDto) (commonModel.PageQueryResult[[]model.Echo], error)
+	QueryEchos(ctx context.Context, queryDto commonModel.EchoQueryDto) (commonModel.PageQueryResult[[]model.Echo], error)
 }
 
 type (
@@ -41,4 +42,5 @@ type Repository interface {
 	IncrementTagUsageCount(ctx context.Context, tagID string) error
 	DeleteTagById(ctx context.Context, id string) error
 	GetEchosByTagId(tagID string, page, pageSize int, search string, showPrivate bool) ([]model.Echo, int64, error)
+	QueryEchos(queryDto commonModel.EchoQueryDto, showPrivate bool) ([]model.Echo, int64, error)
 }

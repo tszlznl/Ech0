@@ -47,7 +47,7 @@
         class="mx-auto my-5 text-center echos-toolbar"
       >
         <p class="text-xl text-[var(--color-text-muted)] flex items-center justify-center">
-          {{ t('homeFeed.noMore') }}<Flowers />
+          {{ echoStore.isFilteringMode ? t('homeFeed.noMoreFiltered') : t('homeFeed.noMore') }}<Flowers />
         </p>
       </div>
     </Transition>
@@ -91,6 +91,7 @@ const zenStore = useZenStore()
 const { t } = useI18n()
 const { SystemSetting } = storeToRefs(settingStore)
 const { isZenMode } = storeToRefs(zenStore)
+const { isFilteringMode } = storeToRefs(echoStore)
 const footerContent = computed(
   () => SystemSetting.value.footer_content || SystemSetting.value.ICP_number,
 )
@@ -218,6 +219,11 @@ watch(
     ensureScrollableInZen()
   },
 )
+
+// 过滤模式切换时（进入/退出/切换标签），刷新列表
+watch(isFilteringMode, () => {
+  echoStore.refreshEchos()
+})
 
 onBeforeUnmount(() => {
   if (scrollListenerAttachedEl) {

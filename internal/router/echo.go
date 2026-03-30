@@ -14,11 +14,15 @@ func setupEchoRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 
 	// Auth
 	// 读接口保留“可匿名降级”行为：无 token 或无效 token 时由 JWT 中间件降级为匿名用户继续访问。
+	appRouterGroup.AuthRouterGroup.POST("/echo/query", h.EchoHandler.QueryEchos())
+
+	// Deprecated: 以下分页/标签查询接口保留向后兼容，请优先使用 POST /echo/query
 	appRouterGroup.AuthRouterGroup.GET("/echo/page", h.EchoHandler.GetEchosByPage())
 	appRouterGroup.AuthRouterGroup.POST("/echo/page", h.EchoHandler.GetEchosByPage())
+	appRouterGroup.AuthRouterGroup.GET("/echo/tag/:tagid", h.EchoHandler.GetEchosByTagId())
+
 	appRouterGroup.AuthRouterGroup.GET("/echo/today", h.EchoHandler.GetTodayEchos())
 	appRouterGroup.AuthRouterGroup.GET("/echo/:id", h.EchoHandler.GetEchoById())
-	appRouterGroup.AuthRouterGroup.GET("/echo/tag/:tagid", h.EchoHandler.GetEchosByTagId())
 	appRouterGroup.AuthRouterGroup.POST(
 		"/echo",
 		middleware.RequireScopes(authModel.ScopeEchoWrite),

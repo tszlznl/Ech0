@@ -367,6 +367,100 @@ func (echoRepository *EchoRepository) IncrementTagUsageCount(
 		UpdateColumn("usage_count", gorm.Expr("usage_count + ?", 1)).Error
 }
 
+func (echoRepository *EchoRepository) QueryEchos(
+	queryDto commonModel.EchoQueryDto,
+	showPrivate bool,
+) ([]model.Echo, int64, error) {
+	var (
+		echos []model.Echo
+		total int64
+	)
+
+	hasTagFilter := len(queryDto.TagIDs) > 0
+
+	sortColumn := "echos.created_at"
+	if queryDto.SortBy == "fav_count" {
+		sortColumn = "echos.fav_count"
+	}
+	sortDir := "DESC"
+	if queryDto.SortOrder == "asc" {
+		sortDir = "ASC"
+	}
+	orderClause := sortColumn + " " + sortDir
+
+	applyFilters := func(db *gorm.DB) *gorm.DB {
+		if hasTagFilter {
+			db = db.Joins("JOIN echo_tags ON echo_tags.echo_id = echos.id").
+				Where("echo_tags.tag_id IN ?", queryDto.TagIDs)
+		}
+		if !showPrivate {
+			db = db.Where("echos.private = ?", false)
+		}
+		if queryDto.Search != "" {
+			db = db.Where("echos.content LIKE ?", "%"+queryDto.Search+"%")
+		}
+		return db
+	}
+
+	countQuery := applyFilters(echoRepository.db().Model(&model.Echo{}))
+	if hasTagFilter {
+		if err := countQuery.Distinct("echos.id").Count(&total).Error; err != nil {
+			return nil, 0, err
+		}
+	} else {
+		if err := countQuery.Count(&total).Error; err != nil {
+			return nil, 0, err
+		}
+	}
+
+	offset := (queryDto.Page - 1) * queryDto.PageSize
+
+	if hasTagFilter {
+		var echoIDs []string
+		idsQuery := applyFilters(echoRepository.db().Model(&model.Echo{}))
+		if err := idsQuery.
+			Distinct("echos.id").
+			Order(orderClause).
+			Limit(queryDto.PageSize).
+			Offset(offset).
+			Pluck("echos.id", &echoIDs).Error; err != nil {
+			return nil, 0, err
+		}
+		if len(echoIDs) == 0 {
+			return []model.Echo{}, total, nil
+		}
+		if err := echoRepository.db().
+			Where("id IN ?", echoIDs).
+			Preload("EchoFiles", func(db *gorm.DB) *gorm.DB {
+				return db.Order("echo_files.sort_order ASC")
+			}).
+			Preload("EchoFiles.File").
+			Preload("Extension").
+			Preload("Tags").
+			Order(orderClause).
+			Find(&echos).Error; err != nil {
+			return nil, 0, err
+		}
+	} else {
+		query := applyFilters(echoRepository.db().Model(&model.Echo{}))
+		if err := query.
+			Preload("EchoFiles", func(db *gorm.DB) *gorm.DB {
+				return db.Order("echo_files.sort_order ASC")
+			}).
+			Preload("EchoFiles.File").
+			Preload("Extension").
+			Preload("Tags").
+			Limit(queryDto.PageSize).
+			Offset(offset).
+			Order(orderClause).
+			Find(&echos).Error; err != nil {
+			return nil, 0, err
+		}
+	}
+
+	return echos, total, nil
+}
+
 func (echoRepository *EchoRepository) GetEchosByTagId(
 	tagId string,
 	page, pageSize int,

@@ -103,37 +103,16 @@ func (echoService *EchoService) PostEcho(ctx context.Context, newEcho *model.Ech
 	return nil
 }
 
+// GetEchosByPage Deprecated: use QueryEchos instead. Kept for backward compatibility.
 func (echoService *EchoService) GetEchosByPage(
 	ctx context.Context,
 	pageQueryDto commonModel.PageQueryDto,
 ) (commonModel.PageQueryResult[[]model.Echo], error) {
-	if pageQueryDto.Page < 1 {
-		pageQueryDto.Page = 1
-	}
-	if pageQueryDto.PageSize < 1 || pageQueryDto.PageSize > 100 {
-		pageQueryDto.PageSize = 10
-	}
-
-	userid := viewer.MustFromContext(ctx).UserID()
-	showPrivate := false
-	if userid != "" {
-		user, err := echoService.commonService.CommonGetUserByUserId(ctx, userid)
-		if err != nil {
-			return commonModel.PageQueryResult[[]model.Echo]{}, err
-		}
-		showPrivate = user.IsAdmin
-	}
-
-	echosByPage, total := echoService.echoRepository.GetEchosByPage(
-		pageQueryDto.Page,
-		pageQueryDto.PageSize,
-		pageQueryDto.Search,
-		showPrivate,
-	)
-	return commonModel.PageQueryResult[[]model.Echo]{
-		Items: echosByPage,
-		Total: total,
-	}, nil
+	return echoService.QueryEchos(ctx, commonModel.EchoQueryDto{
+		Page:     pageQueryDto.Page,
+		PageSize: pageQueryDto.PageSize,
+		Search:   pageQueryDto.Search,
+	})
 }
 
 func (echoService *EchoService) DeleteEchoById(ctx context.Context, id string) error {
@@ -354,18 +333,38 @@ func (echoService *EchoService) ProcessEchoTags(ctx context.Context, echo *model
 	return nil
 }
 
+// GetEchosByTagId Deprecated: use QueryEchos instead. Kept for backward compatibility.
 func (echoService *EchoService) GetEchosByTagId(
 	ctx context.Context,
 	tagId string,
 	pageQueryDto commonModel.PageQueryDto,
 ) (commonModel.PageQueryResult[[]model.Echo], error) {
-	if pageQueryDto.Page < 1 {
-		pageQueryDto.Page = 1
+	return echoService.QueryEchos(ctx, commonModel.EchoQueryDto{
+		Page:     pageQueryDto.Page,
+		PageSize: pageQueryDto.PageSize,
+		Search:   pageQueryDto.Search,
+		TagIDs:   []string{tagId},
+	})
+}
+
+func (echoService *EchoService) QueryEchos(
+	ctx context.Context,
+	queryDto commonModel.EchoQueryDto,
+) (commonModel.PageQueryResult[[]model.Echo], error) {
+	if queryDto.Page < 1 {
+		queryDto.Page = 1
 	}
-	if pageQueryDto.PageSize < 1 || pageQueryDto.PageSize > 100 {
-		pageQueryDto.PageSize = 10
+	if queryDto.PageSize < 1 || queryDto.PageSize > 100 {
+		queryDto.PageSize = 10
 	}
-	pageQueryDto.Search = strings.TrimSpace(pageQueryDto.Search)
+	queryDto.Search = strings.TrimSpace(queryDto.Search)
+
+	if queryDto.SortBy == "" {
+		queryDto.SortBy = "created_at"
+	}
+	if queryDto.SortOrder == "" {
+		queryDto.SortOrder = "desc"
+	}
 
 	userId := viewer.MustFromContext(ctx).UserID()
 	showPrivate := false
@@ -377,13 +376,7 @@ func (echoService *EchoService) GetEchosByTagId(
 		showPrivate = user.IsAdmin
 	}
 
-	echos, total, err := echoService.echoRepository.GetEchosByTagId(
-		tagId,
-		pageQueryDto.Page,
-		pageQueryDto.PageSize,
-		pageQueryDto.Search,
-		showPrivate,
-	)
+	echos, total, err := echoService.echoRepository.QueryEchos(queryDto, showPrivate)
 	if err != nil {
 		return commonModel.PageQueryResult[[]model.Echo]{}, err
 	}

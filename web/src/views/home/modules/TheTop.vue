@@ -106,8 +106,6 @@ const handleSearch = () => {
 
 const handleCancelFilter = () => {
   echoStore.isFilteringMode = false
-  echoStore.filteredTag = null
-  echoStore.refreshEchosForFilter()
 }
 
 const handleExitZenMode = () => {

@@ -1,6 +1,15 @@
 import { request, requestWithDirectUrlAndData } from '../request'
 
-// 分页获取Echos
+// 统一查询 Echos（支持分页、搜索、标签过滤、排序）
+export async function fetchQueryEchos(params: App.Api.Ech0.EchoQueryParams) {
+  return request<App.Api.Ech0.PaginationResult>({
+    url: `/echo/query`,
+    method: 'POST',
+    data: params,
+  })
+}
+
+// @deprecated 请使用 fetchQueryEchos
 export async function fetchGetEchosByPage(searchParams: App.Api.Ech0.ParamsByPagination) {
   return request<App.Api.Ech0.PaginationResult>({
     url: `/echo/page`,
@@ -84,7 +93,7 @@ export function fetchDeleteTagById(tagId: string) {
   })
 }
 
-// 根据标签查询Echos（支持分页）
+// @deprecated 请使用 fetchQueryEchos
 export async function fetchGetEchosByTagId(
   tagId: string,
   searchParams: App.Api.Ech0.ParamsByPagination,

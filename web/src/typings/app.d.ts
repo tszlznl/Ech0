@@ -164,6 +164,15 @@ declare namespace App {
         search?: string
       }
 
+      type EchoQueryParams = {
+        page: number
+        pageSize: number
+        search?: string
+        tagIds?: string[]
+        sortBy?: string
+        sortOrder?: string
+      }
+
       type Echo = {
         id: string
         content: string

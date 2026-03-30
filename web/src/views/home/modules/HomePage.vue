@@ -36,8 +36,7 @@
         <TheTop class="sm:px-4" />
         <div class="w-full h-2 bg-[var(--color-bg-canvas)]"></div>
       </div>
-      <TheEchos v-if="!isFilteringMode && !inboxMode" :scroll-target="mainColumn" />
-      <TheFilteredEchos v-else-if="isFilteringMode && !inboxMode" :scroll-target="mainColumn" />
+      <TheEchos v-if="!inboxMode" :scroll-target="mainColumn" />
       <TheInbox v-else />
     </div>
   </div>
@@ -47,9 +46,8 @@
 import TheTop from './TheTop.vue'
 import TheBoard from './TheBoard.vue'
 import TheEchos from './TheEchos.vue'
-import TheFilteredEchos from './TheFilteredEchos.vue'
 import { defineAsyncComponent, onMounted, ref, onBeforeUnmount } from 'vue'
-import { useUserStore, useEchoStore, useSettingStore, useInboxStore, useZenStore } from '@/stores'
+import { useUserStore, useSettingStore, useInboxStore, useZenStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { useBfCacheRestore } from '@/composables/useBfCacheRestore'
 
@@ -67,12 +65,10 @@ const TheCommentWidget = defineAsyncComponent(
 )
 
 const userStore = useUserStore()
-const echoStore = useEchoStore()
 const settingStore = useSettingStore()
 const inboxStore = useInboxStore()
 const zenStore = useZenStore()
 const { isLogin } = storeToRefs(userStore)
-const { isFilteringMode } = storeToRefs(echoStore)
 const { AgentSetting } = storeToRefs(settingStore)
 const { inboxMode } = storeToRefs(inboxStore)
 const { isZenMode } = storeToRefs(zenStore)

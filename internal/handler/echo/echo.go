@@ -60,8 +60,10 @@ func (echoHandler *EchoHandler) PostEcho() gin.HandlerFunc {
 
 // GetEchosByPage 获取Echo列表，支持分页, 兼容 GET Query 和 POST JSON 请求
 //
-//	@Summary		获取Echo列表（分页）
-//	@Description	获取Echo列表，支持分页，兼容 GET Query 和 POST JSON 请求
+// Deprecated: 请使用 POST /echo/query 替代
+//
+//	@Summary		获取Echo列表（分页）[Deprecated]
+//	@Description	Deprecated: 请使用 POST /echo/query 替代。获取Echo列表，支持分页，兼容 GET Query 和 POST JSON 请求
 //	@Tags			Echo
 //	@Accept			json
 //	@Produce		json
@@ -349,10 +351,48 @@ func (echoHandler *EchoHandler) DeleteTag() gin.HandlerFunc {
 	})
 }
 
+// QueryEchos 统一查询 Echo 列表
+//
+//	@Summary		统一查询 Echo 列表
+//	@Description	统一的 Echo 查询接口，支持分页、搜索、标签过滤、排序等组合条件
+//	@Tags			Echo
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		model.EchoQueryDto				true	"查询参数"
+//	@Success		200		{object}	handler.Response{data=object}	"查询成功"
+//	@Failure		200		{object}	handler.Response				"查询失败"
+//	@Router			/echo/query [post]
+func (echoHandler *EchoHandler) QueryEchos() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		var queryRequest commonModel.EchoQueryDto
+		if err := ctx.ShouldBindJSON(&queryRequest); err != nil {
+			return res.Response{
+				Msg: commonModel.INVALID_REQUEST_BODY,
+				Err: err,
+			}
+		}
+
+		result, err := echoHandler.echoService.QueryEchos(ctx.Request.Context(), queryRequest)
+		if err != nil {
+			return res.Response{
+				Msg: "",
+				Err: err,
+			}
+		}
+
+		return res.Response{
+			Data: result,
+			Msg:  commonModel.QUERY_ECHOS_SUCCESS,
+		}
+	})
+}
+
 // GetEchosByTagId 获取指定标签 ID 的 Echo 列表
 //
-//	@Summary		获取指定标签 ID 的 Echo 列表
-//	@Description	根据标签 ID 获取包含该标签的 Echo 列表，支持 query 分页与搜索
+// Deprecated: 请使用 POST /echo/query 的 tagIds 参数替代
+//
+//	@Summary		获取指定标签 ID 的 Echo 列表 [Deprecated]
+//	@Description	Deprecated: 请使用 POST /echo/query 的 tagIds 参数替代。根据标签 ID 获取包含该标签的 Echo 列表，支持 query 分页与搜索
 //	@Tags			Echo
 //	@Accept			json
 //	@Produce		json

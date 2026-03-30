@@ -22,6 +22,10 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		allowAnonymousForCurrentRoute := func() bool {
 			path := ctx.Request.URL.Path
 			method := ctx.Request.Method
+			// 统一查询接口（POST /api/echo/query）
+			if path == "/api/echo/query" && method == http.MethodPost {
+				return true
+			}
 			// 分页获取首页 Echo
 			if strings.HasPrefix(path, "/api/echo/page") {
 				return true

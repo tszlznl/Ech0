@@ -11,6 +11,18 @@ type PageQueryDto struct {
 	Search   string `json:"search"   form:"search"`
 }
 
+// EchoQueryDto 统一 Echo 查询接口的请求体
+//
+// swagger:model EchoQueryDto
+type EchoQueryDto struct {
+	Page      int      `json:"page"`
+	PageSize  int      `json:"pageSize"`
+	Search    string   `json:"search"`
+	TagIDs    []string `json:"tagIds"`
+	SortBy    string   `json:"sortBy"`
+	SortOrder string   `json:"sortOrder"`
+}
+
 // FileDto is the unified response for file operations.
 // The Key field is the single source of truth — URLs are resolved at runtime.
 //
