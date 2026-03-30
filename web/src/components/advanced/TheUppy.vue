@@ -147,6 +147,22 @@ async function getImageDimensionsFromUppyFile(
 const handlePaste = async (e: ClipboardEvent) => {
   if (!e.clipboardData) return
 
+  // Dashboard 在 document 级别注册了 handlePasteOnBody 来处理粘贴
+  // Dashboard 的逻辑是：无论焦点在哪里，只要有文件就添加到 Uppy
+  // 所以我们必须阻止事件冒泡，避免 Dashboard 也添加同样的文件
+
+  // 但如果我们焦点在 Dashboard 内部，应该让 Dashboard 处理，我们跳过
+  const dashboardEl = document.getElementById('uppy-dashboard')
+  const isFocusInDashboard = dashboardEl?.contains(document.activeElement)
+
+  if (isFocusInDashboard) {
+    // 焦点在 Dashboard 内，让 Dashboard 处理
+    return
+  }
+
+  // 阻止事件冒泡到 Dashboard 的处理器
+  e.stopPropagation()
+
   for (const item of e.clipboardData.items) {
     if (item.type.startsWith('image/')) {
       const file = item.getAsFile()
@@ -171,8 +187,6 @@ const handlePaste = async (e: ClipboardEvent) => {
           // Uppy 检测到重复文件时抛出 RestrictionError，静默跳过
           // 不需要额外处理，与其他上传方式的重复检测行为保持一致
         }
-        // 注意：不再手动调用 upload()
-        // 因为 Uppy 配置了 autoProceed: true，会自动开始上传
       }
     }
   }
@@ -269,8 +283,8 @@ const initUppy = () => {
     })
   }
 
-  // 监听粘贴事件
-  document.addEventListener('paste', handlePaste)
+  // 监听粘贴事件（使用 capture 模式，在事件捕获阶段处理，比 Dashboard 的冒泡处理器更早执行）
+  document.addEventListener('paste', handlePaste, { capture: true })
 
   // 添加文件时
   uppy.on('files-added', () => {
@@ -527,7 +541,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  document.removeEventListener('paste', handlePaste)
+  document.removeEventListener('paste', handlePaste, { capture: true })
 })
 </script>
 
