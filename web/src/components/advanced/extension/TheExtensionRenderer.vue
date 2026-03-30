@@ -4,19 +4,16 @@
     <VideoCard
       v-else-if="echo.extension.type === ExtensionType.VIDEO"
       :video-id="echo.extension.payload.videoId"
-      class="px-2 mx-auto"
     />
     <GithubCard
       v-else-if="
         echo.extension.type === ExtensionType.GITHUBPROJ && echo.extension.payload?.repoUrl
       "
       :github-url="echo.extension.payload.repoUrl"
-      class="px-2 mx-auto"
     />
     <WebsiteCard
       v-else-if="echo.extension.type === ExtensionType.WEBSITE"
       :website="echo.extension.payload"
-      class="px-2 mx-auto"
     />
   </div>
 </template>

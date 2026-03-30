@@ -1,5 +1,5 @@
 <template>
-  <div class="px-9 md:px-11">
+  <div class="px-2">
     <div class="widget bg-transparent! w-full max-w-[19rem] mx-auto rounded-md p-4">
       <div class="connect-head mb-2">
         <div class="connect-icon-chip">
@@ -20,7 +20,13 @@
             :key="index"
             class="relative flex flex-col items-center justify-center w-8 h-8 min-w-[2rem] min-h-[2rem] flex-none border-2 border-[var(--color-border-subtle)] shadow-sm rounded-full hover:shadow-md transition duration-200 ease-in-out group"
           >
-            <a :href="connect.server_url" target="_blank" class="block w-full h-full">
+            <a
+              :href="connect.server_url"
+              target="_blank"
+              class="block w-full h-full"
+              @mouseenter="showTooltip(connect, $event)"
+              @mouseleave="hideTooltip"
+            >
               <img
                 :src="connect.logo"
                 alt="avatar"
@@ -36,15 +42,6 @@
                 }"
               ></span>
             </a>
-            <div
-              class="absolute z-10 left-1/2 -translate-x-1/2 top-10 min-w-max bg-gray-800 text-white text-xs rounded px-3 py-2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-lg"
-            >
-              <div class="font-bold mb-1">{{ connect.server_name }}</div>
-              <div>{{ t('connectWidget.tooltipOwner') }}: {{ connect.sys_username || '-' }}</div>
-              <div>{{ t('connectWidget.tooltipTotal') }}: {{ connect.total_echos ?? 0 }}</div>
-              <div>{{ t('connectWidget.tooltipToday') }}: {{ connect.today_echos ?? 0 }}</div>
-              <div>{{ t('connectWidget.tooltipVersion') }}: {{ connect.version || '-' }}</div>
-            </div>
           </div>
         </div>
       </div>
@@ -54,6 +51,17 @@
         </div>
       </div>
     </div>
+    <div
+      v-if="tooltip.visible"
+      class="fixed z-50 min-w-max bg-gray-800 text-white text-xs rounded px-3 py-2 shadow-lg pointer-events-none"
+      :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px' }"
+    >
+      <div class="font-bold mb-1">{{ tooltip.data?.server_name }}</div>
+      <div>{{ t('connectWidget.tooltipOwner') }}: {{ tooltip.data?.sys_username || '-' }}</div>
+      <div>{{ t('connectWidget.tooltipTotal') }}: {{ tooltip.data?.total_echos ?? 0 }}</div>
+      <div>{{ t('connectWidget.tooltipToday') }}: {{ tooltip.data?.today_echos ?? 0 }}</div>
+      <div>{{ t('connectWidget.tooltipVersion') }}: {{ tooltip.data?.version || '-' }}</div>
+    </div>
   </div>
 </template>
 
@@ -61,13 +69,33 @@
 import Connect from '@/components/icons/connect.vue'
 import { useConnectStore } from '@/stores'
 import { storeToRefs } from 'pinia'
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const connectStore = useConnectStore()
 const { t } = useI18n()
 const { getConnectInfo } = connectStore
 const { loading, connectsInfo } = storeToRefs(connectStore)
+
+const tooltip = ref<{
+  visible: boolean
+  x: number
+  y: number
+  data: (typeof connectsInfo.value)[number] | null
+}>({ visible: false, x: 0, y: 0, data: null })
+
+function showTooltip(connect: (typeof connectsInfo.value)[number], event: MouseEvent) {
+  const target = event.currentTarget as HTMLElement
+  const rect = target.getBoundingClientRect()
+  tooltip.value.data = connect
+  tooltip.value.x = rect.left
+  tooltip.value.y = rect.bottom + 6
+  tooltip.value.visible = true
+}
+
+function hideTooltip() {
+  tooltip.value.visible = false
+}
 
 const getColor = (count: number): string => {
   if (count >= 4) return 'var(--color-accent)'

@@ -1,5 +1,5 @@
 <template>
-  <div class="px-9 md:px-11">
+  <div class="px-2">
     <div class="widget bg-transparent! w-full max-w-[19rem] mx-auto rounded-md p-4">
       <div class="heatmap-head mb-2">
         <div class="heatmap-date-chip">{{ displayDate }}</div>

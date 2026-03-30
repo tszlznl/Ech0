@@ -218,7 +218,6 @@ onBeforeUnmount(() => {
 
 .apple-frame {
   width: 100%;
-  max-width: 660px;
   min-height: 175px;
   overflow: hidden;
   border-radius: inherit;
@@ -227,7 +226,6 @@ onBeforeUnmount(() => {
 
 .extension-card-invalid {
   width: 100%;
-  max-width: 24rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border-subtle);
   background: var(--color-bg-surface);

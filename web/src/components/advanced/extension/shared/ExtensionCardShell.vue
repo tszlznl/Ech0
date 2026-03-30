@@ -40,12 +40,9 @@ const paddingClass = computed(() => {
   overflow: hidden;
 }
 
-.extension-card-shell--default {
-  max-width: 24rem;
-}
-
+.extension-card-shell--default,
 .extension-card-shell--wide {
-  max-width: 41.25rem;
+  max-width: 100%;
 }
 
 .extension-card-shell--padding-none {

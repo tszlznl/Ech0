@@ -1,5 +1,5 @@
 <template>
-  <div v-if="AgentSetting.enable" class="px-9 md:px-11">
+  <div v-if="AgentSetting.enable" class="px-2">
     <div class="widget bg-transparent! w-full max-w-[19rem] mx-auto rounded-md p-4">
       <div class="recent-head mb-2">
         <div class="recent-icon-chip">
