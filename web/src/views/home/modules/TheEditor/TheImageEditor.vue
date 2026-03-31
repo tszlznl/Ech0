@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="editor-image-panel">
     <h2 class="text-[var(--color-text-secondary)] font-bold my-2">
       {{ t('editor.imageSectionTitle') }}
     </h2>
@@ -137,4 +137,11 @@ const layoutOptions = computed(() => [
 ])
 </script>
 
-<style scoped></style>
+<style scoped>
+.editor-image-panel {
+  margin: 0.75rem 0;
+  padding: 0.75rem;
+  border: 1px dashed var(--md-editor-mini-border);
+  border-radius: var(--radius-xs);
+}
+</style>

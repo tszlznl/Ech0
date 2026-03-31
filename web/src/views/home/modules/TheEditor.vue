@@ -1,11 +1,8 @@
 <template>
-  <div
-    v-if="ShowEditor"
-    class="bg-[var(--color-bg-surface)] ring-1 ring-[var(--color-border-subtle)] ring-inset rounded-[var(--radius-lg)] mx-auto shadow-xs hover:shadow-sm"
-  >
-    <div class="mx-auto w-full px-3 py-4">
-      <div class="rounded-[var(--radius-md)] p-2 sm:p-3 mb-1">
-        <TheMdEditor v-if="currentMode === Mode.ECH0" class="rounded-[var(--radius-md)]" />
+  <div v-if="ShowEditor" class="editor-shell">
+    <div class="editor-shell__inner">
+      <div class="editor-shell__body">
+        <TheMdEditor v-if="currentMode === Mode.ECH0" class="rounded-[var(--radius-xs)]" />
         <TheImageEditor v-if="currentMode === Mode.Image" />
         <TheInboxModeEditor v-if="currentMode === Mode.INBOX" />
         <TheModePanel v-if="currentMode === Mode.Panel" />
@@ -130,3 +127,37 @@ watch(
   },
 )
 </script>
+
+<style scoped>
+.editor-shell {
+  position: relative;
+  z-index: 24;
+  isolation: isolate;
+  margin: 0 auto;
+  border-radius: var(--radius-xs);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.editor-shell__inner {
+  width: 100%;
+  padding: 0.2rem;
+}
+
+.editor-shell__body {
+  margin-bottom: 0.15rem;
+  border-radius: var(--radius-xs);
+  padding: 0.15rem;
+}
+
+@media (min-width: 640px) {
+  .editor-shell__inner {
+    padding: 0.25rem;
+  }
+
+  .editor-shell__body {
+    padding: 0.2rem;
+  }
+}
+</style>

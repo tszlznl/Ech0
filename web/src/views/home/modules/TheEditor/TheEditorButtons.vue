@@ -1,38 +1,32 @@
 <template>
-  <div class="flex flex-row items-center justify-between px-2">
-    <div class="flex flex-row items-center gap-2">
+  <div class="editor-actions">
+    <div class="editor-actions__left">
       <!-- ShowMore -->
-      <div>
-        <BaseButton
-          :icon="currentMode === Mode.ECH0 ? Advance : Back"
-          @click="handleChangeMode"
-          :class="['w-8 h-8 sm:w-9 sm:h-9 rounded-md'].join(' ')"
-          :tooltip="currentMode === Mode.ECH0 ? t('editor.more') : t('editor.backToEditor')"
-        />
-      </div>
+      <BaseButton
+        :icon="currentMode === Mode.ECH0 ? Advance : Back"
+        @click="handleChangeMode"
+        :class="['w-8 h-8 sm:w-9 sm:h-9 rounded-xs'].join(' ')"
+        :tooltip="currentMode === Mode.ECH0 ? t('editor.more') : t('editor.backToEditor')"
+      />
       <!-- Photo Upload -->
-      <div v-if="currentMode === Mode.ECH0">
-        <BaseButton
-          :icon="ImageUpload"
-          @click="handleAddImageMode"
-          class="w-8 h-8 sm:w-9 sm:h-9 rounded-md"
-          :tooltip="t('editor.addImage')"
-        />
-      </div>
+      <BaseButton
+        v-if="currentMode === Mode.ECH0"
+        :icon="ImageUpload"
+        @click="handleAddImageMode"
+        class="w-8 h-8 sm:w-9 sm:h-9 rounded-xs"
+        :tooltip="t('editor.addImage')"
+      />
       <!-- Privacy Set -->
-      <div v-if="currentMode === Mode.ECH0">
-        <BaseButton
-          :icon="echoToAdd.private ? Private : Public"
-          @click="handlePrivate"
-          class="w-8 h-8 sm:w-9 sm:h-9 rounded-md"
-          :tooltip="t('editor.togglePrivacy')"
-        />
-      </div>
+      <BaseButton
+        v-if="currentMode === Mode.ECH0"
+        :icon="echoToAdd.private ? Private : Public"
+        @click="handlePrivate"
+        class="w-8 h-8 sm:w-9 sm:h-9 rounded-xs"
+        :tooltip="t('editor.togglePrivacy')"
+      />
       <!-- Tag Add or Select -->
-      <div v-if="currentMode === Mode.ECH0">
-        <div
-          class="flex items-center justify-between rounded-sm border border-[var(--color-border-subtle)] border-dashed px-1"
-        >
+      <div v-if="currentMode === Mode.ECH0" class="editor-actions__tag">
+        <div class="editor-actions__tag-box">
           <span class="text-[var(--color-text-muted)]">#</span>
           <BaseCombobox
             :key="tagOptions.length"
@@ -40,19 +34,19 @@
             :multiple="false"
             :options="tagOptions"
             :placeholder="t('editor.tagPlaceholder')"
-            wrapper-class="border-transparent shadow-none bg-transparent"
-            input-class="w-16 h-7 text-[var(--color-text-secondary)]"
+            wrapper-class="h-full border-transparent shadow-none bg-transparent rounded-[var(--radius-xs)]"
+            input-class="w-20 h-full text-[var(--color-text-secondary)]"
           />
         </div>
       </div>
     </div>
 
-    <div class="flex flex-row items-center gap-2">
+    <div class="editor-actions__right">
       <!-- Published Info -->
       <div v-if="hasContent || hasFile || hasExtension" class="relative group">
         <Info class="w-6 h-6 text-[var(--color-text-muted)] hover:text-[var(--color-text-muted)]" />
         <div
-          class="absolute right-0 top-full z-10 mt-2 whitespace-nowrap rounded-md border border-[var(--color-border-subtle)] border-dashed bg-[var(--color-bg-surface)] px-2 py-1 text-xs shadow-md opacity-0 translate-y-1 scale-95 pointer-events-none transition-all duration-200 ease-out group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100 group-hover:pointer-events-auto"
+          class="editor-actions__info-pop"
         >
           <div v-if="infoTooltipLines.length > 0">
             <div class="mb-1 font-medium text-[var(--color-text-secondary)]">
@@ -83,7 +77,7 @@
         <BaseButton
           :icon="Publish"
           @click="handleAddorUpdate"
-          class="w-8 h-8 sm:w-9 sm:h-9 rounded-md"
+          class="w-8 h-8 sm:w-9 sm:h-9 rounded-xs editor-actions__cta"
           :tooltip="t('editor.publishEcho')"
         />
       </div>
@@ -92,7 +86,7 @@
         <BaseButton
           :icon="ExitUpdate"
           @click="handleExitUpdateMode"
-          class="w-8 h-8 sm:w-9 sm:h-9 rounded-md"
+          class="w-8 h-8 sm:w-9 sm:h-9 rounded-xs editor-actions__cta"
           :tooltip="t('editor.exitUpdateMode')"
         />
       </div>
@@ -101,7 +95,7 @@
         <BaseButton
           :icon="Update"
           @click="handleAddorUpdate"
-          class="w-8 h-8 sm:w-9 sm:h-9 rounded-md"
+          class="w-8 h-8 sm:w-9 sm:h-9 rounded-xs editor-actions__cta"
           :tooltip="t('editor.updateEcho')"
         />
       </div>
@@ -217,4 +211,97 @@ const handleExitUpdateMode = () => {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.editor-actions {
+  --btn-bg-color: var(--md-editor-mini-btn-bg);
+  --btn-ring-color: color-mix(in srgb, var(--md-editor-mini-btn-border), var(--color-bg-canvas) 26%);
+  --btn-hover-bg-color: color-mix(in srgb, var(--md-editor-mini-btn-hover-bg), var(--color-bg-canvas) 38%);
+  --btn-hover-border-color: color-mix(
+    in srgb,
+    var(--md-editor-toolbar-btn-hover-border),
+    var(--color-bg-canvas) 20%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.3rem 0.35rem 0.1rem;
+}
+
+.editor-actions__left {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  overflow: visible;
+}
+
+.editor-actions__tag {
+  min-width: 0;
+  flex: 0 1 9rem;
+}
+
+.editor-actions__tag-box {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  height: 2rem;
+  border-radius: var(--radius-xs);
+  border: 1px dashed var(--md-editor-mini-btn-border);
+  background: var(--md-editor-mini-btn-bg);
+  padding: 0 0.35rem;
+}
+
+@media (min-width: 640px) {
+  .editor-actions__tag-box {
+    height: 2.25rem;
+  }
+}
+
+.editor-actions__right {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+}
+
+.editor-actions__info-pop {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 10;
+  margin-top: 0.5rem;
+  white-space: nowrap;
+  border-radius: var(--radius-xs);
+  border: 1px dashed var(--md-editor-mini-btn-border);
+  background: var(--md-editor-mini-bg);
+  padding: 0.4rem 0.55rem;
+  font-size: 0.75rem;
+  box-shadow: var(--md-editor-mini-shell-shadow);
+  opacity: 0;
+  transform: translateY(0.25rem) scale(0.96);
+  pointer-events: none;
+  transition: all 0.2s ease-out;
+}
+
+.group:hover .editor-actions__info-pop {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.editor-actions__cta {
+  box-shadow: var(--md-editor-mini-shell-shadow);
+}
+
+@media (max-width: 639.98px) {
+  .editor-actions {
+    gap: 0.45rem;
+  }
+}
+</style>

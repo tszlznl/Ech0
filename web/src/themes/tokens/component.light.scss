@@ -74,6 +74,14 @@
 
   --md-editor-bg-color: var(--color-bg-surface);
   --md-editor-border-color: var(--color-border-subtle);
+  --md-editor-mini-shell-bg: color-mix(in srgb, var(--color-bg-canvas), var(--color-bg-surface) 34%);
+  --md-editor-mini-shell-border: color-mix(in srgb, var(--color-border-subtle), var(--color-bg-canvas) 24%);
+  --md-editor-mini-shell-shadow: 0 1px 1px oklch(26% 0.01 60 / 0.04);
+  --md-editor-mini-bg: color-mix(in srgb, var(--color-bg-surface), var(--color-bg-canvas) 32%);
+  --md-editor-mini-border: color-mix(in srgb, var(--color-border-subtle), var(--color-bg-canvas) 18%);
+  --md-editor-mini-btn-bg: color-mix(in srgb, var(--color-bg-surface), var(--color-bg-canvas) 24%);
+  --md-editor-mini-btn-border: color-mix(in srgb, var(--color-border-subtle), var(--color-bg-canvas) 20%);
+  --md-editor-mini-btn-hover-bg: color-mix(in srgb, var(--color-bg-muted), var(--color-bg-canvas) 12%);
   --md-editor-divider-color: var(--color-border-subtle);
   --md-editor-toolbar-btn-bg: var(--color-bg-surface);
   --md-editor-toolbar-btn-text: var(--color-text-secondary);
