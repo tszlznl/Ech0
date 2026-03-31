@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto mb-1 sm:mb-0">
+  <div class="w-full px-2 mb-1 sm:mb-0">
     <div class="w-full flex flex-col gap-3">
       <div class="flex justify-start items-center gap-2 w-full flex-wrap">
         <BaseInput
@@ -8,7 +8,7 @@
           type="text"
           v-model="searchContent"
           :placeholder="t('homeTop.searchPlaceholder')"
-          class="h-10 w-full! max-w-none bg-[var(--input-bg-color)]"
+          class="h-10 w-full! max-w-none rounded-[var(--radius-xs)]! bg-[var(--input-bg-color)]"
           @keyup.enter="($event.target as HTMLInputElement).blur()"
           @blur="handleSearch"
         />

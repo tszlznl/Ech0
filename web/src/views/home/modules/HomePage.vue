@@ -5,17 +5,10 @@
         <div
           ref="mainColumn"
           class="home-main"
-          :style="{ '--date-sticky-top': echoDateStickyTop }"
         >
-          <!-- 整个顶部区域作为一个 sticky 块，内部不再各自 sticky -->
-          <div ref="topStickyBar" class="home-sticky">
-            <div class="home-main-track">
-              <HomeHeader />
-              <HomeBanner />
-            </div>
-          </div>
-
           <div class="home-main-track">
+            <HomeHeader />
+            <HomeBanner />
             <TheEditor v-if="isLogin" />
 
             <TheEchos
@@ -50,13 +43,10 @@ import TheEchos from './TheEchos.vue'
 import { defineAsyncComponent, onMounted, ref, onBeforeUnmount } from 'vue'
 import { useUserStore, useInboxStore, useZenStore } from '@/stores'
 import { storeToRefs } from 'pinia'
-import { useBfCacheRestore } from '@/composables/useBfCacheRestore'
-import { useI18n } from 'vue-i18n'
 
 const TheEditor = defineAsyncComponent(() => import('./TheEditor.vue'))
 const TheInbox = defineAsyncComponent(() => import('./TheInbox.vue'))
 
-const { t } = useI18n()
 const userStore = useUserStore()
 const inboxStore = useInboxStore()
 const zenStore = useZenStore()
@@ -65,27 +55,8 @@ const { inboxMode } = storeToRefs(inboxStore)
 const { isZenMode } = storeToRefs(zenStore)
 
 const mainColumn = ref<HTMLElement | null>(null)
-const topStickyBar = ref<HTMLElement | null>(null)
-const echoDateStickyTop = ref('0px')
 const TIMELINE_SCROLL_KEY = 'home:timeline:scrollTop'
 let timelineScrollRaf: number | null = null
-let stickyBarObserver: ResizeObserver | null = null
-
-const updateStickyTop = () => {
-  if (window.innerWidth >= 640 && topStickyBar.value) {
-    echoDateStickyTop.value = `${topStickyBar.value.offsetHeight - 1}px`
-  } else {
-    echoDateStickyTop.value = '0px'
-  }
-}
-
-const updatePosition = () => {
-  updateStickyTop()
-}
-
-const schedulePositionUpdate = () => {
-  runWithBfCacheGuard(updatePosition, 120)
-}
 
 const saveTimelineScrollPosition = () => {
   if (!mainColumn.value || timelineScrollRaf !== null) return
@@ -106,22 +77,10 @@ const restoreTimelineScrollPosition = () => {
   mainColumn.value.scrollTop = scrollTop
 }
 
-const { runWithBfCacheGuard } = useBfCacheRestore({
-  onRestore: () => {
-    schedulePositionUpdate()
-  },
-})
-
 onMounted(async () => {
-  schedulePositionUpdate()
-  window.addEventListener('resize', schedulePositionUpdate)
   if (mainColumn.value) {
     mainColumn.value.scrollLeft = 0
     mainColumn.value.addEventListener('scroll', saveTimelineScrollPosition, { passive: true })
-  }
-  if (topStickyBar.value) {
-    stickyBarObserver = new ResizeObserver(updateStickyTop)
-    stickyBarObserver.observe(topStickyBar.value)
   }
   window.requestAnimationFrame(() => {
     restoreTimelineScrollPosition()
@@ -129,17 +88,12 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', schedulePositionUpdate)
   if (mainColumn.value) {
     mainColumn.value.removeEventListener('scroll', saveTimelineScrollPosition)
   }
   if (timelineScrollRaf !== null) {
     window.cancelAnimationFrame(timelineScrollRaf)
     timelineScrollRaf = null
-  }
-  if (stickyBarObserver) {
-    stickyBarObserver.disconnect()
-    stickyBarObserver = null
   }
 })
 </script>
@@ -163,24 +117,25 @@ onBeforeUnmount(() => {
 
 .home-shell {
   max-width: 50rem;
-  margin-left: auto;
-  margin-right: auto;
-  padding: 1rem 0.75rem 2.5rem;
+  margin: 1rem auto 2.5rem;
+  padding: 0 0.75rem;
 }
 
 @media (min-width: 640px) {
   .home-shell {
-    padding: 1.25rem 1rem 2rem;
+    margin-top: 1.25rem;
+    margin-bottom: 2rem;
+    padding: 0 1rem;
   }
 }
 
 @media (min-width: 820px) {
   .home-shell {
-    padding: 1.5rem 1rem 2rem;
+    margin: 0 auto;
+    padding: 0 1rem;
     display: flex;
     flex-direction: column;
     height: 100%;
-    box-sizing: border-box;
   }
 }
 
@@ -236,6 +191,7 @@ onBeforeUnmount(() => {
     overscroll-behavior: contain;
     flex: 0 1 var(--home-main-max);
     max-width: var(--home-main-max);
+    padding: 1.5rem 0 2rem;
   }
 
   .home-layout--zen .home-main {
@@ -244,15 +200,6 @@ onBeforeUnmount(() => {
     margin-left: auto;
     margin-right: auto;
   }
-}
-
-/* 整个顶部（头像 + 欢迎）作为一个 sticky 块 */
-.home-sticky {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  padding-bottom: 0.25rem;
-  background: var(--home-canvas);
 }
 
 .home-aside {
@@ -276,13 +223,10 @@ onBeforeUnmount(() => {
 
   .home-aside--rail {
     display: flex;
-    position: sticky;
-    top: 1rem;
     width: 14rem;
     flex-shrink: 0;
     align-self: flex-start;
-    max-height: calc(100dvh - 2rem);
-    overflow: auto;
+    margin-top: 1.5rem;
   }
 }
 

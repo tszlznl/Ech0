@@ -94,6 +94,7 @@ const handleToggleZenMode = () => {
   justify-content: space-between;
   gap: 0.75rem;
   margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
   min-height: 6rem;
   padding: 0.75rem;
   border-radius: var(--radius-xs);

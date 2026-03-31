@@ -84,8 +84,8 @@ const logo = computed(() => {
 }
 
 .home-header__logo {
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 2.125rem;
+  height: 2.125rem;
   border-radius: 9999px;
   object-fit: cover;
   border: 2px solid var(--color-bg-surface);
