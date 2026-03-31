@@ -16,15 +16,19 @@
 
     <div class="home-header__actions">
       <div class="home-header__links">
-        <button
-          type="button"
-          v-tooltip="themeToggleTooltip"
-          :aria-label="t('homeNav.themeToggleTitle', { mode: nextThemeModeLabel })"
+        
+        <a href="/rss" v-tooltip="t('homeTop.rssTitle')" class="home-header__link-icon">
+          <Rss class="w-4 h-4" />
+        </a>
+        <a
+          href="https://github.com/lin-snow/Ech0"
+          target="_blank"
+          rel="noopener noreferrer"
+          v-tooltip="t('homeNav.githubAction')"
           class="home-header__link-icon"
-          @click="handleThemeToggle"
         >
-          <component :is="themeIcon" class="w-4 h-4" />
-        </button>
+          <Github class="w-4 h-4" />
+        </a>
         <button
           type="button"
           v-tooltip="isZenMode ? t('homeTop.exitZenMode') : t('homeNav.enterZenMode')"
@@ -34,18 +38,16 @@
         >
           <Zen class="block w-4 h-4" />
         </button>
-        <a href="/rss" v-tooltip="t('homeTop.rssTitle')" class="home-header__link-icon">
-          <Rss class="w-5 h-5" />
-        </a>
-        <a
-          href="https://github.com/lin-snow/Ech0"
-          target="_blank"
-          rel="noopener noreferrer"
-          v-tooltip="t('homeNav.githubAction')"
+        <button
+          type="button"
+          v-tooltip="themeToggleTooltip"
+          :aria-label="t('homeNav.themeToggleTitle', { mode: nextThemeModeLabel })"
           class="home-header__link-icon"
+          @click="handleThemeToggle"
         >
-          <Github class="w-5 h-5" />
-        </a>
+          <component :is="themeIcon" class="w-4 h-4" />
+        </button>
+        
       </div>
     </div>
   </div>
@@ -189,7 +191,7 @@ const handleToggleZenMode = () => {
 
 .home-header__link-icon {
   display: inline-flex;
-  padding: 0.25rem;
+  padding: 0.2rem;
   color: var(--color-text-muted);
   border-radius: 0.375rem;
   transition:
