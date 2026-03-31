@@ -41,7 +41,10 @@
 
         <aside v-if="!isZenMode" class="home-aside home-aside--rail">
           <HomeSidebarNav />
-          <TheFilter />
+          <div class="home-aside__filter-block">
+            <TheFilter />
+            <p class="home-aside__version">version: {{ settingStore.hello?.version || '--' }}</p>
+          </div>
         </aside>
       </div>
     </div>
@@ -250,6 +253,26 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 0.875rem;
   width: 100%;
+}
+
+.home-aside__filter-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.home-aside__version {
+  margin: 0;
+  margin-top: 0.5rem;
+  padding-inline: 0.5rem;
+  font-family: var(--font-family-display);
+  font-weight: 500;
+  font-size: 0.75rem;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  user-select: none;
 }
 
 .home-content-block {
