@@ -182,7 +182,7 @@ const isItemActive = (item: (typeof items)[number]) => {
 @media (max-width: 819.98px) {
   .home-sidebar-nav__nav {
     flex-direction: row;
-    gap: 0.375rem;
+    gap: 0.2rem;
     overflow-x: auto;
     white-space: nowrap;
     scrollbar-width: none;

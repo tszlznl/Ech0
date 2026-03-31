@@ -8,9 +8,9 @@
           :class="{ 'home-main--unclipped': activeTab === 'tags' }"
         >
           <div class="home-main-track">
-            <HomeHeader class="mb-3" />
+            <HomeHeader class="mb-3 mx-1" />
             <aside v-if="!isZenMode" class="home-aside home-aside--mobile">
-              <HomeSidebarNav v-model:mobile-search-open="mobileSearchOpen" />
+              <HomeSidebarNav v-model:mobile-search-open="mobileSearchOpen" class="mx-1" />
             </aside>
             <div v-if="activeTab === 'publish'" class="home-content-block home-content-block--publish">
               <TheEditor />
