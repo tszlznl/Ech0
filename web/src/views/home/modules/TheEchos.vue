@@ -1,5 +1,12 @@
 <template>
-  <div class="mx-auto px-2 sm:px-4 md:px-6 mt-1 sm:mt-0 mb-4 sm:mb-5 md:mb-6 overflow-x-hidden">
+  <div
+    class="mx-auto mt-1 sm:mt-0 mb-4 sm:mb-5 md:mb-6"
+    :class="
+      compact
+        ? 'pl-1 pr-0 max-w-full'
+        : 'px-2 sm:px-4 md:px-6 max-w-full'
+    "
+  >
     <!-- Echos - 使用 TransitionGroup 实现入场动画 -->
     <TransitionGroup
       v-if="echoStore.echoList"
@@ -26,7 +33,7 @@
     <Transition name="fade">
       <div
         v-if="echoStore.hasMore && !echoStore.isLoading"
-        class="mb-4 mt-1 -ml-2 flex items-center justify-between echos-toolbar"
+        class="mb-4 mt-1 flex items-center justify-between echos-toolbar"
       >
         <BaseButton
           v-if="!isZenMode"
@@ -57,8 +64,11 @@
         <span class="text-xl text-[var(--color-text-muted)]">{{ t('homeFeed.loading') }}</span>
       </div>
     </Transition>
-    <!-- 自定义页脚 -->
-    <div v-if="footerContent" class="text-center">
+    <!-- 自定义页脚（紧跟时间线内容之后） -->
+    <div
+      v-if="footerContent"
+      class="mt-6 text-center"
+    >
       <a v-if="footerLink" :href="footerLink" target="_blank" rel="noopener noreferrer">
         <span class="text-[var(--color-text-muted)] text-sm">
           {{ footerContent }}
@@ -83,6 +93,8 @@ import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
   scrollTarget?: HTMLElement | null
+  /** 首页窄栏：减少左右留白以贴合参考图时间线宽度 */
+  compact?: boolean
 }>()
 
 const echoStore = useEchoStore()

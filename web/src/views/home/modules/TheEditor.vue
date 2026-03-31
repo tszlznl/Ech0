@@ -4,41 +4,22 @@
     class="bg-[var(--color-bg-surface)] ring-1 ring-[var(--color-border-subtle)] ring-inset rounded-[var(--radius-lg)] mx-auto shadow-xs hover:shadow-sm"
   >
     <div class="mx-auto w-full px-3 py-4">
-      <!-- The Title && Nav -->
-      <TheTitleAndNav />
-
-      <!-- The Editor -->
       <div class="rounded-[var(--radius-md)] p-2 sm:p-3 mb-1">
-        <!-- EchoMode : TheMdEditor -->
         <TheMdEditor v-if="currentMode === Mode.ECH0" class="rounded-[var(--radius-md)]" />
-
-        <!-- ImageMode : TheImageEditor -->
         <TheImageEditor v-if="currentMode === Mode.Image" />
-
-        <!-- InboxMode : TheInboxModeEditor -->
         <TheInboxModeEditor v-if="currentMode === Mode.INBOX" />
-
-        <!-- The Mode Panel -->
         <TheModePanel v-if="currentMode === Mode.Panel" />
-
-        <!-- ExtensionMode: TheExtensionEditor -->
         <TheExtensionEditor v-if="currentMode === Mode.EXTEN" />
-
-        <!-- TagManageMode: TheTagsManager -->
         <TheTagsManager v-if="currentMode === Mode.TagManage" />
       </div>
 
-      <!-- Editor Buttons -->
       <TheEditorButtons />
-
-      <!-- Editor Image -->
       <TheEditorImage />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import TheTitleAndNav from './TheEditor/TheTitleAndNav.vue'
 import TheEditorImage from './TheEditor/TheEditorImage.vue'
 import TheEditorButtons from './TheEditor/TheEditorButtons.vue'
 
@@ -57,7 +38,6 @@ const TheInboxModeEditor = defineAsyncComponent(() => import('./TheEditor/TheInb
 const TheExtensionEditor = defineAsyncComponent(() => import('./TheEditor/TheExtensionEditor.vue'))
 const TheTagsManager = defineAsyncComponent(() => import('./TheEditor/TheTagsManager.vue'))
 
-/* --------------- 与Pinia相关 ---------------- */
 const echoStore = useEchoStore()
 const editorStore = useEditorStore()
 const { echoToUpdate } = storeToRefs(echoStore)
@@ -74,10 +54,6 @@ const {
 } = storeToRefs(editorStore)
 const { t } = useI18n()
 
-/* -------------------------------------------- */
-
-/* ------------------ 与Watch相关的各种函数 -------------- */
-// 监听用户输入
 watch(
   () => videoURL.value,
   (newVal) => {
@@ -87,11 +63,11 @@ watch(
         /(?:https?:\/\/(?:www\.)?)?(?:youtu\.be\/|youtube\.com\/(?:(?:watch)?\?(?:.*&)?v(?:i)?=|(?:embed)\/))([\w-]+)/
       let match = newVal.match(bvRegex)
       if (match) {
-        extensionToAdd.value.extension = match[0] //bilibili
+        extensionToAdd.value.extension = match[0]
       } else {
         match = newVal.match(ytRegex)
         if (match) {
-          extensionToAdd.value.extension = match[1] ?? '' //youtube
+          extensionToAdd.value.extension = match[1] ?? ''
         } else {
           theToast.error(String(t('editor.videoShareLinkInvalid')))
         }
@@ -100,19 +76,13 @@ watch(
   },
 )
 
-// 监听是否处于更新模式
 watch(
   () => isUpdateMode.value,
   (newVal) => {
     if (newVal) {
-      // 处于更新模式（将待更新的数据填充到编辑器）
-      // 0. 清空编辑器
       editorStore.clearEditor()
-
-      // 1. 填充本文
       echoToAdd.value.content = echoToUpdate.value?.content || ''
 
-      // 2. 填充图片
       const existingImages = getEchoFiles(echoToUpdate.value)
       if (existingImages.length > 0) {
         editorStore.setFilesToAdd(
@@ -127,25 +97,20 @@ watch(
         editorStore.setFilesToAdd([])
       }
 
-      // 3. 填充扩展
       if (echoToUpdate.value?.extension) {
         currentExtensionType.value = echoToUpdate.value.extension.type as ExtensionType
         extensionToAdd.value.extension_type = echoToUpdate.value.extension.type
-        // 根据扩展类型填充
         switch (echoToUpdate.value.extension.type) {
           case ExtensionType.MUSIC:
             extensionToAdd.value.extension = echoToUpdate.value.extension.payload.url || ''
             break
-
           case ExtensionType.VIDEO:
             extensionToAdd.value.extension = echoToUpdate.value.extension.payload.videoId || ''
             videoURL.value = echoToUpdate.value.extension.payload.videoId || ''
             break
-
           case ExtensionType.GITHUBPROJ:
             extensionToAdd.value.extension = echoToUpdate.value.extension.payload.repoUrl || ''
             break
-
           case ExtensionType.WEBSITE:
             websiteToAdd.value.title = echoToUpdate.value.extension.payload.title || ''
             websiteToAdd.value.site = echoToUpdate.value.extension.payload.site || ''
@@ -153,24 +118,15 @@ watch(
         }
       }
 
-      // 4. 填充标签
       const tags = echoToUpdate.value?.tags
       tagToAdd.value = Array.isArray(tags) && tags.length > 0 ? (tags[0]?.name ?? '') : ''
-
-      // 5. 填充私密状态 && 布局方式
       echoToAdd.value.private = echoToUpdate.value?.private || false
       echoToAdd.value.layout = echoToUpdate.value?.layout || ImageLayout.WATERFALL
-
-      // 6. 回到页面顶部（触发BackToTop）
       window.scrollTo({ top: 0, behavior: 'smooth' })
-
-      // 7. 弹出通知，提示可以编辑了
       theToast.info(String(t('editor.enteredUpdateMode')))
     } else {
-      // 退出更新模式
       echoToUpdate.value = null
     }
   },
 )
-/* ------------------------------------------------------- */
 </script>

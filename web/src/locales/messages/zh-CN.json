@@ -362,6 +362,19 @@
     "hubTitle": "Ech0 Hub",
     "panelTitle": "面板"
   },
+  "homeSidebar": {
+    "home": "首页",
+    "blog": "博客",
+    "tags": "标签",
+    "links": "链接",
+    "widget": "小组件"
+  },
+  "homeBio": {
+    "tagline": "欢迎光临"
+  },
+  "homeFooter": {
+    "powered": "由 Ech0 驱动"
+  },
   "homeFeed": {
     "loadMore": "继续装填",
     "noMore": "没有啦！",

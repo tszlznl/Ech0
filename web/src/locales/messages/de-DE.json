@@ -362,6 +362,19 @@
     "hubTitle": "Ech0 Hub",
     "panelTitle": "Panel"
   },
+  "homeSidebar": {
+    "home": "Start",
+    "blog": "Blog",
+    "tags": "Tags",
+    "links": "Links",
+    "widget": "Widget"
+  },
+  "homeBio": {
+    "tagline": "Willkommen"
+  },
+  "homeFooter": {
+    "powered": "Powered by Ech0"
+  },
   "homeFeed": {
     "loadMore": "Mehr laden",
     "noMore": "Keine weiteren Einträge",
