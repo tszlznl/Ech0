@@ -8,10 +8,13 @@
         >
           <div class="home-main-track">
             <HomeHeader />
+            <aside v-if="!isZenMode" class="home-aside home-aside--mobile">
+              <HomeSidebarNav v-model:mobile-search-open="mobileSearchOpen" />
+            </aside>
             <TheEditor v-if="activeTab === 'publish'" />
 
             <template v-else-if="activeTab === 'home'">
-              <HomeBanner />
+              <HomeBanner :class="{ 'home-banner--mobile-hidden': shouldHideBannerOnMobile }" />
 
               <TheEchos
                 v-if="!inboxMode"
@@ -31,10 +34,6 @@
               <HubPage v-else embedded :scroll-target="mainColumn" />
             </div>
 
-            <aside v-if="!isZenMode" class="home-aside home-aside--mobile">
-              <HomeSidebarNav />
-              <TheFilter />
-            </aside>
           </div>
         </div>
 
@@ -54,7 +53,7 @@ import HomeSidebarNav from './HomeSidebarNav.vue'
 import TheFilter from './TheFilter.vue'
 import TheEchos from './TheEchos.vue'
 import { defineAsyncComponent, onMounted, ref, onBeforeUnmount, computed } from 'vue'
-import { useInboxStore, useZenStore, useUserStore, useSettingStore } from '@/stores'
+import { useEchoStore, useInboxStore, useZenStore, useUserStore, useSettingStore } from '@/stores'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { TheCommentWidget, TheConnectWidget, TheHeatMap, TheRecentCard } from '@/components/advanced/widget'
@@ -68,16 +67,22 @@ const userStore = useUserStore()
 const settingStore = useSettingStore()
 const inboxStore = useInboxStore()
 const zenStore = useZenStore()
+const echoStore = useEchoStore()
 const { isLogin } = storeToRefs(userStore)
 const { AgentSetting } = storeToRefs(settingStore)
 const { inboxMode } = storeToRefs(inboxStore)
 const { isZenMode } = storeToRefs(zenStore)
+const { searchingMode, isFilteringMode } = storeToRefs(echoStore)
+const mobileSearchOpen = ref(false)
 const activeTab = computed<'home' | 'publish' | 'status' | 'hub'>(() => {
   if (route.query.tab === 'publish' && isLogin.value) return 'publish'
   if (route.query.tab === 'status') return 'status'
   if (route.query.tab === 'hub') return 'hub'
   return 'home'
 })
+const shouldHideBannerOnMobile = computed(
+  () => mobileSearchOpen.value || searchingMode.value || isFilteringMode.value,
+)
 
 const mainColumn = ref<HTMLElement | null>(null)
 const TIMELINE_SCROLL_KEY = 'home:timeline:scrollTop'
@@ -242,9 +247,8 @@ onBeforeUnmount(() => {
 
 .home-aside--mobile {
   display: flex;
-  margin-top: 1rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--color-border-subtle);
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
 }
 
 @media (min-width: 820px) {
@@ -262,6 +266,10 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 819.98px) {
+  .home-banner--mobile-hidden {
+    display: none;
+  }
+
   .home-aside--rail {
     display: none !important;
   }
