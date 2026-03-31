@@ -364,6 +364,10 @@
   },
   "homeSidebar": {
     "home": "首页",
+    "panel": "面板",
+    "publish": "发布",
+    "plaza": "广场",
+    "status": "状态",
     "blog": "博客",
     "tags": "标签",
     "links": "链接",

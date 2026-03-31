@@ -364,6 +364,10 @@
   },
   "homeSidebar": {
     "home": "Home",
+    "panel": "Panel",
+    "publish": "Publish",
+    "plaza": "Plaza",
+    "status": "Status",
     "blog": "Blog",
     "tags": "Tags",
     "links": "Links",

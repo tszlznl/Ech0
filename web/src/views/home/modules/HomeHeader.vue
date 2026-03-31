@@ -19,28 +19,23 @@
         <a href="/rss" v-tooltip="t('homeTop.rssTitle')" class="home-header__link-icon">
           <Rss class="w-6 h-6" />
         </a>
-        <div class="sm:hidden">
-          <RouterLink to="/widget" v-tooltip="t('homeTop.widgetTitle')" class="home-header__link-icon">
-            <Widget class="w-6 h-6" />
-          </RouterLink>
-        </div>
-        <RouterLink to="/hub" v-tooltip="t('homeTop.hubTitle')" class="home-header__link-icon">
-          <HubIcon class="w-6 h-6" />
-        </RouterLink>
-        <RouterLink to="/panel" v-tooltip="t('homeTop.panelTitle')" class="home-header__link-icon">
-          <Panel class="w-6 h-6" />
-        </RouterLink>
+        <a
+          href="https://github.com/lin-snow/Ech0"
+          target="_blank"
+          rel="noopener noreferrer"
+          v-tooltip="t('homeNav.githubAction')"
+          class="home-header__link-icon"
+        >
+          <Github class="w-6 h-6" />
+        </a>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import Panel from '@/components/icons/panel.vue'
+import Github from '@/components/icons/github.vue'
 import Rss from '@/components/icons/rss.vue'
-import HubIcon from '@/components/icons/hub.vue'
-import Widget from '@/components/icons/widget.vue'
-import { RouterLink } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'

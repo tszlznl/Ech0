@@ -2,10 +2,10 @@
   <nav class="home-sidebar-nav" aria-label="Primary">
     <RouterLink
       v-for="item in items"
-      :key="item.routeName"
+      :key="item.id"
       :to="item.to"
       class="home-sidebar-nav__link"
-      active-class="home-sidebar-nav__link--active"
+      :class="{ 'home-sidebar-nav__link--active': isItemActive(item) }"
     >
       {{ t(item.labelKey) }}
     </RouterLink>
@@ -13,17 +13,43 @@
 </template>
 
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
+const route = useRoute()
 
 const items = [
-  { routeName: 'home', to: { name: 'home' }, labelKey: 'homeSidebar.blog' },
-  { routeName: 'zone', to: { name: 'zone' }, labelKey: 'homeSidebar.tags' },
-  { routeName: 'hub', to: { name: 'hub' }, labelKey: 'homeSidebar.links' },
-  { routeName: 'widget', to: { name: 'widget' }, labelKey: 'homeSidebar.widget' },
+  {
+    id: 'home',
+    to: { name: 'home' },
+    labelKey: 'homeSidebar.home',
+    kind: 'homeTab',
+  },
+  {
+    id: 'publish',
+    to: { name: 'home', query: { tab: 'publish' } },
+    labelKey: 'homeSidebar.publish',
+    kind: 'homeTab',
+  },
+  {
+    id: 'status',
+    to: { name: 'home', query: { tab: 'status' } },
+    labelKey: 'homeSidebar.status',
+    kind: 'homeTab',
+  },
+  { id: 'panel', to: { name: 'panel' }, labelKey: 'homeSidebar.panel', kind: 'route' },
+  { id: 'hub', to: { name: 'hub' }, labelKey: 'homeSidebar.plaza', kind: 'route' },
 ] as const
+
+const isItemActive = (item: (typeof items)[number]) => {
+  if (item.kind === 'homeTab') {
+    const tab = route.query.tab === 'publish' || route.query.tab === 'status' ? route.query.tab : 'home'
+    const itemTab = 'query' in item.to ? item.to.query.tab : 'home'
+    return route.name === 'home' && tab === itemTab
+  }
+  return route.name === item.to.name
+}
 </script>
 
 <style scoped>

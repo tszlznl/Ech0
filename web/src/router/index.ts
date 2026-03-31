@@ -17,6 +17,11 @@ const router = createRouter({
       },
     },
     {
+      path: '/publish',
+      name: 'publish',
+      redirect: { name: 'home', query: { tab: 'publish' } },
+    },
+    {
       path: '/panel',
       name: 'panel',
       component: () => import('../views/panel/PanelView.vue'),

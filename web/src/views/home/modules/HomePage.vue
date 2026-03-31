@@ -8,15 +8,25 @@
         >
           <div class="home-main-track">
             <HomeHeader />
-            <HomeBanner />
-            <TheEditor v-if="isLogin" />
+            <TheEditor v-if="activeTab === 'publish'" />
 
-            <TheEchos
-              v-if="!inboxMode"
-              compact
-              :scroll-target="mainColumn"
-            />
-            <TheInbox v-else />
+            <template v-else-if="activeTab === 'home'">
+              <HomeBanner />
+
+              <TheEchos
+                v-if="!inboxMode"
+                compact
+                :scroll-target="mainColumn"
+              />
+              <TheInbox v-else />
+            </template>
+
+            <div v-else class="home-status-widgets">
+              <TheHeatMap />
+              <TheRecentCard v-if="AgentSetting.enable" />
+              <TheConnectWidget />
+              <TheCommentWidget />
+            </div>
 
             <aside v-if="!isZenMode" class="home-aside home-aside--mobile">
               <HomeSidebarNav />
@@ -40,19 +50,29 @@ import HomeBanner from './HomeBanner.vue'
 import HomeSidebarNav from './HomeSidebarNav.vue'
 import TheFilter from './TheFilter.vue'
 import TheEchos from './TheEchos.vue'
-import { defineAsyncComponent, onMounted, ref, onBeforeUnmount } from 'vue'
-import { useUserStore, useInboxStore, useZenStore } from '@/stores'
+import { defineAsyncComponent, onMounted, ref, onBeforeUnmount, computed } from 'vue'
+import { useInboxStore, useZenStore, useUserStore, useSettingStore } from '@/stores'
+import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
+import { TheCommentWidget, TheConnectWidget, TheHeatMap, TheRecentCard } from '@/components/advanced/widget'
 
+const route = useRoute()
 const TheEditor = defineAsyncComponent(() => import('./TheEditor.vue'))
 const TheInbox = defineAsyncComponent(() => import('./TheInbox.vue'))
 
 const userStore = useUserStore()
+const settingStore = useSettingStore()
 const inboxStore = useInboxStore()
 const zenStore = useZenStore()
 const { isLogin } = storeToRefs(userStore)
+const { AgentSetting } = storeToRefs(settingStore)
 const { inboxMode } = storeToRefs(inboxStore)
 const { isZenMode } = storeToRefs(zenStore)
+const activeTab = computed<'home' | 'publish' | 'status'>(() => {
+  if (route.query.tab === 'publish' && isLogin.value) return 'publish'
+  if (route.query.tab === 'status') return 'status'
+  return 'home'
+})
 
 const mainColumn = ref<HTMLElement | null>(null)
 const TIMELINE_SCROLL_KEY = 'home:timeline:scrollTop'
@@ -207,6 +227,12 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 0.875rem;
   width: 100%;
+}
+
+.home-status-widgets {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .home-aside--mobile {
