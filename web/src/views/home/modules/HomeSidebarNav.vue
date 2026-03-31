@@ -22,7 +22,7 @@
         <Search class="home-sidebar-nav__search-icon" />
       </button>
     </div>
-    <div v-if="searchOpenState" class="home-sidebar-nav__mobile-filter">
+    <div v-if="searchOpenState || isFilteringMode" class="home-sidebar-nav__mobile-filter">
       <TheFilter />
     </div>
   </div>
@@ -32,7 +32,7 @@
 import { RouterLink, useRoute } from 'vue-router'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useUserStore } from '@/stores'
+import { useEchoStore, useUserStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import Search from '@/components/icons/search.vue'
 import TheFilter from './TheFilter.vue'
@@ -40,7 +40,9 @@ import TheFilter from './TheFilter.vue'
 const { t } = useI18n()
 const route = useRoute()
 const userStore = useUserStore()
+const echoStore = useEchoStore()
 const { isLogin } = storeToRefs(userStore)
+const { isFilteringMode } = storeToRefs(echoStore)
 const props = defineProps<{
   mobileSearchOpen?: boolean
 }>()

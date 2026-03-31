@@ -196,6 +196,10 @@ const handleUpdateEcho = async () => {
   }
 
   editorStore.isUpdateMode = true
+  await router.push({
+    name: 'home',
+    query: { tab: 'publish' },
+  })
 }
 
 const LIKE_LIST_KEY = 'likedEchoIds'

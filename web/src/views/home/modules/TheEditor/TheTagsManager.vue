@@ -75,12 +75,14 @@ import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
 import Trashbin from '@/components/icons/trashbin.vue'
 import Filter from '@/components/icons/filter.vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 
 const echoStore = useEchoStore()
 const userStore = useUserStore()
 const { tagList } = storeToRefs(echoStore)
 const { isLogin } = storeToRefs(userStore)
 const { t } = useI18n()
+const router = useRouter()
 
 const { openConfirm } = useBaseDialog()
 const getPopoverPanelClass = (index: number) => {
@@ -96,7 +98,7 @@ const handleFilterByTag = (tag: App.Api.Ech0.Tag) => {
 
   echoStore.filteredTag = tag
   echoStore.isFilteringMode = true
-  echoStore.refreshEchos()
+  router.push({ name: 'home' })
 }
 
 // 删除标签

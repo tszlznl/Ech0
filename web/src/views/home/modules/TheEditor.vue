@@ -21,7 +21,7 @@ import TheEditorImage from './TheEditor/TheEditorImage.vue'
 import TheEditorButtons from './TheEditor/TheEditorButtons.vue'
 
 import { theToast } from '@/utils/toast'
-import { defineAsyncComponent, watch } from 'vue'
+import { defineAsyncComponent, onMounted, watch } from 'vue'
 import { useEchoStore, useEditorStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { Mode, ExtensionType, ImageLayout } from '@/enums/enums'
@@ -73,59 +73,69 @@ watch(
   },
 )
 
+const fillEditorFromEchoToUpdate = () => {
+  editorStore.clearEditor()
+  echoToAdd.value.content = echoToUpdate.value?.content || ''
+
+  const existingImages = getEchoFiles(echoToUpdate.value)
+  if (existingImages.length > 0) {
+    editorStore.setFilesToAdd(
+      existingImages.map((img) => ({
+        id: String(img.id || ''),
+        url: img.url || '',
+        storage_type: img.storage_type || 'local',
+        key: img.key || '',
+      })),
+    )
+  } else {
+    editorStore.setFilesToAdd([])
+  }
+
+  if (echoToUpdate.value?.extension) {
+    currentExtensionType.value = echoToUpdate.value.extension.type as ExtensionType
+    extensionToAdd.value.extension_type = echoToUpdate.value.extension.type
+    switch (echoToUpdate.value.extension.type) {
+      case ExtensionType.MUSIC:
+        extensionToAdd.value.extension = echoToUpdate.value.extension.payload.url || ''
+        break
+      case ExtensionType.VIDEO:
+        extensionToAdd.value.extension = echoToUpdate.value.extension.payload.videoId || ''
+        videoURL.value = echoToUpdate.value.extension.payload.videoId || ''
+        break
+      case ExtensionType.GITHUBPROJ:
+        extensionToAdd.value.extension = echoToUpdate.value.extension.payload.repoUrl || ''
+        break
+      case ExtensionType.WEBSITE:
+        websiteToAdd.value.title = echoToUpdate.value.extension.payload.title || ''
+        websiteToAdd.value.site = echoToUpdate.value.extension.payload.site || ''
+        break
+    }
+  }
+
+  const tags = echoToUpdate.value?.tags
+  tagToAdd.value = Array.isArray(tags) && tags.length > 0 ? (tags[0]?.name ?? '') : ''
+  echoToAdd.value.private = echoToUpdate.value?.private || false
+  echoToAdd.value.layout = echoToUpdate.value?.layout || ImageLayout.WATERFALL
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+  theToast.info(String(t('editor.enteredUpdateMode')))
+}
+
 watch(
   () => isUpdateMode.value,
   (newVal) => {
     if (newVal) {
-      editorStore.clearEditor()
-      echoToAdd.value.content = echoToUpdate.value?.content || ''
-
-      const existingImages = getEchoFiles(echoToUpdate.value)
-      if (existingImages.length > 0) {
-        editorStore.setFilesToAdd(
-          existingImages.map((img) => ({
-            id: String(img.id || ''),
-            url: img.url || '',
-            storage_type: img.storage_type || 'local',
-            key: img.key || '',
-          })),
-        )
-      } else {
-        editorStore.setFilesToAdd([])
-      }
-
-      if (echoToUpdate.value?.extension) {
-        currentExtensionType.value = echoToUpdate.value.extension.type as ExtensionType
-        extensionToAdd.value.extension_type = echoToUpdate.value.extension.type
-        switch (echoToUpdate.value.extension.type) {
-          case ExtensionType.MUSIC:
-            extensionToAdd.value.extension = echoToUpdate.value.extension.payload.url || ''
-            break
-          case ExtensionType.VIDEO:
-            extensionToAdd.value.extension = echoToUpdate.value.extension.payload.videoId || ''
-            videoURL.value = echoToUpdate.value.extension.payload.videoId || ''
-            break
-          case ExtensionType.GITHUBPROJ:
-            extensionToAdd.value.extension = echoToUpdate.value.extension.payload.repoUrl || ''
-            break
-          case ExtensionType.WEBSITE:
-            websiteToAdd.value.title = echoToUpdate.value.extension.payload.title || ''
-            websiteToAdd.value.site = echoToUpdate.value.extension.payload.site || ''
-            break
-        }
-      }
-
-      const tags = echoToUpdate.value?.tags
-      tagToAdd.value = Array.isArray(tags) && tags.length > 0 ? (tags[0]?.name ?? '') : ''
-      echoToAdd.value.private = echoToUpdate.value?.private || false
-      echoToAdd.value.layout = echoToUpdate.value?.layout || ImageLayout.WATERFALL
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-      theToast.info(String(t('editor.enteredUpdateMode')))
+      fillEditorFromEchoToUpdate()
     } else {
       echoToUpdate.value = null
     }
   },
 )
+
+onMounted(() => {
+  if (isUpdateMode.value) {
+    fillEditorFromEchoToUpdate()
+  }
+})
 </script>
 
 <style scoped>
