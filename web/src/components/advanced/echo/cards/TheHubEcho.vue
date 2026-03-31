@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full max-w-sm bg-[var(--color-bg-surface)] h-auto p-5 shadow rounded-lg mx-auto">
+  <div class="w-full max-w-sm bg-[var(--color-bg-surface)] h-auto p-5 shadow rounded-sm mx-auto">
     <div class="flex flex-row items-center gap-2 mt-2 mb-4">
       <div>
         <img

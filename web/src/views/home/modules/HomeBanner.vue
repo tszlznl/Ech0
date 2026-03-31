@@ -4,7 +4,6 @@
       <p class="home-banner__text">{{ t('homeBio.tagline') }}</p>
     </div>
     <div class="home-banner__meta">
-      <span class="home-banner__version">v{{ settingStore.hello?.version || '--' }}</span>
       <span class="home-banner__powered">Powered by Ech0</span>
     </div>
   </section>
@@ -12,9 +11,6 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { useSettingStore } from '@/stores'
-
-const settingStore = useSettingStore()
 const { t } = useI18n()
 </script>
 
@@ -45,13 +41,6 @@ const { t } = useI18n()
   align-items: flex-end;
   justify-content: space-between;
   gap: 0.75rem;
-}
-
-.home-banner__version {
-  font-size: 0.6875rem;
-  line-height: 1;
-  color: var(--color-text-muted);
-  opacity: 0.68;
 }
 
 .home-banner__powered {

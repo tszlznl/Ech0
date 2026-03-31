@@ -184,7 +184,7 @@ export const useHubStore = defineStore('hubStore', () => {
     }
 
     isPreparing.value = false
-    theToast.success(String(i18n.global.t('hub.connectedCount', { count: hubList.value.length })))
+    console.info(String(i18n.global.t('hub.connectedCount', { count: hubList.value.length })))
 
     // 并行请求所有 Hub 的第一页，填充缓冲池
     await Promise.all(Array.from(hubStates.value.keys()).map((url) => fetchHubPage(url)))
