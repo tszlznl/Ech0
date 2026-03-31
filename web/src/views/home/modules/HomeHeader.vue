@@ -17,7 +17,7 @@
     <div class="home-header__actions">
       <div class="home-header__links">
         <a href="/rss" v-tooltip="t('homeTop.rssTitle')" class="home-header__link-icon">
-          <Rss class="w-6 h-6" />
+          <Rss class="w-5 h-5" />
         </a>
         <a
           href="https://github.com/lin-snow/Ech0"
@@ -26,7 +26,7 @@
           v-tooltip="t('homeNav.githubAction')"
           class="home-header__link-icon"
         >
-          <Github class="w-6 h-6" />
+          <Github class="w-5 h-5" />
         </a>
       </div>
     </div>
