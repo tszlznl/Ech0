@@ -2,12 +2,7 @@
   <div class="home-header">
     <div class="home-header__brand">
       <div class="home-header__logo-wrap">
-        <img
-          :src="logo"
-          alt=""
-          loading="lazy"
-          class="home-header__logo"
-        />
+        <img :src="logo" alt="" loading="lazy" class="home-header__logo" />
       </div>
       <h1 class="home-header__title">
         {{ SystemSetting.server_name }}
@@ -16,7 +11,6 @@
 
     <div class="home-header__actions">
       <div class="home-header__links">
-        
         <a href="/rss" v-tooltip="t('homeTop.rssTitle')" class="home-header__link-icon">
           <Rss class="w-4 h-4" />
         </a>
@@ -47,7 +41,6 @@
         >
           <component :is="themeIcon" class="w-4 h-4" />
         </button>
-        
       </div>
     </div>
   </div>
@@ -125,7 +118,6 @@ const handleThemeToggle = async (event: MouseEvent) => {
 const handleToggleZenMode = () => {
   zenStore.setZenMode(!isZenMode.value)
 }
-
 </script>
 
 <style scoped>

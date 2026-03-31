@@ -117,7 +117,7 @@ const props = withDefaults(
     scrollTarget?: HTMLElement | null
   }>(),
   {
-  embedded: false,
+    embedded: false,
     scrollTarget: null,
   },
 )
@@ -154,7 +154,8 @@ const showBackTop = ref(false)
 const HUB_SCROLL_KEY = 'hub:timeline:scrollTop'
 let saveScrollTimer: number | null = null
 let ensuringScrollable = false
-const getActiveScrollElement = () => (props.embedded && props.scrollTarget ? props.scrollTarget : null)
+const getActiveScrollElement = () =>
+  props.embedded && props.scrollTarget ? props.scrollTarget : null
 
 const getScrollMetrics = () => {
   const scrollEl = getActiveScrollElement()

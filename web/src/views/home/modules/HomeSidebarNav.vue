@@ -51,7 +51,7 @@ const emit = defineEmits<{
 }>()
 const localSearchOpen = ref(false)
 const searchOpenState = computed({
-  get: () => (props.mobileSearchOpen ?? localSearchOpen.value),
+  get: () => props.mobileSearchOpen ?? localSearchOpen.value,
   set: (value: boolean) => {
     if (props.mobileSearchOpen === undefined) {
       localSearchOpen.value = value

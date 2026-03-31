@@ -106,7 +106,11 @@ body.md-editor-full-open {
 .markdown-editor .mode-toggle-btn:hover {
   color: var(--md-editor-toolbar-btn-hover-text);
   border-color: var(--md-editor-toolbar-btn-hover-border);
-  background-color: color-mix(in srgb, var(--md-editor-mini-btn-hover-bg), var(--color-bg-canvas) 34%);
+  background-color: color-mix(
+    in srgb,
+    var(--md-editor-mini-btn-hover-bg),
+    var(--color-bg-canvas) 34%
+  );
 }
 
 .markdown-editor .toolbar {

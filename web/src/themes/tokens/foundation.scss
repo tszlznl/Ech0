@@ -19,8 +19,7 @@
 
   --shadow-sm: 0 1px 2px oklch(28.2% 0.01 53.8 / 0.08);
   --shadow-soft:
-    0 1px 2px oklch(28.2% 0.01 53.8 / 0.03),
-    0 2px 6px oklch(28.2% 0.01 53.8 / 0.03),
+    0 1px 2px oklch(28.2% 0.01 53.8 / 0.03), 0 2px 6px oklch(28.2% 0.01 53.8 / 0.03),
     0 4px 12px oklch(28.2% 0.01 53.8 / 0.02);
   --shadow-md: 0 8px 26px oklch(28.2% 0.01 53.8 / 0.12);
 }

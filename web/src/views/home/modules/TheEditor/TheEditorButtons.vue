@@ -45,9 +45,7 @@
       <!-- Published Info -->
       <div v-if="hasContent || hasFile || hasExtension" class="relative group">
         <Info class="w-6 h-6 text-[var(--color-text-muted)] hover:text-[var(--color-text-muted)]" />
-        <div
-          class="editor-actions__info-pop"
-        >
+        <div class="editor-actions__info-pop">
           <div v-if="infoTooltipLines.length > 0">
             <div class="mb-1 font-medium text-[var(--color-text-secondary)]">
               {{ t('editor.addedLabel') }}
@@ -214,8 +212,16 @@ const handleExitUpdateMode = () => {
 <style scoped>
 .editor-actions {
   --btn-bg-color: var(--md-editor-mini-btn-bg);
-  --btn-ring-color: color-mix(in srgb, var(--md-editor-mini-btn-border), var(--color-bg-canvas) 26%);
-  --btn-hover-bg-color: color-mix(in srgb, var(--md-editor-mini-btn-hover-bg), var(--color-bg-canvas) 38%);
+  --btn-ring-color: color-mix(
+    in srgb,
+    var(--md-editor-mini-btn-border),
+    var(--color-bg-canvas) 26%
+  );
+  --btn-hover-bg-color: color-mix(
+    in srgb,
+    var(--md-editor-mini-btn-hover-bg),
+    var(--color-bg-canvas) 38%
+  );
   --btn-hover-border-color: color-mix(
     in srgb,
     var(--md-editor-toolbar-btn-hover-border),

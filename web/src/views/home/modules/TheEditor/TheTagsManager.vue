@@ -5,7 +5,12 @@
     </h2>
     <p class="text-xs text-[var(--color-text-muted)] mb-3">{{ t('editor.tagManagerHint') }}</p>
     <div class="flex flex-wrap gap-2">
-      <Popover v-for="(tag, index) in tagList" :key="tag.id" class="relative overflow-visible" v-slot="{ close }">
+      <Popover
+        v-for="(tag, index) in tagList"
+        :key="tag.id"
+        class="relative overflow-visible"
+        v-slot="{ close }"
+      >
         <PopoverButton
           class="flex items-center gap-1 border rounded-sm border-[var(--color-border-subtle)] border-dashed py-0.5 px-1 mb-1 outline-none transition-colors duration-150 hover:text-[var(--color-text-secondary)]"
           style="white-space: nowrap"

@@ -183,7 +183,7 @@ const handlePaste = async (e: ClipboardEvent) => {
             data: pasteFile,
             source: 'PastedImage',
           })
-        } catch (err: unknown) {
+        } catch {
           // Uppy 检测到重复文件时抛出 RestrictionError，静默跳过
           // 不需要额外处理，与其他上传方式的重复检测行为保持一致
         }

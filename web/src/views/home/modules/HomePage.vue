@@ -12,7 +12,10 @@
             <aside v-if="!isZenMode" class="home-aside home-aside--mobile">
               <HomeSidebarNav v-model:mobile-search-open="mobileSearchOpen" class="mx-1" />
             </aside>
-            <div v-if="activeTab === 'publish'" class="home-content-block home-content-block--publish">
+            <div
+              v-if="activeTab === 'publish'"
+              class="home-content-block home-content-block--publish"
+            >
               <TheEditor />
             </div>
             <div v-else-if="activeTab === 'tags'" class="home-content-block">
@@ -22,11 +25,7 @@
             <template v-else-if="activeTab === 'home'">
               <HomeBanner :class="{ 'home-banner--mobile-hidden': shouldHideBannerOnMobile }" />
 
-              <TheEchos
-                v-if="!inboxMode"
-                compact
-                :scroll-target="mainColumn"
-              />
+              <TheEchos v-if="!inboxMode" compact :scroll-target="mainColumn" />
               <TheInbox v-else />
             </template>
 
@@ -37,7 +36,6 @@
               <TheCommentWidget />
             </div>
             <HubPage v-else embedded :scroll-target="mainColumn" />
-
           </div>
         </div>
 
@@ -60,7 +58,12 @@ import { defineAsyncComponent, onMounted, ref, onBeforeUnmount, computed } from 
 import { useEchoStore, useInboxStore, useZenStore, useUserStore, useSettingStore } from '@/stores'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
-import { TheCommentWidget, TheConnectWidget, TheHeatMap, TheRecentCard } from '@/components/advanced/widget'
+import {
+  TheCommentWidget,
+  TheConnectWidget,
+  TheHeatMap,
+  TheRecentCard,
+} from '@/components/advanced/widget'
 
 const route = useRoute()
 const TheEditor = defineAsyncComponent(() => import('./TheEditor.vue'))
@@ -304,5 +307,4 @@ onBeforeUnmount(() => {
     display: none !important;
   }
 }
-
 </style>

@@ -38,24 +38,24 @@ export const useEchoStore = defineStore('echoStore', () => {
   //  统一查询状态（普通时间线与标签过滤共享同一套状态）
   // ─────────────────────────────────────────────
 
-  const echoList = ref<App.Api.Ech0.Echo[]>([])       // 当前展示的 Echo 列表
-  const echoIndexMap = ref(new Map<string, number>())  // id → echoList 下标，用于快速定位
-  const isLoading = ref<boolean>(true)                 // 是否正在请求数据
-  const total = ref<number>(0)                         // 当前查询条件下的总条数
-  const pageSize = ref<number>(5)                      // 每页数量
-  const page = ref<number>(0)                          // 已成功加载到的页码（0 表示尚未加载）
-  const current = ref<number>(1)                       // 下一次要请求的页码（从 1 开始）
-  const searchValue = ref<string>('')                  // 搜索关键词
+  const echoList = ref<App.Api.Ech0.Echo[]>([]) // 当前展示的 Echo 列表
+  const echoIndexMap = ref(new Map<string, number>()) // id → echoList 下标，用于快速定位
+  const isLoading = ref<boolean>(true) // 是否正在请求数据
+  const total = ref<number>(0) // 当前查询条件下的总条数
+  const pageSize = ref<number>(5) // 每页数量
+  const page = ref<number>(0) // 已成功加载到的页码（0 表示尚未加载）
+  const current = ref<number>(1) // 下一次要请求的页码（从 1 开始）
+  const searchValue = ref<string>('') // 搜索关键词
   const hasMore = computed(() => total.value > echoList.value.length) // 是否还有更多数据
-  const searchingMode = computed(() => searchValue.value.length > 0)  // 是否处于搜索模式
-  const echoToUpdate = ref<App.Api.Ech0.EchoToUpdate | null>(null)    // 编辑中的 Echo 暂存
+  const searchingMode = computed(() => searchValue.value.length > 0) // 是否处于搜索模式
+  const echoToUpdate = ref<App.Api.Ech0.EchoToUpdate | null>(null) // 编辑中的 Echo 暂存
 
-  const tagList = ref<App.Api.Ech0.Tag[]>([])          // 全部标签列表
+  const tagList = ref<App.Api.Ech0.Tag[]>([]) // 全部标签列表
   const tagOptions = computed<string[]>(() => tagList.value.map((tag) => tag.name))
 
   // ── 标签过滤模式 ──
-  const isFilteringMode = ref<boolean>(false)             // 是否正在按标签过滤
-  const filteredTag = ref<App.Api.Ech0.Tag | null>(null)  // 当前选中的过滤标签
+  const isFilteringMode = ref<boolean>(false) // 是否正在按标签过滤
+  const filteredTag = ref<App.Api.Ech0.Tag | null>(null) // 当前选中的过滤标签
 
   // ─────────────────────────────────────────────
   //  watchers

@@ -1,11 +1,7 @@
 <template>
   <div
     class="mx-auto mt-1 sm:mt-0 mb-4 sm:mb-5 md:mb-6"
-    :class="
-      compact
-        ? 'pl-1 pr-0 max-w-full'
-        : 'px-2 sm:px-4 md:px-6 max-w-full'
-    "
+    :class="compact ? 'pl-1 pr-0 max-w-full' : 'px-2 sm:px-4 md:px-6 max-w-full'"
   >
     <!-- Echos - 使用 TransitionGroup 实现入场动画 -->
     <TransitionGroup
@@ -54,7 +50,8 @@
         class="mx-auto my-5 text-center echos-toolbar"
       >
         <p class="text-xl text-[var(--color-text-muted)] flex items-center justify-center">
-          {{ echoStore.isFilteringMode ? t('homeFeed.noMoreFiltered') : t('homeFeed.noMore') }}<Flowers />
+          {{ echoStore.isFilteringMode ? t('homeFeed.noMoreFiltered') : t('homeFeed.noMore')
+          }}<Flowers />
         </p>
       </div>
     </Transition>
@@ -65,10 +62,7 @@
       </div>
     </Transition>
     <!-- 自定义页脚（紧跟时间线内容之后） -->
-    <div
-      v-if="footerContent"
-      class="mt-6 text-center"
-    >
+    <div v-if="footerContent" class="mt-6 text-center">
       <a v-if="footerLink" :href="footerLink" target="_blank" rel="noopener noreferrer">
         <span class="text-[var(--color-text-muted)] text-sm">
           {{ footerContent }}
