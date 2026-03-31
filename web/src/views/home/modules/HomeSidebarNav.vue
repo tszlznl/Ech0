@@ -153,10 +153,15 @@ const isItemActive = (item: (typeof items)[number]) => {
   background: var(--color-bg-muted);
 }
 
-.home-sidebar-nav__link--active {
+.home-sidebar-nav__link.home-sidebar-nav__link--active {
   color: var(--color-text-primary);
   background: color-mix(in srgb, var(--color-bg-muted), var(--color-bg-surface) 90%);
   box-shadow: var(--shadow-soft);
+}
+
+.home-sidebar-nav__link.home-sidebar-nav__link--active:hover {
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-bg-muted), var(--color-bg-surface) 90%);
 }
 
 .home-sidebar-nav__search-trigger {

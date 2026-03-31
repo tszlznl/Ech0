@@ -347,6 +347,9 @@ Run the target binary directly. For example, on Windows, double-click `Ech0.exe`
 13. **How do I enable passkey login?**  
     In `SSO - Passkey`, configure `WebAuthn RP ID` and `WebAuthn Origins`. After saving and seeing "Passkey ready", follow browser prompts to bind biometrics or a security key.
 
+14. **Official statement on third-party integrations**  
+    Third-party integration platforms or services that are not officially authorized by Ech0 are outside the official support scope. Any security incidents, data loss, account issues, or other risks caused by using such services are the sole responsibility of the user and the third-party provider.
+
 ---
 
 ## Feedback & Community
