@@ -12,7 +12,7 @@
             <aside v-if="!isZenMode" class="home-aside home-aside--mobile">
               <HomeSidebarNav v-model:mobile-search-open="mobileSearchOpen" />
             </aside>
-            <div v-if="activeTab === 'publish'" class="home-content-block">
+            <div v-if="activeTab === 'publish'" class="home-content-block home-content-block--publish">
               <TheEditor />
             </div>
             <div v-else-if="activeTab === 'tags'" class="home-content-block">
@@ -253,10 +253,26 @@ onBeforeUnmount(() => {
   width: 100%;
 }
 
+.home-content-block--publish {
+  padding-inline: 0;
+}
+
 .home-status-widgets {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .home-content-block--publish {
+    padding-inline: 1.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .home-content-block--publish {
+    padding-inline: 2rem;
+  }
 }
 
 .home-aside--mobile {
