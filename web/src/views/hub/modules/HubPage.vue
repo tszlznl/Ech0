@@ -4,24 +4,26 @@
   >
     <!-- Ech0s Hub -->
     <div ref="mainColumn" class="mx-auto px-2 text-[var(--color-text-muted)] w-full">
-      <h1
-        class="text-4xl md:text-6xl italic font-bold font-serif text-center text-[var(--color-text-muted)]"
-      >
-        Ech0 Hub
-      </h1>
-
-      <div class="w-full max-w-sm mx-auto">
-        <!-- 返回首页 -->
-        <BaseButton
-          @click="router.push('/')"
-          :class="getButtonClasses('', true)"
-          :tooltip="t('commonNav.backHome')"
+      <template v-if="!embedded">
+        <h1
+          class="text-4xl md:text-6xl italic font-bold font-serif text-center text-[var(--color-text-muted)]"
         >
-          <Arrow
-            class="w-9 h-9 rotate-180 transition-transform duration-200 group-hover:-translate-x-1"
-          />
-        </BaseButton>
-      </div>
+          Ech0 Hub
+        </h1>
+
+        <div class="w-full max-w-sm mx-auto">
+          <!-- 返回首页 -->
+          <BaseButton
+            @click="router.push('/')"
+            :class="getButtonClasses('', true)"
+            :tooltip="t('commonNav.backHome')"
+          >
+            <Arrow
+              class="w-9 h-9 rotate-180 transition-transform duration-200 group-hover:-translate-x-1"
+            />
+          </BaseButton>
+        </div>
+      </template>
 
       <div v-if="echoList.length > 0 && !isPreparing && !hasMusicExtension">
         <DynamicScroller
@@ -86,7 +88,7 @@
       :style="backTopStyle"
       class="fixed bottom-6 z-50 transition-all duration-500 animate-fade-in"
     >
-      <TheBackTop class="w-8 h-8 p-1" />
+      <TheBackTop class="w-8 h-8 p-1" :target="props.embedded ? props.scrollTarget : null" />
     </div>
   </div>
 </template>
@@ -108,6 +110,17 @@ import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
 import { getEchoFilesBy } from '@/utils/echo'
 import { ExtensionType } from '@/enums/enums'
 import { useI18n } from 'vue-i18n'
+
+const props = withDefaults(
+  defineProps<{
+    embedded?: boolean
+    scrollTarget?: HTMLElement | null
+  }>(),
+  {
+  embedded: false,
+    scrollTarget: null,
+  },
+)
 
 const router = useRouter()
 const route = useRoute()
@@ -136,19 +149,48 @@ const hasMusicExtension = computed(() =>
 )
 
 const mainColumn = ref<HTMLElement | null>(null)
-const backTopStyle = ref({ right: '100px' }) // 默认 fallback
+const backTopStyle = ref<Record<string, string>>({ right: '100px' }) // 默认 fallback
 const showBackTop = ref(false)
 const HUB_SCROLL_KEY = 'hub:timeline:scrollTop'
 let saveScrollTimer: number | null = null
 let ensuringScrollable = false
+const getActiveScrollElement = () => (props.embedded && props.scrollTarget ? props.scrollTarget : null)
+
+const getScrollMetrics = () => {
+  const scrollEl = getActiveScrollElement()
+  if (scrollEl) {
+    return {
+      scrollTop: scrollEl.scrollTop,
+      viewportHeight: scrollEl.clientHeight,
+      fullHeight: scrollEl.scrollHeight,
+    }
+  }
+
+  const docEl = document.documentElement
+  const body = document.body
+  return {
+    scrollTop: window.scrollY || docEl.scrollTop || 0,
+    viewportHeight: window.innerHeight,
+    fullHeight: Math.max(docEl.scrollHeight, body.scrollHeight),
+  }
+}
 
 // 监听窗口滚动事件，判断是否显示回到顶部按钮
 const updateShowBackTop = () => {
-  showBackTop.value = window.scrollY > 300
+  showBackTop.value = getScrollMetrics().scrollTop > 300
 }
 const updatePosition = () => {
   if (mainColumn.value) {
     const rect = mainColumn.value.getBoundingClientRect()
+    if (props.embedded) {
+      // 嵌入首页时，将按钮贴近右侧 SideNav 列的左侧区域
+      const safeLeft = Math.min(window.innerWidth - 56, rect.right + 24)
+      backTopStyle.value = {
+        left: `${safeLeft}px`,
+      }
+      return
+    }
+
     const rightOffset = window.innerWidth - rect.right
     const safeRight = Math.max(24, rightOffset - 160)
     backTopStyle.value = {
@@ -173,11 +215,7 @@ const onScroll = () => {
   if (ticking) return
   ticking = true
   requestAnimationFrame(() => {
-    const docEl = document.documentElement
-    const body = document.body
-    const scrollTop = window.scrollY || docEl.scrollTop || 0
-    const viewportHeight = window.innerHeight
-    const fullHeight = Math.max(docEl.scrollHeight, body.scrollHeight)
+    const { scrollTop, viewportHeight, fullHeight } = getScrollMetrics()
 
     updateShowBackTop()
     if (saveScrollTimer !== null) {
@@ -238,14 +276,25 @@ const restoreHubScrollPosition = () => {
   if (!raw) return
   const scrollTop = Number(raw)
   if (!Number.isFinite(scrollTop) || scrollTop < 0) return
+  const scrollEl = getActiveScrollElement()
+  if (scrollEl) {
+    scrollEl.scrollTop = scrollTop
+    return
+  }
   window.scrollTo({ top: scrollTop })
 }
 
 onMounted(async () => {
-  // 监听窗口大小变化
+  // 两种模式都需要响应窗口尺寸变化来校正按钮位置
   schedulePositionUpdate()
   window.addEventListener('resize', schedulePositionUpdate)
-  window.addEventListener('scroll', onScroll, { passive: true })
+
+  // 嵌入模式下监听外部滚动容器；独立页面模式监听 window
+  if (!props.embedded) {
+    window.addEventListener('scroll', onScroll, { passive: true })
+  } else {
+    props.scrollTarget?.addEventListener('scroll', onScroll, { passive: true })
+  }
 
   // 获取 Hub 数据
   await hubStore.getHubList()
@@ -265,8 +314,12 @@ watch(echoList, () => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', schedulePositionUpdate)
-  window.removeEventListener('scroll', onScroll)
-  sessionStorage.setItem(HUB_SCROLL_KEY, String(window.scrollY))
+  if (!props.embedded) {
+    window.removeEventListener('scroll', onScroll)
+  } else {
+    props.scrollTarget?.removeEventListener('scroll', onScroll)
+  }
+  sessionStorage.setItem(HUB_SCROLL_KEY, String(getScrollMetrics().scrollTop))
   if (saveScrollTimer !== null) {
     window.clearTimeout(saveScrollTimer)
     saveScrollTimer = null

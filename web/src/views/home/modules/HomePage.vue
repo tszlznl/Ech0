@@ -22,10 +22,13 @@
             </template>
 
             <div v-else class="home-status-widgets">
-              <TheHeatMap />
-              <TheRecentCard v-if="AgentSetting.enable" />
-              <TheConnectWidget />
-              <TheCommentWidget />
+              <template v-if="activeTab === 'status'">
+                <TheHeatMap />
+                <TheRecentCard v-if="AgentSetting.enable" />
+                <TheConnectWidget />
+                <TheCommentWidget />
+              </template>
+              <HubPage v-else embedded :scroll-target="mainColumn" />
             </div>
 
             <aside v-if="!isZenMode" class="home-aside home-aside--mobile">
@@ -59,6 +62,7 @@ import { TheCommentWidget, TheConnectWidget, TheHeatMap, TheRecentCard } from '@
 const route = useRoute()
 const TheEditor = defineAsyncComponent(() => import('./TheEditor.vue'))
 const TheInbox = defineAsyncComponent(() => import('./TheInbox.vue'))
+const HubPage = defineAsyncComponent(() => import('@/views/hub/modules/HubPage.vue'))
 
 const userStore = useUserStore()
 const settingStore = useSettingStore()
@@ -68,9 +72,10 @@ const { isLogin } = storeToRefs(userStore)
 const { AgentSetting } = storeToRefs(settingStore)
 const { inboxMode } = storeToRefs(inboxStore)
 const { isZenMode } = storeToRefs(zenStore)
-const activeTab = computed<'home' | 'publish' | 'status'>(() => {
+const activeTab = computed<'home' | 'publish' | 'status' | 'hub'>(() => {
   if (route.query.tab === 'publish' && isLogin.value) return 'publish'
   if (route.query.tab === 'status') return 'status'
+  if (route.query.tab === 'hub') return 'hub'
   return 'home'
 })
 

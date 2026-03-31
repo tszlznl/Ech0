@@ -1,7 +1,7 @@
 <template>
   <nav class="home-sidebar-nav" aria-label="Primary">
     <RouterLink
-      v-for="item in items"
+      v-for="item in visibleItems"
       :key="item.id"
       :to="item.to"
       class="home-sidebar-nav__link"
@@ -14,10 +14,15 @@
 
 <script setup lang="ts">
 import { RouterLink, useRoute } from 'vue-router'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useUserStore } from '@/stores'
+import { storeToRefs } from 'pinia'
 
 const { t } = useI18n()
 const route = useRoute()
+const userStore = useUserStore()
+const { isLogin } = storeToRefs(userStore)
 
 const items = [
   {
@@ -26,6 +31,7 @@ const items = [
     labelKey: 'homeSidebar.home',
     kind: 'homeTab',
   },
+  { id: 'panel', to: { name: 'panel' }, labelKey: 'homeSidebar.panel', kind: 'route' },
   {
     id: 'publish',
     to: { name: 'home', query: { tab: 'publish' } },
@@ -38,13 +44,22 @@ const items = [
     labelKey: 'homeSidebar.status',
     kind: 'homeTab',
   },
-  { id: 'panel', to: { name: 'panel' }, labelKey: 'homeSidebar.panel', kind: 'route' },
-  { id: 'hub', to: { name: 'hub' }, labelKey: 'homeSidebar.plaza', kind: 'route' },
+  {
+    id: 'hub',
+    to: { name: 'home', query: { tab: 'hub' } },
+    labelKey: 'homeSidebar.plaza',
+    kind: 'homeTab',
+  },
 ] as const
+
+const visibleItems = computed(() => items.filter((item) => item.id !== 'publish' || isLogin.value))
 
 const isItemActive = (item: (typeof items)[number]) => {
   if (item.kind === 'homeTab') {
-    const tab = route.query.tab === 'publish' || route.query.tab === 'status' ? route.query.tab : 'home'
+    const tab =
+      route.query.tab === 'publish' || route.query.tab === 'status' || route.query.tab === 'hub'
+        ? route.query.tab
+        : 'home'
     const itemTab = 'query' in item.to ? item.to.query.tab : 'home'
     return route.name === 'home' && tab === itemTab
   }
