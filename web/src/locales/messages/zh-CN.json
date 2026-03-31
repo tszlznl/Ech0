@@ -382,7 +382,7 @@
   "homeFeed": {
     "loadMore": "继续装填",
     "noMore": "没有啦！",
-    "noMoreFiltered": "没有啦！🥲",
+    "noMoreFiltered": "没有啦！",
     "loading": "加载中..."
   },
   "dateTime": {
