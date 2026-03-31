@@ -16,6 +16,24 @@
 
     <div class="home-header__actions">
       <div class="home-header__links">
+        <button
+          type="button"
+          v-tooltip="themeToggleTooltip"
+          :aria-label="t('homeNav.themeToggleTitle', { mode: nextThemeModeLabel })"
+          class="home-header__link-icon"
+          @click="handleThemeToggle"
+        >
+          <component :is="themeIcon" class="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          v-tooltip="isZenMode ? t('homeTop.exitZenMode') : t('homeNav.enterZenMode')"
+          :aria-label="isZenMode ? t('homeTop.exitZenMode') : t('homeNav.enterZenMode')"
+          :class="['home-header__link-icon', isZenMode ? 'home-header__link-icon--active' : '']"
+          @click="handleToggleZenMode"
+        >
+          <Zen class="block w-4 h-4" />
+        </button>
         <a href="/rss" v-tooltip="t('homeTop.rssTitle')" class="home-header__link-icon">
           <Rss class="w-5 h-5" />
         </a>
@@ -34,19 +52,27 @@
 </template>
 
 <script setup lang="ts">
+import LightIcon from '@/components/icons/light.vue'
+import DarkIcon from '@/components/icons/dark.vue'
+import AutoIcon from '@/components/icons/auto.vue'
+import Zen from '@/components/icons/zen.vue'
 import Github from '@/components/icons/github.vue'
 import Rss from '@/components/icons/rss.vue'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useSettingStore, useUserStore } from '@/stores'
+import { useSettingStore, useUserStore, useThemeStore, useZenStore } from '@/stores'
 import { resolveAvatarUrl } from '@/service/request/shared'
+import { theToast } from '@/utils/toast'
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
+const themeStore = useThemeStore()
+const zenStore = useZenStore()
 
 const { SystemSetting } = storeToRefs(settingStore)
 const { user, isLogin } = storeToRefs(userStore)
+const { isZenMode } = storeToRefs(zenStore)
 const { t } = useI18n()
 
 const logo = computed(() => {
@@ -55,6 +81,48 @@ const logo = computed(() => {
   }
   return resolveAvatarUrl(SystemSetting.value?.server_logo)
 })
+
+const nextThemeMode = computed(() => {
+  if (themeStore.mode === 'system') return 'light'
+  if (themeStore.mode === 'light') return 'dark'
+  return 'system'
+})
+
+const themeIcon = computed(() => {
+  if (nextThemeMode.value === 'light') return LightIcon
+  if (nextThemeMode.value === 'dark') return DarkIcon
+  return AutoIcon
+})
+
+const nextThemeModeLabel = computed(() => {
+  if (nextThemeMode.value === 'light') return String(t('homeNav.themeLight'))
+  if (nextThemeMode.value === 'dark') return String(t('homeNav.themeDark'))
+  return String(t('homeNav.themeAuto'))
+})
+
+const themeToggleTooltip = computed(() => ({
+  content: String(t('homeNav.themeToggleTitle', { mode: nextThemeModeLabel.value })),
+  triggers: ['hover'],
+  hideTriggers: ['hover', 'click'],
+}))
+
+const getThemeModeLabel = () => {
+  if (themeStore.mode === 'light') return String(t('homeNav.themeLight'))
+  if (themeStore.mode === 'dark') return String(t('homeNav.themeDark'))
+  return String(t('homeNav.themeAuto'))
+}
+
+const handleThemeToggle = async (event: MouseEvent) => {
+  await themeStore.toggleTheme(event)
+  theToast.success(String(t('homeNav.themeSwitched')), {
+    description: String(t('homeNav.themeCurrent', { mode: getThemeModeLabel() })),
+    duration: 1500,
+  })
+}
+
+const handleToggleZenMode = () => {
+  zenStore.setZenMode(!isZenMode.value)
+}
 
 </script>
 
@@ -116,7 +184,7 @@ const logo = computed(() => {
 .home-header__links {
   display: flex;
   align-items: center;
-  gap: 0.125rem;
+  gap: 0.25rem;
 }
 
 .home-header__link-icon {
@@ -131,6 +199,11 @@ const logo = computed(() => {
 
 .home-header__link-icon:hover {
   color: var(--color-text-secondary);
+  background: var(--color-border-subtle);
+}
+
+.home-header__link-icon--active {
+  color: var(--color-text-primary);
   background: var(--color-border-subtle);
 }
 </style>
