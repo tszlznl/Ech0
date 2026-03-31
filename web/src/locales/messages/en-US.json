@@ -360,7 +360,8 @@
     "rssTitle": "RSS",
     "widgetTitle": "Ech0 Widget",
     "hubTitle": "Ech0 Hub",
-    "panelTitle": "Panel"
+    "panelTitle": "Panel",
+    "inboxAction": "Inbox"
   },
   "homeSidebar": {
     "home": "Home",

@@ -360,7 +360,8 @@
     "rssTitle": "RSS",
     "widgetTitle": "Ech0 Widget",
     "hubTitle": "Ech0 Hub",
-    "panelTitle": "面板"
+    "panelTitle": "面板",
+    "inboxAction": "收件箱"
   },
   "homeSidebar": {
     "home": "首页",

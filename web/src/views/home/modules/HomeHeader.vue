@@ -24,6 +24,16 @@
           <Github class="w-4 h-4" />
         </a>
         <button
+          v-if="isLogin"
+          type="button"
+          v-tooltip="t('homeTop.inboxAction')"
+          :aria-label="t('homeTop.inboxAction')"
+          :class="['home-header__link-icon', inboxMode ? 'home-header__link-icon--active' : '']"
+          @click="handleToggleInboxMode"
+        >
+          <Inbox class="block w-4 h-4" />
+        </button>
+        <button
           type="button"
           v-tooltip="isZenMode ? t('homeTop.exitZenMode') : t('homeNav.enterZenMode')"
           :aria-label="isZenMode ? t('homeTop.exitZenMode') : t('homeNav.enterZenMode')"
@@ -53,10 +63,11 @@ import AutoIcon from '@/components/icons/auto.vue'
 import Zen from '@/components/icons/zen.vue'
 import Github from '@/components/icons/github.vue'
 import Rss from '@/components/icons/rss.vue'
+import Inbox from '@/components/icons/inbox.vue'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useSettingStore, useUserStore, useThemeStore, useZenStore } from '@/stores'
+import { useSettingStore, useUserStore, useThemeStore, useZenStore, useInboxStore } from '@/stores'
 import { resolveAvatarUrl } from '@/service/request/shared'
 import { theToast } from '@/utils/toast'
 
@@ -64,10 +75,12 @@ const settingStore = useSettingStore()
 const userStore = useUserStore()
 const themeStore = useThemeStore()
 const zenStore = useZenStore()
+const inboxStore = useInboxStore()
 
 const { SystemSetting } = storeToRefs(settingStore)
 const { user, isLogin } = storeToRefs(userStore)
 const { isZenMode } = storeToRefs(zenStore)
+const { inboxMode } = storeToRefs(inboxStore)
 const { t } = useI18n()
 
 const logo = computed(() => {
@@ -117,6 +130,10 @@ const handleThemeToggle = async (event: MouseEvent) => {
 
 const handleToggleZenMode = () => {
   zenStore.setZenMode(!isZenMode.value)
+}
+
+const handleToggleInboxMode = () => {
+  inboxStore.setInboxMode(!inboxMode.value)
 }
 </script>
 
