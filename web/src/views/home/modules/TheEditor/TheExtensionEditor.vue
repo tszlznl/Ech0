@@ -74,7 +74,7 @@
           :placeholder="t('editor.websiteUrlPlaceholder')"
         />
         <BaseButton
-          class="rounded-lg px-3 py-2 text-sm whitespace-nowrap"
+          class="rounded-md px-3 py-2 text-sm whitespace-nowrap"
           :disabled="isFetchingWebsiteTitle"
           @click="handleFetchWebsiteTitle"
         >

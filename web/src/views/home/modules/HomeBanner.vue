@@ -1,7 +1,7 @@
 <template>
   <section class="home-banner" aria-label="Intro">
     <div class="home-banner__top">
-      <p class="home-banner__text">{{ t('homeBio.tagline') }}</p>
+      <p class="home-banner__line">{{ t('homeBio.tagline') }}</p>
     </div>
     <div class="home-banner__meta">
       <span class="home-banner__powered">Powered by Ech0</span>
@@ -43,24 +43,25 @@ const { t } = useI18n()
   gap: 0.75rem;
 }
 
-.home-banner__powered {
-  font-size: 0.6875rem;
-  line-height: 1;
-  color: var(--color-text-muted);
-  opacity: 0.6;
-}
-
 @media (max-width: 420px) {
   .home-banner {
     flex-wrap: wrap;
   }
 }
 
-.home-banner__text {
+.home-banner__line {
   margin: 0;
   font-family: var(--font-family-display);
   font-size: 0.9375rem;
   line-height: 1.55;
   color: var(--color-text-secondary);
+}
+
+.home-banner__powered {
+  margin: 0;
+  font-family: var(--font-family-display);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--color-text-muted);
 }
 </style>
