@@ -68,15 +68,6 @@
             v-if="dropdownOpen && (filteredOptions.length > 0 || allowCreate)"
             class="w-auto! absolute z-10 mt-2 max-h-64 overflow-y-scroll rounded-[var(--radius-md)] bg-[var(--combobox-bg-color)] py-1 text-sm shadow-[var(--shadow-md)] ring-1 ring-[var(--combobox-border-color)] focus:outline-none"
           >
-            <!-- Existing Options -->
-            <div
-              @click="toggleManaging"
-              class="px-2 py-1 min-w-36 w-max text-[var(--color-text-muted)] cursor-pointer flex items-center justify-between gap-2 text-lg font-bold whitespace-nowrap mx-auto hover:text-[var(--combobox-hover-text-color)]"
-            >
-              <tagsetting class="w-4 h-4 shrink-0" />
-              {{ t('editor.tagManagerTitle') }}
-              <jump class="w-4 h-4 shrink-0" />
-            </div>
             <ComboboxOption
               v-for="item in filteredOptions"
               :key="getOptionLabel(item) || String(item)"
@@ -102,11 +93,6 @@ import {
   ComboboxOption,
   ComboboxButton,
 } from '@headlessui/vue'
-import { useI18n } from 'vue-i18n'
-import tagsetting from '../icons/tagsetting.vue'
-import jump from '../icons/jump.vue'
-import { useEditorStore } from '@/stores'
-import { Mode } from '@/enums/enums'
 
 type ClassValue = string | string[] | Record<string, boolean | number | string>
 
@@ -143,15 +129,7 @@ const internalValue = ref(props.modelValue)
 const labelField = props.labelField || 'name'
 const allowCreate = props.allowCreate ?? false
 const multiple = props.multiple ?? false
-const isManaging = ref<boolean>(false)
 const isUserClicking = ref(false) // 标记用户是否正在主动点击选项
-const editorStore = useEditorStore()
-const { t } = useI18n()
-
-const toggleManaging = () => {
-  isManaging.value = !isManaging.value
-  editorStore.setMode(Mode.TagManage)
-}
 
 watch(
   () => props.modelValue,

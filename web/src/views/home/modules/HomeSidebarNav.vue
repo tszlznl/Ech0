@@ -80,6 +80,12 @@ const items = [
     kind: 'homeTab',
   },
   {
+    id: 'tags',
+    to: { name: 'home', query: { tab: 'tags' } },
+    labelKey: 'homeSidebar.tags',
+    kind: 'homeTab',
+  },
+  {
     id: 'hub',
     to: { name: 'home', query: { tab: 'hub' } },
     labelKey: 'homeSidebar.plaza',
@@ -92,7 +98,10 @@ const visibleItems = computed(() => items.filter((item) => item.id !== 'publish'
 const isItemActive = (item: (typeof items)[number]) => {
   if (item.kind === 'homeTab') {
     const tab =
-      route.query.tab === 'publish' || route.query.tab === 'status' || route.query.tab === 'hub'
+      route.query.tab === 'publish' ||
+      route.query.tab === 'status' ||
+      route.query.tab === 'tags' ||
+      route.query.tab === 'hub'
         ? route.query.tab
         : 'home'
     const itemTab = 'query' in item.to ? item.to.query.tab : 'home'

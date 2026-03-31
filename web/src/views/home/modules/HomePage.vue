@@ -5,13 +5,19 @@
         <div
           ref="mainColumn"
           class="home-main"
+          :class="{ 'home-main--unclipped': activeTab === 'tags' }"
         >
           <div class="home-main-track">
             <HomeHeader class="mb-3" />
             <aside v-if="!isZenMode" class="home-aside home-aside--mobile">
               <HomeSidebarNav v-model:mobile-search-open="mobileSearchOpen" />
             </aside>
-            <TheEditor v-if="activeTab === 'publish'" />
+            <div v-if="activeTab === 'publish'" class="home-content-block">
+              <TheEditor />
+            </div>
+            <div v-else-if="activeTab === 'tags'" class="home-content-block">
+              <TheTagsManager />
+            </div>
 
             <template v-else-if="activeTab === 'home'">
               <HomeBanner :class="{ 'home-banner--mobile-hidden': shouldHideBannerOnMobile }" />
@@ -24,15 +30,13 @@
               <TheInbox v-else />
             </template>
 
-            <div v-else class="home-status-widgets">
-              <template v-if="activeTab === 'status'">
-                <TheHeatMap />
-                <TheRecentCard v-if="AgentSetting.enable" />
-                <TheConnectWidget />
-                <TheCommentWidget />
-              </template>
-              <HubPage v-else embedded :scroll-target="mainColumn" />
+            <div v-else-if="activeTab === 'status'" class="home-content-block home-status-widgets">
+              <TheHeatMap />
+              <TheRecentCard v-if="AgentSetting.enable" />
+              <TheConnectWidget />
+              <TheCommentWidget />
             </div>
+            <HubPage v-else embedded :scroll-target="mainColumn" />
 
           </div>
         </div>
@@ -60,6 +64,7 @@ import { TheCommentWidget, TheConnectWidget, TheHeatMap, TheRecentCard } from '@
 
 const route = useRoute()
 const TheEditor = defineAsyncComponent(() => import('./TheEditor.vue'))
+const TheTagsManager = defineAsyncComponent(() => import('./TheEditor/TheTagsManager.vue'))
 const TheInbox = defineAsyncComponent(() => import('./TheInbox.vue'))
 const HubPage = defineAsyncComponent(() => import('@/views/hub/modules/HubPage.vue'))
 
@@ -74,9 +79,10 @@ const { inboxMode } = storeToRefs(inboxStore)
 const { isZenMode } = storeToRefs(zenStore)
 const { searchingMode, isFilteringMode } = storeToRefs(echoStore)
 const mobileSearchOpen = ref(false)
-const activeTab = computed<'home' | 'publish' | 'status' | 'hub'>(() => {
+const activeTab = computed<'home' | 'publish' | 'status' | 'tags' | 'hub'>(() => {
   if (route.query.tab === 'publish' && isLogin.value) return 'publish'
   if (route.query.tab === 'status') return 'status'
+  if (route.query.tab === 'tags') return 'tags'
   if (route.query.tab === 'hub') return 'hub'
   return 'home'
 })
@@ -224,6 +230,10 @@ onBeforeUnmount(() => {
     padding: 1.5rem 0 2rem;
   }
 
+  .home-main--unclipped {
+    overflow: visible;
+  }
+
   .home-layout--zen .home-main {
     flex: 0 1 min(var(--home-main-max), 100%);
     max-width: min(var(--home-main-max), 100%);
@@ -236,6 +246,10 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
+  width: 100%;
+}
+
+.home-content-block {
   width: 100%;
 }
 
