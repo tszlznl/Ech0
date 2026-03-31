@@ -137,7 +137,7 @@ const isItemActive = (item: (typeof items)[number]) => {
 
 .home-sidebar-nav__link {
   display: block;
-  padding: 0.5rem 0.75rem;
+  padding: 0.4rem 0.7rem;
   border-radius: var(--radius-xs);
   font-size: 0.9375rem;
   font-weight: 500;
@@ -194,7 +194,7 @@ const isItemActive = (item: (typeof items)[number]) => {
 
   .home-sidebar-nav__link {
     flex: 0 0 auto;
-    padding: 0.3rem 0.62rem;
+    padding: 0.3rem 0.5rem;
     border-radius: var(--radius-xs);
     font-size: 0.9rem;
     line-height: 1.2;
