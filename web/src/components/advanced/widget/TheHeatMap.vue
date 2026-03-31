@@ -66,11 +66,11 @@ const getCell = (row: number, col: number) => {
 }
 
 const getColor = (count: number): string => {
-  if (count >= 4) return 'color-mix(in oklab, var(--color-accent) 78%, black)'
-  if (count >= 3) return 'color-mix(in oklab, var(--color-accent) 62%, black)'
-  if (count >= 2) return 'color-mix(in oklab, var(--color-accent) 52%, var(--color-bg-surface))'
-  if (count >= 1) return 'color-mix(in oklab, var(--color-accent) 30%, var(--color-bg-surface))'
-  return 'var(--color-bg-surface)'
+  if (count >= 4) return 'var(--heatmap-bg-color-4)'
+  if (count >= 3) return 'var(--heatmap-bg-color-3)'
+  if (count >= 2) return 'var(--heatmap-bg-color-2)'
+  if (count >= 1) return 'var(--heatmap-bg-color-1)'
+  return 'var(--heatmap-bg-color-0)'
 }
 
 const tooltip = ref({
