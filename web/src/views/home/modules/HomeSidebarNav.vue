@@ -18,7 +18,6 @@ import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 
-/** 参考图：博客=主时间线；第四项为嵌入小组件 */
 const items = [
   { routeName: 'home', to: { name: 'home' }, labelKey: 'homeSidebar.blog' },
   { routeName: 'zone', to: { name: 'zone' }, labelKey: 'homeSidebar.tags' },
@@ -37,7 +36,7 @@ const items = [
 .home-sidebar-nav__link {
   display: block;
   padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-sm);
   font-size: 0.9375rem;
   font-weight: 500;
   color: var(--color-text-secondary);
@@ -49,16 +48,12 @@ const items = [
 
 .home-sidebar-nav__link:hover {
   color: var(--color-text-primary);
-  background: rgb(0 0 0 / 0.04);
+  background: var(--color-bg-muted);
 }
 
 .home-sidebar-nav__link--active {
   color: var(--color-text-primary);
-  background: rgb(255 255 255 / 0.85);
+  background: color-mix(in srgb, var(--color-bg-muted), var(--color-bg-surface) 90%);
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
-}
-
-:global(html.dark) .home-sidebar-nav__link--active {
-  background: var(--color-bg-surface);
 }
 </style>

@@ -158,6 +158,13 @@ onBeforeUnmount(() => {
   color: var(--color-text-primary);
 }
 
+@media (min-width: 820px) {
+  .home-page {
+    height: 100dvh;
+    overflow: hidden;
+  }
+}
+
 .home-shell {
   max-width: 50rem;
   margin-left: auto;
@@ -174,6 +181,10 @@ onBeforeUnmount(() => {
 @media (min-width: 820px) {
   .home-shell {
     padding: 1.5rem 1rem 2rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-sizing: border-box;
   }
 }
 
@@ -193,6 +204,8 @@ onBeforeUnmount(() => {
 
 @media (min-width: 820px) {
   .home-layout {
+    flex: 1;
+    min-height: 0;
     flex-direction: row;
     align-items: flex-start;
     justify-content: center;
@@ -222,8 +235,7 @@ onBeforeUnmount(() => {
 @media (min-width: 820px) {
   .home-main {
     min-height: 0;
-    height: 100%;
-    max-height: 100dvh;
+    align-self: stretch;
     overflow-y: auto;
     overscroll-behavior: contain;
     flex: 0 1 var(--home-main-max);
