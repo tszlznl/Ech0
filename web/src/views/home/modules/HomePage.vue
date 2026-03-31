@@ -4,7 +4,7 @@
     :class="isZenMode ? 'sm:gap-0' : 'sm:gap-8'"
   >
     <div
-      class="sm:max-w-xs w-full sm:min-h-0 sm:h-full sm:overflow-y-auto transition-opacity duration-900 ease-[cubic-bezier(0.22,1,0.36,1)]"
+      class="sm:max-w-sm w-full sm:min-h-0 sm:h-full sm:overflow-y-auto transition-opacity duration-900 ease-[cubic-bezier(0.22,1,0.36,1)]"
       :class="
         isZenMode
           ? 'sm:opacity-0 sm:invisible sm:pointer-events-none sm:w-0 sm:max-w-0 sm:overflow-hidden'
