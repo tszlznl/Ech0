@@ -52,6 +52,8 @@ const { t } = useI18n()
 .home-banner__line {
   margin: 0;
   font-family: 'Songti SC', 'STSong', var(--font-family-display);
+  font-weight: 550;
+  letter-spacing: 0.01em;
   font-size: 0.9375rem;
   line-height: 1.55;
   color: var(--color-text-secondary);
