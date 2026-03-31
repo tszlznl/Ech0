@@ -88,6 +88,7 @@ const logo = computed(() => {
   height: 1.75rem;
   border-radius: 9999px;
   object-fit: cover;
+  border: 2px solid var(--color-bg-surface);
   box-shadow:
     0 0 0 1px var(--color-border-subtle),
     0 1px 2px rgb(0 0 0 / 0.06);

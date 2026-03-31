@@ -20,29 +20,18 @@
       >
         <Zen class="block w-5 h-5" />
       </button>
-      <button
-        type="button"
-        v-tooltip="t('homeNav.helloRequest')"
-        :aria-label="t('homeNav.helloRequest')"
-        class="home-banner__btn"
-        @click="handleHelloOnly"
-      >
-        <Hello class="w-5 h-5" />
-      </button>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import Hello from '@/components/icons/hello.vue'
 import LightIcon from '@/components/icons/light.vue'
 import DarkIcon from '@/components/icons/dark.vue'
 import AutoIcon from '@/components/icons/auto.vue'
 import Zen from '@/components/icons/zen.vue'
 import { storeToRefs } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { fetchHelloEch0 } from '@/service/api'
 import { useThemeStore, useZenStore } from '@/stores'
 import { theToast } from '@/utils/toast'
 
@@ -93,27 +82,6 @@ const handleToggleZenMode = () => {
   zenStore.setZenMode(!isZenMode.value)
 }
 
-const handleHelloOnly = () => {
-  const modeText = getThemeModeLabel()
-  const hello = ref<App.Api.Ech0.HelloEch0>()
-  fetchHelloEch0().then((res) => {
-    if (res.code === 1) {
-      hello.value = res.data
-      theToast.success(String(t('homeNav.helloToastTitle')), {
-        description: String(
-          t('homeNav.helloToastDesc', { version: hello.value.version, mode: modeText }),
-        ),
-        duration: 2000,
-        action: {
-          label: String(t('homeNav.githubAction')),
-          onClick: () => {
-            window.open(hello.value?.github, '_blank')
-          },
-        },
-      })
-    }
-  })
-}
 </script>
 
 <style scoped>
@@ -124,9 +92,9 @@ const handleHelloOnly = () => {
   gap: 0.75rem;
   margin-top: 0.5rem;
   padding: 0.625rem 0.75rem;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xs);
   background: var(--color-bg-surface);
+  box-shadow: var(--shadow-soft);
 }
 
 @media (max-width: 420px) {
@@ -147,7 +115,6 @@ const handleHelloOnly = () => {
   align-items: center;
   flex-shrink: 0;
   border-radius: 9999px;
-  border: 1px solid var(--color-border-subtle);
   background: var(--input-bg-color);
   overflow: hidden;
 }

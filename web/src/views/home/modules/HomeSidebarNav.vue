@@ -36,7 +36,7 @@ const items = [
 .home-sidebar-nav__link {
   display: block;
   padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xs);
   font-size: 0.9375rem;
   font-weight: 500;
   color: var(--color-text-secondary);
