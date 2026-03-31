@@ -103,6 +103,8 @@ const handleFilterByTag = (tag: App.Api.Ech0.Tag) => {
 
   echoStore.filteredTag = tag
   echoStore.isFilteringMode = true
+  // 从标签管理页切回首页时，时间线组件尚未挂载；这里先主动刷新一次，避免过滤状态丢失。
+  echoStore.refreshEchos()
   router.push({ name: 'home' })
 }
 
