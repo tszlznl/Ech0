@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	s3BackupPrefix   = "backups/"
+	s3BackupPrefix    = "backups/"
 	s3BackupKeepCount = 3
 )
 
