@@ -28,7 +28,6 @@
             <aside v-if="!isZenMode" class="home-aside home-aside--mobile">
               <HomeSidebarNav />
               <TheFilter />
-              <p class="home-aside-foot">{{ sidebarFooterText }}</p>
             </aside>
           </div>
         </div>
@@ -36,7 +35,6 @@
         <aside v-if="!isZenMode" class="home-aside home-aside--rail">
           <HomeSidebarNav />
           <TheFilter />
-          <p class="home-aside-foot">{{ sidebarFooterText }}</p>
         </aside>
       </div>
     </div>
@@ -65,8 +63,6 @@ const zenStore = useZenStore()
 const { isLogin } = storeToRefs(userStore)
 const { inboxMode } = storeToRefs(inboxStore)
 const { isZenMode } = storeToRefs(zenStore)
-
-const sidebarFooterText = t('homeFooter.powered')
 
 const mainColumn = ref<HTMLElement | null>(null)
 const topStickyBar = ref<HTMLElement | null>(null)
@@ -296,11 +292,4 @@ onBeforeUnmount(() => {
   }
 }
 
-.home-aside-foot {
-  margin: 0;
-  padding-top: 0.25rem;
-  font-size: 0.75rem;
-  line-height: 1.45;
-  color: var(--color-text-muted);
-}
 </style>

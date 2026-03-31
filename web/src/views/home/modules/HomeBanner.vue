@@ -1,26 +1,29 @@
 <template>
   <section class="home-banner" aria-label="Intro">
-    <p class="home-banner__text">{{ t('homeBio.tagline') }}</p>
-    <div class="home-banner__actions">
-      <button
-        type="button"
-        v-tooltip="themeToggleTooltip"
-        :aria-label="t('homeNav.themeToggleTitle', { mode: nextThemeModeLabel })"
-        class="home-banner__btn"
-        @click="handleThemeToggle"
-      >
-        <component :is="themeIcon" class="w-5 h-5" />
-      </button>
-      <button
-        type="button"
-        v-tooltip="isZenMode ? t('homeTop.exitZenMode') : t('homeNav.enterZenMode')"
-        :aria-label="isZenMode ? t('homeTop.exitZenMode') : t('homeNav.enterZenMode')"
-        :class="['home-banner__btn', isZenMode ? 'home-banner__btn--active' : '']"
-        @click="handleToggleZenMode"
-      >
-        <Zen class="block w-5 h-5" />
-      </button>
+    <div class="home-banner__top">
+      <p class="home-banner__text">{{ t('homeBio.tagline') }}</p>
+      <div class="home-banner__actions">
+        <button
+          type="button"
+          v-tooltip="themeToggleTooltip"
+          :aria-label="t('homeNav.themeToggleTitle', { mode: nextThemeModeLabel })"
+          class="home-banner__btn"
+          @click="handleThemeToggle"
+        >
+          <component :is="themeIcon" class="w-5 h-5" />
+        </button>
+        <button
+          type="button"
+          v-tooltip="isZenMode ? t('homeTop.exitZenMode') : t('homeNav.enterZenMode')"
+          :aria-label="isZenMode ? t('homeTop.exitZenMode') : t('homeNav.enterZenMode')"
+          :class="['home-banner__btn', isZenMode ? 'home-banner__btn--active' : '']"
+          @click="handleToggleZenMode"
+        >
+          <Zen class="block w-5 h-5" />
+        </button>
+      </div>
     </div>
+    <span class="home-banner__powered">Powered by Ech0</span>
   </section>
 </template>
 
@@ -87,14 +90,30 @@ const handleToggleZenMode = () => {
 <style scoped>
 .home-banner {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: space-between;
   gap: 0.75rem;
   margin-top: 0.5rem;
-  padding: 0.625rem 0.75rem;
+  min-height: 6rem;
+  padding: 0.75rem;
   border-radius: var(--radius-xs);
   background: var(--color-bg-surface);
   box-shadow: var(--shadow-soft);
+}
+
+.home-banner__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.home-banner__powered {
+  align-self: flex-end;
+  font-size: 0.6875rem;
+  line-height: 1;
+  color: var(--color-text-muted);
+  opacity: 0.6;
 }
 
 @media (max-width: 420px) {
@@ -105,6 +124,7 @@ const handleToggleZenMode = () => {
 
 .home-banner__text {
   margin: 0;
+  font-family: var(--font-family-display);
   font-size: 0.9375rem;
   line-height: 1.55;
   color: var(--color-text-secondary);
