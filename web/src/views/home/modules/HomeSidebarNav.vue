@@ -145,7 +145,7 @@ const isItemActive = (item: (typeof items)[number]) => {
 .home-sidebar-nav__link--active {
   color: var(--color-text-primary);
   background: color-mix(in srgb, var(--color-bg-muted), var(--color-bg-surface) 90%);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+  box-shadow: var(--shadow-soft);
 }
 
 .home-sidebar-nav__search-trigger {
@@ -183,7 +183,10 @@ const isItemActive = (item: (typeof items)[number]) => {
 
   .home-sidebar-nav__link {
     flex: 0 0 auto;
-    padding: 0.45rem 0.7rem;
+    padding: 0.3rem 0.62rem;
+    border-radius: var(--radius-xs);
+    font-size: 0.9rem;
+    line-height: 1.2;
   }
 
   .home-sidebar-nav__search-trigger {
@@ -191,9 +194,8 @@ const isItemActive = (item: (typeof items)[number]) => {
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    border-radius: var(--radius-xs);
+    padding: 0.2rem;
+    border-radius: 0.375rem;
     color: var(--color-text-muted);
     transition:
       color 0.2s,

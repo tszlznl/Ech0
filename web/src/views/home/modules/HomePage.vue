@@ -7,7 +7,7 @@
           class="home-main"
         >
           <div class="home-main-track">
-            <HomeHeader />
+            <HomeHeader class="mb-3" />
             <aside v-if="!isZenMode" class="home-aside home-aside--mobile">
               <HomeSidebarNav v-model:mobile-search-open="mobileSearchOpen" />
             </aside>
@@ -247,8 +247,8 @@ onBeforeUnmount(() => {
 
 .home-aside--mobile {
   display: flex;
-  margin-top: 0.25rem;
-  margin-bottom: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 @media (min-width: 820px) {
