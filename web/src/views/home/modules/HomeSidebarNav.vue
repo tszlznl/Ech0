@@ -71,7 +71,9 @@ const currentHomeTab = computed<'home' | 'publish' | 'status' | 'tags' | 'hub'>(
 })
 const showSearchTrigger = computed(() => route.name === 'home' && currentHomeTab.value === 'home')
 const showMobileFilter = computed(
-  () => showSearchTrigger.value && (searchOpenState.value || searchingMode.value || isFilteringMode.value),
+  () =>
+    showSearchTrigger.value &&
+    (searchOpenState.value || searchingMode.value || isFilteringMode.value),
 )
 
 const items = [
