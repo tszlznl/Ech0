@@ -177,7 +177,6 @@ const handleLikeEcho = async () => {
     theToast.success(String(t('hubEcho.likeSuccess')))
   }
 }
-
 </script>
 
 <style scoped lang="css">
