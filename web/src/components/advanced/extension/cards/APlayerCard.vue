@@ -213,7 +213,12 @@ onBeforeUnmount(() => {
 <style scoped>
 .music-player-wrap {
   position: relative;
-  min-height: 104px;
+  display: flex;
+  align-items: center;
+}
+
+.music-player-wrap > * {
+  width: 100%;
 }
 
 .apple-frame {
@@ -255,6 +260,7 @@ onBeforeUnmount(() => {
 }
 
 :deep(.aplayer) {
+  margin: 0;
   border-radius: calc(var(--radius-md) - 0.15rem);
   border: 1px solid var(--color-border-subtle);
   box-shadow: var(--shadow-sm);
