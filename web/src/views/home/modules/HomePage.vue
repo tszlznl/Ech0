@@ -230,6 +230,7 @@ onBeforeUnmount(() => {
     min-height: 0;
     align-self: stretch;
     overflow-y: auto;
+    scrollbar-gutter: stable;
     overscroll-behavior: contain;
     flex: 0 1 var(--home-main-max);
     max-width: var(--home-main-max);
@@ -237,7 +238,8 @@ onBeforeUnmount(() => {
   }
 
   .home-main--unclipped {
-    overflow: visible;
+    overflow-x: visible;
+    overflow-y: auto;
   }
 
   .home-layout--zen .home-main {
