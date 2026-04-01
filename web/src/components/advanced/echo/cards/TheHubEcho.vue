@@ -86,18 +86,6 @@
           <LinkTo class="w-4 h-4" />
         </a>
 
-        <div class="flex items-center justify-end" v-tooltip="t('hubEcho.print')">
-          <button
-            @click="handlePrintEcho()"
-            :class="[
-              'transform transition-transform duration-150',
-              isPrintAnimating ? 'scale-160' : 'scale-100',
-            ]"
-          >
-            <Print class="w-4 h-4" />
-          </button>
-        </div>
-
         <div class="flex items-center justify-end" v-tooltip="t('hubEcho.like')">
           <div class="flex items-center gap-1">
             <button
@@ -124,18 +112,15 @@
 import Verified from '@/components/icons/verified.vue'
 import GrayLike from '@/components/icons/graylike.vue'
 import LinkTo from '@/components/icons/linkto.vue'
-import Print from '@/components/icons/print.vue'
 import TheImageGallery from '@/components/advanced/gallery/TheImageGallery.vue'
 import { TheMdPreview } from '@/components/advanced/md'
 import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { ImageLayout } from '@/enums/enums'
 import { formatDate } from '@/utils/other'
 import { getEchoFilesBy } from '@/utils/echo'
-import { useZoneStore } from '@/stores'
 import { useFetch } from '@vueuse/core'
 import { theToast } from '@/utils/toast'
 import { localStg } from '@/utils/storage'
-import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
 const TheExtensionRenderer = defineAsyncComponent(
@@ -147,8 +132,6 @@ type Echo = App.Api.Hub.Echo
 const props = defineProps<{
   echo: Echo
 }>()
-const zoneStore = useZoneStore()
-const router = useRouter()
 const { t } = useI18n()
 
 const fav_count = ref<number>(props.echo.fav_count)
@@ -158,7 +141,6 @@ const echoImageFiles = computed(() =>
 const server_url = computed(() => props.echo.server_url)
 const echo_id = computed(() => props.echo.id)
 const isLikeAnimating = ref(false)
-const isPrintAnimating = ref(false)
 const LIKE_LIST_KEY = computed(() => `${server_url.value}_liked_echo_ids`)
 
 watch(
@@ -196,27 +178,6 @@ const handleLikeEcho = async () => {
   }
 }
 
-const handlePrintEcho = () => {
-  isPrintAnimating.value = true
-  setTimeout(() => {
-    isPrintAnimating.value = false
-  }, 250)
-
-  if (!props.echo.content?.trim()) {
-    theToast.info(String(t('hubEcho.printTextOnly')))
-    return
-  }
-
-  zoneStore.setPendingPrintEcho({
-    id: props.echo.id,
-    content: props.echo.content,
-    created_at: props.echo.created_at,
-    tags: props.echo.tags,
-    echo_files: props.echo.echo_files,
-    extension: props.echo.extension,
-  })
-  router.push({ name: 'zone' })
-}
 </script>
 
 <style scoped lang="css">

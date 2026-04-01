@@ -891,10 +891,6 @@
     "nextImage": "Nächstes Bild",
     "scrollHint": "← Wischen, um mehr zu sehen →"
   },
-  "zone": {
-    "clearedPrintNotes": "Alle Drucknotizen gelöscht",
-    "noPrintableText": "Dieses Echo enthält keinen druckbaren Text"
-  },
   "githubCard": {
     "avatarAlt": "Avatar"
   },

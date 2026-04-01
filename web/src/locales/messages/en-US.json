@@ -891,10 +891,6 @@
     "nextImage": "Next image",
     "scrollHint": "← Swipe left/right to see more →"
   },
-  "zone": {
-    "clearedPrintNotes": "Cleared all printed notes",
-    "noPrintableText": "This Echo link has no printable text"
-  },
   "githubCard": {
     "avatarAlt": "Avatar"
   },

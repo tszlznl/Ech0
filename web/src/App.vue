@@ -44,7 +44,6 @@ router.afterEach((to, from) => {
   const routeDepth: Record<string, number> = {
     home: 0,
     echo: 1,
-    zone: 1,
     panel: 1,
     auth: 1,
     hub: 1,

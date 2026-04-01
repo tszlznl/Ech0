@@ -56,21 +56,6 @@
   --uppy-shadow-inset:
     inset 0 0 0 1px oklch(80% 0.012 62 / 0.35), inset 0 1px 3px oklch(28% 0.01 60 / 0.08);
 
-  --zone-bg-color: oklch(89.3% 0.028 238.3);
-  --zone-grid-color: oklch(100% 0 0 / 0.38);
-  --zone-glow-color: oklch(78.9% 0.02 246.4 / 0.45);
-  --zone-title-color: oklch(35.5% 0.025 254.9 / 0.74);
-  --zone-subtitle-color: oklch(43.5% 0.024 251.4 / 0.7);
-  --zone-console-shell-from: oklch(72.7% 0.165 128.1);
-  --zone-console-shell-to: oklch(66.3% 0.154 128.3);
-  --zone-console-panel: oklch(76.2% 0.169 128.6);
-  --zone-console-screen-bg: oklch(19% 0.025 142.5);
-  --zone-console-screen-text: oklch(88.9% 0.22 141.8);
-  --zone-console-screen-muted: oklch(45.8% 0.106 141.2);
-  --zone-console-button: oklch(30.1% 0.004 286.1);
-  --zone-console-print-button: oklch(66.8% 0.175 49.8);
-  --zone-console-print-text: oklch(29.7% 0.08 42.5);
-  --zone-console-alert: var(--color-danger);
 
   --md-editor-bg-color: var(--color-bg-surface);
   --md-editor-border-color: var(--color-border-subtle);

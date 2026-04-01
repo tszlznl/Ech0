@@ -133,15 +133,6 @@ const router = createRouter({
       },
     },
     {
-      path: '/zone/:echoId?',
-      name: 'zone',
-      component: () => import('../views/zone/ZoneView.vue'),
-      meta: {
-        title: 'Zone',
-        description: 'Explore grouped posts and related content in Ech0.',
-      },
-    },
-    {
       path: '/echo/:echoId',
       name: 'echo',
       component: () => import('../views/echo/EchoView.vue'),

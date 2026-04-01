@@ -891,10 +891,6 @@
     "nextImage": "下一张图片",
     "scrollHint": "← 左右滑动查看更多 →"
   },
-  "zone": {
-    "clearedPrintNotes": "已清空打印纸条",
-    "noPrintableText": "该链接对应的 Echo 没有可打印文本"
-  },
   "githubCard": {
     "avatarAlt": "头像"
   },
