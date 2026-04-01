@@ -10,7 +10,8 @@
         <img :src="logo" alt="" loading="lazy" class="home-header__logo" />
       </button>
       <h1 class="home-header__title">
-        {{ SystemSetting.server_name }}
+        <span>{{ typedTitle }}</span>
+        <span v-if="isTypingTitle" class="home-header__cursor" aria-hidden="true"></span>
       </h1>
     </div>
 
@@ -82,7 +83,7 @@ import Rss from '@/components/icons/rss.vue'
 import Inbox from '@/components/icons/inbox.vue'
 import Auth from '@/components/icons/auth.vue'
 import { storeToRefs } from 'pinia'
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSettingStore, useUserStore, useThemeStore, useZenStore, useInboxStore } from '@/stores'
 import { resolveAvatarUrl } from '@/service/request/shared'
@@ -108,6 +109,52 @@ const logo = computed(() => {
   }
   return resolveAvatarUrl(SystemSetting.value?.server_logo)
 })
+const fullTitle = computed(() => String(SystemSetting.value?.server_name ?? ''))
+const typedTitle = ref('')
+const isTypingTitle = ref(false)
+const CURSOR_INTRO_DELAY_MS = 2800
+const TITLE_TYPING_INTERVAL_MS = 75
+let introDelayTimer: ReturnType<typeof setTimeout> | null = null
+let typingTimer: ReturnType<typeof setTimeout> | null = null
+
+const clearTypingTimers = () => {
+  if (introDelayTimer) {
+    clearTimeout(introDelayTimer)
+    introDelayTimer = null
+  }
+  if (typingTimer) {
+    clearTimeout(typingTimer)
+    typingTimer = null
+  }
+}
+
+const runTypingEffect = () => {
+  clearTypingTimers()
+  typedTitle.value = ''
+  isTypingTitle.value = true
+
+  const nextTitle = fullTitle.value
+  if (!nextTitle) {
+    isTypingTitle.value = false
+    return
+  }
+
+  let index = 0
+  const typeNext = () => {
+    index += 1
+    typedTitle.value = nextTitle.slice(0, index)
+
+    if (index < nextTitle.length) {
+      typingTimer = setTimeout(typeNext, TITLE_TYPING_INTERVAL_MS)
+      return
+    }
+
+    isTypingTitle.value = false
+  }
+
+  // 先显示一小段纯光标闪烁，再开始打字机输出。
+  introDelayTimer = setTimeout(typeNext, CURSOR_INTRO_DELAY_MS)
+}
 
 const nextThemeMode = computed(() => {
   if (themeStore.mode === 'system') return 'light'
@@ -162,6 +209,20 @@ const handleGoExplore = async () => {
 const handleGoLogin = async () => {
   await router.push({ name: 'auth' })
 }
+
+watch(fullTitle, (nextTitle, prevTitle) => {
+  if (nextTitle !== prevTitle) {
+    runTypingEffect()
+  }
+})
+
+onMounted(() => {
+  runTypingEffect()
+})
+
+onBeforeUnmount(() => {
+  clearTypingTimers()
+})
 </script>
 
 <style scoped>
@@ -208,6 +269,28 @@ const handleGoLogin = async () => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.home-header__cursor {
+  display: inline-block;
+  width: 0.42em;
+  height: 0.9em;
+  margin-left: 0.12em;
+  border-radius: 0.08em;
+  background: currentcolor;
+  vertical-align: -0.08em;
+  animation: home-header-cursor-blink 0.95s steps(1, end) infinite;
+}
+
+@keyframes home-header-cursor-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  46%,
+  100% {
+    opacity: 0;
+  }
 }
 
 @media (min-width: 640px) {
