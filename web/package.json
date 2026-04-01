@@ -11,9 +11,10 @@
     "type-check": "vue-tsc --build",
     "token:check": "node ./scripts/check-token-usage.mjs",
     "i18n:key-check": "node ./scripts/check-i18n-keys.mjs",
+    "i18n:unused-check": "node ./scripts/check-i18n-unused.mjs",
     "i18n:hardcoded-check": "node ./scripts/check-i18n-hardcoded.mjs",
     "i18n:pseudo-smoke": "node ./scripts/pseudo-locale-smoke.mjs",
-    "i18n:check": "pnpm run i18n:key-check && pnpm run i18n:hardcoded-check && pnpm run i18n:pseudo-smoke",
+    "i18n:check": "pnpm run i18n:key-check && pnpm run i18n:unused-check && pnpm run i18n:hardcoded-check && pnpm run i18n:pseudo-smoke",
     "test:unit": "vitest run",
     "lint": "eslint . --fix",
     "format": "prettier --write src/"

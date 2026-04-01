@@ -377,6 +377,11 @@ body.md-editor-full-open {
 
   .markdown-editor.is-full .editor-input {
     min-height: 0;
+    font-size: 16px;
+  }
+
+  .markdown-editor:not(.is-full) .editor-input {
+    font-size: 16px;
   }
 
   .markdown-preview-card {
