@@ -122,7 +122,7 @@ func (s *CommonService) GenerateRSS(ctx *gin.Context) (string, error) {
 func (s *CommonService) GetWebsiteTitle(websiteURL string) (string, error) {
 	websiteURL = httpUtil.TrimURL(websiteURL)
 
-	body, err := httpUtil.SendRequest(websiteURL, "GET", httpUtil.Header{}, 10*time.Second)
+	body, err := httpUtil.SendSafeRequest(websiteURL, "GET", httpUtil.Header{}, 10*time.Second)
 	if err != nil {
 		return "", err
 	}
