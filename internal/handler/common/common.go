@@ -169,7 +169,6 @@ func (commonHandler *CommonHandler) GetSitemap(ctx *gin.Context) {
 		URLs: []siteMapURL{
 			{Loc: baseURL + "/", ChangeFreq: "daily", Priority: "1.0"},
 			{Loc: baseURL + "/hub", ChangeFreq: "daily", Priority: "0.8"},
-			{Loc: baseURL + "/zone", ChangeFreq: "daily", Priority: "0.8"},
 			{Loc: baseURL + "/rss", ChangeFreq: "hourly", Priority: "0.6"},
 		},
 	}

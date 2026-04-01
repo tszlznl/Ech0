@@ -1,9 +1,14 @@
 <template>
   <div class="home-header">
     <div class="home-header__brand">
-      <div class="home-header__logo-wrap">
+      <button
+        type="button"
+        class="home-header__logo-wrap"
+        :aria-label="t('homeSidebar.home')"
+        @click="handleGoExplore"
+      >
         <img :src="logo" alt="" loading="lazy" class="home-header__logo" />
-      </div>
+      </button>
       <h1 class="home-header__title">
         {{ SystemSetting.server_name }}
       </h1>
@@ -70,6 +75,7 @@ import { useI18n } from 'vue-i18n'
 import { useSettingStore, useUserStore, useThemeStore, useZenStore, useInboxStore } from '@/stores'
 import { resolveAvatarUrl } from '@/service/request/shared'
 import { theToast } from '@/utils/toast'
+import { useRouter } from 'vue-router'
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
@@ -82,6 +88,7 @@ const { user, isLogin } = storeToRefs(userStore)
 const { isZenMode } = storeToRefs(zenStore)
 const { inboxMode } = storeToRefs(inboxStore)
 const { t } = useI18n()
+const router = useRouter()
 
 const logo = computed(() => {
   if (isLogin.value && user.value?.avatar) {
@@ -135,6 +142,10 @@ const handleToggleZenMode = () => {
 const handleToggleInboxMode = () => {
   inboxStore.setInboxMode(!inboxMode.value)
 }
+
+const handleGoExplore = async () => {
+  await router.push({ name: 'home' })
+}
 </script>
 
 <style scoped>
@@ -155,6 +166,10 @@ const handleToggleInboxMode = () => {
 
 .home-header__logo-wrap {
   flex-shrink: 0;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
 }
 
 .home-header__logo {
