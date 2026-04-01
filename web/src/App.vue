@@ -173,12 +173,7 @@ onMounted(() => {
     </Transition>
   </RouterView>
   <!-- 通知组件 -->
-  <Toaster
-    :theme="mode"
-    position="top-right"
-    :expand="false"
-    richColors
-  />
+  <Toaster :theme="mode" position="top-right" :expand="false" richColors />
   <!-- 全局弹窗对话框 -->
   <BaseDialog
     ref="dialogRef"
