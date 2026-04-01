@@ -110,7 +110,12 @@ const items = [
   },
 ] as const
 
-const visibleItems = computed(() => items.filter((item) => item.id !== 'publish' || isLogin.value))
+const visibleItems = computed(() =>
+  items.filter((item) => {
+    if (item.id === 'publish' || item.id === 'panel') return isLogin.value
+    return true
+  }),
+)
 
 const isItemActive = (item: (typeof items)[number]) => {
   if (item.kind === 'homeTab') {

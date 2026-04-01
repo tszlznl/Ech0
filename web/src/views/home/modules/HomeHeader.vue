@@ -56,6 +56,17 @@
         >
           <component :is="themeIcon" class="w-4 h-4" />
         </button>
+        <button
+          v-if="!isLogin"
+          type="button"
+          v-tooltip="t('authPage.login')"
+          :title="t('authPage.login')"
+          :aria-label="t('authPage.login')"
+          class="home-header__link-icon"
+          @click="handleGoLogin"
+        >
+          <Auth class="block w-4 h-4" />
+        </button>
       </div>
     </div>
   </div>
@@ -69,6 +80,7 @@ import Zen from '@/components/icons/zen.vue'
 import Github from '@/components/icons/github.vue'
 import Rss from '@/components/icons/rss.vue'
 import Inbox from '@/components/icons/inbox.vue'
+import Auth from '@/components/icons/auth.vue'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -145,6 +157,10 @@ const handleToggleInboxMode = () => {
 
 const handleGoExplore = async () => {
   await router.push({ name: 'home' })
+}
+
+const handleGoLogin = async () => {
+  await router.push({ name: 'auth' })
 }
 </script>
 
