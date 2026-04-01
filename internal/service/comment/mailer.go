@@ -23,10 +23,12 @@ func (s *GoMailSender) Send(ctx context.Context, cfg MailerConfig, msg MailMessa
 		return fmt.Errorf("missing mail configuration")
 	}
 
+	port, sslPort, tlsPolicy := resolveSMTPTransport(cfg.Port)
 	opts := []mail.Option{
-		mail.WithPort(defaultPort(cfg.Port)),
+		mail.WithPort(port),
 		mail.WithTimeout(10 * time.Second),
-		mail.WithTLSPortPolicy(mail.TLSMandatory),
+		mail.WithSSLPort(sslPort),
+		mail.WithTLSPortPolicy(tlsPolicy),
 		mail.WithSMTPAuth(mail.SMTPAuthAutoDiscover),
 	}
 
@@ -67,4 +69,20 @@ func defaultPort(port int) int {
 		return port
 	}
 	return 587
+}
+
+func resolveSMTPTransport(configuredPort int) (port int, sslPort bool, tlsPolicy mail.TLSPolicy) {
+	port = defaultPort(configuredPort)
+
+	switch port {
+	case 465:
+		// Port 465 uses implicit SSL/TLS (SMTPS).
+		return port, true, mail.NoTLS
+	case 25:
+		// Port 25 often runs plain SMTP and may optionally support STARTTLS.
+		return port, false, mail.TLSOpportunistic
+	default:
+		// Default to STARTTLS-required behavior on modern submission ports (e.g. 587).
+		return port, false, mail.TLSMandatory
+	}
 }
