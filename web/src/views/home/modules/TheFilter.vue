@@ -31,17 +31,17 @@
 import BaseInput from '@/components/common/BaseInput.vue'
 import { useEchoStore } from '@/stores'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Close from '@/components/icons/close.vue'
 import Filter from '@/components/icons/filter.vue'
 
 const echoStore = useEchoStore()
 const { refreshForSearch, getEchosByPage } = echoStore
-const { searchingMode, filteredTag, isFilteringMode } = storeToRefs(echoStore)
+const { searchingMode, filteredTag, isFilteringMode, searchValue } = storeToRefs(echoStore)
 const { t } = useI18n()
 
-const searchContent = ref<string>('')
+const searchContent = ref<string>(searchValue.value)
 
 const handleSearch = () => {
   echoStore.searchValue = searchContent.value
@@ -54,6 +54,12 @@ const handleSearch = () => {
 const handleCancelFilter = () => {
   echoStore.isFilteringMode = false
 }
+
+watch(searchValue, (value) => {
+  if (value !== searchContent.value) {
+    searchContent.value = value
+  }
+})
 </script>
 
 <style scoped>

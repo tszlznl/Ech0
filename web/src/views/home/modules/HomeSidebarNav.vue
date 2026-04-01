@@ -13,24 +13,25 @@
         </RouterLink>
       </nav>
       <button
+        v-if="showSearchTrigger"
         type="button"
         class="home-sidebar-nav__search-trigger"
         :aria-expanded="searchOpenState"
         :aria-label="t('homeTop.searchTitle')"
-        @click="searchOpenState = !searchOpenState"
+        @click="handleSearchClick"
       >
         <Search class="home-sidebar-nav__search-icon" />
       </button>
     </div>
-    <div v-if="searchOpenState || isFilteringMode" class="home-sidebar-nav__mobile-filter">
+    <div v-if="showMobileFilter" class="home-sidebar-nav__mobile-filter">
       <TheFilter />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { RouterLink, useRoute } from 'vue-router'
-import { computed, ref } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useEchoStore, useUserStore } from '@/stores'
 import { storeToRefs } from 'pinia'
@@ -39,10 +40,11 @@ import TheFilter from './TheFilter.vue'
 
 const { t } = useI18n()
 const route = useRoute()
+const router = useRouter()
 const userStore = useUserStore()
 const echoStore = useEchoStore()
 const { isLogin } = storeToRefs(userStore)
-const { isFilteringMode } = storeToRefs(echoStore)
+const { searchingMode, isFilteringMode } = storeToRefs(echoStore)
 const props = defineProps<{
   mobileSearchOpen?: boolean
 }>()
@@ -60,6 +62,17 @@ const searchOpenState = computed({
     emit('update:mobileSearchOpen', value)
   },
 })
+const currentHomeTab = computed<'home' | 'publish' | 'status' | 'tags' | 'hub'>(() => {
+  if (route.query.tab === 'publish') return 'publish'
+  if (route.query.tab === 'status') return 'status'
+  if (route.query.tab === 'tags') return 'tags'
+  if (route.query.tab === 'hub') return 'hub'
+  return 'home'
+})
+const showSearchTrigger = computed(() => route.name === 'home' && currentHomeTab.value === 'home')
+const showMobileFilter = computed(
+  () => showSearchTrigger.value && (searchOpenState.value || searchingMode.value || isFilteringMode.value),
+)
 
 const items = [
   {
@@ -99,18 +112,25 @@ const visibleItems = computed(() => items.filter((item) => item.id !== 'publish'
 
 const isItemActive = (item: (typeof items)[number]) => {
   if (item.kind === 'homeTab') {
-    const tab =
-      route.query.tab === 'publish' ||
-      route.query.tab === 'status' ||
-      route.query.tab === 'tags' ||
-      route.query.tab === 'hub'
-        ? route.query.tab
-        : 'home'
+    const tab = currentHomeTab.value
     const itemTab = 'query' in item.to ? item.to.query.tab : 'home'
     return route.name === 'home' && tab === itemTab
   }
   return route.name === item.to.name
 }
+
+const handleSearchClick = async () => {
+  if (route.name !== 'home' || currentHomeTab.value !== 'home') {
+    await router.push({ name: 'home' })
+    searchOpenState.value = true
+    return
+  }
+  searchOpenState.value = !searchOpenState.value
+}
+
+watch(showSearchTrigger, (visible) => {
+  if (!visible) searchOpenState.value = false
+})
 </script>
 
 <style scoped>
