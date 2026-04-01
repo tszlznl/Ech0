@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { RouterView, useRouter } from 'vue-router'
 import { onMounted, ref, watch } from 'vue'
-import { useSettingStore } from '@/stores'
+import { useSettingStore, useThemeStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { Toaster } from 'vue-sonner'
 import { resolveAvatarUrl } from './service/request/shared'
@@ -66,6 +66,8 @@ router.afterEach((to, from) => {
 
 const settingStore = useSettingStore()
 const { SystemSetting } = storeToRefs(settingStore)
+const themeStore = useThemeStore()
+const { mode } = storeToRefs(themeStore)
 
 const DEFAULT_FAVICON = '/favicon.ico'
 const CUSTOM_STYLE_ID = 'ech0-custom-style'
@@ -171,7 +173,12 @@ onMounted(() => {
     </Transition>
   </RouterView>
   <!-- 通知组件 -->
-  <Toaster theme="light" position="top-right" :expand="false" richColors />
+  <Toaster
+    :theme="mode"
+    position="top-right"
+    :expand="false"
+    richColors
+  />
   <!-- 全局弹窗对话框 -->
   <BaseDialog
     ref="dialogRef"

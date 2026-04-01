@@ -16,7 +16,7 @@ interface customToastOptions {
 
 // 默认通知选项
 const defaultToastOptions: customToastOptions = {
-  duration: 1800, // 默认持续时间为1500毫秒
+  duration: 1200, // 默认持续时间为1200毫秒
   description: '', // 默认描述为空
   classes: {
     actionButton: 'bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500',
