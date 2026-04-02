@@ -26,32 +26,38 @@ func BuildBackupS3FS(cfg config.StorageConfig) (virefs.FS, error) {
 		return nil, fmt.Errorf("object storage is not enabled")
 	}
 
-	provider := mapS3Provider(cfg.Provider)
-	region := resolveS3Region(cfg.Provider, cfg.Region)
-	endpoint := normalizeS3Endpoint(cfg.Endpoint, cfg.UseSSL)
-
 	var opts []virefs.ObjectOption
 	if cfg.PathPrefix != "" {
 		opts = append(opts, virefs.WithPrefix(strings.Trim(cfg.PathPrefix, "/")+"/"))
 	}
 
-	fs, err := virefs.NewObjectFSFromConfig(context.Background(), &virefs.S3Config{
-		Provider:  provider,
-		Endpoint:  endpoint,
-		Region:    region,
-		Bucket:    cfg.BucketName,
-		AccessKey: cfg.AccessKey,
-		SecretKey: cfg.SecretKey,
-	}, opts...)
+	fs, err := virefs.NewObjectFSFromConfig(context.Background(), virefsS3Config(cfg), opts...)
 	if err != nil {
 		return nil, fmt.Errorf("create backup s3 fs: %w", err)
 	}
 	return fs, nil
 }
 
+func virefsS3Config(cfg config.StorageConfig) *virefs.S3Config {
+	provider := mapS3Provider(cfg.Provider)
+	region := resolveS3Region(cfg.Provider, cfg.Region)
+	endpoint := normalizeS3Endpoint(cfg.Endpoint, cfg.UseSSL)
+	return &virefs.S3Config{
+		Provider:  provider,
+		Endpoint:  endpoint,
+		Region:    region,
+		Bucket:    cfg.BucketName,
+		AccessKey: cfg.AccessKey,
+		SecretKey: cfg.SecretKey,
+	}
+}
+
 // UploadToS3 uploads the local backup ZIP to S3 at backups/<fileName>,
 // then cleans up old backups keeping only the most recent ones.
-func UploadToS3(ctx context.Context, backupFilePath, fileName string, s3FS virefs.FS) error {
+//
+// VireFS v0.1.4+ sets RequestChecksumCalculationWhenRequired on MinIO clients
+// (see NewS3Client), avoiding aws-chunked bodies that MinIO rejects as "chunk too big".
+func UploadToS3(ctx context.Context, backupFilePath, fileName string, cfg config.StorageConfig) error {
 	f, err := os.Open(backupFilePath)
 	if err != nil {
 		return fmt.Errorf("open backup file for s3 upload: %w", err)
@@ -62,6 +68,11 @@ func UploadToS3(ctx context.Context, backupFilePath, fileName string, s3FS viref
 				zap.String("path", backupFilePath), zap.Error(closeErr))
 		}
 	}()
+
+	s3FS, err := BuildBackupS3FS(cfg)
+	if err != nil {
+		return err
+	}
 
 	s3Key := s3BackupPrefix + fileName
 	if err := s3FS.Put(ctx, s3Key, f); err != nil {

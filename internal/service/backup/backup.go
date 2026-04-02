@@ -119,13 +119,7 @@ func (bs *BackupService) tryUploadBackupToS3(ctx context.Context, backupPath, fi
 	}
 
 	cfg := bs.storageManager.GetStorageConfig(ctx)
-	s3FS, err := backup.BuildBackupS3FS(cfg)
-	if err != nil {
-		logUtil.GetLogger().Warn("Failed to build S3 FS for backup upload", zap.Error(err))
-		return
-	}
-
-	if err := backup.UploadToS3(ctx, backupPath, fileName, s3FS); err != nil {
+	if err := backup.UploadToS3(ctx, backupPath, fileName, cfg); err != nil {
 		logUtil.GetLogger().Warn("Failed to upload backup to S3", zap.Error(err))
 	}
 }
