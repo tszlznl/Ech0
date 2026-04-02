@@ -57,7 +57,6 @@ RUN ls -lh /app
 RUN chmod +x /app/ech0
 
 EXPOSE 6277
-# EXPOSE 6278 (暂不默认提供SSH服务)
 
 ENTRYPOINT ["/app/ech0"]
 
