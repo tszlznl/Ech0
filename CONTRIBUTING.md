@@ -1,35 +1,35 @@
 # Contributing to Ech0
 
-感谢你愿意为 Ech0 做贡献。
+Thank you for your interest in contributing to Ech0.
 
-为保证协作效率，请先阅读本文档并遵循以下约定。
+To keep collaboration smooth, please read this document and follow the conventions below.
 
-## 沟通与协作
+## Communication and collaboration
 
-- 缺陷反馈：请使用 GitHub Issues。
-- 新功能讨论：请优先使用 GitHub Discussions。
-- 安全漏洞：请不要公开提交 Issue，改走 `SECURITY.md` 中的私密披露流程。
+- **Bug reports:** use GitHub Issues.
+- **Feature discussion:** prefer GitHub Discussions.
+- **Security vulnerabilities:** do not file public issues; follow the private disclosure process in `SECURITY.md`.
 
-## 开发环境
+## Development environment
 
-### 后端
+### Backend
 
 - Go `1.26.0+`
-- 需要可用的 C 编译器（涉及 CGO，如 sqlite）
+- A working C toolchain (CGO is used, e.g. for SQLite)
 
-常用命令（仓库根目录）：
+Common commands (repository root):
 
 ```bash
 make run
 make dev
 ```
 
-### 前端
+### Frontend
 
 - Node.js `25+`
 - pnpm `10+`
 
-常用命令（`web` 目录）：
+Common commands (`web` directory):
 
 ```bash
 pnpm install
@@ -38,39 +38,39 @@ pnpm build
 pnpm lint
 ```
 
-## 贡献流程
+## Contribution workflow
 
-1. Fork 本仓库并创建功能分支（示例：`feat/xxx`、`fix/xxx`）。
-2. 保持改动聚焦：一个 PR 尽量只解决一类问题。
-3. 提交前完成必要检查（见下文“提交前检查”）。
-4. 发起 Pull Request，并清晰描述背景、方案与验证结果。
+1. Fork this repository and create a feature branch (e.g. `feat/xxx`, `fix/xxx`).
+2. Keep changes focused: one PR should ideally address one kind of change.
+3. Run the checks below before submitting (see “Pre-submission checks”).
+4. Open a Pull Request with a clear description of context, approach, and verification.
 
-## 提交前检查
+## Pre-submission checks
 
-请在提交 PR 前至少完成以下检查：
+Before opening a PR, please at least:
 
-- 后端可编译通过（`go build ./...`）。
-- 前端构建通过（`pnpm build`，在 `web` 目录执行）。
-- 若改动影响行为，请补充或更新测试（如适用）。
-- 若改动影响用户使用或部署，请同步更新文档。
+- Ensure the backend builds (`go build ./...`).
+- Ensure the frontend builds (`pnpm build` from the `web` directory).
+- Add or update tests when behavior changes (when applicable).
+- Update documentation when changes affect users or deployment.
 
-## Pull Request 要求
+## Pull Request guidelines
 
-建议你的 PR 描述包含：
+Your PR description should include:
 
-- 变更目的（为什么要改）。
-- 主要改动点（改了什么）。
-- 验证方式（如何确认可用）。
-- 可能影响范围（兼容性、迁移、回滚建议）。
+- **Purpose** (why the change is needed).
+- **What changed** (main edits).
+- **How you verified** (how to confirm it works).
+- **Impact** (compatibility, migration, rollback notes if relevant).
 
-如果 PR 体量较大，建议拆分成多个可审阅的小 PR。
+For large changes, consider splitting into smaller, reviewable PRs.
 
-## 代码风格
+## Code style
 
-- 保持现有项目风格与目录结构，不引入与现有约定冲突的新模式。
-- 避免无关重构和大面积格式化。
-- 命名遵循仓库现有约定（例如分层 alias 命名）。
+- Match existing project style and layout; avoid introducing patterns that conflict with current conventions.
+- Avoid unrelated refactors and large-scale formatting-only changes.
+- Follow existing naming conventions (e.g. layered package aliases).
 
-## 许可声明
+## License
 
-向 Ech0 提交代码即表示你同意你的贡献遵循仓库当前开源许可证（AGPL-3.0）发布。
+By contributing code to Ech0, you agree that your contributions are licensed under the project’s current open-source license (AGPL-3.0).
