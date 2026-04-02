@@ -178,6 +178,14 @@ export function fetchUpdateBackupScheduleSetting(
   })
 }
 
+// 手动创建快照
+export function fetchCreateSnapshot() {
+  return request({
+    url: '/backup/snapshot',
+    method: 'POST',
+  })
+}
+
 // 获取LLM Agent信息(无需鉴权)
 export function fetchGetAgentInfo() {
   return request<App.Api.Setting.AgentSetting>({

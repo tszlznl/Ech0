@@ -67,3 +67,28 @@ func (backupHandler *BackupHandler) ExportBackup() gin.HandlerFunc {
 		}
 	})
 }
+
+// CreateSnapshot 手动创建快照
+//
+//	@Summary		手动创建快照
+//	@Description	仅在服务端创建本地快照；若配置了 S3 则尝试上传（失败静默）
+//	@Tags			系统备份
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	res.Response	"创建快照成功"
+//	@Failure		200	{object}	res.Response	"创建快照失败"
+//	@Router			/backup/snapshot [post]
+func (backupHandler *BackupHandler) CreateSnapshot() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		if err := backupHandler.backupService.CreateSnapshot(ctx.Request.Context()); err != nil {
+			return res.Response{
+				Msg: "",
+				Err: err,
+			}
+		}
+
+		return res.Response{
+			Msg: commonModel.CREATE_SNAPSHOT_SUCCESS,
+		}
+	})
+}

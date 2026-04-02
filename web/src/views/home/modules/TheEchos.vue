@@ -49,9 +49,8 @@
         v-if="!echoStore.hasMore && !echoStore.isLoading"
         class="mx-auto my-5 text-center echos-toolbar"
       >
-        <p class="text-xl text-[var(--color-text-muted)] flex items-center justify-center">
-          {{ echoStore.isFilteringMode ? t('homeFeed.noMoreFiltered') : t('homeFeed.noMore')
-          }}<Flowers />
+        <p class="text-xl text-[var(--color-text-muted)]">
+          {{ echoStore.isFilteringMode ? t('homeFeed.noMoreFiltered') : t('homeFeed.noMore') }}
         </p>
       </div>
     </Transition>
@@ -86,7 +85,6 @@ import BaseButton from '@/components/common/BaseButton.vue'
 import TheLoadingIndicator from '@/components/common/TheLoadingIndicator.vue'
 import { storeToRefs } from 'pinia'
 import TheBackTop from '@/components/advanced/TheBackTop.vue'
-import Flowers from '@/components/icons/flowers.vue'
 import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{

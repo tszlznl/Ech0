@@ -105,6 +105,11 @@ func setupSettingRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 		middleware.RequireScopes(authModel.ScopeAdminSettings),
 		h.SettingHandler.UpdateBackupScheduleSetting(),
 	)
+	appRouterGroup.AuthRouterGroup.POST(
+		"/backup/snapshot",
+		middleware.RequireScopes(authModel.ScopeAdminSettings),
+		h.BackupHandler.CreateSnapshot(),
+	)
 
 	appRouterGroup.AuthRouterGroup.GET(
 		"/agent/settings",

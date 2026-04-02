@@ -247,12 +247,13 @@
     "noAvailableInstance": "No available Hub instances can be connected right now.",
     "connectedCount": "Connected to {count} instance(s), loading Echos...",
     "loading": "Loading...",
-    "emptyConnectHint": "No data yet. Add a Connect first 🙃",
+    "emptyConnectHint": "No data yet. Add a Connect first.",
     "noMoreData": "No more data"
   },
   "inbox": {
     "cleared": "Inbox has been cleared",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "empty": "No data"
   },
   "systemLog": {
     "level": "Log level",
@@ -343,8 +344,8 @@
   "homeFooter": {},
   "homeFeed": {
     "loadMore": "Load more",
-    "noMore": "No more",
-    "noMoreFiltered": "No more 🥲",
+    "noMore": "No more data",
+    "noMoreFiltered": "No more data",
     "loading": "Loading..."
   },
   "dateTime": {
@@ -773,10 +774,15 @@
     "disconnectConfirmTitle": "Are you sure you want to disconnect?"
   },
   "backupScheduleSetting": {
-    "title": "Backup Schedule Settings",
-    "enableAutoBackup": "Enable auto backup",
-    "crontab": "Backup crontab",
-    "crontabPlaceholder": "Backup crontab expression"
+    "title": "Snapshot Settings",
+    "description": "Configure automatic snapshot creation and trigger snapshots manually.",
+    "createSnapshot": "Create Snapshot",
+    "creatingSnapshot": "Creating...",
+    "createSnapshotSuccess": "Snapshot created successfully",
+    "createSnapshotFailed": "Failed to create snapshot",
+    "enableAutoBackup": "Auto create snapshots",
+    "crontab": "Snapshot crontab",
+    "crontabPlaceholder": "Enter snapshot crontab expression"
   },
   "uppy": {
     "dashboardNote": "Paste or choose images to upload!",

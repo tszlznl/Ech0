@@ -247,12 +247,13 @@
     "noAvailableInstance": "当前Hub暂无可连接的实例。",
     "connectedCount": "成功连接 {count} 个实例，开始加载 Echos",
     "loading": "加载中...",
-    "emptyConnectHint": "暂无数据，快去添加Connect吧🙃",
+    "emptyConnectHint": "暂无数据，快去添加 Connect 吧",
     "noMoreData": "没有更多数据了"
   },
   "inbox": {
     "cleared": "收件箱已清空",
-    "loading": "加载中..."
+    "loading": "加载中...",
+    "empty": "暂无数据"
   },
   "systemLog": {
     "level": "日志级别",
@@ -343,8 +344,8 @@
   "homeFooter": {},
   "homeFeed": {
     "loadMore": "继续装填",
-    "noMore": "没有啦！",
-    "noMoreFiltered": "没有啦！",
+    "noMore": "没有更多数据了",
+    "noMoreFiltered": "没有更多数据了",
     "loading": "加载中..."
   },
   "dateTime": {
@@ -773,10 +774,15 @@
     "disconnectConfirmTitle": "确定要断开连接吗？"
   },
   "backupScheduleSetting": {
-    "title": "备份计划设置",
-    "enableAutoBackup": "启用自动备份",
-    "crontab": "备份计划Crontab",
-    "crontabPlaceholder": "备份计划Crontab表达式"
+    "title": "快照设置",
+    "description": "配置自动创建快照计划，也可手动触发创建。",
+    "createSnapshot": "创建快照",
+    "creatingSnapshot": "创建中...",
+    "createSnapshotSuccess": "快照创建成功",
+    "createSnapshotFailed": "快照创建失败",
+    "enableAutoBackup": "自动创建快照",
+    "crontab": "快照计划 Crontab",
+    "crontabPlaceholder": "请输入快照计划 Crontab 表达式"
   },
   "uppy": {
     "dashboardNote": "支持粘贴或选择图片上传哦！",

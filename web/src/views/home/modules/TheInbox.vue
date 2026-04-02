@@ -18,8 +18,8 @@
     </div>
     <!-- 没有更多 -->
     <div v-if="!hasMore && !loading" class="mx-auto my-5 text-center">
-      <p class="text-xl text-[var(--color-text-muted)] flex items-center justify-center">
-        没有啦！<Flowers />
+      <p class="text-xl text-[var(--color-text-muted)]">
+        {{ t('inbox.empty') }}
       </p>
     </div>
     <!-- 加载中 -->
@@ -33,7 +33,6 @@ import { useInboxStore } from '@/stores'
 import TheInboxCard from '@/components/advanced/TheInboxCard.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import TheLoadingIndicator from '@/components/common/TheLoadingIndicator.vue'
-import Flowers from '@/components/icons/flowers.vue'
 import { useI18n } from 'vue-i18n'
 
 const inboxStore = useInboxStore()

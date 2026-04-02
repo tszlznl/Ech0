@@ -81,6 +81,34 @@ func (bs *BackupService) ExportBackup(ctx *gin.Context, reqCtx context.Context) 
 	return nil
 }
 
+func (bs *BackupService) CreateSnapshot(ctx context.Context) error {
+	userid := viewer.MustFromContext(ctx).UserID()
+	user, err := bs.commonService.CommonGetUserByUserId(ctx, userid)
+	if err != nil {
+		return err
+	}
+	if !user.IsAdmin {
+		return errors.New(commonModel.NO_PERMISSION_DENIED)
+	}
+
+	backupFilePath, backupFileName, err := backup.ExecuteBackup()
+	if err != nil {
+		return err
+	}
+
+	// S3 上传失败不影响本地快照创建成功，失败仅记录日志。
+	bs.tryUploadBackupToS3(ctx, backupFilePath, backupFileName)
+
+	if err := bs.publisher.SystemBackup(
+		context.Background(),
+		contracts.SystemBackupEvent{Info: "System manual snapshot completed"},
+	); err != nil {
+		logUtil.GetLogger().Error("Failed to publish system backup completed event", zap.Error(err))
+	}
+
+	return nil
+}
+
 func (bs *BackupService) tryUploadBackupToS3(ctx context.Context, backupPath, fileName string) {
 	if bs.storageManager == nil {
 		return

@@ -247,12 +247,13 @@
     "noAvailableInstance": "Derzeit keine erreichbaren Hub-Instanzen verfügbar.",
     "connectedCount": "Mit {count} Instanz(en) verbunden, Echos werden geladen…",
     "loading": "Wird geladen…",
-    "emptyConnectHint": "Noch keine Daten. Füge zuerst einen Connect hinzu 🙃",
+    "emptyConnectHint": "Noch keine Daten. Füge zuerst einen Connect hinzu.",
     "noMoreData": "Keine weiteren Daten"
   },
   "inbox": {
     "cleared": "Posteingang geleert",
-    "loading": "Wird geladen…"
+    "loading": "Wird geladen…",
+    "empty": "Keine Daten"
   },
   "systemLog": {
     "level": "Log-Level",
@@ -343,8 +344,8 @@
   "homeFooter": {},
   "homeFeed": {
     "loadMore": "Mehr laden",
-    "noMore": "Keine weiteren Einträge",
-    "noMoreFiltered": "Keine weiteren Einträge 🥲",
+    "noMore": "Keine weiteren Daten",
+    "noMoreFiltered": "Keine weiteren Daten",
     "loading": "Wird geladen…"
   },
   "dateTime": {
@@ -773,10 +774,15 @@
     "disconnectConfirmTitle": "Verbindung wirklich trennen?"
   },
   "backupScheduleSetting": {
-    "title": "Backup-Zeitplan",
-    "enableAutoBackup": "Automatisches Backup aktivieren",
-    "crontab": "Backup-Crontab",
-    "crontabPlaceholder": "Crontab-Ausdruck für den Backup-Zeitplan"
+    "title": "Snapshot-Einstellungen",
+    "description": "Automatische Snapshot-Erstellung konfigurieren und Snapshots manuell auslösen.",
+    "createSnapshot": "Snapshot erstellen",
+    "creatingSnapshot": "Wird erstellt...",
+    "createSnapshotSuccess": "Snapshot erfolgreich erstellt",
+    "createSnapshotFailed": "Snapshot konnte nicht erstellt werden",
+    "enableAutoBackup": "Snapshots automatisch erstellen",
+    "crontab": "Snapshot-Crontab",
+    "crontabPlaceholder": "Crontab-Ausdruck für Snapshot-Zeitplan eingeben"
   },
   "uppy": {
     "dashboardNote": "Bilder einfügen oder auswählen!",

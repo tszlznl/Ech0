@@ -9,6 +9,7 @@ import (
 
 type Service interface {
 	ExportBackup(ctx *gin.Context, reqCtx context.Context) error
+	CreateSnapshot(ctx context.Context) error
 }
 
 type CommonService = commonService.Service

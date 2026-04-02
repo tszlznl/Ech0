@@ -77,8 +77,8 @@
       </div>
 
       <div v-if="echoList.length > 0 && !hasMore" class="my-6">
-        <p class="text-[var(--color-text-secondary)] text-center flex items-center justify-center">
-          {{ t('hub.noMoreData') }}<Flowers />
+        <p class="text-[var(--color-text-secondary)] text-center">
+          {{ t('hub.noMoreData') }}
         </p>
       </div>
     </div>
@@ -101,7 +101,6 @@ import TheLoadingIndicator from '@/components/common/TheLoadingIndicator.vue'
 import Arrow from '@/components/icons/arrow.vue'
 import TheBackTop from '@/components/advanced/TheBackTop.vue'
 import TheHubEcho from '@/components/advanced/echo/cards/TheHubEcho.vue'
-import Flowers from '@/components/icons/flowers.vue'
 import { onMounted, watch, computed, ref, onBeforeUnmount, nextTick } from 'vue'
 import { useHubStore } from '@/stores'
 import { storeToRefs } from 'pinia'

@@ -1,12 +1,28 @@
 <template>
   <PanelCard>
-    <!-- 备份计划设置 -->
-    <div class="w-full">
-      <div class="flex flex-row items-center justify-between mb-3">
-        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">
-          {{ t('backupScheduleSetting.title') }}
-        </h1>
-        <div class="flex flex-row items-center justify-end">
+    <div class="w-full space-y-3">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div class="space-y-1">
+          <h1 class="text-[var(--color-text-primary)] font-bold text-lg leading-none">
+            {{ t('backupScheduleSetting.title') }}
+          </h1>
+          <p class="text-[var(--color-text-secondary)] text-sm">
+            {{ t('backupScheduleSetting.description') }}
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center justify-end gap-2">
+          <BaseButton
+            @click="handleCreateSnapshot"
+            :disabled="creatingSnapshot"
+            class="px-3 py-1.5 text-sm! rounded-[var(--radius-md)]"
+            :tooltip="t('backupScheduleSetting.createSnapshot')"
+          >
+            {{
+              creatingSnapshot
+                ? t('backupScheduleSetting.creatingSnapshot')
+                : t('backupScheduleSetting.createSnapshot')
+            }}
+          </BaseButton>
           <BaseEditCapsule
             :editing="scheduleEditMode"
             :apply-title="t('commonUi.apply')"
@@ -18,20 +34,20 @@
         </div>
       </div>
 
-      <!-- 开启自动备份 -->
-      <div class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] h-10">
-        <h2 class="font-semibold min-w-30 w-max shrink-0 whitespace-nowrap">
-          {{ t('backupScheduleSetting.enableAutoBackup') }}:
+      <div
+        class="flex flex-wrap items-center justify-start text-[var(--color-text-secondary)] gap-2 min-h-10"
+      >
+        <h2 class="font-semibold w-36 shrink-0">
+          {{ t('backupScheduleSetting.enableAutoBackup') }}
         </h2>
         <BaseSwitch v-model="BackupSchedule.enable" :disabled="!scheduleEditMode" />
       </div>
 
-      <!-- 备份计划表达式 -->
       <div
-        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
+        class="flex flex-wrap items-center justify-start text-[var(--color-text-secondary)] gap-2 min-h-10"
       >
-        <h2 class="font-semibold min-w-38 w-max shrink-0 whitespace-nowrap">
-          {{ t('backupScheduleSetting.crontab') }}:
+        <h2 class="font-semibold w-36 shrink-0">
+          {{ t('backupScheduleSetting.crontab') }}
         </h2>
         <span
           v-if="!scheduleEditMode"
@@ -62,9 +78,10 @@ import PanelCard from '@/layout/PanelCard.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseSwitch from '@/components/common/BaseSwitch.vue'
 import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
+import BaseButton from '@/components/common/BaseButton.vue'
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { fetchUpdateBackupScheduleSetting } from '@/service/api'
+import { fetchCreateSnapshot, fetchUpdateBackupScheduleSetting } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
@@ -75,6 +92,7 @@ const { getBackupSchedule } = settingStore
 const { BackupSchedule } = storeToRefs(settingStore)
 
 const scheduleEditMode = ref<boolean>(false)
+const creatingSnapshot = ref<boolean>(false)
 
 const handleUpdateBackupSchedule = async () => {
   const res = await fetchUpdateBackupScheduleSetting(BackupSchedule.value)
@@ -84,6 +102,26 @@ const handleUpdateBackupSchedule = async () => {
 
   scheduleEditMode.value = false
   await getBackupSchedule()
+}
+
+const handleCreateSnapshot = async () => {
+  if (creatingSnapshot.value) return
+
+  creatingSnapshot.value = true
+  try {
+    const res = await fetchCreateSnapshot()
+    if (res.code === 1) {
+      theToast.success(res.msg || String(t('backupScheduleSetting.createSnapshotSuccess')))
+      return
+    }
+
+    theToast.error(res.msg || String(t('backupScheduleSetting.createSnapshotFailed')))
+  } catch (error) {
+    console.error(String(t('backupScheduleSetting.createSnapshotFailed')), error)
+    theToast.error(String(t('backupScheduleSetting.createSnapshotFailed')))
+  } finally {
+    creatingSnapshot.value = false
+  }
 }
 
 onMounted(async () => {

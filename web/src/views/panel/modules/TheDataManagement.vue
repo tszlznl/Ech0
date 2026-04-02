@@ -1,12 +1,12 @@
 <template>
-  <div class="w-full px-2">
+  <div class="w-full px-2 space-y-3">
     <!-- 数据迁移 -->
-    <TheMigrationSetting class="mb-3" />
+    <TheMigrationSetting />
 
     <!-- 数据管理 -->
-    <TheBackupSetting class="mb-3" />
+    <TheBackupSetting />
 
-    <!-- 备份计划设置 -->
+    <!-- 快照设置 -->
     <TheBackupScheduleSetting />
   </div>
 </template>
