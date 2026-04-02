@@ -253,7 +253,7 @@
   "inbox": {
     "cleared": "Inbox has been cleared",
     "loading": "Loading...",
-    "empty": "No data"
+    "empty": "No messages yet"
   },
   "systemLog": {
     "level": "Log level",

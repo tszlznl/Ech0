@@ -253,7 +253,7 @@
   "inbox": {
     "cleared": "收件箱已清空",
     "loading": "加载中...",
-    "empty": "暂无数据"
+    "empty": "暂无消息..."
   },
   "systemLog": {
     "level": "日志级别",

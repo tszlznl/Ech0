@@ -253,7 +253,7 @@
   "inbox": {
     "cleared": "Posteingang geleert",
     "loading": "Wird geladen…",
-    "empty": "Keine Daten"
+    "empty": "Noch keine Nachrichten"
   },
   "systemLog": {
     "level": "Log-Level",
