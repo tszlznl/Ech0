@@ -65,7 +65,7 @@
       </div>
 
       <div v-if="isLoading || isPreparing" class="my-6">
-        <p class="text-[var(--color-text-secondary)] text-center">{{ t('hub.loading') }}</p>
+        <TheLoadingIndicator :label="t('hub.loading')" />
       </div>
       <div
         v-else-if="echoList.length === 0 && hasTriedInitialLoad && !isPreparing && !isLoading"
@@ -97,6 +97,7 @@
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
 import BaseButton from '@/components/common/BaseButton.vue'
+import TheLoadingIndicator from '@/components/common/TheLoadingIndicator.vue'
 import Arrow from '@/components/icons/arrow.vue'
 import TheBackTop from '@/components/advanced/TheBackTop.vue'
 import TheHubEcho from '@/components/advanced/echo/cards/TheHubEcho.vue'

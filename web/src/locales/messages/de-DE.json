@@ -251,7 +251,8 @@
     "noMoreData": "Keine weiteren Daten"
   },
   "inbox": {
-    "cleared": "Posteingang geleert"
+    "cleared": "Posteingang geleert",
+    "loading": "Wird geladen…"
   },
   "systemLog": {
     "level": "Log-Level",

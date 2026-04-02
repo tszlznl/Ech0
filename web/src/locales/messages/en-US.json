@@ -251,7 +251,8 @@
     "noMoreData": "No more data"
   },
   "inbox": {
-    "cleared": "Inbox has been cleared"
+    "cleared": "Inbox has been cleared",
+    "loading": "Loading..."
   },
   "systemLog": {
     "level": "Log level",

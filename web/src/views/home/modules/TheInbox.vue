@@ -23,9 +23,7 @@
       </p>
     </div>
     <!-- 加载中 -->
-    <div v-if="loading" class="mx-auto my-5 text-center">
-      <span class="text-xl text-[var(--color-text-muted)]">加载中...</span>
-    </div>
+    <TheLoadingIndicator v-if="loading" class="mx-auto my-5" size="lg" :label="t('inbox.loading')" />
   </div>
 </template>
 <script lang="ts" setup>
@@ -34,9 +32,12 @@ import { storeToRefs } from 'pinia'
 import { useInboxStore } from '@/stores'
 import TheInboxCard from '@/components/advanced/TheInboxCard.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
+import TheLoadingIndicator from '@/components/common/TheLoadingIndicator.vue'
 import Flowers from '@/components/icons/flowers.vue'
+import { useI18n } from 'vue-i18n'
 
 const inboxStore = useInboxStore()
+const { t } = useI18n()
 const { items, hasMore, loading } = storeToRefs(inboxStore)
 const { loadMore, markAsRead } = inboxStore
 

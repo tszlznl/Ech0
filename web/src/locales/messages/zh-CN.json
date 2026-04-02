@@ -251,7 +251,8 @@
     "noMoreData": "没有更多数据了"
   },
   "inbox": {
-    "cleared": "收件箱已清空"
+    "cleared": "收件箱已清空",
+    "loading": "加载中..."
   },
   "systemLog": {
     "level": "日志级别",

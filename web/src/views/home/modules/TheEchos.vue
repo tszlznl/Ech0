@@ -57,9 +57,12 @@
     </Transition>
     <!-- 加载中 -->
     <Transition name="fade">
-      <div v-if="echoStore.isLoading" class="mx-auto my-5 text-center echos-toolbar">
-        <span class="text-xl text-[var(--color-text-muted)]">{{ t('homeFeed.loading') }}</span>
-      </div>
+      <TheLoadingIndicator
+        v-if="echoStore.isLoading"
+        class="mx-auto my-5 echos-toolbar"
+        size="lg"
+        :label="t('homeFeed.loading')"
+      />
     </Transition>
     <!-- 自定义页脚（紧跟时间线内容之后） -->
     <div v-if="footerContent" class="mt-6 text-center">
@@ -80,6 +83,7 @@ import TheEchoCard from '@/components/advanced/echo/cards/TheEchoCard.vue'
 import { computed, onBeforeUnmount, onMounted, nextTick, watch } from 'vue'
 import { useEchoStore, useSettingStore, useZenStore } from '@/stores'
 import BaseButton from '@/components/common/BaseButton.vue'
+import TheLoadingIndicator from '@/components/common/TheLoadingIndicator.vue'
 import { storeToRefs } from 'pinia'
 import TheBackTop from '@/components/advanced/TheBackTop.vue'
 import Flowers from '@/components/icons/flowers.vue'
