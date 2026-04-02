@@ -95,9 +95,11 @@ func (commonHandler *CommonHandler) Healthz() gin.HandlerFunc {
 		return res.Response{
 			Msg: commonModel.GET_HEALTHZ_SUCCESS,
 			Data: struct {
-				Status string `json:"status"`
+				Status  string `json:"status"`
+				Version string `json:"version"`
 			}{
-				Status: "ok",
+				Status:  "ok",
+				Version: commonModel.Version,
 			},
 		}
 	})
