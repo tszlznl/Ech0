@@ -300,12 +300,40 @@ uninstall_ech0() {
   read -r -p "确认卸载 Ech0? [y/N]: " choice
   case "$choice" in
     y|Y)
+      local delete_data_choice
+      local remove_data="false"
+      local data_dir="$target_path/data"
+      if [ -d "$data_dir" ]; then
+        read -r -p "检测到数据目录 ${data_dir}，是否同时删除(删除后不可恢复)? [y/N]: " delete_data_choice
+        case "$delete_data_choice" in
+          y|Y)
+            remove_data="true"
+            ;;
+        esac
+      fi
+
       systemctl stop "$SERVICE_NAME" >/dev/null 2>&1 || true
       systemctl disable "$SERVICE_NAME" >/dev/null 2>&1 || true
       rm -f "/etc/systemd/system/${SERVICE_NAME}.service"
       systemctl daemon-reload
 
-      rm -rf "$target_path"
+      if [ "$remove_data" = "true" ]; then
+        rm -rf "$target_path"
+        log_info "已删除程序与数据目录"
+      else
+        shopt -s dotglob nullglob
+        for item in "$target_path"/*; do
+          local name
+          name=$(basename "$item")
+          if [ "$name" = "data" ]; then
+            continue
+          fi
+          rm -rf "$item"
+        done
+        shopt -u dotglob nullglob
+        log_warn "已保留数据目录: ${data_dir}"
+      fi
+
       rm -f "$MANAGER_PATH" "$COMMAND_LINK"
 
       log_info "Ech0 已卸载"
