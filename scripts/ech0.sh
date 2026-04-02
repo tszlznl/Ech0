@@ -93,6 +93,12 @@ get_installed_path() {
   return 1
 }
 
+is_ech0_installed() {
+  local installed_path
+  installed_path=$(get_installed_path)
+  [ -f "$installed_path/ech0" ]
+}
+
 cleanup_tmp() {
   rm -rf "$TMP_DIR"
   rm -f "$DOWNLOAD_FILE"
@@ -240,6 +246,12 @@ install_ech0() {
   ensure_command curl
   ensure_command tar
   ensure_command systemctl
+
+  local installed_path
+  installed_path=$(get_installed_path)
+  if [ -f "$installed_path/ech0" ]; then
+    handle_error 1 "检测到 Ech0 已安装在 ${installed_path}，请使用 update 或先 uninstall"
+  fi
 
   local target_path
   target_path=$(resolve_install_path "$1")
@@ -415,9 +427,14 @@ restart_service() {
 }
 
 show_menu() {
+  local install_label="1) 安装 Ech0"
+  if is_ech0_installed; then
+    install_label="1) 安装 Ech0 (已安装)"
+  fi
+
   echo
   echo "欢迎使用 Ech0 部署脚本"
-  echo "1) 安装 Ech0"
+  echo "$install_label"
   echo "2) 更新 Ech0"
   echo "3) 删除 Ech0"
   echo "4) 查看服务状态"
@@ -431,6 +448,12 @@ show_menu() {
 
   case "$choice" in
     1)
+      if is_ech0_installed; then
+        local installed_path
+        installed_path=$(get_installed_path)
+        log_warn "已检测到安装: ${installed_path}，请使用更新或先卸载"
+        return
+      fi
       read -r -p "安装路径(默认: ${INSTALL_PATH_DEFAULT}): " path_choice
       install_ech0 "$path_choice"
       ;;
