@@ -43,7 +43,14 @@
           <HomeSidebarNav />
           <div class="home-aside__filter-block">
             <TheFilter />
-            <p class="home-aside__version">version: {{ settingStore.hello?.version || '--' }}</p>
+            <a
+              href="https://github.com/lin-snow/Ech0"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="home-aside__version"
+            >
+              version: {{ settingStore.hello?.version || '--' }}
+            </a>
           </div>
         </aside>
       </div>
@@ -264,6 +271,7 @@ onBeforeUnmount(() => {
 }
 
 .home-aside__version {
+  display: inline-block;
   margin: 0;
   margin-top: 0.5rem;
   padding-inline: 0.5rem;
@@ -274,7 +282,13 @@ onBeforeUnmount(() => {
   letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
   color: var(--color-text-muted);
-  user-select: none;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.home-aside__version:hover {
+  color: var(--color-text-secondary);
 }
 
 .home-content-block {
