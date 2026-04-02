@@ -275,9 +275,7 @@ export const useHubStore = defineStore('hubStore', () => {
         // 2. 如果所有缓冲池都空了，尝试补充
         if (maxHubUrl === null) {
           // 先等正在请求中的 hub 完成，再判断是否还有数据
-          const inFlightHubs = Array.from(hubStates.value.values()).filter(
-            (s) => s.isLoading,
-          )
+          const inFlightHubs = Array.from(hubStates.value.values()).filter((s) => s.isLoading)
           if (inFlightHubs.length > 0) {
             await Promise.all(
               inFlightHubs.map(
