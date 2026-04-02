@@ -5,7 +5,6 @@ GREEN='\033[1;32m'
 YELLOW='\033[1;33m'
 ORANGE='\033[38;5;214m'
 RESET='\033[0m'
-
 if [ -n "${NO_COLOR:-}" ] || [ "${TERM:-}" = "dumb" ]; then
   RED=''
   GREEN=''
@@ -450,6 +449,11 @@ render_script_header() {
   esac
 
   echo -e "$separator"
+  echo -e "${ORANGE}  _____     _      ___${RESET}"
+  echo -e "${ORANGE} | ____|___| |__  / _ \\\\${RESET}"
+  echo -e "${ORANGE} |  _| / __| '_ \\\\| | | |${RESET}"
+  echo -e "${ORANGE} | |__| (__| | | | |_| |${RESET}"
+  echo -e "${ORANGE} |_____|\\___|_| |_|\\___/${RESET}"
   echo -e "${ORANGE}Ech0 管理脚本 (安装/更新/卸载/服务管理)${RESET}"
   echo "当前命令: ${command_name}"
   echo -e "安装状态: ${install_state_display}"
