@@ -274,12 +274,28 @@ export const useHubStore = defineStore('hubStore', () => {
 
         // 2. 如果所有缓冲池都空了，尝试补充
         if (maxHubUrl === null) {
+          // 先等正在请求中的 hub 完成，再判断是否还有数据
+          const inFlightHubs = Array.from(hubStates.value.values()).filter(
+            (s) => s.isLoading,
+          )
+          if (inFlightHubs.length > 0) {
+            await Promise.all(
+              inFlightHubs.map(
+                (s) =>
+                  new Promise<void>((resolve) => {
+                    const check = () => (s.isLoading ? setTimeout(check, 50) : resolve())
+                    check()
+                  }),
+              ),
+            )
+          }
+
           const emptyHubsWithMore = Array.from(hubStates.value.values()).filter(
             (s) => s.hasMore && !s.isLoading && s.buffer.length === 0,
           )
 
           if (emptyHubsWithMore.length === 0) {
-            // 真的没有更多数据了
+            // 缓冲池和远端都没数据了
             break
           }
 

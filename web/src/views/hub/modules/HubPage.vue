@@ -25,7 +25,7 @@
         </div>
       </template>
 
-      <div v-if="echoList.length > 0 && !isPreparing && !hasMusicExtension">
+      <div v-if="echoList.length > 0 && !isPreparing && !props.embedded && !hasMusicExtension">
         <DynamicScroller
           class="hub-dynamic-scroller"
           :items="echoList"
@@ -54,7 +54,7 @@
         </DynamicScroller>
       </div>
 
-      <div v-else-if="echoList.length > 0 && !isPreparing && hasMusicExtension" class="w-full">
+      <div v-else-if="echoList.length > 0 && !isPreparing" class="w-full">
         <div
           v-for="item in echoList"
           :key="item.virtual_key"
@@ -81,6 +81,9 @@
           {{ t('hub.noMoreData') }}
         </p>
       </div>
+
+      <!-- 触底哨兵：IntersectionObserver 检测可见性来触发加载 -->
+      <div ref="sentinelRef" class="h-1" />
     </div>
 
     <div
@@ -128,7 +131,6 @@ const { t } = useI18n()
 
 const currentRoute = computed(() => route.name as string)
 
-// 统一的按钮样式计算函数
 const getButtonClasses = (routeName: string, isBackButton = false) => {
   const baseClasses = isBackButton
     ? 'text-[var(--color-text-primary)] rounded-md transition-all duration-300 border-none !shadow-none !ring-0 hover:opacity-75 p-2 group bg-transparent'
@@ -149,13 +151,25 @@ const hasMusicExtension = computed(() =>
 )
 
 const mainColumn = ref<HTMLElement | null>(null)
-const backTopStyle = ref<Record<string, string>>({ right: '100px' }) // 默认 fallback
+const sentinelRef = ref<HTMLElement | null>(null)
+const backTopStyle = ref<Record<string, string>>({ right: '100px' })
 const showBackTop = ref(false)
 const HUB_SCROLL_KEY = 'hub:timeline:scrollTop'
 let saveScrollTimer: number | null = null
-let ensuringScrollable = false
-const getActiveScrollElement = () =>
-  props.embedded && props.scrollTarget ? props.scrollTarget : null
+let sentinelObserver: IntersectionObserver | null = null
+
+const isScrollable = (el: HTMLElement) => {
+  const style = window.getComputedStyle(el)
+  const ov = style.overflowY
+  return ov === 'auto' || ov === 'scroll' || ov === 'overlay'
+}
+
+const getActiveScrollElement = () => {
+  if (props.embedded && props.scrollTarget && isScrollable(props.scrollTarget)) {
+    return props.scrollTarget
+  }
+  return null
+}
 
 const getScrollMetrics = () => {
   const scrollEl = getActiveScrollElement()
@@ -176,27 +190,28 @@ const getScrollMetrics = () => {
   }
 }
 
-// 监听窗口滚动事件，判断是否显示回到顶部按钮
 const updateShowBackTop = () => {
   showBackTop.value = getScrollMetrics().scrollTop > 300
 }
-const updatePosition = () => {
-  if (mainColumn.value) {
-    const rect = mainColumn.value.getBoundingClientRect()
-    if (props.embedded) {
-      // 嵌入首页时，将按钮贴近右侧 SideNav 列的左侧区域
-      const safeLeft = Math.min(window.innerWidth - 56, rect.right + 24)
-      backTopStyle.value = {
-        left: `${safeLeft}px`,
-      }
-      return
-    }
 
-    const rightOffset = window.innerWidth - rect.right
-    const safeRight = Math.max(24, rightOffset - 160)
+const updatePosition = () => {
+  const column = mainColumn.value
+  if (!column) return
+  const rect = column.getBoundingClientRect?.()
+  if (!rect) return
+
+  if (props.embedded) {
+    const safeLeft = Math.min(window.innerWidth - 56, rect.right + 24)
     backTopStyle.value = {
-      right: `${safeRight}px`,
+      left: `${safeLeft}px`,
     }
+    return
+  }
+
+  const rightOffset = window.innerWidth - rect.right
+  const safeRight = Math.max(24, rightOffset - 160)
+  backTopStyle.value = {
+    right: `${safeRight}px`,
   }
 }
 
@@ -210,66 +225,73 @@ const { runWithBfCacheGuard } = useBfCacheRestore({
   },
 })
 
-// --- 滚动到底部检测 ---
-let ticking = false
-const onScroll = () => {
-  if (ticking) return
-  ticking = true
-  requestAnimationFrame(() => {
-    const { scrollTop, viewportHeight, fullHeight } = getScrollMetrics()
-
-    updateShowBackTop()
-    if (saveScrollTimer !== null) {
-      window.clearTimeout(saveScrollTimer)
-    }
-    saveScrollTimer = window.setTimeout(() => {
-      sessionStorage.setItem(HUB_SCROLL_KEY, String(scrollTop))
-      saveScrollTimer = null
-    }, 120)
-
-    if (isLoading.value || !hasMore.value) {
-      ticking = false
-      return
-    }
-
-    const threshold = 300
-
-    if (scrollTop + viewportHeight + threshold >= fullHeight) {
-      hubStore.loadEchoListPage()
-    }
-
-    ticking = false
-  })
+// --- 触底加载（IntersectionObserver） ---
+const onSentinelVisible = () => {
+  if (isLoading.value || isPreparing.value || !hasMore.value) return
+  hubStore.loadEchoListPage()
 }
 
+const setupSentinelObserver = () => {
+  teardownSentinelObserver()
+
+  const el = sentinelRef.value
+  if (!el) return
+
+  const root = getActiveScrollElement()
+  sentinelObserver = new IntersectionObserver(
+    (entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        onSentinelVisible()
+      }
+    },
+    { root: root ?? null, rootMargin: '0px 0px 300px 0px' },
+  )
+  sentinelObserver.observe(el)
+}
+
+const teardownSentinelObserver = () => {
+  sentinelObserver?.disconnect()
+  sentinelObserver = null
+}
+
+// DynamicScroller 的 @update 事件仍用于回顶按钮等
 const onScrollerUpdate = () => {
-  onScroll()
+  updateShowBackTop()
 }
 
-// --- 自动加载补全 ---
-const ensureScrollable = async () => {
-  if (ensuringScrollable) return
-  ensuringScrollable = true
-  try {
-    const maxAutoLoads = 3
-    let attempts = 0
+// --- 滚动位置保存（仅用于回顶按钮 + 位置恢复） ---
+let scrollListenerBound = false
+const onScrollForBackTop = () => {
+  updateShowBackTop()
 
-    while (attempts < maxAutoLoads && hasMore.value && !isLoading.value) {
-      await nextTick()
-      const docEl = document.documentElement
-      const body = document.body
-      const fullHeight = Math.max(docEl.scrollHeight, body.scrollHeight)
-      const viewportHeight = window.innerHeight
+  if (saveScrollTimer !== null) window.clearTimeout(saveScrollTimer)
+  saveScrollTimer = window.setTimeout(() => {
+    const { scrollTop } = getScrollMetrics()
+    sessionStorage.setItem(HUB_SCROLL_KEY, String(scrollTop))
+    saveScrollTimer = null
+  }, 120)
+}
 
-      // 页面已经可滚动时停止补拉，避免过度请求
-      if (fullHeight > viewportHeight + 10) break
-
-      attempts++
-      await hubStore.loadEchoListPage()
-    }
-  } finally {
-    ensuringScrollable = false
+const bindScrollListenerForBackTop = () => {
+  if (scrollListenerBound) return
+  const scrollEl = getActiveScrollElement()
+  if (scrollEl) {
+    scrollEl.addEventListener('scroll', onScrollForBackTop, { passive: true })
+  } else {
+    window.addEventListener('scroll', onScrollForBackTop, { passive: true })
   }
+  scrollListenerBound = true
+}
+
+const unbindScrollListenerForBackTop = () => {
+  if (!scrollListenerBound) return
+  const scrollEl = getActiveScrollElement()
+  if (scrollEl) {
+    scrollEl.removeEventListener('scroll', onScrollForBackTop)
+  } else {
+    window.removeEventListener('scroll', onScrollForBackTop)
+  }
+  scrollListenerBound = false
 }
 
 const restoreHubScrollPosition = () => {
@@ -286,16 +308,8 @@ const restoreHubScrollPosition = () => {
 }
 
 onMounted(async () => {
-  // 两种模式都需要响应窗口尺寸变化来校正按钮位置
   schedulePositionUpdate()
   window.addEventListener('resize', schedulePositionUpdate)
-
-  // 嵌入模式下监听外部滚动容器；独立页面模式监听 window
-  if (!props.embedded) {
-    window.addEventListener('scroll', onScroll, { passive: true })
-  } else {
-    props.scrollTarget?.addEventListener('scroll', onScroll, { passive: true })
-  }
 
   // 获取 Hub 数据
   await hubStore.getHubList()
@@ -303,23 +317,47 @@ onMounted(async () => {
   await hubStore.loadEchoListPage()
 
   restoreHubScrollPosition()
-  // 自动填充内容不足的情况
-  ensureScrollable()
   updateShowBackTop()
+
+  await nextTick()
+  setupSentinelObserver()
+  bindScrollListenerForBackTop()
 })
 
-// 当 echoList 变化时，自动检测是否需要补充加载
-watch(echoList, () => {
-  ensureScrollable()
+// scrollTarget 变化时重建 observer（root 可能变了）
+watch(
+  () => props.scrollTarget,
+  async () => {
+    await nextTick()
+    setupSentinelObserver()
+    unbindScrollListenerForBackTop()
+    bindScrollListenerForBackTop()
+  },
+)
+
+// isLoading 恢复后重新检查哨兵是否可见（防止用户已停止滚动导致卡住）
+watch(isLoading, (loading) => {
+  if (loading || !hasMore.value) return
+  nextTick(() => {
+    onSentinelVisible()
+  })
 })
+
+// echoList 变化后重新设置 observer（列表增长后哨兵位置变了）
+watch(
+  echoList,
+  () => {
+    nextTick(() => {
+      setupSentinelObserver()
+    })
+  },
+  { flush: 'post' },
+)
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', schedulePositionUpdate)
-  if (!props.embedded) {
-    window.removeEventListener('scroll', onScroll)
-  } else {
-    props.scrollTarget?.removeEventListener('scroll', onScroll)
-  }
+  teardownSentinelObserver()
+  unbindScrollListenerForBackTop()
   sessionStorage.setItem(HUB_SCROLL_KEY, String(getScrollMetrics().scrollTop))
   if (saveScrollTimer !== null) {
     window.clearTimeout(saveScrollTimer)
