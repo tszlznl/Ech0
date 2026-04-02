@@ -10,8 +10,10 @@ SERVICE_NAME="ech0"
 INSTALL_PATH_DEFAULT="/opt/ech0"
 TMP_DIR="/tmp/ech0-install"
 DOWNLOAD_FILE="/tmp/ech0.tar.gz"
-MANAGER_PATH="/usr/local/sbin/ech0-manager"
-COMMAND_LINK="/usr/local/bin/ech0"
+MANAGER_PATH="/usr/local/sbin/em"
+COMMAND_LINK="/usr/local/bin/em"
+COMMAND_LINK_COMPAT="/usr/local/bin/ech0"
+LEGACY_MANAGER_PATH="/usr/local/sbin/ech0-manager"
 
 ARCH=""
 LATEST_TAG=""
@@ -213,6 +215,24 @@ install_cli_helper() {
 
   mkdir -p "$(dirname "$COMMAND_LINK")"
   ln -sf "$MANAGER_PATH" "$COMMAND_LINK" || log_warn "创建命令链接失败"
+  ln -sf "$MANAGER_PATH" "$COMMAND_LINK_COMPAT" || log_warn "创建兼容命令链接失败"
+}
+
+should_install_cli_helper() {
+  if [ ! -t 0 ]; then
+    return 0
+  fi
+
+  local choice
+  read -r -p "是否安装管理命令(em，并兼容 ech0)? [Y/n]: " choice
+  case "$choice" in
+    n|N)
+      return 1
+      ;;
+    *)
+      return 0
+      ;;
+  esac
 }
 
 install_ech0() {
@@ -228,14 +248,23 @@ install_ech0() {
   download_package
   extract_package "$target_path"
   ensure_service "$target_path"
-  install_cli_helper
+
+  local cli_installed="false"
+  if should_install_cli_helper; then
+    install_cli_helper
+    cli_installed="true"
+  else
+    log_warn "已跳过管理命令安装，可稍后手动执行安装脚本来安装"
+  fi
 
   systemctl restart "$SERVICE_NAME"
 
   log_info "Ech0 安装完成"
   echo "安装路径: $target_path"
   echo "服务命令: systemctl {start|stop|restart} ${SERVICE_NAME}"
-  echo "管理脚本: $COMMAND_LINK"
+  if [ "$cli_installed" = "true" ]; then
+    echo "管理命令: ${COMMAND_LINK} (兼容命令: ${COMMAND_LINK_COMPAT})"
+  fi
 }
 
 update_ech0() {
@@ -334,7 +363,7 @@ uninstall_ech0() {
         log_warn "已保留数据目录: ${data_dir}"
       fi
 
-      rm -f "$MANAGER_PATH" "$COMMAND_LINK"
+      rm -f "$MANAGER_PATH" "$COMMAND_LINK" "$COMMAND_LINK_COMPAT" "$LEGACY_MANAGER_PATH"
 
       log_info "Ech0 已卸载"
       ;;
