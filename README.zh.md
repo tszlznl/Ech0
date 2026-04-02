@@ -181,11 +181,6 @@ docker run -d \
 
 ## 极速部署
 
-<!-- ### 🧙 脚本一键部署（推荐,请确保网络可以访问GitHub Release）
-```shell
-curl -fsSL "https://raw.githubusercontent.com/lin-snow/Ech0/main/scripts/ech0.sh" -o ech0.sh && bash ech0.sh
-``` -->
-
 ### 🐳 Docker 部署（推荐）
 
 ```shell
@@ -211,6 +206,15 @@ docker run -d \
 ```shell
 docker-compose up -d
 ```
+
+### 🧙 脚本部署
+
+```shell
+curl -fsSL "https://raw.githubusercontent.com/lin-snow/Ech0/main/scripts/ech0.sh" -o ech0.sh && bash ech0.sh
+```
+
+> 脚本通过 systemd 安装和管理 Ech0，涉及服务管理时请使用 root 权限执行。
+> 如需自定义安装路径，可执行 `bash ech0.sh install /your/path/ech0`。
 
 ### ☸️ Kubernetes (Helm)
 

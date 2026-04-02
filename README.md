@@ -179,10 +179,6 @@ See [Quick Deployment](#quick-deployment) for Docker Compose and Helm options.
 
 ## Quick Deployment
 
-<!-- ### 🧙 One-click Script Deployment (Recommended; ensure your network can access GitHub Releases)
-```shell
-curl -fsSL "https://raw.githubusercontent.com/lin-snow/Ech0/main/scripts/ech0.sh" -o ech0.sh && bash ech0.sh
-``` -->
 
 ### 🐳 Docker Deployment (Recommended)
 
@@ -209,6 +205,15 @@ Run the following command in that directory:
 ```shell
 docker-compose up -d
 ```
+
+### 🧙 Script Deployment
+
+```shell
+curl -fsSL "https://raw.githubusercontent.com/lin-snow/Ech0/main/scripts/ech0.sh" -o ech0.sh && bash ech0.sh
+```
+
+> The script installs and manages Ech0 through systemd, so please run with root privileges when needed.
+> You can run `bash ech0.sh install /your/path/ech0` to customize the install path.
 
 ### ☸️ Kubernetes (Helm)
 
