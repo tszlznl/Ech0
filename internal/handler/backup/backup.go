@@ -90,7 +90,7 @@ func (backupHandler *BackupHandler) CreateSnapshot() gin.HandlerFunc {
 
 		return res.Response{
 			Data: task,
-			Msg: commonModel.CREATE_SNAPSHOT_SUCCESS,
+			Msg:  commonModel.CREATE_SNAPSHOT_SUCCESS,
 		}
 	})
 }

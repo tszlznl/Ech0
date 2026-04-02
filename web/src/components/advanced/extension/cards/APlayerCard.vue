@@ -185,6 +185,8 @@ const ensureMetingAssets = async () => {
 watch(
   musicSourceKey,
   async () => {
+    // patch ASAP in case meting-js is already registered from previous views
+    patchMetingDisconnectGuard()
     resetReadyState()
     const currentMusicInfo = musicInfo.value
     if (!currentMusicInfo || currentMusicInfo.server === MusicProvider.APPLE) return
@@ -201,10 +203,27 @@ watch(
 )
 
 onMounted(() => {
+  patchMetingDisconnectGuard()
   observeMetingReady()
 })
 
 onBeforeUnmount(() => {
+  const host = metingRef.value as
+    | (HTMLElement & {
+        lock?: boolean | string
+        aplayer?: { destroy?: () => void }
+      })
+    | null
+  if (host) {
+    // meting-js disconnectedCallback calls this.aplayer.destroy() without guard.
+    // mark lock first to skip its internal teardown, then safely teardown here.
+    host.lock = true
+    try {
+      host.aplayer?.destroy?.()
+    } catch {
+      // ignore third-party teardown failures during route/tab transitions
+    }
+  }
   metingObserver?.disconnect()
   metingObserver = null
 })

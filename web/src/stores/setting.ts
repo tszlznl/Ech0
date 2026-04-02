@@ -207,7 +207,8 @@ export const useSettingStore = defineStore('settingStore', () => {
         }
       }
     } catch (error) {
-      snapshotError.value = error instanceof Error ? error.message : 'Failed to poll snapshot status'
+      snapshotError.value =
+        error instanceof Error ? error.message : 'Failed to poll snapshot status'
     } finally {
       snapshotPollInFlight.value = false
     }
