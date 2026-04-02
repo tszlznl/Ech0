@@ -5,7 +5,7 @@ GREEN='\033[1;32m'
 YELLOW='\033[1;33m'
 RESET='\033[0m'
 
-REPO="lin-snow/Ech0"
+REPO="${ECH0_GITHUB_REPO:-lin-snow/Ech0}"
 SERVICE_NAME="ech0"
 INSTALL_PATH_DEFAULT="/opt/ech0"
 TMP_DIR="/tmp/ech0-install"
@@ -140,8 +140,20 @@ prepare_install_dir() {
 
 extract_package() {
   local install_path=$1
-  local package_dir="$TMP_DIR/ech0-linux-${ARCH}"
+  local package_dir
+  package_dir=$(extract_release_package_dir)
 
+  cp -a "$package_dir"/. "$install_path"/ || handle_error 1 "复制文件失败"
+
+  local arch_binary="$install_path/ech0-linux-${ARCH}"
+  if [ -f "$arch_binary" ]; then
+    mv "$arch_binary" "$install_path/ech0" || handle_error 1 "重命名二进制失败"
+  fi
+
+  chmod +x "$install_path/ech0" || handle_error 1 "设置执行权限失败"
+}
+
+extract_release_package_dir() {
   rm -rf "$TMP_DIR"
   mkdir -p "$TMP_DIR"
 
@@ -156,16 +168,7 @@ extract_package() {
     handle_error 1 "未找到 Ech0 二进制文件"
   fi
 
-  package_dir=$(dirname "$binary_path")
-
-  cp -a "$package_dir"/. "$install_path"/ || handle_error 1 "复制文件失败"
-
-  local arch_binary="$install_path/ech0-linux-${ARCH}"
-  if [ -f "$arch_binary" ]; then
-    mv "$arch_binary" "$install_path/ech0" || handle_error 1 "重命名二进制失败"
-  fi
-
-  chmod +x "$install_path/ech0" || handle_error 1 "设置执行权限失败"
+  dirname "$binary_path"
 }
 
 ensure_service() {
@@ -250,21 +253,8 @@ update_ech0() {
 
   download_package
 
-  rm -rf "$TMP_DIR"
-  mkdir -p "$TMP_DIR"
-  if ! tar -xzf "$DOWNLOAD_FILE" -C "$TMP_DIR"; then
-    handle_error 1 "解压失败"
-  fi
-
-  local binary_path
-  binary_path=$(find "$TMP_DIR" -mindepth 1 -maxdepth 5 -type f \
-    \( -name "ech0" -o -name "ech0-linux-${ARCH}" \) -print -quit)
-  if [ -z "$binary_path" ]; then
-    handle_error 1 "未找到 Ech0 二进制文件"
-  fi
-
   local package_dir
-  package_dir=$(dirname "$binary_path")
+  package_dir=$(extract_release_package_dir)
 
   systemctl stop "$SERVICE_NAME" >/dev/null 2>&1 || true
 
@@ -435,7 +425,7 @@ main() {
       run_cli_command info
       ;;
     start)
-      run_cli_command tui
+      start_service
       ;;
     tui)
       run_cli_command tui
@@ -449,7 +439,6 @@ main() {
     "")
       while true; do
         show_menu
-        sleep 2
       done
       ;;
     *)
@@ -461,7 +450,6 @@ main() {
   status          查看服务状态
   info            执行 "ech0 info"
   start           启动服务
-  tui             执行 "ech0 tui"
   stop            停止服务
   restart         重启服务
   (无参数)        进入交互菜单

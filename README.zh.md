@@ -183,7 +183,7 @@ docker run -d \
 
 <!-- ### 🧙 脚本一键部署（推荐,请确保网络可以访问GitHub Release）
 ```shell
-curl -fsSL "https://sh.soopy.cn/ech0.sh" -o ech0.sh && bash ech0.sh
+curl -fsSL "https://raw.githubusercontent.com/lin-snow/Ech0/main/scripts/ech0.sh" -o ech0.sh && bash ech0.sh
 ``` -->
 
 ### 🐳 Docker 部署（推荐）

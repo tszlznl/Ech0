@@ -181,7 +181,7 @@ See [Quick Deployment](#quick-deployment) for Docker Compose and Helm options.
 
 <!-- ### 🧙 One-click Script Deployment (Recommended; ensure your network can access GitHub Releases)
 ```shell
-curl -fsSL "https://sh.soopy.cn/ech0.sh" -o ech0.sh && bash ech0.sh
+curl -fsSL "https://raw.githubusercontent.com/lin-snow/Ech0/main/scripts/ech0.sh" -o ech0.sh && bash ech0.sh
 ``` -->
 
 ### 🐳 Docker Deployment (Recommended)
