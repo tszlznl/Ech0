@@ -3,5 +3,5 @@ name: ech0
 description: A Helm chart for Ech0
 type: application
 version: 0.1.0
-appVersion: "4.3.1"
+appVersion: "latest"
 icon: "https://github.com/lin-snow/Ech0/blob/main/docs/imgs/logo.svg"
