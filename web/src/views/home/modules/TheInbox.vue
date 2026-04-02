@@ -23,7 +23,12 @@
       </p>
     </div>
     <!-- 加载中 -->
-    <TheLoadingIndicator v-if="loading" class="mx-auto my-5" size="lg" :label="t('inbox.loading')" />
+    <TheLoadingIndicator
+      v-if="loading"
+      class="mx-auto my-5"
+      size="lg"
+      :label="t('inbox.loading')"
+    />
   </div>
 </template>
 <script lang="ts" setup>
