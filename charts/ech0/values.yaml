@@ -97,6 +97,33 @@ config:
   # ECH0_CONFIG: "/app/data/config.yaml"
   JWT_SECRET: "Hello Echos" # This should be overridden in a production environment
 
+# Additional environment variables injected into the main container.
+# Example:
+# extraEnv:
+#   - name: ECH0_SERVER_MODE
+#     value: "release"
+extraEnv: []
+
+# Additional envFrom sources, e.g. configMapRef or secretRef.
+# Example:
+# extraEnvFrom:
+#   - secretRef:
+#       name: ech0-extra-secret
+extraEnvFrom: []
+
+probes:
+  enabled: true
+  readiness:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 2
+    failureThreshold: 3
+  liveness:
+    initialDelaySeconds: 15
+    periodSeconds: 20
+    timeoutSeconds: 2
+    failureThreshold: 3
+
 persistence:
   enabled: true
   size: 1Gi
