@@ -364,7 +364,7 @@ show_menu() {
   echo "2) 更新 Ech0"
   echo "3) 删除 Ech0"
   echo "4) 查看服务状态"
-  echo "5) 查看当前信息 (ech0 info)"
+  echo "5) 查看当前信息"
   echo "6) 启动服务"
   echo "7) 停止服务"
   echo "8) 重启服务"
