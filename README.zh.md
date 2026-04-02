@@ -380,11 +380,6 @@ docker image prune -f
 
 ---
 
-## 项目架构
-
-- 后端事件总线已切换为 [Busen](https://github.com/lin-snow/Busen)：采用 typed-first in-process 架构，并通过显式背压、hooks 与 drain shutdown 提升稳定性。
----
-
 ## 开发指南
 ### 后端环境要求
 📌 **Go 1.26.0+**

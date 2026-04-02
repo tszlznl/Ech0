@@ -299,16 +299,6 @@ docker image prune -f
    helm upgrade my-ech0 ./charts/ech0 --namespace my-namespace
    ```
 
-<!-- ---
-
-## Access Modes
-
-### 🖥️ TUI Mode
-
-![TUI Mode](./docs/imgs/tui.png)
-
-Run the target binary directly. For example, on Windows, double-click `Ech0.exe`. -->
-
 ---
 
 ## FAQ
@@ -375,12 +365,6 @@ Run the target binary directly. For example, on Windows, double-click `Ech0.exe`
 - [Code of Conduct](./CODE_OF_CONDUCT.md)
 - [Security Policy](./SECURITY.md)
 - [License](./LICENSE)
-
----
-
-## Project Architecture
-
-- The backend event bus has switched to [Busen](https://github.com/lin-snow/Busen): it uses a typed-first in-process architecture, and improves stability through explicit backpressure, hooks, and drain shutdown.
 
 ---
 
