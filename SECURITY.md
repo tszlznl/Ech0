@@ -1,43 +1,43 @@
 # Security Policy
 
-感谢你帮助 Ech0 提升安全性。
+Thank you for helping improve Ech0’s security.
 
 ## Supported Versions
 
-我们通常只对以下版本提供安全修复支持：
+We generally provide security fixes only for:
 
-- 最新发布版本（Latest）
-- 上一个稳定版本（Previous）
+- The latest release (Latest)
+- The previous stable release (Previous)
 
-更早版本可能不会收到安全补丁，建议尽快升级。
+Older releases may not receive security patches; we recommend upgrading as soon as practical.
 
 ## Reporting a Vulnerability
 
-请不要在公开 Issue 或 Discussion 中披露安全漏洞细节。
+Please do not disclose security vulnerability details in public Issues or Discussions.
 
-推荐优先使用 GitHub 私密漏洞报告（Security Advisories）：
+We recommend using GitHub’s private vulnerability reporting (Security Advisories):
 
 - https://github.com/lin-snow/Ech0/security/advisories/new
 
-如果你无法使用上面的方式，请通过维护者可控的私密渠道联系，并包含以下信息：
+If you cannot use the link above, contact the maintainers through a private channel they control, and include:
 
-- 漏洞类型与影响范围
-- 复现步骤或 PoC
-- 受影响版本、环境与配置
-- 可能的修复建议（可选）
+- Vulnerability type and impact
+- Steps to reproduce or a proof of concept
+- Affected versions, environment, and configuration
+- Suggested fix (optional)
 
 ## Response Process
 
-收到报告后，我们会尽力按以下节奏处理：
+After we receive a report, we aim to:
 
-- 48 小时内确认收到
-- 7 天内完成初步评估与分级
-- 修复后尽快发布版本并更新公告
+- Acknowledge receipt within 48 hours
+- Complete an initial assessment and severity rating within 7 days
+- Ship a fix in a release as soon as possible and publish an advisory
 
-具体时长会受漏洞复杂度与发布窗口影响。
+Actual timelines may vary with complexity and release windows.
 
 ## Coordinated Disclosure
 
-在补丁发布前，请避免公开披露漏洞细节。
+Please avoid public disclosure of vulnerability details before a patch is available.
 
-我们鼓励遵循负责任披露流程，在修复发布后再同步公开技术细节，以保护用户安全。
+We encourage responsible disclosure: share technical details after a fix is released to protect users.
