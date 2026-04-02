@@ -3,7 +3,16 @@
 RED='\033[1;31m'
 GREEN='\033[1;32m'
 YELLOW='\033[1;33m'
+ORANGE='\033[38;5;214m'
 RESET='\033[0m'
+
+if [ -n "${NO_COLOR:-}" ] || [ "${TERM:-}" = "dumb" ]; then
+  RED=''
+  GREEN=''
+  YELLOW=''
+  ORANGE=''
+  RESET=''
+fi
 
 REPO="${ECH0_GITHUB_REPO:-lin-snow/Ech0}"
 SERVICE_NAME="ech0"
@@ -394,6 +403,61 @@ show_status() {
   fi
 }
 
+render_script_header() {
+  local command_name="${1:-menu}"
+  local install_state="未安装"
+  local install_state_display=""
+  local install_path="-"
+  local service_state="未知"
+  local service_state_display=""
+  local separator="${ORANGE}==================================================${RESET}"
+
+  if is_ech0_installed; then
+    install_path=$(get_installed_path)
+    install_state="已安装"
+  fi
+
+  if command -v systemctl >/dev/null 2>&1; then
+    if [ -f "/etc/systemd/system/${SERVICE_NAME}.service" ]; then
+      if systemctl is-active "$SERVICE_NAME" >/dev/null 2>&1; then
+        service_state="运行中"
+      else
+        service_state="未运行"
+      fi
+    else
+      service_state="未安装服务"
+    fi
+  else
+    service_state="systemctl 不可用"
+  fi
+
+  if [ "$install_state" = "已安装" ]; then
+    install_state_display="${GREEN}${install_state}${RESET}"
+  else
+    install_state_display="${ORANGE}${install_state}${RESET}"
+  fi
+
+  case "$service_state" in
+    运行中)
+      service_state_display="${GREEN}${service_state}${RESET}"
+      ;;
+    未运行|未安装服务|systemctl\ 不可用)
+      service_state_display="${ORANGE}${service_state}${RESET}"
+      ;;
+    *)
+      service_state_display="${RED}${service_state}${RESET}"
+      ;;
+  esac
+
+  echo -e "$separator"
+  echo -e "${ORANGE}Ech0 管理脚本 (安装/更新/卸载/服务管理)${RESET}"
+  echo "当前命令: ${command_name}"
+  echo -e "安装状态: ${install_state_display}"
+  echo "安装路径: ${install_path}"
+  echo -e "服务状态: ${service_state_display}"
+  echo -e "$separator"
+}
+
 run_cli_command() {
   local subcommand=$1
   local target_path
@@ -488,6 +552,8 @@ show_menu() {
 }
 
 main() {
+  render_script_header "$1"
+
   case "$1" in
     install)
       install_ech0 "$2"
