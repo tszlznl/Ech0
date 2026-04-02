@@ -80,7 +80,8 @@ func (backupHandler *BackupHandler) ExportBackup() gin.HandlerFunc {
 //	@Router			/backup/snapshot [post]
 func (backupHandler *BackupHandler) CreateSnapshot() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		if err := backupHandler.backupService.CreateSnapshot(ctx.Request.Context()); err != nil {
+		task, err := backupHandler.backupService.CreateSnapshot(ctx.Request.Context())
+		if err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -88,7 +89,36 @@ func (backupHandler *BackupHandler) CreateSnapshot() gin.HandlerFunc {
 		}
 
 		return res.Response{
+			Data: task,
 			Msg: commonModel.CREATE_SNAPSHOT_SUCCESS,
+		}
+	})
+}
+
+// GetSnapshotStatus 查询快照任务状态
+//
+//	@Summary		查询快照任务状态
+//	@Description	根据 taskId 查询创建快照任务的执行状态
+//	@Tags			系统备份
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	res.Response	"查询快照状态成功"
+//	@Failure		200	{object}	res.Response	"查询快照状态失败"
+//	@Router			/backup/snapshot/{taskId} [get]
+func (backupHandler *BackupHandler) GetSnapshotStatus() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		taskID := ctx.Param("taskId")
+		result, err := backupHandler.backupService.GetSnapshotTaskStatus(ctx.Request.Context(), taskID)
+		if err != nil {
+			return res.Response{
+				Msg: "",
+				Err: err,
+			}
+		}
+
+		return res.Response{
+			Data: result,
+			Msg:  commonModel.SUCCESS_MESSAGE,
 		}
 	})
 }

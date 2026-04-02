@@ -110,6 +110,11 @@ func setupSettingRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 		middleware.RequireScopes(authModel.ScopeAdminSettings),
 		h.BackupHandler.CreateSnapshot(),
 	)
+	appRouterGroup.AuthRouterGroup.GET(
+		"/backup/snapshot/:taskId",
+		middleware.RequireScopes(authModel.ScopeAdminSettings),
+		h.BackupHandler.GetSnapshotStatus(),
+	)
 
 	appRouterGroup.AuthRouterGroup.GET(
 		"/agent/settings",

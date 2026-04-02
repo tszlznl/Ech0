@@ -180,9 +180,19 @@ export function fetchUpdateBackupScheduleSetting(
 
 // 手动创建快照
 export function fetchCreateSnapshot() {
-  return request({
+  return request<App.Api.Setting.SnapshotTaskCreateResult>({
     url: '/backup/snapshot',
     method: 'POST',
+    // 快照创建可能耗时较长，避免默认 20s 超时导致请求中断
+    timeout: 60 * 60 * 1000,
+  })
+}
+
+// 获取快照任务状态
+export function fetchGetSnapshotStatus(taskId: string) {
+  return request<App.Api.Setting.SnapshotTaskStatusResult>({
+    url: `/backup/snapshot/${taskId}`,
+    method: 'GET',
   })
 }
 

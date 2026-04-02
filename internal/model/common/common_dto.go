@@ -167,3 +167,31 @@ type FileTreeResultDto struct {
 type GetWebsiteTitleDto struct {
 	WebSiteURL string `json:"website_url" form:"website_url" binding:"required"`
 }
+
+type SnapshotTaskStatus string
+
+const (
+	SnapshotTaskStatusPending SnapshotTaskStatus = "pending"
+	SnapshotTaskStatusRunning SnapshotTaskStatus = "running"
+	SnapshotTaskStatusSuccess SnapshotTaskStatus = "success"
+	SnapshotTaskStatusFailed  SnapshotTaskStatus = "failed"
+)
+
+// SnapshotTaskCreateResult 创建快照任务后的返回体
+//
+// swagger:model SnapshotTaskCreateResult
+type SnapshotTaskCreateResult struct {
+	TaskID string             `json:"task_id"`
+	Status SnapshotTaskStatus `json:"status"`
+}
+
+// SnapshotTaskStatusResult 快照任务状态查询返回体
+//
+// swagger:model SnapshotTaskStatusResult
+type SnapshotTaskStatusResult struct {
+	TaskID    string             `json:"task_id"`
+	Status    SnapshotTaskStatus `json:"status"`
+	StartedAt time.Time          `json:"started_at"`
+	UpdatedAt time.Time          `json:"updated_at"`
+	Error     string             `json:"error,omitempty"`
+}

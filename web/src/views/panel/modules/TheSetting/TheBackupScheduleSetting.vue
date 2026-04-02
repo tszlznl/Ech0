@@ -13,12 +13,12 @@
         <div class="flex flex-wrap items-center justify-end gap-2">
           <BaseButton
             @click="handleCreateSnapshot"
-            :disabled="creatingSnapshot"
+            :disabled="isSnapshotCreating"
             class="px-3 py-1.5 text-sm! rounded-[var(--radius-md)]"
             :tooltip="t('backupScheduleSetting.createSnapshot')"
           >
             {{
-              creatingSnapshot
+              isSnapshotCreating
                 ? t('backupScheduleSetting.creatingSnapshot')
                 : t('backupScheduleSetting.createSnapshot')
             }}
@@ -79,20 +79,22 @@ import BaseInput from '@/components/common/BaseInput.vue'
 import BaseSwitch from '@/components/common/BaseSwitch.vue'
 import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { fetchCreateSnapshot, fetchUpdateBackupScheduleSetting } from '@/service/api'
+import { fetchUpdateBackupScheduleSetting } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 
 const settingStore = useSettingStore()
 const { t } = useI18n()
-const { getBackupSchedule } = settingStore
-const { BackupSchedule } = storeToRefs(settingStore)
+const { getBackupSchedule, startSnapshotTask, restoreSnapshotTaskFromStorage } = settingStore
+const { BackupSchedule, snapshotStatus, snapshotError } = storeToRefs(settingStore)
 
 const scheduleEditMode = ref<boolean>(false)
-const creatingSnapshot = ref<boolean>(false)
+const isSnapshotCreating = computed(
+  () => snapshotStatus.value === 'pending' || snapshotStatus.value === 'running',
+)
 
 const handleUpdateBackupSchedule = async () => {
   const res = await fetchUpdateBackupScheduleSetting(BackupSchedule.value)
@@ -105,13 +107,12 @@ const handleUpdateBackupSchedule = async () => {
 }
 
 const handleCreateSnapshot = async () => {
-  if (creatingSnapshot.value) return
-
-  creatingSnapshot.value = true
+  if (isSnapshotCreating.value) return
   try {
-    const res = await fetchCreateSnapshot()
+    const res = await startSnapshotTask()
+    if (!res) return
     if (res.code === 1) {
-      theToast.success(res.msg || String(t('backupScheduleSetting.createSnapshotSuccess')))
+      theToast.success(res.msg || String(t('backupScheduleSetting.creatingSnapshot')))
       return
     }
 
@@ -119,13 +120,26 @@ const handleCreateSnapshot = async () => {
   } catch (error) {
     console.error(String(t('backupScheduleSetting.createSnapshotFailed')), error)
     theToast.error(String(t('backupScheduleSetting.createSnapshotFailed')))
-  } finally {
-    creatingSnapshot.value = false
   }
 }
 
+watch(
+  () => snapshotStatus.value,
+  (status, prevStatus) => {
+    if (status === prevStatus) return
+    if (status === 'success') {
+      theToast.success(String(t('backupScheduleSetting.createSnapshotSuccess')))
+      return
+    }
+    if (status === 'failed') {
+      theToast.error(snapshotError.value || String(t('backupScheduleSetting.createSnapshotFailed')))
+    }
+  },
+)
+
 onMounted(async () => {
   await getBackupSchedule()
+  await restoreSnapshotTaskFromStorage()
 })
 </script>
 

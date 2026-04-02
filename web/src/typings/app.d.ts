@@ -433,6 +433,21 @@ declare namespace App {
         cron_expression: string
       }
 
+      type SnapshotTaskStatus = 'pending' | 'running' | 'success' | 'failed'
+
+      type SnapshotTaskCreateResult = {
+        task_id: string
+        status: SnapshotTaskStatus
+      }
+
+      type SnapshotTaskStatusResult = {
+        task_id: string
+        status: SnapshotTaskStatus
+        started_at: string
+        updated_at: string
+        error?: string
+      }
+
       type AgentSetting = {
         enable: boolean
         provider: string

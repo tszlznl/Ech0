@@ -7,12 +7,18 @@ import {
   fetchGetAllWebhooks,
   fetchListAccessTokens,
   fetchGetBackupScheduleSetting,
+  fetchCreateSnapshot,
+  fetchGetSnapshotStatus,
   fetchGetAgentSettings,
   fetchGetAgentInfo,
   fetchHelloEch0,
 } from '@/service/api'
 import { S3Provider, OAuth2Provider, AgentProvider } from '@/enums/enums'
 import { useUserStore } from './user'
+
+const SNAPSHOT_TASK_ID_STORAGE_KEY = 'backup_snapshot_task_id'
+const SNAPSHOT_STATUS_POLL_INTERVAL_MS = 3000
+type SnapshotUIStatus = App.Api.Setting.SnapshotTaskStatus | 'idle'
 
 export const useSettingStore = defineStore('settingStore', () => {
   const userStore = useUserStore()
@@ -83,6 +89,12 @@ export const useSettingStore = defineStore('settingStore', () => {
   })
   const hello = ref<App.Api.Ech0.HelloEch0>()
   const loading = ref<boolean>(true)
+  const snapshotTaskId = ref<string>('')
+  const snapshotStatus = ref<SnapshotUIStatus>('idle')
+  const snapshotError = ref<string>('')
+  const snapshotPolling = ref<boolean>(false)
+  const snapshotPollTimer = ref<ReturnType<typeof setTimeout> | null>(null)
+  const snapshotPollInFlight = ref<boolean>(false)
 
   /**
    * Actions
@@ -147,6 +159,83 @@ export const useSettingStore = defineStore('settingStore', () => {
     }
   }
 
+  const stopSnapshotPolling = () => {
+    snapshotPolling.value = false
+    if (snapshotPollTimer.value) {
+      clearTimeout(snapshotPollTimer.value)
+      snapshotPollTimer.value = null
+    }
+  }
+
+  const persistSnapshotTaskId = (taskId: string) => {
+    if (typeof window === 'undefined') return
+    if (taskId) {
+      window.localStorage.setItem(SNAPSHOT_TASK_ID_STORAGE_KEY, taskId)
+      return
+    }
+    window.localStorage.removeItem(SNAPSHOT_TASK_ID_STORAGE_KEY)
+  }
+
+  const setSnapshotTaskState = (taskId: string, status: SnapshotUIStatus, error = '') => {
+    snapshotTaskId.value = taskId
+    snapshotStatus.value = status
+    snapshotError.value = error
+  }
+
+  const scheduleSnapshotPoll = () => {
+    if (!snapshotPolling.value || !snapshotTaskId.value) return
+    if (snapshotPollTimer.value) clearTimeout(snapshotPollTimer.value)
+    snapshotPollTimer.value = setTimeout(async () => {
+      await pollSnapshotStatus(snapshotTaskId.value)
+    }, SNAPSHOT_STATUS_POLL_INTERVAL_MS)
+  }
+
+  const pollSnapshotStatus = async (taskId?: string) => {
+    const id = taskId || snapshotTaskId.value
+    if (!id || snapshotPollInFlight.value) return
+    snapshotPollInFlight.value = true
+    try {
+      const res = await fetchGetSnapshotStatus(id)
+      if (res.code === 1) {
+        const status = res.data.status
+        setSnapshotTaskState(id, status, res.data.error || '')
+        if (status === 'success' || status === 'failed') {
+          stopSnapshotPolling()
+          persistSnapshotTaskId('')
+          snapshotTaskId.value = ''
+          return
+        }
+      }
+    } catch (error) {
+      snapshotError.value = error instanceof Error ? error.message : 'Failed to poll snapshot status'
+    } finally {
+      snapshotPollInFlight.value = false
+    }
+    scheduleSnapshotPoll()
+  }
+
+  const startSnapshotTask = async () => {
+    if (snapshotStatus.value === 'pending' || snapshotStatus.value === 'running') return null
+    const res = await fetchCreateSnapshot()
+    if (res.code === 1 && res.data?.task_id) {
+      const taskId = res.data.task_id
+      setSnapshotTaskState(taskId, res.data.status, '')
+      persistSnapshotTaskId(taskId)
+      snapshotPolling.value = true
+      await pollSnapshotStatus(taskId)
+    }
+    return res
+  }
+
+  const restoreSnapshotTaskFromStorage = async () => {
+    if (typeof window === 'undefined') return
+    const taskId = (window.localStorage.getItem(SNAPSHOT_TASK_ID_STORAGE_KEY) || '').trim()
+    if (!taskId) return
+    setSnapshotTaskState(taskId, 'running', '')
+    snapshotPolling.value = true
+    await pollSnapshotStatus(taskId)
+  }
+
   const getHelloEch0 = async () => {
     const res = await fetchHelloEch0()
     if (res.code === 1) {
@@ -199,8 +288,16 @@ export const useSettingStore = defineStore('settingStore', () => {
     getAllWebhooks,
     getHelloEch0,
     getBackupSchedule,
+    startSnapshotTask,
+    pollSnapshotStatus,
+    restoreSnapshotTaskFromStorage,
+    stopSnapshotPolling,
     getAgentSetting,
     getAgentInfo,
     init,
+    snapshotTaskId,
+    snapshotStatus,
+    snapshotError,
+    snapshotPolling,
   }
 })
