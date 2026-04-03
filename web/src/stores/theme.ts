@@ -8,7 +8,7 @@ const THEME_COLOR_META_NAME = 'theme-color'
 const THEME_COLOR_FALLBACK: Record<ThemeType, string> = {
   light: '#f4f1ec',
   dark: '#333333',
-  sunny: '#eeece6', // 需要考虑有一层视频带来的色彩层级变化 RGB(238,236,230)
+  sunny: '#eeece6',
 }
 
 export const useThemeStore = defineStore('themeStore', () => {
@@ -128,8 +128,9 @@ export const useThemeStore = defineStore('themeStore', () => {
 
   const syncThemeColorMeta = () => {
     const rootStyles = getComputedStyle(document.documentElement)
+    const chromeColor = rootStyles.getPropertyValue('--color-chrome-theme').trim()
     const canvasColor = rootStyles.getPropertyValue('--color-bg-canvas').trim()
-    const nextThemeColor = canvasColor || THEME_COLOR_FALLBACK[theme.value]
+    const nextThemeColor = chromeColor || canvasColor || THEME_COLOR_FALLBACK[theme.value]
 
     let themeColorMeta = document.querySelector<HTMLMetaElement>(`meta[name="${THEME_COLOR_META_NAME}"]`)
     if (!themeColorMeta) {
