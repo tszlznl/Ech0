@@ -50,10 +50,48 @@ const imageRows = computed(() => {
   return rows
 })
 
-/** 稳定伪随机角度，约 [-10°, 10°] */
+/**
+ * 每张图唯一 z-index（10 起递增），但「谁在上」由确定性洗牌决定，
+ * 避免始终从左到右单调叠高；同一次数据集顺序稳定。
+ */
+function buildStackZIndices(count: number): number[] {
+  if (count === 0) return []
+  const order = Array.from({ length: count }, (_, i) => i)
+  let state = ((count + 1) * 2654435761 + 1597334677) >>> 0
+  for (let i = count - 1; i > 0; i--) {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0
+    const j = state % (i + 1)
+    const tmp = order[i]!
+    order[i] = order[j]!
+    order[j] = tmp
+  }
+  const z: number[] = new Array(count)
+  for (let rank = 0; rank < count; rank++) {
+    z[order[rank]!] = 10 + rank
+  }
+  return z
+}
+
+const stackZIndices = computed(() => buildStackZIndices(props.images.length))
+
+/** 32-bit 混合，减轻「连续 idx」与线性同余带来的角度偏斜 */
+function mix32(n: number): number {
+  let x = (Math.imul(n ^ 0x243f6a88, 0x9e3779b1) + 0x517cc1b7) >>> 0
+  x ^= x >>> 16
+  x = Math.imul(x, 0x7feb352d) >>> 0
+  x ^= x >>> 15
+  x = Math.imul(x, 0x846ca68b) >>> 0
+  x ^= x >>> 16
+  return x >>> 0
+}
+
+/**
+ * 稳定角度 [-10°, 10°] 整数；CSS 中负值为逆时针、正值为顺时针。
+ * 旧版 (idx*9301)%233280 对相邻下标分布不均，易出现「几乎不左转」。
+ */
 function stackRotateDeg(idx: number): number {
-  const t = ((idx * 9301 + 49297) % 233280) / 233280
-  return Math.round(-10 + t * 20)
+  const u = mix32(idx) / 4294967296
+  return Math.round(-10 + u * 20)
 }
 
 /** 波浪式垂直偏移（px），与邮票尺寸成比例 */
@@ -64,10 +102,11 @@ function stackOffsetY(idx: number): number {
 function cardStyle(idx: number): Record<string, string> {
   const deg = stackRotateDeg(idx)
   const y = stackOffsetY(idx)
+  const z = stackZIndices.value[idx] ?? 10
   return {
     '--stack-rot': `${deg}deg`,
     '--stack-y': `${y}px`,
-    zIndex: String(idx + 1),
+    zIndex: String(z),
   }
 }
 </script>
@@ -75,7 +114,7 @@ function cardStyle(idx: number): Record<string, string> {
 <style scoped>
 /* 邮票外框总边长（含白边），勿放大：避免 flex 子项 min-width:auto 按原图撑满屏 */
 .stack-root {
-  --stamp-outer: 64px;
+  --stamp-outer: 60px;
   /* 画在 img 上的白框宽度（box-sizing: border-box 含在邮票边长内） */
   --stamp-white-border: 2px;
   /* hover 放大倍数，与下方 min-height / padding 联动，避免被裁切 */
@@ -111,7 +150,7 @@ function cardStyle(idx: number): Record<string, string> {
 .stack-track {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 0;
   width: max-content;
   max-width: 100%;
@@ -146,9 +185,12 @@ function cardStyle(idx: number): Record<string, string> {
   flex: 0 0 auto;
   width: var(--stamp-outer);
   margin-left: calc(var(--stamp-outer) * -1 * var(--stack-overlap));
-  transform: rotate(var(--stack-rot, 0deg)) translateY(var(--stack-y, 0px));
+  transform: rotate(var(--stack-rot, 0deg)) translateY(var(--stack-y, 0px)) translateZ(0);
   transform-origin: center center;
   transition: transform 0.2s ease;
+  /* 合成层 + 背面不可见，减轻旋转后位图边缘锯齿（Chrome / Safari） */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .stack-card--row-start {
@@ -157,9 +199,10 @@ function cardStyle(idx: number): Record<string, string> {
 
 .stack-card:focus-within,
 .stack-card:hover {
-  z-index: 50 !important;
+  /* 高于任意洗牌后的 stack z（10..10+n），保证可点、可悬停 */
+  z-index: 9999 !important;
   transform: rotate(var(--stack-rot, 0deg)) translateY(var(--stack-y, 0px))
-    scale(var(--stack-hover-scale));
+    scale(var(--stack-hover-scale)) translateZ(0);
 }
 
 /* 锁住点击区域，防止大图 intrinsic 宽度撑破 flex */
@@ -189,6 +232,8 @@ function cardStyle(idx: number): Record<string, string> {
   border: none;
   border-radius: 0 !important;
   overflow: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
   /* 仅细描边，避免灰黑投影；hover 不再加深阴影 */
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-border-subtle) 85%, transparent);
 }
@@ -209,6 +254,9 @@ function cardStyle(idx: number): Record<string, string> {
   border: var(--stamp-white-border) solid #fff;
   box-sizing: border-box;
   box-shadow: none !important;
+  /* 与父级旋转配合，单独提升图层利于插值采样 */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -217,13 +265,13 @@ function cardStyle(idx: number): Record<string, string> {
   }
 
   .stack-card {
-    transform: translateY(var(--stack-y, 0px));
+    transform: translateY(var(--stack-y, 0px)) translateZ(0);
     transition: none;
   }
 
   .stack-card:focus-within,
   .stack-card:hover {
-    transform: translateY(var(--stack-y, 0px));
+    transform: translateY(var(--stack-y, 0px)) translateZ(0);
   }
 }
 </style>
