@@ -39,11 +39,20 @@ defineProps<GalleryHorizontalProps>()
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+  scrollbar-color: var(--color-gallery-scrollbar) transparent;
 }
 
 .horizontal-scroll-container::-webkit-scrollbar {
   height: 4px;
+}
+
+.horizontal-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.horizontal-scroll-container::-webkit-scrollbar-thumb {
+  background: var(--color-gallery-scrollbar);
+  border-radius: 9999px;
 }
 
 .horizontal-scroll-wrapper {
@@ -62,7 +71,7 @@ defineProps<GalleryHorizontalProps>()
 .scroll-hint {
   text-align: center;
   font-size: 12px;
-  color: #999;
+  color: var(--color-gallery-hint);
   margin-top: 8px;
   animation: hint-pulse 2s infinite;
 }

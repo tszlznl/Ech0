@@ -41,8 +41,8 @@ const extraCount = computed(() => (props.images.length > 9 ? props.images.length
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.45);
-  color: #fff;
+  background: var(--color-overlay-strong);
+  color: var(--color-gallery-overlay-text);
   font-size: 20px;
   font-weight: 600;
   border-radius: 8px;
