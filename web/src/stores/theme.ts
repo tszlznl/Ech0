@@ -8,7 +8,7 @@ const THEME_COLOR_META_NAME = 'theme-color'
 const THEME_COLOR_FALLBACK: Record<ThemeType, string> = {
   light: '#f4f1ec',
   dark: '#333333',
-  sunny: 'rgb(238, 236, 230)', // 需要考虑有一层视频带来的色彩层级变化 RGB(238,236,230)
+  sunny: '#eeece6', // 需要考虑有一层视频带来的色彩层级变化 RGB(238,236,230)
 }
 
 export const useThemeStore = defineStore('themeStore', () => {
