@@ -22,6 +22,8 @@ export type GalleryHorizontalProps = GalleryWithImageKeyProps & {
   getHorizontalAspectStyle: (image: App.Api.Ech0.FileObject) => Record<string, string> | undefined
 }
 
+export type GalleryStackProps = GalleryWithImageKeyProps
+
 export type GalleryWaterfallProps = GalleryWithImageKeyProps & {
   getAspectRatioStyle: (image: App.Api.Ech0.FileObject) => Record<string, string> | undefined
 }

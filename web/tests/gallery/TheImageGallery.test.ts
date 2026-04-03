@@ -48,6 +48,10 @@ const layoutStubs = {
     name: 'GalleryHorizontal',
     template: '<div data-test="horizontal" />',
   }),
+  GalleryStack: defineComponent({
+    name: 'GalleryStack',
+    template: '<div data-test="stack" />',
+  }),
 }
 
 const createImage = (overrides: Record<string, unknown> = {}) =>
@@ -75,6 +79,22 @@ describe('TheImageGallery', () => {
     expect(wrapper.find('[data-test="grid"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="carousel"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="horizontal"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="stack"]').exists()).toBe(false)
+  })
+
+  it('renders stack layout when requested', () => {
+    const wrapper = mount(TheImageGallery, {
+      props: {
+        images: [createImage()],
+        layout: ImageLayout.STACK,
+      },
+      global: {
+        stubs: layoutStubs,
+      },
+    })
+
+    expect(wrapper.find('[data-test="stack"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="waterfall"]').exists()).toBe(false)
   })
 
   it('cleans loaded state when image dataset changes', async () => {

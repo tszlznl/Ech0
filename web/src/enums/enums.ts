@@ -22,6 +22,7 @@ export enum ImageLayout {
   GRID = 'grid', // 九宫格布局
   HORIZONTAL = 'horizontal', // 横向布局
   CAROUSEL = 'carousel', // 单图轮播布局
+  STACK = 'stack', // 堆叠（多行交错、白边、轻微旋转）
 }
 
 // S3 Service Provider

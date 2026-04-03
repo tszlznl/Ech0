@@ -132,7 +132,9 @@ export const useThemeStore = defineStore('themeStore', () => {
     const canvasColor = rootStyles.getPropertyValue('--color-bg-canvas').trim()
     const nextThemeColor = chromeColor || canvasColor || THEME_COLOR_FALLBACK[theme.value]
 
-    let themeColorMeta = document.querySelector<HTMLMetaElement>(`meta[name="${THEME_COLOR_META_NAME}"]`)
+    let themeColorMeta = document.querySelector<HTMLMetaElement>(
+      `meta[name="${THEME_COLOR_META_NAME}"]`,
+    )
     if (!themeColorMeta) {
       themeColorMeta = document.createElement('meta')
       themeColorMeta.setAttribute('name', THEME_COLOR_META_NAME)

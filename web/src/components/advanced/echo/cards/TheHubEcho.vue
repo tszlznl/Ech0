@@ -32,7 +32,9 @@
       <div class="py-4">
         <template
           v-if="
-            props.echo.layout === ImageLayout.GRID || props.echo.layout === ImageLayout.HORIZONTAL
+            props.echo.layout === ImageLayout.GRID ||
+            props.echo.layout === ImageLayout.HORIZONTAL ||
+            props.echo.layout === ImageLayout.STACK
           "
         >
           <div class="mx-auto w-11/12 pl-1 mb-3">

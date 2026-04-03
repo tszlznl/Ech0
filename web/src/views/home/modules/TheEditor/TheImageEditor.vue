@@ -37,7 +37,7 @@
       <BaseSelect
         v-model="echoToAdd.layout"
         :options="layoutOptions"
-        class="w-32 h-7"
+        class="w-36 h-7"
         :placeholder="t('editor.imageLayoutPlaceholder')"
       />
     </div>
@@ -134,6 +134,7 @@ const layoutOptions = computed(() => [
   { label: String(t('editor.layoutGrid')), value: ImageLayout.GRID },
   { label: String(t('editor.layoutCarousel')), value: ImageLayout.CAROUSEL },
   { label: String(t('editor.layoutHorizontal')), value: ImageLayout.HORIZONTAL },
+  { label: String(t('editor.layoutStack')), value: ImageLayout.STACK },
 ])
 </script>
 

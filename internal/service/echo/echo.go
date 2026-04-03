@@ -59,7 +59,8 @@ func (echoService *EchoService) PostEcho(ctx context.Context, newEcho *model.Ech
 	if layout == "" || (layout != model.LayoutWaterfall &&
 		layout != model.LayoutGrid &&
 		layout != model.LayoutHorizontal &&
-		layout != model.LayoutCarousel) {
+		layout != model.LayoutCarousel &&
+		layout != model.LayoutStack) {
 		newEcho.Layout = model.LayoutWaterfall
 	}
 
@@ -201,7 +202,8 @@ func (echoService *EchoService) UpdateEcho(ctx context.Context, echo *model.Echo
 	if layout == "" || (layout != model.LayoutWaterfall &&
 		layout != model.LayoutGrid &&
 		layout != model.LayoutHorizontal &&
-		layout != model.LayoutCarousel) {
+		layout != model.LayoutCarousel &&
+		layout != model.LayoutStack) {
 		echo.Layout = model.LayoutWaterfall
 	}
 

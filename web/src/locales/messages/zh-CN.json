@@ -39,6 +39,7 @@
     "layoutGrid": "九宫格",
     "layoutCarousel": "单图轮播",
     "layoutHorizontal": "水平轮播",
+    "layoutStack": "堆叠",
     "musicUrlPlaceholder": "音乐链接...",
     "musicShare": "音乐分享",
     "musicSupportHint": "支持网易云/QQ音乐/Apple Music",

@@ -30,7 +30,9 @@
       <div class="py-4">
         <template
           v-if="
-            props.echo.layout === ImageLayout.GRID || props.echo.layout === ImageLayout.HORIZONTAL
+            props.echo.layout === ImageLayout.GRID ||
+            props.echo.layout === ImageLayout.HORIZONTAL ||
+            props.echo.layout === ImageLayout.STACK
           "
         >
           <div class="mb-3">

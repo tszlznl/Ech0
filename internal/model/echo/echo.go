@@ -79,4 +79,5 @@ const (
 	LayoutGrid       = "grid"
 	LayoutHorizontal = "horizontal"
 	LayoutCarousel   = "carousel"
+	LayoutStack      = "stack"
 )

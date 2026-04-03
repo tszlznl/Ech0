@@ -39,6 +39,7 @@
     "layoutGrid": "Grid",
     "layoutCarousel": "Carousel",
     "layoutHorizontal": "Horizontal",
+    "layoutStack": "Stack",
     "musicUrlPlaceholder": "Music URL...",
     "musicShare": "Music share",
     "musicSupportHint": "Supports NetEase/QQ Music/Apple Music",

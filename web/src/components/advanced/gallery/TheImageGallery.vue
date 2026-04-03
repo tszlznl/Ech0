@@ -46,6 +46,17 @@
       :open="openGallery"
       :get-horizontal-aspect-style="getHorizontalAspectStyle"
     />
+
+    <GalleryStack
+      v-if="layoutValue === ImageLayout.STACK"
+      :images="images"
+      :resolved-srcs="resolvedSrcs"
+      :get-alt="getAlt"
+      :get-image-key="getImageKey"
+      :is-loaded="isImageLoaded"
+      :mark-loaded="markImageLoaded"
+      :open="openGallery"
+    />
   </div>
 </template>
 
@@ -59,6 +70,7 @@ import GalleryWaterfall from './layouts/GalleryWaterfall.vue'
 import GalleryGrid from './layouts/GalleryGrid.vue'
 import GalleryCarousel from './layouts/GalleryCarousel.vue'
 import GalleryHorizontal from './layouts/GalleryHorizontal.vue'
+import GalleryStack from './layouts/GalleryStack.vue'
 
 const props = defineProps<{
   images?: App.Api.Ech0.FileObject[]

@@ -435,7 +435,7 @@ func normalizeUsername(v string) string {
 
 func normalizeLayout(v string) string {
 	switch strings.TrimSpace(strings.ToLower(v)) {
-	case echoModel.LayoutGrid, echoModel.LayoutHorizontal, echoModel.LayoutCarousel, echoModel.LayoutWaterfall:
+	case echoModel.LayoutGrid, echoModel.LayoutHorizontal, echoModel.LayoutCarousel, echoModel.LayoutWaterfall, echoModel.LayoutStack:
 		return strings.TrimSpace(strings.ToLower(v))
 	default:
 		return echoModel.LayoutWaterfall

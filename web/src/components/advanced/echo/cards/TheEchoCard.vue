@@ -92,7 +92,9 @@
       <div class="px-4 py-3">
         <template
           v-if="
-            props.echo.layout === ImageLayout.GRID || props.echo.layout === ImageLayout.HORIZONTAL
+            props.echo.layout === ImageLayout.GRID ||
+            props.echo.layout === ImageLayout.HORIZONTAL ||
+            props.echo.layout === ImageLayout.STACK
           "
         >
           <div class="mx-auto w-11/12 pl-1 mb-3">
@@ -283,8 +285,9 @@ onBeforeUnmount(() => {
   --axis-dot-size: 0.5rem;
   --axis-dot-gap: 0.3rem;
   max-width: 100%;
-  overflow-x: hidden;
   overflow-x: clip;
+  /* 纵向允许溢出绘制，避免时间线内图片（如照片流 hover 放大）被裁切 */
+  overflow-y: visible;
 }
 
 .timeline-marker {
@@ -303,9 +306,8 @@ onBeforeUnmount(() => {
   margin-left: var(--axis-offset);
   max-width: 100%;
   min-width: 0;
-  overflow: hidden;
-  overflow-x: hidden;
   overflow-x: clip;
+  overflow-y: visible;
 }
 
 .timeline-content::before {
