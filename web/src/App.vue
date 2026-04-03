@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterView, useRouter } from 'vue-router'
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useSettingStore, useThemeStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { Toaster } from 'vue-sonner'
@@ -66,7 +66,10 @@ router.afterEach((to, from) => {
 const settingStore = useSettingStore()
 const { SystemSetting } = storeToRefs(settingStore)
 const themeStore = useThemeStore()
-const { mode } = storeToRefs(themeStore)
+const { theme } = storeToRefs(themeStore)
+const toasterTheme = computed(() => (theme.value === 'dark' ? 'dark' : 'light'))
+const sunnyVideoSrc = ref('')
+let sunnyVideoLoading = false
 
 const DEFAULT_FAVICON = '/favicon.ico'
 const CUSTOM_STYLE_ID = 'ech0-custom-style'
@@ -159,31 +162,87 @@ watch(
   { immediate: true },
 )
 
+// 性能优化：仅在切换到 sunny 主题时加载落叶视频资源
+watch(
+  theme,
+  async (nextTheme) => {
+    if (nextTheme !== 'sunny') return
+    if (sunnyVideoSrc.value || sunnyVideoLoading) return
+
+    sunnyVideoLoading = true
+    try {
+      const mod = await import('@/assets/leaves.mp4')
+      sunnyVideoSrc.value = mod.default
+    } finally {
+      sunnyVideoLoading = false
+    }
+  },
+  { immediate: true },
+)
+
 onMounted(() => {
   register(dialogRef.value) // 全局注册弹窗对话框
 })
 </script>
 
 <template>
-  <!-- 路由视图 - 带切换动画 -->
-  <RouterView v-slot="{ Component }">
-    <Transition :name="transitionName" mode="out-in">
-      <component :is="Component" />
-    </Transition>
-  </RouterView>
-  <!-- 通知组件 -->
-  <Toaster :theme="mode" position="top-right" :expand="false" richColors />
-  <!-- 全局弹窗对话框 -->
-  <BaseDialog
-    ref="dialogRef"
-    :title="title"
-    :description="description"
-    @confirm="handleConfirm"
-    @cancel="handleCancel"
-  />
+  <!-- 落叶层仅用于画布氛围，置于主体之下，避免影响正文可读性 -->
+  <div v-if="theme === 'sunny' && sunnyVideoSrc" class="sunny-atmosphere" aria-hidden="true">
+    <video
+      class="sunny-atmosphere__leaves"
+      :src="sunnyVideoSrc"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+    />
+  </div>
+  <div class="app-stack">
+    <!-- 路由视图 - 带切换动画 -->
+    <RouterView v-slot="{ Component }">
+      <Transition :name="transitionName" mode="out-in">
+        <component :is="Component" />
+      </Transition>
+    </RouterView>
+    <!-- 通知组件 -->
+    <Toaster :theme="toasterTheme" position="top-right" :expand="false" richColors />
+    <!-- 全局弹窗对话框 -->
+    <BaseDialog
+      ref="dialogRef"
+      :title="title"
+      :description="description"
+      @confirm="handleConfirm"
+      @cancel="handleCancel"
+    />
+  </div>
 </template>
 
 <style scoped>
+.sunny-atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  overflow: hidden;
+  mix-blend-mode: multiply;
+}
+
+.sunny-atmosphere__leaves {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: var(--sunny-video-opacity, 0.52);
+  filter: saturate(1.02) contrast(1.01);
+}
+
+.app-stack {
+  position: relative;
+  z-index: 2;
+  min-height: 100%;
+  isolation: isolate;
+}
+
 /* 路由切换动画 - 淡入淡出 + 轻微滑动 */
 .fade-enter-active,
 .fade-leave-active {

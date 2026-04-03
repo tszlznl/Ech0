@@ -76,7 +76,7 @@
 <script setup lang="ts">
 import LightIcon from '@/components/icons/light.vue'
 import DarkIcon from '@/components/icons/dark.vue'
-import AutoIcon from '@/components/icons/auto.vue'
+import LeafIcon from '@/components/icons/leaf.vue'
 import Zen from '@/components/icons/zen.vue'
 import Github from '@/components/icons/github.vue'
 import Rss from '@/components/icons/rss.vue'
@@ -157,21 +157,21 @@ const runTypingEffect = () => {
 }
 
 const nextThemeMode = computed(() => {
-  if (themeStore.mode === 'system') return 'light'
-  if (themeStore.mode === 'light') return 'dark'
-  return 'system'
+  if (themeStore.mode === 'light') return 'sunny'
+  if (themeStore.mode === 'sunny') return 'dark'
+  return 'light'
 })
 
 const themeIcon = computed(() => {
   if (nextThemeMode.value === 'light') return LightIcon
   if (nextThemeMode.value === 'dark') return DarkIcon
-  return AutoIcon
+  return LeafIcon
 })
 
 const nextThemeModeLabel = computed(() => {
   if (nextThemeMode.value === 'light') return String(t('homeNav.themeLight'))
   if (nextThemeMode.value === 'dark') return String(t('homeNav.themeDark'))
-  return String(t('homeNav.themeAuto'))
+  return String(t('homeNav.themeSunny'))
 })
 
 const themeToggleTooltip = computed(() => ({
@@ -183,7 +183,7 @@ const themeToggleTooltip = computed(() => ({
 const getThemeModeLabel = () => {
   if (themeStore.mode === 'light') return String(t('homeNav.themeLight'))
   if (themeStore.mode === 'dark') return String(t('homeNav.themeDark'))
-  return String(t('homeNav.themeAuto'))
+  return String(t('homeNav.themeSunny'))
 }
 
 const handleThemeToggle = async (event: MouseEvent) => {

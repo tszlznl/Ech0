@@ -318,7 +318,7 @@
     "enterZenMode": "进入 Zen Mode",
     "themeLight": "浅色",
     "themeDark": "深色",
-    "themeAuto": "自动",
+    "themeSunny": "晴日",
     "themeSwitched": "主题已切换",
     "themeCurrent": "当前主题为：{mode}",
     "githubAction": "Github"

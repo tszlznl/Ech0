@@ -318,7 +318,7 @@
     "enterZenMode": "Zen-Modus aktivieren",
     "themeLight": "Hell",
     "themeDark": "Dunkel",
-    "themeAuto": "Automatisch",
+    "themeSunny": "Sonnig",
     "themeSwitched": "Theme gewechselt",
     "themeCurrent": "Aktuelles Theme: {mode}",
     "githubAction": "GitHub"
