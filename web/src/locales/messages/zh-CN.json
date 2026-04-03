@@ -331,10 +331,10 @@
     "inboxAction": "收件箱"
   },
   "homeSidebar": {
-    "home": "探索",
+    "home": "动态",
     "panel": "设置",
     "publish": "发布",
-    "plaza": "发现",
+    "plaza": "探索",
     "status": "状态",
     "tags": "标签"
   },

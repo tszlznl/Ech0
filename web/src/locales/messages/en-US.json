@@ -331,10 +331,10 @@
     "inboxAction": "Inbox"
   },
   "homeSidebar": {
-    "home": "Explore",
+    "home": "Feed",
     "panel": "Settings",
     "publish": "Publish",
-    "plaza": "Discover",
+    "plaza": "Explore",
     "status": "Status",
     "tags": "Tags"
   },

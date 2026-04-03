@@ -331,10 +331,10 @@
     "inboxAction": "Posteingang"
   },
   "homeSidebar": {
-    "home": "Start",
+    "home": "Feed",
     "panel": "Einstellungen",
     "publish": "Veröffentlichen",
-    "plaza": "Plaza",
+    "plaza": "Erkunden",
     "status": "Status",
     "tags": "Tags"
   },
