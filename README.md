@@ -345,6 +345,9 @@ docker image prune -f
 14. **Official statement on third-party integrations**  
     Third-party integration platforms or services that are not officially authorized by Ech0 are outside the official support scope. Any security incidents, data loss, account issues, or other risks caused by using such services are the sole responsibility of the user and the third-party provider.
 
+15. **Where can I find detailed documentation on local vs S3 storage rules, object keys, and migration?**  
+    See the in-repo [Storage migration guide](./docs/storage-migration.md). It explains how flat `key` values map to on-disk paths and S3 object keys (including `schema.Resolve` and `PathPrefix`), how stored `File.url` snapshots relate to the UI, the difference between static `/api/files` access and authenticated `stream` routes, and practical guidance for switching S3 providers or moving data between local disk and object storage.
+
 ---
 
 ## Feedback & Community
