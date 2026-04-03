@@ -4,6 +4,12 @@ import { localStg } from '@/utils/storage'
 
 export type ThemeMode = 'light' | 'dark' | 'sunny'
 type ThemeType = 'light' | 'dark' | 'sunny'
+const THEME_COLOR_META_NAME = 'theme-color'
+const THEME_COLOR_FALLBACK: Record<ThemeType, string> = {
+  light: '#f4f1ec',
+  dark: '#333333',
+  sunny: 'rgb(238, 236, 230)', // 需要考虑有一层视频带来的色彩层级变化 RGB(238,236,230)
+}
 
 export const useThemeStore = defineStore('themeStore', () => {
   const savedThemeMode = localStg.getItem('themeMode')
@@ -116,7 +122,23 @@ export const useThemeStore = defineStore('themeStore', () => {
 
     document.documentElement.classList.remove('light', 'dark', 'sunny')
     document.documentElement.classList.add(theme.value)
+    syncThemeColorMeta()
     localStg.setItem('theme', theme.value)
+  }
+
+  const syncThemeColorMeta = () => {
+    const rootStyles = getComputedStyle(document.documentElement)
+    const canvasColor = rootStyles.getPropertyValue('--color-bg-canvas').trim()
+    const nextThemeColor = canvasColor || THEME_COLOR_FALLBACK[theme.value]
+
+    let themeColorMeta = document.querySelector<HTMLMetaElement>(`meta[name="${THEME_COLOR_META_NAME}"]`)
+    if (!themeColorMeta) {
+      themeColorMeta = document.createElement('meta')
+      themeColorMeta.setAttribute('name', THEME_COLOR_META_NAME)
+      document.head.appendChild(themeColorMeta)
+    }
+
+    themeColorMeta.setAttribute('content', nextThemeColor)
   }
 
   const init = () => {
