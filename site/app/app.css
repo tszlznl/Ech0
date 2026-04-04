@@ -1,15 +1,19 @@
 @import "tailwindcss";
 
+/* Radix Sand–aligned palette (similar to minttr.com) */
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-serif: "Source Serif 4", Georgia, "Times New Roman", ui-serif, serif;
+  --color-app: #fdfdfc;
+  --color-sand-1: #fdfdfc;
+  --color-sand-6: #d7d4cf;
+  --color-sand-11: #64605b;
+  --color-sand-12: #21201c;
 }
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
-
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+  /* Single smoothing mode — stacking antialiased + subpixel can look soft/blurry on some displays */
+  @apply bg-app font-sans text-base text-sand-11 antialiased;
 }
