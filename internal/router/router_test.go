@@ -19,6 +19,7 @@ import (
 	fileHandler "github.com/lin-snow/ech0/internal/handler/file"
 	inboxHandler "github.com/lin-snow/ech0/internal/handler/inbox"
 	initHandler "github.com/lin-snow/ech0/internal/handler/init"
+	"github.com/lin-snow/ech0/internal/mcp"
 	migrationHandler "github.com/lin-snow/ech0/internal/handler/migration"
 	settingHandler "github.com/lin-snow/ech0/internal/handler/setting"
 	userHandler "github.com/lin-snow/ech0/internal/handler/user"
@@ -192,6 +193,7 @@ func buildTestHandlers() *handler.Bundle {
 		migrationHandler.NewMigrationHandler(nil),
 		dashboardHandler.NewDashboardHandler(nil),
 		agentHandler.NewAgentHandler(nil),
+		mcp.NewHandler(nil, nil),
 	)
 }
 

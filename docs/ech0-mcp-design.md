@@ -1,7 +1,7 @@
 # Ech0 MCP 设计文档（详细版）
 
 日期：2026-04-04  
-状态：设计草案（待评审）  
+状态：v1 已实现（Streamable HTTP on /mcp, 6 tools + 3 resources）  
 适用范围：Ech0 后端 + API 集成层（不含前端 UI 大改）
 
 ## 1. 背景与目标

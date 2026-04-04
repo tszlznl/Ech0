@@ -20,6 +20,7 @@ const (
 	AudiencePublic      = "public-client"
 	AudienceCLI         = "cli"
 	AudienceIntegration = "integration"
+	AudienceMCPRemote   = "mcp-remote"
 )
 
 var validScopes = map[string]struct{}{
@@ -40,6 +41,7 @@ var validAudiences = map[string]struct{}{
 	AudiencePublic:      {},
 	AudienceCLI:         {},
 	AudienceIntegration: {},
+	AudienceMCPRemote:   {},
 }
 
 func IsValidScope(scope string) bool {

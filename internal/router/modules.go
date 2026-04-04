@@ -146,5 +146,11 @@ func featureRouteModules() []RouteModule {
 				setupMigrationRoutes(ctx.Groups, ctx.Handlers)
 			},
 		},
+		routeModule{
+			name: "mcp",
+			register: func(ctx *RouterContext) {
+				setupMCPRoutes(ctx.Groups, ctx.Handlers)
+			},
+		},
 	}
 }

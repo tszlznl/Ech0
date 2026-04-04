@@ -125,6 +125,8 @@ var HandlerGraphSet = wire.NewSet(
 	service.MigratorSet,
 	handler.MigrationSet,
 
+	handler.MCPSet,
+
 	handler.NewBundle,
 )
 

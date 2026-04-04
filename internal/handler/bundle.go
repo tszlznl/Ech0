@@ -11,6 +11,7 @@ import (
 	fileHandler "github.com/lin-snow/ech0/internal/handler/file"
 	inboxHandler "github.com/lin-snow/ech0/internal/handler/inbox"
 	initHandler "github.com/lin-snow/ech0/internal/handler/init"
+	"github.com/lin-snow/ech0/internal/mcp"
 	migrationHandler "github.com/lin-snow/ech0/internal/handler/migration"
 	settingHandler "github.com/lin-snow/ech0/internal/handler/setting"
 	userHandler "github.com/lin-snow/ech0/internal/handler/user"
@@ -33,6 +34,7 @@ type Bundle struct {
 	MigrationHandler *migrationHandler.MigrationHandler
 	DashboardHandler *dashboardHandler.DashboardHandler
 	AgentHandler     *agentHandler.AgentHandler
+	MCPHandler       *mcp.Handler
 }
 
 // NewBundle 创建 Handler 聚合实例。
@@ -51,6 +53,7 @@ func NewBundle(
 	migrationHandler *migrationHandler.MigrationHandler,
 	dashboardHandler *dashboardHandler.DashboardHandler,
 	agentHandler *agentHandler.AgentHandler,
+	mcpHandler *mcp.Handler,
 ) *Bundle {
 	return &Bundle{
 		WebHandler:       webHandler,
@@ -67,5 +70,6 @@ func NewBundle(
 		MigrationHandler: migrationHandler,
 		DashboardHandler: dashboardHandler,
 		AgentHandler:     agentHandler,
+		MCPHandler:       mcpHandler,
 	}
 }
