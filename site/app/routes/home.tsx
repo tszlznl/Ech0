@@ -202,7 +202,7 @@ export default function Home() {
           <h2 className="font-serif text-[1.125rem] font-semibold leading-snug text-sand-12">
             Why choose Ech0?
           </h2>
-          <ol className="mt-6 list-decimal space-y-3 pl-[1.25rem] text-[0.9375rem] leading-relaxed text-sand-11 marker:font-serif marker:text-sand-11">
+          <ol className="mt-6 list-decimal space-y-3 pl-5 text-[0.9375rem] leading-relaxed text-sand-11 marker:font-serif marker:text-sand-11">
             <li>
               <span className="font-semibold text-sand-12">
                 From notes to life
@@ -234,7 +234,7 @@ export default function Home() {
           <h2 className="font-serif text-[1.125rem] font-semibold leading-snug text-sand-12">
             Why use Ech0?
           </h2>
-          <ol className="mt-6 list-decimal space-y-3 pl-[1.25rem] text-[0.9375rem] leading-relaxed text-sand-11 marker:font-serif marker:text-sand-11">
+          <ol className="mt-6 list-decimal space-y-3 pl-5 text-[0.9375rem] leading-relaxed text-sand-11 marker:font-serif marker:text-sand-11">
             <li>
               <span className="font-semibold text-sand-12">
                 Simple and pure
