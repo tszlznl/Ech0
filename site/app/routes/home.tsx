@@ -1,3 +1,4 @@
+import type { SVGProps } from "react";
 import { Link } from "react-router";
 import type { Route } from "./+types/home";
 import { absoluteUrl, DEFAULT_DESCRIPTION, SITE_NAME, siteUrl } from "../site";
@@ -56,18 +57,19 @@ export const links: Route.LinksFunction = () => [
   { rel: "preload", href: OG_IMAGE_PATH, as: "image" },
 ];
 
-function LeafIcon({ className }: { className?: string }) {
+/** Remix Icon: ri-quill-pen-line (Apache-2.0, https://github.com/Remix-Design/RemixIcon) */
+function RiQuillPenLine(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      className={className}
-      width="14"
-      height="14"
-      viewBox="0 0 256 256"
-      fill="currentColor"
       xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
       aria-hidden
+      {...props}
     >
-      <path d="M208 40c-32 28-88 24-128 64-40 40-48 96-48 96s56-8 96-48c40-40 36-96 64-128 4-4 12-4 16 0s4 12 0 16zM72 216s24-8 48-32c28-28 32-72 32-72s-44 4-72 32c-24 24-32 48-32 48z" />
+      <path
+        fill="currentColor"
+        d="M6.94 14.033a30 30 0 0 0-.606 1.783c.96-.697 2.101-1.14 3.418-1.304c2.513-.314 4.746-1.973 5.876-4.058l-1.456-1.455l1.413-1.415l1-1.002c.43-.429.915-1.224 1.428-2.367c-5.593.867-9.018 4.291-11.074 9.818M17 8.997l1 1c-1 3-4 6-8 6.5q-4.003.5-5.002 5.5H3c1-6 3-20 18-20q-1.5 4.496-2.997 5.997z"
+      />
     </svg>
   );
 }
@@ -178,7 +180,7 @@ export default function Home() {
               prefetch="viewport"
               className="inline-flex items-center gap-2 rounded-full border border-sand-6 bg-sand-2/80 px-5 py-2.5 text-[13px] font-medium text-sand-11 shadow-[0_1px_2px_rgba(33,32,28,0.05)] no-underline transition-colors hover:border-sand-11/25 hover:bg-sand-2 hover:text-sand-12"
             >
-              <LeafIcon className="opacity-75" />
+              <RiQuillPenLine className="size-3.5 shrink-0 opacity-75" />
               Get started
             </Link>
             <p className="text-[0.6875rem] font-medium tracking-wide text-sand-11/85">
