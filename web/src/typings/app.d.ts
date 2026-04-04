@@ -409,7 +409,7 @@ declare namespace App {
         name: string
         token_type?: string
         scopes?: string | string[]
-        audience?: 'public-client' | 'cli' | 'integration'
+        audience?: 'public-client' | 'cli' | 'integration' | 'mcp-remote'
         jti?: string
         expiry: string | null
         last_used_at?: string | null
@@ -420,7 +420,7 @@ declare namespace App {
         name: string
         expiry: string
         scopes: string[]
-        audience: 'public-client' | 'cli' | 'integration'
+        audience: 'public-client' | 'cli' | 'integration' | 'mcp-remote'
       }
 
       type BackupSchedule = {

@@ -70,6 +70,39 @@ func RequireScopes(scopes ...string) gin.HandlerFunc {
 	}
 }
 
+func RequireAudience(allowed ...string) gin.HandlerFunc {
+	set := make(map[string]struct{}, len(allowed))
+	for _, a := range allowed {
+		set[a] = struct{}{}
+	}
+	return func(ctx *gin.Context) {
+		v := viewer.MustFromContext(ctx.Request.Context())
+		if v.TokenType() == authModel.TokenTypeSession {
+			ctx.Next()
+			return
+		}
+		for _, aud := range v.Audience() {
+			if _, ok := set[aud]; ok {
+				ctx.Next()
+				return
+			}
+		}
+		ctx.JSON(
+			http.StatusForbidden,
+			commonModel.FailWithLocalized[any](
+				i18nUtil.Localize(i18nUtil.LocalizerFromGin(ctx), commonModel.MsgKeyAuthAudienceForbidden, errUtil.HandleError(&commonModel.ServerError{
+					Msg: commonModel.NO_PERMISSION_DENIED,
+					Err: nil,
+				}), nil),
+				commonModel.ErrCodeAudienceForbidden,
+				commonModel.MsgKeyAuthAudienceForbidden,
+				nil,
+			),
+		)
+		ctx.Abort()
+	}
+}
+
 func containsValidAudience(audiences []string) bool {
 	if len(audiences) == 0 {
 		return false

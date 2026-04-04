@@ -319,6 +319,13 @@ const scopeGroups = [
     ],
   },
   {
+    labelKey: 'accessTokenSetting.scopeGroupConnect',
+    items: [
+      { value: 'connect:read', labelKey: 'accessTokenSetting.scopeConnectRead' },
+      { value: 'connect:write', labelKey: 'accessTokenSetting.scopeConnectWrite' },
+    ],
+  },
+  {
     labelKey: 'accessTokenSetting.scopeGroupProfile',
     items: [{ value: 'profile:read', labelKey: 'accessTokenSetting.scopeProfileRead' }],
   },
@@ -344,6 +351,10 @@ const audienceOptions = computed(() => [
   {
     label: t('accessTokenSetting.audienceIntegration'),
     value: 'integration' as const,
+  },
+  {
+    label: t('accessTokenSetting.audienceMcpRemote'),
+    value: 'mcp-remote' as const,
   },
 ])
 
@@ -380,6 +391,8 @@ const scopeLabelMap: Record<string, string> = {
   'comment:moderate': 'accessTokenSetting.scopeCommentModerate',
   'file:read': 'accessTokenSetting.scopeFileRead',
   'file:write': 'accessTokenSetting.scopeFileWrite',
+  'connect:read': 'accessTokenSetting.scopeConnectRead',
+  'connect:write': 'accessTokenSetting.scopeConnectWrite',
   'profile:read': 'accessTokenSetting.scopeProfileRead',
   'admin:settings': 'accessTokenSetting.scopeAdminSettings',
   'admin:user': 'accessTokenSetting.scopeAdminUser',
@@ -414,6 +427,9 @@ function getAudienceLabel(audience?: App.Api.Setting.AccessToken['audience']) {
   }
   if (audience === 'integration') {
     return String(t('accessTokenSetting.audienceIntegration'))
+  }
+  if (audience === 'mcp-remote') {
+    return String(t('accessTokenSetting.audienceMcpRemote'))
   }
   return String(t('accessTokenSetting.audiencePublicClient'))
 }

@@ -1,6 +1,8 @@
 # Ech0 MCP 接入指南
 
-Ech0 内建 [MCP（Model Context Protocol）](https://modelcontextprotocol.io/) Server：在标准协议下把**帖子、标签、评论、文件、资料与统计**等能力以 **Tools** 与 **Resources** 暴露给 AI 工作流。传输层为 **Streamable HTTP**（JSON-RPC 2.0 over HTTP），与主服务同端口，通过 **Bearer Token**（Audience `mcp-remote`）与 **Scope** 做最小权限控制。
+Ech0 内建 [MCP（Model Context Protocol）](https://modelcontextprotocol.io/) Server：在标准协议下把**帖子、标签、评论、文件、互联、资料与统计**等能力以 **Tools** 与 **Resources** 暴露给 AI 工作流。传输层为 **Streamable HTTP**（JSON-RPC 2.0 over HTTP），与主服务同端口，通过 **Bearer Token** 与 **Scope** 做最小权限控制。
+
+> **Audience 要求**：MCP 端点**仅允许** Audience 为 **`mcp-remote`** 的 Access Token 访问。使用其他 audience（如 `public-client`、`cli`）的 Token 将被拒绝（HTTP 403）。
 
 > 架构与实现细节见 [internal/mcp/README.md](../internal/mcp/README.md)。
 
@@ -16,7 +18,7 @@ Ech0 的 MCP 端点采用 **Streamable HTTP**（JSON-RPC over HTTP），与 [MCP
 
 在 Ech0 管理后台 **设置 → 访问令牌** 中创建一个新 Token：
 
-- **Audience**：选择 `mcp-remote`（MCP 专用 audience，区别于 `cli`、`integration` 等）
+- **Audience**：选择 `MCP (AI Agent)`（即 `mcp-remote`，MCP 专用 audience，区别于 `cli`、`integration` 等）
 - **Scopes**：根据需要勾选（建议最小权限）
   - 只读场景：`echo:read`、`profile:read`
   - 读写场景：再加上 `echo:write`
