@@ -30,3 +30,26 @@ body {
   font-size: 0.8125rem;
   color: var(--color-sand-12);
 }
+
+/* Code blocks: override highlight.js github.css (white bg + 1em padding) to match page */
+.docs-markdown pre {
+  background-color: var(--color-sand-2);
+}
+
+.docs-markdown pre code.hljs {
+  padding: 0.5rem 0.625rem !important;
+  background-color: transparent !important;
+}
+
+.docs-markdown .hljs {
+  color: var(--color-sand-12);
+  background-color: var(--color-sand-2) !important;
+}
+
+.docs-markdown .hljs-addition {
+  background-color: color-mix(in srgb, var(--color-sand-2) 92%, #22863a);
+}
+
+.docs-markdown .hljs-deletion {
+  background-color: color-mix(in srgb, var(--color-sand-2) 92%, #b31d28);
+}
