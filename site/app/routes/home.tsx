@@ -163,16 +163,12 @@ export default function Home() {
         {/* Hero: headline → positioning → CTA */}
         <section className="flex flex-col items-center gap-8 text-center">
           <h1 className="max-w-[22ch] font-serif text-[1.65rem] font-normal leading-[1.2] tracking-[-0.02em] text-sand-12 sm:text-[1.75rem]">
-            After capture comes publishing.
+            Let your thoughts flow.
           </h1>
 
-          <div className="font-serif text-[0.9375rem] font-normal leading-[1.45] tracking-[0.01em] text-sand-11 [&>p+p]:mt-1">
-            <p>Capture holds thoughts.</p>
-            <p>Ech0 is what comes next—share and connect.</p>
-            <p className="text-sand-12">
-              Your timeline on your server.
-            </p>
-          </div>
+          <p className="max-w-[26ch] font-serif text-[0.9375rem] font-normal leading-[1.45] tracking-[0.01em] text-sand-11">
+            A personal timeline, hosted on your server.
+          </p>
 
           <div className="flex flex-col items-center gap-3">
             <Link
@@ -184,18 +180,20 @@ export default function Home() {
               Get started
             </Link>
             <p className="text-[0.6875rem] font-medium tracking-wide text-sand-11/85">
-              AGPL-3.0 · lightweight · open source
+              AGPL-3.0 · Lightweight · Open Source
             </p>
           </div>
         </section>
 
-        {/* Quote + philosophy */}
+        {/* Tagline */}
         <section className={`${dashedSection} text-left`}>
           <p className="font-serif text-base italic leading-snug text-sand-11">
-            &ldquo;One timeline, purely.&rdquo;
+            One timeline, entirely yours.
           </p>
           <p className="mt-5 max-w-[34ch] text-[0.9375rem] leading-relaxed text-sand-10">
-            Markdown, links, media—one stream, your rules.
+            Short notes, links, media—
+            <br />
+            your ideas, flowing freely.
           </p>
         </section>
 
@@ -207,23 +205,26 @@ export default function Home() {
           <ol className="mt-6 list-decimal space-y-3 pl-[1.25rem] text-[0.9375rem] leading-relaxed text-sand-11 marker:font-serif marker:text-sand-11">
             <li>
               <span className="font-semibold text-sand-12">
-                After capture
+                From notes to life
               </span>
               {" — "}
-              Jotting is step one; Ech0 is publish and connect—not a private
-              vault only.
+              Ideas don&rsquo;t sit idle—they form a timeline others can
+              discover, share, and discuss.
             </li>
             <li>
               <span className="font-semibold text-sand-12">
-                A real timeline
+                Private, yet connected
               </span>
               {" — "}
-              A stream others can find—still your space, not a generic feed.
+              Your space is fully under your control, with optional comments and
+              subscriptions that let connection happen naturally.
             </li>
             <li>
-              <span className="font-semibold text-sand-12">Keep it quiet</span>
+              <span className="font-semibold text-sand-12">
+                Light and unbound
+              </span>
               {" — "}
-              Self-hosted: your rules, no wiki sprawl or noise.
+              Self-hosted, clean, ad-free, subscription-free, and platform-free.
             </li>
           </ol>
         </section>
@@ -236,21 +237,21 @@ export default function Home() {
           <ol className="mt-6 list-decimal space-y-3 pl-[1.25rem] text-[0.9375rem] leading-relaxed text-sand-11 marker:font-serif marker:text-sand-11">
             <li>
               <span className="font-semibold text-sand-12">
-                Light &amp; self-hosted
+                Simple and pure
               </span>
               {" — "}
-              Notes, links, media—one timeline on your hardware.
+              Notes, links, media—one clean timeline running on your server.
             </li>
             <li>
-              <span className="font-semibold text-sand-12">No lock-in</span>
+              <span className="font-semibold text-sand-12">Full control</span>
               {" — "}
-              Your server, your content—no ads or lock-in.
+              Your content, your rules. Move, manage, and protect your ideas.
             </li>
             <li>
-              <span className="font-semibold text-sand-12">Open &amp; easy</span>
+              <span className="font-semibold text-sand-12">Open and easy</span>
               {" — "}
-              AGPL-3.0; easy deploy. RSS, comments, multi-instance—connection
-              without the noise.
+              AGPL-3.0, fast deployment, RSS, comments,
+              multi-instance—connection without noise.
             </li>
           </ol>
         </section>
