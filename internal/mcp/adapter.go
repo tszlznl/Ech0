@@ -104,6 +104,54 @@ func buildTags(args map[string]any) []echoModel.Tag {
 	return tags
 }
 
+func buildEchoFiles(args map[string]any) []echoModel.EchoFile {
+	raw, ok := args["echo_files"]
+	if !ok {
+		return nil
+	}
+	arr, ok := raw.([]any)
+	if !ok {
+		return nil
+	}
+	var files []echoModel.EchoFile
+	for i, v := range arr {
+		obj, ok := v.(map[string]any)
+		if !ok {
+			continue
+		}
+		fileID := stringArg(obj, "file_id")
+		if fileID == "" {
+			continue
+		}
+		sortOrder := intArg(obj, "sort_order", i)
+		files = append(files, echoModel.EchoFile{
+			FileID:    fileID,
+			SortOrder: sortOrder,
+		})
+	}
+	return files
+}
+
+func buildExtension(args map[string]any) *echoModel.EchoExtension {
+	raw, ok := args["extension"]
+	if !ok {
+		return nil
+	}
+	obj, ok := raw.(map[string]any)
+	if !ok {
+		return nil
+	}
+	extType := stringArg(obj, "type")
+	if extType == "" {
+		return nil
+	}
+	payload, _ := obj["payload"].(map[string]any)
+	return &echoModel.EchoExtension{
+		Type:    extType,
+		Payload: payload,
+	}
+}
+
 // --- Result helpers ---
 
 func jsonResult(v any) (*ToolCallResult, error) {

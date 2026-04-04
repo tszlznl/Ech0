@@ -11,7 +11,7 @@ func (a *Adapter) registerFileTools(reg *Registry) {
 	reg.RegisterTool(ToolDefinition{
 		Name:        "list_files",
 		Title:       "List Files",
-		Description: "List uploaded file metadata with optional search and storage type filter. Returns paginated results: {items, total, page, page_size}. Does not return file contents.",
+		Description: "List uploaded file metadata with optional search and storage type filter. Returns paginated results: {items, total, page, page_size}. Each item's id can be used as echo_files[].file_id in create_post/update_post. Does not return file contents.",
 		InputSchema: map[string]any{
 			"type": "object",
 			"properties": map[string]any{
@@ -26,7 +26,7 @@ func (a *Adapter) registerFileTools(reg *Registry) {
 	reg.RegisterTool(ToolDefinition{
 		Name:        "get_file",
 		Title:       "Get File",
-		Description: "Get metadata for a single file (name, size, mime type, storage type, URL, timestamps). Does not return file contents.",
+		Description: "Get metadata for a single file (name, size, mime type, storage type, URL, timestamps). The id can be used as echo_files[].file_id in create_post/update_post. Does not return file contents.",
 		InputSchema: map[string]any{
 			"type":     "object",
 			"required": []string{"id"},

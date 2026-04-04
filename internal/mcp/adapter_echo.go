@@ -53,33 +53,65 @@ func (a *Adapter) registerEchoTools(reg *Registry) {
 		},
 	}, a.listTags, authModel.ScopeEchoRead)
 
+	echoFileSchema := map[string]any{
+		"type":     "object",
+		"required": []string{"file_id"},
+		"properties": map[string]any{
+			"file_id":    map[string]any{"type": "string", "format": "uuid", "description": "File UUID (obtained via the file upload REST API)"},
+			"sort_order": map[string]any{"type": "integer", "description": "Display order (0-based); defaults to array index if omitted"},
+		},
+	}
+	extensionSchema := map[string]any{
+		"type":     "object",
+		"required": []string{"type", "payload"},
+		"properties": map[string]any{
+			"type": map[string]any{
+				"type":        "string",
+				"enum":        []string{"MUSIC", "VIDEO", "GITHUBPROJ", "WEBSITE"},
+				"description": "Extension type",
+			},
+			"payload": map[string]any{
+				"type":        "object",
+				"description": "Type-specific data. MUSIC: {url}; VIDEO: {videoId}; GITHUBPROJ: {repoUrl}; WEBSITE: {title, site}",
+			},
+		},
+	}
+	layoutEnum := []string{"waterfall", "grid", "horizontal", "carousel", "stack"}
+
 	reg.RegisterTool(ToolDefinition{
-		Name:        "create_post",
-		Title:       "Create Post",
-		Description: "Create a new post. Returns {id, message} on success. Content supports Markdown. Tags are matched or created by name.",
+		Name:  "create_post",
+		Title: "Create Post",
+		Description: "Create a new post. At least one of content, echo_files, or extension must be provided. " +
+			"Returns {id, message}. Files must be uploaded beforehand via the REST upload API; pass their IDs in echo_files.",
 		InputSchema: map[string]any{
-			"type":     "object",
-			"required": []string{"content"},
+			"type": "object",
 			"properties": map[string]any{
-				"content": map[string]any{"type": "string", "description": "Post body (Markdown supported)"},
-				"tags":    map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Tag names to attach; non-existent tags are created automatically"},
-				"private": map[string]any{"type": "boolean", "description": "Mark the post as private (only visible to the owner)", "default": false},
+				"content":    map[string]any{"type": "string", "description": "Post body (Markdown supported)"},
+				"tags":       map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Tag names to attach; non-existent tags are created automatically"},
+				"private":    map[string]any{"type": "boolean", "description": "Mark the post as private (only visible to the owner)", "default": false},
+				"layout":     map[string]any{"type": "string", "enum": layoutEnum, "description": "Image layout style", "default": "waterfall"},
+				"echo_files": map[string]any{"type": "array", "items": echoFileSchema, "description": "Attached files (images, etc.) referenced by file_id"},
+				"extension":  extensionSchema,
 			},
 		},
 	}, a.createPost, authModel.ScopeEchoWrite)
 
 	reg.RegisterTool(ToolDefinition{
-		Name:        "update_post",
-		Title:       "Update Post",
-		Description: "Update an existing post. Only supplied fields are changed. When tags is provided it fully replaces the tag list. Returns {id, message}.",
+		Name:  "update_post",
+		Title: "Update Post",
+		Description: "Update an existing post. Only supplied fields are changed, except echo_files and extension which fully replace " +
+			"the existing values when provided. Returns {id, message}.",
 		InputSchema: map[string]any{
 			"type":     "object",
 			"required": []string{"id"},
 			"properties": map[string]any{
-				"id":      map[string]any{"type": "string", "format": "uuid", "description": "Post UUID"},
-				"content": map[string]any{"type": "string", "description": "New body (Markdown)"},
-				"tags":    map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "New tag name list (replaces all existing tags)"},
-				"private": map[string]any{"type": "boolean", "description": "Set visibility"},
+				"id":         map[string]any{"type": "string", "format": "uuid", "description": "Post UUID"},
+				"content":    map[string]any{"type": "string", "description": "New body (Markdown)"},
+				"tags":       map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "New tag name list (replaces all existing tags)"},
+				"private":    map[string]any{"type": "boolean", "description": "Set visibility"},
+				"layout":     map[string]any{"type": "string", "enum": layoutEnum, "description": "Image layout style"},
+				"echo_files": map[string]any{"type": "array", "items": echoFileSchema, "description": "New attached files (replaces all existing attachments)"},
+				"extension":  extensionSchema,
 			},
 		},
 	}, a.updatePost, authModel.ScopeEchoWrite)
@@ -221,16 +253,20 @@ func (a *Adapter) listTags(_ context.Context, _ map[string]any) (*ToolCallResult
 
 func (a *Adapter) createPost(ctx context.Context, args map[string]any) (*ToolCallResult, error) {
 	content := stringArg(args, "content")
-	if content == "" {
-		return textError("content is required"), nil
+	echoFiles := buildEchoFiles(args)
+	extension := buildExtension(args)
+
+	if strings.TrimSpace(content) == "" && len(echoFiles) == 0 && extension == nil {
+		return textError("at least one of content, echo_files, or extension is required"), nil
 	}
-	private := boolArg(args, "private")
-	tags := buildTags(args)
 
 	echo := &echoModel.Echo{
-		Content: content,
-		Private: private,
-		Tags:    tags,
+		Content:   content,
+		Private:   boolArg(args, "private"),
+		Layout:    stringArg(args, "layout"),
+		Tags:      buildTags(args),
+		EchoFiles: echoFiles,
+		Extension: extension,
 	}
 	if err := a.echoSvc.PostEcho(ctx, echo); err != nil {
 		return nil, err
@@ -255,7 +291,10 @@ func (a *Adapter) updatePost(ctx context.Context, args map[string]any) (*ToolCal
 			echo.Private = b
 		}
 	}
+	echo.Layout = stringArg(args, "layout")
 	echo.Tags = buildTags(args)
+	echo.EchoFiles = buildEchoFiles(args)
+	echo.Extension = buildExtension(args)
 
 	if err := a.echoSvc.UpdateEcho(ctx, echo); err != nil {
 		return nil, err

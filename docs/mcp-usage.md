@@ -76,8 +76,8 @@ Ech0 的 MCP 端点采用 **Streamable HTTP**（JSON-RPC over HTTP），与 [MCP
 | `get_post` | 根据 ID 获取帖子详情 | `echo:read` |
 | `get_today_posts` | 获取今日帖子（支持时区参数） | `echo:read` |
 | `list_tags` | 列出所有标签 | `echo:read` |
-| `create_post` | 创建新帖子（返回新帖 ID） | `echo:write` |
-| `update_post` | 更新已有帖子（返回帖子 ID） | `echo:write` |
+| `create_post` | 创建新帖子；支持 `content`、`echo_files`（附件 file_id 列表）、`layout`、`extension`（扩展块），至少提供其一 | `echo:write` |
+| `update_post` | 更新已有帖子；`echo_files`/`extension` 提供时为**全量替换** | `echo:write` |
 | `delete_post` | 删除帖子（返回帖子 ID） | `echo:write` |
 | `like_post` | 点赞帖子 | `echo:write` |
 | `delete_tag` | 删除标签 | `echo:write` |
@@ -92,9 +92,11 @@ Ech0 的 MCP 端点采用 **Streamable HTTP**（JSON-RPC over HTTP），与 [MCP
 
 | Tool | 说明 | 所需 Scope |
 |------|------|-----------|
-| `list_files` | 列出已上传文件（支持分页、搜索、存储类型过滤） | `file:read` |
-| `get_file` | 获取文件元信息 | `file:read` |
+| `list_files` | 列出已上传文件（支持分页、搜索、存储类型过滤）；返回的 `id` 可作为 `create_post.echo_files[].file_id` 引用 | `file:read` |
+| `get_file` | 获取单个文件元信息（名称、URL、尺寸等）；`id` 同样可用于 `echo_files` 引用 | `file:read` |
 | `delete_file` | 删除文件 | `file:write` |
+
+> **注意**：文件上传需通过实例的 REST 文件上传 API（`POST /api/files/upload`，multipart/form-data）完成，MCP 目前不提供上传能力。上传后获得的 `file_id` 可传入 `create_post` / `update_post` 的 `echo_files` 参数进行关联。
 
 ### Connects
 
