@@ -79,80 +79,48 @@ func (a *Adapter) registerFileResources(reg *Registry) {
 	}, a.resourceFileUploadGuide, authModel.ScopeFileRead)
 }
 
-func (a *Adapter) resourceFileUploadGuide(_ context.Context, _ string) (*ResourceReadResult, error) {
-	guide := `# Ech0 File Upload Guide
+func (a *Adapter) resourceFileUploadGuide(ctx context.Context, _ string) (*ResourceReadResult, error) {
+	token := RawTokenFromContext(ctx)
+	baseURL := BaseURLFromContext(ctx)
+	if baseURL == "" {
+		baseURL = "http://localhost:6277"
+	}
 
-File upload is handled via the REST API (not MCP) because it requires multipart/form-data binary transfer.
+	guide := "# Ech0 File Upload Guide\n\n" +
+		"File upload is handled via the REST API (not MCP) because it requires multipart/form-data binary transfer.\n\n" +
+		"## Your Credentials\n\n" +
+		"- **Base URL**: `" + baseURL + "`\n" +
+		"- **Bearer Token**: `" + token + "`\n\n" +
+		"You can reuse this token directly in the curl commands below.\n\n" +
+		"## Upload Endpoint\n\n" +
+		"```\nPOST " + baseURL + "/api/files/upload\nContent-Type: multipart/form-data\nAuthorization: Bearer " + token + "\n```\n\n" +
+		"### Form Fields\n\n" +
+		"| Field | Required | Description |\n" +
+		"|-------|----------|-------------|\n" +
+		"| file | Yes | The binary file to upload |\n" +
+		"| category | No | image (default), video, audio, document, file |\n" +
+		"| storage_type | No | local (default) or s3 |\n\n" +
+		"### Example (curl)\n\n" +
+		"```bash\ncurl -X POST " + baseURL + "/api/files/upload \\\n" +
+		"  -H \"Authorization: Bearer " + token + "\" \\\n" +
+		"  -F \"file=@/path/to/photo.png\" \\\n" +
+		"  -F \"category=image\"\n```\n\n" +
+		"### Response\n\n" +
+		"```json\n{\n  \"code\": 1,\n  \"data\": {\n    \"id\": \"<file-uuid>\",\n    \"name\": \"photo.png\",\n" +
+		"    \"url\": \"/api/files/images/...\",\n    \"content_type\": \"image/png\",\n" +
+		"    \"size\": 123456,\n    \"width\": 1920,\n    \"height\": 1080\n  }\n}\n```\n\n" +
+		"## Using the Uploaded File in a Post\n\n" +
+		"After uploading, use the returned `id` as `file_id` in create_post or update_post:\n\n" +
+		"```json\n{\n  \"name\": \"create_post\",\n  \"arguments\": {\n    \"content\": \"Check out this image!\",\n" +
+		"    \"echo_files\": [\n      { \"file_id\": \"<file-uuid-from-upload>\", \"sort_order\": 0 }\n    ]\n  }\n}\n```\n\n" +
+		"## External Files (No Upload Needed)\n\n" +
+		"If your file is already hosted at a public URL, use the MCP tool `create_external_file` instead—no upload required.\n\n" +
+		"## Constraints\n\n" +
+		"- Allowed MIME types are configured server-side (images, audio, video, etc.)\n" +
+		"- Max file size: configured per instance (default varies by category)\n" +
+		"- Only admin users can upload files\n" +
+		"- The access token must have the `file:write` scope\n"
 
-## Upload Endpoint
-
-` + "```" + `
-POST <base_url>/api/files/upload
-Content-Type: multipart/form-data
-Authorization: Bearer <access-token>
-` + "```" + `
-
-### Form Fields
-
-| Field | Required | Description |
-|-------|----------|-------------|
-| file | Yes | The binary file to upload |
-| category | No | image (default), video, audio, document, file |
-| storage_type | No | local (default) or s3 |
-
-### Example (curl)
-
-` + "```" + `bash
-curl -X POST http://localhost:6277/api/files/upload \
-  -H "Authorization: Bearer <token>" \
-  -F "file=@/path/to/photo.png" \
-  -F "category=image"
-` + "```" + `
-
-### Response
-
-` + "```" + `json
-{
-  "code": 1,
-  "data": {
-    "id": "<file-uuid>",
-    "name": "photo.png",
-    "url": "/api/files/images/...",
-    "content_type": "image/png",
-    "size": 123456,
-    "width": 1920,
-    "height": 1080
-  }
-}
-` + "```" + `
-
-## Using the Uploaded File in a Post
-
-After uploading, use the returned ` + "`id`" + ` as ` + "`file_id`" + ` in create_post or update_post:
-
-` + "```" + `json
-{
-  "name": "create_post",
-  "arguments": {
-    "content": "Check out this image!",
-    "echo_files": [
-      { "file_id": "<file-uuid-from-upload>", "sort_order": 0 }
-    ]
-  }
-}
-` + "```" + `
-
-## External Files (No Upload Needed)
-
-If your file is already hosted at a public URL, use the MCP tool ` + "`create_external_file`" + ` instead—no upload required.
-
-## Constraints
-
-- Allowed MIME types are configured server-side (images, audio, video, etc.)
-- Max file size: configured per instance (default varies by category)
-- Only admin users can upload files
-- The access token must have the ` + "`file:write`" + ` scope
-`
 	return &ResourceReadResult{
 		Contents: []ResourceContent{{
 			URI:      "ech0://guide/file-upload",

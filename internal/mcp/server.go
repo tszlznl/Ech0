@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
@@ -15,6 +16,23 @@ import (
 )
 
 const toolTimeout = 10 * time.Second
+
+type ctxKey int
+
+const (
+	ctxKeyRawToken ctxKey = iota
+	ctxKeyBaseURL
+)
+
+func RawTokenFromContext(ctx context.Context) string {
+	v, _ := ctx.Value(ctxKeyRawToken).(string)
+	return v
+}
+
+func BaseURLFromContext(ctx context.Context) string {
+	v, _ := ctx.Value(ctxKeyBaseURL).(string)
+	return v
+}
 
 type Server struct {
 	registry *Registry
@@ -60,7 +78,18 @@ func (s *Server) handlePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	v := viewer.MustFromContext(r.Context())
+	ctx := r.Context()
+	if auth := r.Header.Get("Authorization"); strings.HasPrefix(auth, "Bearer ") {
+		ctx = context.WithValue(ctx, ctxKeyRawToken, strings.TrimPrefix(auth, "Bearer "))
+	}
+	scheme := "http"
+	if r.TLS != nil || strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https") {
+		scheme = "https"
+	}
+	ctx = context.WithValue(ctx, ctxKeyBaseURL, scheme+"://"+r.Host)
+	r = r.WithContext(ctx)
+
+	v := viewer.MustFromContext(ctx)
 
 	result, rpcErr := s.dispatch(r, &req, v)
 
