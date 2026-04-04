@@ -33,6 +33,11 @@ const (
 	maxFormTokenHours  int64 = 24
 	maxCommentRunes          = 200
 	recentDuplicateSec int64 = 90
+
+	integrationShortWindow int64 = 60
+	integrationLongWindow  int64 = 3600
+	integrationShortLimit  int64 = 5
+	integrationLongLimit   int64 = 30
 )
 
 type CommentService struct {
@@ -197,6 +202,128 @@ func (s *CommentService) CreateComment(
 		ID:     comment.ID,
 		Status: comment.Status,
 	}, nil
+}
+
+func (s *CommentService) CreateIntegrationComment(
+	ctx context.Context,
+	clientIP string,
+	userAgent string,
+	dto *model.CreateIntegrationCommentDto,
+) (model.CreateCommentResult, error) {
+	setting, err := s.GetSystemSetting(ctx)
+	if err != nil {
+		return model.CreateCommentResult{}, err
+	}
+	if !setting.EnableComment {
+		return model.CreateCommentResult{},
+			commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "评论功能未启用")
+	}
+
+	v := viewer.MustFromContext(ctx)
+	userID := ""
+	tokenID := ""
+	if v != nil {
+		userID = strings.TrimSpace(v.UserID())
+		tokenID = strings.TrimSpace(v.TokenID())
+	}
+
+	comment := model.Comment{
+		EchoID:    strings.TrimSpace(dto.EchoID),
+		Content:   strings.TrimSpace(dto.Content),
+		IPHash:    hashClientIP(clientIP),
+		UserAgent: strings.TrimSpace(userAgent),
+		Status:    model.StatusPending,
+		Source:    model.SourceIntegration,
+	}
+	if comment.EchoID == "" || comment.Content == "" {
+		return model.CreateCommentResult{},
+			commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "评论内容不能为空")
+	}
+	if utf8.RuneCountInString(comment.Content) > maxCommentRunes {
+		return model.CreateCommentResult{},
+			commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "评论内容不能超过200字")
+	}
+
+	nickname := strings.TrimSpace(dto.Nickname)
+	if nickname == "" {
+		nickname = "Integration"
+	}
+	comment.Nickname = nickname
+
+	if userID != "" {
+		comment.UserID = &userID
+	}
+
+	if !setting.RequireApproval {
+		comment.Status = model.StatusApproved
+	}
+
+	if err := s.checkIntegrationRateLimit(ctx, comment.IPHash, userID, tokenID); err != nil {
+		return model.CreateCommentResult{}, err
+	}
+
+	duplicated, err := s.repo.ExistsRecentDuplicate(
+		ctx,
+		comment.EchoID,
+		comment.Content,
+		comment.Email,
+		comment.IPHash,
+		derefString(comment.UserID),
+		recentDuplicateSec,
+	)
+	if err != nil {
+		return model.CreateCommentResult{}, err
+	}
+	if duplicated {
+		return model.CreateCommentResult{},
+			commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "请勿重复提交相同评论")
+	}
+
+	if err := s.repo.CreateComment(ctx, &comment); err != nil {
+		return model.CreateCommentResult{}, err
+	}
+
+	zap.L().Info("integration comment created",
+		zap.String("comment_id", comment.ID),
+		zap.String("echo_id", comment.EchoID),
+		zap.String("token_id", tokenID),
+		zap.String("user_id", userID),
+		zap.String("source", string(comment.Source)),
+		zap.String("metadata", strings.TrimSpace(dto.Metadata)),
+	)
+
+	s.emitCommentCreated(ctx, comment)
+	s.notifyOwnerAsync(ctx, "created", comment)
+	return model.CreateCommentResult{
+		ID:     comment.ID,
+		Status: comment.Status,
+	}, nil
+}
+
+func (s *CommentService) checkIntegrationRateLimit(ctx context.Context, ipHash, userID, _ string) error {
+	ipShort, err := s.repo.CountByIPWithin(ctx, ipHash, integrationShortWindow)
+	if err != nil {
+		return err
+	}
+	ipLong, err := s.repo.CountByIPWithin(ctx, ipHash, integrationLongWindow)
+	if err != nil {
+		return err
+	}
+	if ipShort >= integrationShortLimit || ipLong >= integrationLongLimit {
+		return commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "集成评论过于频繁，请稍后再试")
+	}
+
+	if userID != "" {
+		userShort, err := s.repo.CountByUserWithin(ctx, userID, integrationShortWindow)
+		if err != nil {
+			return err
+		}
+		if userShort >= integrationShortLimit {
+			return commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "集成评论过于频繁，请稍后再试")
+		}
+	}
+
+	return nil
 }
 
 func (s *CommentService) ListPublicByEchoID(ctx context.Context, echoID string) ([]model.Comment, error) {

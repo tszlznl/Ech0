@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
+	model "github.com/lin-snow/ech0/internal/model/comment"
 )
 
 func (a *Adapter) registerCommentTools(reg *Registry) {
@@ -20,6 +21,22 @@ func (a *Adapter) registerCommentTools(reg *Registry) {
 			},
 		},
 	}, a.listComments, authModel.ScopeCommentRead)
+
+	reg.RegisterTool(ToolDefinition{
+		Name:        "create_integration_comment",
+		Title:       "Create Integration Comment",
+		Description: "Post a comment on behalf of an integration/AI agent. Bypasses captcha and form-token verification. Requires comment:write scope.",
+		InputSchema: map[string]any{
+			"type":     "object",
+			"required": []string{"echo_id", "content"},
+			"properties": map[string]any{
+				"echo_id":  map[string]any{"type": "string", "format": "uuid", "description": "Post UUID to comment on"},
+				"content":  map[string]any{"type": "string", "description": "Comment text (max 200 characters)"},
+				"nickname": map[string]any{"type": "string", "description": "Display name for the comment (defaults to 'Integration')"},
+				"metadata": map[string]any{"type": "string", "description": "Optional metadata (e.g. model name, provider)"},
+			},
+		},
+	}, a.createIntegrationComment, authModel.ScopeCommentWrite)
 }
 
 func (a *Adapter) registerCommentResources(reg *Registry) {
@@ -42,6 +59,25 @@ func (a *Adapter) listComments(ctx context.Context, args map[string]any) (*ToolC
 		return nil, err
 	}
 	return jsonResult(comments)
+}
+
+func (a *Adapter) createIntegrationComment(ctx context.Context, args map[string]any) (*ToolCallResult, error) {
+	echoID := stringArg(args, "echo_id")
+	content := stringArg(args, "content")
+	if echoID == "" || content == "" {
+		return textError("echo_id and content are required"), nil
+	}
+	dto := &model.CreateIntegrationCommentDto{
+		EchoID:   echoID,
+		Content:  content,
+		Nickname: stringArg(args, "nickname"),
+		Metadata: stringArg(args, "metadata"),
+	}
+	result, err := a.commentSvc.CreateIntegrationComment(ctx, "", "MCP", dto)
+	if err != nil {
+		return nil, err
+	}
+	return jsonResult(result)
 }
 
 func (a *Adapter) resourceRecentComments(ctx context.Context, _ string) (*ResourceReadResult, error) {

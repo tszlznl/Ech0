@@ -5,6 +5,7 @@ import (
 	"github.com/lin-snow/ech0/internal/captcha"
 	"github.com/lin-snow/ech0/internal/handler"
 	"github.com/lin-snow/ech0/internal/middleware"
+	authModel "github.com/lin-snow/ech0/internal/model/auth"
 )
 
 func setupCommentRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
@@ -23,6 +24,14 @@ func setupCommentRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 		h.CommentHandler.ListPublicComments(),
 	)
 	appRouterGroup.PublicRouterGroup.POST("/comments", h.CommentHandler.CreateComment())
+
+	// Integration (trusted token-based access)
+	appRouterGroup.AuthRouterGroup.POST(
+		"/comments/integration",
+		middleware.RequireScopes(authModel.ScopeCommentWrite),
+		middleware.RequireAudience(authModel.AudienceIntegration, authModel.AudienceMCPRemote),
+		h.CommentHandler.CreateIntegrationComment(),
+	)
 
 	// Admin Panel
 	appRouterGroup.AuthRouterGroup.GET("/panel/comments", h.CommentHandler.ListPanelComments())

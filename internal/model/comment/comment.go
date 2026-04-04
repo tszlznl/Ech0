@@ -18,8 +18,9 @@ const (
 type SourceType string
 
 const (
-	SourceGuest  SourceType = "guest"
-	SourceSystem SourceType = "system"
+	SourceGuest       SourceType = "guest"
+	SourceSystem      SourceType = "system"
+	SourceIntegration SourceType = "integration"
 )
 
 const (
@@ -64,6 +65,13 @@ type CreateCommentDto struct {
 type CreateCommentResult struct {
 	ID     string `json:"id"`
 	Status Status `json:"status"`
+}
+
+type CreateIntegrationCommentDto struct {
+	EchoID   string `json:"echo_id" binding:"required"`
+	Content  string `json:"content" binding:"required"`
+	Nickname string `json:"nickname"`
+	Metadata string `json:"metadata"`
 }
 
 type UpdateCommentStatusDto struct {
