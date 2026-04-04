@@ -50,6 +50,16 @@ func setupTestServer() *Server {
 		}, nil
 	}, "echo:read")
 
+	reg.RegisterResource(ResourceDefinition{
+		URI:      "ech0://items/{id}",
+		Name:     "item",
+		MimeType: "application/json",
+	}, func(_ context.Context, uri string) (*ResourceReadResult, error) {
+		return &ResourceReadResult{
+			Contents: []ResourceContent{{URI: uri, MimeType: "application/json", Text: `{"uri":"` + uri + `"}`}},
+		}, nil
+	}, "echo:read")
+
 	return NewServer(reg)
 }
 
@@ -164,8 +174,8 @@ func TestResourcesList(t *testing.T) {
 	if err := json.Unmarshal(b, &result); err != nil {
 		t.Fatalf("unmarshal result: %v", err)
 	}
-	if len(result.Resources) != 1 {
-		t.Errorf("resources count = %d, want 1", len(result.Resources))
+	if len(result.Resources) != 2 {
+		t.Errorf("resources count = %d, want 2", len(result.Resources))
 	}
 }
 
@@ -182,6 +192,25 @@ func TestResourcesReadSuccess(t *testing.T) {
 	}
 	if len(result.Contents) == 0 || result.Contents[0].Text != "test data" {
 		t.Errorf("unexpected content: %v", result.Contents)
+	}
+}
+
+func TestResourcesReadPrefixMatch(t *testing.T) {
+	srv := setupTestServer()
+	resp := doRPC(t, srv, "resources/read", ResourceReadParams{URI: "ech0://items/abc-123"})
+	if resp.Error != nil {
+		t.Fatalf("unexpected error: %v", resp.Error)
+	}
+	b, _ := json.Marshal(resp.Result)
+	var result ResourceReadResult
+	if err := json.Unmarshal(b, &result); err != nil {
+		t.Fatalf("unmarshal result: %v", err)
+	}
+	if len(result.Contents) == 0 {
+		t.Fatal("expected content from prefix-matched resource")
+	}
+	if result.Contents[0].URI != "ech0://items/abc-123" {
+		t.Errorf("URI = %q, want %q", result.Contents[0].URI, "ech0://items/abc-123")
 	}
 }
 

@@ -162,7 +162,7 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 	dashboardHandler := handler14.NewDashboardHandler(dashboardService)
 	agentService := service13.NewAgentService(settingService, echoService, keyValueRepository)
 	agentHandler := handler15.NewAgentHandler(agentService)
-	mcpHandler := mcp.NewHandler(echoService, userService)
+	mcpHandler := mcp.NewHandler(echoService, userService, commentService, fileService, commonService)
 	bundle := handler.NewBundle(webHandler, userHandler, echoHandler, fileHandler, commentHandler, initHandler, commonHandler, settingHandler, inboxHandler, connectHandler, backupHandler, migrationHandler, dashboardHandler, agentHandler, mcpHandler)
 	return bundle, nil
 }

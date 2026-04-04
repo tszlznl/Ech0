@@ -25,9 +25,9 @@ func NewInboxHandler(inboxService service.Service) *InboxHandler {
 //	@Tags			收件箱
 //	@Accept			json
 //	@Produce		json
-//	@Param			page		query		int				false	"页码"
-//	@Param			pageSize	query		int				false	"每页数量"
-//	@Param			search		query		string			false	"搜索关键词"
+//	@Param			page		query		int					false	"页码"
+//	@Param			pageSize	query		int					false	"每页数量"
+//	@Param			search		query		string				false	"搜索关键词"
 //	@Success		200			{object}	handler.Response	"获取成功"
 //	@Failure		200			{object}	handler.Response	"获取失败"
 //	@Router			/inbox [get]
@@ -84,7 +84,7 @@ func (inboxHandler *InboxHandler) GetUnreadInbox() gin.HandlerFunc {
 //	@Tags			收件箱
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		int				true	"收件箱ID"
+//	@Param			id	path		int					true	"收件箱ID"
 //	@Success		200	{object}	handler.Response	"标记成功"
 //	@Failure		200	{object}	handler.Response	"标记失败"
 //	@Router			/inbox/{id}/read [put]
@@ -113,7 +113,7 @@ func (inboxHandler *InboxHandler) MarkInboxAsRead() gin.HandlerFunc {
 //	@Tags			收件箱
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		int				true	"收件箱ID"
+//	@Param			id	path		int					true	"收件箱ID"
 //	@Success		200	{object}	handler.Response	"删除成功"
 //	@Failure		200	{object}	handler.Response	"删除失败"
 //	@Router			/inbox/{id} [delete]

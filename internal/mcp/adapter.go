@@ -5,23 +5,45 @@ import (
 	"fmt"
 
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
+	commentService "github.com/lin-snow/ech0/internal/service/comment"
+	commonService "github.com/lin-snow/ech0/internal/service/common"
 	echoService "github.com/lin-snow/ech0/internal/service/echo"
+	fileService "github.com/lin-snow/ech0/internal/service/file"
 	userService "github.com/lin-snow/ech0/internal/service/user"
 )
 
 type Adapter struct {
-	echoSvc echoService.Service
-	userSvc userService.Service
+	echoSvc    echoService.Service
+	userSvc    userService.Service
+	commentSvc commentService.Service
+	fileSvc    fileService.Service
+	commonSvc  commonService.Service
 }
 
-func NewAdapter(echoSvc echoService.Service, userSvc userService.Service) *Adapter {
-	return &Adapter{echoSvc: echoSvc, userSvc: userSvc}
+func NewAdapter(
+	echoSvc echoService.Service,
+	userSvc userService.Service,
+	commentSvc commentService.Service,
+	fileSvc fileService.Service,
+	commonSvc commonService.Service,
+) *Adapter {
+	return &Adapter{
+		echoSvc:    echoSvc,
+		userSvc:    userSvc,
+		commentSvc: commentSvc,
+		fileSvc:    fileSvc,
+		commonSvc:  commonSvc,
+	}
 }
 
 func (a *Adapter) RegisterAll(reg *Registry) {
 	a.registerEchoTools(reg)
 	a.registerEchoResources(reg)
 	a.registerUserResources(reg)
+	a.registerCommentTools(reg)
+	a.registerCommentResources(reg)
+	a.registerFileTools(reg)
+	a.registerCommonResources(reg)
 }
 
 // --- Argument helpers ---

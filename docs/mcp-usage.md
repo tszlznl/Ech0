@@ -14,6 +14,8 @@ Ech0 内建了 [MCP（Model Context Protocol）](https://modelcontextprotocol.io
 - **Scopes**：根据需要勾选（建议最小权限）
   - 只读场景：`echo:read`、`profile:read`
   - 读写场景：再加上 `echo:write`
+  - 评论场景：`comment:read`（查看）、`comment:write`（发表）
+  - 文件场景：`file:read`（查看）、`file:write`（删除）
 - **有效期**：建议选择 8 小时或 1 个月（不建议永不过期）
 
 创建后妥善保存 Token，它只会显示一次。
@@ -59,22 +61,44 @@ Ech0 内建了 [MCP（Model Context Protocol）](https://modelcontextprotocol.io
 
 ## 可用 Tools
 
+### Posts & Tags
+
 | Tool | 说明 | 所需 Scope |
 |------|------|-----------|
-| `search_posts` | 搜索帖子（支持关键词、标签过滤、分页） | `echo:read` |
+| `search_posts` | 搜索帖子（支持关键词、标签过滤、分页、排序） | `echo:read` |
 | `get_post` | 根据 ID 获取帖子详情 | `echo:read` |
+| `get_today_posts` | 获取今日帖子（支持时区参数） | `echo:read` |
 | `list_tags` | 列出所有标签 | `echo:read` |
-| `create_post` | 创建新帖子（支持 Markdown、标签、私密设置） | `echo:write` |
-| `update_post` | 更新已有帖子 | `echo:write` |
-| `delete_post` | 删除帖子 | `echo:write` |
+| `create_post` | 创建新帖子（返回新帖 ID） | `echo:write` |
+| `update_post` | 更新已有帖子（返回帖子 ID） | `echo:write` |
+| `delete_post` | 删除帖子（返回帖子 ID） | `echo:write` |
+| `like_post` | 点赞帖子 | `echo:write` |
+| `delete_tag` | 删除标签 | `echo:write` |
+
+### Comments
+
+| Tool | 说明 | 所需 Scope |
+|------|------|-----------|
+| `list_comments` | 列出指定帖子的公开评论 | `comment:read` |
+
+### Files
+
+| Tool | 说明 | 所需 Scope |
+|------|------|-----------|
+| `list_files` | 列出已上传文件（支持分页、搜索、存储类型过滤） | `file:read` |
+| `get_file` | 获取文件元信息 | `file:read` |
+| `delete_file` | 删除文件 | `file:write` |
 
 ## 可用 Resources
 
 | Resource URI | 说明 | 所需 Scope |
 |-------------|------|-----------|
 | `ech0://posts/recent` | 最近的帖子（默认 20 条） | `echo:read` |
+| `ech0://posts/{id}` | 按 ID 读取单篇帖子 | `echo:read` |
 | `ech0://tags` | 所有标签及使用次数 | `echo:read` |
 | `ech0://profile/me` | 当前用户资料 | `profile:read` |
+| `ech0://comments/recent` | 最近的公开评论（默认 20 条） | `comment:read` |
+| `ech0://stats/heatmap` | 过去一年的每日帖子数量热力图 | `echo:read` |
 
 ## 安全说明
 

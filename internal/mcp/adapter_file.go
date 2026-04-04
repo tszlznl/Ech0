@@ -1,0 +1,95 @@
+package mcp
+
+import (
+	"context"
+
+	authModel "github.com/lin-snow/ech0/internal/model/auth"
+	commonModel "github.com/lin-snow/ech0/internal/model/common"
+)
+
+func (a *Adapter) registerFileTools(reg *Registry) {
+	reg.RegisterTool(ToolDefinition{
+		Name:        "list_files",
+		Title:       "List Files",
+		Description: "List uploaded files with optional filters.",
+		InputSchema: map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"page":         map[string]any{"type": "integer", "description": "Page number (default 1)"},
+				"page_size":    map[string]any{"type": "integer", "description": "Items per page (default 20, max 100)"},
+				"search":       map[string]any{"type": "string", "description": "Search keyword"},
+				"storage_type": map[string]any{"type": "string", "description": "Filter by storage type (local or s3)"},
+			},
+		},
+	}, a.listFiles, authModel.ScopeFileRead)
+
+	reg.RegisterTool(ToolDefinition{
+		Name:        "get_file",
+		Title:       "Get File",
+		Description: "Get file metadata by ID.",
+		InputSchema: map[string]any{
+			"type":     "object",
+			"required": []string{"id"},
+			"properties": map[string]any{
+				"id": map[string]any{"type": "string", "description": "File UUID"},
+			},
+		},
+	}, a.getFile, authModel.ScopeFileRead)
+
+	reg.RegisterTool(ToolDefinition{
+		Name:        "delete_file",
+		Title:       "Delete File",
+		Description: "Delete a file by ID.",
+		InputSchema: map[string]any{
+			"type":     "object",
+			"required": []string{"id"},
+			"properties": map[string]any{
+				"id": map[string]any{"type": "string", "description": "File UUID"},
+			},
+		},
+	}, a.deleteFile, authModel.ScopeFileWrite)
+}
+
+func (a *Adapter) listFiles(ctx context.Context, args map[string]any) (*ToolCallResult, error) {
+	page := intArg(args, "page", 1)
+	pageSize := intArg(args, "page_size", 20)
+	if pageSize > 100 {
+		pageSize = 100
+	}
+	search := stringArg(args, "search")
+	storageType := stringArg(args, "storage_type")
+
+	result, err := a.fileSvc.ListFiles(ctx, commonModel.FileListQueryDto{
+		Page:        page,
+		PageSize:    pageSize,
+		Search:      search,
+		StorageType: storageType,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return jsonResult(result)
+}
+
+func (a *Adapter) getFile(ctx context.Context, args map[string]any) (*ToolCallResult, error) {
+	id := stringArg(args, "id")
+	if id == "" {
+		return textError("id is required"), nil
+	}
+	file, err := a.fileSvc.GetFileByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return jsonResult(file)
+}
+
+func (a *Adapter) deleteFile(ctx context.Context, args map[string]any) (*ToolCallResult, error) {
+	id := stringArg(args, "id")
+	if id == "" {
+		return textError("id is required"), nil
+	}
+	if err := a.fileSvc.DeleteFile(ctx, id); err != nil {
+		return nil, err
+	}
+	return jsonResult(map[string]string{"id": id, "message": "file deleted successfully"})
+}

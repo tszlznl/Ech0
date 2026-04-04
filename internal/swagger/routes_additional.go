@@ -57,7 +57,7 @@ func ListFileTree() {}
 //	@Description	按路径读取并返回文件流
 //	@Tags			文件管理
 //	@Produce		octet-stream
-//	@Success		200	{file}		file
+//	@Success		200	{file}	file
 //	@Router			/file/stream [get]
 func StreamFileByPath() {}
 
@@ -77,7 +77,7 @@ func GetFileByID() {}
 //	@Description	通过 ID 读取并返回文件流
 //	@Tags			文件管理
 //	@Produce		octet-stream
-//	@Success		200	{file}		file
+//	@Success		200	{file}	file
 //	@Router			/file/{id}/stream [get]
 func StreamFileByID() {}
 

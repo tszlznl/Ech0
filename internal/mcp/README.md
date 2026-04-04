@@ -38,9 +38,12 @@ MCP Host (Cursor / Claude Desktop / ...)
                │
                ▼
 ┌──────────────────────────────────────────────┐
-│  Adapter                                     │
-│  ├─ Tools  → EchoService / UserService       │
-│  └─ Resources → EchoService / UserService    │
+│  Adapter（按业务域拆分）                      │
+│  ├─ adapter_echo.go    → EchoService         │
+│  ├─ adapter_user.go    → UserService         │
+│  ├─ adapter_comment.go → CommentService      │
+│  ├─ adapter_file.go    → FileService         │
+│  └─ adapter_common.go  → CommonService       │
 │  （不直连 Repository，强制走 Service 层）      │
 └──────────────────────────────────────────────┘
 ```
@@ -53,10 +56,13 @@ MCP Host (Cursor / Claude Desktop / ...)
 | `capability.go` | MCP 协议版本、ServerCapabilities、InitializeResult、ServerInfo |
 | `tools.go` | Tool 相关类型：ToolDefinition、ToolCallParams、ToolCallResult、ContentItem |
 | `resources.go` | Resource 相关类型：ResourceDefinition、ResourceReadParams、ResourceReadResult |
-| `registry.go` | Tool/Resource 注册表，支持按名查找与 scope 绑定 |
+| `registry.go` | Tool/Resource 注册表，支持精确匹配与 URI 前缀匹配 |
 | `adapter.go` | Adapter 结构体、构造函数、RegisterAll 入口、通用参数/结果 helper |
-| `adapter_echo.go` | Echo 域：帖子 CRUD tools + tags/recent_posts resources |
+| `adapter_echo.go` | Echo 域：帖子 CRUD + 点赞/今日/标签 tools，posts/tags resources |
 | `adapter_user.go` | User 域：profile/me resource |
+| `adapter_comment.go` | Comment 域：list_comments tool，recent comments resource |
+| `adapter_file.go` | File 域：list/get/delete file tools |
+| `adapter_common.go` | Common 域：heatmap resource |
 | `server.go` | MCP Server 核心：请求解析、方法分发、scope 校验、超时控制、审计日志 |
 | `handler.go` | Gin 桥接层：组装 Registry → Adapter → Server，暴露 `ServeEndpoint()` |
 | `server_test.go` | 单元测试：协议握手、tool 调用、scope 拒绝、resource 读取、错误处理 |
@@ -83,4 +89,3 @@ MCP Host (Cursor / Claude Desktop / ...)
 ## 相关文档
 
 - [MCP 接入指南](../../docs/mcp-usage.md) — Token 创建、Host 配置、curl 示例
-- [MCP 设计文档](../../docs/ech0-mcp-design.md) — 完整设计决策与里程碑规划

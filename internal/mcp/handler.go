@@ -2,7 +2,10 @@ package mcp
 
 import (
 	"github.com/gin-gonic/gin"
+	commentService "github.com/lin-snow/ech0/internal/service/comment"
+	commonService "github.com/lin-snow/ech0/internal/service/common"
 	echoService "github.com/lin-snow/ech0/internal/service/echo"
+	fileService "github.com/lin-snow/ech0/internal/service/file"
 	userService "github.com/lin-snow/ech0/internal/service/user"
 )
 
@@ -10,9 +13,15 @@ type Handler struct {
 	server *Server
 }
 
-func NewHandler(echoSvc echoService.Service, userSvc userService.Service) *Handler {
+func NewHandler(
+	echoSvc echoService.Service,
+	userSvc userService.Service,
+	commentSvc commentService.Service,
+	fileSvc fileService.Service,
+	commonSvc commonService.Service,
+) *Handler {
 	registry := NewRegistry()
-	adapter := NewAdapter(echoSvc, userSvc)
+	adapter := NewAdapter(echoSvc, userSvc, commentSvc, fileSvc, commonSvc)
 	adapter.RegisterAll(registry)
 	return &Handler{server: NewServer(registry)}
 }
