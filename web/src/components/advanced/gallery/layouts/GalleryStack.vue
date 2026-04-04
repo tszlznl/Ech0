@@ -117,12 +117,19 @@ function cardStyle(idx: number): Record<string, string> {
   --stamp-outer: 60px;
   /* 画在 img 上的白框宽度（box-sizing: border-box 含在邮票边长内） */
   --stamp-white-border: 2px;
+  /* 白边与裁切区域的轻微圆角（勿过大，避免不像「邮票」） */
+  --stamp-corner-radius: 2px;
   /* hover 放大倍数，与下方 min-height / padding 联动，避免被裁切 */
   --stack-hover-scale: 1.25;
   /* 横向重叠：仅压住一小部分（0.22 ≈ 22% 宽度），勿过大 */
   --stack-overlap: 0.22;
   /* 纵向：下一行向上叠到上一行，比例相对邮票高度 */
   --stack-row-overlap: 0.6;
+  --stack-frame-shadow: 0 0 0 1px color-mix(in srgb, var(--color-border-subtle) 85%, transparent);
+  --stack-frame-shadow-hover:
+    0 0 0 1px color-mix(in srgb, var(--color-border-subtle) 85%, transparent),
+    0 0.2rem 0.45rem color-mix(in srgb, var(--color-text-primary) 9%, transparent),
+    0 0.55rem 1rem color-mix(in srgb, var(--color-text-primary) 5%, transparent);
   width: 100%;
   max-width: 100%;
   margin-left: auto;
@@ -230,16 +237,21 @@ function cardStyle(idx: number): Record<string, string> {
   box-sizing: border-box;
   background: transparent;
   border: none;
-  border-radius: 0 !important;
+  border-radius: var(--stamp-corner-radius) !important;
   overflow: hidden;
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
-  /* 仅细描边，避免灰黑投影；hover 不再加深阴影 */
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-border-subtle) 85%, transparent);
+  box-shadow: var(--stack-frame-shadow);
+  transition: box-shadow 0.2s ease;
+}
+
+.stack-card:hover :deep(.gallery-image-frame.stack-frame),
+.stack-card:focus-within :deep(.gallery-image-frame.stack-frame) {
+  box-shadow: var(--stack-frame-shadow-hover);
 }
 
 :deep(.gallery-image-frame.stack-frame .image-skeleton) {
-  border-radius: 0 !important;
+  border-radius: var(--stamp-corner-radius) !important;
 }
 
 :deep(.gallery-image-frame.stack-frame .echoimg.stack-img) {
@@ -250,7 +262,7 @@ function cardStyle(idx: number): Record<string, string> {
   max-height: none !important;
   object-fit: cover;
   object-position: center;
-  border-radius: 0 !important;
+  border-radius: var(--stamp-corner-radius) !important;
   border: var(--stamp-white-border) solid #fff;
   box-sizing: border-box;
   box-shadow: none !important;
@@ -272,6 +284,15 @@ function cardStyle(idx: number): Record<string, string> {
   .stack-card:focus-within,
   .stack-card:hover {
     transform: translateY(var(--stack-y, 0px)) translateZ(0);
+  }
+
+  :deep(.gallery-image-frame.stack-frame) {
+    transition: none;
+  }
+
+  .stack-card:hover :deep(.gallery-image-frame.stack-frame),
+  .stack-card:focus-within :deep(.gallery-image-frame.stack-frame) {
+    box-shadow: var(--stack-frame-shadow);
   }
 }
 </style>
