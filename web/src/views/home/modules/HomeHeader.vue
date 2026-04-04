@@ -177,7 +177,7 @@ const nextThemeModeLabel = computed(() => {
 const themeToggleTooltip = computed(() => ({
   content: String(t('homeNav.themeToggleTitle', { mode: nextThemeModeLabel.value })),
   triggers: ['hover'],
-  hideTriggers: ['hover', 'click'],
+  hideTriggers: ['hover', 'click', 'touch'],
 }))
 
 const getThemeModeLabel = () => {

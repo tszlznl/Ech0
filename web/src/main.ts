@@ -34,16 +34,17 @@ app.use(i18n)
 app.use(FloatingVue, {
   themes: {
     tooltip: {
-      // Avoid focus staying on hidden popper (aria-hidden + focused descendant warning).
       triggers: ['hover'],
-      hideTriggers: ['hover', 'click'],
+      // `touch` → touchend on target; iOS Safari often omits mouseleave after tap.
+      hideTriggers: ['hover', 'click', 'touch'],
       placement: 'top',
       delay: { show: 300, hide: 80 },
       distance: 10,
       container: 'body',
-      // floating-vue sets tabindex="0" on popper when autoHide=true, which can cause
-      // hidden tooltip poppers to retain focus and trigger aria-hidden warnings.
-      autoHide: false,
+      // Do not move focus into the popper on show (reduces aria issues with tooltips).
+      noAutoFocus: true,
+      // Tap outside to dismiss (needed on iOS when autoHide was false + sticky hover).
+      autoHide: true,
     },
   },
 })
