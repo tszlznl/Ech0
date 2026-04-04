@@ -113,9 +113,6 @@ docker run -d \
 
 ## 完整能力清单
 
-<details>
-  <summary><strong>展开查看完整能力</strong></summary>
-
 ### 产品亮点
 
 - ☁️ **轻量高效架构**：低资源占用与小体积镜像，适合个人服务器到 ARM 设备。  
@@ -175,8 +172,6 @@ docker run -d \
 ### License
 
 - 🎉 **完全开源**：基于 **AGPL-3.0** 协议发布，无追踪、无订阅、无 SaaS 依赖。  
-
-</details>
 
 ---
 
@@ -301,16 +296,6 @@ docker image prune -f
    helm upgrade my-ech0 ./charts/ech0 --namespace my-namespace
    ```
 
-<!-- ---
-
-## 访问方式
-
-### 🖥️ TUI 模式
-
-![TUI 模式](./docs/imgs/tui.png)
-
-直接运行对应的二进制文件即可。例如在 Windows 中，双击 `Ech0.exe`。 -->
-
 ---
 
 ## 常见问题
@@ -358,16 +343,7 @@ docker image prune -f
       未经 Ech0 官方授权的第三方集成平台或服务，不属于官方支持范围。因使用此类平台或服务导致的安全事件、数据丢失、账号异常或其他风险与损失，由使用方及第三方自行承担，官方不承担相关责任。
 
 15. **如何通过第三方集成（AI / 自动化）发布评论？**
-      Ech0 提供专用集成评论接口 `POST /api/comments/integration`，无需通过验证码或表单 token。使用前需在"访问令牌"管理中创建一个包含 `comment:write` scope 和 `integration` audience 的 access token，然后在请求头中附带 `Authorization: Bearer <token>`。请求体示例：
-      ```json
-      {
-        "echo_id": "<目标帖子 UUID>",
-        "content": "评论内容",
-        "nickname": "Bot Name",
-        "metadata": "可选的自定义备注"
-      }
-      ```
-      该接口具有独立的频控策略，评论来源会标记为 `integration`，可在后台评论管理中识别。
+      Ech0 提供专用集成评论接口 `POST /api/comments/integration`，无需通过验证码或表单 token。使用前需在「访问令牌」管理中创建一个包含 `comment:write` scope 和 `integration` audience 的 access token，并在请求头中附带 `Authorization: Bearer <token>`。请求体字段与响应说明请以你部署实例上的 OpenAPI 文档为准：在浏览器打开 `/swagger/index.html`（本地开发一般为 `http://localhost:6277/swagger/index.html`）。该接口具有独立的频控策略，评论来源会标记为 `integration`，可在后台评论管理中识别。
 
 16. **想详细了解本地与对象存储的数据布局、`key` 映射规则，以及更换 S3 或本地 ⇄ 对象互迁时要注意什么？**  
       请参阅仓库内文档：[存储迁移指南](./docs/storage-migration.md)。文中说明扁平 `key` 与 `schema.Resolve`、`PathPrefix`、入库 `url` 快照的含义，前台 `/api/files` 静态访问与 `stream` 接口的差异，以及更换 S3 服务商与本地存储和对象存储之间迁移的操作要点与注意事项。

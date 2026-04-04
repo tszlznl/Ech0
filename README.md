@@ -111,9 +111,6 @@ See [Quick Deployment](#quick-deployment) for Docker Compose and Helm options.
 
 ## Full Feature List
 
-<details>
-  <summary><strong>Expand full capabilities</strong></summary>
-
 ### Highlights
 
 - ☁️ **Lightweight, Efficient Architecture**: Low resource usage and compact images, suitable from personal servers to ARM devices.  
@@ -173,8 +170,6 @@ See [Quick Deployment](#quick-deployment) for Docker Compose and Helm options.
 ### License
 
 - 🎉 **Fully Open Source**: Released under **AGPL-3.0**, with no tracking, no subscription, and no SaaS dependency.  
-
-</details>
 
 ---
 
@@ -347,16 +342,7 @@ docker image prune -f
     Third-party integration platforms or services that are not officially authorized by Ech0 are outside the official support scope. Any security incidents, data loss, account issues, or other risks caused by using such services are the sole responsibility of the user and the third-party provider.
 
 15. **How do I post comments via a third-party integration (AI / automation)?**
-    Ech0 provides a dedicated integration comment endpoint at `POST /api/comments/integration` that bypasses captcha and form-token verification. Create an access token with the `comment:write` scope and `integration` audience from "Access Token" management, then include it in the `Authorization: Bearer <token>` header. Example payload:
-    ```json
-    {
-      "echo_id": "<target post UUID>",
-      "content": "Comment text",
-      "nickname": "Bot Name",
-      "metadata": "optional custom note"
-    }
-    ```
-    This endpoint has its own rate limits, and comments are tagged with `source=integration` so they are identifiable in the admin panel.
+    Ech0 provides a dedicated integration comment endpoint at `POST /api/comments/integration` that bypasses captcha and form-token verification. Create an access token with the `comment:write` scope and `integration` audience from "Access Token" management, then include it in the `Authorization: Bearer <token>` header. For request body fields and responses, use the OpenAPI docs served by your instance at `/swagger/index.html` (for local development, typically `http://localhost:6277/swagger/index.html`). This endpoint has its own rate limits, and comments are tagged with `source=integration` so they are identifiable in the admin panel.
 
 16. **Where can I find detailed documentation on local vs S3 storage rules, object keys, and migration?**  
     See the in-repo [Storage migration guide](./docs/storage-migration.md). It explains how flat `key` values map to on-disk paths and S3 object keys (including `schema.Resolve` and `PathPrefix`), how stored `File.url` snapshots relate to the UI, the difference between static `/api/files` access and authenticated `stream` routes, and practical guidance for switching S3 providers or moving data between local disk and object storage.
