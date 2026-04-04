@@ -71,7 +71,7 @@ Ech0 的 MCP 端点采用 **Streamable HTTP**（JSON-RPC over HTTP），与 [MCP
 
 ## 能力总览
 
-当前 MCP 共暴露 **24 个 Tool** 与 **8 个 Resource**，按业务域整理如下。
+当前 MCP 共暴露 **26 个 Tool** 与 **9 个 Resource**，按业务域整理如下。
 
 ### Posts & Tags
 
@@ -95,8 +95,11 @@ Ech0 的 MCP 端点采用 **Streamable HTTP**（JSON-RPC over HTTP），与 [MCP
 
 | 类型 | 名称 | 说明 | Scope |
 |------|------|------|-------|
-| Tool | `list_comments` | 列出指定帖子下的公开评论 | `comment:read` |
+| Tool | `list_comments` | 列出指定帖子下已通过的公开评论（与 `GET /api/comments` 等价） | `comment:read` |
+| Tool | `create_comment` | 以集成/AI 身份发表评论（与 `create_integration_comment` 相同，推荐在 Agent 中使用此名称） | `comment:write` |
+| Tool | `create_integration_comment` | 同上；与 `POST /api/comments/integration` 共用同一套校验与落库逻辑（无验证码、无 form_token） | `comment:write` |
 | Resource | `ech0://comments/recent` | 全站最近 20 条公开评论 | `comment:read` |
+| Resource | `ech0://guide/integration-comment` | 集成评论说明：REST 端点、Audience（`mcp-remote` / `integration`）、请求体、curl 示例、与本 MCP 会话 Token 的对应关系 | `comment:read` |
 
 ### Files
 

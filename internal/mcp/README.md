@@ -62,7 +62,7 @@ MCP-compatible client / Host
 | `adapter.go` | Adapter 结构体、构造函数、RegisterAll 入口、通用参数/结果 helper |
 | `adapter_echo.go` | Echo 域：帖子 CRUD + 点赞/今日/标签 tools，posts/tags resources |
 | `adapter_user.go` | User 域：profile/me resource |
-| `adapter_comment.go` | Comment 域：list_comments tool，recent comments resource |
+| `adapter_comment.go` | Comment 域：`list_comments`、`create_comment` / `create_integration_comment` tools；`ech0://comments/recent`、`ech0://guide/integration-comment` resources |
 | `adapter_file.go` | File 域：list/get/delete/create_external file tools |
 | `adapter_common.go` | Common 域：heatmap resource |
 | `adapter_connect.go` | Connect 域：list/add/delete connects tools，connect self/info resources |
