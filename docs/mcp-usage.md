@@ -1,8 +1,14 @@
 # Ech0 MCP 接入指南
 
-Ech0 内建了 [MCP（Model Context Protocol）](https://modelcontextprotocol.io/) Server，允许 AI 应用（如 Cursor、Claude Desktop 等）通过标准化协议访问你的 Ech0 实例。
+Ech0 内建 [MCP（Model Context Protocol）](https://modelcontextprotocol.io/) Server：在标准协议下把**帖子、标签、评论、文件、资料与统计**等能力以 **Tools** 与 **Resources** 暴露给 AI 工作流。传输层为 **Streamable HTTP**（JSON-RPC 2.0 over HTTP），与主服务同端口，通过 **Bearer Token**（Audience `mcp-remote`）与 **Scope** 做最小权限控制。
 
-> 架构与实现细节见 [internal/mcp/README.md](../internal/mcp/README.md)，设计决策见 [MCP 设计文档](./ech0-mcp-design.md)。
+> 架构与实现细节见 [internal/mcp/README.md](../internal/mcp/README.md)。
+
+## 接入方式
+
+Ech0 的 MCP 端点采用 **Streamable HTTP**（JSON-RPC over HTTP），与 [MCP 规范](https://modelcontextprotocol.io/) 一致。若你的环境支持远程 MCP，并能携带 `Authorization: Bearer <token>`，将 `url` 指向本服务即可。
+
+若运行环境只支持本地 stdio 进程而非远程 HTTP，可通过网关或代理转发到本端点。
 
 ## 快速开始
 
@@ -22,7 +28,7 @@ Ech0 内建了 [MCP（Model Context Protocol）](https://modelcontextprotocol.io
 
 ### 2. 配置 MCP Host
 
-在你的 MCP 客户端（如 Cursor `mcp.json`）中添加：
+在你使用的 MCP 客户端配置中（具体文件名与入口因产品而异）添加远程服务，例如：
 
 ```json
 {

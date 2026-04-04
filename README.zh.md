@@ -163,7 +163,7 @@ docker run -d \
 - 📟 **TUI 管理界面**：提供终端交互界面，适合服务器环境管理。  
 - 🧰 **CLI 工具链**：提供 CLI 工具，支持自动化管理与脚本集成。  
 - 🔗 **开放 API 与 Webhook**：提供完整 API 与 Webhook，便于外部系统集成和自动化工作流。  
-- 🤖 **MCP（模型上下文协议）**：内建 [MCP Server](./docs/mcp-usage.md)，让 AI 应用（Cursor、Claude Desktop 等）通过标准协议访问 Ech0。  
+- 🤖 **MCP（模型上下文协议）**：内建 [MCP Server](./docs/mcp-usage.md)，把帖子、文件与统计等能力通过 **Streamable HTTP** 以 **Tools / Resources** 交给上层 AI 工作流，**Scoped JWT** 鉴权。  
 
 ### Experience
 

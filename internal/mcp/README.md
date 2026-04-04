@@ -2,13 +2,12 @@
 
 Ech0 内建的 MCP（Model Context Protocol）Server 实现。
 
-通过 `/mcp` 端点（复用主服务 6277 端口）对外暴露 Streamable HTTP 传输，
-允许 Cursor、Claude Desktop 等 MCP Host 以标准协议访问 Ech0 的内容能力。
+通过 `/mcp` 端点（复用主服务 6277 端口）对外暴露 **Streamable HTTP**，任意支持该传输方式的 MCP Host 均可统一调用 Tools、读取 Resources；鉴权与 Scope 与 REST API 共用同一套 JWT。
 
 ## 架构
 
 ```
-MCP Host (Cursor / Claude Desktop / ...)
+MCP-compatible client / Host
     │
     ▼
 ┌──────────────────────────────────────────────┐
