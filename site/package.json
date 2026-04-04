@@ -6,7 +6,7 @@
     "prebuild": "rm -rf public/docs-assets && mkdir -p public/docs-assets && test -d docs/imgs && cp -R docs/imgs public/docs-assets/ || true",
     "build": "react-router build",
     "dev": "react-router dev",
-    "start": "react-router-serve ./build/server/index.js",
+    "start": "serve -s build/client",
     "typecheck": "react-router typegen && tsc",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -20,6 +20,7 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-markdown": "^10.1.0",
+    "serve": "^14.2.4",
     "react-router": "7.14.0",
     "rehype-highlight": "^7.0.2",
     "remark-gfm": "^4.0.1"

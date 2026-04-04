@@ -13,7 +13,7 @@ export function meta(_args: Route.MetaArgs) {
   ];
 }
 
-export function loader() {
+export async function clientLoader() {
   return { cards: listDocCards() };
 }
 

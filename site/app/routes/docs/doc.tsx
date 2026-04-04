@@ -28,7 +28,7 @@ const LEGACY_DOC_REDIRECTS: Record<string, string> = {
   "design/palette": "/docs",
 };
 
-export function loader({ params }: Route.LoaderArgs) {
+export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const splat = params["*"]?.replace(/\/$/, "") ?? "";
   if (splat === "" || splat === "README") {
     return redirect("/docs");

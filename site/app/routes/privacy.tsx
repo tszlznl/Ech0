@@ -24,7 +24,7 @@ export const links: Route.LinksFunction = () => [
   { rel: "canonical", href: absoluteUrl("/privacy") },
 ];
 
-export function loader() {
+export async function clientLoader() {
   return parseDocFile(privacyMd, "privacy");
 }
 
