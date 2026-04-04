@@ -29,7 +29,7 @@ export function fetchGetAllConnectInfo() {
 // 添加Connect
 export function fetchAddConnect(connectUrl: string) {
   return request<App.Api.Connect.Connected>({
-    url: '/addConnect',
+    url: '/connects',
     method: 'POST',
     data: {
       connect_url: connectUrl,
@@ -40,7 +40,7 @@ export function fetchAddConnect(connectUrl: string) {
 // 删除Connect
 export function fetchDeleteConnect(id: string) {
   return request<App.Api.Connect.Connected>({
-    url: `/delConnect/${id}`,
+    url: `/connects/${id}`,
     method: 'DELETE',
   })
 }

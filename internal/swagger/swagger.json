@@ -96,40 +96,6 @@
                 }
             }
         },
-        "/addConnect": {
-            "post": {
-                "description": "用户添加一个新的连接",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "连接管理"
-                ],
-                "summary": "添加连接",
-                "parameters": [
-                    {
-                        "description": "连接信息",
-                        "name": "connected",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.Connected"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "添加连接失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/agent/info": {
             "get": {
                 "description": "获取系统的 Agent 信息",
@@ -222,34 +188,6 @@
                 "responses": {
                     "200": {
                         "description": "更新 Agent 设置失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/allusers": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "获取系统中所有用户的详细信息，接口需要认证",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "用户管理"
-                ],
-                "summary": "获取所有用户",
-                "responses": {
-                    "200": {
-                        "description": "获取失败，code=0，msg错误描述",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
@@ -512,6 +450,40 @@
                 }
             }
         },
+        "/connects": {
+            "post": {
+                "description": "用户添加一个新的连接",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "连接管理"
+                ],
+                "summary": "添加连接",
+                "parameters": [
+                    {
+                        "description": "连接信息",
+                        "name": "connected",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.Connected"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "添加连接失败",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/connects/info": {
             "get": {
                 "description": "获取当前用户所有已添加的连接的详细信息",
@@ -535,7 +507,7 @@
                 }
             }
         },
-        "/delConnect/{id}": {
+        "/connects/{id}": {
             "delete": {
                 "description": "用户根据ID删除一个已添加的连接",
                 "consumes": [
@@ -550,8 +522,8 @@
                 "summary": "删除连接",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "连接ID",
+                        "type": "string",
+                        "description": "连接ID (UUID)",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -2273,6 +2245,34 @@
                 "responses": {
                     "200": {
                         "description": "参数错误或删除失败，code=0，msg错误描述",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/users": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "获取系统中所有用户的详细信息，接口需要认证",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户管理"
+                ],
+                "summary": "获取所有用户",
+                "responses": {
+                    "200": {
+                        "description": "获取失败，code=0，msg错误描述",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }

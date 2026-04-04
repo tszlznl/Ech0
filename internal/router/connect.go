@@ -10,6 +10,6 @@ func setupConnectRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	appRouterGroup.PublicRouterGroup.GET("/connects/info", h.ConnectHandler.GetConnectsInfo())
 
 	// Auth
-	appRouterGroup.AuthRouterGroup.POST("/addConnect", h.ConnectHandler.AddConnect())
-	appRouterGroup.AuthRouterGroup.DELETE("/delConnect/:id", h.ConnectHandler.DeleteConnect())
+	appRouterGroup.AuthRouterGroup.POST("/connects", h.ConnectHandler.AddConnect())
+	appRouterGroup.AuthRouterGroup.DELETE("/connects/:id", h.ConnectHandler.DeleteConnect())
 }

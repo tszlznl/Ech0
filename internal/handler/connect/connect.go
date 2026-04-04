@@ -30,7 +30,7 @@ func NewConnectHandler(connectService service.Service) *ConnectHandler {
 //	@Param			connected	body		model.Connected		true	"连接信息"
 //	@Success		200			{object}	handler.Response	"添加连接成功"
 //	@Failure		200			{object}	handler.Response	"添加连接失败"
-//	@Router			/addConnect [post]
+//	@Router			/connects [post]
 func (connectHandler *ConnectHandler) AddConnect() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		var connected connectModel.Connected
@@ -60,10 +60,10 @@ func (connectHandler *ConnectHandler) AddConnect() gin.HandlerFunc {
 //	@Tags			连接管理
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		int					true	"连接ID"
+//	@Param			id	path		string				true	"连接ID (UUID)"
 //	@Success		200	{object}	handler.Response	"删除连接成功"
 //	@Failure		200	{object}	handler.Response	"删除连接失败"
-//	@Router			/delConnect/{id} [delete]
+//	@Router			/connects/{id} [delete]
 func (connectHandler *ConnectHandler) DeleteConnect() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 从 URL 参数获取 ID

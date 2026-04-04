@@ -28,7 +28,7 @@ func setupUserRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 
 	// Auth
 	appRouterGroup.AuthRouterGroup.GET(
-		"/allusers",
+		"/users",
 		middleware.RequireScopes(authModel.ScopeAdminUser),
 		h.UserHandler.GetAllUsers(),
 	)

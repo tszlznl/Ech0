@@ -181,7 +181,7 @@ func (userHandler *UserHandler) UpdateUserAdmin() gin.HandlerFunc {
 //	@Success		200	{object}	handler.Response	"获取成功，code=1，包含用户列表"
 //	@Failure		200	{object}	handler.Response							"获取失败，code=0，msg错误描述"
 //	@Security		ApiKeyAuth
-//	@Router			/allusers [get]
+//	@Router			/users [get]
 func (userHandler *UserHandler) GetAllUsers() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		allusers, err := userHandler.userService.GetAllUsers()

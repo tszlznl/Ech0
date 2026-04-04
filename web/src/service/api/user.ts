@@ -20,7 +20,7 @@ export function fetchUpdateUser(user: App.Api.User.UserInfo) {
 // 获取用户列表
 export function fetchGetAllUsers() {
   return request<App.Api.User.User[]>({
-    url: '/allusers',
+    url: '/users',
     method: 'GET',
   })
 }

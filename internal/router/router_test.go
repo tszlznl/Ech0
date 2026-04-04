@@ -47,6 +47,8 @@ func TestSetupRouter_RegistersKeyRoutes(t *testing.T) {
 		{method: http.MethodGet, path: "/api/init/status"},
 		{method: http.MethodGet, path: "/api/settings"},
 		{method: http.MethodGet, path: "/api/agent/recent"},
+		{method: http.MethodPost, path: "/api/connects"},
+		{method: http.MethodDelete, path: "/api/connects/:id"},
 		{method: http.MethodGet, path: "/api/system/logs"},
 		{method: http.MethodGet, path: "/api/system/logs/stream"},
 		{method: http.MethodGet, path: "/ws/system/logs"},
@@ -81,7 +83,7 @@ func TestSetupRouter_AllUsersRouteProtected(t *testing.T) {
 	engine := gin.New()
 	SetupRouter(engine, buildTestHandlers())
 
-	req := httptest.NewRequest(http.MethodGet, "/api/allusers", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
 	rec := httptest.NewRecorder()
 	engine.ServeHTTP(rec, req)
 

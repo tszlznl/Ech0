@@ -427,28 +427,6 @@ paths:
       summary: 删除访问令牌
       tags:
       - 系统设置
-  /addConnect:
-    post:
-      consumes:
-      - application/json
-      description: 用户添加一个新的连接
-      parameters:
-      - description: 连接信息
-        in: body
-        name: connected
-        required: true
-        schema:
-          $ref: '#/definitions/model.Connected'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 添加连接失败
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 添加连接
-      tags:
-      - 连接管理
   /agent/info:
     get:
       consumes:
@@ -514,23 +492,6 @@ paths:
       summary: 更新 Agent 设置
       tags:
       - 系统设置
-  /allusers:
-    get:
-      consumes:
-      - application/json
-      description: 获取系统中所有用户的详细信息，接口需要认证
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 获取失败，code=0，msg错误描述
-          schema:
-            $ref: '#/definitions/handler.Response'
-      security:
-      - ApiKeyAuth: []
-      summary: 获取所有用户
-      tags:
-      - 用户管理
   /backup/export:
     get:
       consumes:
@@ -699,6 +660,49 @@ paths:
       summary: 获取所有连接
       tags:
       - 连接管理
+  /connects:
+    post:
+      consumes:
+      - application/json
+      description: 用户添加一个新的连接
+      parameters:
+      - description: 连接信息
+        in: body
+        name: connected
+        required: true
+        schema:
+          $ref: '#/definitions/model.Connected'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 添加连接失败
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: 添加连接
+      tags:
+      - 连接管理
+  /connects/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 用户根据ID删除一个已添加的连接
+      parameters:
+      - description: 连接ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除连接失败
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: 删除连接
+      tags:
+      - 连接管理
   /connects/info:
     get:
       consumes:
@@ -712,27 +716,6 @@ paths:
           schema:
             $ref: '#/definitions/handler.Response'
       summary: 获取所有添加的连接信息
-      tags:
-      - 连接管理
-  /delConnect/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: 用户根据ID删除一个已添加的连接
-      parameters:
-      - description: 连接ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 删除连接失败
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 删除连接
       tags:
       - 连接管理
   /echo:
@@ -1859,6 +1842,23 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: 更新用户权限（管理员权限）
+      tags:
+      - 用户管理
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: 获取系统中所有用户的详细信息，接口需要认证
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取失败，code=0，msg错误描述
+          schema:
+            $ref: '#/definitions/handler.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取所有用户
       tags:
       - 用户管理
   /webhook:
