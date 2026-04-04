@@ -14,20 +14,13 @@ body {
   background-color: var(--selection-bg-color);
 }
 
-/* View Transitions API - 主题切换扩散动画 */
+/* View Transitions：默认交叉淡化，短时长以降低合成开销 */
+::view-transition-group(root) {
+  animation-duration: 0.22s;
+  animation-timing-function: ease-out;
+}
+
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  /* 禁用所有默认动画和过渡效果 */
-  animation: none;
   mix-blend-mode: normal;
-}
-
-/* 旧状态在下层 */
-::view-transition-old(root) {
-  z-index: 1;
-}
-
-/* 新状态在上层，通过 clip-path 从点击位置扩散 */
-::view-transition-new(root) {
-  z-index: 9999;
 }

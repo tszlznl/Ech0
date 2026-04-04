@@ -87,7 +87,6 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSettingStore, useUserStore, useThemeStore, useZenStore, useInboxStore } from '@/stores'
 import { resolveAvatarUrl } from '@/service/request/shared'
-import { theToast } from '@/utils/toast'
 import { useRouter } from 'vue-router'
 
 const settingStore = useSettingStore()
@@ -180,18 +179,8 @@ const themeToggleTooltip = computed(() => ({
   hideTriggers: ['hover', 'click', 'touch'],
 }))
 
-const getThemeModeLabel = () => {
-  if (themeStore.mode === 'light') return String(t('homeNav.themeLight'))
-  if (themeStore.mode === 'dark') return String(t('homeNav.themeDark'))
-  return String(t('homeNav.themeSunny'))
-}
-
-const handleThemeToggle = async (event: MouseEvent) => {
-  await themeStore.toggleTheme(event)
-  theToast.success(String(t('homeNav.themeSwitched')), {
-    description: String(t('homeNav.themeCurrent', { mode: getThemeModeLabel() })),
-    duration: 1500,
-  })
+const handleThemeToggle = async () => {
+  await themeStore.toggleTheme()
 }
 
 const handleToggleZenMode = () => {
