@@ -117,8 +117,8 @@ func (fileHandler *FileHandler) ListFileTree() gin.HandlerFunc {
 //	@Produce		json
 //	@Param			id		path		string					true	"文件ID"
 //	@Param			data	body		model.UpdateFileMetaDto	true	"文件元信息"
-//	@Success		200		{object}	res.Response{data=model.FileDto}
-//	@Failure		500		{object}	res.Response
+//	@Success		200		{object}	handler.Response
+//	@Failure		500		{object}	handler.Response
 //	@Router			/file/{id}/meta [put]
 func (fileHandler *FileHandler) UpdateFileMeta() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {

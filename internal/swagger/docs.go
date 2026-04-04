@@ -159,6 +159,27 @@ const docTemplate = `{
                 }
             }
         },
+        "/agent/recent": {
+            "get": {
+                "description": "获取 Agent 近期动态列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "系统设置"
+                ],
+                "summary": "获取近期动态",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/agent/settings": {
             "get": {
                 "description": "获取系统的 Agent 相关设置",
@@ -242,61 +263,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/audios/delete": {
-            "delete": {
-                "description": "用户删除已上传的音频文件",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "通用功能"
-                ],
-                "summary": "删除音频",
-                "responses": {
-                    "200": {
-                        "description": "删除失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/audios/upload": {
-            "post": {
-                "description": "用户上传音频文件，成功后返回音频的访问 URL",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "通用功能"
-                ],
-                "summary": "上传音频",
-                "parameters": [
-                    {
-                        "type": "file",
-                        "description": "音频文件",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "上传失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/backup/export": {
             "get": {
                 "description": "用户导出备份文件，成功后触发文件下载",
@@ -314,7 +280,7 @@ const docTemplate = `{
                     "200": {
                         "description": "导出备份失败",
                         "schema": {
-                            "$ref": "#/definitions/handler.Response"
+                            "type": "string"
                         }
                     }
                 }
@@ -375,9 +341,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/comment/settings": {
-            "get": {
-                "description": "获取系统的评论相关设置",
+        "/backup/snapshot": {
+            "post": {
+                "description": "仅在服务端创建本地快照；若配置了 S3 则尝试上传（失败静默）",
                 "consumes": [
                     "application/json"
                 ],
@@ -385,20 +351,22 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "系统设置"
+                    "系统备份"
                 ],
-                "summary": "获取评论设置",
+                "summary": "手动创建快照",
                 "responses": {
                     "200": {
-                        "description": "获取评论设置失败",
+                        "description": "创建快照失败",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
                     }
                 }
-            },
-            "put": {
-                "description": "更新系统的评论相关设置",
+            }
+        },
+        "/backup/snapshot/{taskId}": {
+            "get": {
+                "description": "根据 taskId 查询创建快照任务的执行状态",
                 "consumes": [
                     "application/json"
                 ],
@@ -406,25 +374,99 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "系统设置"
+                    "系统备份"
                 ],
-                "summary": "更新评论设置",
-                "parameters": [
-                    {
-                        "description": "新的评论设置",
-                        "name": "commentSettings",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.CommentSettingDto"
-                        }
-                    }
-                ],
+                "summary": "查询快照任务状态",
                 "responses": {
                     "200": {
-                        "description": "更新评论设置失败",
+                        "description": "查询快照状态失败",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/comments": {
+            "get": {
+                "description": "按动态 ID 获取评论列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "评论"
+                ],
+                "summary": "获取评论列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "提交新评论",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "评论"
+                ],
+                "summary": "创建评论",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/comments/form": {
+            "get": {
+                "description": "获取评论发布所需表单元数据",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "评论"
+                ],
+                "summary": "获取评论表单配置",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/comments/public": {
+            "get": {
+                "description": "获取公开评论流",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "评论"
+                ],
+                "summary": "获取公开评论",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -631,7 +673,7 @@ const docTemplate = `{
         },
         "/echo/page": {
             "get": {
-                "description": "获取Echo列表，支持分页，兼容 GET Query 和 POST JSON 请求",
+                "description": "Deprecated: 请使用 POST /echo/query 替代。获取Echo列表，支持分页，兼容 GET Query 和 POST JSON 请求",
                 "consumes": [
                     "application/json"
                 ],
@@ -641,7 +683,7 @@ const docTemplate = `{
                 "tags": [
                     "Echo"
                 ],
-                "summary": "获取Echo列表（分页）",
+                "summary": "获取Echo列表（分页）[Deprecated]",
                 "parameters": [
                     {
                         "type": "integer",
@@ -674,7 +716,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "获取Echo列表，支持分页，兼容 GET Query 和 POST JSON 请求",
+                "description": "Deprecated: 请使用 POST /echo/query 替代。获取Echo列表，支持分页，兼容 GET Query 和 POST JSON 请求",
                 "consumes": [
                     "application/json"
                 ],
@@ -684,7 +726,7 @@ const docTemplate = `{
                 "tags": [
                     "Echo"
                 ],
-                "summary": "获取Echo列表（分页）",
+                "summary": "获取Echo列表（分页）[Deprecated]",
                 "parameters": [
                     {
                         "type": "integer",
@@ -717,9 +759,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/echo/tag/{tagid}": {
-            "get": {
-                "description": "根据标签 ID 获取包含该标签的 Echo 列表，支持 query 分页与搜索",
+        "/echo/query": {
+            "post": {
+                "description": "统一的 Echo 查询接口，支持分页、搜索、标签过滤、排序等组合条件",
                 "consumes": [
                     "application/json"
                 ],
@@ -729,7 +771,41 @@ const docTemplate = `{
                 "tags": [
                     "Echo"
                 ],
-                "summary": "获取指定标签 ID 的 Echo 列表",
+                "summary": "统一查询 Echo 列表",
+                "parameters": [
+                    {
+                        "description": "查询参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.EchoQueryDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询失败",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/echo/tag/{tagid}": {
+            "get": {
+                "description": "Deprecated: 请使用 POST /echo/query 的 tagIds 参数替代。根据标签 ID 获取包含该标签的 Echo 列表，支持 query 分页与搜索",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Echo"
+                ],
+                "summary": "获取指定标签 ID 的 Echo 列表 [Deprecated]",
                 "parameters": [
                     {
                         "type": "integer",
@@ -852,67 +928,90 @@ const docTemplate = `{
                 }
             }
         },
-        "/heatmap": {
+        "/file/stream": {
             "get": {
-                "description": "获取系统活动热力图数据，用于展示用户活动分布情况",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "按路径读取并返回文件流",
                 "produces": [
-                    "application/json"
+                    "application/octet-stream"
                 ],
                 "tags": [
-                    "通用功能"
+                    "文件管理"
                 ],
-                "summary": "获取热力图数据",
+                "summary": "按路径流式读取文件",
                 "responses": {
                     "200": {
-                        "description": "获取热力图数据失败",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.Response"
+                            "type": "file"
                         }
                     }
                 }
             }
         },
-        "/hello": {
+        "/file/tree": {
             "get": {
-                "description": "获取 Ech0 系统欢迎信息、版本号和 GitHub 地址",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "获取文件树结构",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "通用功能"
+                    "文件管理"
                 ],
-                "summary": "Hello Ech0",
+                "summary": "文件树",
                 "responses": {
                     "200": {
-                        "description": "获取欢迎信息成功",
+                        "description": "OK",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/handler.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
             }
         },
-        "/images/delete": {
+        "/file/{id}": {
+            "get": {
+                "description": "通过 ID 查询文件元信息",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "文件管理"
+                ],
+                "summary": "按 ID 获取文件",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
             "delete": {
-                "description": "用户删除已上传的图片，需传入图片 URL 和来源信息",
+                "description": "根据 ID 删除文件",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "文件管理"
+                ],
+                "summary": "删除文件",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/file/{id}/meta": {
+            "put": {
+                "description": "用于 ObjectFS 预签名直传完成后回填 size/width/height",
                 "consumes": [
                     "application/json"
                 ],
@@ -920,23 +1019,36 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "通用功能"
+                    "File"
                 ],
-                "summary": "删除图片",
+                "summary": "更新对象存储文件元信息",
                 "parameters": [
                     {
-                        "description": "图片删除请求体",
-                        "name": "imageDto",
+                        "type": "string",
+                        "description": "文件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "文件元信息",
+                        "name": "data",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ImageDto"
+                            "$ref": "#/definitions/model.UpdateFileMetaDto"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "删除失败",
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
@@ -944,9 +1056,98 @@ const docTemplate = `{
                 }
             }
         },
-        "/images/upload": {
+        "/file/{id}/stream": {
+            "get": {
+                "description": "通过 ID 读取并返回文件流",
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "文件管理"
+                ],
+                "summary": "按 ID 流式读取文件",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/files": {
+            "get": {
+                "description": "分页获取文件列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "文件管理"
+                ],
+                "summary": "文件列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/files/external": {
             "post": {
-                "description": "用户上传图片，成功后返回图片的访问 URL",
+                "description": "创建外部 URL 文件记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "文件管理"
+                ],
+                "summary": "创建外链文件",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/files/presign": {
+            "put": {
+                "description": "获取文件直传预签名 URL",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "文件管理"
+                ],
+                "summary": "获取文件预签名 URL",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/files/upload": {
+            "post": {
+                "description": "上传文件到存储系统",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -954,23 +1155,36 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "通用功能"
+                    "文件管理"
                 ],
-                "summary": "上传图片",
-                "parameters": [
-                    {
-                        "type": "file",
-                        "description": "图片文件",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
+                "summary": "上传文件",
                 "responses": {
                     "200": {
-                        "description": "上传失败",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.Response"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/healthz": {
+            "get": {
+                "description": "服务健康检查接口",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "系统"
+                ],
+                "summary": "健康检查",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -1127,6 +1341,51 @@ const docTemplate = `{
                 }
             }
         },
+        "/init/owner": {
+            "post": {
+                "description": "创建首个 Owner 账号",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "初始化"
+                ],
+                "summary": "初始化 Owner",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/init/status": {
+            "get": {
+                "description": "获取系统初始化状态",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "初始化"
+                ],
+                "summary": "获取初始化状态",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/login": {
             "post": {
                 "description": "用户通过用户名和密码登录，返回 JWT Token",
@@ -1156,6 +1415,123 @@ const docTemplate = `{
                         "description": "登录失败，返回错误信息",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/cancel": {
+            "post": {
+                "description": "取消当前迁移任务",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "迁移"
+                ],
+                "summary": "取消迁移",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/cleanup": {
+            "post": {
+                "description": "清理迁移临时文件与状态",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "迁移"
+                ],
+                "summary": "清理迁移",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/start": {
+            "post": {
+                "description": "启动迁移任务",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "迁移"
+                ],
+                "summary": "开始迁移",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/status": {
+            "get": {
+                "description": "查询当前迁移任务状态",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "迁移"
+                ],
+                "summary": "迁移状态",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/upload": {
+            "post": {
+                "description": "上传迁移源文件",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "迁移"
+                ],
+                "summary": "上传迁移包",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -1234,6 +1610,200 @@ const docTemplate = `{
                         "description": "获取 OAuth2 状态失败",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/panel/comments": {
+            "get": {
+                "description": "管理后台获取评论列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "评论管理"
+                ],
+                "summary": "评论管理列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/panel/comments/batch": {
+            "post": {
+                "description": "管理后台批量操作评论",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "评论管理"
+                ],
+                "summary": "批量操作评论",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/panel/comments/settings": {
+            "get": {
+                "description": "管理后台获取评论设置",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "评论管理"
+                ],
+                "summary": "获取评论设置",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "管理后台更新评论设置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "评论管理"
+                ],
+                "summary": "更新评论设置",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/panel/comments/settings/test-email": {
+            "post": {
+                "description": "管理后台发送评论邮件测试",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "评论管理"
+                ],
+                "summary": "测试评论邮件",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/panel/comments/{id}": {
+            "get": {
+                "description": "管理后台按 ID 获取评论详情",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "评论管理"
+                ],
+                "summary": "获取评论详情",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "管理后台删除评论",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "评论管理"
+                ],
+                "summary": "删除评论",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/panel/comments/{id}/hot": {
+            "patch": {
+                "description": "管理后台更新评论热度/置顶状态",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "评论管理"
+                ],
+                "summary": "更新评论置顶",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/panel/comments/{id}/status": {
+            "patch": {
+                "description": "管理后台更新评论状态",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "评论管理"
+                ],
+                "summary": "更新评论状态",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -1353,56 +1923,19 @@ const docTemplate = `{
         },
         "/rss": {
             "get": {
-                "description": "获取系统的RSS订阅源（Atom格式），用于订阅最新动态",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "获取 RSS/Atom 订阅源",
                 "produces": [
                     "application/rss+xml"
                 ],
                 "tags": [
                     "通用功能"
                 ],
-                "summary": "获取RSS订阅源",
+                "summary": "获取 RSS",
                 "responses": {
                     "200": {
-                        "description": "获取RSS失败",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/s3/presign": {
-            "put": {
-                "description": "获取用于上传文件到 S3 的预签名 URL",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "通用功能"
-                ],
-                "summary": "获取 S3 预签名 URL",
-                "parameters": [
-                    {
-                        "description": "S3 预签名请求体",
-                        "name": "s3Dto",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.GetPresignURLDto"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "获取预签名 URL 失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
+                            "type": "string"
                         }
                     }
                 }
@@ -1513,6 +2046,47 @@ const docTemplate = `{
                         "description": "更新设置失败",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/system/logs": {
+            "get": {
+                "description": "获取系统日志列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "系统"
+                ],
+                "summary": "系统日志",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/system/logs/stream": {
+            "get": {
+                "description": "SSE 方式订阅系统日志",
+                "produces": [
+                    "text/event-stream"
+                ],
+                "tags": [
+                    "系统"
+                ],
+                "summary": "系统日志流",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }
@@ -1782,8 +2356,8 @@ const docTemplate = `{
                 "summary": "更新 Webhook",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "要更新的 Webhook ID",
+                        "type": "string",
+                        "description": "要更新的 Webhook ID (UUID)",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -1821,8 +2395,8 @@ const docTemplate = `{
                 "summary": "删除 Webhook",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "要删除的 Webhook ID",
+                        "type": "string",
+                        "description": "要删除的 Webhook ID (UUID)",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -1838,9 +2412,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/website/title": {
-            "get": {
-                "description": "获取网站标题",
+        "/webhook/{id}/test": {
+            "post": {
+                "description": "根据 ID 触发一次 Webhook 测试请求",
                 "consumes": [
                     "application/json"
                 ],
@@ -1848,23 +2422,44 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "通用功能"
+                    "系统设置"
                 ],
-                "summary": "获取网站标题",
+                "summary": "测试 Webhook",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "网站URL",
-                        "name": "website_url",
-                        "in": "query",
+                        "description": "要测试的 Webhook ID (UUID)",
+                        "name": "id",
+                        "in": "path",
                         "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "获取网站标题失败",
+                        "description": "测试 Webhook 失败",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/website/title": {
+            "get": {
+                "description": "根据 URL 获取网站标题",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "通用功能"
+                ],
+                "summary": "获取网站标题",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -1882,44 +2477,32 @@ const docTemplate = `{
                 "data": {
                     "description": "Data 响应数据，具体内容因接口而异"
                 },
+                "error_code": {
+                    "description": "ErrorCode 业务错误码，可选",
+                    "type": "string"
+                },
+                "message_key": {
+                    "description": "MessageKey 国际化消息 key，可选",
+                    "type": "string"
+                },
+                "message_params": {
+                    "description": "MessageParams 国际化模板参数，可选",
+                    "type": "object",
+                    "additionalProperties": {}
+                },
                 "msg": {
                     "description": "Msg 返回信息，通常是状态描述",
                     "type": "string"
                 }
             }
         },
-        "model.AccessTokenSetting": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "description": "访问令牌创建时间，RFC3339 时间字符串",
-                    "type": "string"
-                },
-                "expiry": {
-                    "description": "指针类型，NULL 表示永不过期",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "访问令牌 ID",
-                    "type": "integer"
-                },
-                "name": {
-                    "description": "访问令牌名称",
-                    "type": "string"
-                },
-                "token": {
-                    "description": "访问令牌",
-                    "type": "string"
-                },
-                "user_id": {
-                    "description": "创建该访问令牌的用户 ID",
-                    "type": "integer"
-                }
-            }
-        },
         "model.AccessTokenSettingDto": {
             "type": "object",
             "properties": {
+                "audience": {
+                    "description": "访问令牌受众（public-client/cli/integration）",
+                    "type": "string"
+                },
                 "expiry": {
                     "description": "访问令牌过期策略（8_hours/1_month/never）",
                     "type": "string"
@@ -1927,35 +2510,13 @@ const docTemplate = `{
                 "name": {
                     "description": "访问令牌名称",
                     "type": "string"
-                }
-            }
-        },
-        "model.AgentSetting": {
-            "type": "object",
-            "properties": {
-                "api_key": {
-                    "description": "LLM API Key",
-                    "type": "string"
                 },
-                "base_url": {
-                    "description": "自定义 API URL（可选）",
-                    "type": "string"
-                },
-                "enable": {
-                    "description": "是否启用 Agent 功能",
-                    "type": "boolean"
-                },
-                "model": {
-                    "description": "LLM 模型名称",
-                    "type": "string"
-                },
-                "prompt": {
-                    "description": "Agent 额外使用的提示词",
-                    "type": "string"
-                },
-                "provider": {
-                    "description": "LLM 提供商 （OpenAI、DeepSeek、Anthropic、Gemini、阿里百炼、Ollama等）",
-                    "type": "string"
+                "scopes": {
+                    "description": "访问令牌权限范围",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -1988,19 +2549,6 @@ const docTemplate = `{
                 }
             }
         },
-        "model.BackupSchedule": {
-            "type": "object",
-            "properties": {
-                "cron_expression": {
-                    "description": "备份计划的 Cron 表达式",
-                    "type": "string"
-                },
-                "enable": {
-                    "description": "是否启用备份计划",
-                    "type": "boolean"
-                }
-            }
-        },
         "model.BackupScheduleDto": {
             "type": "object",
             "properties": {
@@ -2014,40 +2562,6 @@ const docTemplate = `{
                 }
             }
         },
-        "model.CommentSetting": {
-            "type": "object",
-            "properties": {
-                "comment_api": {
-                    "description": "评论 API 地址",
-                    "type": "string"
-                },
-                "enable_comment": {
-                    "description": "是否启用评论",
-                    "type": "boolean"
-                },
-                "provider": {
-                    "description": "评论提供者",
-                    "type": "string"
-                }
-            }
-        },
-        "model.CommentSettingDto": {
-            "type": "object",
-            "properties": {
-                "comment_api": {
-                    "description": "评论 API 地址",
-                    "type": "string"
-                },
-                "enable_comment": {
-                    "description": "是否启用评论",
-                    "type": "boolean"
-                },
-                "provider": {
-                    "description": "评论提供者",
-                    "type": "string"
-                }
-            }
-        },
         "model.Connected": {
             "type": "object",
             "properties": {
@@ -2056,69 +2570,45 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "model.Echo": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "extension": {
-                    "$ref": "#/definitions/model.EchoExtension"
-                },
-                "fav_count": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "images": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.Image"
-                    }
-                },
-                "layout": {
-                    "type": "string"
-                },
-                "private": {
-                    "type": "boolean"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.Tag"
-                    }
-                },
-                "user_id": {
-                    "type": "integer"
-                },
-                "username": {
                     "type": "string"
                 }
             }
         },
-        "model.EchoExtension": {
+        "model.EchoExtensionDto": {
             "type": "object",
             "properties": {
-                "echo_id": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
                 "payload": {
                     "type": "object",
                     "additionalProperties": true
                 },
                 "type": {
                     "type": "string"
+                }
+            }
+        },
+        "model.EchoQueryDto": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "search": {
+                    "type": "string"
+                },
+                "sortBy": {
+                    "type": "string"
+                },
+                "sortOrder": {
+                    "type": "string"
+                },
+                "tagIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -2135,7 +2625,7 @@ const docTemplate = `{
                     }
                 },
                 "extension": {
-                    "$ref": "#/definitions/model.EchoExtension"
+                    "$ref": "#/definitions/model.EchoExtensionDto"
                 },
                 "id": {
                     "type": "string"
@@ -2151,90 +2641,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/model.Tag"
                     }
-                }
-            }
-        },
-        "model.GetPresignURLDto": {
-            "type": "object",
-            "required": [
-                "file_name"
-            ],
-            "properties": {
-                "content_type": {
-                    "description": "文件的 MIME 类型",
-                    "type": "string"
-                },
-                "file_name": {
-                    "description": "原始文件名",
-                    "type": "string"
-                }
-            }
-        },
-        "model.Image": {
-            "type": "object",
-            "properties": {
-                "access_url": {
-                    "description": "可直接访问地址（前端渲染应优先使用）",
-                    "type": "string"
-                },
-                "height": {
-                    "description": "图片高度",
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "image_source": {
-                    "description": "图片来源: local/url/s3",
-                    "type": "string"
-                },
-                "image_url": {
-                    "description": "图片URL",
-                    "type": "string"
-                },
-                "echo_id": {
-                    "description": "关联的 Echo ID",
-                    "type": "integer"
-                },
-                "object_key": {
-                    "description": "对象存储的Key (如果是本地存储则为空)",
-                    "type": "string"
-                },
-                "width": {
-                    "description": "图片宽度",
-                    "type": "integer"
-                }
-            }
-        },
-        "model.ImageDto": {
-            "type": "object",
-            "required": [
-                "source",
-                "url"
-            ],
-            "properties": {
-                "access_url": {
-                    "description": "可直接访问地址（前端渲染应优先使用）",
-                    "type": "string"
-                },
-                "height": {
-                    "description": "图片高度",
-                    "type": "integer"
-                },
-                "object_key": {
-                    "description": "对象存储的 Key, 用于删除 S3/R2 上的图片",
-                    "type": "string"
-                },
-                "source": {
-                    "type": "string"
-                },
-                "url": {
-                    "description": "图片的 URL 地址",
-                    "type": "string"
-                },
-                "width": {
-                    "description": "图片宽度",
-                    "type": "integer"
                 }
             }
         },
@@ -2253,53 +2659,15 @@ const docTemplate = `{
                 }
             }
         },
-        "model.OAuth2Setting": {
-            "type": "object",
-            "properties": {
-                "auth_url": {
-                    "description": "OAuth2 授权 URL",
-                    "type": "string"
-                },
-                "client_id": {
-                    "description": "OAuth2 Client ID",
-                    "type": "string"
-                },
-                "client_secret": {
-                    "description": "OAuth2 Client Secret",
-                    "type": "string"
-                },
-                "enable": {
-                    "description": "是否启用 OAuth2 登录",
-                    "type": "boolean"
-                },
-                "provider": {
-                    "description": "OAuth2 提供商",
-                    "type": "string"
-                },
-                "redirect_uri": {
-                    "description": "OAuth2 重定向 URI",
-                    "type": "string"
-                },
-                "scopes": {
-                    "description": "OAuth2 请求的权限范围",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "token_url": {
-                    "description": "OAuth2 令牌 URL",
-                    "type": "string"
-                },
-                "user_info_url": {
-                    "description": "OAuth2 用户信息 URL",
-                    "type": "string"
-                }
-            }
-        },
         "model.OAuth2SettingDto": {
             "type": "object",
             "properties": {
+                "auth_redirect_allowed_return_urls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "auth_url": {
                     "type": "string"
                 },
@@ -2309,8 +2677,26 @@ const docTemplate = `{
                 "client_secret": {
                     "type": "string"
                 },
+                "cors_allowed_origins": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "enable": {
                     "type": "boolean"
+                },
+                "is_oidc": {
+                    "description": "是否启用 OIDC",
+                    "type": "boolean"
+                },
+                "issuer": {
+                    "description": "OIDC 颁发者",
+                    "type": "string"
+                },
+                "jwks_url": {
+                    "description": "OIDC JWKS URL",
+                    "type": "string"
                 },
                 "provider": {
                     "type": "string"
@@ -2332,30 +2718,16 @@ const docTemplate = `{
                 }
             }
         },
-        "model.OAuth2Status": {
+        "model.PageQueryDto": {
             "type": "object",
             "properties": {
-                "enabled": {
-                    "type": "boolean"
+                "page": {
+                    "type": "integer"
                 },
-                "oauth_ready": {
-                    "type": "boolean"
+                "pageSize": {
+                    "type": "integer"
                 },
-                "provider": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.PasskeySetting": {
-            "type": "object",
-            "properties": {
-                "webauthn_allowed_origins": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "webauthn_rp_id": {
+                "search": {
                     "type": "string"
                 }
             }
@@ -2374,31 +2746,6 @@ const docTemplate = `{
                 }
             }
         },
-        "model.PasskeyStatus": {
-            "type": "object",
-            "properties": {
-                "passkey_ready": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "model.PageQueryDto": {
-            "type": "object",
-            "properties": {
-                "page": {
-                    "description": "页码，从1开始",
-                    "type": "integer"
-                },
-                "pageSize": {
-                    "description": "每页大小",
-                    "type": "integer"
-                },
-                "search": {
-                    "description": "用于搜索的关键字",
-                    "type": "string"
-                }
-            }
-        },
         "model.RegisterDto": {
             "type": "object",
             "required": [
@@ -2406,60 +2753,14 @@ const docTemplate = `{
                 "username"
             ],
             "properties": {
+                "email": {
+                    "type": "string"
+                },
                 "password": {
                     "type": "string"
                 },
                 "username": {
                     "type": "string"
-                }
-            }
-        },
-        "model.S3Setting": {
-            "type": "object",
-            "properties": {
-                "access_key": {
-                    "description": "访问密钥 ID",
-                    "type": "string"
-                },
-                "bucket_name": {
-                    "description": "存储桶名称",
-                    "type": "string"
-                },
-                "cdn_url": {
-                    "description": "CDN 加速域名（可选，没有就走 Endpoint）",
-                    "type": "string"
-                },
-                "enable": {
-                    "description": "是否启用 S3 存储",
-                    "type": "boolean"
-                },
-                "endpoint": {
-                    "description": "S3 端点",
-                    "type": "string"
-                },
-                "path_prefix": {
-                    "description": "存储路径前缀，例如 \"uploads/\"，方便隔离目录",
-                    "type": "string"
-                },
-                "provider": {
-                    "description": "S3 服务提供商，例如 \"aws\", \"r2\", \"minio\", \"other\"",
-                    "type": "string"
-                },
-                "public_read": {
-                    "description": "上传时是否默认设置对象为 public-read",
-                    "type": "boolean"
-                },
-                "region": {
-                    "description": "区域",
-                    "type": "string"
-                },
-                "secret_key": {
-                    "description": "秘密访问密钥",
-                    "type": "string"
-                },
-                "use_ssl": {
-                    "description": "是否使用 SSL",
-                    "type": "boolean"
                 }
             }
         },
@@ -2512,43 +2813,6 @@ const docTemplate = `{
                 }
             }
         },
-        "model.SystemSetting": {
-            "type": "object",
-            "properties": {
-                "ICP_number": {
-                    "description": "备案号",
-                    "type": "string"
-                },
-                "allow_register": {
-                    "description": "是否允许注册'",
-                    "type": "boolean"
-                },
-                "custom_css": {
-                    "description": "自定义 CSS",
-                    "type": "string"
-                },
-                "custom_js": {
-                    "description": "自定义 JS",
-                    "type": "string"
-                },
-                "meting_api": {
-                    "description": "Meting API 地址",
-                    "type": "string"
-                },
-                "server_name": {
-                    "description": "服务器名称",
-                    "type": "string"
-                },
-                "server_url": {
-                    "description": "服务器地址",
-                    "type": "string"
-                },
-                "site_title": {
-                    "description": "站点标题",
-                    "type": "string"
-                }
-            }
-        },
         "model.SystemSettingDto": {
             "type": "object",
             "properties": {
@@ -2560,10 +2824,6 @@ const docTemplate = `{
                     "description": "是否允许注册",
                     "type": "boolean"
                 },
-                "comment_api": {
-                    "description": "评论 API 地址",
-                    "type": "string"
-                },
                 "custom_css": {
                     "description": "自定义 CSS",
                     "type": "string"
@@ -2572,8 +2832,28 @@ const docTemplate = `{
                     "description": "自定义 JS",
                     "type": "string"
                 },
+                "default_locale": {
+                    "description": "站点默认语言（如 zh-CN / en-US）",
+                    "type": "string"
+                },
+                "footer_content": {
+                    "description": "自定义页脚内容",
+                    "type": "string"
+                },
+                "footer_link": {
+                    "description": "自定义页脚链接",
+                    "type": "string"
+                },
                 "meting_api": {
                     "description": "Meting API 地址",
+                    "type": "string"
+                },
+                "server_logo": {
+                    "description": "服务器Logo",
+                    "type": "string"
+                },
+                "server_logo_file_id": {
+                    "description": "服务器Logo文件ID（用于确认临时文件）",
                     "type": "string"
                 },
                 "server_name": {
@@ -2594,18 +2874,36 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "created_at": {
-                    "description": "创建时间",
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "name": {
-                    "description": "标签名称",
                     "type": "string"
                 },
                 "usage_count": {
-                    "description": "使用计数",
+                    "type": "integer"
+                }
+            }
+        },
+        "model.UpdateFileMetaDto": {
+            "type": "object",
+            "required": [
+                "size"
+            ],
+            "properties": {
+                "content_type": {
+                    "type": "string"
+                },
+                "height": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "width": {
                     "type": "integer"
                 }
             }
@@ -2617,9 +2915,25 @@ const docTemplate = `{
                     "description": "头像地址\nexample: https://example.com/avatar.png",
                     "type": "string"
                 },
+                "avatar_file_id": {
+                    "description": "头像文件ID（用于确认临时文件转正）\nexample: 0195e2a7-54a9-7bcf-8df5-6d81d671f5c7",
+                    "type": "string"
+                },
+                "email": {
+                    "description": "邮箱\nexample: owner@example.com",
+                    "type": "string"
+                },
                 "is_admin": {
                     "description": "是否为管理员\nexample: false",
                     "type": "boolean"
+                },
+                "is_owner": {
+                    "description": "是否为Owner\nexample: false",
+                    "type": "boolean"
+                },
+                "locale": {
+                    "description": "语言偏好\nexample: zh-CN",
+                    "type": "string"
                 },
                 "password": {
                     "description": "密码\nexample: 123456",
@@ -2627,47 +2941,6 @@ const docTemplate = `{
                 },
                 "username": {
                     "description": "用户名\nexample: linsnow",
-                    "type": "string"
-                }
-            }
-        },
-        "model.Webhook": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "description": "创建时间",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "Webhook ID",
-                    "type": "integer"
-                },
-                "is_active": {
-                    "description": "启用/禁用状态",
-                    "type": "boolean"
-                },
-                "last_status": {
-                    "description": "最近调用状态（如 success, failed）",
-                    "type": "string"
-                },
-                "last_trigger": {
-                    "description": "最近触发时间",
-                    "type": "string"
-                },
-                "name": {
-                    "description": "Webhook 名称",
-                    "type": "string"
-                },
-                "secret": {
-                    "description": "签名密钥，用于请求验证（HMAC等）",
-                    "type": "string"
-                },
-                "updated_at": {
-                    "description": "更新时间",
-                    "type": "string"
-                },
-                "url": {
-                    "description": "Webhook URL",
                     "type": "string"
                 }
             }

@@ -7,60 +7,36 @@ definitions:
         type: integer
       data:
         description: Data 响应数据，具体内容因接口而异
+      error_code:
+        description: ErrorCode 业务错误码，可选
+        type: string
+      message_key:
+        description: MessageKey 国际化消息 key，可选
+        type: string
+      message_params:
+        additionalProperties: {}
+        description: MessageParams 国际化模板参数，可选
+        type: object
       msg:
         description: Msg 返回信息，通常是状态描述
         type: string
     type: object
-  model.AccessTokenSetting:
-    properties:
-      created_at:
-        description: 访问令牌创建时间，RFC3339 时间字符串
-        type: string
-      expiry:
-        description: 指针类型，NULL 表示永不过期
-        type: string
-      id:
-        description: 访问令牌 ID
-        type: integer
-      name:
-        description: 访问令牌名称
-        type: string
-      token:
-        description: 访问令牌
-        type: string
-      user_id:
-        description: 创建该访问令牌的用户 ID
-        type: integer
-    type: object
   model.AccessTokenSettingDto:
     properties:
+      audience:
+        description: 访问令牌受众（public-client/cli/integration）
+        type: string
       expiry:
         description: 访问令牌过期策略（8_hours/1_month/never）
         type: string
       name:
         description: 访问令牌名称
         type: string
-    type: object
-  model.AgentSetting:
-    properties:
-      api_key:
-        description: LLM API Key
-        type: string
-      base_url:
-        description: 自定义 API URL（可选）
-        type: string
-      enable:
-        description: 是否启用 Agent 功能
-        type: boolean
-      model:
-        description: LLM 模型名称
-        type: string
-      prompt:
-        description: Agent 额外使用的提示词
-        type: string
-      provider:
-        description: LLM 提供商 （OpenAI、DeepSeek、Anthropic、Gemini、阿里百炼、Ollama等）
-        type: string
+      scopes:
+        description: 访问令牌权限范围
+        items:
+          type: string
+        type: array
     type: object
   model.AgentSettingDto:
     properties:
@@ -83,15 +59,6 @@ definitions:
         description: LLM 提供商 （OpenAI、DeepSeek、Anthropic、Gemini、阿里百炼、Ollama等）
         type: string
     type: object
-  model.BackupSchedule:
-    properties:
-      cron_expression:
-        description: 备份计划的 Cron 表达式
-        type: string
-      enable:
-        description: 是否启用备份计划
-        type: boolean
-    type: object
   model.BackupScheduleDto:
     properties:
       cron_expression:
@@ -101,119 +68,38 @@ definitions:
         description: 是否启用备份计划
         type: boolean
     type: object
-  model.CommentProviderFieldMeta:
-    properties:
-      key:
-        description: 字段键名
-        type: string
-      label:
-        description: 字段名称
-        type: string
-      placeholder:
-        description: 输入提示
-        type: string
-      required:
-        description: 是否必填
-        type: boolean
-    type: object
-  model.CommentProviderMeta:
-    properties:
-      fields:
-        description: 字段定义
-        items:
-          $ref: '#/definitions/model.CommentProviderFieldMeta'
-        type: array
-      label:
-        description: 展示名
-        type: string
-      provider:
-        description: provider key
-        type: string
-    type: object
-  model.CommentProviderMetaResponse:
-    properties:
-      providers:
-        items:
-          $ref: '#/definitions/model.CommentProviderMeta'
-        type: array
-    type: object
-  model.CommentProviderSetting:
-    properties:
-      config:
-        additionalProperties: true
-        description: 提供者私有配置
-        type: object
-      css_url:
-        description: 可选样式地址（为空则使用默认）
-        type: string
-      script_url:
-        description: 可选脚本地址（为空则使用默认）
-        type: string
-    type: object
-  model.CommentSetting:
-    properties:
-      enable_comment:
-        description: 是否启用评论
-        type: boolean
-      provider:
-        description: 当前启用的评论提供者
-        type: string
-      providers:
-        additionalProperties:
-          $ref: '#/definitions/model.CommentProviderSetting'
-        description: 各评论提供者配置
-        type: object
-    type: object
-  model.CommentSettingDto:
-    properties:
-      enable_comment:
-        description: 是否启用评论
-        type: boolean
-      provider:
-        description: 当前启用的评论提供者
-        type: string
-      providers:
-        additionalProperties:
-          $ref: '#/definitions/model.CommentProviderSetting'
-        description: 各评论提供者配置
-        type: object
-    type: object
   model.Connected:
     properties:
       connect_url:
         description: 连接地址
         type: string
       id:
-        type: integer
+        type: string
     type: object
-  model.Echo:
+  model.EchoExtensionDto:
     properties:
-      content:
+      payload:
+        additionalProperties: true
+        type: object
+      type:
         type: string
-      created_at:
+    type: object
+  model.EchoQueryDto:
+    properties:
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      search:
         type: string
-      extension:
-        $ref: '#/definitions/model.EchoExtension'
-      fav_count:
-        type: integer
-      id:
-        type: integer
-      images:
+      sortBy:
+        type: string
+      sortOrder:
+        type: string
+      tagIds:
         items:
-          $ref: '#/definitions/model.Image'
+          type: string
         type: array
-      layout:
-        type: string
-      private:
-        type: boolean
-      tags:
-        items:
-          $ref: '#/definitions/model.Tag'
-        type: array
-      user_id:
-        type: integer
-      username:
-        type: string
     type: object
   model.EchoUpsertDto:
     properties:
@@ -224,7 +110,7 @@ definitions:
           type: object
         type: array
       extension:
-        $ref: '#/definitions/model.EchoExtension'
+        $ref: '#/definitions/model.EchoExtensionDto'
       id:
         type: string
       layout:
@@ -235,78 +121,6 @@ definitions:
         items:
           $ref: '#/definitions/model.Tag'
         type: array
-    type: object
-  model.EchoExtension:
-    properties:
-      echo_id:
-        type: string
-      id:
-        type: string
-      payload:
-        additionalProperties: true
-        type: object
-      type:
-        type: string
-    type: object
-  model.GetPresignURLDto:
-    properties:
-      content_type:
-        description: 文件的 MIME 类型
-        type: string
-      file_name:
-        description: 原始文件名
-        type: string
-    required:
-    - file_name
-    type: object
-  model.Image:
-    properties:
-      access_url:
-        description: 可直接访问地址（前端渲染应优先使用）
-        type: string
-      height:
-        description: 图片高度
-        type: integer
-      id:
-        type: integer
-      image_source:
-        description: '图片来源: local/url/s3'
-        type: string
-      image_url:
-        description: 图片URL
-        type: string
-      echo_id:
-        description: 关联的 Echo ID
-        type: integer
-      object_key:
-        description: 对象存储的Key (如果是本地存储则为空)
-        type: string
-      width:
-        description: 图片宽度
-        type: integer
-    type: object
-  model.ImageDto:
-    properties:
-      access_url:
-        description: 可直接访问地址（前端渲染应优先使用）
-        type: string
-      height:
-        description: 图片高度
-        type: integer
-      object_key:
-        description: 对象存储的 Key, 用于删除 S3/R2 上的图片
-        type: string
-      source:
-        type: string
-      url:
-        description: 图片的 URL 地址
-        type: string
-      width:
-        description: 图片宽度
-        type: integer
-    required:
-    - source
-    - url
     type: object
   model.LoginDto:
     properties:
@@ -318,48 +132,33 @@ definitions:
     - password
     - username
     type: object
-  model.OAuth2Setting:
-    properties:
-      auth_url:
-        description: OAuth2 授权 URL
-        type: string
-      client_id:
-        description: OAuth2 Client ID
-        type: string
-      client_secret:
-        description: OAuth2 Client Secret
-        type: string
-      enable:
-        description: 是否启用 OAuth2 登录
-        type: boolean
-      provider:
-        description: OAuth2 提供商
-        type: string
-      redirect_uri:
-        description: OAuth2 重定向 URI
-        type: string
-      scopes:
-        description: OAuth2 请求的权限范围
-        items:
-          type: string
-        type: array
-      token_url:
-        description: OAuth2 令牌 URL
-        type: string
-      user_info_url:
-        description: OAuth2 用户信息 URL
-        type: string
-    type: object
   model.OAuth2SettingDto:
     properties:
+      auth_redirect_allowed_return_urls:
+        items:
+          type: string
+        type: array
       auth_url:
         type: string
       client_id:
         type: string
       client_secret:
         type: string
+      cors_allowed_origins:
+        items:
+          type: string
+        type: array
       enable:
         type: boolean
+      is_oidc:
+        description: 是否启用 OIDC
+        type: boolean
+      issuer:
+        description: OIDC 颁发者
+        type: string
+      jwks_url:
+        description: OIDC JWKS URL
+        type: string
       provider:
         type: string
       redirect_uri:
@@ -373,22 +172,13 @@ definitions:
       user_info_url:
         type: string
     type: object
-  model.OAuth2Status:
+  model.PageQueryDto:
     properties:
-      enabled:
-        type: boolean
-      oauth_ready:
-        type: boolean
-      provider:
-        type: string
-    type: object
-  model.PasskeySetting:
-    properties:
-      webauthn_allowed_origins:
-        items:
-          type: string
-        type: array
-      webauthn_rp_id:
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      search:
         type: string
     type: object
   model.PasskeySettingDto:
@@ -400,25 +190,10 @@ definitions:
       webauthn_rp_id:
         type: string
     type: object
-  model.PasskeyStatus:
-    properties:
-      passkey_ready:
-        type: boolean
-    type: object
-  model.PageQueryDto:
-    properties:
-      page:
-        description: 页码，从1开始
-        type: integer
-      pageSize:
-        description: 每页大小
-        type: integer
-      search:
-        description: 用于搜索的关键字
-        type: string
-    type: object
   model.RegisterDto:
     properties:
+      email:
+        type: string
       password:
         type: string
       username:
@@ -426,42 +201,6 @@ definitions:
     required:
     - password
     - username
-    type: object
-  model.S3Setting:
-    properties:
-      access_key:
-        description: 访问密钥 ID
-        type: string
-      bucket_name:
-        description: 存储桶名称
-        type: string
-      cdn_url:
-        description: CDN 加速域名（可选，没有就走 Endpoint）
-        type: string
-      enable:
-        description: 是否启用 S3 存储
-        type: boolean
-      endpoint:
-        description: S3 端点
-        type: string
-      path_prefix:
-        description: 存储路径前缀，例如 "uploads/"，方便隔离目录
-        type: string
-      provider:
-        description: S3 服务提供商，例如 "aws", "r2", "minio", "other"
-        type: string
-      public_read:
-        description: 上传时是否默认设置对象为 public-read
-        type: boolean
-      region:
-        description: 区域
-        type: string
-      secret_key:
-        description: 秘密访问密钥
-        type: string
-      use_ssl:
-        description: 是否使用 SSL
-        type: boolean
     type: object
   model.S3SettingDto:
     properties:
@@ -499,33 +238,6 @@ definitions:
         description: 是否使用 SSL
         type: boolean
     type: object
-  model.SystemSetting:
-    properties:
-      ICP_number:
-        description: 备案号
-        type: string
-      allow_register:
-        description: 是否允许注册'
-        type: boolean
-      custom_css:
-        description: 自定义 CSS
-        type: string
-      custom_js:
-        description: 自定义 JS
-        type: string
-      meting_api:
-        description: Meting API 地址
-        type: string
-      server_name:
-        description: 服务器名称
-        type: string
-      server_url:
-        description: 服务器地址
-        type: string
-      site_title:
-        description: 站点标题
-        type: string
-    type: object
   model.SystemSettingDto:
     properties:
       ICP_number:
@@ -540,8 +252,23 @@ definitions:
       custom_js:
         description: 自定义 JS
         type: string
+      default_locale:
+        description: 站点默认语言（如 zh-CN / en-US）
+        type: string
+      footer_content:
+        description: 自定义页脚内容
+        type: string
+      footer_link:
+        description: 自定义页脚链接
+        type: string
       meting_api:
         description: Meting API 地址
+        type: string
+      server_logo:
+        description: 服务器Logo
+        type: string
+      server_logo_file_id:
+        description: 服务器Logo文件ID（用于确认临时文件）
         type: string
       server_name:
         description: 服务器名称
@@ -556,16 +283,27 @@ definitions:
   model.Tag:
     properties:
       created_at:
-        description: 创建时间
         type: string
       id:
-        type: integer
+        type: string
       name:
-        description: 标签名称
         type: string
       usage_count:
-        description: 使用计数
         type: integer
+    type: object
+  model.UpdateFileMetaDto:
+    properties:
+      content_type:
+        type: string
+      height:
+        type: integer
+      size:
+        minimum: 0
+        type: integer
+      width:
+        type: integer
+    required:
+    - size
     type: object
   model.UserInfoDto:
     properties:
@@ -574,11 +312,31 @@ definitions:
           头像地址
           example: https://example.com/avatar.png
         type: string
+      avatar_file_id:
+        description: |-
+          头像文件ID（用于确认临时文件转正）
+          example: 0195e2a7-54a9-7bcf-8df5-6d81d671f5c7
+        type: string
+      email:
+        description: |-
+          邮箱
+          example: owner@example.com
+        type: string
       is_admin:
         description: |-
           是否为管理员
           example: false
         type: boolean
+      is_owner:
+        description: |-
+          是否为Owner
+          example: false
+        type: boolean
+      locale:
+        description: |-
+          语言偏好
+          example: zh-CN
+        type: string
       password:
         description: |-
           密码
@@ -588,36 +346,6 @@ definitions:
         description: |-
           用户名
           example: linsnow
-        type: string
-    type: object
-  model.Webhook:
-    properties:
-      created_at:
-        description: 创建时间
-        type: string
-      id:
-        description: Webhook ID
-        type: integer
-      is_active:
-        description: 启用/禁用状态
-        type: boolean
-      last_status:
-        description: 最近调用状态（如 success, failed）
-        type: string
-      last_trigger:
-        description: 最近触发时间
-        type: string
-      name:
-        description: Webhook 名称
-        type: string
-      secret:
-        description: 签名密钥，用于请求验证（HMAC等）
-        type: string
-      updated_at:
-        description: 更新时间
-        type: string
-      url:
-        description: Webhook URL
         type: string
     type: object
   model.WebhookDto:
@@ -736,6 +464,20 @@ paths:
       summary: 获取 Agent 信息
       tags:
       - 系统设置
+  /agent/recent:
+    get:
+      description: 获取 Agent 近期动态列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 获取近期动态
+      tags:
+      - 系统设置
   /agent/settings:
     get:
       consumes:
@@ -789,42 +531,6 @@ paths:
       summary: 获取所有用户
       tags:
       - 用户管理
-  /audios/delete:
-    delete:
-      consumes:
-      - application/json
-      description: 用户删除已上传的音频文件
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 删除失败
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 删除音频
-      tags:
-      - 通用功能
-  /audios/upload:
-    post:
-      consumes:
-      - multipart/form-data
-      description: 用户上传音频文件，成功后返回音频的访问 URL
-      parameters:
-      - description: 音频文件
-        in: formData
-        name: file
-        required: true
-        type: file
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 上传失败
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 上传音频
-      tags:
-      - 通用功能
   /backup/export:
     get:
       consumes:
@@ -836,7 +542,7 @@ paths:
         "200":
           description: 导出备份失败
           schema:
-            $ref: '#/definitions/handler.Response'
+            type: string
       summary: 导出数据备份
       tags:
       - 系统备份
@@ -876,57 +582,93 @@ paths:
       summary: 更新备份计划
       tags:
       - 系统设置
-  /comment/settings:
+  /backup/snapshot:
+    post:
+      consumes:
+      - application/json
+      description: 仅在服务端创建本地快照；若配置了 S3 则尝试上传（失败静默）
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建快照失败
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: 手动创建快照
+      tags:
+      - 系统备份
+  /backup/snapshot/{taskId}:
     get:
       consumes:
       - application/json
-      description: 获取系统的评论相关设置
+      description: 根据 taskId 查询创建快照任务的执行状态
       produces:
       - application/json
       responses:
         "200":
-          description: 获取评论设置失败
+          description: 查询快照状态失败
           schema:
             $ref: '#/definitions/handler.Response'
-      summary: 获取评论设置
+      summary: 查询快照任务状态
       tags:
-      - 系统设置
-    put:
-      consumes:
-      - application/json
-      description: 更新系统的评论相关设置
-      parameters:
-      - description: 新的评论设置
-        in: body
-        name: commentSettings
-        required: true
-        schema:
-          $ref: '#/definitions/model.CommentSettingDto'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 更新评论设置失败
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 更新评论设置
-      tags:
-      - 系统设置
-  /comment/providers/meta:
+      - 系统备份
+  /comments:
     get:
-      consumes:
-      - application/json
-      description: 获取各评论服务提供者的动态字段定义
+      description: 按动态 ID 获取评论列表
       produces:
       - application/json
       responses:
         "200":
-          description: 获取评论提供者元数据失败
+          description: OK
           schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 获取评论提供者元数据
+            additionalProperties: true
+            type: object
+      summary: 获取评论列表
       tags:
-      - 系统设置
+      - 评论
+    post:
+      consumes:
+      - application/json
+      description: 提交新评论
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 创建评论
+      tags:
+      - 评论
+  /comments/form:
+    get:
+      description: 获取评论发布所需表单元数据
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 获取评论表单配置
+      tags:
+      - 评论
+  /comments/public:
+    get:
+      description: 获取公开评论流
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 获取公开评论
+      tags:
+      - 评论
   /connect:
     get:
       consumes:
@@ -1102,7 +844,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取Echo列表，支持分页，兼容 GET Query 和 POST JSON 请求
+      description: 'Deprecated: 请使用 POST /echo/query 替代。获取Echo列表，支持分页，兼容 GET Query
+        和 POST JSON 请求'
       parameters:
       - description: 页码（GET方式）
         in: query
@@ -1124,13 +867,14 @@ paths:
           description: 获取失败
           schema:
             $ref: '#/definitions/handler.Response'
-      summary: 获取Echo列表（分页）
+      summary: 获取Echo列表（分页）[Deprecated]
       tags:
       - Echo
     post:
       consumes:
       - application/json
-      description: 获取Echo列表，支持分页，兼容 GET Query 和 POST JSON 请求
+      description: 'Deprecated: 请使用 POST /echo/query 替代。获取Echo列表，支持分页，兼容 GET Query
+        和 POST JSON 请求'
       parameters:
       - description: 页码（GET方式）
         in: query
@@ -1152,14 +896,37 @@ paths:
           description: 获取失败
           schema:
             $ref: '#/definitions/handler.Response'
-      summary: 获取Echo列表（分页）
+      summary: 获取Echo列表（分页）[Deprecated]
+      tags:
+      - Echo
+  /echo/query:
+    post:
+      consumes:
+      - application/json
+      description: 统一的 Echo 查询接口，支持分页、搜索、标签过滤、排序等组合条件
+      parameters:
+      - description: 查询参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.EchoQueryDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询失败
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: 统一查询 Echo 列表
       tags:
       - Echo
   /echo/tag/{tagid}:
     get:
       consumes:
       - application/json
-      description: 根据标签 ID 获取包含该标签的 Echo 列表，支持 query 分页与搜索
+      description: 'Deprecated: 请使用 POST /echo/query 的 tagIds 参数替代。根据标签 ID 获取包含该标签的
+        Echo 列表，支持 query 分页与搜索'
       parameters:
       - description: 标签 ID
         in: path
@@ -1185,7 +952,7 @@ paths:
           description: 获取失败
           schema:
             $ref: '#/definitions/handler.Response'
-      summary: 获取指定标签 ID 的 Echo 列表
+      summary: 获取指定标签 ID 的 Echo 列表 [Deprecated]
       tags:
       - Echo
   /echo/today:
@@ -1203,84 +970,180 @@ paths:
       summary: 获取今天的Echo列表
       tags:
       - Echo
-  /heatmap:
-    get:
-      consumes:
-      - application/json
-      description: 获取系统活动热力图数据，用于展示用户活动分布情况
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 获取热力图数据失败
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 获取热力图数据
-      tags:
-      - 通用功能
-  /hello:
-    get:
-      consumes:
-      - application/json
-      description: 获取 Ech0 系统欢迎信息、版本号和 GitHub 地址
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 获取欢迎信息成功
-          schema:
-            allOf:
-            - $ref: '#/definitions/handler.Response'
-            - properties:
-                data:
-                  type: object
-              type: object
-      summary: Hello Ech0
-      tags:
-      - 通用功能
-  /images/delete:
+  /file/{id}:
     delete:
+      description: 根据 ID 删除文件
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 删除文件
+      tags:
+      - 文件管理
+    get:
+      description: 通过 ID 查询文件元信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 按 ID 获取文件
+      tags:
+      - 文件管理
+  /file/{id}/meta:
+    put:
       consumes:
       - application/json
-      description: 用户删除已上传的图片，需传入图片 URL 和来源信息
+      description: 用于 ObjectFS 预签名直传完成后回填 size/width/height
       parameters:
-      - description: 图片删除请求体
+      - description: 文件ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 文件元信息
         in: body
-        name: imageDto
+        name: data
         required: true
         schema:
-          $ref: '#/definitions/model.ImageDto'
+          $ref: '#/definitions/model.UpdateFileMetaDto'
       produces:
       - application/json
       responses:
         "200":
-          description: 删除失败
+          description: OK
           schema:
             $ref: '#/definitions/handler.Response'
-      summary: 删除图片
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: 更新对象存储文件元信息
       tags:
-      - 通用功能
-  /images/upload:
+      - File
+  /file/{id}/stream:
+    get:
+      description: 通过 ID 读取并返回文件流
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: 按 ID 流式读取文件
+      tags:
+      - 文件管理
+  /file/stream:
+    get:
+      description: 按路径读取并返回文件流
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: 按路径流式读取文件
+      tags:
+      - 文件管理
+  /file/tree:
+    get:
+      description: 获取文件树结构
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 文件树
+      tags:
+      - 文件管理
+  /files:
+    get:
+      description: 分页获取文件列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 文件列表
+      tags:
+      - 文件管理
+  /files/external:
+    post:
+      consumes:
+      - application/json
+      description: 创建外部 URL 文件记录
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 创建外链文件
+      tags:
+      - 文件管理
+  /files/presign:
+    put:
+      consumes:
+      - application/json
+      description: 获取文件直传预签名 URL
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 获取文件预签名 URL
+      tags:
+      - 文件管理
+  /files/upload:
     post:
       consumes:
       - multipart/form-data
-      description: 用户上传图片，成功后返回图片的访问 URL
-      parameters:
-      - description: 图片文件
-        in: formData
-        name: file
-        required: true
-        type: file
+      description: 上传文件到存储系统
       produces:
       - application/json
       responses:
         "200":
-          description: 上传失败
+          description: OK
           schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 上传图片
+            additionalProperties: true
+            type: object
+      summary: 上传文件
       tags:
-      - 通用功能
+      - 文件管理
+  /healthz:
+    get:
+      description: 服务健康检查接口
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 健康检查
+      tags:
+      - 系统
   /inbox:
     delete:
       consumes:
@@ -1380,6 +1243,36 @@ paths:
       summary: 获取未读消息
       tags:
       - 收件箱
+  /init/owner:
+    post:
+      consumes:
+      - application/json
+      description: 创建首个 Owner 账号
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 初始化 Owner
+      tags:
+      - 初始化
+  /init/status:
+    get:
+      description: 获取系统初始化状态
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 获取初始化状态
+      tags:
+      - 初始化
   /login:
     post:
       consumes:
@@ -1402,6 +1295,84 @@ paths:
       summary: 用户登录接口
       tags:
       - 用户认证
+  /migration/cancel:
+    post:
+      consumes:
+      - application/json
+      description: 取消当前迁移任务
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 取消迁移
+      tags:
+      - 迁移
+  /migration/cleanup:
+    post:
+      consumes:
+      - application/json
+      description: 清理迁移临时文件与状态
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 清理迁移
+      tags:
+      - 迁移
+  /migration/start:
+    post:
+      consumes:
+      - application/json
+      description: 启动迁移任务
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 开始迁移
+      tags:
+      - 迁移
+  /migration/status:
+    get:
+      description: 查询当前迁移任务状态
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 迁移状态
+      tags:
+      - 迁移
+  /migration/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 上传迁移源文件
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 上传迁移包
+      tags:
+      - 迁移
   /oauth2/settings:
     get:
       consumes:
@@ -1453,6 +1424,136 @@ paths:
       summary: 获取 OAuth2 状态
       tags:
       - 系统设置
+  /panel/comments:
+    get:
+      description: 管理后台获取评论列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 评论管理列表
+      tags:
+      - 评论管理
+  /panel/comments/{id}:
+    delete:
+      description: 管理后台删除评论
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 删除评论
+      tags:
+      - 评论管理
+    get:
+      description: 管理后台按 ID 获取评论详情
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 获取评论详情
+      tags:
+      - 评论管理
+  /panel/comments/{id}/hot:
+    patch:
+      description: 管理后台更新评论热度/置顶状态
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 更新评论置顶
+      tags:
+      - 评论管理
+  /panel/comments/{id}/status:
+    patch:
+      description: 管理后台更新评论状态
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 更新评论状态
+      tags:
+      - 评论管理
+  /panel/comments/batch:
+    post:
+      consumes:
+      - application/json
+      description: 管理后台批量操作评论
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 批量操作评论
+      tags:
+      - 评论管理
+  /panel/comments/settings:
+    get:
+      description: 管理后台获取评论设置
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 获取评论设置
+      tags:
+      - 评论管理
+    put:
+      consumes:
+      - application/json
+      description: 管理后台更新评论设置
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 更新评论设置
+      tags:
+      - 评论管理
+  /panel/comments/settings/test-email:
+    post:
+      consumes:
+      - application/json
+      description: 管理后台发送评论邮件测试
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 测试评论邮件
+      tags:
+      - 评论管理
   /passkey/settings:
     get:
       consumes:
@@ -1528,39 +1629,15 @@ paths:
       - 用户认证
   /rss:
     get:
-      consumes:
-      - application/json
-      description: 获取系统的RSS订阅源（Atom格式），用于订阅最新动态
+      description: 获取 RSS/Atom 订阅源
       produces:
       - application/rss+xml
       responses:
         "200":
-          description: 获取RSS失败
+          description: OK
           schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 获取RSS订阅源
-      tags:
-      - 通用功能
-  /s3/presign:
-    put:
-      consumes:
-      - application/json
-      description: 获取用于上传文件到 S3 的预签名 URL
-      parameters:
-      - description: S3 预签名请求体
-        in: body
-        name: s3Dto
-        required: true
-        schema:
-          $ref: '#/definitions/model.GetPresignURLDto'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 获取预签名 URL 失败
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 获取 S3 预签名 URL
+            type: string
+      summary: 获取 RSS
       tags:
       - 通用功能
   /s3/settings:
@@ -1635,6 +1712,33 @@ paths:
       summary: 更新设置
       tags:
       - 系统设置
+  /system/logs:
+    get:
+      description: 获取系统日志列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 系统日志
+      tags:
+      - 系统
+  /system/logs/stream:
+    get:
+      description: SSE 方式订阅系统日志
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: 系统日志流
+      tags:
+      - 系统
   /tag/{id}:
     delete:
       consumes:
@@ -1799,11 +1903,11 @@ paths:
       - application/json
       description: 根据 ID 删除指定的 Webhook 配置
       parameters:
-      - description: 要删除的 Webhook ID
+      - description: 要删除的 Webhook ID (UUID)
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -1819,11 +1923,11 @@ paths:
       - application/json
       description: 根据 ID 更新指定的 Webhook 配置
       parameters:
-      - description: 要更新的 Webhook ID
+      - description: 要更新的 Webhook ID (UUID)
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       - description: 新的 Webhook 配置
         in: body
         name: webhook
@@ -1840,24 +1944,38 @@ paths:
       summary: 更新 Webhook
       tags:
       - 系统设置
-  /website/title:
-    get:
+  /webhook/{id}/test:
+    post:
       consumes:
       - application/json
-      description: 获取网站标题
+      description: 根据 ID 触发一次 Webhook 测试请求
       parameters:
-      - description: 网站URL
-        in: query
-        name: website_url
+      - description: 要测试的 Webhook ID (UUID)
+        in: path
+        name: id
         required: true
         type: string
       produces:
       - application/json
       responses:
         "200":
-          description: 获取网站标题失败
+          description: 测试 Webhook 失败
           schema:
             $ref: '#/definitions/handler.Response'
+      summary: 测试 Webhook
+      tags:
+      - 系统设置
+  /website/title:
+    get:
+      description: 根据 URL 获取网站标题
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
       summary: 获取网站标题
       tags:
       - 通用功能

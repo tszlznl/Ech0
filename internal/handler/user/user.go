@@ -34,8 +34,8 @@ func NewUserHandler(userService service.Service) *UserHandler {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			login	body		model.LoginDto	true	"登录请求体"
-//	@Success		200		{object}	res.Response	"登录成功，返回JWT Token"
-//	@Failure		200		{object}	res.Response	"登录失败，返回错误信息"
+//	@Success		200		{object}	handler.Response	"登录成功，返回JWT Token"
+//	@Failure		200		{object}	handler.Response	"登录失败，返回错误信息"
 //	@Router			/login [post]
 func (userHandler *UserHandler) Login() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -73,8 +73,8 @@ func (userHandler *UserHandler) Login() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			register	body		model.RegisterDto	true	"注册请求体"
-//	@Success		200			{object}	res.Response		"注册成功，code=1，msg=REGISTER_SUCCESS"
-//	@Failure		200			{object}	res.Response		"请求参数错误或注册失败，code=0，msg错误描述"
+//	@Success		200			{object}	handler.Response		"注册成功，code=1，msg=REGISTER_SUCCESS"
+//	@Failure		200			{object}	handler.Response		"请求参数错误或注册失败，code=0，msg错误描述"
 //	@Router			/register [post]
 func (userHandler *UserHandler) Register() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -108,8 +108,8 @@ func (userHandler *UserHandler) Register() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			user	body		model.UserInfoDto	true	"用户更新信息"
-//	@Success		200		{object}	res.Response		"更新成功，code=1，msg=UPDATE_USER_SUCCESS"
-//	@Failure		200		{object}	res.Response		"请求参数错误或更新失败，code=0，msg错误描述"
+//	@Success		200		{object}	handler.Response		"更新成功，code=1，msg=UPDATE_USER_SUCCESS"
+//	@Failure		200		{object}	handler.Response		"请求参数错误或更新失败，code=0，msg错误描述"
 //	@Security		ApiKeyAuth
 //	@Router			/user [put]
 func (userHandler *UserHandler) UpdateUser() gin.HandlerFunc {
@@ -144,8 +144,8 @@ func (userHandler *UserHandler) UpdateUser() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int				true	"用户ID"
-//	@Success		200	{object}	res.Response	"更新成功，code=1，msg=UPDATE_USER_SUCCESS"
-//	@Failure		200	{object}	res.Response	"参数错误或更新失败，code=0，msg错误描述"
+//	@Success		200	{object}	handler.Response	"更新成功，code=1，msg=UPDATE_USER_SUCCESS"
+//	@Failure		200	{object}	handler.Response	"参数错误或更新失败，code=0，msg错误描述"
 //	@Security		ApiKeyAuth
 //	@Router			/user/admin/{id} [put]
 func (userHandler *UserHandler) UpdateUserAdmin() gin.HandlerFunc {
@@ -178,8 +178,8 @@ func (userHandler *UserHandler) UpdateUserAdmin() gin.HandlerFunc {
 //	@Tags			用户管理
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response{data=[]model.UserInfoDto}	"获取成功，code=1，包含用户列表"
-//	@Failure		200	{object}	res.Response							"获取失败，code=0，msg错误描述"
+//	@Success		200	{object}	handler.Response	"获取成功，code=1，包含用户列表"
+//	@Failure		200	{object}	handler.Response							"获取失败，code=0，msg错误描述"
 //	@Security		ApiKeyAuth
 //	@Router			/allusers [get]
 func (userHandler *UserHandler) GetAllUsers() gin.HandlerFunc {
@@ -207,8 +207,8 @@ func (userHandler *UserHandler) GetAllUsers() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int				true	"用户ID"
-//	@Success		200	{object}	res.Response	"删除成功，code=1，msg=DELETE_USER_SUCCESS"
-//	@Failure		200	{object}	res.Response	"参数错误或删除失败，code=0，msg错误描述"
+//	@Success		200	{object}	handler.Response	"删除成功，code=1，msg=DELETE_USER_SUCCESS"
+//	@Failure		200	{object}	handler.Response	"参数错误或删除失败，code=0，msg错误描述"
 //	@Security		ApiKeyAuth
 //	@Router			/user/{id} [delete]
 func (userHandler *UserHandler) DeleteUser() gin.HandlerFunc {
@@ -241,8 +241,8 @@ func (userHandler *UserHandler) DeleteUser() gin.HandlerFunc {
 //	@Tags			用户管理
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response{data=model.UserInfoDto}	"获取成功，code=1，包含用户信息"
-//	@Failure		200	{object}	res.Response							"获取失败，code=0，msg错误描述"
+//	@Success		200	{object}	handler.Response	"获取成功，code=1，包含用户信息"
+//	@Failure		200	{object}	handler.Response							"获取失败，code=0，msg错误描述"
 //	@Security		ApiKeyAuth
 //	@Router			/user [get]
 func (userHandler *UserHandler) GetUserInfo() gin.HandlerFunc {

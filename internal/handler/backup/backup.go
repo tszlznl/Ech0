@@ -75,8 +75,8 @@ func (backupHandler *BackupHandler) ExportBackup() gin.HandlerFunc {
 //	@Tags			系统备份
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response	"创建快照成功"
-//	@Failure		200	{object}	res.Response	"创建快照失败"
+//	@Success		200	{object}	handler.Response	"创建快照成功"
+//	@Failure		200	{object}	handler.Response	"创建快照失败"
 //	@Router			/backup/snapshot [post]
 func (backupHandler *BackupHandler) CreateSnapshot() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -102,8 +102,8 @@ func (backupHandler *BackupHandler) CreateSnapshot() gin.HandlerFunc {
 //	@Tags			系统备份
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response	"查询快照状态成功"
-//	@Failure		200	{object}	res.Response	"查询快照状态失败"
+//	@Success		200	{object}	handler.Response	"查询快照状态成功"
+//	@Failure		200	{object}	handler.Response	"查询快照状态失败"
 //	@Router			/backup/snapshot/{taskId} [get]
 func (backupHandler *BackupHandler) GetSnapshotStatus() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {

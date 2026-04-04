@@ -28,8 +28,8 @@ func NewInboxHandler(inboxService service.Service) *InboxHandler {
 //	@Param			page		query		int				false	"页码"
 //	@Param			pageSize	query		int				false	"每页数量"
 //	@Param			search		query		string			false	"搜索关键词"
-//	@Success		200			{object}	res.Response	"获取成功"
-//	@Failure		200			{object}	res.Response	"获取失败"
+//	@Success		200			{object}	handler.Response	"获取成功"
+//	@Failure		200			{object}	handler.Response	"获取失败"
 //	@Router			/inbox [get]
 func (inboxHandler *InboxHandler) GetInboxList() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -60,8 +60,8 @@ func (inboxHandler *InboxHandler) GetInboxList() gin.HandlerFunc {
 //	@Tags			收件箱
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response	"获取成功"
-//	@Failure		200	{object}	res.Response	"获取失败"
+//	@Success		200	{object}	handler.Response	"获取成功"
+//	@Failure		200	{object}	handler.Response	"获取失败"
 //	@Router			/inbox/unread [get]
 func (inboxHandler *InboxHandler) GetUnreadInbox() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -85,8 +85,8 @@ func (inboxHandler *InboxHandler) GetUnreadInbox() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int				true	"收件箱ID"
-//	@Success		200	{object}	res.Response	"标记成功"
-//	@Failure		200	{object}	res.Response	"标记失败"
+//	@Success		200	{object}	handler.Response	"标记成功"
+//	@Failure		200	{object}	handler.Response	"标记失败"
 //	@Router			/inbox/{id}/read [put]
 func (inboxHandler *InboxHandler) MarkInboxAsRead() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -114,8 +114,8 @@ func (inboxHandler *InboxHandler) MarkInboxAsRead() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int				true	"收件箱ID"
-//	@Success		200	{object}	res.Response	"删除成功"
-//	@Failure		200	{object}	res.Response	"删除失败"
+//	@Success		200	{object}	handler.Response	"删除成功"
+//	@Failure		200	{object}	handler.Response	"删除失败"
 //	@Router			/inbox/{id} [delete]
 func (inboxHandler *InboxHandler) DeleteInbox() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -142,8 +142,8 @@ func (inboxHandler *InboxHandler) DeleteInbox() gin.HandlerFunc {
 //	@Tags			收件箱
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response	"清空成功"
-//	@Failure		200	{object}	res.Response	"清空失败"
+//	@Success		200	{object}	handler.Response	"清空成功"
+//	@Failure		200	{object}	handler.Response	"清空失败"
 //	@Router			/inbox [delete]
 func (inboxHandler *InboxHandler) ClearInbox() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {

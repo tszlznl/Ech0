@@ -27,8 +27,8 @@ func NewSettingHandler(settingService service.Service) *SettingHandler {
 //	@Tags			系统设置
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response{data=model.SystemSetting}	"获取设置成功"
-//	@Failure		200	{object}	res.Response							"获取设置失败"
+//	@Success		200	{object}	handler.Response	"获取设置成功"
+//	@Failure		200	{object}	handler.Response							"获取设置失败"
 //	@Router			/settings [get]
 func (settingHandler *SettingHandler) GetSettings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -55,8 +55,8 @@ func (settingHandler *SettingHandler) GetSettings() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			settings	body		model.SystemSettingDto	true	"新的系统设置"
-//	@Success		200			{object}	res.Response			"更新设置成功"
-//	@Failure		200			{object}	res.Response			"更新设置失败"
+//	@Success		200			{object}	handler.Response			"更新设置成功"
+//	@Failure		200			{object}	handler.Response			"更新设置失败"
 //	@Router			/settings [put]
 func (settingHandler *SettingHandler) UpdateSettings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -89,8 +89,8 @@ func (settingHandler *SettingHandler) UpdateSettings() gin.HandlerFunc {
 //	@Tags			系统设置
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response{data=model.S3Setting}	"获取 S3 存储设置成功"
-//	@Failure		200	{object}	res.Response						"获取 S3 存储设置失败"
+//	@Success		200	{object}	handler.Response	"获取 S3 存储设置成功"
+//	@Failure		200	{object}	handler.Response						"获取 S3 存储设置失败"
 //	@Router			/s3/settings [get]
 func (settingHandler *SettingHandler) GetS3Settings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -117,8 +117,8 @@ func (settingHandler *SettingHandler) GetS3Settings() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			s3Settings	body		model.S3SettingDto	true	"新的 S3 存储设置"
-//	@Success		200			{object}	res.Response		"更新 S3 存储设置成功"
-//	@Failure		200			{object}	res.Response		"更新 S3 存储设置失败"
+//	@Success		200			{object}	handler.Response		"更新 S3 存储设置成功"
+//	@Failure		200			{object}	handler.Response		"更新 S3 存储设置失败"
 //	@Router			/s3/settings [put]
 func (settingHandler *SettingHandler) UpdateS3Settings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -151,8 +151,8 @@ func (settingHandler *SettingHandler) UpdateS3Settings() gin.HandlerFunc {
 //	@Tags			系统设置
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response{data=model.OAuth2Setting}	"获取 OAuth2 设置成功"
-//	@Failure		200	{object}	res.Response							"获取 OAuth2 设置失败"
+//	@Success		200	{object}	handler.Response	"获取 OAuth2 设置成功"
+//	@Failure		200	{object}	handler.Response							"获取 OAuth2 设置失败"
 //	@Router			/oauth2/settings [get]
 func (settingHandler *SettingHandler) GetOAuth2Settings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -179,8 +179,8 @@ func (settingHandler *SettingHandler) GetOAuth2Settings() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			oauthSettings	body		model.OAuth2SettingDto	true	"新的 OAuth 设置"
-//	@Success		200				{object}	res.Response			"更新 OAuth 设置成功"
-//	@Failure		200				{object}	res.Response			"更新 OAuth 设置失败"
+//	@Success		200				{object}	handler.Response			"更新 OAuth 设置成功"
+//	@Failure		200				{object}	handler.Response			"更新 OAuth 设置失败"
 //	@Router			/oauth2/settings [put]
 func (settingHandler *SettingHandler) UpdateOAuth2Settings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -213,8 +213,8 @@ func (settingHandler *SettingHandler) UpdateOAuth2Settings() gin.HandlerFunc {
 //	@Tags			系统设置
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response{data=model.OAuth2Status}	"获取 OAuth2 状态成功"
-//	@Failure		200	{object}	res.Response							"获取 OAuth2 状态失败"
+//	@Success		200	{object}	handler.Response	"获取 OAuth2 状态成功"
+//	@Failure		200	{object}	handler.Response							"获取 OAuth2 状态失败"
 //	@Router			/oauth2/status [get]
 func (settingHandler *SettingHandler) GetOAuth2Status() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -240,8 +240,8 @@ func (settingHandler *SettingHandler) GetOAuth2Status() gin.HandlerFunc {
 //	@Tags			系统设置
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response{data=model.PasskeySetting}	"获取 Passkey 设置成功"
-//	@Failure		200	{object}	res.Response							"获取 Passkey 设置失败"
+//	@Success		200	{object}	handler.Response	"获取 Passkey 设置成功"
+//	@Failure		200	{object}	handler.Response							"获取 Passkey 设置失败"
 //	@Router			/passkey/settings [get]
 func (settingHandler *SettingHandler) GetPasskeySettings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -268,8 +268,8 @@ func (settingHandler *SettingHandler) GetPasskeySettings() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			passkeySettings	body		model.PasskeySettingDto	true	"新的 Passkey 设置"
-//	@Success		200				{object}	res.Response			"更新 Passkey 设置成功"
-//	@Failure		200				{object}	res.Response			"更新 Passkey 设置失败"
+//	@Success		200				{object}	handler.Response			"更新 Passkey 设置成功"
+//	@Failure		200				{object}	handler.Response			"更新 Passkey 设置失败"
 //	@Router			/passkey/settings [put]
 func (settingHandler *SettingHandler) UpdatePasskeySettings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -301,8 +301,8 @@ func (settingHandler *SettingHandler) UpdatePasskeySettings() gin.HandlerFunc {
 //	@Tags			系统设置
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response{data=model.PasskeyStatus}	"获取 Passkey 状态成功"
-//	@Failure		200	{object}	res.Response							"获取 Passkey 状态失败"
+//	@Success		200	{object}	handler.Response	"获取 Passkey 状态成功"
+//	@Failure		200	{object}	handler.Response							"获取 Passkey 状态失败"
 //	@Router			/passkey/status [get]
 func (settingHandler *SettingHandler) GetPasskeyStatus() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -328,8 +328,8 @@ func (settingHandler *SettingHandler) GetPasskeyStatus() gin.HandlerFunc {
 //	@Tags			系统设置
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response{data=[]model.Webhook}	"获取 Webhook 列表成功"
-//	@Failure		200	{object}	res.Response						"获取 Webhook 列表失败"
+//	@Success		200	{object}	handler.Response	"获取 Webhook 列表成功"
+//	@Failure		200	{object}	handler.Response						"获取 Webhook 列表失败"
 //	@Router			/webhook [get]
 func (settingHandler *SettingHandler) GetWebhook() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -356,8 +356,8 @@ func (settingHandler *SettingHandler) GetWebhook() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string			true	"要删除的 Webhook ID (UUID)"
-//	@Success		200	{object}	res.Response	"删除 Webhook 成功"
-//	@Failure		200	{object}	res.Response	"删除 Webhook 失败"
+//	@Success		200	{object}	handler.Response	"删除 Webhook 成功"
+//	@Failure		200	{object}	handler.Response	"删除 Webhook 失败"
 //	@Router			/webhook/{id} [delete]
 func (settingHandler *SettingHandler) DeleteWebhook() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -391,8 +391,8 @@ func (settingHandler *SettingHandler) DeleteWebhook() gin.HandlerFunc {
 //	@Produce		json
 //	@Param			id		path		string				true	"要更新的 Webhook ID (UUID)"
 //	@Param			webhook	body		model.WebhookDto	true	"新的 Webhook 配置"
-//	@Success		200		{object}	res.Response		"更新 Webhook 成功"
-//	@Failure		200		{object}	res.Response		"更新 Webhook 失败"
+//	@Success		200		{object}	handler.Response		"更新 Webhook 成功"
+//	@Failure		200		{object}	handler.Response		"更新 Webhook 失败"
 //	@Router			/webhook/{id} [put]
 func (settingHandler *SettingHandler) UpdateWebhook() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -434,8 +434,8 @@ func (settingHandler *SettingHandler) UpdateWebhook() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			webhook	body		model.WebhookDto	true	"新的 Webhook 配置"
-//	@Success		200		{object}	res.Response		"创建 Webhook 成功"
-//	@Failure		200		{object}	res.Response		"创建 Webhook 失败"
+//	@Success		200		{object}	handler.Response		"创建 Webhook 成功"
+//	@Failure		200		{object}	handler.Response		"创建 Webhook 失败"
 //	@Router			/webhook [post]
 func (settingHandler *SettingHandler) CreateWebhook() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -469,8 +469,8 @@ func (settingHandler *SettingHandler) CreateWebhook() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string			true	"要测试的 Webhook ID (UUID)"
-//	@Success		200	{object}	res.Response	"测试 Webhook 成功"
-//	@Failure		200	{object}	res.Response	"测试 Webhook 失败"
+//	@Success		200	{object}	handler.Response	"测试 Webhook 成功"
+//	@Failure		200	{object}	handler.Response	"测试 Webhook 失败"
 //	@Router			/webhook/{id}/test [post]
 func (settingHandler *SettingHandler) TestWebhook() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -501,8 +501,8 @@ func (settingHandler *SettingHandler) TestWebhook() gin.HandlerFunc {
 //	@Tags			系统设置
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response{data=[]model.AccessTokenSetting}	"列出访问令牌成功"
-//	@Failure		200	{object}	res.Response									"列出访问令牌失败"
+//	@Success		200	{object}	handler.Response	"列出访问令牌成功"
+//	@Failure		200	{object}	handler.Response									"列出访问令牌失败"
 //	@Router			/access-tokens [get]
 func (settingHandler *SettingHandler) ListAccessTokens() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -529,8 +529,8 @@ func (settingHandler *SettingHandler) ListAccessTokens() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			accessToken	body		model.AccessTokenSettingDto					true	"新的访问令牌信息"
-//	@Success		200			{object}	res.Response{data=model.AccessTokenSetting}	"创建访问令牌成功"
-//	@Failure		200			{object}	res.Response								"创建访问令牌失败"
+//	@Success		200			{object}	handler.Response	"创建访问令牌成功"
+//	@Failure		200			{object}	handler.Response								"创建访问令牌失败"
 //	@Router			/access-tokens [post]
 func (settingHandler *SettingHandler) CreateAccessToken() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -569,8 +569,8 @@ func (settingHandler *SettingHandler) CreateAccessToken() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int				true	"要删除的访问令牌 ID"
-//	@Success		200	{object}	res.Response	"删除访问令牌成功"
-//	@Failure		200	{object}	res.Response	"删除访问令牌失败"
+//	@Success		200	{object}	handler.Response	"删除访问令牌成功"
+//	@Failure		200	{object}	handler.Response	"删除访问令牌失败"
 //	@Router			/access-tokens/{id} [delete]
 func (settingHandler *SettingHandler) DeleteAccessToken() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -602,8 +602,8 @@ func (settingHandler *SettingHandler) DeleteAccessToken() gin.HandlerFunc {
 //	@Tags			系统设置
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response{data=model.BackupSchedule}	"获取备份计划成功"
-//	@Failure		200	{object}	res.Response							"获取备份计划失败"
+//	@Success		200	{object}	handler.Response	"获取备份计划成功"
+//	@Failure		200	{object}	handler.Response							"获取备份计划失败"
 //	@Router			/backup/schedule [get]
 func (settingHandler *SettingHandler) GetBackupScheduleSetting() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -630,8 +630,8 @@ func (settingHandler *SettingHandler) GetBackupScheduleSetting() gin.HandlerFunc
 //	@Accept			json
 //	@Produce		json
 //	@Param			backupSchedule	body		model.BackupScheduleDto	true	"备份计划设置"
-//	@Success		200				{object}	res.Response			"设置备份计划成功"
-//	@Failure		200				{object}	res.Response			"设置备份计划失败"
+//	@Success		200				{object}	handler.Response			"设置备份计划成功"
+//	@Failure		200				{object}	handler.Response			"设置备份计划失败"
 //	@Router			/backup/schedule [post]
 func (settingHandler *SettingHandler) UpdateBackupScheduleSetting() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -664,8 +664,8 @@ func (settingHandler *SettingHandler) UpdateBackupScheduleSetting() gin.HandlerF
 //	@Tags			系统设置
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response	"获取 Agent 信息成功"
-//	@Failure		200	{object}	res.Response	"获取 Agent 信息失败"
+//	@Success		200	{object}	handler.Response	"获取 Agent 信息成功"
+//	@Failure		200	{object}	handler.Response	"获取 Agent 信息失败"
 //	@Router			/agent/info [get]
 func (settingHandler *SettingHandler) GetAgentInfo() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -695,8 +695,8 @@ func (settingHandler *SettingHandler) GetAgentInfo() gin.HandlerFunc {
 //	@Tags			系统设置
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	res.Response{data=model.AgentSetting}	"获取 Agent 设置成功"
-//	@Failure		200	{object}	res.Response							"获取 Agent 设置失败"
+//	@Success		200	{object}	handler.Response	"获取 Agent 设置成功"
+//	@Failure		200	{object}	handler.Response							"获取 Agent 设置失败"
 //	@Router			/agent/settings [get]
 func (settingHandler *SettingHandler) GetAgentSettings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
@@ -723,8 +723,8 @@ func (settingHandler *SettingHandler) GetAgentSettings() gin.HandlerFunc {
 //	@Accept			json
 //	@Produce		json
 //	@Param			settings	body		model.AgentSettingDto	true	"新的 Agent 设置"
-//	@Success		200			{object}	res.Response			"更新 Agent 设置成功"
-//	@Failure		200			{object}	res.Response			"更新 Agent 设置失败"
+//	@Success		200			{object}	handler.Response			"更新 Agent 设置成功"
+//	@Failure		200			{object}	handler.Response			"更新 Agent 设置失败"
 //	@Router			/agent/settings [put]
 func (settingHandler *SettingHandler) UpdateAgentSettings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
