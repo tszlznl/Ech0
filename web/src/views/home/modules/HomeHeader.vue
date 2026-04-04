@@ -111,8 +111,8 @@ const logo = computed(() => {
 const fullTitle = computed(() => String(SystemSetting.value?.server_name ?? ''))
 const typedTitle = ref('')
 const isTypingTitle = ref(false)
-const CURSOR_INTRO_DELAY_MS = 2800
-const TITLE_TYPING_INTERVAL_MS = 75
+const CURSOR_INTRO_DELAY_MS = 2000
+const TITLE_TYPING_INTERVAL_MS = 85
 let introDelayTimer: ReturnType<typeof setTimeout> | null = null
 let typingTimer: ReturnType<typeof setTimeout> | null = null
 
