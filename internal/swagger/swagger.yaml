@@ -616,6 +616,45 @@ paths:
       summary: 获取评论表单配置
       tags:
       - 评论
+  /comments/integration:
+    post:
+      consumes:
+      - application/json
+      description: 供第三方集成平台（AI / 自动化）通过 access token 发布评论，免验证码与表单 token。需要 comment:write
+        scope 与 integration audience。
+      parameters:
+      - description: Bearer <access_token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 请求体
+        in: body
+        name: body
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 集成评论
+      tags:
+      - 评论
   /comments/public:
     get:
       description: 获取公开评论流

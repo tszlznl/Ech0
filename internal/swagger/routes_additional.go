@@ -165,6 +165,21 @@ func ListPublicComments() {}
 //	@Router			/comments [post]
 func CreateComment() {}
 
+// CreateIntegrationComment godoc
+//
+//	@Summary		集成评论
+//	@Description	供第三方集成平台（AI / 自动化）通过 access token 发布评论，免验证码与表单 token。需要 comment:write scope 与 integration audience。
+//	@Tags			评论
+//	@Accept			json
+//	@Produce		json
+//	@Param			Authorization	header		string	true	"Bearer <access_token>"
+//	@Param			body			body		object	true	"请求体"
+//	@Success		200				{object}	map[string]interface{}
+//	@Failure		401				{object}	map[string]interface{}
+//	@Failure		403				{object}	map[string]interface{}
+//	@Router			/comments/integration [post]
+func CreateIntegrationComment() {}
+
 // ListPanelComments godoc
 //
 //	@Summary		评论管理列表
