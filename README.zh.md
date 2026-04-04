@@ -160,7 +160,7 @@ docker run -d \
 - 📟 **TUI 管理界面**：提供终端交互界面，适合服务器环境管理。  
 - 🧰 **CLI 工具链**：提供 CLI 工具，支持自动化管理与脚本集成。  
 - 🔗 **开放 API 与 Webhook**：提供完整 API 与 Webhook，便于外部系统集成和自动化工作流。  
-- 🤖 **MCP（模型上下文协议）**：内建 [MCP Server](./docs/mcp-usage.md)，**近乎完整覆盖**核心功能，帖子、文件与统计等能力通过 **Streamable HTTP** 以 **Tools / Resources** 交给上层 AI 工作流，**Scoped JWT** 鉴权。  
+- 🤖 **MCP（模型上下文协议）**：内建 [MCP Server](./docs/usage/mcp-usage.md)，**近乎完整覆盖**核心功能，帖子、文件与统计等能力通过 **Streamable HTTP** 以 **Tools / Resources** 交给上层 AI 工作流，**Scoped JWT** 鉴权。  
 
 ### Experience
 
@@ -346,7 +346,7 @@ docker image prune -f
       Ech0 提供专用集成评论接口 `POST /api/comments/integration`，无需通过验证码或表单 token。使用前需在「访问令牌」管理中创建一个包含 `comment:write` scope 和 `integration` audience 的 access token，并在请求头中附带 `Authorization: Bearer <token>`。请求体字段与响应说明请以你部署实例上的 OpenAPI 文档为准：在浏览器打开 `/swagger/index.html`（本地开发一般为 `http://localhost:6277/swagger/index.html`）。该接口具有独立的频控策略，评论来源会标记为 `integration`，可在后台评论管理中识别。
 
 16. **想详细了解本地与对象存储的数据布局、`key` 映射规则，以及更换 S3 或本地 ⇄ 对象互迁时要注意什么？**  
-      请参阅仓库内文档：[存储迁移指南](./docs/storage-migration.md)。文中说明扁平 `key` 与 `schema.Resolve`、`PathPrefix`、入库 `url` 快照的含义，前台 `/api/files` 静态访问与 `stream` 接口的差异，以及更换 S3 服务商与本地存储和对象存储之间迁移的操作要点与注意事项。
+      请参阅仓库内文档：[存储迁移指南](./docs/usage/storage-migration.md)。文中说明扁平 `key` 与 `schema.Resolve`、`PathPrefix`、入库 `url` 快照的含义，前台 `/api/files` 静态访问与 `stream` 接口的差异，以及更换 S3 服务商与本地存储和对象存储之间迁移的操作要点与注意事项。
 
 ---
 

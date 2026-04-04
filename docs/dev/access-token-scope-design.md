@@ -1,7 +1,7 @@
 # Access Token 权限粒度改造设计（Ech0）
 
 日期：2026-03-23  
-状态：已评审草案（待实现计划）  
+状态：已落地（实现以 `internal/model/auth`、`internal/util/jwt`、`internal/middleware` 为准；本文档保留设计背景与决策记录）  
 范围：后端鉴权与令牌管理（不含完整 OAuth2 授权服务器）
 
 ## 1. 背景与目标

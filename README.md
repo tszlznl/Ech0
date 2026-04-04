@@ -158,7 +158,7 @@ See [Quick Deployment](#quick-deployment) for Docker Compose and Helm options.
 - 📟 **TUI Management Interface**: Provides a terminal UI, ideal for server-side administration.  
 - 🧰 **CLI Toolchain**: CLI tools for automation and script integration.  
 - 🔗 **Open API & Webhook**: Full API and Webhook support for external integration and automation workflows.  
-- 🤖 **MCP (Model Context Protocol)**: Built-in [MCP Server](./docs/mcp-usage.md) exposes **near-complete coverage** of core product features to the AI layer (posts, files, stats, and more)—**Streamable HTTP**, **Tools & Resources**, **scoped JWT**.  
+- 🤖 **MCP (Model Context Protocol)**: Built-in [MCP Server](./docs/usage/mcp-usage.md) exposes **near-complete coverage** of core product features to the AI layer (posts, files, stats, and more)—**Streamable HTTP**, **Tools & Resources**, **scoped JWT**.  
 
 ### Experience
 
@@ -345,7 +345,7 @@ docker image prune -f
     Ech0 provides a dedicated integration comment endpoint at `POST /api/comments/integration` that bypasses captcha and form-token verification. Create an access token with the `comment:write` scope and `integration` audience from "Access Token" management, then include it in the `Authorization: Bearer <token>` header. For request body fields and responses, use the OpenAPI docs served by your instance at `/swagger/index.html` (for local development, typically `http://localhost:6277/swagger/index.html`). This endpoint has its own rate limits, and comments are tagged with `source=integration` so they are identifiable in the admin panel.
 
 16. **Where can I find detailed documentation on local vs S3 storage rules, object keys, and migration?**  
-    See the in-repo [Storage migration guide](./docs/storage-migration.md). It explains how flat `key` values map to on-disk paths and S3 object keys (including `schema.Resolve` and `PathPrefix`), how stored `File.url` snapshots relate to the UI, the difference between static `/api/files` access and authenticated `stream` routes, and practical guidance for switching S3 providers or moving data between local disk and object storage.
+    See the in-repo [Storage migration guide](./docs/usage/storage-migration.md). It explains how flat `key` values map to on-disk paths and S3 object keys (including `schema.Resolve` and `PathPrefix`), how stored `File.url` snapshots relate to the UI, the difference between static `/api/files` access and authenticated `stream` routes, and practical guidance for switching S3 providers or moving data between local disk and object storage.
 
 ---
 

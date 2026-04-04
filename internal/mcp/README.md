@@ -93,4 +93,4 @@ MCP-compatible client / Host
 
 ## 相关文档
 
-- [MCP 接入指南](../../docs/mcp-usage.md) — Token 创建、Host 配置、curl 示例
+- [MCP 接入指南](../../docs/usage/mcp-usage.md) — Token 创建、Host 配置、curl 示例

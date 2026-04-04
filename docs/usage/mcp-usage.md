@@ -4,7 +4,7 @@ Ech0 内建 [MCP（Model Context Protocol）](https://modelcontextprotocol.io/) 
 
 > **Audience 要求**：MCP 端点**仅允许** Audience 为 **`mcp-remote`** 的 Access Token 访问。使用其他 audience（如 `public-client`、`cli`）的 Token 将被拒绝（HTTP 403）。
 
-> 架构与实现细节见 [internal/mcp/README.md](../internal/mcp/README.md)。
+> 架构与实现细节见 [internal/mcp/README.md](../../internal/mcp/README.md)。
 
 ## 接入方式
 
