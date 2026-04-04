@@ -1,15 +1,57 @@
 import type { Route } from "./+types/home";
+import {
+  absoluteUrl,
+  DEFAULT_DESCRIPTION,
+  SITE_NAME,
+  siteUrl,
+} from "../site";
+
+const PAGE_TITLE = `${SITE_NAME} — Self-hosted microblog & timeline`;
+const OG_IMAGE_PATH = "/screenshot.png";
+const OG_IMAGE_WIDTH = 1412;
+const OG_IMAGE_HEIGHT = 1131;
 
 export function meta({}: Route.MetaArgs) {
+  const canonical = absoluteUrl("/");
+  const imageUrl = absoluteUrl(OG_IMAGE_PATH);
   return [
-    { title: "Ech0 — Self-hosted microblog" },
+    { title: PAGE_TITLE },
+    { name: "description", content: DEFAULT_DESCRIPTION },
     {
-      name: "description",
+      name: "keywords",
       content:
-        "Self-hosted timeline you own. Share posts, optional comments. Lightweight and open source.",
+        "Ech0, microblog, self-hosted, timeline, open source, blog, personal website, RSS alternative, memo",
+    },
+    { name: "author", content: "Ech0" },
+    { name: "robots", content: "index, follow" },
+    { name: "theme-color", content: "#fdfdfc" },
+    { property: "og:type", content: "website" },
+    { property: "og:site_name", content: SITE_NAME },
+    { property: "og:title", content: PAGE_TITLE },
+    { property: "og:description", content: DEFAULT_DESCRIPTION },
+    { property: "og:url", content: canonical },
+    { property: "og:image", content: imageUrl },
+    { property: "og:image:width", content: String(OG_IMAGE_WIDTH) },
+    { property: "og:image:height", content: String(OG_IMAGE_HEIGHT) },
+    {
+      property: "og:image:alt",
+      content: "Ech0 web interface showing a personal timeline feed",
+    },
+    { property: "og:locale", content: "en_US" },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: PAGE_TITLE },
+    { name: "twitter:description", content: DEFAULT_DESCRIPTION },
+    { name: "twitter:image", content: imageUrl },
+    {
+      name: "twitter:image:alt",
+      content: "Ech0 web interface showing a personal timeline feed",
     },
   ];
 }
+
+export const links: Route.LinksFunction = () => [
+  { rel: "canonical", href: absoluteUrl("/") },
+];
 
 function ArrowIcon({ className }: { className?: string }) {
   return (
@@ -26,6 +68,23 @@ function ArrowIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: SITE_NAME,
+  description: DEFAULT_DESCRIPTION,
+  url: siteUrl(),
+  applicationCategory: "WebApplication",
+  operatingSystem: "Linux, Docker, self-hosted",
+  license: "https://github.com/lin-snow/Ech0/blob/main/LICENSE",
+  codeRepository: "https://github.com/lin-snow/Ech0",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+} as const;
 
 export default function Home() {
   return (
@@ -145,6 +204,11 @@ export default function Home() {
           </a>
         </footer>
       </main>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
     </div>
   );
 }
