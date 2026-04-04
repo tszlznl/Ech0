@@ -248,7 +248,7 @@ const handleExitUpdateMode = () => {
 
 .editor-actions__tag {
   min-width: 0;
-  flex: 0 1 9rem;
+  flex: 0 1 7rem;
 }
 
 .editor-actions__tag-box {
