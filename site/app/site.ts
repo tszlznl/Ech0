@@ -18,4 +18,4 @@ export function absoluteUrl(path: string): string {
 export const SITE_NAME = "Ech0";
 
 export const DEFAULT_DESCRIPTION =
-  "Self-hosted microblog and timeline you fully own. Publish short posts, links, and media; optional comments. Lightweight, easy to deploy, and open source.";
+  "Lightweight self-hosted timeline for thoughts, notes, and links. Run on your server with full control—no ads, no lock-in. Easy to deploy and open source.";

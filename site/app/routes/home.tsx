@@ -22,7 +22,7 @@ export function meta(_args: Route.MetaArgs) {
     { name: "author", content: "Ech0" },
     { name: "application-name", content: SITE_NAME },
     { name: "robots", content: "index, follow" },
-    { name: "theme-color", content: "#fdfdfc" },
+    { name: "theme-color", content: "#f6f4f0" },
     { property: "og:type", content: "website" },
     { property: "og:site_name", content: SITE_NAME },
     { property: "og:title", content: PAGE_TITLE },
@@ -53,11 +53,10 @@ export function meta(_args: Route.MetaArgs) {
 
 export const links: Route.LinksFunction = () => [
   { rel: "canonical", href: absoluteUrl("/") },
-  /* LCP: hero screenshot — same-origin URL for early discovery */
   { rel: "preload", href: OG_IMAGE_PATH, as: "image" },
 ];
 
-function ArrowIcon({ className }: { className?: string }) {
+function LeafIcon({ className }: { className?: string }) {
   return (
     <svg
       className={className}
@@ -68,7 +67,7 @@ function ArrowIcon({ className }: { className?: string }) {
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden
     >
-      <path d="M221.66 133.66l-72 72a8 8 0 01-11.32-11.32L196.69 136H40a8 8 0 010-16h156.69l-58.35-58.34a8 8 0 0111.32-11.32l72 72a8 8 0 010 11.32z" />
+      <path d="M208 40c-32 28-88 24-128 64-40 40-48 96-48 96s56-8 96-48c40-40 36-96 64-128 4-4 12-4 16 0s4 12 0 16zM72 216s24-8 48-32c28-28 32-72 32-72s-44 4-72 32c-24 24-32 48-32 48z" />
     </svg>
   );
 }
@@ -111,10 +110,13 @@ function buildHomeJsonLd() {
   } as const;
 }
 
+/** Dashed divider + compact gap to copy (line → text, block → block). */
+const dashedSection = "border-t border-dashed border-sand-6 mt-10 pt-5";
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-app">
-      <header className="mx-auto flex w-full max-w-[min(100%,30rem)] items-center justify-between px-5 py-8">
+      <header className="mx-auto flex w-full max-w-[min(100%,30rem)] items-center justify-between px-5 pt-8 pb-4">
         <a
           href="/"
           className="flex items-center gap-2.5 text-sand-12 no-underline"
@@ -126,7 +128,9 @@ export default function Home() {
             height={28}
             className="size-7 shrink-0 rounded-sm"
           />
-          <span className="text-[0.95rem] font-medium">Ech0</span>
+          <span className="text-[0.95rem] font-medium tracking-tight">
+            Ech0
+          </span>
         </a>
         <Link
           to="/docs"
@@ -137,91 +141,119 @@ export default function Home() {
         </Link>
       </header>
 
-      <main className="mx-auto flex w-full max-w-[min(100%,30rem)] flex-col gap-y-8 px-5 pb-24">
-        <section className="flex flex-col items-center gap-8 text-center">
-          <div className="w-full overflow-hidden rounded-xl shadow-[0_16px_40px_-12px_rgba(33,32,28,0.12)] ring-1 ring-sand-6/70">
-            <img
-              src="/screenshot.png"
-              alt="Ech0 interface preview"
-              className="block w-full align-middle"
-              width={1412}
-              height={1131}
-              sizes="(max-width: 480px) 100vw, min(100%, 30rem)"
-              decoding="sync"
-              fetchPriority="high"
-              loading="eager"
-            />
-          </div>
+      <div className="mx-auto w-full max-w-[min(100%,30rem)] px-5">
+        <div className="overflow-hidden rounded-xl shadow-[0_16px_40px_-12px_rgba(33,32,28,0.12)] ring-1 ring-sand-6/70">
+          <img
+            src="/screenshot.png"
+            alt="Ech0 interface preview"
+            className="block w-full align-middle"
+            width={1412}
+            height={1131}
+            sizes="(max-width: 480px) 100vw, min(100%, 30rem)"
+            decoding="sync"
+            fetchPriority="high"
+            loading="eager"
+          />
+        </div>
+      </div>
 
-          <h1 className="font-serif text-2xl font-normal leading-snug text-sand-12 text-balance">
-            <span className="block">Self-hosted microblog.</span>
-            <span className="mt-1 block">Own your timeline.</span>
+      <main className="mx-auto w-full max-w-[min(100%,30rem)] px-5 pb-28 pt-8">
+        {/* Hero: headline → positioning → CTA */}
+        <section className="flex flex-col items-center gap-8 text-center">
+          <h1 className="max-w-[22ch] font-serif text-[1.65rem] font-normal leading-[1.2] tracking-[-0.02em] text-sand-12 sm:text-[1.75rem]">
+            After capture comes publishing.
           </h1>
 
-          <div className="font-serif text-[0.9375rem] font-normal leading-[1.28] tracking-[0.01em] text-sand-11 [&>p+p]:mt-0.5">
-            <p>Not a team wiki.</p>
-            <p>Not a social network.</p>
-            <p className="text-sand-12">A public timeline on your server.</p>
+          <div className="font-serif text-[0.9375rem] font-normal leading-[1.45] tracking-[0.01em] text-sand-11 [&>p+p]:mt-1">
+            <p>Capture holds thoughts.</p>
+            <p>Ech0 is what comes next—share and connect.</p>
+            <p className="text-sand-12">
+              Your timeline on your server.
+            </p>
           </div>
 
-          <Link
-            to="/docs"
-            prefetch="viewport"
-            className="inline-flex items-center gap-1.5 rounded-full border border-sand-6 bg-sand-2/70 px-4 py-2 text-[13px] font-medium text-sand-11 shadow-[0_1px_2px_rgba(33,32,28,0.04)] no-underline transition-colors hover:border-sand-11/20 hover:bg-sand-2 hover:text-sand-12"
-          >
-            <ArrowIcon className="opacity-70" />
-            Get started
-          </Link>
+          <div className="flex flex-col items-center gap-3">
+            <Link
+              to="/docs"
+              prefetch="viewport"
+              className="inline-flex items-center gap-2 rounded-full border border-sand-6 bg-sand-2/80 px-5 py-2.5 text-[13px] font-medium text-sand-11 shadow-[0_1px_2px_rgba(33,32,28,0.05)] no-underline transition-colors hover:border-sand-11/25 hover:bg-sand-2 hover:text-sand-12"
+            >
+              <LeafIcon className="opacity-75" />
+              Get started
+            </Link>
+            <p className="text-[0.6875rem] font-medium tracking-wide text-sand-11/85">
+              AGPL-3.0 · lightweight · open source
+            </p>
+          </div>
+        </section>
 
-          <p className="text-xs font-medium text-sand-11/90">
-            Lightweight · easy to deploy · open source
+        {/* Quote + philosophy */}
+        <section className={`${dashedSection} text-left`}>
+          <p className="font-serif text-base italic leading-snug text-sand-11">
+            &ldquo;One timeline, purely.&rdquo;
+          </p>
+          <p className="mt-5 max-w-[34ch] text-[0.9375rem] leading-relaxed text-sand-10">
+            Markdown, links, media—one stream, your rules.
           </p>
         </section>
 
-        <section className="border-t border-sand-6 pt-8 font-serif text-[1.0625rem] leading-[1.65] text-sand-11">
-          <p className="font-normal text-sand-12">
-            After capture comes publishing.
-          </p>
-          <p className="mt-3 text-[0.98em]">
-            Ech0 is for what comes after quick notes: one timeline, optional
-            comments, data on your box.
-          </p>
-        </section>
-
-        <section className="font-serif text-[1.0625rem] leading-[1.65] text-sand-11">
-          <h2 className="text-[1.08em] font-semibold leading-snug text-sand-12">
-            Why Ech0
+        {/* Why choose */}
+        <section className={dashedSection}>
+          <h2 className="font-serif text-[1.125rem] font-semibold leading-snug text-sand-12">
+            Why choose Ech0?
           </h2>
-          <p className="mt-3 text-[0.98em]">
-            Skip PKM bloat and team docs—if you want a small, deployable
-            microblog, this fits.
-          </p>
-        </section>
-
-        <section className="font-serif text-[1.0625rem] leading-[1.65] text-sand-11">
-          <h2 className="text-[1.08em] font-semibold leading-snug text-sand-12">
-            What you get
-          </h2>
-          <ol className="mt-4 list-decimal space-y-3.5 pl-[1.35rem] text-[0.98em] marker:text-sand-11">
+          <ol className="mt-6 list-decimal space-y-3 pl-[1.25rem] text-[0.9375rem] leading-relaxed text-sand-11 marker:font-serif marker:text-sand-11">
             <li>
-              <span className="font-semibold text-sand-12">Post</span>
+              <span className="font-semibold text-sand-12">
+                After capture
+              </span>
               {" — "}
-              short posts, links, and media from one UI.
+              Jotting is step one; Ech0 is publish and connect—not a private
+              vault only.
             </li>
             <li>
-              <span className="font-semibold text-sand-12">Self-host</span>
+              <span className="font-semibold text-sand-12">
+                A real timeline
+              </span>
               {" — "}
-              your data stays on your infrastructure.
+              A stream others can find—still your space, not a generic feed.
             </li>
             <li>
-              <span className="font-semibold text-sand-12">Connect</span>
+              <span className="font-semibold text-sand-12">Keep it quiet</span>
               {" — "}
-              optional comments and sharing—lightweight, not a full network.
+              Self-hosted: your rules, no wiki sprawl or noise.
             </li>
           </ol>
         </section>
 
-        <footer className="border-t border-sand-6 pt-10 text-center text-sm text-sand-11">
+        {/* Why use */}
+        <section className={dashedSection}>
+          <h2 className="font-serif text-[1.125rem] font-semibold leading-snug text-sand-12">
+            Why use Ech0?
+          </h2>
+          <ol className="mt-6 list-decimal space-y-3 pl-[1.25rem] text-[0.9375rem] leading-relaxed text-sand-11 marker:font-serif marker:text-sand-11">
+            <li>
+              <span className="font-semibold text-sand-12">
+                Light &amp; self-hosted
+              </span>
+              {" — "}
+              Notes, links, media—one timeline on your hardware.
+            </li>
+            <li>
+              <span className="font-semibold text-sand-12">No lock-in</span>
+              {" — "}
+              Your server, your content—no ads or lock-in.
+            </li>
+            <li>
+              <span className="font-semibold text-sand-12">Open &amp; easy</span>
+              {" — "}
+              AGPL-3.0; easy deploy. RSS, comments, multi-instance—connection
+              without the noise.
+            </li>
+          </ol>
+        </section>
+
+        <footer className="mt-14 pt-12 text-center text-sm text-sand-11">
           <Link
             to="/docs"
             prefetch="viewport"

@@ -6,8 +6,8 @@
     "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-serif: "Source Serif 4", Georgia, "Times New Roman", ui-serif, serif;
-  --color-app: #fdfdfc;
-  --color-sand-1: #fdfdfc;
+  --color-app: #f6f4f0;
+  --color-sand-1: #f6f4f0;
   /* Between sand-1 and sand-6 — matches common Radix Sand 2 */
   --color-sand-2: #f5f4f1;
   --color-sand-6: #d7d4cf;
