@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import type { Route } from "./+types/home";
 import {
   absoluteUrl,
@@ -100,12 +101,12 @@ export default function Home() {
           />
           <span className="text-[0.95rem] font-medium">Ech0</span>
         </a>
-        <a
-          href="https://memo.vaaat.com/"
+        <Link
+          to="/docs"
           className="text-sm font-medium text-sand-11 transition-colors hover:text-sand-12"
         >
-          Live demo
-        </a>
+          Docs
+        </Link>
       </header>
 
       <main className="mx-auto flex w-full max-w-[min(100%,30rem)] flex-col gap-y-8 px-5 pb-24">
@@ -132,13 +133,13 @@ export default function Home() {
             <p className="text-sand-12">A public timeline on your server.</p>
           </div>
 
-          <a
-            href="https://github.com/lin-snow/Ech0/releases"
+          <Link
+            to="/docs"
             className="inline-flex items-center gap-1.5 rounded-full border border-sand-6 bg-sand-2/70 px-4 py-2 text-[13px] font-medium text-sand-11 shadow-[0_1px_2px_rgba(33,32,28,0.04)] no-underline transition-colors hover:border-sand-11/20 hover:bg-sand-2 hover:text-sand-12"
           >
             <ArrowIcon className="opacity-70" />
             Get started
-          </a>
+          </Link>
 
           <p className="text-xs font-medium text-sand-11/90">
             Lightweight · easy to deploy · open source
@@ -189,12 +190,19 @@ export default function Home() {
         </section>
 
         <footer className="border-t border-sand-6 pt-10 text-center text-sm text-sand-11">
-          <a
-            href="https://www.ech0.app/"
+          <Link
+            to="/docs"
             className="font-medium underline-offset-4 transition-colors hover:text-sand-12"
           >
             Docs
-          </a>
+          </Link>
+          <span className="mx-2 text-sand-6">·</span>
+          <Link
+            to="/privacy"
+            className="font-medium underline-offset-4 transition-colors hover:text-sand-12"
+          >
+            Privacy
+          </Link>
           <span className="mx-2 text-sand-6">·</span>
           <a
             href="https://github.com/lin-snow/Ech0"

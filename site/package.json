@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prebuild": "rm -rf public/docs-assets && mkdir -p public/docs-assets && test -d docs/imgs && cp -R docs/imgs public/docs-assets/ || true",
     "build": "react-router build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
@@ -11,10 +12,14 @@
   "dependencies": {
     "@react-router/node": "7.14.0",
     "@react-router/serve": "7.14.0",
+    "highlight.js": "^11.11.1",
     "isbot": "^5.1.37",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "react-router": "7.14.0"
+    "react-markdown": "^10.1.0",
+    "react-router": "7.14.0",
+    "rehype-highlight": "^7.0.2",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@react-router/dev": "7.14.0",

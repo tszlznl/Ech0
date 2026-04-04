@@ -1,0 +1,95 @@
+---
+title: 安装部署
+description: Docker、Compose、Helm 与二进制
+---
+
+# Docker 部署（推荐）
+
+```bash
+docker run -d \
+  --name ech0 \
+  -p 6277:6277 \
+  -v /opt/ech0/data:/app/data \
+  -e JWT_SECRET="Hello Echos" \
+  sn0wl1n/ech0:latest
+```
+
+> **提示：** 部署完成后访问 `http://<服务器IP>:6277` 即可开始使用。首次注册账号会自动成为 Owner（管理员）。数据默认持久化在 `/opt/ech0/data`。
+
+> **注意：** 请将 `JWT_SECRET` 替换为高强度随机字符串，不要使用默认值。
+
+---
+
+# Docker Compose 部署
+
+创建 `docker-compose.yml`：
+
+```yaml
+services:
+  ech0:
+    image: sn0wl1n/ech0:latest
+    container_name: ech0
+    ports:
+      - "6277:6277"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - JWT_SECRET=your-strong-secret-here
+    restart: unless-stopped
+```
+
+启动：
+
+```bash
+docker compose up -d
+```
+
+---
+
+# Kubernetes (Helm)
+
+Ech0 提供 Helm Chart，位于仓库 `charts/ech0/` 目录。
+
+```bash
+helm install ech0 ./charts/ech0 \
+  --set env.JWT_SECRET="your-strong-secret-here"
+```
+
+Helm Chart 包含 Deployment、Service、Ingress、PVC 等模板，可通过 `values.yaml` 自定义配置。
+
+---
+
+# 脚本安装
+
+> **提示：** 需确保网络可以访问 GitHub Release。
+
+```bash
+curl -fsSL "https://sh.soopy.cn/ech0.sh" -o ech0.sh && bash ech0.sh
+```
+
+安装后在终端输入 `ech0` 即可看到 TUI 菜单。
+
+---
+
+# 二进制直接运行
+
+从 [GitHub Releases](https://github.com/lin-snow/Ech0/releases) 下载对应平台的二进制：
+
+```bash
+tar -xzf ech0_linux_amd64.tar.gz
+./ech0 serve
+```
+
+支持平台：`linux/amd64`、`linux/arm64`、`linux/armv7`、`windows/amd64`。
+
+---
+
+# 初始化
+
+首次访问时系统处于未初始化状态，需创建 Owner 账号：
+
+1. 访问 `http://<服务器IP>:6277`
+2. 页面自动跳转到初始化界面
+3. 设置用户名和密码，完成 Owner 账号创建
+
+> **提示：** 系统默认最多支持 5 个用户账号。只有 Admin/Owner 角色可发布内容。
