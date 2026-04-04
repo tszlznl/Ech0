@@ -42,7 +42,8 @@ MCP-compatible client / Host
 │  ├─ adapter_user.go    → UserService         │
 │  ├─ adapter_comment.go → CommentService      │
 │  ├─ adapter_file.go    → FileService         │
-│  └─ adapter_common.go  → CommonService       │
+│  ├─ adapter_common.go  → CommonService       │
+│  └─ adapter_connect.go → ConnectService      │
 │  （不直连 Repository，强制走 Service 层）      │
 └──────────────────────────────────────────────┘
 ```
@@ -62,6 +63,7 @@ MCP-compatible client / Host
 | `adapter_comment.go` | Comment 域：list_comments tool，recent comments resource |
 | `adapter_file.go` | File 域：list/get/delete file tools |
 | `adapter_common.go` | Common 域：heatmap resource |
+| `adapter_connect.go` | Connect 域：list/add/delete connects tools，connect self/info resources |
 | `server.go` | MCP Server 核心：请求解析、方法分发、scope 校验、超时控制、审计日志 |
 | `handler.go` | Gin 桥接层：组装 Registry → Adapter → Server，暴露 `ServeEndpoint()` |
 | `server_test.go` | 单元测试：协议握手、tool 调用、scope 拒绝、resource 读取、错误处理 |

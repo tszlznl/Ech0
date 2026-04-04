@@ -13,7 +13,7 @@ func (a *Adapter) registerUserResources(reg *Registry) {
 		URI:         "ech0://profile/me",
 		Name:        "profile",
 		Title:       "Current User Profile",
-		Description: "Profile information of the authenticated user.",
+		Description: "JSON object with id, username, email, avatar URL, and admin flag of the token owner.",
 		MimeType:    "application/json",
 	}, a.resourceProfile, authModel.ScopeProfileRead)
 }

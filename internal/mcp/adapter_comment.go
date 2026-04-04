@@ -11,12 +11,12 @@ func (a *Adapter) registerCommentTools(reg *Registry) {
 	reg.RegisterTool(ToolDefinition{
 		Name:        "list_comments",
 		Title:       "List Comments",
-		Description: "List public comments for a specific post.",
+		Description: "List all approved public comments for a specific post. Returns an array of comment objects (author, content, created_at).",
 		InputSchema: map[string]any{
 			"type":     "object",
 			"required": []string{"echo_id"},
 			"properties": map[string]any{
-				"echo_id": map[string]any{"type": "string", "description": "Post UUID to list comments for"},
+				"echo_id": map[string]any{"type": "string", "format": "uuid", "description": "Post UUID whose comments to retrieve"},
 			},
 		},
 	}, a.listComments, authModel.ScopeCommentRead)
@@ -27,7 +27,7 @@ func (a *Adapter) registerCommentResources(reg *Registry) {
 		URI:         "ech0://comments/recent",
 		Name:        "recent_comments",
 		Title:       "Recent Comments",
-		Description: "Most recent public comments (default 20).",
+		Description: "The 20 most recent approved public comments across all posts, newest first.",
 		MimeType:    "application/json",
 	}, a.resourceRecentComments, authModel.ScopeCommentRead)
 }

@@ -7,6 +7,7 @@ import (
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	commentService "github.com/lin-snow/ech0/internal/service/comment"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
+	connectService "github.com/lin-snow/ech0/internal/service/connect"
 	echoService "github.com/lin-snow/ech0/internal/service/echo"
 	fileService "github.com/lin-snow/ech0/internal/service/file"
 	userService "github.com/lin-snow/ech0/internal/service/user"
@@ -18,6 +19,7 @@ type Adapter struct {
 	commentSvc commentService.Service
 	fileSvc    fileService.Service
 	commonSvc  commonService.Service
+	connectSvc connectService.Service
 }
 
 func NewAdapter(
@@ -26,6 +28,7 @@ func NewAdapter(
 	commentSvc commentService.Service,
 	fileSvc fileService.Service,
 	commonSvc commonService.Service,
+	connectSvc connectService.Service,
 ) *Adapter {
 	return &Adapter{
 		echoSvc:    echoSvc,
@@ -33,6 +36,7 @@ func NewAdapter(
 		commentSvc: commentSvc,
 		fileSvc:    fileSvc,
 		commonSvc:  commonSvc,
+		connectSvc: connectSvc,
 	}
 }
 
@@ -44,6 +48,8 @@ func (a *Adapter) RegisterAll(reg *Registry) {
 	a.registerCommentResources(reg)
 	a.registerFileTools(reg)
 	a.registerCommonResources(reg)
+	a.registerConnectTools(reg)
+	a.registerConnectResources(reg)
 }
 
 // --- Argument helpers ---

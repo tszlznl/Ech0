@@ -12,7 +12,7 @@ func (a *Adapter) registerCommonResources(reg *Registry) {
 		URI:         "ech0://stats/heatmap",
 		Name:        "heatmap",
 		Title:       "Post Heatmap",
-		Description: "Daily post counts for the past year (heatmap data).",
+		Description: "Daily post counts for the past 365 days. Returns an array of {date, count} objects, suitable for calendar heatmap rendering.",
 		MimeType:    "application/json",
 	}, a.resourceHeatmap, authModel.ScopeEchoRead)
 }

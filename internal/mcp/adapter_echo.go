@@ -16,16 +16,16 @@ func (a *Adapter) registerEchoTools(reg *Registry) {
 	reg.RegisterTool(ToolDefinition{
 		Name:        "search_posts",
 		Title:       "Search Posts",
-		Description: "Search posts with optional filters (query text, tags, pagination, sorting).",
+		Description: "Search posts by keyword and/or tag IDs. Returns paginated results: {items, total, page, page_size}. All parameters are optional; omitting everything returns the latest posts.",
 		InputSchema: map[string]any{
 			"type": "object",
 			"properties": map[string]any{
-				"query":      map[string]any{"type": "string", "description": "Full-text search keyword"},
-				"tag_ids":    map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Filter by tag IDs"},
-				"page":       map[string]any{"type": "integer", "description": "Page number (default 1)"},
-				"page_size":  map[string]any{"type": "integer", "description": "Items per page (default 20, max 100)"},
-				"sort_by":    map[string]any{"type": "string", "description": "Sort field: created_at (default) or fav_count"},
-				"sort_order": map[string]any{"type": "string", "description": "Sort order: desc (default) or asc"},
+				"query":      map[string]any{"type": "string", "description": "Full-text search keyword (matched against post content)"},
+				"tag_ids":    map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Filter by one or more tag UUIDs (AND logic)"},
+				"page":       map[string]any{"type": "integer", "description": "Page number, 1-based", "default": 1},
+				"page_size":  map[string]any{"type": "integer", "description": "Results per page (1–100)", "default": 20},
+				"sort_by":    map[string]any{"type": "string", "enum": []string{"created_at", "fav_count"}, "description": "Field to sort by", "default": "created_at"},
+				"sort_order": map[string]any{"type": "string", "enum": []string{"desc", "asc"}, "description": "Sort direction", "default": "desc"},
 			},
 		},
 	}, a.searchPosts, authModel.ScopeEchoRead)
@@ -33,12 +33,12 @@ func (a *Adapter) registerEchoTools(reg *Registry) {
 	reg.RegisterTool(ToolDefinition{
 		Name:        "get_post",
 		Title:       "Get Post",
-		Description: "Get a single post by its ID.",
+		Description: "Retrieve a single post by UUID. Returns the full post object including content, tags, like count, and timestamps.",
 		InputSchema: map[string]any{
 			"type":     "object",
 			"required": []string{"id"},
 			"properties": map[string]any{
-				"id": map[string]any{"type": "string", "description": "Post UUID"},
+				"id": map[string]any{"type": "string", "format": "uuid", "description": "Post UUID"},
 			},
 		},
 	}, a.getPost, authModel.ScopeEchoRead)
@@ -46,7 +46,7 @@ func (a *Adapter) registerEchoTools(reg *Registry) {
 	reg.RegisterTool(ToolDefinition{
 		Name:        "list_tags",
 		Title:       "List Tags",
-		Description: "List all available tags.",
+		Description: "List every tag in the system. Each entry contains the tag id, name, and usage count. No parameters needed.",
 		InputSchema: map[string]any{
 			"type":       "object",
 			"properties": map[string]any{},
@@ -56,14 +56,14 @@ func (a *Adapter) registerEchoTools(reg *Registry) {
 	reg.RegisterTool(ToolDefinition{
 		Name:        "create_post",
 		Title:       "Create Post",
-		Description: "Create a new post.",
+		Description: "Create a new post. Returns {id, message} on success. Content supports Markdown. Tags are matched or created by name.",
 		InputSchema: map[string]any{
 			"type":     "object",
 			"required": []string{"content"},
 			"properties": map[string]any{
-				"content": map[string]any{"type": "string", "description": "Post content (Markdown supported)"},
-				"tags":    map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Tag names to attach"},
-				"private": map[string]any{"type": "boolean", "description": "Whether the post is private (default false)"},
+				"content": map[string]any{"type": "string", "description": "Post body (Markdown supported)"},
+				"tags":    map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Tag names to attach; non-existent tags are created automatically"},
+				"private": map[string]any{"type": "boolean", "description": "Mark the post as private (only visible to the owner)", "default": false},
 			},
 		},
 	}, a.createPost, authModel.ScopeEchoWrite)
@@ -71,15 +71,15 @@ func (a *Adapter) registerEchoTools(reg *Registry) {
 	reg.RegisterTool(ToolDefinition{
 		Name:        "update_post",
 		Title:       "Update Post",
-		Description: "Update an existing post by ID.",
+		Description: "Update an existing post. Only supplied fields are changed. When tags is provided it fully replaces the tag list. Returns {id, message}.",
 		InputSchema: map[string]any{
 			"type":     "object",
 			"required": []string{"id"},
 			"properties": map[string]any{
-				"id":      map[string]any{"type": "string", "description": "Post UUID"},
-				"content": map[string]any{"type": "string", "description": "New content"},
-				"tags":    map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Replacement tag names"},
-				"private": map[string]any{"type": "boolean", "description": "Whether the post is private"},
+				"id":      map[string]any{"type": "string", "format": "uuid", "description": "Post UUID"},
+				"content": map[string]any{"type": "string", "description": "New body (Markdown)"},
+				"tags":    map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "New tag name list (replaces all existing tags)"},
+				"private": map[string]any{"type": "boolean", "description": "Set visibility"},
 			},
 		},
 	}, a.updatePost, authModel.ScopeEchoWrite)
@@ -87,12 +87,12 @@ func (a *Adapter) registerEchoTools(reg *Registry) {
 	reg.RegisterTool(ToolDefinition{
 		Name:        "delete_post",
 		Title:       "Delete Post",
-		Description: "Delete a post by ID.",
+		Description: "Permanently delete a post. Returns {id, message}. This action cannot be undone.",
 		InputSchema: map[string]any{
 			"type":     "object",
 			"required": []string{"id"},
 			"properties": map[string]any{
-				"id": map[string]any{"type": "string", "description": "Post UUID"},
+				"id": map[string]any{"type": "string", "format": "uuid", "description": "Post UUID"},
 			},
 		},
 	}, a.deletePost, authModel.ScopeEchoWrite)
@@ -100,11 +100,11 @@ func (a *Adapter) registerEchoTools(reg *Registry) {
 	reg.RegisterTool(ToolDefinition{
 		Name:        "get_today_posts",
 		Title:       "Get Today's Posts",
-		Description: "Get all posts published today.",
+		Description: "Return all posts created today. The boundary of 'today' depends on the timezone parameter. Returns an array of post objects.",
 		InputSchema: map[string]any{
 			"type": "object",
 			"properties": map[string]any{
-				"timezone": map[string]any{"type": "string", "description": "IANA timezone (e.g. Asia/Shanghai). Defaults to UTC."},
+				"timezone": map[string]any{"type": "string", "description": "IANA timezone name (e.g. Asia/Shanghai, America/New_York). Defaults to UTC if omitted."},
 			},
 		},
 	}, a.getTodayPosts, authModel.ScopeEchoRead)
@@ -112,12 +112,12 @@ func (a *Adapter) registerEchoTools(reg *Registry) {
 	reg.RegisterTool(ToolDefinition{
 		Name:        "like_post",
 		Title:       "Like Post",
-		Description: "Increment the like count of a post.",
+		Description: "Increment the like (favourite) count of a post by one. Returns {id, message}.",
 		InputSchema: map[string]any{
 			"type":     "object",
 			"required": []string{"id"},
 			"properties": map[string]any{
-				"id": map[string]any{"type": "string", "description": "Post UUID"},
+				"id": map[string]any{"type": "string", "format": "uuid", "description": "Post UUID"},
 			},
 		},
 	}, a.likePost, authModel.ScopeEchoWrite)
@@ -125,12 +125,12 @@ func (a *Adapter) registerEchoTools(reg *Registry) {
 	reg.RegisterTool(ToolDefinition{
 		Name:        "delete_tag",
 		Title:       "Delete Tag",
-		Description: "Delete a tag by ID.",
+		Description: "Delete a tag and remove its association from all posts. Returns {id, message}. This action cannot be undone.",
 		InputSchema: map[string]any{
 			"type":     "object",
 			"required": []string{"id"},
 			"properties": map[string]any{
-				"id": map[string]any{"type": "string", "description": "Tag UUID"},
+				"id": map[string]any{"type": "string", "format": "uuid", "description": "Tag UUID"},
 			},
 		},
 	}, a.deleteTag, authModel.ScopeEchoWrite)
@@ -141,7 +141,7 @@ func (a *Adapter) registerEchoResources(reg *Registry) {
 		URI:         "ech0://tags",
 		Name:        "tags",
 		Title:       "All Tags",
-		Description: "List of all tags with usage counts.",
+		Description: "JSON array of all tags. Each object has id, name, and the number of posts using this tag.",
 		MimeType:    "application/json",
 	}, a.resourceTags, authModel.ScopeEchoRead)
 
@@ -149,7 +149,7 @@ func (a *Adapter) registerEchoResources(reg *Registry) {
 		URI:         "ech0://posts/recent",
 		Name:        "recent_posts",
 		Title:       "Recent Posts",
-		Description: "Most recent posts (default 20).",
+		Description: "The 20 most recently created posts (newest first). Append ?limit=N (1–100) to the URI to change the count.",
 		MimeType:    "application/json",
 	}, a.resourceRecentPosts, authModel.ScopeEchoRead)
 
@@ -157,7 +157,7 @@ func (a *Adapter) registerEchoResources(reg *Registry) {
 		URI:         "ech0://posts/{id}",
 		Name:        "post",
 		Title:       "Post by ID",
-		Description: "A single post by its UUID.",
+		Description: "Full post object (content, tags, timestamps, like count) for a given UUID. Replace {id} with the post UUID.",
 		MimeType:    "application/json",
 	}, a.resourcePostByID, authModel.ScopeEchoRead)
 }

@@ -22,6 +22,7 @@ Ech0 的 MCP 端点采用 **Streamable HTTP**（JSON-RPC over HTTP），与 [MCP
   - 读写场景：再加上 `echo:write`
   - 评论场景：`comment:read`（查看）、`comment:write`（发表）
   - 文件场景：`file:read`（查看）、`file:write`（删除）
+  - 互联场景：`connect:read`（查看连接列表与对端信息）、`connect:write`（添加/删除连接）
 - **有效期**：建议选择 8 小时或 1 个月（不建议永不过期）
 
 创建后妥善保存 Token，它只会显示一次。
@@ -95,6 +96,15 @@ Ech0 的 MCP 端点采用 **Streamable HTTP**（JSON-RPC over HTTP），与 [MCP
 | `get_file` | 获取文件元信息 | `file:read` |
 | `delete_file` | 删除文件 | `file:write` |
 
+### Connects
+
+| Tool | 说明 | 所需 Scope |
+|------|------|-----------|
+| `list_connects` | 列出本实例已保存的对端连接（id + URL） | `connect:read` |
+| `get_connects_info` | 聚合获取所有对端的公开信息（名称、logo、帖子数等，有 30 分钟缓存） | `connect:read` |
+| `add_connect` | 添加远程 Ech0 实例连接 | `connect:write` |
+| `delete_connect` | 删除已保存的连接 | `connect:write` |
+
 ## 可用 Resources
 
 | Resource URI | 说明 | 所需 Scope |
@@ -105,6 +115,7 @@ Ech0 的 MCP 端点采用 **Streamable HTTP**（JSON-RPC over HTTP），与 [MCP
 | `ech0://profile/me` | 当前用户资料 | `profile:read` |
 | `ech0://comments/recent` | 最近的公开评论（默认 20 条） | `comment:read` |
 | `ech0://stats/heatmap` | 过去一年的每日帖子数量热力图 | `echo:read` |
+| `ech0://connect/self` | 当前实例的公开信息卡片（名称、URL、logo、帖子统计、版本） | `connect:read` |
 
 ## 安全说明
 

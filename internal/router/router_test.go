@@ -193,7 +193,7 @@ func buildTestHandlers() *handler.Bundle {
 		migrationHandler.NewMigrationHandler(nil),
 		dashboardHandler.NewDashboardHandler(nil),
 		agentHandler.NewAgentHandler(nil),
-		mcp.NewHandler(nil, nil, nil, nil, nil),
+		mcp.NewHandler(nil, nil, nil, nil, nil, nil),
 	)
 }
 

@@ -11,14 +11,14 @@ func (a *Adapter) registerFileTools(reg *Registry) {
 	reg.RegisterTool(ToolDefinition{
 		Name:        "list_files",
 		Title:       "List Files",
-		Description: "List uploaded files with optional filters.",
+		Description: "List uploaded file metadata with optional search and storage type filter. Returns paginated results: {items, total, page, page_size}. Does not return file contents.",
 		InputSchema: map[string]any{
 			"type": "object",
 			"properties": map[string]any{
-				"page":         map[string]any{"type": "integer", "description": "Page number (default 1)"},
-				"page_size":    map[string]any{"type": "integer", "description": "Items per page (default 20, max 100)"},
-				"search":       map[string]any{"type": "string", "description": "Search keyword"},
-				"storage_type": map[string]any{"type": "string", "description": "Filter by storage type (local or s3)"},
+				"page":         map[string]any{"type": "integer", "description": "Page number, 1-based", "default": 1},
+				"page_size":    map[string]any{"type": "integer", "description": "Results per page (1–100)", "default": 20},
+				"search":       map[string]any{"type": "string", "description": "Search by file name"},
+				"storage_type": map[string]any{"type": "string", "enum": []string{"local", "s3"}, "description": "Filter by storage backend"},
 			},
 		},
 	}, a.listFiles, authModel.ScopeFileRead)
@@ -26,12 +26,12 @@ func (a *Adapter) registerFileTools(reg *Registry) {
 	reg.RegisterTool(ToolDefinition{
 		Name:        "get_file",
 		Title:       "Get File",
-		Description: "Get file metadata by ID.",
+		Description: "Get metadata for a single file (name, size, mime type, storage type, URL, timestamps). Does not return file contents.",
 		InputSchema: map[string]any{
 			"type":     "object",
 			"required": []string{"id"},
 			"properties": map[string]any{
-				"id": map[string]any{"type": "string", "description": "File UUID"},
+				"id": map[string]any{"type": "string", "format": "uuid", "description": "File UUID"},
 			},
 		},
 	}, a.getFile, authModel.ScopeFileRead)
@@ -39,12 +39,12 @@ func (a *Adapter) registerFileTools(reg *Registry) {
 	reg.RegisterTool(ToolDefinition{
 		Name:        "delete_file",
 		Title:       "Delete File",
-		Description: "Delete a file by ID.",
+		Description: "Permanently delete a file from storage. Returns {id, message}. This action cannot be undone.",
 		InputSchema: map[string]any{
 			"type":     "object",
 			"required": []string{"id"},
 			"properties": map[string]any{
-				"id": map[string]any{"type": "string", "description": "File UUID"},
+				"id": map[string]any{"type": "string", "format": "uuid", "description": "File UUID"},
 			},
 		},
 	}, a.deleteFile, authModel.ScopeFileWrite)
