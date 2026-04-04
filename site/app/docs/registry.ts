@@ -83,6 +83,33 @@ export function listDocCards(): DocCard[] {
   return cards;
 }
 
+/**
+ * Shown as large hero cards on /docs — onboarding & deploy get visual priority.
+ * Order matches display order (not sort key).
+ */
+export const DOC_HERO_SLUGS: readonly string[] = [
+  "guide/overview",
+  "start/installation",
+];
+
+/** Split catalog into featured hero docs and everything else (order preserved). */
+export function partitionDocCards(cards: DocCard[]): {
+  featured: DocCard[];
+  rest: DocCard[];
+} {
+  const heroSet = new Set(DOC_HERO_SLUGS);
+  const featured: DocCard[] = [];
+  const rest: DocCard[] = [];
+  for (const c of cards) {
+    if (heroSet.has(c.slug)) featured.push(c);
+    else rest.push(c);
+  }
+  featured.sort(
+    (a, b) => DOC_HERO_SLUGS.indexOf(a.slug) - DOC_HERO_SLUGS.indexOf(b.slug),
+  );
+  return { featured, rest };
+}
+
 /** Explicit order: onboarding → guides → dev / community. */
 const DOC_ORDER: readonly string[] = [
   "guide/overview",
