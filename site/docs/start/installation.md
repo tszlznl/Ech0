@@ -1,9 +1,13 @@
 ---
 title: 安装部署
-description: Docker、Compose、Helm 与二进制
+description: 推荐用 Docker，其次 Compose / 脚本 / Helm
 ---
 
-# Docker 部署（推荐）
+> **推荐顺序**：**Docker 单容器** → Docker Compose → 安装脚本（systemd）→ 克隆仓库后用 Helm → 直接运行二进制。下文与仓库根目录 `README.zh.md` 保持一致。
+
+---
+
+## Docker（推荐）
 
 ```bash
 docker run -d \
@@ -14,15 +18,28 @@ docker run -d \
   sn0wl1n/ech0:latest
 ```
 
-> **提示：** 部署完成后访问 `http://<服务器IP>:6277` 即可开始使用。首次注册账号会自动成为 Owner（管理员）。数据默认持久化在 `/opt/ech0/data`。
-
-> **注意：** 请将 `JWT_SECRET` 替换为高强度随机字符串，不要使用默认值。
+- 部署完成后浏览器访问 `http://<服务器IP>:6277`。  
+- **请把** `JWT_SECRET="Hello Echos"` **改成你自己的随机字符串**，不要长期使用示例值。  
+- **第一个注册的账号**会成为管理员（Owner）；当前版本默认只有高权限账号可以发帖。  
+- 数据持久化在上例的 `/opt/ech0/data`（可按需改挂载路径）。
 
 ---
 
-# Docker Compose 部署
+## Docker Compose
 
-创建 `docker-compose.yml`：
+新建目录，放入 `docker-compose.yml`（可参考仓库示例或下列最小示例），在该目录执行：
+
+```bash
+docker compose up -d
+```
+
+若你本机命令仍是 `docker-compose`（带横杠），则使用：
+
+```bash
+docker-compose up -d
+```
+
+示例：
 
 ```yaml
 services:
@@ -34,62 +51,57 @@ services:
     volumes:
       - ./data:/app/data
     environment:
-      - JWT_SECRET=your-strong-secret-here
+      - JWT_SECRET=请改为随机强密码
     restart: unless-stopped
 ```
 
-启动：
+---
+
+## 脚本安装（systemd）
+
+与 README 相同，从仓库拉取安装脚本：
 
 ```bash
-docker compose up -d
+curl -fsSL "https://raw.githubusercontent.com/lin-snow/Ech0/main/scripts/ech0.sh" -o ech0.sh && bash ech0.sh
 ```
+
+- 脚本通过 **systemd** 安装和管理服务，涉及服务启停时通常需要 **root**。  
+- 自定义安装目录可执行：`bash ech0.sh install /your/path/ech0`（以脚本 `--help` 为准）。
 
 ---
 
-# Kubernetes (Helm)
+## Kubernetes（Helm）
 
-Ech0 提供 Helm Chart，位于仓库 `charts/ech0/` 目录。
+项目未提供在线 Helm 仓库，需要**先克隆仓库**再在本地安装：
 
 ```bash
-helm install ech0 ./charts/ech0 \
-  --set env.JWT_SECRET="your-strong-secret-here"
+git clone https://github.com/lin-snow/Ech0.git
+cd Ech0
+helm install ech0 ./charts/ech0
 ```
 
-Helm Chart 包含 Deployment、Service、Ingress、PVC 等模板，可通过 `values.yaml` 自定义配置。
+可自定义 release 名与命名空间，例如：
+
+```bash
+helm install my-ech0 ./charts/ech0 --namespace my-namespace --create-namespace
+```
+
+`JWT_SECRET` 等可通过 `values.yaml` 或 `--set` 传入，详见 Chart 目录内说明。
 
 ---
 
-# 脚本安装
+## 二进制
 
-> **提示：** 需确保网络可以访问 GitHub Release。
-
-```bash
-curl -fsSL "https://sh.soopy.cn/ech0.sh" -o ech0.sh && bash ech0.sh
-```
-
-安装后在终端输入 `ech0` 即可看到 TUI 菜单。
-
----
-
-# 二进制直接运行
-
-从 [GitHub Releases](https://github.com/lin-snow/Ech0/releases) 下载对应平台的二进制：
+从 [GitHub Releases](https://github.com/lin-snow/Ech0/releases) 下载对应平台压缩包，解压后：
 
 ```bash
-tar -xzf ech0_linux_amd64.tar.gz
 ./ech0 serve
 ```
 
-支持平台：`linux/amd64`、`linux/arm64`、`linux/armv7`、`windows/amd64`。
+常见架构包括 `linux/amd64`、`linux/arm64`、`linux/armv7`、`windows/amd64` 等。
 
 ---
 
-# 初始化
+## 首次使用
 
-首次访问时系统处于未初始化状态，需创建 Owner 账号：
-
-1. 访问 `http://<服务器IP>:6277`
-2. 页面自动跳转到初始化界面
-3. 设置用户名和密码，完成 Owner 账号创建
-
-> **提示：** 系统默认最多支持 5 个用户账号。只有 Admin/Owner 角色可发布内容。
+按向导完成初始化；用户数量、发帖权限等以当前版本 **设置界面** 为准。

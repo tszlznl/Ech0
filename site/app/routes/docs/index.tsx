@@ -48,13 +48,13 @@ export default function DocsIndex({ loaderData }: Route.ComponentProps) {
           <li key={card.slug}>
             <Link
               to={`/docs/${card.slug}`}
-              className="flex aspect-[5/3] flex-col justify-between rounded-xl border border-sand-6 bg-sand-2/50 p-2.5 text-left shadow-[0_1px_2px_rgba(33,32,28,0.04)] transition-colors hover:border-sand-11/25 hover:bg-sand-2"
+              className="flex aspect-10/3 min-h-0 flex-col justify-center gap-0.5 rounded-xl border border-sand-6 bg-sand-2/50 px-2 py-1.5 text-left shadow-[0_1px_2px_rgba(33,32,28,0.04)] transition-colors hover:border-sand-11/25 hover:bg-sand-2"
             >
-              <span className="font-serif text-xs font-semibold leading-snug text-sand-12 line-clamp-3">
+              <span className="font-serif text-xs font-semibold leading-tight text-sand-12 line-clamp-2">
                 {card.title}
               </span>
               {card.description ? (
-                <span className="mt-1 line-clamp-2 text-[0.6875rem] leading-snug text-sand-11">
+                <span className="line-clamp-1 text-[0.6875rem] leading-tight text-sand-11">
                   {card.description}
                 </span>
               ) : null}

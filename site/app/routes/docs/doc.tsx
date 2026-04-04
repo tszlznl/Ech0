@@ -19,10 +19,23 @@ export function meta({ data }: Route.MetaArgs) {
   ];
 }
 
+const LEGACY_DOC_REDIRECTS: Record<string, string> = {
+  "guide/connect": "/docs/guide/federation",
+  "guide/hub": "/docs/guide/federation",
+  "guide/oauth": "/docs/guide/sso",
+  "guide/passkey": "/docs/guide/sso",
+  "guide/inbox": "/docs",
+  "design/palette": "/docs",
+};
+
 export function loader({ params }: Route.LoaderArgs) {
   const splat = params["*"]?.replace(/\/$/, "") ?? "";
   if (splat === "" || splat === "README") {
     return redirect("/docs");
+  }
+  const legacy = LEGACY_DOC_REDIRECTS[splat];
+  if (legacy) {
+    return redirect(legacy);
   }
   const doc = getDoc(splat);
   if (!doc) throw new Response("Not Found", { status: 404 });

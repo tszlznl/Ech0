@@ -82,12 +82,24 @@ export function listDocCards(): DocCard[] {
   return cards;
 }
 
-/** Explicit order: 产品概览 first, then 安装部署, then the rest. */
+/** Explicit order: onboarding → guides → dev / community. */
 const DOC_ORDER: readonly string[] = [
   "guide/overview",
   "start/installation",
-  "start/faq",
+  "start/update",
   "guide/editor",
+  "start/faq",
+  "guide/federation",
+  "guide/sso",
+  "guide/comment",
+  "guide/agent",
+  "guide/webhook",
+  "guide/accesstoken",
+  "guide/s3",
+  "guide/datacontrol",
+  "dev/guide",
+  "start/community",
+  "start/credits",
 ];
 
 function docOrder(slug: string): number {
