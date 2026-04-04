@@ -161,6 +161,7 @@ See [Quick Deployment](#quick-deployment) for Docker Compose and Helm options.
 - 📟 **TUI Management Interface**: Provides a terminal UI, ideal for server-side administration.  
 - 🧰 **CLI Toolchain**: CLI tools for automation and script integration.  
 - 🔗 **Open API & Webhook**: Full API and Webhook support for external integration and automation workflows.  
+- 🤖 **MCP (Model Context Protocol)**: Built-in [MCP Server](./docs/mcp-usage.md) enables AI applications (Cursor, Claude Desktop, etc.) to access Ech0 via a standardized protocol.  
 
 ### Experience
 

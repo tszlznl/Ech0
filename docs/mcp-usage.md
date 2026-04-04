@@ -1,6 +1,8 @@
 # Ech0 MCP 接入指南
 
-Ech0 内建了 MCP（Model Context Protocol）Server，允许 AI 应用（如 Cursor、Claude Desktop 等）通过标准化协议访问你的 Ech0 实例。
+Ech0 内建了 [MCP（Model Context Protocol）](https://modelcontextprotocol.io/) Server，允许 AI 应用（如 Cursor、Claude Desktop 等）通过标准化协议访问你的 Ech0 实例。
+
+> 架构与实现细节见 [internal/mcp/README.md](../internal/mcp/README.md)，设计决策见 [MCP 设计文档](./ech0-mcp-design.md)。
 
 ## 快速开始
 
@@ -8,7 +10,7 @@ Ech0 内建了 MCP（Model Context Protocol）Server，允许 AI 应用（如 Cu
 
 在 Ech0 管理后台 **设置 → 访问令牌** 中创建一个新 Token：
 
-- **Audience**：选择 `mcp-remote`
+- **Audience**：选择 `mcp-remote`（MCP 专用 audience，区别于 `cli`、`integration` 等）
 - **Scopes**：根据需要勾选（建议最小权限）
   - 只读场景：`echo:read`、`profile:read`
   - 读写场景：再加上 `echo:write`
