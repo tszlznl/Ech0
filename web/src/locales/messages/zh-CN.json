@@ -320,8 +320,6 @@
     "themeLight": "浅色",
     "themeDark": "深色",
     "themeSunny": "晴日",
-    "themeSwitched": "主题已切换",
-    "themeCurrent": "当前主题为：{mode}",
     "githubAction": "Github"
   },
   "homeTop": {

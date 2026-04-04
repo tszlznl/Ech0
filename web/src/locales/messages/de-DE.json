@@ -320,8 +320,6 @@
     "themeLight": "Hell",
     "themeDark": "Dunkel",
     "themeSunny": "Sonnig",
-    "themeSwitched": "Theme gewechselt",
-    "themeCurrent": "Aktuelles Theme: {mode}",
     "githubAction": "GitHub"
   },
   "homeTop": {
