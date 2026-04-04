@@ -55,6 +55,7 @@ func (a *Adapter) RegisterAll(reg *Registry) {
 	a.registerCommentTools(reg)
 	a.registerCommentResources(reg)
 	a.registerFileTools(reg)
+	a.registerFileResources(reg)
 	a.registerCommonResources(reg)
 	a.registerConnectTools(reg)
 	a.registerConnectResources(reg)

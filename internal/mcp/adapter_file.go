@@ -69,6 +69,99 @@ func (a *Adapter) registerFileTools(reg *Registry) {
 	}, a.createExternalFile, authModel.ScopeFileWrite)
 }
 
+func (a *Adapter) registerFileResources(reg *Registry) {
+	reg.RegisterResource(ResourceDefinition{
+		URI:         "ech0://guide/file-upload",
+		Name:        "file_upload_guide",
+		Title:       "File Upload Guide",
+		Description: "Step-by-step instructions for uploading files via the REST API so they can be referenced in create_post/update_post echo_files.",
+		MimeType:    "text/markdown",
+	}, a.resourceFileUploadGuide, authModel.ScopeFileRead)
+}
+
+func (a *Adapter) resourceFileUploadGuide(_ context.Context, _ string) (*ResourceReadResult, error) {
+	guide := `# Ech0 File Upload Guide
+
+File upload is handled via the REST API (not MCP) because it requires multipart/form-data binary transfer.
+
+## Upload Endpoint
+
+` + "```" + `
+POST <base_url>/api/files/upload
+Content-Type: multipart/form-data
+Authorization: Bearer <access-token>
+` + "```" + `
+
+### Form Fields
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| file | Yes | The binary file to upload |
+| category | No | image (default), video, audio, document, file |
+| storage_type | No | local (default) or s3 |
+
+### Example (curl)
+
+` + "```" + `bash
+curl -X POST http://localhost:6277/api/files/upload \
+  -H "Authorization: Bearer <token>" \
+  -F "file=@/path/to/photo.png" \
+  -F "category=image"
+` + "```" + `
+
+### Response
+
+` + "```" + `json
+{
+  "code": 1,
+  "data": {
+    "id": "<file-uuid>",
+    "name": "photo.png",
+    "url": "/api/files/images/...",
+    "content_type": "image/png",
+    "size": 123456,
+    "width": 1920,
+    "height": 1080
+  }
+}
+` + "```" + `
+
+## Using the Uploaded File in a Post
+
+After uploading, use the returned ` + "`id`" + ` as ` + "`file_id`" + ` in create_post or update_post:
+
+` + "```" + `json
+{
+  "name": "create_post",
+  "arguments": {
+    "content": "Check out this image!",
+    "echo_files": [
+      { "file_id": "<file-uuid-from-upload>", "sort_order": 0 }
+    ]
+  }
+}
+` + "```" + `
+
+## External Files (No Upload Needed)
+
+If your file is already hosted at a public URL, use the MCP tool ` + "`create_external_file`" + ` instead—no upload required.
+
+## Constraints
+
+- Allowed MIME types are configured server-side (images, audio, video, etc.)
+- Max file size: configured per instance (default varies by category)
+- Only admin users can upload files
+- The access token must have the ` + "`file:write`" + ` scope
+`
+	return &ResourceReadResult{
+		Contents: []ResourceContent{{
+			URI:      "ech0://guide/file-upload",
+			MimeType: "text/markdown",
+			Text:     guide,
+		}},
+	}, nil
+}
+
 func (a *Adapter) listFiles(ctx context.Context, args map[string]any) (*ToolCallResult, error) {
 	page := intArg(args, "page", 1)
 	pageSize := intArg(args, "page_size", 20)

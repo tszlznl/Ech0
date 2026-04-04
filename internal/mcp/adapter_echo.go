@@ -82,7 +82,10 @@ func (a *Adapter) registerEchoTools(reg *Registry) {
 		Name:  "create_post",
 		Title: "Create Post",
 		Description: "Create a new post. At least one of content, echo_files, or extension must be provided. " +
-			"Returns {id, message}. Files must be uploaded beforehand via the REST upload API; pass their IDs in echo_files.",
+			"Returns {id, message}. To attach files, upload them first via the REST API " +
+			"(POST <base_url>/api/files/upload, multipart/form-data, field 'file') " +
+			"and pass the returned id values in echo_files. " +
+			"Read the resource ech0://guide/file-upload for full upload instructions.",
 		InputSchema: map[string]any{
 			"type": "object",
 			"properties": map[string]any{

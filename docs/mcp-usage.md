@@ -71,7 +71,7 @@ Ech0 的 MCP 端点采用 **Streamable HTTP**（JSON-RPC over HTTP），与 [MCP
 
 ## 能力总览
 
-当前 MCP 共暴露 **24 个 Tool** 与 **7 个 Resource**，按业务域整理如下。
+当前 MCP 共暴露 **24 个 Tool** 与 **8 个 Resource**，按业务域整理如下。
 
 ### Posts & Tags
 
@@ -106,8 +106,9 @@ Ech0 的 MCP 端点采用 **Streamable HTTP**（JSON-RPC over HTTP），与 [MCP
 | Tool | `get_file` | 获取单个文件元信息（名称、URL、尺寸等）；`id` 可用于 `echo_files` 引用 | `file:read` |
 | Tool | `delete_file` | 永久删除文件 | `file:write` |
 | Tool | `create_external_file` | 用外部 URL 注册文件记录（无需上传）；返回含 `id` 的文件元信息，可直接用于 `echo_files` | `file:write` |
+| Resource | `ech0://guide/file-upload` | 文件上传指南：REST 上传端点、参数、curl 示例、以及如何将上传结果用于 `create_post` | `file:read` |
 
-> **注意**：本地文件上传仍需通过实例的 REST API（`POST /api/files/upload`，multipart/form-data）完成。外部图床等已有 URL 的文件可直接使用 `create_external_file` 注册。
+> **提示**：本地文件上传通过 REST API（`POST /api/files/upload`，multipart/form-data）完成。AI Agent 可读取 `ech0://guide/file-upload` 获取完整操作指南。已有 URL 的外部文件可直接使用 `create_external_file` 注册。
 
 ### Connects（实例互联）
 
