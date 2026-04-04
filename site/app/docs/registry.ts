@@ -26,9 +26,10 @@ function labelFromSlug(slug: string): string {
   return base.replace(/-/g, " ");
 }
 
-function parseFrontMatterBlock(
-  fm: string,
-): { title: string; description: string } {
+function parseFrontMatterBlock(fm: string): {
+  title: string;
+  description: string;
+} {
   const titleM = fm.match(/^title:\s*(.+)$/m);
   const descM = fm.match(/^description:\s*(.+)$/m);
   return {
@@ -38,7 +39,10 @@ function parseFrontMatterBlock(
 }
 
 /** Strip YAML frontmatter and return body + meta */
-export function parseDocFile(raw: string, slug: string): {
+export function parseDocFile(
+  raw: string,
+  slug: string,
+): {
   title: string;
   description: string;
   body: string;
@@ -54,8 +58,7 @@ export function parseDocFile(raw: string, slug: string): {
   }
   const { title: fmTitle, description } = parseFrontMatterBlock(m[1]);
   const body = prepareMarkdownContent(m[2]);
-  const title =
-    fmTitle || extractTitleFromBody(body) || labelFromSlug(slug);
+  const title = fmTitle || extractTitleFromBody(body) || labelFromSlug(slug);
   return { title, description, body };
 }
 
@@ -63,9 +66,7 @@ export function listDocCards(): DocCard[] {
   const cards: DocCard[] = [];
   for (const key of Object.keys(raw)) {
     const nk = normalizePath(key);
-    const slug = nk
-      .replace(/^.*\/docs\//, "")
-      .replace(/\.md$/, "");
+    const slug = nk.replace(/^.*\/docs\//, "").replace(/\.md$/, "");
     if (!slug || slug === "README") continue;
     const parsed = parseDocFile(raw[key] as string, slug);
     cards.push({
@@ -114,9 +115,7 @@ export function getDoc(
   if (normalized === "") return null;
   const key = Object.keys(raw).find((k) => {
     const nk = normalizePath(k);
-    return (
-      nk.endsWith(`/${normalized}.md`) || nk.endsWith(`${normalized}.md`)
-    );
+    return nk.endsWith(`/${normalized}.md`) || nk.endsWith(`${normalized}.md`);
   });
   if (!key) return null;
   return parseDocFile(raw[key] as string, normalized);

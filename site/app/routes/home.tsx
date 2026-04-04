@@ -1,18 +1,13 @@
 import { Link } from "react-router";
 import type { Route } from "./+types/home";
-import {
-  absoluteUrl,
-  DEFAULT_DESCRIPTION,
-  SITE_NAME,
-  siteUrl,
-} from "../site";
+import { absoluteUrl, DEFAULT_DESCRIPTION, SITE_NAME, siteUrl } from "../site";
 
 const PAGE_TITLE = `${SITE_NAME} — Self-hosted microblog & timeline`;
 const OG_IMAGE_PATH = "/screenshot.png";
 const OG_IMAGE_WIDTH = 1412;
 const OG_IMAGE_HEIGHT = 1131;
 
-export function meta({}: Route.MetaArgs) {
+export function meta(_args: Route.MetaArgs) {
   const canonical = absoluteUrl("/");
   const imageUrl = absoluteUrl(OG_IMAGE_PATH);
   return [
@@ -91,7 +86,10 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-app">
       <header className="mx-auto flex w-full max-w-[min(100%,30rem)] items-center justify-between px-5 py-8">
-        <a href="/" className="flex items-center gap-2.5 text-sand-12 no-underline">
+        <a
+          href="/"
+          className="flex items-center gap-2.5 text-sand-12 no-underline"
+        >
           <img
             src="/logo.svg"
             alt="Ech0"

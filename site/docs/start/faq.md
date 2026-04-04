@@ -71,6 +71,6 @@ description: 与 README 常见问题对齐的简答
 
 ### AI 摘要、Webhook、API？
 
-- Agent：**系统设置 → Agent**，见 [智能摘要](/docs/guide/agent)。  
-- Webhook：[事件推送](/docs/guide/webhook)。  
+- Agent：**系统设置 → Agent**，见 [智能摘要](/docs/guide/agent)。
+- Webhook：[事件推送](/docs/guide/webhook)。
 - 通用 API：用 [访问令牌](/docs/guide/accesstoken) 调用，文档在 **`/swagger/index.html`**。

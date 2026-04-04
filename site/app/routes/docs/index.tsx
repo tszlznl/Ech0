@@ -3,13 +3,12 @@ import type { Route } from "./+types/index";
 import { listDocCards } from "../../docs/registry";
 import { absoluteUrl } from "../../site";
 
-export function meta({}: Route.MetaArgs) {
+export function meta(_args: Route.MetaArgs) {
   return [
     { title: "Documentation — Ech0" },
     {
       name: "description",
-      content:
-        "Ech0 documentation: deployment, features, and policies.",
+      content: "Ech0 documentation: deployment, features, and policies.",
     },
   ];
 }

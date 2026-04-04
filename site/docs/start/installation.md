@@ -18,9 +18,9 @@ docker run -d \
   sn0wl1n/ech0:latest
 ```
 
-- 部署完成后浏览器访问 `http://<服务器IP>:6277`。  
-- **请把** `JWT_SECRET="Hello Echos"` **改成你自己的随机字符串**，不要长期使用示例值。  
-- **第一个注册的账号**会成为管理员（Owner）；当前版本默认只有高权限账号可以发帖。  
+- 部署完成后浏览器访问 `http://<服务器IP>:6277`。
+- **请把** `JWT_SECRET="Hello Echos"` **改成你自己的随机字符串**，不要长期使用示例值。
+- **第一个注册的账号**会成为管理员（Owner）；当前版本默认只有高权限账号可以发帖。
 - 数据持久化在上例的 `/opt/ech0/data`（可按需改挂载路径）。
 
 ---
@@ -65,7 +65,7 @@ services:
 curl -fsSL "https://raw.githubusercontent.com/lin-snow/Ech0/main/scripts/ech0.sh" -o ech0.sh && bash ech0.sh
 ```
 
-- 脚本通过 **systemd** 安装和管理服务，涉及服务启停时通常需要 **root**。  
+- 脚本通过 **systemd** 安装和管理服务，涉及服务启停时通常需要 **root**。
 - 自定义安装目录可执行：`bash ech0.sh install /your/path/ech0`（以脚本 `--help` 为准）。
 
 ---

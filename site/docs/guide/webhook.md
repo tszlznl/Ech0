@@ -17,16 +17,16 @@ description: Webhook 配置、事件类型与验签
 
 ## 常见事件类型（节选）
 
-| Topic（示意） | 说明 |
-| --- | --- |
-| `user.created` / `user.updated` / `user.deleted` | 用户变更 |
-| `echo.created` / `echo.updated` / `echo.deleted` | 动态发布与变更 |
-| `comment.created` / `comment.status.updated` / `comment.deleted` | 评论 |
-| `resource.uploaded` | 文件上传完成 |
-| `system.backup` / `system.export` | 备份与导出 |
-| `system.backup_schedule.updated` | 备份计划变更 |
-| `inbox.clear` | 收件箱清空 |
-| `ech0.update.check` | 版本检查 |
+| Topic（示意）                                                    | 说明           |
+| ---------------------------------------------------------------- | -------------- |
+| `user.created` / `user.updated` / `user.deleted`                 | 用户变更       |
+| `echo.created` / `echo.updated` / `echo.deleted`                 | 动态发布与变更 |
+| `comment.created` / `comment.status.updated` / `comment.deleted` | 评论           |
+| `resource.uploaded`                                              | 文件上传完成   |
+| `system.backup` / `system.export`                                | 备份与导出     |
+| `system.backup_schedule.updated`                                 | 备份计划变更   |
+| `inbox.clear`                                                    | 收件箱清空     |
+| `ech0.update.check`                                              | 版本检查       |
 
 完整列表与字段以当前版本及 **`/swagger`** 为准。
 

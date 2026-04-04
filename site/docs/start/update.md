@@ -44,7 +44,7 @@ docker-compose pull && docker-compose up -d --force-recreate
 
 ## Kubernetes（Helm）
 
-1. 进入克隆下来的仓库目录，拉最新代码：`git pull`  
+1. 进入克隆下来的仓库目录，拉最新代码：`git pull`
 2. 升级 release：
 
 ```bash
