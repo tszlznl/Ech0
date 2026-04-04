@@ -10,6 +10,7 @@ const OG_IMAGE_HEIGHT = 1131;
 export function meta(_args: Route.MetaArgs) {
   const canonical = absoluteUrl("/");
   const imageUrl = absoluteUrl(OG_IMAGE_PATH);
+  const isHttps = imageUrl.startsWith("https:");
   return [
     { title: PAGE_TITLE },
     { name: "description", content: DEFAULT_DESCRIPTION },
@@ -19,6 +20,7 @@ export function meta(_args: Route.MetaArgs) {
         "Ech0, microblog, self-hosted, timeline, open source, blog, personal website, RSS alternative, memo",
     },
     { name: "author", content: "Ech0" },
+    { name: "application-name", content: SITE_NAME },
     { name: "robots", content: "index, follow" },
     { name: "theme-color", content: "#fdfdfc" },
     { property: "og:type", content: "website" },
@@ -27,6 +29,10 @@ export function meta(_args: Route.MetaArgs) {
     { property: "og:description", content: DEFAULT_DESCRIPTION },
     { property: "og:url", content: canonical },
     { property: "og:image", content: imageUrl },
+    { property: "og:image:type", content: "image/png" },
+    ...(isHttps
+      ? [{ property: "og:image:secure_url", content: imageUrl } as const]
+      : []),
     { property: "og:image:width", content: String(OG_IMAGE_WIDTH) },
     { property: "og:image:height", content: String(OG_IMAGE_HEIGHT) },
     {
@@ -47,6 +53,8 @@ export function meta(_args: Route.MetaArgs) {
 
 export const links: Route.LinksFunction = () => [
   { rel: "canonical", href: absoluteUrl("/") },
+  /* LCP: hero screenshot — same-origin URL for early discovery */
+  { rel: "preload", href: OG_IMAGE_PATH, as: "image" },
 ];
 
 function ArrowIcon({ className }: { className?: string }) {
@@ -65,22 +73,43 @@ function ArrowIcon({ className }: { className?: string }) {
   );
 }
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  name: SITE_NAME,
-  description: DEFAULT_DESCRIPTION,
-  url: siteUrl(),
-  applicationCategory: "WebApplication",
-  operatingSystem: "Linux, Docker, self-hosted",
-  license: "https://github.com/lin-snow/Ech0/blob/main/LICENSE",
-  codeRepository: "https://github.com/lin-snow/Ech0",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-  },
-} as const;
+function buildHomeJsonLd() {
+  const base = siteUrl();
+  const imageUrl = absoluteUrl(OG_IMAGE_PATH);
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": `${base}/#website`,
+        url: base,
+        name: SITE_NAME,
+        description: DEFAULT_DESCRIPTION,
+        inLanguage: "en",
+        publisher: { "@id": `${base}/#software` },
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": `${base}/#software`,
+        name: SITE_NAME,
+        description: DEFAULT_DESCRIPTION,
+        url: base,
+        image: imageUrl,
+        screenshot: imageUrl,
+        applicationCategory: "WebApplication",
+        operatingSystem: "Linux, Docker, self-hosted",
+        license: "https://github.com/lin-snow/Ech0/blob/main/LICENSE",
+        codeRepository: "https://github.com/lin-snow/Ech0",
+        sameAs: ["https://github.com/lin-snow/Ech0"],
+        offers: {
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "USD",
+        },
+      },
+    ],
+  } as const;
+}
 
 export default function Home() {
   return (
@@ -101,6 +130,7 @@ export default function Home() {
         </a>
         <Link
           to="/docs"
+          prefetch="viewport"
           className="text-sm font-medium text-sand-11 transition-colors hover:text-sand-12"
         >
           Docs
@@ -116,6 +146,9 @@ export default function Home() {
               className="block w-full align-middle"
               width={1412}
               height={1131}
+              sizes="(max-width: 480px) 100vw, min(100%, 30rem)"
+              decoding="sync"
+              fetchPriority="high"
               loading="eager"
             />
           </div>
@@ -133,6 +166,7 @@ export default function Home() {
 
           <Link
             to="/docs"
+            prefetch="viewport"
             className="inline-flex items-center gap-1.5 rounded-full border border-sand-6 bg-sand-2/70 px-4 py-2 text-[13px] font-medium text-sand-11 shadow-[0_1px_2px_rgba(33,32,28,0.04)] no-underline transition-colors hover:border-sand-11/20 hover:bg-sand-2 hover:text-sand-12"
           >
             <ArrowIcon className="opacity-70" />
@@ -190,6 +224,7 @@ export default function Home() {
         <footer className="border-t border-sand-6 pt-10 text-center text-sm text-sand-11">
           <Link
             to="/docs"
+            prefetch="viewport"
             className="font-medium underline-offset-4 transition-colors hover:text-sand-12"
           >
             Docs
@@ -197,6 +232,7 @@ export default function Home() {
           <span className="mx-2 text-sand-6">·</span>
           <Link
             to="/privacy"
+            prefetch="viewport"
             className="font-medium underline-offset-4 transition-colors hover:text-sand-12"
           >
             Privacy
@@ -213,7 +249,7 @@ export default function Home() {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildHomeJsonLd()) }}
       />
     </div>
   );
