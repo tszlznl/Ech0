@@ -5,11 +5,13 @@ import (
 	"fmt"
 
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
+	agentService "github.com/lin-snow/ech0/internal/service/agent"
 	commentService "github.com/lin-snow/ech0/internal/service/comment"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
 	connectService "github.com/lin-snow/ech0/internal/service/connect"
 	echoService "github.com/lin-snow/ech0/internal/service/echo"
 	fileService "github.com/lin-snow/ech0/internal/service/file"
+	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	userService "github.com/lin-snow/ech0/internal/service/user"
 )
 
@@ -20,6 +22,8 @@ type Adapter struct {
 	fileSvc    fileService.Service
 	commonSvc  commonService.Service
 	connectSvc connectService.Service
+	agentSvc   agentService.Service
+	settingSvc settingService.Service
 }
 
 func NewAdapter(
@@ -29,6 +33,8 @@ func NewAdapter(
 	fileSvc fileService.Service,
 	commonSvc commonService.Service,
 	connectSvc connectService.Service,
+	agentSvc agentService.Service,
+	settingSvc settingService.Service,
 ) *Adapter {
 	return &Adapter{
 		echoSvc:    echoSvc,
@@ -37,6 +43,8 @@ func NewAdapter(
 		fileSvc:    fileSvc,
 		commonSvc:  commonSvc,
 		connectSvc: connectSvc,
+		agentSvc:   agentSvc,
+		settingSvc: settingSvc,
 	}
 }
 
@@ -50,6 +58,8 @@ func (a *Adapter) RegisterAll(reg *Registry) {
 	a.registerCommonResources(reg)
 	a.registerConnectTools(reg)
 	a.registerConnectResources(reg)
+	a.registerAgentTools(reg)
+	a.registerWebhookTools(reg)
 }
 
 // --- Argument helpers ---

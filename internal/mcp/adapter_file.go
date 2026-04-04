@@ -48,6 +48,25 @@ func (a *Adapter) registerFileTools(reg *Registry) {
 			},
 		},
 	}, a.deleteFile, authModel.ScopeFileWrite)
+
+	reg.RegisterTool(ToolDefinition{
+		Name:  "create_external_file",
+		Title: "Create External File",
+		Description: "Register an external URL as an Ech0 file record (no upload needed). " +
+			"Returns the created file metadata including id, which can be used as echo_files[].file_id in create_post/update_post.",
+		InputSchema: map[string]any{
+			"type":     "object",
+			"required": []string{"url"},
+			"properties": map[string]any{
+				"url":          map[string]any{"type": "string", "format": "uri", "description": "External file URL (e.g. image hosted on a CDN)"},
+				"name":         map[string]any{"type": "string", "description": "Display name for the file"},
+				"content_type": map[string]any{"type": "string", "description": "MIME type (e.g. image/png)"},
+				"category":     map[string]any{"type": "string", "enum": []string{"image", "video", "audio", "document", "file"}, "description": "File category"},
+				"width":        map[string]any{"type": "integer", "description": "Image/video width in pixels"},
+				"height":       map[string]any{"type": "integer", "description": "Image/video height in pixels"},
+			},
+		},
+	}, a.createExternalFile, authModel.ScopeFileWrite)
 }
 
 func (a *Adapter) listFiles(ctx context.Context, args map[string]any) (*ToolCallResult, error) {
@@ -77,6 +96,26 @@ func (a *Adapter) getFile(ctx context.Context, args map[string]any) (*ToolCallRe
 		return textError("id is required"), nil
 	}
 	file, err := a.fileSvc.GetFileByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return jsonResult(file)
+}
+
+func (a *Adapter) createExternalFile(ctx context.Context, args map[string]any) (*ToolCallResult, error) {
+	url := stringArg(args, "url")
+	if url == "" {
+		return textError("url is required"), nil
+	}
+	dto := commonModel.CreateExternalFileDto{
+		URL:         url,
+		Name:        stringArg(args, "name"),
+		ContentType: stringArg(args, "content_type"),
+		Category:    stringArg(args, "category"),
+		Width:       intArg(args, "width", 0),
+		Height:      intArg(args, "height", 0),
+	}
+	file, err := a.fileSvc.CreateExternalFile(ctx, dto)
 	if err != nil {
 		return nil, err
 	}

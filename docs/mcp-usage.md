@@ -21,8 +21,9 @@ Ech0 的 MCP 端点采用 **Streamable HTTP**（JSON-RPC over HTTP），与 [MCP
   - 只读场景：`echo:read`、`profile:read`
   - 读写场景：再加上 `echo:write`
   - 评论场景：`comment:read`（查看）、`comment:write`（发表）
-  - 文件场景：`file:read`（查看）、`file:write`（删除）
+  - 文件场景：`file:read`（查看）、`file:write`（删除 / 外部文件入库）
   - 互联场景：`connect:read`（查看连接列表与对端信息）、`connect:write`（添加/删除连接）
+  - 管理场景：`admin:settings`（Webhook 管理等管理员操作）
 - **有效期**：建议选择 8 小时或 1 个月（不建议永不过期）
 
 创建后妥善保存 Token，它只会显示一次。
@@ -66,58 +67,77 @@ Ech0 的 MCP 端点采用 **Streamable HTTP**（JSON-RPC over HTTP），与 [MCP
 - **GET /mcp**：返回服务状态信息
 - **POST /mcp**：处理 JSON-RPC 请求
 
-## 可用 Tools
+## 能力总览
+
+当前 MCP 共暴露 **24 个 Tool** 与 **7 个 Resource**，按业务域整理如下。
 
 ### Posts & Tags
 
-| Tool | 说明 | 所需 Scope |
-|------|------|-----------|
-| `search_posts` | 搜索帖子（支持关键词、标签过滤、分页、排序） | `echo:read` |
-| `get_post` | 根据 ID 获取帖子详情 | `echo:read` |
-| `get_today_posts` | 获取今日帖子（支持时区参数） | `echo:read` |
-| `list_tags` | 列出所有标签 | `echo:read` |
-| `create_post` | 创建新帖子；支持 `content`、`echo_files`（附件 file_id 列表）、`layout`、`extension`（扩展块），至少提供其一 | `echo:write` |
-| `update_post` | 更新已有帖子；`echo_files`/`extension` 提供时为**全量替换** | `echo:write` |
-| `delete_post` | 删除帖子（返回帖子 ID） | `echo:write` |
-| `like_post` | 点赞帖子 | `echo:write` |
-| `delete_tag` | 删除标签 | `echo:write` |
+| 类型 | 名称 | 说明 | Scope |
+|------|------|------|-------|
+| Tool | `search_posts` | 按关键词 / 标签 ID 搜索帖子，返回分页结果 `{items, total, page, page_size}` | `echo:read` |
+| Tool | `get_post` | 按 UUID 获取单篇帖子（含内容、标签、点赞数、附件、扩展块） | `echo:read` |
+| Tool | `get_today_posts` | 获取今日发布的帖子（支持 IANA 时区参数） | `echo:read` |
+| Tool | `list_tags` | 列出全部标签（id、名称、使用次数） | `echo:read` |
+| Tool | `create_post` | 创建帖子；支持 `content`、`echo_files`、`layout`、`extension`，至少提供其一 | `echo:write` |
+| Tool | `update_post` | 更新帖子；`echo_files` / `extension` 提供时为**全量替换** | `echo:write` |
+| Tool | `delete_post` | 永久删除帖子 | `echo:write` |
+| Tool | `like_post` | 帖子点赞数 +1 | `echo:write` |
+| Tool | `delete_tag` | 删除标签并解除与所有帖子的关联 | `echo:write` |
+| Resource | `ech0://posts/recent` | 最近 20 条帖子（可附 `?limit=N`） | `echo:read` |
+| Resource | `ech0://posts/{id}` | 按 UUID 读取单篇帖子 | `echo:read` |
+| Resource | `ech0://tags` | 全部标签及使用次数 | `echo:read` |
+| Resource | `ech0://stats/heatmap` | 过去 365 天每日发帖数（热力图数据） | `echo:read` |
 
 ### Comments
 
-| Tool | 说明 | 所需 Scope |
-|------|------|-----------|
-| `list_comments` | 列出指定帖子的公开评论 | `comment:read` |
+| 类型 | 名称 | 说明 | Scope |
+|------|------|------|-------|
+| Tool | `list_comments` | 列出指定帖子下的公开评论 | `comment:read` |
+| Resource | `ech0://comments/recent` | 全站最近 20 条公开评论 | `comment:read` |
 
 ### Files
 
-| Tool | 说明 | 所需 Scope |
-|------|------|-----------|
-| `list_files` | 列出已上传文件（支持分页、搜索、存储类型过滤）；返回的 `id` 可作为 `create_post.echo_files[].file_id` 引用 | `file:read` |
-| `get_file` | 获取单个文件元信息（名称、URL、尺寸等）；`id` 同样可用于 `echo_files` 引用 | `file:read` |
-| `delete_file` | 删除文件 | `file:write` |
+| 类型 | 名称 | 说明 | Scope |
+|------|------|------|-------|
+| Tool | `list_files` | 分页列出已上传文件元数据；返回的 `id` 可作为 `create_post.echo_files[].file_id` 引用 | `file:read` |
+| Tool | `get_file` | 获取单个文件元信息（名称、URL、尺寸等）；`id` 可用于 `echo_files` 引用 | `file:read` |
+| Tool | `delete_file` | 永久删除文件 | `file:write` |
+| Tool | `create_external_file` | 用外部 URL 注册文件记录（无需上传）；返回含 `id` 的文件元信息，可直接用于 `echo_files` | `file:write` |
 
-> **注意**：文件上传需通过实例的 REST 文件上传 API（`POST /api/files/upload`，multipart/form-data）完成，MCP 目前不提供上传能力。上传后获得的 `file_id` 可传入 `create_post` / `update_post` 的 `echo_files` 参数进行关联。
+> **注意**：本地文件上传仍需通过实例的 REST API（`POST /api/files/upload`，multipart/form-data）完成。外部图床等已有 URL 的文件可直接使用 `create_external_file` 注册。
 
-### Connects
+### Connects（实例互联）
 
-| Tool | 说明 | 所需 Scope |
-|------|------|-----------|
-| `list_connects` | 列出本实例已保存的对端连接（id + URL） | `connect:read` |
-| `get_connects_info` | 聚合获取所有对端的公开信息（名称、logo、帖子数等，有 30 分钟缓存） | `connect:read` |
-| `add_connect` | 添加远程 Ech0 实例连接 | `connect:write` |
-| `delete_connect` | 删除已保存的连接 | `connect:write` |
+| 类型 | 名称 | 说明 | Scope |
+|------|------|------|-------|
+| Tool | `list_connects` | 列出本实例已保存的对端连接 | `connect:read` |
+| Tool | `get_connects_info` | 聚合获取所有对端的公开信息（有 30 分钟缓存） | `connect:read` |
+| Tool | `add_connect` | 添加远程 Ech0 实例连接 | `connect:write` |
+| Tool | `delete_connect` | 删除已保存的连接 | `connect:write` |
+| Resource | `ech0://connect/self` | 本实例公开信息卡片（名称、URL、logo、帖子统计、版本） | `connect:read` |
 
-## 可用 Resources
+### Agent
 
-| Resource URI | 说明 | 所需 Scope |
-|-------------|------|-----------|
-| `ech0://posts/recent` | 最近的帖子（默认 20 条） | `echo:read` |
-| `ech0://posts/{id}` | 按 ID 读取单篇帖子 | `echo:read` |
-| `ech0://tags` | 所有标签及使用次数 | `echo:read` |
-| `ech0://profile/me` | 当前用户资料 | `profile:read` |
-| `ech0://comments/recent` | 最近的公开评论（默认 20 条） | `comment:read` |
-| `ech0://stats/heatmap` | 过去一年的每日帖子数量热力图 | `echo:read` |
-| `ech0://connect/self` | 当前实例的公开信息卡片（名称、URL、logo、帖子统计、版本） | `connect:read` |
+| 类型 | 名称 | 说明 | Scope |
+|------|------|------|-------|
+| Tool | `get_recent` | AI 生成的站点近况摘要（有缓存，首次可能需数秒） | `echo:read` |
+
+### Webhooks
+
+| 类型 | 名称 | 说明 | Scope |
+|------|------|------|-------|
+| Tool | `list_webhooks` | 列出所有已配置的 Webhook（不含 secret） | `admin:settings` |
+| Tool | `create_webhook` | 创建 Webhook 端点 | `admin:settings` |
+| Tool | `update_webhook` | 更新 Webhook（按 id，全量替换） | `admin:settings` |
+| Tool | `delete_webhook` | 删除 Webhook | `admin:settings` |
+| Tool | `test_webhook` | 向 Webhook 端点发送测试请求 | `admin:settings` |
+
+### User
+
+| 类型 | 名称 | 说明 | Scope |
+|------|------|------|-------|
+| Resource | `ech0://profile/me` | 当前 Token 对应用户的资料（id、username、email、avatar、admin） | `profile:read` |
 
 ## 安全说明
 
