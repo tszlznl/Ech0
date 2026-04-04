@@ -15,7 +15,7 @@ importers:
         specifier: 7.14.0
         version: 7.14.0(react-router@7.14.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(typescript@5.9.3)
       isbot:
-        specifier: ^5.1.36
+        specifier: ^5.1.37
         version: 5.1.37
       react:
         specifier: ^19.2.4
@@ -34,7 +34,7 @@ importers:
         specifier: ^4.2.2
         version: 4.2.2(vite@8.0.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/node@22.19.17)(esbuild@0.27.7)(jiti@2.6.1))
       '@types/node':
-        specifier: ^22
+        specifier: ^22.19.17
         version: 22.19.17
       '@types/react':
         specifier: ^19.2.14
