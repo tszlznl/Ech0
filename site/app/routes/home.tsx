@@ -112,8 +112,8 @@ function buildHomeJsonLd() {
   } as const;
 }
 
-/** Dashed divider + compact gap to copy (line → text, block → block). */
-const dashedSection = "border-t border-dashed border-sand-6 mt-10 pt-5";
+/** Dashed divider + breathing room between narrative blocks. */
+const dashedSection = "border-t border-dashed border-sand-6 mt-12 pt-8";
 
 export default function Home() {
   return (
@@ -159,7 +159,7 @@ export default function Home() {
         </div>
       </div>
 
-      <main className="mx-auto w-full max-w-[min(100%,30rem)] px-5 pb-28 pt-8">
+      <main className="mx-auto w-full max-w-[min(100%,34rem)] px-5 pb-28 pt-10">
         {/* Hero: headline → positioning → CTA */}
         <section className="flex flex-col items-center gap-8 text-center">
           <h1 className="max-w-[22ch] font-serif text-[1.65rem] font-normal leading-[1.2] tracking-[-0.02em] text-sand-12 sm:text-[1.75rem]">
@@ -185,75 +185,78 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Tagline */}
+        {/* Narrative + value (editorial layout below the fold) */}
         <section className={`${dashedSection} text-left`}>
-          <p className="font-serif text-base italic leading-snug text-sand-11">
+          <h2 className="font-serif text-[1.2rem] font-semibold leading-snug tracking-[-0.02em] text-sand-12">
+            Why Ech0?
+          </h2>
+          <p className="mt-5 font-serif text-base italic leading-snug text-sand-11">
             One timeline, entirely yours.
           </p>
-          <p className="mt-5 max-w-[34ch] text-[0.9375rem] leading-relaxed text-sand-10">
-            A single stream for what you publish—
-            <br />
-            calm, open, and running on your server.
-          </p>
+          <div className="mt-5 space-y-4 font-sans text-[0.9375rem] leading-[1.65] text-sand-11">
+            <p>
+              If you want a corner of the web that feels like{" "}
+              <em className="not-italic font-medium text-sand-12">yours</em>—not
+              someone else&rsquo;s feed, not a rented profile—Ech0 is a small,
+              self-hosted microblog: one calm stream for what you publish,
+              running on hardware you control.
+            </p>
+            <p>
+              No ads, no subscription wall, no algorithm in the middle. AGPL-3.0,
+              lightweight, and built to stay out of the way.
+            </p>
+          </div>
         </section>
 
-        {/* Why choose */}
         <section className={dashedSection}>
-          <h2 className="font-serif text-[1.125rem] font-semibold leading-snug text-sand-12">
-            Why choose Ech0?
+          <h2 className="font-serif text-[1.2rem] font-semibold leading-snug tracking-[-0.02em] text-sand-12">
+            What can Ech0 do for you?
           </h2>
-          <ol className="mt-6 list-decimal space-y-3 pl-5 text-[0.9375rem] leading-relaxed text-sand-11 marker:font-serif marker:text-sand-11">
+          <ol className="mt-6 list-decimal space-y-5 pl-[1.35rem] text-[0.9375rem] leading-[1.6] text-sand-11 marker:font-serif marker:text-[0.95rem] marker:text-sand-11 sm:pl-6">
             <li>
-              <span className="font-semibold text-sand-12">
-                From idea to life
-              </span>
+              <span className="font-semibold text-sand-12">From idea to life</span>
               {" — "}
-              Ideas don&rsquo;t sit idle—they form a timeline others can
-              discover, share, and discuss.
+              Thoughts don&rsquo;t have to stay in drafts—they become a timeline
+              others can discover, share, and discuss.
             </li>
             <li>
               <span className="font-semibold text-sand-12">
                 Private, yet connected
               </span>
               {" — "}
-              Your space is fully under your control, with optional comments and
-              subscriptions that let connection happen naturally.
+              Your instance, your rules; optional comments and RSS let people
+              follow you without turning the whole thing into a platform.
             </li>
             <li>
-              <span className="font-semibold text-sand-12">
-                Light and unbound
-              </span>
-              {" — "}
-              Self-hosted, clean, ad-free, subscription-free, and platform-free.
-            </li>
-          </ol>
-        </section>
-
-        {/* Why use */}
-        <section className={dashedSection}>
-          <h2 className="font-serif text-[1.125rem] font-semibold leading-snug text-sand-12">
-            Why use Ech0?
-          </h2>
-          <ol className="mt-6 list-decimal space-y-3 pl-5 text-[0.9375rem] leading-relaxed text-sand-11 marker:font-serif marker:text-sand-11">
-            <li>
-              <span className="font-semibold text-sand-12">
-                Simple and pure
-              </span>
+              <span className="font-semibold text-sand-12">Simple and pure</span>
               {" — "}
               One clean timeline on your server—nothing noisy, nothing borrowed.
             </li>
             <li>
               <span className="font-semibold text-sand-12">Full control</span>
               {" — "}
-              Your content, your rules. Move, manage, and protect your ideas.
+              Your content, your data. Export, move, and protect what you write.
             </li>
             <li>
               <span className="font-semibold text-sand-12">Open and easy</span>
               {" — "}
-              AGPL-3.0, fast deployment, RSS, comments,
-              multi-instance—connection without noise.
+              Fast to deploy, AGPL-3.0, RSS, comments, and multi-instance when you
+              want company—without the noise.
             </li>
           </ol>
+          <p className="mt-8 text-center font-serif text-sm italic text-sand-11">
+            <Link
+              to="/docs"
+              prefetch="viewport"
+              className="font-sans not-italic font-medium text-sand-11 underline-offset-4 transition-colors hover:text-sand-12"
+            >
+              See for yourself
+            </Link>
+            <span className="font-sans not-italic text-sand-10"> — </span>
+            <span className="font-sans not-italic text-[0.8125rem] text-sand-10">
+              start with the docs
+            </span>
+          </p>
         </section>
 
         <footer className="mt-14 pt-12 text-center text-sm text-sand-11">
