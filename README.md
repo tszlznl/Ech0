@@ -67,6 +67,7 @@ It stays lightweight, easy to deploy, and fully open-source.
     - [☸️ Kubernetes (Helm)](#️-kubernetes-helm-1)
   - [FAQ](#faq)
   - [Feedback & Community](#feedback--community)
+  - [Join Ech0 Hub](#join-ech0-hub)
 - [Open Source Governance](#open-source-governance)
   - [Project Architecture](#project-architecture)
   - [Development Guide](#development-guide)
@@ -354,6 +355,15 @@ docker image prune -f
 - If you encounter bugs, report them in [Issues](https://github.com/lin-snow/Ech0/issues).
 - For feature ideas or improvements, join discussions in [Discussions](https://github.com/lin-snow/Ech0/discussions).
 - Official QQ Group: `1065435773`
+
+### Join Ech0 Hub
+
+[Ech0 Hub](https://hub.ech0.app/) is a public directory that merges timelines from listed Ech0 instances. To add **your** public instance:
+
+1. **CORS**: Allow the Hub origin to call your instance API — set `Access-Control-Allow-Origin` (or equivalent) so `https://hub.ech0.app` is permitted. For local Hub development, also allow `http://localhost:5173`.
+2. **Register**: Open [**Join Ech0 Hub**](https://github.com/lin-snow/Ech0/issues/new?template=register-hub-instance.yml) (GitHub sign-in required), fill in **Instance ID** (lowercase letters, digits, hyphens; globally unique on Hub) and **Instance URL** (your deployment base URL, no trailing slash), and submit. CI parses the issue and opens a PR that updates [`hub/public/hub.json`](./hub/public/hub.json). After maintainers merge, your instance appears in the Hub list.
+
+More detail on the registry format and browser-side aggregation: [`hub/README.md`](./hub/README.md).
 
 | Official QQ Community                                          | Other Groups |
 | -------------------------------------------------------------- | ------------ |

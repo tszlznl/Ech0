@@ -5,11 +5,11 @@ Frontend for **[hub.ech0.app](https://hub.ech0.app)**: it loads a static **insta
 ## Architecture
 
 
-| Aspect   | Description                                                                                                                                 |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| **CSR**  | Content is rendered after data is fetched in the browser; no server-side templates.                                                           |
-| **SPA**  | Vue 3 + `vue-router` single-page app; route changes do not full-page reload.                                                                |
-| **PWA**  | `vite-plugin-pwa` provides the Web App Manifest and Service Worker (installable on desktop/home screen, static asset caching per `vite.config.ts`). |
+| Aspect  | Description                                                                                                                                         |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **CSR** | Content is rendered after data is fetched in the browser; no server-side templates.                                                                 |
+| **SPA** | Vue 3 + `vue-router` single-page app; route changes do not full-page reload.                                                                        |
+| **PWA** | `vite-plugin-pwa` provides the Web App Manifest and Service Worker (installable on desktop/home screen, static asset caching per `vite.config.ts`). |
 
 
 For a detailed task list as the implementation evolves, see the repo root: `docs/superpowers/plans/2026-04-05-ech0-hub-csr-spa-pwa.md`.
@@ -30,12 +30,12 @@ At runtime Hub requests `/hub.json` from the same origin (in dev, Vite serves it
 }
 ```
 
-- **`id`**: Short identifier for the instance (source labeling and UI).
-- **`url`**: API root **without** a trailing slash; aggregated requests use `{url}/api/echo/query` (same as the main project’s `internal/router`). Health checks use **`GET {url}/healthz`** on the same host (see `internal/router/resource.go`; not under `/api`).
+- `**id**`: Short identifier for the instance (source labeling and UI).
+- `**url**`: API root **without** a trailing slash; aggregated requests use `{url}/api/echo/query` (same as the main project’s `internal/router`). Health checks use `**GET {url}/healthz`** on the same host (see `internal/router/resource.go`; not under `/api`).
 
 ## Health checks and version gate
 
-1. For each instance, call **`GET {url}/healthz`**, parse `data.version` when **`code === 1`** (same contract as `Healthz` in `internal/handler/common/common.go`).
+1. For each instance, call `**GET {url}/healthz`**, parse `data.version` when `**code === 1**` (same contract as `Healthz` in `internal/handler/common/common.go`).
 2. Only instances whose version is **≥ 4.4.0** (same semantics as `Version` in `internal/model/common/common.go`) participate in post aggregation.
 3. If the check fails or the request errors, show the reason on the page and exclude that instance from the timeline.
 
@@ -47,7 +47,7 @@ At runtime Hub requests `/hub.json` from the same origin (in dev, Vite serves it
 
 ## Cross-origin (CORS)
 
-When the browser on `hub.ech0.app` calls each instance, **`/api/*` and `/healthz`** (among others) must allow the Hub origin (e.g. `Access-Control-Allow-Origin: https://hub.ech0.app`). If you cannot change the instance, use a **reverse proxy** on the Hub domain (same-origin avoids CORS).
+When the browser on `hub.ech0.app` calls each instance, `**/api/`* and `/healthz`** (among others) must allow the Hub origin (e.g. `Access-Control-Allow-Origin: https://hub.ech0.app`). If you cannot change the instance, use a **reverse proxy** on the Hub domain (same-origin avoids CORS).
 
 ## Development & build
 

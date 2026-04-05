@@ -69,6 +69,7 @@
     - [☸️ Kubernetes (Helm)](#️-kubernetes-helm-1)
   - [常见问题](#常见问题)
   - [反馈与社区](#反馈与社区)
+  - [加入 Ech0 Hub](#加入-ech0-hub)
 - [开源治理](#开源治理)
   - [项目架构](#项目架构)
   - [开发指南](#开发指南)
@@ -355,6 +356,15 @@ docker image prune -f
 - 若程序出现 bug，可在 [Issues](https://github.com/lin-snow/Ech0/issues) 中反馈。
 - 针对新增或改进的需求，欢迎前往 [Discussions](https://github.com/lin-snow/Ech0/discussions) 一起交流。
 - 官方 QQ 群号：1065435773
+
+### 加入 Ech0 Hub
+
+[Ech0 Hub](https://hub.ech0.app/) 会聚合已登记的公开实例时间线。若希望**自己的公开实例**出现在列表中：
+
+1. **配置 CORS**：允许 Hub 源站跨域访问你的实例 API（例如 `Access-Control-Allow-Origin` 包含 `https://hub.ech0.app`）。本地调试 Hub 时还需允许 `http://localhost:5173`。
+2. **提交登记**：在仓库中打开 [**登记到 Ech0 Hub**](https://github.com/lin-snow/Ech0/issues/new?template=register-hub-instance.yml)（需登录 GitHub），按表单填写 **Instance ID**（仅小写字母、数字、连字符，且在 Hub 内全局唯一）与 **Instance URL**（部署根地址，勿带末尾 `/`）。提交后 Actions 会解析并自动发起更新 [`hub/public/hub.json`](./hub/public/hub.json) 的 PR，维护者合并后即可在 Hub 中看到你的实例。
+
+登记格式、聚合方式等说明见 [`hub/README.md`](./hub/README.md)。
 
 | 官方QQ交流群                                                    | 其它交流群 |
 | --------------------------------------------------------------- | ---------- |
