@@ -9,7 +9,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.5.32"
+    "@types/markdown-it": "^14.1.2",
+    "@unocss/preset-wind4": "^66.6.7",
+    "@vueuse/core": "^14.2.1",
+    "floating-vue": "^5.2.2",
+    "highlight.js": "^11.11.1",
+    "markdown-it": "^14.1.1",
+    "photoswipe": "^5.4.4",
+    "sass-embedded": "^1.99.0",
+    "unocss": "^66.6.7",
+    "vue": "^3.5.32",
+    "vue-i18n": "^11.3.0",
+    "vue-router": "^5.0.4"
   },
   "devDependencies": {
     "@types/node": "^24.12.2",
@@ -17,6 +28,7 @@
     "@vue/tsconfig": "^0.9.1",
     "typescript": "~5.9.3",
     "vite": "^8.0.3",
+    "vite-plugin-pwa": "^1.2.0",
     "vue-tsc": "^3.2.6"
   }
 }
