@@ -281,6 +281,13 @@ export default function Home() {
           </Link>
           <span className="mx-2 text-sand-6">·</span>
           <a
+            href="https://hub.ech0.app"
+            className="font-medium underline-offset-4 transition-colors hover:text-sand-12"
+          >
+            Hub
+          </a>
+          <span className="mx-2 text-sand-6">·</span>
+          <a
             href="https://github.com/lin-snow/Ech0"
             className="font-medium underline-offset-4 transition-colors hover:text-sand-12"
           >

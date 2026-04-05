@@ -25,7 +25,7 @@ const ROUTES = {
   },
 } as const
 
-const OG_IMAGE = `${HUB_SITE_ORIGIN}/favicon.svg`
+const OG_IMAGE = `${HUB_SITE_ORIGIN}/logo.svg`
 
 function ensureMeta(attr: 'name' | 'property', key: string, content: string) {
   const selector = attr === 'name' ? `meta[name="${key}"]` : `meta[property="${key}"]`

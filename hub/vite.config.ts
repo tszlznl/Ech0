@@ -32,7 +32,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['favicon.svg', 'icons.svg'],
+      includeAssets: ['favicon.svg', 'logo.svg', 'icons.svg'],
       manifest: {
         name: 'Ech0 Hub',
         short_name: 'Ech0 Hub',
@@ -43,6 +43,12 @@ export default defineConfig({
         background_color: '#f4f1ec',
         theme_color: '#f4f1ec',
         icons: [
+          {
+            src: '/logo.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any',
+          },
           {
             src: '/favicon.svg',
             sizes: 'any',
