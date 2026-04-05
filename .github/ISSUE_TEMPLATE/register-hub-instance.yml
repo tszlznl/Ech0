@@ -1,4 +1,4 @@
-name: 登记到 Ech0 Hub
+name: Join Ech0 Hub
 description: 将你的公开 Ech0 实例登记到 hub.ech0.app 的聚合列表（由机器人自动发起 PR 更新 hub.json）
 title: "[Hub] Register instance"
 labels:
