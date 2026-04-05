@@ -1,6 +1,8 @@
 <template>
-  <div class="w-full max-w-sm bg-[var(--color-bg-surface)] h-auto p-5 shadow rounded-sm mx-auto">
-    <div class="flex flex-row items-center gap-2 mt-2 mb-4">
+  <div
+    class="w-full max-w-sm bg-[var(--color-bg-surface)] h-auto p-3.5 sm:p-4 shadow rounded-sm mx-auto"
+  >
+    <div class="flex flex-row items-center gap-2 mt-1 mb-3">
       <div>
         <img
           :src="echo.logo"
@@ -29,7 +31,7 @@
     </div>
 
     <div>
-      <div class="py-4">
+      <div class="py-2.5">
         <template
           v-if="
             props.echo.layout === ImageLayout.GRID ||
@@ -60,7 +62,7 @@
           </div>
         </template>
 
-        <div v-if="props.echo.extension" class="my-4">
+        <div v-if="props.echo.extension" class="my-3">
           <TheExtensionRenderer :echo="props.echo" />
         </div>
       </div>

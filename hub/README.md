@@ -35,7 +35,7 @@ At runtime Hub requests `/hub.json` from the same origin (in dev, Vite serves it
 
 ## Health checks and version gate
 
-1. For each instance, call `**GET {url}/healthz`**, parse `data.version` when `**code === 1**` (same contract as `Healthz` in `internal/handler/common/common.go`).
+1. For each instance, call `**GET {url}/healthz`**, parse `data.version` when `**code === 1`** (same contract as `Healthz` in `internal/handler/common/common.go`).
 2. Only instances whose version is **≥ 4.4.0** (same semantics as `Version` in `internal/model/common/common.go`) participate in post aggregation.
 3. If the check fails or the request errors, show the reason on the page and exclude that instance from the timeline.
 

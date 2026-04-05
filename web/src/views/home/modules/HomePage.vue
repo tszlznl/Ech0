@@ -189,6 +189,7 @@ onBeforeUnmount(() => {
 }
 
 .home-shell--zen .home-layout {
+  width: 100%;
   max-width: min(var(--home-main-max), 100%);
   margin-left: auto;
   margin-right: auto;
@@ -250,7 +251,7 @@ onBeforeUnmount(() => {
   }
 
   .home-layout--zen .home-main {
-    flex: 0 1 min(var(--home-main-max), 100%);
+    flex: 0 1 var(--home-main-max);
     max-width: min(var(--home-main-max), 100%);
     margin-left: auto;
     margin-right: auto;
