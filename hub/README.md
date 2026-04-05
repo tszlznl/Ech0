@@ -14,7 +14,7 @@
 
 ## 如何登记到 Hub 列表
 
-在本仓库用 **Issue 表单「登记到 Ech0 Hub」** 提交即可（需登录 GitHub）。提交后 Actions 会解析内容并**自动发起 PR** 修改 `hub/public/hub.json`，维护者审核合并后生效。请事先为实例配置好 **CORS**（允许 `https://hub.ech0.app`）。
+在本仓库用 **Issue 表单「登记到 Ech0 Hub」** 提交即可（需登录 GitHub）。模板会为 Issue 打上 **`hub`** 标签；仓库里需已存在同名标签（可在 **Settings → Labels** 新建）。提交后 Actions 会解析内容并**自动发起带 `hub` 标签的 PR** 修改 `hub/public/hub.json`，维护者审核合并后生效。请事先为实例配置好 **CORS**（允许 `https://hub.ech0.app`）。
 
 ## 实例清单 `public/hub.json`
 

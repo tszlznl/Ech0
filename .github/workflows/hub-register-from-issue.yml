@@ -1,4 +1,4 @@
-# 使用模板「登记到 Ech0 Hub」开 Issue 并带上标签 hub-register 时，
+# 使用模板「登记到 Ech0 Hub」开 Issue 并带上标签 hub 时，
 # 解析 Instance ID / Instance URL，更新 hub/public/hub.json 并自动开 PR（需维护者合并）。
 name: Hub register from issue
 
@@ -8,7 +8,7 @@ on:
 
 jobs:
   update-hub-json:
-    if: contains(join(github.event.issue.labels.*.name, ','), 'hub-register')
+    if: contains(github.event.issue.labels.*.name, 'hub')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -117,8 +117,9 @@ jobs:
             由 #${{ github.event.issue.number }} 自动发起。
 
             - [ ] 维护者确认 CORS 与实例可访问后再合并。
-          branch: hub-register/issue-${{ github.event.issue.number }}
+          branch: hub/issue-${{ github.event.issue.number }}
           delete-branch: true
+          labels: hub
           add-paths: |
             hub/public/hub.json
 

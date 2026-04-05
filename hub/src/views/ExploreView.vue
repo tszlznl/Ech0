@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
+import { useMediaQuery } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import TheLoadingIndicator from '@/components/common/TheLoadingIndicator.vue'
 import { RouterLink } from 'vue-router'
@@ -45,11 +46,31 @@ const feedError = ref<string | null>(null)
 
 const exploreLayout = ref<'list' | 'masonry'>(readExploreLayout())
 
+/** 与 Tailwind `md` 一致；以下视口不展示瀑布流，避免窄屏多列 */
+const masonryViewportMd = useMediaQuery('(min-width: 768px)')
+
+/** 用户选瀑布流且视口足够宽时才启用多列 */
+const feedLayoutIsMasonry = computed(
+  () => exploreLayout.value === 'masonry' && masonryViewportMd.value,
+)
+
+/** 切换条高亮：移动端始终表现为「单列」选中，避免与真实布局不一致 */
+const layoutToggleListActive = computed(
+  () => exploreLayout.value === 'list' || !masonryViewportMd.value,
+)
+const layoutToggleMasonryActive = computed(
+  () => exploreLayout.value === 'masonry' && masonryViewportMd.value,
+)
+
 watch(exploreLayout, (mode) => {
   localStg.setItem(EXPLORE_LAYOUT_KEY, mode)
   nextTick(() => {
     scheduleLayout()
   })
+})
+
+watch(feedLayoutIsMasonry, () => {
+  nextTick(() => scheduleLayout())
 })
 
 const mainColumn = ref<HTMLElement | null>(null)
@@ -170,7 +191,7 @@ onBeforeUnmount(() => {
       <nav
         class="hub-explore-mono mx-auto flex w-full items-center justify-between gap-3 px-5 pt-8 pb-2 transition-[max-width] duration-200"
         :class="
-          exploreLayout === 'masonry'
+          feedLayoutIsMasonry
             ? 'max-w-[min(100%,90rem)]'
             : 'max-w-[min(100%,34rem)]'
         "
@@ -190,11 +211,11 @@ onBeforeUnmount(() => {
             type="button"
             class="hub-explore-layout-btn inline-flex h-8 w-8 items-center justify-center rounded transition"
             :class="
-              exploreLayout === 'list'
+              layoutToggleListActive
                 ? 'bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)]'
                 : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
             "
-            :aria-pressed="exploreLayout === 'list'"
+            :aria-pressed="layoutToggleListActive"
             :title="t('hub.layoutList')"
             @click="exploreLayout = 'list'"
           >
@@ -219,11 +240,11 @@ onBeforeUnmount(() => {
             type="button"
             class="hub-explore-layout-btn inline-flex h-8 w-8 items-center justify-center rounded transition"
             :class="
-              exploreLayout === 'masonry'
+              layoutToggleMasonryActive
                 ? 'bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)]'
                 : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
             "
-            :aria-pressed="exploreLayout === 'masonry'"
+            :aria-pressed="layoutToggleMasonryActive"
             :title="t('hub.layoutMasonry')"
             @click="exploreLayout = 'masonry'"
           >
@@ -250,7 +271,7 @@ onBeforeUnmount(() => {
       <div
         class="mx-auto flex w-full justify-center px-5 pb-10 pt-2 transition-[max-width] duration-200"
         :class="
-          exploreLayout === 'masonry'
+          feedLayoutIsMasonry
             ? 'max-w-[min(100%,90rem)]'
             : 'max-w-[min(100%,34rem)]'
         "
@@ -305,21 +326,21 @@ onBeforeUnmount(() => {
             <div
               v-else-if="echoList.length > 0 && !isPreparing"
               class="hub-explore-feed"
-              :class="{ 'hub-explore-feed--masonry': exploreLayout === 'masonry' }"
+              :class="{ 'hub-explore-feed--masonry': feedLayoutIsMasonry }"
             >
               <div
                 v-for="item in echoList"
                 :key="item.virtual_key"
                 class="hub-explore-echo-row hub-item-wrap py-2"
                 :class="
-                  exploreLayout === 'masonry'
+                  feedLayoutIsMasonry
                     ? 'hub-item-wrap--masonry block w-full'
                     : 'flex items-center justify-center'
                 "
               >
                 <HubEchoCard
                   :echo="item"
-                  :variant="exploreLayout === 'masonry' ? 'masonry' : 'default'"
+                  :variant="feedLayoutIsMasonry ? 'masonry' : 'default'"
                 />
               </div>
             </div>
