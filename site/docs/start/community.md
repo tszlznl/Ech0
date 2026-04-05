@@ -13,19 +13,19 @@ description: 反馈渠道、参与贡献、贡献者与赞助
 
 ### 我该去哪里问？
 
-| 你的情况 | 建议渠道 |
-| -------- | -------- |
-| 疑似 Bug、崩溃、无法部署 | [GitHub Issues](https://github.com/lin-snow/Ech0/issues)（尽量带版本、环境、复现步骤） |
-| 功能想法、用法讨论、经验分享 | [GitHub Discussions](https://github.com/lin-snow/Ech0/discussions) |
-| 即时聊天、中文用户交流 | **QQ 群**（见下方） |
+| 你的情况                     | 建议渠道                                                                               |
+| ---------------------------- | -------------------------------------------------------------------------------------- |
+| 疑似 Bug、崩溃、无法部署     | [GitHub Issues](https://github.com/lin-snow/Ech0/issues)（尽量带版本、环境、复现步骤） |
+| 功能想法、用法讨论、经验分享 | [GitHub Discussions](https://github.com/lin-snow/Ech0/discussions)                     |
+| 即时聊天、中文用户交流       | **QQ 群**（见下方）                                                                    |
 
 提 Issue 前可先搜是否已有相同问题；附上 **部署方式**（Docker / 二进制等）、**版本**与**日志片段**会更容易被定位。
 
 ### 链接
 
-- **Bug 与缺陷**：[GitHub Issues](https://github.com/lin-snow/Ech0/issues)  
-- **讨论与问答**：[GitHub Discussions](https://github.com/lin-snow/Ech0/discussions)  
-- **QQ 交流群**：[1065435773](https://qm.qq.com/cgi-bin/qm/qr?group_code=1065435773)  
+- **Bug 与缺陷**：[GitHub Issues](https://github.com/lin-snow/Ech0/issues)
+- **讨论与问答**：[GitHub Discussions](https://github.com/lin-snow/Ech0/discussions)
+- **QQ 交流群**：[1065435773](https://qm.qq.com/cgi-bin/qm/qr?group_code=1065435773)
 
 ### 参与贡献
 

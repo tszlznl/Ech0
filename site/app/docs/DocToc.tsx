@@ -27,10 +27,7 @@ export function DocToc({ items }: { items: TocItem[] }) {
   return (
     <>
       {/* Mobile / tablet: collapsible */}
-      <nav
-        className="mb-6 lg:hidden"
-        aria-label="本页目录"
-      >
+      <nav className="mb-6 lg:hidden" aria-label="本页目录">
         <details className="group rounded-lg border border-sand-6/90 bg-sand-2/50 px-3 py-2">
           <summary className="cursor-pointer list-none text-[0.6875rem] font-semibold tracking-wide text-sand-11 [&::-webkit-details-marker]:hidden">
             <span className="inline-flex items-center gap-1.5">
@@ -50,10 +47,7 @@ export function DocToc({ items }: { items: TocItem[] }) {
       </nav>
 
       {/* Desktop: sticky sidebar */}
-      <nav
-        className="hidden lg:block"
-        aria-label="本页目录"
-      >
+      <nav className="hidden lg:block" aria-label="本页目录">
         <p className="mb-3 text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-sand-11/90">
           本页目录
         </p>

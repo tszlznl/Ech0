@@ -63,8 +63,8 @@ helm upgrade my-ech0 ./charts/ech0 --namespace my-namespace
 
 ## 升级后建议
 
-1. 打开管理后台，确认版本号与健康状态（若有）。  
-2. 快速浏览时间线、发一条测试 Echo、检查评论与附件是否正常。  
-3. 若使用 Connect / Webhook，关注 Release 是否提及行为变更。  
+1. 打开管理后台，确认版本号与健康状态（若有）。
+2. 快速浏览时间线、发一条测试 Echo、检查评论与附件是否正常。
+3. 若使用 Connect / Webhook，关注 Release 是否提及行为变更。
 
 更多排错思路见 [常见问题](/docs/start/faq)。

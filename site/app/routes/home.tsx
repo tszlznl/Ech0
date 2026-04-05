@@ -202,8 +202,8 @@ export default function Home() {
               running on hardware you control.
             </p>
             <p>
-              No ads, no subscription wall, no algorithm in the middle. AGPL-3.0,
-              lightweight, and built to stay out of the way.
+              No ads, no subscription wall, no algorithm in the middle.
+              AGPL-3.0, lightweight, and built to stay out of the way.
             </p>
           </div>
         </section>
@@ -214,7 +214,9 @@ export default function Home() {
           </h2>
           <ol className="mt-6 list-decimal space-y-5 pl-[1.35rem] text-[0.9375rem] leading-[1.6] text-sand-11 marker:font-serif marker:text-[0.95rem] marker:text-sand-11 sm:pl-6">
             <li>
-              <span className="font-semibold text-sand-12">From idea to life</span>
+              <span className="font-semibold text-sand-12">
+                From idea to life
+              </span>
               {" — "}
               Thoughts don&rsquo;t have to stay in drafts—they become a timeline
               others can discover, share, and discuss.
@@ -228,7 +230,9 @@ export default function Home() {
               follow you without turning the whole thing into a platform.
             </li>
             <li>
-              <span className="font-semibold text-sand-12">Simple and pure</span>
+              <span className="font-semibold text-sand-12">
+                Simple and pure
+              </span>
               {" — "}
               One clean timeline on your server—nothing noisy, nothing borrowed.
             </li>
@@ -240,8 +244,8 @@ export default function Home() {
             <li>
               <span className="font-semibold text-sand-12">Open and easy</span>
               {" — "}
-              Fast to deploy, AGPL-3.0, RSS, comments, and multi-instance when you
-              want company—without the noise.
+              Fast to deploy, AGPL-3.0, RSS, comments, and multi-instance when
+              you want company—without the noise.
             </li>
           </ol>
           <p className="mt-8 text-center font-serif text-sm italic text-sand-11">

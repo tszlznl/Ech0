@@ -87,9 +87,9 @@ description: 与 README 对齐的问答；部署、权限、存储与集成
 
 ### AI 摘要、Webhook、API？
 
-- Agent：**系统设置 → Agent**，见 [智能摘要](/docs/guide/agent)。  
-- Webhook：[事件推送](/docs/guide/webhook)。  
-- 通用 API：用 [访问令牌](/docs/guide/accesstoken) 调用，文档在 **`/swagger/index.html`**。  
+- Agent：**系统设置 → Agent**，见 [智能摘要](/docs/guide/agent)。
+- Webhook：[事件推送](/docs/guide/webhook)。
+- 通用 API：用 [访问令牌](/docs/guide/accesstoken) 调用，文档在 **`/swagger/index.html`**。
 - AI 客户端（Cursor 等）连实例：见 [MCP 接入](/docs/guide/mcp)，需 **MCP（AI Agent）** 受众的令牌。
 
 ### 自动化或 AI 想发评论？

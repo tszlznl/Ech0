@@ -85,10 +85,7 @@ export function MarkdownDoc({
       return base;
     }
 
-    const H2 = ({
-      children,
-      ...props
-    }: ComponentPropsWithoutRef<"h2">) => {
+    const H2 = ({ children, ...props }: ComponentPropsWithoutRef<"h2">) => {
       const item = toc[tocPtr.current];
       if (item?.depth === 2) {
         tocPtr.current++;
@@ -101,10 +98,7 @@ export function MarkdownDoc({
       return <h2 {...props}>{children}</h2>;
     };
 
-    const H3 = ({
-      children,
-      ...props
-    }: ComponentPropsWithoutRef<"h3">) => {
+    const H3 = ({ children, ...props }: ComponentPropsWithoutRef<"h3">) => {
       const item = toc[tocPtr.current];
       if (item?.depth === 3) {
         tocPtr.current++;
