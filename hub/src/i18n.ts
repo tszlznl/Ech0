@@ -7,6 +7,9 @@ const enUSHub = {
     ...enUS.hub,
     emptyConnectHint:
       'Nothing here yet—public instances may have no posts, or feeds are still loading.',
+    layoutSwitch: 'Feed layout',
+    layoutList: 'Single column',
+    layoutMasonry: 'Masonry grid',
   },
 }
 

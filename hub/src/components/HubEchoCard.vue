@@ -16,9 +16,14 @@ import { formatHubDate } from '../utils/formatHubDate'
 
 type Echo = App.Api.Hub.Echo
 
-const props = defineProps<{
-  echo: Echo
-}>()
+const props = withDefaults(
+  defineProps<{
+    echo: Echo
+    /** `masonry`: full column width for multi-column feed */
+    variant?: 'default' | 'masonry'
+  }>(),
+  { variant: 'default' },
+)
 
 const { t } = useI18n()
 
@@ -79,7 +84,10 @@ const handleLikeEcho = async () => {
 
 <template>
   <div
-    class="w-full max-w-sm rounded-sm border border-[var(--color-border-strong)] h-auto px-3 py-3 sm:px-3.5 sm:py-3.5 mx-auto"
+    :class="[
+      'w-full rounded-sm border border-[var(--color-border-strong)] h-auto px-3 py-3 sm:px-3.5 sm:py-3.5',
+      props.variant === 'masonry' ? 'max-w-none' : 'max-w-sm mx-auto',
+    ]"
   >
     <div class="flex flex-row items-center gap-2 mb-3">
       <div class="shrink-0">
