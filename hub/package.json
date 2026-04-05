@@ -3,10 +3,12 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "_comment": "postinstall：Hub 的 @ 指向 ../web/src，vue-tsc 按「被检查文件」解析 node_modules，需在 web 下也安装依赖，否则报 TS2307；用 npm --prefix 以便仅装 hub 时不必有 pnpm。若要与 web 的 pnpm-lock 严格一致，可在仓库根或 web 下另行 pnpm install。packageManager：与 web 一致，便于 Corepack / CI 固定 pnpm 版本。",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postinstall": "npm install --prefix ../web"
   },
   "dependencies": {
     "@types/markdown-it": "^14.1.2",
@@ -30,5 +32,6 @@
     "vite": "^8.0.3",
     "vite-plugin-pwa": "^1.2.0",
     "vue-tsc": "^3.2.6"
-  }
+  },
+  "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319"
 }
