@@ -31,27 +31,21 @@ onMounted(async () => {
       <section
         class="hub-home-hero flex flex-col items-center gap-9 text-center sm:gap-11"
       >
-        <p
-          class="hub-home-eyebrow text-[0.625rem] font-medium uppercase tracking-[0.22em] text-[var(--color-text-muted)]"
-        >
-          Ech0 Hub
-        </p>
         <h1
-          class="hub-home-title max-w-full whitespace-nowrap text-center font-normal leading-[1.45] tracking-[0.02em] text-[var(--color-text-primary)] text-[clamp(0.8125rem,2.65vw,1.1875rem)]"
+          class="hub-home-title mx-auto max-w-[min(100%,26rem)] text-center font-normal leading-[1.45] tracking-[0.02em] text-[var(--color-text-primary)] text-[clamp(0.8125rem,2.65vw,1.1875rem)]"
         >
-          Many voices, one quiet view.
+          Ech0 Hub — where echoes meet and ideas resonate.
         </h1>
         <HubHomeFoliageCanvas class="w-full" />
         <p
           class="hub-home-lede mx-auto max-w-[34ch] text-[0.8125rem] font-normal leading-[1.75] text-[var(--color-text-secondary)] sm:text-[0.84375rem]"
         >
-          A quiet stream of voices from across the network—pause, read, and drift where curiosity
-          leads.
+          Discover voices from across the web, softly converging into a single stream of resonance.
         </p>
         <p
           class="hub-home-caption -mt-1 max-w-[30ch] text-[0.75rem] leading-[1.65] text-[var(--color-text-muted)]"
         >
-          <em>One quiet stream at a time.</em>
+          <em>Many corners, one echoing space.</em>
         </p>
         <div class="flex flex-col items-center gap-4 pt-1">
           <RouterLink

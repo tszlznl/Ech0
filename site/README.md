@@ -1,59 +1,57 @@
-# Official Site && Docs
+# Ech0 — marketing site & documentation
 
-## Welcome to React Router!
+This package is the **official landing page** and **documentation site** for [Ech0](https://github.com/lin-snow/Ech0). It is a **client-side SPA** (no SSR): React Router 7, React 19, Vite, Tailwind CSS v4, and Markdown-backed docs.
 
-A modern, production-ready template for building full-stack React applications using React Router.
+## What lives here
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+| Path | Purpose |
+|------|---------|
+| `app/routes/` | Pages: home (`/`), docs catalog (`/docs`), doc article (`/docs/*`), privacy |
+| `app/docs/` | Doc registry (`registry.ts`), Markdown rendering (`MarkdownDoc.tsx`), table of contents helpers |
+| `docs/` | Markdown sources (`**/*.md`), images under `docs/imgs/` (copied into `public/docs-assets` on build) |
+| `public/` | Static assets (`logo.svg`, `screenshot.png`, `_redirects` for SPA fallback on static hosts) |
 
-## Features
+The doc catalog order and featured cards are controlled in `app/docs/registry.ts` (`DOC_ORDER`, optional `DOC_HERO_SLUGS`).
 
-- 🚀 SPA mode (client-rendered; deploy `build/client`)
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+## Prerequisites
 
-## Getting Started
+- **Node.js** (LTS recommended)
+- **pnpm** (workspace uses `pnpm` at the repo root)
 
-### Installation
+## Commands
 
 ```bash
 pnpm install
+pnpm dev          # dev server (Vite; default http://localhost:5173)
+pnpm build        # output: build/client/ (static assets)
+pnpm start        # serve build/client locally (serve -s)
+pnpm typecheck    # react-router typegen + tsc
+pnpm lint
+pnpm format       # or pnpm format:check
 ```
 
-### Development
+`prebuild` copies `docs/imgs` → `public/docs-assets` when present, so Markdown can reference `/docs-assets/imgs/...`.
 
-Start the development server with HMR:
+## Environment
 
-```bash
-pnpm dev
-```
+| Variable | Purpose |
+|----------|---------|
+| `VITE_SITE_URL` | Canonical site origin (no trailing slash) for OG URLs, JSON-LD, sitemap-related logic. Default in code: `https://www.ech0.app`. |
 
-Your application will be available at `http://localhost:5173`.
+When deploying to a custom domain, align `VITE_SITE_URL` and update `public/sitemap.xml` / `public/robots.txt` if needed.
 
-## Building for Production
+## Production build
 
-```bash
-pnpm build
-```
+- Run `pnpm build`.
+- Deploy the contents of **`build/client/`** to any static host.
+- Configure **SPA fallback** to `index.html` for client-side routes (this repo includes `public/_redirects` for Netlify-style hosts).
 
-Output is **`build/client/`** (static SPA). Point your CDN or static host at that folder. For client-side routes, configure the host to fall back to `index.html` (this repo includes `public/_redirects` for Netlify-style hosts).
+## Editing documentation
 
-Local preview of the built files:
+1. Add or change Markdown under `docs/` (e.g. `docs/guide/foo.md` → URL `/docs/guide/foo`).
+2. Register the slug in `app/docs/registry.ts` `DOC_ORDER` if you care about sidebar order; unlisted files still appear but sort after known entries.
+3. Use `![](imgs/...)` in Markdown; paths are rewritten to `/docs-assets/imgs/...` at render time.
 
-```bash
-pnpm start
-```
+## License
 
-(`serve -s build/client`)
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+Content and code follow the same terms as the parent [Ech0](https://github.com/lin-snow/Ech0) repository unless noted otherwise.
