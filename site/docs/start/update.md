@@ -1,9 +1,11 @@
 ---
 title: 版本更新
-description: Docker、Compose、Helm 升级步骤
+description: 升级前备份；Docker、Compose、Helm 的具体命令
 ---
 
-> **v3 → v4**：不能原地升级。请先在 v3 **导出快照**，再部署 v4，在 v4 面板做 **v3 迁移** 导入。
+升级前请**备份数据目录**（以及若启用对象存储，需按策略备份桶内对象与元数据）。小版本升级通常只需拉新镜像并重建容器；**大版本**（尤其跨主版本）务必读 Release 说明与仓库 `README.zh.md`。
+
+> **v3 → v4**：不能原地升级。请先在 v3 **导出快照**，再部署 v4，在 v4 面板做 **v3 迁移** 导入。详见 [数据管理](/docs/guide/datacontrol)。
 
 ---
 
@@ -21,7 +23,7 @@ docker run -d \
   sn0wl1n/ech0:latest
 ```
 
-请把 `JWT_SECRET` 换成与你环境一致的值（与初次部署相同），数据卷路径勿改错。
+请把 `JWT_SECRET` 换成与你环境一致的值（与初次部署相同），数据卷路径勿改错。若升级后无法启动，先回滚镜像标签并核对 Release 说明，不要清空数据目录试错。
 
 ---
 
@@ -56,3 +58,13 @@ helm upgrade ech0 ./charts/ech0
 ```bash
 helm upgrade my-ech0 ./charts/ech0 --namespace my-namespace
 ```
+
+---
+
+## 升级后建议
+
+1. 打开管理后台，确认版本号与健康状态（若有）。  
+2. 快速浏览时间线、发一条测试 Echo、检查评论与附件是否正常。  
+3. 若使用 Connect / Webhook，关注 Release 是否提及行为变更。  
+
+更多排错思路见 [常见问题](/docs/start/faq)。

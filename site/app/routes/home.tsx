@@ -180,7 +180,7 @@ export default function Home() {
               Get started
             </Link>
             <p className="text-[0.6875rem] font-medium tracking-wide text-sand-11/85">
-              AGPL-3.0 · Lightweight · Open Source
+              AGPL-3.0 · Lightweight · Self-hosted
             </p>
           </div>
         </section>

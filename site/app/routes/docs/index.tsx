@@ -40,6 +40,67 @@ function DocHeroIcon({ slug }: { slug: string }) {
       </svg>
     );
   }
+  if (slug === "start/getting-started") {
+    return (
+      <svg
+        className="size-5"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        <path d="M12 2v4" />
+        <path d="m4.93 4.93 2.83 2.83" />
+        <path d="M2 12h4" />
+        <path d="m4.93 19.07 2.83-2.83" />
+        <path d="M12 18v4" />
+        <path d="m19.07 19.07-2.83-2.83" />
+        <path d="M18 12h4" />
+        <path d="m19.07 4.93-2.83 2.83" />
+        <circle cx="12" cy="12" r="4" />
+      </svg>
+    );
+  }
+  if (slug === "start/installation") {
+    return (
+      <svg
+        className="size-5"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="7 10 12 15 17 10" />
+        <line x1="12" x2="12" y1="15" y2="3" />
+      </svg>
+    );
+  }
+  if (slug === "start/update") {
+    return (
+      <svg
+        className="size-5"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+        <path d="M3 3v5h5" />
+        <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+        <path d="M16 16h5v5" />
+      </svg>
+    );
+  }
   return (
     <svg
       className="size-5"
@@ -62,7 +123,7 @@ export default function DocsIndex({ loaderData }: Route.ComponentProps) {
   const { featured, rest } = loaderData;
 
   return (
-    <>
+    <div className="mx-auto w-full max-w-[min(100%,30rem)]">
       <header className="flex items-center justify-between pt-8">
         <Link
           to="/"
@@ -87,7 +148,7 @@ export default function DocsIndex({ loaderData }: Route.ComponentProps) {
           >
             Start here
           </h2>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+          <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {featured.map((card) => (
               <li key={card.slug} className="flex min-h-0">
                 <Link
@@ -147,6 +208,6 @@ export default function DocsIndex({ loaderData }: Route.ComponentProps) {
           ))}
         </ul>
       </section>
-    </>
+    </div>
   );
 }

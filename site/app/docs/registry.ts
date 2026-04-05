@@ -89,7 +89,9 @@ export function listDocCards(): DocCard[] {
  */
 export const DOC_HERO_SLUGS: readonly string[] = [
   "guide/overview",
+  "start/getting-started",
   "start/installation",
+  "start/update",
 ];
 
 /** Split catalog into featured hero docs and everything else (order preserved). */
@@ -113,9 +115,11 @@ export function partitionDocCards(cards: DocCard[]): {
 /** Explicit order: onboarding → guides → dev / community. */
 const DOC_ORDER: readonly string[] = [
   "guide/overview",
+  "start/getting-started",
   "start/installation",
   "start/update",
   "guide/editor",
+  "guide/preferences",
   "start/faq",
   "guide/federation",
   "guide/sso",
@@ -123,11 +127,11 @@ const DOC_ORDER: readonly string[] = [
   "guide/agent",
   "guide/webhook",
   "guide/accesstoken",
+  "guide/mcp",
   "guide/s3",
   "guide/datacontrol",
   "dev/guide",
   "start/community",
-  "start/credits",
 ];
 
 function docOrder(slug: string): number {

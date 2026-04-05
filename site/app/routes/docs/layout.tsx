@@ -8,7 +8,7 @@ export function meta(_args: Route.MetaArgs) {
 export default function DocsLayout() {
   return (
     <div className="min-h-screen bg-app">
-      <div className="mx-auto w-full max-w-[min(100%,30rem)] px-5 pb-24">
+      <div className="mx-auto w-full max-w-[min(100%,30rem)] px-5 pb-24 lg:max-w-[min(100%,72rem)] lg:px-8">
         <Outlet />
       </div>
     </div>
