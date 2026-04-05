@@ -18,4 +18,4 @@ export function absoluteUrl(path: string): string {
 export const SITE_NAME = "Ech0";
 
 export const DEFAULT_DESCRIPTION =
-  "Let your thoughts flow: a personal timeline on your server—notes, links, and media. Self-hosted, AGPL-3.0, ad-free and platform-free.";
+  "Let your thoughts flow: a personal timeline on your server—self-hosted, AGPL-3.0, ad-free and platform-free.";

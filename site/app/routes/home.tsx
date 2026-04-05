@@ -191,9 +191,9 @@ export default function Home() {
             One timeline, entirely yours.
           </p>
           <p className="mt-5 max-w-[34ch] text-[0.9375rem] leading-relaxed text-sand-10">
-            Short notes, links, media—
+            A single stream for what you publish—
             <br />
-            your ideas, flowing freely.
+            calm, open, and running on your server.
           </p>
         </section>
 
@@ -205,7 +205,7 @@ export default function Home() {
           <ol className="mt-6 list-decimal space-y-3 pl-5 text-[0.9375rem] leading-relaxed text-sand-11 marker:font-serif marker:text-sand-11">
             <li>
               <span className="font-semibold text-sand-12">
-                From notes to life
+                From idea to life
               </span>
               {" — "}
               Ideas don&rsquo;t sit idle—they form a timeline others can
@@ -240,7 +240,7 @@ export default function Home() {
                 Simple and pure
               </span>
               {" — "}
-              Notes, links, media—one clean timeline running on your server.
+              One clean timeline on your server—nothing noisy, nothing borrowed.
             </li>
             <li>
               <span className="font-semibold text-sand-12">Full control</span>
