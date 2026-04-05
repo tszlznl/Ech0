@@ -36,7 +36,8 @@ export default defineConfig({
       manifest: {
         name: 'Ech0 Hub',
         short_name: 'Ech0 Hub',
-        description: 'Aggregate public Ech0 instances',
+        description:
+          'Discover and connect with resonating voices from public Ech0 instances — one feed, many sites.',
         start_url: '/',
         display: 'standalone',
         background_color: '#f4f1ec',
