@@ -146,6 +146,7 @@ jobs:
           title: 'chore(hub): add instance ${{ steps.hub.outputs.instance_id }} (#${{ steps.hub.outputs.issue_number }})'
           body: |
             由 #${{ steps.hub.outputs.issue_number }} 自动发起。
+            Closes #${{ steps.hub.outputs.issue_number }}
 
             - [ ] 维护者确认 CORS 与实例可访问后再合并。
           branch: hub/issue-${{ steps.hub.outputs.issue_number }}
