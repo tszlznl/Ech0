@@ -18,6 +18,28 @@ For a detailed task list as the implementation evolves, see the repo root: `docs
 
 Submit via the **“Register on Ech0 Hub”** Issue form in this repository (GitHub sign-in required). The template applies the `hub` label; ensure a label with that name exists (**Settings → Labels**). After submission, Actions parse the issue and **open a PR** that updates `hub/public/hub.json`. It goes live after maintainers merge. Configure **CORS** on your instance to allow `https://hub.ech0.app`.
 
+## Registration automation workflow
+
+The workflow file is `.github/workflows/hub-register-from-issue.yml`. It automates issue-to-PR registration with these triggers:
+
+- `issues.opened`: runs when a new issue is created.
+- `issues.reopened`: runs when an existing issue is reopened.
+- `workflow_dispatch`: manual recovery path by passing `issue_number` from the Actions UI.
+
+Execution logic:
+
+1. For `opened` / `reopened`, the job only runs when the issue has the `hub` label.
+2. For `workflow_dispatch`, it fetches the target issue by `issue_number` and validates that `hub` label exists.
+3. It parses `Instance ID` and `Instance URL` from the issue body, validates format and URL scheme (`https`), then updates `hub/public/hub.json`.
+4. It creates a PR on branch `hub/issue-<issue_number>` with commit title `chore(hub): add instance ...`.
+5. The PR body includes `Closes #<issue_number>`, so merging the PR automatically closes the source issue.
+6. It comments on the issue with the created PR link for status tracking.
+
+Repository settings required for PR creation from Actions:
+
+- `Settings -> Actions -> General -> Workflow permissions` must be set to **Read and write permissions**.
+- Enable **Allow GitHub Actions to create and approve pull requests**.
+
 ## Instance registry `public/hub.json`
 
 At runtime Hub requests `/hub.json` from the same origin (in dev, Vite serves it from `public/`). Each instance needs only `id` and `url`:
