@@ -4,11 +4,17 @@ name: Hub register from issue
 
 on:
   issues:
-    types: [opened]
+    types: [opened, reopened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: '需要处理的 Issue 编号（例如 123）'
+        required: true
+        type: string
 
 jobs:
   update-hub-json:
-    if: contains(github.event.issue.labels.*.name, 'hub')
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.issue.labels.*.name, 'hub')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -27,7 +33,32 @@ jobs:
             const core = require('@actions/core');
 
             const hubPath = 'hub/public/hub.json';
-            const body = context.payload.issue.body || '';
+            const issueNumber = context.eventName === 'workflow_dispatch'
+              ? Number(core.getInput('issue_number'))
+              : context.issue.number;
+
+            if (!Number.isInteger(issueNumber) || issueNumber <= 0) {
+              core.setFailed('invalid issue_number input');
+              return;
+            }
+
+            let issue;
+            if (context.eventName === 'workflow_dispatch') {
+              const resp = await github.rest.issues.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+              });
+              issue = resp.data;
+              if (!Array.isArray(issue.labels) || !issue.labels.some((l) => l.name === 'hub')) {
+                core.setFailed('target issue does not have hub label');
+                return;
+              }
+            } else {
+              issue = context.payload.issue;
+            }
+
+            const body = issue.body || '';
 
             const idRe = /### Instance ID\s*\r?\n+\s*([^\n#]+)/;
             const urlRe = /### Instance URL\s*\r?\n+\s*([^\n#]+)/;
@@ -38,7 +69,7 @@ jobs:
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: context.issue.number,
+                issue_number: issueNumber,
                 body: msg,
               });
             };
@@ -104,6 +135,7 @@ jobs:
 
             core.setOutput('changed', 'true');
             core.setOutput('instance_id', instanceId);
+            core.setOutput('issue_number', String(issueNumber));
 
       - name: Create pull request
         id: cpr
@@ -111,13 +143,13 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'chore(hub): add instance ${{ steps.hub.outputs.instance_id }} (#${{ github.event.issue.number }})'
-          title: 'chore(hub): add instance ${{ steps.hub.outputs.instance_id }} (#${{ github.event.issue.number }})'
+          commit-message: 'chore(hub): add instance ${{ steps.hub.outputs.instance_id }} (#${{ steps.hub.outputs.issue_number }})'
+          title: 'chore(hub): add instance ${{ steps.hub.outputs.instance_id }} (#${{ steps.hub.outputs.issue_number }})'
           body: |
-            由 #${{ github.event.issue.number }} 自动发起。
+            由 #${{ steps.hub.outputs.issue_number }} 自动发起。
 
             - [ ] 维护者确认 CORS 与实例可访问后再合并。
-          branch: hub/issue-${{ github.event.issue.number }}
+          branch: hub/issue-${{ steps.hub.outputs.issue_number }}
           delete-branch: true
           labels: hub
           add-paths: |
@@ -127,12 +159,13 @@ jobs:
         if: steps.hub.outputs.changed == 'true' && steps.cpr.outputs.pull-request-url != ''
         env:
           PR_URL: ${{ steps.cpr.outputs.pull-request-url }}
+          ISSUE_NUMBER: ${{ steps.hub.outputs.issue_number }}
         uses: actions/github-script@v8
         with:
           script: |
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
+              issue_number: Number(process.env.ISSUE_NUMBER),
               body: `已创建 PR：${process.env.PR_URL}\n\n维护者审核合并后，实例会出现在 Hub 列表中。`,
             });
