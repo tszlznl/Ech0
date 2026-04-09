@@ -334,7 +334,14 @@ onMounted(() => {
 }
 
 .update-dot {
-  display: none;
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #e5a00d;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+  animation: update-dot-pulse 2s ease-in-out infinite;
 }
 
 .stat-checking {
@@ -342,6 +349,16 @@ onMounted(() => {
   color: var(--color-text-muted);
   margin-left: 0.2em;
   animation: stat-checking-blink 1s steps(1, end) infinite;
+}
+
+@keyframes update-dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 @keyframes stat-checking-blink {
@@ -368,25 +385,5 @@ onMounted(() => {
     gap: 0.85rem;
   }
 
-  .update-dot {
-    display: inline-block;
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 50%;
-    background: #e5a00d;
-    margin-left: 0.4rem;
-    vertical-align: middle;
-    animation: update-dot-pulse 2s ease-in-out infinite;
-  }
-
-  @keyframes update-dot-pulse {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.4;
-    }
-  }
 }
 </style>
