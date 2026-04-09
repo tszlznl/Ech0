@@ -3,10 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"net"
-	"net/http"
-	"net/url"
-	"strings"
 	"time"
 
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
@@ -166,7 +162,7 @@ func (settingService *SettingService) TestWebhook(ctx context.Context, id string
 		return err
 	}
 
-	client := &http.Client{Timeout: 5 * time.Second}
+	client := webhookclient.NewSafeHTTPClient(5 * time.Second)
 	triggerAt := time.Now().UTC()
 	sendErr := webhookclient.SendWithRetry(client, webhook, obs, 2, 300*time.Millisecond)
 	status := "success"
@@ -178,22 +174,8 @@ func (settingService *SettingService) TestWebhook(ctx context.Context, id string
 }
 
 func validateWebhookURL(rawURL string) error {
-	parsed, err := url.Parse(rawURL)
-	if err != nil {
+	if err := httpUtil.ValidatePublicHTTPURL(rawURL); err != nil {
 		return errors.New(commonModel.INVALID_WEBHOOK_URL)
-	}
-	if parsed.Scheme != "http" && parsed.Scheme != "https" {
-		return errors.New(commonModel.INVALID_WEBHOOK_URL)
-	}
-	host := strings.ToLower(parsed.Hostname())
-	if host == "" || host == "localhost" || strings.HasSuffix(host, ".local") {
-		return errors.New(commonModel.INVALID_WEBHOOK_URL)
-	}
-	if ip := net.ParseIP(host); ip != nil {
-		if ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalMulticast() ||
-			ip.IsLinkLocalUnicast() || ip.IsUnspecified() {
-			return errors.New(commonModel.INVALID_WEBHOOK_URL)
-		}
 	}
 	return nil
 }

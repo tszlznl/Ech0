@@ -18,6 +18,8 @@ import (
 	"go.uber.org/zap"
 )
 
+const defaultWebhookTimeout = 5 * time.Second
+
 type WebhookStore interface {
 	ListActiveWebhooks(ctx context.Context) ([]webhookModel.Webhook, error)
 	UpdateWebhookDeliveryStatus(
@@ -48,14 +50,7 @@ func NewDispatcher(
 	return &Dispatcher{
 		repo:      repo,
 		queueRepo: queueRepo,
-		client: &http.Client{
-			Timeout: 5 * time.Second,
-			Transport: &http.Transport{
-				MaxIdleConns:        10,
-				MaxIdleConnsPerHost: 10,
-				IdleConnTimeout:     30 * time.Second,
-			},
-		},
+		client:    webhookclient.NewSafeHTTPClient(defaultWebhookTimeout),
 		pool: async.NewWorkerPool(
 			config.Config().Event.WebhookPoolWorkers,
 			config.Config().Event.WebhookPoolQueue,

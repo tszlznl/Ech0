@@ -2,7 +2,12 @@ package util
 
 import (
 	"bytes"
+	"context"
+	"net"
+	"net/http"
+	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 func TestValidatePublicHTTPURL(t *testing.T) {
@@ -58,6 +63,56 @@ func TestValidatePublicHTTPURL(t *testing.T) {
 			rawURL:  "http://host.docker.internal",
 			wantErr: true,
 		},
+		{
+			name:    "reject_private_172",
+			rawURL:  "http://172.16.0.1",
+			wantErr: true,
+		},
+		{
+			name:    "reject_private_192",
+			rawURL:  "http://192.168.1.1",
+			wantErr: true,
+		},
+		{
+			name:    "reject_url_with_userinfo",
+			rawURL:  "http://admin:pass@example.com",
+			wantErr: true,
+		},
+		{
+			name:    "reject_empty_scheme",
+			rawURL:  "://example.com",
+			wantErr: true,
+		},
+		{
+			name:    "reject_no_host",
+			rawURL:  "http://",
+			wantErr: true,
+		},
+		{
+			name:    "reject_gateway_docker",
+			rawURL:  "http://gateway.docker.internal",
+			wantErr: true,
+		},
+		{
+			name:    "reject_subdomain_localhost",
+			rawURL:  "http://foo.localhost",
+			wantErr: true,
+		},
+		{
+			name:    "reject_ipv6_link_local",
+			rawURL:  "http://[fe80::1]",
+			wantErr: true,
+		},
+		{
+			name:    "reject_ipv6_unique_local",
+			rawURL:  "http://[fc00::1]",
+			wantErr: true,
+		},
+		{
+			name:    "allow_public_domain_with_path",
+			rawURL:  "https://hooks.slack.com/services/T00/B00/xxx",
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -69,6 +124,43 @@ func TestValidatePublicHTTPURL(t *testing.T) {
 				t.Fatalf("ValidatePublicHTTPURL(%q) error = %v, wantErr=%v", tt.rawURL, err, tt.wantErr)
 			}
 		})
+	}
+}
+
+func TestSecureDialContext_blocks_loopback(t *testing.T) {
+	t.Parallel()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	dial := SecureDialContext(2 * time.Second)
+	conn, err := dial(context.Background(), "tcp", srv.Listener.Addr().String())
+	if conn != nil {
+		_ = conn.Close()
+	}
+	if err == nil {
+		t.Fatal("expected SecureDialContext to block loopback connection, but got nil error")
+	}
+}
+
+func TestSecureDialContext_blocks_private_ip(t *testing.T) {
+	t.Parallel()
+
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("failed to listen: %v", err)
+	}
+	defer ln.Close()
+
+	dial := SecureDialContext(2 * time.Second)
+	conn, dialErr := dial(context.Background(), "tcp", ln.Addr().String())
+	if conn != nil {
+		_ = conn.Close()
+	}
+	if dialErr == nil {
+		t.Fatal("expected SecureDialContext to block private IP connection")
 	}
 }
 

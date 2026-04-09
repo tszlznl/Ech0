@@ -56,6 +56,7 @@ type Header struct {
 const (
 	defaultSafeResponseBodyLimitBytes int64 = 1 << 20 // 1 MiB
 	maxSafeRedirects                        = 3
+	MaxSafeRedirects                        = maxSafeRedirects
 )
 
 var blockedCIDRs = mustParseCIDRs(
@@ -140,7 +141,9 @@ func ValidatePublicHTTPURL(rawURL string) error {
 	return nil
 }
 
-func secureDialContext(timeout time.Duration) func(context.Context, string, string) (net.Conn, error) {
+// SecureDialContext returns a DialContext function that rejects connections
+// to private/reserved IP addresses after DNS resolution.
+func SecureDialContext(timeout time.Duration) func(context.Context, string, string) (net.Conn, error) {
 	dialer := &net.Dialer{Timeout: timeout}
 	return func(ctx context.Context, network, address string) (net.Conn, error) {
 		conn, err := dialer.DialContext(ctx, network, address)
@@ -242,7 +245,7 @@ func SendSafeRequest(
 			TLSClientConfig: &tls.Config{
 				MinVersion: tls.VersionTLS12,
 			},
-			DialContext: secureDialContext(clientTimeout),
+			DialContext: SecureDialContext(clientTimeout),
 		},
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			if len(via) >= maxSafeRedirects {
