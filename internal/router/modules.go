@@ -1,9 +1,12 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/lin-snow/ech0/internal/config"
 	"github.com/lin-snow/ech0/internal/handler"
+	"github.com/lin-snow/ech0/internal/middleware"
 )
 
 // RouterContext 聚合路由注册需要的上下文。
@@ -48,7 +51,8 @@ func coreRouteModules() []RouteModule {
 				if root == "" {
 					root = "data/files"
 				}
-				ctx.Engine.Static("api/files", root)
+				filesGroup := ctx.Engine.Group("api/files", middleware.StaticFileSecurity())
+				filesGroup.StaticFS("/", http.Dir(root))
 			},
 		},
 		routeModule{

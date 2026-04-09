@@ -86,10 +86,24 @@ func (s *FileService) UploadFile(
 		return commonModel.FileDto{}, errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	contentType := file.Header.Get("Content-Type")
-	if !isAllowedType(contentType, config.Config().Upload.AllowedTypes) {
-		return commonModel.FileDto{}, errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
+	reader, err := file.Open()
+	if err != nil {
+		return commonModel.FileDto{}, err
 	}
+	detectedMIME, err := detectContentType(reader)
+	_ = reader.Close()
+	if err != nil {
+		return commonModel.FileDto{}, err
+	}
+
+	if err := validateFileUpload(file.Filename, detectedMIME, config.Config().Upload.AllowedTypes); err != nil {
+		return commonModel.FileDto{}, err
+	}
+
+	// Use the canonical MIME for the extension rather than the raw sniffed
+	// value (which may be "application/octet-stream" for formats Go cannot
+	// identify by magic bytes alone, e.g. AVIF, FLAC).
+	contentType := resolveContentType(file.Filename, detectedMIME)
 
 	limit := int64(config.Config().Upload.ImageMaxSize)
 	if category == storage.CategoryAudio {
@@ -105,11 +119,11 @@ func (s *FileService) UploadFile(
 		return commonModel.FileDto{}, err
 	}
 
-	reader, err := file.Open()
+	uploadReader, err := file.Open()
 	if err != nil {
 		return commonModel.FileDto{}, err
 	}
-	defer func() { _ = reader.Close() }()
+	defer func() { _ = uploadReader.Close() }()
 
 	var opts []virefs.PutOption
 	if contentType != "" {
@@ -121,7 +135,7 @@ func (s *FileService) UploadFile(
 		targetStorageType = storage.StorageTypeLocal
 	}
 	selector := s.getSelector()
-	if err := selector.Put(context.Background(), targetStorageType, key, reader, opts...); err != nil {
+	if err := selector.Put(context.Background(), targetStorageType, key, uploadReader, opts...); err != nil {
 		return commonModel.FileDto{}, err
 	}
 
@@ -765,8 +779,8 @@ func (s *FileService) GetFilePresignURL(
 	if strings.HasPrefix(contentType, "audio/") {
 		category = storage.CategoryAudio
 	}
-	if !isAllowedType(contentType, config.Config().Upload.AllowedTypes) {
-		return result, errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
+	if err := validateFileUploadByName(dto.FileName, contentType, config.Config().Upload.AllowedTypes); err != nil {
+		return result, err
 	}
 
 	key, err := s.keyGen.GenerateKey(category, userid, dto.FileName)
@@ -949,6 +963,156 @@ func isAllowedType(contentType string, allowedTypes []string) bool {
 		}
 	}
 	return false
+}
+
+// Extensions that must never be stored, regardless of allowlist configuration.
+var dangerousExtensions = map[string]struct{}{
+	".html": {}, ".htm": {}, ".xhtml": {},
+	".svg": {},
+	".xml": {}, ".xsl": {}, ".xslt": {},
+	".js": {}, ".mjs": {}, ".cjs": {},
+	".php": {}, ".asp": {}, ".aspx": {}, ".jsp": {},
+}
+
+// Safe extension-to-MIME mapping. Only these extensions are accepted for upload.
+var safeExtMIME = map[string][]string{
+	".jpg":  {"image/jpeg"},
+	".jpeg": {"image/jpeg"},
+	".png":  {"image/png"},
+	".gif":  {"image/gif"},
+	".webp": {"image/webp"},
+	".avif": {"image/avif"},
+	".mp3":  {"audio/mpeg"},
+	".flac": {"audio/flac"},
+	".wav":  {"audio/wav", "audio/x-wav"},
+	".m4a":  {"audio/mp4", "audio/x-m4a"},
+	".ogg":  {"audio/ogg"},
+}
+
+// MIME types that indicate executable/document content; files whose magic
+// bytes resolve to these must always be rejected regardless of extension.
+var executableMIMEs = map[string]struct{}{
+	"text/html":                {},
+	"text/xml":                 {},
+	"application/xhtml+xml":   {},
+	"application/xml":         {},
+	"image/svg+xml":           {},
+	"application/javascript":  {},
+	"text/javascript":         {},
+	"application/x-httpd-php": {},
+}
+
+// detectContentType reads the first 512 bytes of f to sniff MIME via
+// http.DetectContentType, then rewinds f back to the start.
+func detectContentType(f multipart.File) (string, error) {
+	buf := make([]byte, 512)
+	n, err := f.Read(buf)
+	if err != nil && err != io.EOF {
+		return "", err
+	}
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		return "", err
+	}
+	return http.DetectContentType(buf[:n]), nil
+}
+
+// validateFileUpload performs server-side file type validation:
+//  1. Reject dangerous extensions unconditionally.
+//  2. Require extension to be in the safe whitelist.
+//  3. Require the config allowlist MIME to match the extension's expected set.
+func validateFileUpload(filename string, detectedMIME string, allowedTypes []string) error {
+	ext := strings.ToLower(filepath.Ext(strings.TrimSpace(filename)))
+
+	if _, blocked := dangerousExtensions[ext]; blocked {
+		return errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
+	}
+
+	expectedMIMEs, ok := safeExtMIME[ext]
+	if !ok {
+		return errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
+	}
+
+	// If magic-bytes detection resolved to an executable MIME, reject even if
+	// the extension looks safe (e.g. an HTML file renamed to .jpg).
+	if _, exec := executableMIMEs[detectedMIME]; exec {
+		return errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
+	}
+
+	// The detected MIME must either match one of the extension's expected
+	// types, or be "application/octet-stream" (meaning the sniffer could not
+	// determine a more specific type — common for AVIF, FLAC, etc.).
+	mimeOK := detectedMIME == "application/octet-stream"
+	if !mimeOK {
+		for _, m := range expectedMIMEs {
+			if detectedMIME == m {
+				mimeOK = true
+				break
+			}
+		}
+	}
+	if !mimeOK {
+		return errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
+	}
+
+	// At least one of the extension's expected MIMEs must be on the config
+	// allowlist so administrators retain control.
+	configOK := false
+	for _, m := range expectedMIMEs {
+		if isAllowedType(m, allowedTypes) {
+			configOK = true
+			break
+		}
+	}
+	if !configOK {
+		return errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
+	}
+
+	return nil
+}
+
+// validateFileUploadByName validates filename + declared MIME without file
+// body (used by presign URL flow where no file content is available).
+func validateFileUploadByName(filename string, declaredMIME string, allowedTypes []string) error {
+	ext := strings.ToLower(filepath.Ext(strings.TrimSpace(filename)))
+
+	if _, blocked := dangerousExtensions[ext]; blocked {
+		return errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
+	}
+
+	expectedMIMEs, ok := safeExtMIME[ext]
+	if !ok {
+		return errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
+	}
+
+	if !isAllowedType(declaredMIME, allowedTypes) {
+		return errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
+	}
+
+	mimeMatchesExt := false
+	for _, m := range expectedMIMEs {
+		if declaredMIME == m {
+			mimeMatchesExt = true
+			break
+		}
+	}
+	if !mimeMatchesExt {
+		return errors.New(commonModel.FILE_TYPE_NOT_ALLOWED)
+	}
+	return nil
+}
+
+// resolveContentType returns the canonical MIME for the file extension. If the
+// detected MIME is specific (not application/octet-stream), it is returned
+// directly; otherwise the first expected MIME for the extension is used.
+func resolveContentType(filename string, detected string) string {
+	if detected != "" && detected != "application/octet-stream" {
+		return detected
+	}
+	ext := strings.ToLower(filepath.Ext(strings.TrimSpace(filename)))
+	if mimes, ok := safeExtMIME[ext]; ok && len(mimes) > 0 {
+		return mimes[0]
+	}
+	return detected
 }
 
 func (s *FileService) getSelector() *storage.StorageSelector {
