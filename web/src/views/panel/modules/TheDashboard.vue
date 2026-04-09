@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { fetchGetEchosByPage, fetchCheckUpdate } from '@/service/api'
+import { fetchGetEchosByPage, fetchGetTodayEchos, fetchCheckUpdate } from '@/service/api'
 import { useConnectStore, useSettingStore } from '@/stores'
 import { theToast } from '@/utils/toast'
 import PanelCard from '@/layout/PanelCard.vue'
@@ -14,18 +14,13 @@ type StatCard = {
   note: string
 }
 
-type StatusCard = {
-  key: string
-  title: string
-  value: string
-}
-
 const settingStore = useSettingStore()
 const connectStore = useConnectStore()
 const { t, locale } = useI18n()
 
 const loading = ref(true)
 const echoTotal = ref<number | null>(null)
+const todayEchoCount = ref<number | null>(null)
 const connectCount = ref<number | null>(null)
 const hasUpdate = ref(false)
 const latestVersion = ref('')
@@ -56,8 +51,15 @@ const dashboardStats = computed<StatCard[]>(() => {
       note: '',
     },
     {
-      key: 'version',
+      key: 'today-echo',
       serial: 'NO.03',
+      label: String(t('dashboard.todayEchoCount')),
+      value: formatMetric(todayEchoCount.value),
+      note: '',
+    },
+    {
+      key: 'version',
+      serial: 'NO.04',
       label: String(t('dashboard.currentVersion')),
       value: settingStore.hello?.version || '--',
       note: '',
@@ -73,30 +75,22 @@ const todayText = computed(() => {
   }).format(new Date())
 })
 
-const dashboardStatus = computed<StatusCard[]>(() => {
-  const connect = connectCount.value ?? 0
-
-  return [
-    {
-      key: 'connect-status',
-      title: String(t('dashboard.connectionStatus')),
-      value:
-        connect > 0
-          ? String(t('dashboard.nodesOnline', { count: connect }))
-          : String(t('dashboard.noNodes')),
-    },
-  ]
-})
-
 const loadDashboardStats = async () => {
   loading.value = true
-  const [echoRes] = await Promise.allSettled([
+  const [echoRes, , todayRes] = await Promise.allSettled([
     fetchGetEchosByPage({ page: 1, pageSize: 1, search: '' }),
     connectStore.getConnect(),
+    fetchGetTodayEchos(),
   ])
 
   if (echoRes.status === 'fulfilled' && echoRes.value.code === 1) {
     echoTotal.value = echoRes.value.data?.total ?? 0
+  }
+
+  if (todayRes.status === 'fulfilled' && todayRes.value.code === 1) {
+    todayEchoCount.value = Array.isArray(todayRes.value.data)
+      ? todayRes.value.data.length
+      : 0
   }
 
   connectCount.value = connectStore.connects.length
@@ -172,21 +166,6 @@ onMounted(() => {
           }}</span>
         </p>
         <p class="stat-note">{{ item.note }}</p>
-      </PanelCard>
-    </section>
-
-    <section class="status-grid">
-      <PanelCard
-        v-for="item in dashboardStatus"
-        :key="item.key"
-        border-style="solid"
-        class="status-card"
-      >
-        <div class="status-head">
-          <p class="status-title">{{ item.title }}</p>
-          <span class="status-head-line"></span>
-        </div>
-        <p class="status-value">{{ item.value }}</p>
       </PanelCard>
     </section>
   </div>
@@ -293,44 +272,6 @@ onMounted(() => {
   opacity: 0.7;
 }
 
-.status-grid {
-  display: grid;
-  grid-template-columns: repeat(1, minmax(0, 1fr));
-  gap: 0.7rem;
-}
-
-.status-card {
-  display: grid;
-  gap: 0.35rem;
-  padding: 0.7rem 0.9rem;
-  box-shadow: none;
-}
-
-.status-head {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.status-title {
-  color: var(--color-text-muted);
-  font-size: 0.78rem;
-  white-space: nowrap;
-}
-
-.status-head-line {
-  display: inline-block;
-  width: 100%;
-  height: 1px;
-  background: color-mix(in oklab, var(--color-border-subtle) 85%, transparent);
-}
-
-.status-value {
-  color: var(--color-text-secondary);
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
 .stat-card--clickable {
   cursor: pointer;
 }
@@ -376,10 +317,6 @@ onMounted(() => {
 
 @media (min-width: 768px) {
   .stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .status-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 

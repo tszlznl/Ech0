@@ -52,6 +52,13 @@ export function fetchLikeEcho(echoId: string) {
   })
 }
 
+export function fetchGetTodayEchos() {
+  return request<App.Api.Ech0.Echo[]>({
+    url: `/echo/today`,
+    method: 'GET',
+  })
+}
+
 // 获取Echo详情
 export async function fetchGetEchoById(echoId: string) {
   return request<App.Api.Ech0.Echo>({

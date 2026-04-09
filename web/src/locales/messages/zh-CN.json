@@ -268,10 +268,8 @@
   "dashboard": {
     "echoTotal": "Echo 总数",
     "connectedNodes": "已连接节点",
+    "todayEchoCount": "今日发布",
     "currentVersion": "当前版本",
-    "connectionStatus": "连接状态",
-    "nodesOnline": "{count} 个节点在线",
-    "noNodes": "暂无可用节点",
     "checkingUpdate": "正在检查更新...",
     "updateAvailable": "有新版本 {version} 可用",
     "alreadyLatest": "已是最新版本",

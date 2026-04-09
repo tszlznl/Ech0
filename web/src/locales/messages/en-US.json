@@ -268,10 +268,8 @@
   "dashboard": {
     "echoTotal": "Total Echos",
     "connectedNodes": "Connected nodes",
+    "todayEchoCount": "Today's Echos",
     "currentVersion": "Current version",
-    "connectionStatus": "Connection status",
-    "nodesOnline": "{count} node(s) online",
-    "noNodes": "No available nodes",
     "checkingUpdate": "Checking for updates...",
     "updateAvailable": "New version {version} available",
     "alreadyLatest": "Already up to date",
