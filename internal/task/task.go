@@ -76,10 +76,6 @@ func (t *Tasker) Start(context.Context) error {
 	if err := t.DeadLetterConsumeTask(); err != nil {
 		return err
 	}
-	if err := t.Ech0UpdateCheckTask(); err != nil {
-		return err
-	}
-
 	// 读取自动备份cron设置
 	var backupScheduleSetting settingModel.BackupSchedule
 	if err := t.settingService.GetBackupScheduleSetting(&backupScheduleSetting); err != nil {
@@ -268,25 +264,3 @@ func (t *Tasker) tryUploadBackupToS3(ctx context.Context, backupPath, fileName s
 	}
 }
 
-// Ech0UpdateCheckTask 定时检查版本更新
-func (t *Tasker) Ech0UpdateCheckTask() error {
-	_, err := t.scheduler.NewJob(
-		gocron.DailyJob(1, gocron.NewAtTimes(gocron.NewAtTime(12, 0, 0))),
-		gocron.NewTask(
-			func() {
-				if err := t.publisher.Ech0UpdateChecked(
-					context.Background(),
-					contracts.Ech0UpdateCheckEvent{Info: "Ech0 update checked"},
-				); err != nil {
-					logUtil.GetLogger().Error("Failed to publish ech0 update checked event", zap.Error(err))
-				}
-			},
-		),
-	)
-	if err != nil {
-		logUtil.GetLogger().
-			Error("Failed to schedule Ech0UpdateCheckTask", zap.Error(err))
-		return err
-	}
-	return nil
-}

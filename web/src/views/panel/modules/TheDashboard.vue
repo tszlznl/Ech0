@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { fetchGetEchosByPage } from '@/service/api'
+import { fetchGetEchosByPage, fetchCheckUpdate } from '@/service/api'
 import { useConnectStore, useSettingStore } from '@/stores'
+import { theToast } from '@/utils/toast'
 import PanelCard from '@/layout/PanelCard.vue'
 
 type StatCard = {
@@ -26,6 +27,9 @@ const { t, locale } = useI18n()
 const loading = ref(true)
 const echoTotal = ref<number | null>(null)
 const connectCount = ref<number | null>(null)
+const hasUpdate = ref(false)
+const latestVersion = ref('')
+const checkingUpdate = ref(false)
 
 const formatMetric = (value: number | null) => {
   if (value === null) {
@@ -100,6 +104,35 @@ const loadDashboardStats = async () => {
   loading.value = false
 }
 
+const handleCheckUpdate = async () => {
+  if (checkingUpdate.value) return
+  checkingUpdate.value = true
+  try {
+    const res = await fetchCheckUpdate()
+    if (res.code === 1 && res.data) {
+      hasUpdate.value = res.data.has_update
+      latestVersion.value = res.data.latest_version
+      if (res.data.has_update) {
+        theToast.info(String(t('dashboard.updateAvailable', { version: res.data.latest_version })))
+      } else {
+        theToast.info(String(t('dashboard.alreadyLatest')))
+      }
+    } else {
+      theToast.error(String(t('dashboard.checkUpdateFailed')))
+    }
+  } catch {
+    theToast.error(String(t('dashboard.checkUpdateFailed')))
+  } finally {
+    checkingUpdate.value = false
+  }
+}
+
+const handleStatCardClick = (key: string) => {
+  if (key === 'version') {
+    void handleCheckUpdate()
+  }
+}
+
 onMounted(() => {
   void loadDashboardStats()
 })
@@ -118,7 +151,9 @@ onMounted(() => {
         v-for="item in dashboardStats"
         :key="item.key"
         border-style="solid"
-        class="stat-card"
+        :class="['stat-card', item.key === 'version' ? 'stat-card--clickable' : '']"
+        v-tooltip="item.key === 'version' ? t('dashboard.clickToCheckUpdate') : undefined"
+        @click="handleStatCardClick(item.key)"
       >
         <div class="stat-head">
           <p class="stat-serial">{{ item.serial }}</p>
@@ -127,6 +162,12 @@ onMounted(() => {
         <p class="stat-label">{{ item.label }}</p>
         <p class="stat-value" :class="{ 'is-loading': loading && item.value === '--' }">
           {{ item.value }}
+          <span
+            v-if="item.key === 'version' && hasUpdate"
+            class="update-dot"
+            :title="t('dashboard.updateAvailable', { version: latestVersion })"
+          ></span>
+          <span v-if="item.key === 'version' && checkingUpdate" class="stat-checking">...</span>
         </p>
         <p class="stat-note">{{ item.note }}</p>
       </PanelCard>
@@ -288,6 +329,32 @@ onMounted(() => {
   font-weight: 600;
 }
 
+.stat-card--clickable {
+  cursor: pointer;
+}
+
+.update-dot {
+  display: none;
+}
+
+.stat-checking {
+  font-size: 0.6em;
+  color: var(--color-text-muted);
+  margin-left: 0.2em;
+  animation: stat-checking-blink 1s steps(1, end) infinite;
+}
+
+@keyframes stat-checking-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0.3;
+  }
+}
+
 @media (min-width: 768px) {
   .stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -299,6 +366,27 @@ onMounted(() => {
 
   .dashboard-page {
     gap: 0.85rem;
+  }
+
+  .update-dot {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: #e5a00d;
+    margin-left: 0.4rem;
+    vertical-align: middle;
+    animation: update-dot-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes update-dot-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
   }
 }
 </style>

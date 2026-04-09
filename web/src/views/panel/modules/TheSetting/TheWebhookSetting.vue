@@ -324,7 +324,6 @@ const webhookGuideTopics = [
   'system.backup',
   'system.export',
   'system.backup_schedule.updated',
-  'ech0.update.check',
 ]
 const webhookGuideHeaders = computed(() => [
   { key: 'X-Ech0-Event', desc: String(t('webhookSetting.guideHeaderEvent')) },

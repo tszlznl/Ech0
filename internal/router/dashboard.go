@@ -9,6 +9,11 @@ import (
 func setupDashboardRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	// Auth
 	appRouterGroup.AuthRouterGroup.GET(
+		"/system/check-update",
+		middleware.RequireScopes(authModel.ScopeAdminSettings),
+		h.DashboardHandler.CheckUpdate(),
+	)
+	appRouterGroup.AuthRouterGroup.GET(
 		"/system/logs",
 		middleware.RequireScopes(authModel.ScopeAdminSettings),
 		h.DashboardHandler.GetSystemLogs(),

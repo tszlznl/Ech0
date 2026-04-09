@@ -271,7 +271,12 @@
     "currentVersion": "Current version",
     "connectionStatus": "Connection status",
     "nodesOnline": "{count} node(s) online",
-    "noNodes": "No available nodes"
+    "noNodes": "No available nodes",
+    "checkingUpdate": "Checking for updates...",
+    "updateAvailable": "New version {version} available",
+    "alreadyLatest": "Already up to date",
+    "checkUpdateFailed": "Failed to check for updates",
+    "clickToCheckUpdate": "Click to check for updates"
   },
   "panelPage": {
     "friend": "friend",

@@ -24,7 +24,6 @@ func webhookSubscriptions(observer WebhookObserver) []Subscription {
 		webhookTopicSubscription[contracts.SystemBackupEvent](observer, contracts.TopicSystemBackup),
 		webhookTopicSubscription[contracts.SystemExportEvent](observer, contracts.TopicSystemExport),
 		webhookTopicSubscription[contracts.UpdateBackupScheduleEvent](observer, contracts.TopicBackupScheduleUpdate),
-		webhookTopicSubscription[contracts.Ech0UpdateCheckEvent](observer, contracts.TopicEch0UpdateCheck),
 	}
 }
 

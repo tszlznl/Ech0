@@ -10,9 +10,11 @@ import (
 	res "github.com/lin-snow/ech0/internal/handler/response"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	service "github.com/lin-snow/ech0/internal/service/dashboard"
+	githubUtil "github.com/lin-snow/ech0/internal/util/github"
 	jwtUtil "github.com/lin-snow/ech0/internal/util/jwt"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"go.uber.org/zap"
+	"golang.org/x/mod/semver"
 )
 
 type DashboardHandler struct {
@@ -86,6 +88,29 @@ func (dashboardHandler *DashboardHandler) WSSubscribeSystemLogs() gin.HandlerFun
 		)
 		if err != nil {
 			logUtil.GetLogger().Error("WebSocket Subscribe System Logs Failed", zap.Error(err))
+		}
+	})
+}
+
+// CheckUpdate 检查 Ech0 版本更新
+func (dashboardHandler *DashboardHandler) CheckUpdate() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		latestVersion, err := githubUtil.GetLatestVersion()
+		if err != nil {
+			return res.Response{Msg: "检查更新失败", Err: err}
+		}
+
+		cur := semver.Canonical("v" + strings.TrimPrefix(strings.TrimSpace(commonModel.Version), "v"))
+		lat := semver.Canonical("v" + strings.TrimPrefix(strings.TrimSpace(latestVersion), "v"))
+		hasUpdate := cur != "" && lat != "" && semver.Compare(lat, cur) > 0
+
+		return res.Response{
+			Data: gin.H{
+				"current_version": commonModel.Version,
+				"latest_version":  latestVersion,
+				"has_update":      hasUpdate,
+			},
+			Msg: commonModel.SUCCESS_MESSAGE,
 		}
 	})
 }

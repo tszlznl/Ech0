@@ -271,7 +271,12 @@
     "currentVersion": "Aktuelle Version",
     "connectionStatus": "Verbindungsstatus",
     "nodesOnline": "{count} Knoten online",
-    "noNodes": "Keine Knoten verfügbar"
+    "noNodes": "Keine Knoten verfügbar",
+    "checkingUpdate": "Prüfe auf Updates…",
+    "updateAvailable": "Neue Version {version} verfügbar",
+    "alreadyLatest": "Bereits auf dem neuesten Stand",
+    "checkUpdateFailed": "Update-Prüfung fehlgeschlagen",
+    "clickToCheckUpdate": "Klicken, um auf Updates zu prüfen"
   },
   "panelPage": {
     "friend": "Freund",

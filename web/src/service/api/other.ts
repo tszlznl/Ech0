@@ -16,6 +16,19 @@ export function fetchExportBackup() {
   })
 }
 
+export type CheckUpdateResult = {
+  current_version: string
+  latest_version: string
+  has_update: boolean
+}
+
+export function fetchCheckUpdate() {
+  return request<CheckUpdateResult>({
+    url: '/system/check-update',
+    method: 'GET',
+  })
+}
+
 // 获取网站标题
 export function fetchGetWebsiteTitle(websiteURL: string) {
   return request<string>({

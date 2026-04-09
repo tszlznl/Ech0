@@ -28,7 +28,6 @@ const (
 	TopicSystemExport         = "system.export"
 	TopicBackupScheduleUpdate = "system.backup_schedule.updated"
 	TopicDeadLetterRetried    = "deadletter.retried"
-	TopicEch0UpdateCheck      = "ech0.update.check"
 )
 
 var webhookTopicWhitelist = map[string]struct{}{
@@ -45,7 +44,6 @@ var webhookTopicWhitelist = map[string]struct{}{
 	TopicSystemBackup:         {},
 	TopicSystemExport:         {},
 	TopicBackupScheduleUpdate: {},
-	TopicEch0UpdateCheck:      {},
 }
 
 type (
@@ -99,7 +97,6 @@ type (
 	DeadLetterRetriedEvent struct {
 		DeadLetter queueModel.DeadLetter
 	}
-	Ech0UpdateCheckEvent struct{ Info string }
 
 	WebhookObservation struct {
 		Topic      string            `json:"topic"`

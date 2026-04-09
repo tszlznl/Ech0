@@ -120,7 +120,6 @@ Webhook 是 Ech0 的事件推送能力。当系统内发生关键事件（如用
 - `system.backup`
 - `system.export`
 - `system.backup_schedule.updated`
-- `ech0.update.check`
 
 说明：`deadletter.retried` 不是对外 webhook 事件，它是内部死信重放事件。
 
