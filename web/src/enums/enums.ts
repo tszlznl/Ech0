@@ -74,4 +74,3 @@ export enum AgentProvider {
   OLLAMA = 'ollama',
   CUSTOM = 'custom',
 }
-

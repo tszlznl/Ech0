@@ -263,4 +263,3 @@ func (t *Tasker) tryUploadBackupToS3(ctx context.Context, backupPath, fileName s
 		logUtil.GetLogger().Warn("Failed to upload backup to S3", zap.Error(err))
 	}
 }
-

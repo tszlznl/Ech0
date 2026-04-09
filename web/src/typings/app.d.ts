@@ -607,6 +607,5 @@ declare namespace App {
         logo: string
       }
     }
-
   }
 }

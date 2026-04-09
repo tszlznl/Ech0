@@ -14,6 +14,12 @@ type StatCard = {
   note: string
 }
 
+type StatusCard = {
+  key: string
+  title: string
+  value: string
+}
+
 const settingStore = useSettingStore()
 const connectStore = useConnectStore()
 const { t, locale } = useI18n()
@@ -75,6 +81,21 @@ const todayText = computed(() => {
   }).format(new Date())
 })
 
+const dashboardStatus = computed<StatusCard[]>(() => {
+  const connect = connectCount.value ?? 0
+
+  return [
+    {
+      key: 'connect-status',
+      title: String(t('dashboard.connectionStatus')),
+      value:
+        connect > 0
+          ? String(t('dashboard.nodesOnline', { count: connect }))
+          : String(t('dashboard.noNodes')),
+    },
+  ]
+})
+
 const loadDashboardStats = async () => {
   loading.value = true
   const [echoRes, , todayRes] = await Promise.allSettled([
@@ -88,9 +109,7 @@ const loadDashboardStats = async () => {
   }
 
   if (todayRes.status === 'fulfilled' && todayRes.value.code === 1) {
-    todayEchoCount.value = Array.isArray(todayRes.value.data)
-      ? todayRes.value.data.length
-      : 0
+    todayEchoCount.value = Array.isArray(todayRes.value.data) ? todayRes.value.data.length : 0
   }
 
   connectCount.value = connectStore.connects.length
@@ -166,6 +185,21 @@ onMounted(() => {
           }}</span>
         </p>
         <p class="stat-note">{{ item.note }}</p>
+      </PanelCard>
+    </section>
+
+    <section class="status-grid">
+      <PanelCard
+        v-for="item in dashboardStatus"
+        :key="item.key"
+        border-style="solid"
+        class="status-card"
+      >
+        <div class="status-head">
+          <p class="status-title">{{ item.title }}</p>
+          <span class="status-head-line"></span>
+        </div>
+        <p class="status-value">{{ item.value }}</p>
       </PanelCard>
     </section>
   </div>
@@ -272,6 +306,44 @@ onMounted(() => {
   opacity: 0.7;
 }
 
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.status-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.7rem 0.9rem;
+  box-shadow: none;
+}
+
+.status-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.status-title {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.status-head-line {
+  display: inline-block;
+  width: 100%;
+  height: 1px;
+  background: color-mix(in oklab, var(--color-border-subtle) 85%, transparent);
+}
+
+.status-value {
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
 .stat-card--clickable {
   cursor: pointer;
 }
@@ -320,9 +392,12 @@ onMounted(() => {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .dashboard-page {
     gap: 0.85rem;
   }
-
 }
 </style>

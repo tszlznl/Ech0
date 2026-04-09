@@ -66,9 +66,7 @@
       <!-- Publish -->
       <div
         v-if="
-          currentMode !== Mode.Panel &&
-          currentMode !== Mode.TagManage &&
-          isUpdateMode === false
+          currentMode !== Mode.Panel && currentMode !== Mode.TagManage && isUpdateMode === false
         "
       >
         <BaseButton

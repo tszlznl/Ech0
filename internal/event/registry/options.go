@@ -35,4 +35,3 @@ func AgentSubscribeOptions() []busen.SubscribeOption {
 		busen.WithOverflow(eventbus.MapOverflow(ec.DefaultOverflow)),
 	}
 }
-

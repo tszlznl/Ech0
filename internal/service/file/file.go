@@ -992,8 +992,8 @@ var safeExtMIME = map[string][]string{
 // MIME types that indicate executable/document content; files whose magic
 // bytes resolve to these must always be rejected regardless of extension.
 var executableMIMEs = map[string]struct{}{
-	"text/html":                {},
-	"text/xml":                 {},
+	"text/html":               {},
+	"text/xml":                {},
 	"application/xhtml+xml":   {},
 	"application/xml":         {},
 	"image/svg+xml":           {},
