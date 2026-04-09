@@ -52,8 +52,6 @@ var EventGraphSet = wire.NewSet(
 
 	repository.UserSet,
 
-	repository.InboxSet,
-
 	repository.KeyValueSet,
 	repository.QueueSet,
 	repository.WebhookSet,
@@ -65,7 +63,6 @@ var EventGraphSet = wire.NewSet(
 	eventsubscriber.NewBackupScheduler,
 	eventsubscriber.NewDeadLetterResolver,
 	eventsubscriber.NewAgentProcessor,
-	eventsubscriber.NewInboxDispatcher,
 	ProvideSubscriptionProviders,
 	eventregistry.NewEventRegistry,
 )
@@ -104,10 +101,6 @@ var HandlerGraphSet = wire.NewSet(
 	repository.SettingSet,
 	service.SettingSet,
 	handler.SettingSet,
-
-	repository.InboxSet,
-	service.InboxSet,
-	handler.InboxSet,
 
 	repository.ConnectSet,
 	service.ConnectSet,
@@ -226,7 +219,6 @@ func ProvideSubscriptionProviders(
 	dlr *eventsubscriber.DeadLetterResolver,
 	bs *eventsubscriber.BackupScheduler,
 	ap *eventsubscriber.AgentProcessor,
-	id *eventsubscriber.InboxDispatcher,
 ) []eventregistry.SubscriptionProvider {
-	return []eventregistry.SubscriptionProvider{dlr, bs, ap, id}
+	return []eventregistry.SubscriptionProvider{dlr, bs, ap}
 }

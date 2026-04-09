@@ -10,7 +10,6 @@ import (
 	dashboardService "github.com/lin-snow/ech0/internal/service/dashboard"
 	echoService "github.com/lin-snow/ech0/internal/service/echo"
 	fileService "github.com/lin-snow/ech0/internal/service/file"
-	inboxService "github.com/lin-snow/ech0/internal/service/inbox"
 	initService "github.com/lin-snow/ech0/internal/service/init"
 	migratorService "github.com/lin-snow/ech0/internal/service/migrator"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
@@ -63,10 +62,6 @@ var (
 	AgentSet = wire.NewSet(
 		agentService.NewAgentService,
 		wire.Bind(new(agentService.Service), new(*agentService.AgentService)),
-	)
-	InboxSet = wire.NewSet(
-		inboxService.NewInboxService,
-		wire.Bind(new(inboxService.Service), new(*inboxService.InboxService)),
 	)
 	MigratorSet = wire.NewSet(
 		migratorService.NewMigratorService,

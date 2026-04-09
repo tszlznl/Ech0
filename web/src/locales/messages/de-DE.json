@@ -72,7 +72,6 @@
     "addVideo": "Video hinzufügen",
     "addGithubProject": "GitHub-Projekt hinzufügen",
     "addWebsiteLink": "Website-Link hinzufügen",
-    "inboxMode": "Posteingang-Modus",
     "more": "Mehr",
     "backToEditor": "Zurück zum Editor",
     "addImage": "Bild hinzufügen",
@@ -90,8 +89,6 @@
     "privacySwitched": "Auf {mode} umgeschaltet",
     "privacyPrivate": "privat",
     "privacyPublic": "öffentlich",
-    "inboxTotal": "Nachrichten insgesamt: {total}",
-    "inboxUnread": "Ungelesene Nachrichten: {total}",
     "removeImage": "Bild entfernen",
     "invalidImageIndex": "Ungültiger Bildindex – Entfernen nicht möglich",
     "removeImageConfirmTitle": "Dieses Bild entfernen?",
@@ -251,11 +248,6 @@
     "emptyConnectHint": "Noch keine Daten. Füge zuerst einen Connect hinzu.",
     "noMoreData": "Keine weiteren Daten"
   },
-  "inbox": {
-    "cleared": "Posteingang geleert",
-    "loading": "Wird geladen…",
-    "empty": "Noch keine Nachrichten"
-  },
   "systemLog": {
     "level": "Log-Level",
     "allLevels": "Alle Level",
@@ -275,12 +267,8 @@
   },
   "dashboard": {
     "echoTotal": "Echos gesamt",
-    "unreadInbox": "Ungelesener Posteingang",
     "connectedNodes": "Verbundene Knoten",
     "currentVersion": "Aktuelle Version",
-    "inboxStatus": "Posteingang-Status",
-    "pendingCount": "{count} ausstehend",
-    "cleared": "Geleert",
     "connectionStatus": "Verbindungsstatus",
     "nodesOnline": "{count} Knoten online",
     "noNodes": "Keine Knoten verfügbar"
@@ -326,8 +314,7 @@
     "searchTitle": "Suche",
     "searchPlaceholder": "Suchen…",
     "exitZenMode": "Zen-Modus verlassen",
-    "rssTitle": "RSS",
-    "inboxAction": "Posteingang"
+    "rssTitle": "RSS"
   },
   "homeSidebar": {
     "home": "Feed",
@@ -680,6 +667,7 @@
     "scopeConnectRead": "Peer-Verbindungen anzeigen",
     "scopeConnectWrite": "Peer-Verbindungen verwalten",
     "scopeProfileRead": "Profil lesen",
+    "scopeProfileWrite": "Profil bearbeiten",
     "scopeAdminSettings": "Systemeinstellungen verwalten",
     "scopeAdminUser": "Benutzer verwalten",
     "scopeAdminToken": "Token verwalten",

@@ -608,29 +608,5 @@ declare namespace App {
       }
     }
 
-    namespace Inbox {
-      type Inbox = {
-        id: string
-        source: string
-        content: string
-        type: string
-        read: boolean
-        read_count: number
-        meta?: string
-        read_at?: number // Unix时间戳（秒）
-        created_at: number // Unix时间戳（秒）
-      }
-
-      type InboxListResult = {
-        items: Inbox[]
-        total: number
-      }
-
-      type InboxListParams = {
-        page: number
-        pageSize: number
-        search?: string
-      }
-    }
   }
 }

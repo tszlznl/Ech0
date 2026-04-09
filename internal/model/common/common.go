@@ -11,8 +11,6 @@ type (
 	S3Provider     string
 	OAuth2Provider string
 	AgentProvider  string
-	InboxType      string
-	InboxSource    string
 	Locale         string
 )
 
@@ -47,17 +45,6 @@ const (
 	Qwen      AgentProvider = "qwen"
 	Ollama    AgentProvider = "ollama"
 	Custom    AgentProvider = "custom"
-)
-
-const (
-	// Inbox 类型
-	EchoInboxType         InboxType = "echo"
-	NotificationInboxType InboxType = "notification"
-
-	// Inbox 来源
-	SystemSource InboxSource = "system"
-	AgentSource  InboxSource = "agent"
-	UserSource   InboxSource = "user"
 )
 
 const (

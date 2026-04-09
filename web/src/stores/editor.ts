@@ -4,7 +4,7 @@ import { theToast } from '@/utils/toast'
 import { fetchAddEcho, fetchUpdateEcho } from '@/service/api'
 import { Mode, ExtensionType, ImageLayout } from '@/enums/enums'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
-import { useEchoStore, useInboxStore } from '@/stores'
+import { useEchoStore } from '@/stores'
 import { localStg } from '@/utils/storage'
 import { getImageSize } from '@/utils/image'
 import { getFileToAddUrl } from '@/utils/other'
@@ -30,7 +30,6 @@ type EditorDraft = {
 
 export const useEditorStore = defineStore('editorStore', () => {
   const echoStore = useEchoStore()
-  const inboxStore = useInboxStore()
   const { openConfirm } = useBaseDialog()
   const t = (key: string, params?: Record<string, unknown>) =>
     String(i18n.global.t(key, params || {}))
@@ -234,17 +233,13 @@ export const useEditorStore = defineStore('editorStore', () => {
   // 设置当前编辑模式
   const setMode = (mode: Mode) => {
     currentMode.value = mode
-
-    if (mode === Mode.Panel) {
-      inboxStore.setInboxMode(false)
-    }
   }
   // 切换当前编辑模式
   const toggleMode = () => {
     if (currentMode.value === Mode.ECH0)
       setMode(Mode.Panel) // 切换到面板模式
-    else if (currentMode.value === Mode.INBOX || currentMode.value === Mode.EXTEN)
-      setMode(Mode.Panel) // 扩展模式/收件箱模式切换到面板模式
+    else if (currentMode.value === Mode.EXTEN)
+      setMode(Mode.Panel) // 扩展模式切换到面板模式
     else setMode(Mode.ECH0) // 其他模式均切换到Echo编辑模式
   }
 

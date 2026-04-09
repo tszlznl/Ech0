@@ -72,7 +72,6 @@
     "addVideo": "Add video",
     "addGithubProject": "Add GitHub project",
     "addWebsiteLink": "Add website link",
-    "inboxMode": "Inbox mode",
     "more": "More",
     "backToEditor": "Back to editor",
     "addImage": "Add image",
@@ -90,8 +89,6 @@
     "privacySwitched": "Switched to {mode}",
     "privacyPrivate": "private",
     "privacyPublic": "public",
-    "inboxTotal": "Total messages: {total}",
-    "inboxUnread": "Unread messages: {total}",
     "removeImage": "Remove image",
     "invalidImageIndex": "Invalid current image index; cannot remove",
     "removeImageConfirmTitle": "Remove this image?",
@@ -251,11 +248,6 @@
     "emptyConnectHint": "No data yet. Add a Connect first.",
     "noMoreData": "No more data"
   },
-  "inbox": {
-    "cleared": "Inbox has been cleared",
-    "loading": "Loading...",
-    "empty": "No messages yet"
-  },
   "systemLog": {
     "level": "Log level",
     "allLevels": "All levels",
@@ -275,12 +267,8 @@
   },
   "dashboard": {
     "echoTotal": "Total Echos",
-    "unreadInbox": "Unread inbox",
     "connectedNodes": "Connected nodes",
     "currentVersion": "Current version",
-    "inboxStatus": "Inbox status",
-    "pendingCount": "{count} pending",
-    "cleared": "Cleared",
     "connectionStatus": "Connection status",
     "nodesOnline": "{count} node(s) online",
     "noNodes": "No available nodes"
@@ -326,8 +314,7 @@
     "searchTitle": "Search",
     "searchPlaceholder": "Search...",
     "exitZenMode": "Exit Zen Mode",
-    "rssTitle": "RSS",
-    "inboxAction": "Inbox"
+    "rssTitle": "RSS"
   },
   "homeSidebar": {
     "home": "Feed",
@@ -680,6 +667,7 @@
     "scopeConnectRead": "View peer connections",
     "scopeConnectWrite": "Manage peer connections",
     "scopeProfileRead": "Read profile",
+    "scopeProfileWrite": "Modify profile",
     "scopeAdminSettings": "Manage system settings",
     "scopeAdminUser": "Manage users",
     "scopeAdminToken": "Manage tokens",

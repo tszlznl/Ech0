@@ -135,12 +135,6 @@ func featureRouteModules() []RouteModule {
 			},
 		},
 		routeModule{
-			name: "inbox",
-			register: func(ctx *RouterContext) {
-				setupInboxRoutes(ctx.Groups, ctx.Handlers)
-			},
-		},
-		routeModule{
 			name: "migration",
 			register: func(ctx *RouterContext) {
 				setupMigrationRoutes(ctx.Groups, ctx.Handlers)

@@ -16,6 +16,7 @@ const (
 	ScopeConnectRead    = "connect:read"
 	ScopeConnectWrite   = "connect:write"
 	ScopeProfileRead    = "profile:read"
+	ScopeProfileWrite   = "profile:write"
 	ScopeAdminSettings  = "admin:settings"
 	ScopeAdminUser      = "admin:user"
 	ScopeAdminToken     = "admin:token"
@@ -36,6 +37,7 @@ var validScopes = map[string]struct{}{
 	ScopeConnectRead:   {},
 	ScopeConnectWrite:  {},
 	ScopeProfileRead:   {},
+	ScopeProfileWrite:  {},
 	ScopeAdminSettings: {},
 	ScopeAdminUser:     {},
 	ScopeAdminToken:    {},

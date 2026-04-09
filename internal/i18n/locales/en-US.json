@@ -13,6 +13,5 @@
   { "id": "comment_manager.title", "translation": "Comment System Settings" },
   { "id": "comment_manager.subtitle", "translation": "Manage comment toggles, moderation policy, and captcha settings in one place." },
   { "id": "dashboard.logs.success", "translation": "System logs retrieved successfully" },
-  { "id": "dashboard.logs.tail_invalid", "translation": "tail must be a positive number" },
-  { "id": "inbox.new_version_available", "translation": "A new version is available: {{.LatestVersion}}" }
+  { "id": "dashboard.logs.tail_invalid", "translation": "tail must be a positive number" }
 ]

@@ -68,7 +68,6 @@
         v-if="
           currentMode !== Mode.Panel &&
           currentMode !== Mode.TagManage &&
-          currentMode !== Mode.INBOX &&
           isUpdateMode === false
         "
       >
@@ -80,7 +79,7 @@
         />
       </div>
       <!-- Exit Update -->
-      <div v-if="currentMode !== Mode.Panel && currentMode !== Mode.INBOX && isUpdateMode === true">
+      <div v-if="currentMode !== Mode.Panel && isUpdateMode === true">
         <BaseButton
           :icon="ExitUpdate"
           @click="handleExitUpdateMode"

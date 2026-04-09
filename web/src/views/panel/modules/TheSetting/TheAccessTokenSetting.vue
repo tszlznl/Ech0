@@ -327,7 +327,10 @@ const scopeGroups = [
   },
   {
     labelKey: 'accessTokenSetting.scopeGroupProfile',
-    items: [{ value: 'profile:read', labelKey: 'accessTokenSetting.scopeProfileRead' }],
+    items: [
+      { value: 'profile:read', labelKey: 'accessTokenSetting.scopeProfileRead' },
+      { value: 'profile:write', labelKey: 'accessTokenSetting.scopeProfileWrite' },
+    ],
   },
   {
     labelKey: 'accessTokenSetting.scopeGroupAdmin',
@@ -394,6 +397,7 @@ const scopeLabelMap: Record<string, string> = {
   'connect:read': 'accessTokenSetting.scopeConnectRead',
   'connect:write': 'accessTokenSetting.scopeConnectWrite',
   'profile:read': 'accessTokenSetting.scopeProfileRead',
+  'profile:write': 'accessTokenSetting.scopeProfileWrite',
   'admin:settings': 'accessTokenSetting.scopeAdminSettings',
   'admin:user': 'accessTokenSetting.scopeAdminUser',
   'admin:token': 'accessTokenSetting.scopeAdminToken',

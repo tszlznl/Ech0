@@ -157,7 +157,6 @@ type EventConfig struct {
 	SystemBuffer       int
 	AgentBuffer        int
 	AgentParallelism   int
-	InboxBuffer        int
 	WebhookPoolWorkers int
 	WebhookPoolQueue   int
 }
@@ -253,7 +252,6 @@ func defaultConfig() *AppConfig {
 			SystemBuffer:       64,
 			AgentBuffer:        128,
 			AgentParallelism:   2,
-			InboxBuffer:        64,
 			WebhookPoolWorkers: 6,
 			WebhookPoolQueue:   6,
 		},
@@ -366,7 +364,6 @@ func applyEnvOverrides(cfg *AppConfig) {
 	setIntEnv("ECH0_EVENT_SYSTEM_BUFFER", &cfg.Event.SystemBuffer)
 	setIntEnv("ECH0_EVENT_AGENT_BUFFER", &cfg.Event.AgentBuffer)
 	setIntEnv("ECH0_EVENT_AGENT_PARALLELISM", &cfg.Event.AgentParallelism)
-	setIntEnv("ECH0_EVENT_INBOX_BUFFER", &cfg.Event.InboxBuffer)
 	setIntEnv("ECH0_EVENT_WEBHOOK_POOL_WORKERS", &cfg.Event.WebhookPoolWorkers)
 	setIntEnv("ECH0_EVENT_WEBHOOK_POOL_QUEUE", &cfg.Event.WebhookPoolQueue)
 

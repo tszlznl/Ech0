@@ -324,7 +324,6 @@ const webhookGuideTopics = [
   'system.backup',
   'system.export',
   'system.backup_schedule.updated',
-  'inbox.clear',
   'ech0.update.check',
 ]
 const webhookGuideHeaders = computed(() => [

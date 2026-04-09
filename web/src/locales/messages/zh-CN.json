@@ -72,7 +72,6 @@
     "addVideo": "添加视频",
     "addGithubProject": "添加Github项目",
     "addWebsiteLink": "添加网站链接",
-    "inboxMode": "收件箱模式",
     "more": "更多",
     "backToEditor": "返回编辑器",
     "addImage": "添加图片",
@@ -90,8 +89,6 @@
     "privacySwitched": "已切换为 {mode} 状态",
     "privacyPrivate": "私密",
     "privacyPublic": "公开",
-    "inboxTotal": "当前消息共有 {total} 条",
-    "inboxUnread": "未读消息共有 {total} 条",
     "removeImage": "移除图片",
     "invalidImageIndex": "当前图片索引无效，无法删除！",
     "removeImageConfirmTitle": "确定要移除图片吗？",
@@ -251,11 +248,6 @@
     "emptyConnectHint": "暂无数据，快去添加 Connect 吧",
     "noMoreData": "没有更多数据了"
   },
-  "inbox": {
-    "cleared": "收件箱已清空",
-    "loading": "加载中...",
-    "empty": "暂无消息..."
-  },
   "systemLog": {
     "level": "日志级别",
     "allLevels": "全部级别",
@@ -275,12 +267,8 @@
   },
   "dashboard": {
     "echoTotal": "Echo 总数",
-    "unreadInbox": "未读收件箱",
     "connectedNodes": "已连接节点",
     "currentVersion": "当前版本",
-    "inboxStatus": "收件箱状态",
-    "pendingCount": "待处理 {count}",
-    "cleared": "已清空",
     "connectionStatus": "连接状态",
     "nodesOnline": "{count} 个节点在线",
     "noNodes": "暂无可用节点"
@@ -326,8 +314,7 @@
     "searchTitle": "搜索",
     "searchPlaceholder": "搜索...",
     "exitZenMode": "退出 Zen Mode",
-    "rssTitle": "RSS",
-    "inboxAction": "收件箱"
+    "rssTitle": "RSS"
   },
   "homeSidebar": {
     "home": "动态",
@@ -680,6 +667,7 @@
     "scopeConnectRead": "查看互联连接",
     "scopeConnectWrite": "管理互联连接",
     "scopeProfileRead": "查看个人资料",
+    "scopeProfileWrite": "修改个人资料",
     "scopeAdminSettings": "系统设置管理",
     "scopeAdminUser": "用户管理",
     "scopeAdminToken": "令牌管理",

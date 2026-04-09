@@ -34,6 +34,19 @@ func TestCreateAccessToken_RejectsUnknownAudience(t *testing.T) {
 	}
 }
 
+func TestCreateAccessToken_AcceptsProfileWriteScope(t *testing.T) {
+	user := userModel.User{IsAdmin: true}
+	dto := &model.AccessTokenSettingDto{
+		Name:     "profile-write-token",
+		Expiry:   model.EIGHT_HOUR_EXPIRY,
+		Scopes:   []string{authModel.ScopeProfileWrite},
+		Audience: authModel.AudiencePublic,
+	}
+	if err := validateAccessTokenRequest(user, dto); err != nil {
+		t.Fatalf("expected profile:write to be accepted, got error: %v", err)
+	}
+}
+
 func TestCreateAccessToken_RejectsAdminScopeForNonAdminUser(t *testing.T) {
 	user := userModel.User{IsAdmin: false}
 	dto := &model.AccessTokenSettingDto{

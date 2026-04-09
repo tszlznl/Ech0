@@ -76,7 +76,7 @@ func (t *Tasker) Start(context.Context) error {
 	if err := t.DeadLetterConsumeTask(); err != nil {
 		return err
 	}
-	if err := t.InboxTask(); err != nil {
+	if err := t.Ech0UpdateCheckTask(); err != nil {
 		return err
 	}
 
@@ -268,35 +268,24 @@ func (t *Tasker) tryUploadBackupToS3(ctx context.Context, backupPath, fileName s
 	}
 }
 
-// InboxTask 定时处理Inbox任务
-func (t *Tasker) InboxTask() error {
-	// 每天12点执行一次, 测试时为每30秒执行一次
+// Ech0UpdateCheckTask 定时检查版本更新
+func (t *Tasker) Ech0UpdateCheckTask() error {
 	_, err := t.scheduler.NewJob(
 		gocron.DailyJob(1, gocron.NewAtTimes(gocron.NewAtTime(12, 0, 0))),
-		// gocron.DurationJob(30*time.Second), // 测试时为每30秒执行一次
 		gocron.NewTask(
 			func() {
-				// 检查 Ech0 版本更新
 				if err := t.publisher.Ech0UpdateChecked(
 					context.Background(),
 					contracts.Ech0UpdateCheckEvent{Info: "Ech0 update checked"},
 				); err != nil {
 					logUtil.GetLogger().Error("Failed to publish ech0 update checked event", zap.Error(err))
 				}
-
-				// 清理已读的存在超过七天的消息
-				if err := t.publisher.InboxCleared(
-					context.Background(),
-					contracts.InboxClearEvent{Info: "Inbox cleared"},
-				); err != nil {
-					logUtil.GetLogger().Error("Failed to publish inbox cleared event", zap.Error(err))
-				}
 			},
 		),
 	)
 	if err != nil {
 		logUtil.GetLogger().
-			Error("Failed to schedule InboxTask", zap.Error(err))
+			Error("Failed to schedule Ech0UpdateCheckTask", zap.Error(err))
 		return err
 	}
 	return nil

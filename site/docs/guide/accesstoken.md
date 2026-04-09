@@ -61,6 +61,7 @@ Authorization: Bearer <令牌>
 | `connect:read`     | 查看互联（Connect）配置与对端信息                                  |
 | `connect:write`    | 添加、删除互联                                                     |
 | `profile:read`     | 读当前用户资料                                                     |
+| `profile:write`    | 修改个人资料、绑定 OAuth、管理 Passkey 等写操作                    |
 | `admin:settings`   | 系统设置、Webhook 等**管理级**接口（仅管理员账号创建的令牌可包含） |
 | `admin:user`       | 用户管理类接口                                                     |
 | `admin:token`      | 管理访问令牌本身等                                                 |

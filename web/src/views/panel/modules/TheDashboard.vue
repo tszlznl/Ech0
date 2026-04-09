@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { fetchGetEchosByPage, fetchUnreadInbox } from '@/service/api'
+import { fetchGetEchosByPage } from '@/service/api'
 import { useConnectStore, useSettingStore } from '@/stores'
 import PanelCard from '@/layout/PanelCard.vue'
 
@@ -25,7 +25,6 @@ const { t, locale } = useI18n()
 
 const loading = ref(true)
 const echoTotal = ref<number | null>(null)
-const unreadInboxCount = ref<number | null>(null)
 const connectCount = ref<number | null>(null)
 
 const formatMetric = (value: number | null) => {
@@ -46,22 +45,15 @@ const dashboardStats = computed<StatCard[]>(() => {
       note: '',
     },
     {
-      key: 'inbox',
-      serial: 'NO.02',
-      label: String(t('dashboard.unreadInbox')),
-      value: formatMetric(unreadInboxCount.value),
-      note: '',
-    },
-    {
       key: 'connect',
-      serial: 'NO.03',
+      serial: 'NO.02',
       label: String(t('dashboard.connectedNodes')),
       value: formatMetric(connectCount.value),
       note: '',
     },
     {
       key: 'version',
-      serial: 'NO.04',
+      serial: 'NO.03',
       label: String(t('dashboard.currentVersion')),
       value: settingStore.hello?.version || '--',
       note: '',
@@ -78,18 +70,9 @@ const todayText = computed(() => {
 })
 
 const dashboardStatus = computed<StatusCard[]>(() => {
-  const unread = unreadInboxCount.value ?? 0
   const connect = connectCount.value ?? 0
 
   return [
-    {
-      key: 'inbox-status',
-      title: String(t('dashboard.inboxStatus')),
-      value:
-        unread > 0
-          ? String(t('dashboard.pendingCount', { count: unread }))
-          : String(t('dashboard.cleared')),
-    },
     {
       key: 'connect-status',
       title: String(t('dashboard.connectionStatus')),
@@ -103,18 +86,13 @@ const dashboardStatus = computed<StatusCard[]>(() => {
 
 const loadDashboardStats = async () => {
   loading.value = true
-  const [echoRes, unreadRes] = await Promise.allSettled([
+  const [echoRes] = await Promise.allSettled([
     fetchGetEchosByPage({ page: 1, pageSize: 1, search: '' }),
-    fetchUnreadInbox(),
     connectStore.getConnect(),
   ])
 
   if (echoRes.status === 'fulfilled' && echoRes.value.code === 1) {
     echoTotal.value = echoRes.value.data?.total ?? 0
-  }
-
-  if (unreadRes.status === 'fulfilled' && unreadRes.value.code === 1) {
-    unreadInboxCount.value = Array.isArray(unreadRes.value.data) ? unreadRes.value.data.length : 0
   }
 
   connectCount.value = connectStore.connects.length

@@ -13,6 +13,5 @@
   { "id": "comment_manager.title", "translation": "Kommentarsystem-Einstellungen" },
   { "id": "comment_manager.subtitle", "translation": "Kommentarfunktion, Moderationsregeln und Captcha zentral verwalten." },
   { "id": "dashboard.logs.success", "translation": "Systemlogs erfolgreich abgerufen" },
-  { "id": "dashboard.logs.tail_invalid", "translation": "tail muss eine positive Zahl sein" },
-  { "id": "inbox.new_version_available", "translation": "Neue Version verfügbar: {{.LatestVersion}}" }
+  { "id": "dashboard.logs.tail_invalid", "translation": "tail muss eine positive Zahl sein" }
 ]

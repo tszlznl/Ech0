@@ -10,7 +10,6 @@ import (
 	dashboardHandler "github.com/lin-snow/ech0/internal/handler/dashboard"
 	echoHandler "github.com/lin-snow/ech0/internal/handler/echo"
 	fileHandler "github.com/lin-snow/ech0/internal/handler/file"
-	inboxHandler "github.com/lin-snow/ech0/internal/handler/inbox"
 	initHandler "github.com/lin-snow/ech0/internal/handler/init"
 	migrationHandler "github.com/lin-snow/ech0/internal/handler/migration"
 	settingHandler "github.com/lin-snow/ech0/internal/handler/setting"
@@ -32,7 +31,6 @@ var (
 	BackupSet    = wire.NewSet(backupHandler.NewBackupHandler)
 	DashboardSet = wire.NewSet(dashboardHandler.NewDashboardHandler)
 	AgentSet     = wire.NewSet(agentHandler.NewAgentHandler)
-	InboxSet     = wire.NewSet(inboxHandler.NewInboxHandler)
 	MigrationSet = wire.NewSet(migrationHandler.NewMigrationHandler)
 	MCPSet       = wire.NewSet(mcp.NewHandler)
 )

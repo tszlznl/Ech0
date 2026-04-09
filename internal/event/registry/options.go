@@ -36,12 +36,3 @@ func AgentSubscribeOptions() []busen.SubscribeOption {
 	}
 }
 
-func InboxSubscribeOptions() []busen.SubscribeOption {
-	ec := config.Config().Event
-	return []busen.SubscribeOption{
-		busen.Async(),
-		busen.Sequential(),
-		busen.WithBuffer(ec.InboxBuffer),
-		busen.WithOverflow(eventbus.MapOverflow(ec.DefaultOverflow)),
-	}
-}

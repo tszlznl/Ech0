@@ -97,7 +97,3 @@ func (p *Publisher) DeadLetterRetried(ctx context.Context, evt contracts.DeadLet
 func (p *Publisher) Ech0UpdateChecked(ctx context.Context, evt contracts.Ech0UpdateCheckEvent) error {
 	return busen.Publish(ctx, p.bus, evt, busen.WithTopic(contracts.TopicEch0UpdateCheck))
 }
-
-func (p *Publisher) InboxCleared(ctx context.Context, evt contracts.InboxClearEvent) error {
-	return busen.Publish(ctx, p.bus, evt, busen.WithTopic(contracts.TopicInboxClear))
-}

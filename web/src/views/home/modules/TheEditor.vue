@@ -4,7 +4,6 @@
       <div class="editor-shell__body">
         <TheMdEditor v-if="currentMode === Mode.ECH0" class="rounded-[var(--radius-xs)]" />
         <TheImageEditor v-if="currentMode === Mode.Image" />
-        <TheInboxModeEditor v-if="currentMode === Mode.INBOX" />
         <TheModePanel v-if="currentMode === Mode.Panel" />
         <TheExtensionEditor v-if="currentMode === Mode.EXTEN" />
         <TheTagsManager v-if="currentMode === Mode.TagManage" />
@@ -31,7 +30,6 @@ import { useI18n } from 'vue-i18n'
 const TheMdEditor = defineAsyncComponent(() => import('@/components/advanced/md/TheMdEditor.vue'))
 const TheModePanel = defineAsyncComponent(() => import('./TheEditor/TheModePanel.vue'))
 const TheImageEditor = defineAsyncComponent(() => import('./TheEditor/TheImageEditor.vue'))
-const TheInboxModeEditor = defineAsyncComponent(() => import('./TheEditor/TheInboxModeEditor.vue'))
 const TheExtensionEditor = defineAsyncComponent(() => import('./TheEditor/TheExtensionEditor.vue'))
 const TheTagsManager = defineAsyncComponent(() => import('./TheEditor/TheTagsManager.vue'))
 

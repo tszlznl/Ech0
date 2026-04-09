@@ -101,11 +101,6 @@ const (
 	ONLY_OWNER_CAN_MANAGE  = "仅Owner可管理管理员权限"
 )
 
-// Inbox 错误相关常量
-const (
-	INBOX_NOT_FOUND = "收件箱消息不存在"
-)
-
 // User 错误相关常量
 const (
 	USERNAME_ALREADY_EXISTS        = "用户名已存在"

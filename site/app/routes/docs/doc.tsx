@@ -26,7 +26,6 @@ const LEGACY_DOC_REDIRECTS: Record<string, string> = {
   "guide/hub": "/docs/guide/federation",
   "guide/oauth": "/docs/guide/sso",
   "guide/passkey": "/docs/guide/sso",
-  "guide/inbox": "/docs",
   "design/palette": "/docs",
   "start/credits": "/docs/start/community",
 };

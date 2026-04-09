@@ -39,7 +39,7 @@ func setupUserRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	)
 	appRouterGroup.AuthRouterGroup.PUT(
 		"/user",
-		middleware.RequireScopes(authModel.ScopeProfileRead),
+		middleware.RequireScopes(authModel.ScopeProfileWrite),
 		h.UserHandler.UpdateUser(),
 	)
 	appRouterGroup.AuthRouterGroup.DELETE(
@@ -54,7 +54,7 @@ func setupUserRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	)
 	appRouterGroup.AuthRouterGroup.POST(
 		"/oauth/:provider/bind",
-		middleware.RequireScopes(authModel.ScopeProfileRead),
+		middleware.RequireScopes(authModel.ScopeProfileWrite),
 		h.UserHandler.OAuthBind(),
 	)
 	appRouterGroup.AuthRouterGroup.GET(
@@ -64,12 +64,12 @@ func setupUserRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	)
 	appRouterGroup.AuthRouterGroup.POST(
 		"/passkey/register/begin",
-		middleware.RequireScopes(authModel.ScopeProfileRead),
+		middleware.RequireScopes(authModel.ScopeProfileWrite),
 		h.UserHandler.PasskeyRegisterBeginV2(),
 	)
 	appRouterGroup.AuthRouterGroup.POST(
 		"/passkey/register/finish",
-		middleware.RequireScopes(authModel.ScopeProfileRead),
+		middleware.RequireScopes(authModel.ScopeProfileWrite),
 		h.UserHandler.PasskeyRegisterFinishV2(),
 	)
 	appRouterGroup.AuthRouterGroup.GET(
@@ -79,12 +79,12 @@ func setupUserRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	)
 	appRouterGroup.AuthRouterGroup.DELETE(
 		"/passkeys/:id",
-		middleware.RequireScopes(authModel.ScopeProfileRead),
+		middleware.RequireScopes(authModel.ScopeProfileWrite),
 		h.UserHandler.DeletePasskey(),
 	)
 	appRouterGroup.AuthRouterGroup.PUT(
 		"/passkeys/:id",
-		middleware.RequireScopes(authModel.ScopeProfileRead),
+		middleware.RequireScopes(authModel.ScopeProfileWrite),
 		h.UserHandler.UpdatePasskeyDeviceName(),
 	)
 }

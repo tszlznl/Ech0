@@ -25,8 +25,7 @@
             <template v-else-if="activeTab === 'home'">
               <HomeBanner :class="{ 'home-banner--mobile-hidden': shouldHideBannerOnMobile }" />
 
-              <TheEchos v-if="!inboxMode" compact :scroll-target="mainColumn" />
-              <TheInbox v-else />
+              <TheEchos compact :scroll-target="mainColumn" />
             </template>
 
             <div v-else-if="activeTab === 'status'" class="home-content-block home-status-widgets">
@@ -65,7 +64,7 @@ import HomeSidebarNav from './HomeSidebarNav.vue'
 import TheFilter from './TheFilter.vue'
 import TheEchos from './TheEchos.vue'
 import { defineAsyncComponent, onMounted, ref, onBeforeUnmount, computed } from 'vue'
-import { useEchoStore, useInboxStore, useZenStore, useUserStore, useSettingStore } from '@/stores'
+import { useEchoStore, useZenStore, useUserStore, useSettingStore } from '@/stores'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import {
@@ -78,17 +77,14 @@ import {
 const route = useRoute()
 const TheEditor = defineAsyncComponent(() => import('./TheEditor.vue'))
 const TheTagsManager = defineAsyncComponent(() => import('./TheEditor/TheTagsManager.vue'))
-const TheInbox = defineAsyncComponent(() => import('./TheInbox.vue'))
 const HubPage = defineAsyncComponent(() => import('@/views/hub/modules/HubPage.vue'))
 
 const userStore = useUserStore()
 const settingStore = useSettingStore()
-const inboxStore = useInboxStore()
 const zenStore = useZenStore()
 const echoStore = useEchoStore()
 const { isLogin } = storeToRefs(userStore)
 const { AgentSetting } = storeToRefs(settingStore)
-const { inboxMode } = storeToRefs(inboxStore)
 const { isZenMode } = storeToRefs(zenStore)
 const { searchingMode, isFilteringMode } = storeToRefs(echoStore)
 const mobileSearchOpen = ref(false)

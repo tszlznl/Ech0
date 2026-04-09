@@ -5,7 +5,6 @@ export enum Mode {
   EXTEN = 3, // 处理扩展状态
   Image = 5, // 图片上传状态
   TagManage = 6, // 标签管理状态
-  INBOX = 7, // 收件箱状态
 }
 
 // 扩展类型
@@ -76,14 +75,3 @@ export enum AgentProvider {
   CUSTOM = 'custom',
 }
 
-// Inbox
-export enum InboxType {
-  Echo = 'echo',
-  Notification = 'notification',
-}
-
-export enum InboxSource {
-  System = 'system',
-  User = 'user',
-  Agent = 'agent',
-}

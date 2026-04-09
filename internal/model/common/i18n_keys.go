@@ -14,7 +14,6 @@ const (
 	MsgKeyAuthTokenTransportForbidden = "auth.token_transport_forbidden"
 	MsgKeyDashboardLogsOk             = "dashboard.logs.success"
 	MsgKeyDashboardTailBad            = "dashboard.logs.tail_invalid"
-	MsgKeyInboxNewVersion             = "inbox.new_version_available"
 )
 
 func MessageKeyFromErrorCode(code string) string {

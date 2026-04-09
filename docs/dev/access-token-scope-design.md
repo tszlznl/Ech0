@@ -66,6 +66,7 @@
 - `file:read`
 - `file:write`
 - `profile:read`
+- `profile:write`
 - `admin:settings`
 - `admin:user`
 - `admin:token`

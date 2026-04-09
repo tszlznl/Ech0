@@ -8,7 +8,6 @@ import (
 	connectRepository "github.com/lin-snow/ech0/internal/repository/connect"
 	echoRepository "github.com/lin-snow/ech0/internal/repository/echo"
 	fileRepository "github.com/lin-snow/ech0/internal/repository/file"
-	inboxRepository "github.com/lin-snow/ech0/internal/repository/inbox"
 	initRepository "github.com/lin-snow/ech0/internal/repository/init"
 	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
 	migrationRepository "github.com/lin-snow/ech0/internal/repository/migration"
@@ -22,7 +21,6 @@ import (
 	connectService "github.com/lin-snow/ech0/internal/service/connect"
 	echoService "github.com/lin-snow/ech0/internal/service/echo"
 	fileService "github.com/lin-snow/ech0/internal/service/file"
-	inboxService "github.com/lin-snow/ech0/internal/service/inbox"
 	initService "github.com/lin-snow/ech0/internal/service/init"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	userService "github.com/lin-snow/ech0/internal/service/user"
@@ -75,11 +73,6 @@ var (
 		webhookRepository.NewWebhookRepository,
 		wire.Bind(new(settingService.WebhookRepository), new(*webhookRepository.WebhookRepository)),
 		wire.Bind(new(webhookmodule.WebhookStore), new(*webhookRepository.WebhookRepository)),
-	)
-	InboxSet = wire.NewSet(
-		inboxRepository.NewInboxRepository,
-		wire.Bind(new(inboxService.Repository), new(*inboxRepository.InboxRepository)),
-		wire.Bind(new(eventsubscriber.InboxStore), new(*inboxRepository.InboxRepository)),
 	)
 	QueueSet = wire.NewSet(
 		queueRepository.NewQueueRepository,

@@ -37,7 +37,6 @@
   - `common.request_failed`
   - `auth.token_missing`
   - `dashboard.logs.tail_invalid`
-  - `inbox.new_version_available`
 
 ## 4. Backend Rules
 
