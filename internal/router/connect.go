@@ -1,6 +1,10 @@
 package router
 
-import "github.com/lin-snow/ech0/internal/handler"
+import (
+	"github.com/lin-snow/ech0/internal/handler"
+	"github.com/lin-snow/ech0/internal/middleware"
+	authModel "github.com/lin-snow/ech0/internal/model/auth"
+)
 
 // setupConnectRoutes 设置连接路由
 func setupConnectRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
@@ -10,6 +14,14 @@ func setupConnectRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	appRouterGroup.PublicRouterGroup.GET("/connects/info", h.ConnectHandler.GetConnectsInfo())
 
 	// Auth
-	appRouterGroup.AuthRouterGroup.POST("/connects", h.ConnectHandler.AddConnect())
-	appRouterGroup.AuthRouterGroup.DELETE("/connects/:id", h.ConnectHandler.DeleteConnect())
+	appRouterGroup.AuthRouterGroup.POST(
+		"/connects",
+		middleware.RequireScopes(authModel.ScopeConnectWrite),
+		h.ConnectHandler.AddConnect(),
+	)
+	appRouterGroup.AuthRouterGroup.DELETE(
+		"/connects/:id",
+		middleware.RequireScopes(authModel.ScopeConnectWrite),
+		h.ConnectHandler.DeleteConnect(),
+	)
 }

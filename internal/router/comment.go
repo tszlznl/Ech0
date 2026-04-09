@@ -34,13 +34,49 @@ func setupCommentRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	)
 
 	// Admin Panel
-	appRouterGroup.AuthRouterGroup.GET("/panel/comments", h.CommentHandler.ListPanelComments())
-	appRouterGroup.AuthRouterGroup.GET("/panel/comments/:id", h.CommentHandler.GetCommentByID())
-	appRouterGroup.AuthRouterGroup.PATCH("/panel/comments/:id/status", h.CommentHandler.UpdateCommentStatus())
-	appRouterGroup.AuthRouterGroup.PATCH("/panel/comments/:id/hot", h.CommentHandler.UpdateCommentHot())
-	appRouterGroup.AuthRouterGroup.DELETE("/panel/comments/:id", h.CommentHandler.DeleteComment())
-	appRouterGroup.AuthRouterGroup.POST("/panel/comments/batch", h.CommentHandler.BatchAction())
-	appRouterGroup.AuthRouterGroup.GET("/panel/comments/settings", h.CommentHandler.GetCommentSetting())
-	appRouterGroup.AuthRouterGroup.PUT("/panel/comments/settings", h.CommentHandler.UpdateCommentSetting())
-	appRouterGroup.AuthRouterGroup.POST("/panel/comments/settings/test-email", h.CommentHandler.TestCommentEmail())
+	appRouterGroup.AuthRouterGroup.GET(
+		"/panel/comments",
+		middleware.RequireScopes(authModel.ScopeCommentMod),
+		h.CommentHandler.ListPanelComments(),
+	)
+	appRouterGroup.AuthRouterGroup.GET(
+		"/panel/comments/:id",
+		middleware.RequireScopes(authModel.ScopeCommentMod),
+		h.CommentHandler.GetCommentByID(),
+	)
+	appRouterGroup.AuthRouterGroup.PATCH(
+		"/panel/comments/:id/status",
+		middleware.RequireScopes(authModel.ScopeCommentMod),
+		h.CommentHandler.UpdateCommentStatus(),
+	)
+	appRouterGroup.AuthRouterGroup.PATCH(
+		"/panel/comments/:id/hot",
+		middleware.RequireScopes(authModel.ScopeCommentMod),
+		h.CommentHandler.UpdateCommentHot(),
+	)
+	appRouterGroup.AuthRouterGroup.DELETE(
+		"/panel/comments/:id",
+		middleware.RequireScopes(authModel.ScopeCommentMod),
+		h.CommentHandler.DeleteComment(),
+	)
+	appRouterGroup.AuthRouterGroup.POST(
+		"/panel/comments/batch",
+		middleware.RequireScopes(authModel.ScopeCommentMod),
+		h.CommentHandler.BatchAction(),
+	)
+	appRouterGroup.AuthRouterGroup.GET(
+		"/panel/comments/settings",
+		middleware.RequireScopes(authModel.ScopeCommentMod),
+		h.CommentHandler.GetCommentSetting(),
+	)
+	appRouterGroup.AuthRouterGroup.PUT(
+		"/panel/comments/settings",
+		middleware.RequireScopes(authModel.ScopeCommentMod),
+		h.CommentHandler.UpdateCommentSetting(),
+	)
+	appRouterGroup.AuthRouterGroup.POST(
+		"/panel/comments/settings/test-email",
+		middleware.RequireScopes(authModel.ScopeCommentMod),
+		h.CommentHandler.TestCommentEmail(),
+	)
 }

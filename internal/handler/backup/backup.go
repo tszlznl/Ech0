@@ -1,15 +1,10 @@
 package handler
 
 import (
-	"context"
-	"strings"
-
 	"github.com/gin-gonic/gin"
 	res "github.com/lin-snow/ech0/internal/handler/response"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	service "github.com/lin-snow/ech0/internal/service/backup"
-	jwtUtil "github.com/lin-snow/ech0/internal/util/jwt"
-	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
 type BackupHandler struct {
@@ -35,27 +30,7 @@ func NewBackupHandler(backupService service.Service) *BackupHandler {
 //	@Router			/backup/export [get]
 func (backupHandler *BackupHandler) ExportBackup() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		token := ctx.Query("token")
-		if token == "" {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-			}
-		}
-
-		token = strings.Trim(token, `"`) // 去掉可能的双引号
-
-		// 使用 JWT Util进行处理
-		claims, err := jwtUtil.ParseToken(token)
-		if err != nil {
-			return res.Response{
-				Msg: commonModel.TOKEN_NOT_VALID,
-				Err: err,
-			}
-		}
-
-		// 从 Claims中提取 UserID，注入 viewer 上下文供 service 鉴权。
-		reqCtx := viewer.WithContext(context.Background(), viewer.NewUserViewer(claims.Userid))
-		if err := backupHandler.backupService.ExportBackup(ctx, reqCtx); err != nil {
+		if err := backupHandler.backupService.ExportBackup(ctx, ctx.Request.Context()); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
