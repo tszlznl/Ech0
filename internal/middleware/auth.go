@@ -50,6 +50,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		tokenFromQuery := false
 		if auth == "" {
 			queryToken := strings.TrimSpace(ctx.Query("token"))
+			queryToken = strings.Trim(queryToken, `"`)
 			if queryToken != "" && queryToken != "null" && queryToken != "undefined" {
 				auth = "Bearer " + queryToken
 				tokenFromQuery = true

@@ -26,6 +26,7 @@ import { theToast } from '@/utils/toast'
 import { useUserStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
+import { localStg } from '@/utils/storage'
 
 const userStore = useUserStore()
 const { isLogin } = storeToRefs(userStore)
@@ -42,8 +43,7 @@ const handleBackupExport = async () => {
       duration: 4000,
     })
 
-    // 1. 获取 token
-    const token = localStorage.getItem('token')
+    const token = localStg.getItem<string>('token')
     const baseURL =
       import.meta.env.VITE_SERVICE_BASE_URL === '/'
         ? window.location.origin
