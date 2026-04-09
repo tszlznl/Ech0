@@ -167,7 +167,9 @@ onMounted(() => {
             class="update-dot"
             :title="t('dashboard.updateAvailable', { version: latestVersion })"
           ></span>
-          <span v-if="item.key === 'version' && checkingUpdate" class="stat-checking">...</span>
+          <span v-if="item.key === 'version' && checkingUpdate" class="stat-checking">{{
+            t('dashboard.checkingUpdate')
+          }}</span>
         </p>
         <p class="stat-note">{{ item.note }}</p>
       </PanelCard>
