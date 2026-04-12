@@ -24,6 +24,7 @@ import (
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/task"
 	"github.com/lin-snow/ech0/internal/transaction"
+	"github.com/lin-snow/ech0/internal/visitor"
 	"github.com/lin-snow/ech0/internal/webhook"
 	"gorm.io/gorm"
 )
@@ -73,6 +74,7 @@ var HandlerGraphSet = wire.NewSet(
 	storage.ProviderSet,
 	wire.Bind(new(storage.S3SettingStore), new(*keyvalueRepository.KeyValueRepository)),
 	repository.FileSet,
+	visitor.NewTracker,
 	handler.WebSet,
 
 	repository.UserSet,

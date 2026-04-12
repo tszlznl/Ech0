@@ -23,5 +23,10 @@ func setupDashboardRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 		middleware.RequireScopes(authModel.ScopeAdminSettings),
 		h.DashboardHandler.SSESubscribeSystemLogs(),
 	)
+	appRouterGroup.AuthRouterGroup.GET(
+		"/system/visitor-stats",
+		middleware.RequireScopes(authModel.ScopeAdminSettings),
+		h.DashboardHandler.GetVisitorStats(),
+	)
 	appRouterGroup.WSRouterGroup.GET("/system/logs", h.DashboardHandler.WSSubscribeSystemLogs())
 }

@@ -61,6 +61,7 @@ import (
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/task"
 	"github.com/lin-snow/ech0/internal/transaction"
+	"github.com/lin-snow/ech0/internal/visitor"
 	"github.com/lin-snow/ech0/internal/webhook"
 	"gorm.io/gorm"
 )
@@ -116,7 +117,8 @@ func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() *busen.Bu
 
 // BuildHandlers 使用 wire 生成的代码来构建 Handlers 实例。
 func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor, ebProvider func() *busen.Bus) (*handler.Bundle, error) {
-	webHandler := handler2.NewWebHandler()
+	tracker := visitor.NewTracker()
+	webHandler := handler2.NewWebHandler(tracker)
 	userRepository := repository3.NewUserRepository(dbProvider, appCache)
 	commonRepository := repository4.NewCommonRepository(dbProvider)
 	commonService := service.NewCommonService(commonRepository)
@@ -150,7 +152,7 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 	backupHandler := handler11.NewBackupHandler(backupService)
 	migratorService := service10.NewMigratorService(commonService, keyValueRepository, manager, appCache)
 	migrationHandler := handler12.NewMigrationHandler(migratorService)
-	dashboardService := service11.NewDashboardService()
+	dashboardService := service11.NewDashboardService(tracker)
 	dashboardHandler := handler13.NewDashboardHandler(dashboardService)
 	agentService := service12.NewAgentService(settingService, echoService, keyValueRepository)
 	agentHandler := handler14.NewAgentHandler(agentService)
@@ -216,7 +218,7 @@ var RuntimeSet = server.ProviderSet
 
 var EventGraphSet = wire.NewSet(repository11.EchoSet, repository11.UserSet, repository11.KeyValueSet, repository11.QueueSet, repository11.WebhookSet, wire.Bind(new(registry.WebhookObserver), new(*webhook.Dispatcher)), wire.Bind(new(subscriber.DeadLetterProcessor), new(*webhook.Dispatcher)), webhook.NewDispatcher, subscriber.NewBackupScheduler, subscriber.NewDeadLetterResolver, subscriber.NewAgentProcessor, ProvideSubscriptionProviders, registry.NewEventRegistry)
 
-var HandlerGraphSet = wire.NewSet(publisher.New, wire.Bind(new(service6.EventPublisher), new(*publisher.Publisher)), storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository11.FileSet, handler.WebSet, repository11.UserSet, service13.UserSet, handler.UserSet, repository11.EchoSet, service13.EchoSet, handler.EchoSet, repository11.CommentSet, service13.CommentSet, handler.CommentSet, repository11.CommonSet, service13.FileSet, handler.FileSet, repository11.InitSet, service13.InitSet, handler.InitSet, service13.CommonSet, handler.CommonSet, repository11.WebhookSet, repository11.KeyValueSet, repository11.SettingSet, service13.SettingSet, handler.SettingSet, repository11.ConnectSet, service13.ConnectSet, handler.ConnectSet, service13.DashboardSet, handler.DashboardSet, service13.AgentSet, handler.AgentSet, service13.BackupSet, handler.BackupSet, repository11.MigrationSet, service13.MigratorSet, handler.MigrationSet, handler.MCPSet, handler.NewBundle)
+var HandlerGraphSet = wire.NewSet(publisher.New, wire.Bind(new(service6.EventPublisher), new(*publisher.Publisher)), storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository11.FileSet, visitor.NewTracker, handler.WebSet, repository11.UserSet, service13.UserSet, handler.UserSet, repository11.EchoSet, service13.EchoSet, handler.EchoSet, repository11.CommentSet, service13.CommentSet, handler.CommentSet, repository11.CommonSet, service13.FileSet, handler.FileSet, repository11.InitSet, service13.InitSet, handler.InitSet, service13.CommonSet, handler.CommonSet, repository11.WebhookSet, repository11.KeyValueSet, repository11.SettingSet, service13.SettingSet, handler.SettingSet, repository11.ConnectSet, service13.ConnectSet, handler.ConnectSet, service13.DashboardSet, handler.DashboardSet, service13.AgentSet, handler.AgentSet, service13.BackupSet, handler.BackupSet, repository11.MigrationSet, service13.MigratorSet, handler.MigrationSet, handler.MCPSet, handler.NewBundle)
 
 var TaskerGraphSet = wire.NewSet(publisher.New, storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository11.FileSet, repository11.KeyValueSet, repository11.WebhookSet, repository11.SettingSet, service13.SettingSet, repository11.EchoSet, service13.EchoSet, repository11.CommonSet, service13.FileSet, service13.CommonSet, repository11.QueueSet, task.ProviderSet)
 

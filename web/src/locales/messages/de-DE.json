@@ -276,9 +276,11 @@
     "clickToCheckUpdate": "Klicken, um auf Updates zu prüfen",
     "activityTitle": "Activity",
     "activityAccent": "Log",
-    "hotTitle": "Trending",
-    "hotAccent": "Echos",
-    "noHotEchos": "Keine beliebten"
+    "visitorTitle": "Besucher",
+    "visitorAccent": "Statistik",
+    "visitorPv": "Seitenaufrufe",
+    "visitorUv": "Eindeutige Besucher",
+    "visitorEmpty": "Noch keine Besucherdaten"
   },
   "tagPileWidget": {
     "title": "Tech",

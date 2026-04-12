@@ -323,6 +323,16 @@ func GetSystemLogs() {}
 //	@Router			/system/logs/stream [get]
 func StreamSystemLogs() {}
 
+// GetVisitorStats godoc
+//
+//	@Summary		近七天访客统计
+//	@Description	获取近七天 PV/UV 统计数据
+//	@Tags			系统
+//	@Produce		json
+//	@Success		200	{object}	map[string]interface{}
+//	@Router			/system/visitor-stats [get]
+func GetVisitorStats() {}
+
 // MigrationUpload godoc
 //
 //	@Summary		上传迁移包

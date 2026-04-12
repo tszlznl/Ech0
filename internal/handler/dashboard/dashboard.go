@@ -63,6 +63,16 @@ func (dashboardHandler *DashboardHandler) GetSystemLogs() gin.HandlerFunc {
 	})
 }
 
+// GetVisitorStats 获取近七天访客统计
+func (dashboardHandler *DashboardHandler) GetVisitorStats() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		return res.Response{
+			Data: dashboardHandler.dashboardService.GetVisitorStats(),
+			Msg:  commonModel.SUCCESS_MESSAGE,
+		}
+	})
+}
+
 // WSSubscribeSystemLogs 通过 WebSocket 订阅系统日志
 func (dashboardHandler *DashboardHandler) WSSubscribeSystemLogs() gin.HandlerFunc {
 	return gin.HandlerFunc(func(ctx *gin.Context) {

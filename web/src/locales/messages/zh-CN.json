@@ -276,9 +276,11 @@
     "clickToCheckUpdate": "点击检查更新",
     "activityTitle": "Activity",
     "activityAccent": "Log",
-    "hotTitle": "Trending",
-    "hotAccent": "Echos",
-    "noHotEchos": "暂无热门"
+    "visitorTitle": "Visitor",
+    "visitorAccent": "Stats",
+    "visitorPv": "访问量",
+    "visitorUv": "独立访客",
+    "visitorEmpty": "暂无访客数据"
   },
   "tagPileWidget": {
     "title": "Tech",

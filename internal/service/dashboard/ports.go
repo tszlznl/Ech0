@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	"github.com/lin-snow/ech0/internal/visitor"
 )
 
 type SystemLogQuery struct {
@@ -19,6 +20,7 @@ type SystemLogStreamFilter struct {
 
 type Service interface {
 	GetSystemLogs(query SystemLogQuery) ([]logUtil.LogEntry, error)
+	GetVisitorStats() []visitor.DayStat
 	WSSubscribeSystemLogs(w http.ResponseWriter, r *http.Request, filter SystemLogStreamFilter) error
 	SSESubscribeSystemLogs(w http.ResponseWriter, r *http.Request, filter SystemLogStreamFilter) error
 }

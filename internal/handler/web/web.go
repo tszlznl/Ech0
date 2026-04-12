@@ -9,14 +9,17 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lin-snow/ech0/internal/visitor"
 	"github.com/lin-snow/ech0/template"
 )
 
-type WebHandler struct{}
+type WebHandler struct {
+	visitorTracker *visitor.Tracker
+}
 
 // NewWebHandler WebHandler 的构造函数
-func NewWebHandler() *WebHandler {
-	return &WebHandler{}
+func NewWebHandler(visitorTracker *visitor.Tracker) *WebHandler {
+	return &WebHandler{visitorTracker: visitorTracker}
 }
 
 // Templates 返回一个处理前端编译后文件的 gin.HandlerFunc
@@ -47,6 +50,7 @@ func (webHandler *WebHandler) Templates() gin.HandlerFunc {
 			}
 			defer func() { _ = fallback.Close() }()
 			fallbackStat, _ := fallback.Stat()
+			webHandler.visitorTracker.Record(ctx.Request, ctx.ClientIP())
 			ctx.Header("Content-Type", "text/html; charset=utf-8")
 			ctx.Header("Cache-Control", "no-cache")
 			http.ServeContent(
@@ -81,6 +85,9 @@ func (webHandler *WebHandler) Templates() gin.HandlerFunc {
 
 		ctx.Header("Content-Type", getMimeType(fullPath))
 		setCacheControlHeader(ctx, requestPath)
+		if requestPath == "/index.html" {
+			webHandler.visitorTracker.Record(ctx.Request, ctx.ClientIP())
+		}
 		http.ServeContent(ctx.Writer, ctx.Request, fullPath, stat.ModTime(), f)
 	}
 }

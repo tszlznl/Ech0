@@ -582,6 +582,14 @@ declare namespace App {
       }
     }
 
+    namespace Dashboard {
+      type VisitorDayStat = {
+        date: string
+        pv: number
+        uv: number
+      }
+    }
+
     namespace Hub {
       type HubItem = string | { id: string; connect_url: string }
       type HubList = HubItem[]

@@ -27,6 +27,7 @@ import (
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
 	jwtUtil "github.com/lin-snow/ech0/internal/util/jwt"
+	"github.com/lin-snow/ech0/internal/visitor"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -264,7 +265,7 @@ func containsRoute(routes []gin.RouteInfo, method, path string) bool {
 
 func buildTestHandlers() *handler.Bundle {
 	return handler.NewBundle(
-		webHandler.NewWebHandler(),
+		webHandler.NewWebHandler(visitor.NewTracker()),
 		userHandler.NewUserHandler(nil),
 		echoHandler.NewEchoHandler(nil),
 		fileHandler.NewFileHandler(nil),

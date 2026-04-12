@@ -10,12 +10,15 @@ import (
 
 	"github.com/gorilla/websocket"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	"github.com/lin-snow/ech0/internal/visitor"
 )
 
-type DashboardService struct{}
+type DashboardService struct {
+	visitorTracker *visitor.Tracker
+}
 
-func NewDashboardService() *DashboardService {
-	return &DashboardService{}
+func NewDashboardService(visitorTracker *visitor.Tracker) *DashboardService {
+	return &DashboardService{visitorTracker: visitorTracker}
 }
 
 func (s *DashboardService) GetSystemLogs(query SystemLogQuery) ([]logUtil.LogEntry, error) {
@@ -24,6 +27,10 @@ func (s *DashboardService) GetSystemLogs(query SystemLogQuery) ([]logUtil.LogEnt
 		tail = 200
 	}
 	return logUtil.QueryLogFileTail(logUtil.CurrentLogFilePath(), tail, query.Level, query.Keyword)
+}
+
+func (s *DashboardService) GetVisitorStats() []visitor.DayStat {
+	return s.visitorTracker.Last7Days()
 }
 
 func (s *DashboardService) WSSubscribeSystemLogs(

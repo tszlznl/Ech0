@@ -1683,6 +1683,20 @@ paths:
       summary: 系统日志流
       tags:
       - 系统
+  /system/visitor-stats:
+    get:
+      description: 获取近七天 PV/UV 统计数据
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 近七天访客统计
+      tags:
+      - 系统
   /tag/{id}:
     delete:
       consumes:

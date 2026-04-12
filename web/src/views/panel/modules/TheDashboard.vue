@@ -1,14 +1,11 @@
 <script setup lang="ts">
+import { usePreferredReducedMotion, useTransition } from '@vueuse/core'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  fetchCheckUpdate,
-  fetchGetEchosByPage,
-  fetchGetTodayEchos,
-} from '@/service/api'
+import { fetchCheckUpdate, fetchGetEchosByPage, fetchGetTodayEchos } from '@/service/api'
 import { useConnectStore, useSettingStore } from '@/stores'
 import { theToast } from '@/utils/toast'
-import { TheActivityLog, TheTagPileWidget } from '@/components/advanced/widget'
+import { TheActivityLog, TheVisitorStatsWidget } from '@/components/advanced/widget'
 import Box from '@/components/icons/box.vue'
 import ConnectedIcon from '@/components/icons/connected-icon.vue'
 import DateIcon from '@/components/icons/date-icon.vue'
@@ -29,6 +26,23 @@ const loading = ref(true)
 const echoTotal = ref<number | null>(null)
 const todayEchoCount = ref<number | null>(null)
 const connectCount = ref<number | null>(null)
+
+const prefersReducedMotion = usePreferredReducedMotion()
+const statAnimDuration = computed(() => (prefersReducedMotion.value === 'reduce' ? 0 : 820))
+
+const echoAnimTarget = ref(0)
+const todayAnimTarget = ref(0)
+const connectAnimTarget = ref(0)
+
+const echoAnimated = useTransition(echoAnimTarget, {
+  duration: statAnimDuration,
+})
+const todayAnimated = useTransition(todayAnimTarget, {
+  duration: statAnimDuration,
+})
+const connectAnimated = useTransition(connectAnimTarget, {
+  duration: statAnimDuration,
+})
 const hasUpdate = ref(false)
 const latestVersion = ref('')
 const checkingUpdate = ref(false)
@@ -36,6 +50,18 @@ const checkingUpdate = ref(false)
 const formatMetric = (value: number | null) => {
   if (value === null) return '--'
   return new Intl.NumberFormat(locale.value).format(value)
+}
+
+const formatAnimatedMetric = (key: string) => {
+  if (loading.value) return '--'
+  if (key === 'echos' && echoTotal.value === null) return '--'
+  if (key === 'today-echo' && todayEchoCount.value === null) return '--'
+  if (key === 'connect' && connectCount.value === null) return '--'
+  let n = 0
+  if (key === 'echos') n = Math.round(echoAnimated.value)
+  else if (key === 'today-echo') n = Math.round(todayAnimated.value)
+  else if (key === 'connect') n = Math.round(connectAnimated.value)
+  return new Intl.NumberFormat(locale.value).format(n)
 }
 
 const dashboardStats = computed<StatCard[]>(() => [
@@ -65,6 +91,11 @@ const dashboardStats = computed<StatCard[]>(() => [
   },
 ])
 
+const statValueText = (item: StatCard) => {
+  if (item.key === 'version') return item.value
+  return formatAnimatedMetric(item.key)
+}
+
 const todayText = computed(() => {
   return new Intl.DateTimeFormat(locale.value, {
     month: '2-digit',
@@ -83,14 +114,17 @@ const loadDashboardStats = async () => {
 
   if (echoRes.status === 'fulfilled' && echoRes.value.code === 1) {
     echoTotal.value = echoRes.value.data?.total ?? 0
+    echoAnimTarget.value = echoTotal.value
   }
 
   if (todayRes.status === 'fulfilled' && todayRes.value.code === 1) {
     const data = todayRes.value.data
     todayEchoCount.value = Array.isArray(data) ? data.length : 0
+    todayAnimTarget.value = todayEchoCount.value
   }
 
   connectCount.value = connectStore.connects.length
+  connectAnimTarget.value = connectCount.value
   loading.value = false
 }
 
@@ -138,9 +172,10 @@ onMounted(() => {
     <!-- Stat cards -->
     <section class="stats-grid">
       <div
-        v-for="item in dashboardStats"
+        v-for="(item, statIndex) in dashboardStats"
         :key="item.key"
         :class="['stat-card', item.key === 'version' ? 'stat-card--clickable' : '']"
+        :style="{ '--stat-enter-delay': `${statIndex * 72}ms` }"
         v-tooltip="item.key === 'version' ? t('dashboard.clickToCheckUpdate') : undefined"
         @click="handleStatCardClick(item.key)"
       >
@@ -154,8 +189,14 @@ onMounted(() => {
           <Box v-else-if="item.icon === 'version'" class="stat-card-icon stat-card-icon--stroke" />
         </div>
         <div class="stat-body">
-          <p class="stat-value" :class="{ 'is-loading': loading && item.value === '--' }">
-            {{ item.value }}
+          <p
+            class="stat-value"
+            :class="{
+              'is-loading': loading && item.key !== 'version' && item.value === '--',
+              'stat-value--numeric': item.key !== 'version',
+            }"
+          >
+            {{ statValueText(item) }}
             <span
               v-if="item.key === 'version' && hasUpdate"
               class="update-dot"
@@ -187,7 +228,7 @@ onMounted(() => {
         <TheActivityLog />
       </div>
       <div class="panel-widget-wrap panel-widget-wrap--divider">
-        <TheTagPileWidget :ech0-version="settingStore.hello?.version || '--'" />
+        <TheVisitorStatsWidget />
       </div>
     </section>
   </div>
@@ -237,6 +278,8 @@ onMounted(() => {
   padding: 0.65rem 0.4rem;
   border-bottom: 1px dashed var(--color-border-subtle);
   transition: opacity 0.2s ease;
+  animation: stat-card-enter 0.58s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--stat-enter-delay, 0ms);
 }
 
 .stat-card:hover {
@@ -292,6 +335,10 @@ onMounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.stat-value--numeric {
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-value.is-loading {
@@ -355,6 +402,23 @@ onMounted(() => {
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes stat-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.45rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stat-card {
+    animation: none;
   }
 }
 

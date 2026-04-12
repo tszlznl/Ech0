@@ -1994,6 +1994,27 @@
                 }
             }
         },
+        "/system/visitor-stats": {
+            "get": {
+                "description": "获取近七天 PV/UV 统计数据",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "系统"
+                ],
+                "summary": "近七天访客统计",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/tag/{id}": {
             "delete": {
                 "description": "根据ID删除指定的标签",
