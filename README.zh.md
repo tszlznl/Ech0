@@ -18,7 +18,7 @@
 <div align="center">
   <img alt="Ech0" src="./docs/imgs/logo.svg" width="150">
 
-  [预览地址](https://memo.vaaat.com/) | [官网与文档](https://www.ech0.app/) | [Ech0 Hub](https://hub.ech0.app/)
+  [预览地址](https://memo.vaaat.com/) | [官网与文档](https://www.ech0.app/) | [发布页面](https://lin-snow.github.io/Ech0/) | [Ech0 Hub](https://hub.ech0.app/)
 
   # Ech0
 </div>
