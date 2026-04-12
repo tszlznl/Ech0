@@ -661,6 +661,37 @@
                 }
             }
         },
+        "/echo/hot": {
+            "get": {
+                "description": "从最近发布的动态池中按「点赞数 + 已审核评论数×2」计算热度并排序，返回前若干条 Echo。需走认证路由（无有效 token 时按匿名处理）；管理员可包含私有 Echo。查询参数 limit 为可选正整数，默认 5，服务端最大返回 20 条；无效或非正整数时使用默认值。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Echo"
+                ],
+                "summary": "获取热门 Echo 列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "返回条数，默认 5，最大 20",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取失败",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/echo/like/{id}": {
             "put": {
                 "description": "根据ID为指定的Echo动态点赞",

@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { fetchGetEchosByPage, fetchGetTodayEchos, fetchCheckUpdate } from '@/service/api'
+import {
+  fetchCheckUpdate,
+  fetchGetEchosByPage,
+  fetchGetTodayEchos,
+} from '@/service/api'
 import { useConnectStore, useSettingStore } from '@/stores'
 import { theToast } from '@/utils/toast'
-import { TheActivityLog, TheTrendingEcho } from '@/components/advanced/widget'
+import { TheActivityLog, TheTagPileWidget } from '@/components/advanced/widget'
 import Box from '@/components/icons/box.vue'
 import ConnectedIcon from '@/components/icons/connected-icon.vue'
 import DateIcon from '@/components/icons/date-icon.vue'
@@ -117,7 +121,9 @@ const handleStatCardClick = (key: string) => {
   if (key === 'version') void handleCheckUpdate()
 }
 
-onMounted(() => void loadDashboardStats())
+onMounted(() => {
+  void loadDashboardStats()
+})
 </script>
 
 <template>
@@ -177,8 +183,12 @@ onMounted(() => void loadDashboardStats())
 
     <!-- Panels -->
     <section class="dashboard-panels">
-      <TheActivityLog />
-      <TheTrendingEcho />
+      <div class="panel-widget-wrap">
+        <TheActivityLog />
+      </div>
+      <div class="panel-widget-wrap panel-widget-wrap--divider">
+        <TheTagPileWidget :ech0-version="settingStore.hello?.version || '--'" />
+      </div>
     </section>
   </div>
 </template>
@@ -319,7 +329,17 @@ onMounted(() => void loadDashboardStats())
 .dashboard-panels {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1rem;
+  gap: 0;
+}
+
+.panel-widget-wrap {
+  padding: 0.45rem 0.1rem;
+}
+
+.panel-widget-wrap--divider {
+  margin-top: 0.2rem;
+  padding-top: 0.9rem;
+  border-top: 0.5px dashed var(--color-border-subtle);
 }
 
 @keyframes dot-pulse {
@@ -344,7 +364,26 @@ onMounted(() => void loadDashboardStats())
   }
 
   .dashboard-panels {
+    position: relative;
     grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .dashboard-panels::before {
+    content: '';
+    position: absolute;
+    top: 0.35rem;
+    bottom: 0.35rem;
+    left: 50%;
+    border-left: 0.5px dashed var(--color-border-subtle);
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  .panel-widget-wrap--divider {
+    margin-top: 0;
+    padding-top: 0.45rem;
+    border-top: none;
   }
 }
 

@@ -438,6 +438,17 @@ func (echoHandler *EchoHandler) GetEchosByTagId() gin.HandlerFunc {
 	})
 }
 
+// GetHotEchos 获取热门 Echo 列表
+//
+//	@Summary		获取热门 Echo 列表
+//	@Description	从最近发布的动态池中按「点赞数 + 已审核评论数×2」计算热度并排序，返回前若干条 Echo。需走认证路由（无有效 token 时按匿名处理）；管理员可包含私有 Echo。查询参数 limit 为可选正整数，默认 5，服务端最大返回 20 条；无效或非正整数时使用默认值。
+//	@Tags			Echo
+//	@Accept			json
+//	@Produce		json
+//	@Param			limit	query		int		false	"返回条数，默认 5，最大 20"
+//	@Success		200		{object}	handler.Response{data=object}	"获取成功"
+//	@Failure		200		{object}	handler.Response				"获取失败"
+//	@Router			/echo/hot [get]
 func (echoHandler *EchoHandler) GetHotEchos() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		limit := 5

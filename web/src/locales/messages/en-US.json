@@ -280,6 +280,11 @@
     "hotAccent": "Echos",
     "noHotEchos": "No trending echos"
   },
+  "tagPileWidget": {
+    "title": "Tech",
+    "accent": "Stacks",
+    "empty": "No trending tags"
+  },
   "panelPage": {
     "friend": "friend",
     "welcomeBack": "Welcome back, {username}",

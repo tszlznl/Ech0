@@ -1,5 +1,5 @@
 <template>
-  <div class="activity-log">
+  <div class="activity-log p-1">
     <div class="activity-head">
       <div class="activity-chip">7 DAYS</div>
       <div class="activity-title-wrap">
