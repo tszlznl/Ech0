@@ -109,6 +109,7 @@ jobs:
           ' release/index.html.tmpl > _site/index.html
 
           cp docs/imgs/logo.svg _site/logo.svg
+          cp web/public/favicon.svg _site/favicon.svg
           touch _site/.nojekyll
 
       - name: Deploy release page to gh-pages
@@ -136,6 +137,7 @@ jobs:
 
           cp _site/index.html "$tmpdir/index.html"
           cp _site/logo.svg "$tmpdir/logo.svg"
+          cp _site/favicon.svg "$tmpdir/favicon.svg"
           cp _site/.nojekyll "$tmpdir/.nojekyll"
 
           # Bootstrap Helm repo index when chart-releaser skips publishing
@@ -151,7 +153,7 @@ jobs:
 
           (
             cd "$tmpdir"
-            git add index.html logo.svg .nojekyll index.yaml
+            git add index.html logo.svg favicon.svg .nojekyll index.yaml
             shopt -s nullglob
             chart_pkgs=(ech0-*.tgz)
             if [ "${#chart_pkgs[@]}" -gt 0 ]; then
