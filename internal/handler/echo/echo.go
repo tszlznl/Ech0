@@ -445,7 +445,7 @@ func (echoHandler *EchoHandler) GetEchosByTagId() gin.HandlerFunc {
 //	@Tags			Echo
 //	@Accept			json
 //	@Produce		json
-//	@Param			limit	query		int		false	"返回条数，默认 5，最大 20"
+//	@Param			limit	query		int								false	"返回条数，默认 5，最大 20"
 //	@Success		200		{object}	handler.Response{data=object}	"获取成功"
 //	@Failure		200		{object}	handler.Response				"获取失败"
 //	@Router			/echo/hot [get]
