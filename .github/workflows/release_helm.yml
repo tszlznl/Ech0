@@ -138,9 +138,25 @@ jobs:
           cp _site/logo.svg "$tmpdir/logo.svg"
           cp _site/.nojekyll "$tmpdir/.nojekyll"
 
+          # Bootstrap Helm repo index when chart-releaser skips publishing
+          # (for example, no chart version change detected) and index.yaml is absent.
+          if [ ! -f "$tmpdir/index.yaml" ]; then
+            echo "index.yaml missing on gh-pages, bootstrapping from local chart package..."
+            bootstrap_dir="$(mktemp -d)"
+            helm package charts/ech0 --destination "$bootstrap_dir"
+            helm repo index "$bootstrap_dir" --url "https://lin-snow.github.io/Ech0"
+            cp "$bootstrap_dir/index.yaml" "$tmpdir/index.yaml"
+            cp "$bootstrap_dir"/ech0-*.tgz "$tmpdir/"
+          fi
+
           (
             cd "$tmpdir"
-            git add index.html logo.svg .nojekyll
+            git add index.html logo.svg .nojekyll index.yaml
+            shopt -s nullglob
+            chart_pkgs=(ech0-*.tgz)
+            if [ "${#chart_pkgs[@]}" -gt 0 ]; then
+              git add "${chart_pkgs[@]}"
+            fi
             if git diff --cached --quiet; then
               echo "Release page unchanged; skip commit."
               exit 0
