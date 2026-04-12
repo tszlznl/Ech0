@@ -26,7 +26,7 @@ make dev
 
 ### Frontend
 
-- Node.js `25+`
+- Node.js `25.5.0+`
 - pnpm `10+`
 
 Common commands (`web` directory):
