@@ -210,6 +210,42 @@ jobs:
                   print(f"Removed stale chart package: {pkg.name}")
           PY
 
+          # Keep gh-pages as a publish-only minimal branch.
+          # Remove any unrelated files carried over from historical main snapshots.
+          python3 - "$tmpdir/index.yaml" "$tmpdir" <<'PY'
+          import re
+          import shutil
+          import sys
+          from pathlib import Path
+
+          index_path = Path(sys.argv[1])
+          pages_dir = Path(sys.argv[2])
+
+          keep_files = {
+              ".nojekyll",
+              "index.html",
+              "index.yaml",
+              "logo.svg",
+              "favicon.svg",
+          }
+
+          # Keep local chart packages only when referenced by index.yaml.
+          if index_path.exists():
+              content = index_path.read_text(encoding="utf-8")
+              keep_files.update(re.findall(r'ech0-[0-9A-Za-z_.-]+\.tgz', content))
+
+          for child in pages_dir.iterdir():
+              if child.name == ".git":
+                  continue
+              if child.name in keep_files:
+                  continue
+              if child.is_dir():
+                  shutil.rmtree(child)
+              else:
+                  child.unlink()
+              print(f"Pruned unrelated gh-pages item: {child.name}")
+          PY
+
           (
             cd "$tmpdir"
             git add index.html logo.svg favicon.svg .nojekyll index.yaml

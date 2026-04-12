@@ -29,4 +29,5 @@ Notes:
 - `release_helm.yml` also supports manual rerun from the Actions UI via `workflow_dispatch`.
 - If chart-releaser reports no chart changes and `gh-pages/index.yaml` is missing, the workflow bootstraps a minimal Helm repo index by packaging `charts/ech0` and writing `index.yaml` to `gh-pages`.
 - The deploy step removes stale `ech0-*.tgz` files from `gh-pages`, keeping only packages still referenced by `index.yaml`.
+- The deploy step prunes unrelated files from `gh-pages`, keeping it as a publish-only minimal branch (`index.html`, `index.yaml`, `.nojekyll`, icons, and referenced chart packages).
 - If `version` is unchanged, chart-releaser will not produce a new package version.
