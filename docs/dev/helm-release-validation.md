@@ -25,9 +25,7 @@ Notes:
 - `release_helm.yml` automatically syncs chart `appVersion` from release tag (e.g. `v4.4.4` -> `4.4.4`).
 - For manual runs (`workflow_dispatch`), you can pass `release_tag`; if omitted, the workflow uses the latest release tag.
 - `release_helm.yml` uses `charts_dir: ./charts` because chart-releaser expects the parent folder of chart directories.
+- `release_helm.yml` enables `skip_existing` in chart-releaser to avoid failing when a chart release tag (such as `ech0-1.0.0`) already exists.
 - `release_helm.yml` now triggers on `release.published` so release-page generation can read the latest published release metadata.
 - `release_helm.yml` also supports manual rerun from the Actions UI via `workflow_dispatch`.
-- If chart-releaser reports no chart changes and `gh-pages/index.yaml` is missing, the workflow bootstraps a minimal Helm repo index by packaging `charts/ech0` and writing `index.yaml` to `gh-pages`.
-- The deploy step removes stale `ech0-*.tgz` files from `gh-pages`, keeping only packages still referenced by `index.yaml`.
-- The deploy step prunes unrelated files from `gh-pages`, keeping it as a publish-only minimal branch (`index.html`, `index.yaml`, `.nojekyll`, icons, and referenced chart packages).
 - If `version` is unchanged, chart-releaser will not produce a new package version.

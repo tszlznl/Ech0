@@ -75,6 +75,7 @@ jobs:
         uses: helm/chart-releaser-action@v1.6.0
         with:
           charts_dir: ./charts
+          skip_existing: true
         env:
           CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -177,83 +178,9 @@ jobs:
           cp _site/favicon.svg "$tmpdir/favicon.svg"
           cp _site/.nojekyll "$tmpdir/.nojekyll"
 
-          # Bootstrap Helm repo index when chart-releaser skips publishing
-          # (for example, no chart version change detected) and index.yaml is absent.
-          if [ ! -f "$tmpdir/index.yaml" ]; then
-            echo "index.yaml missing on gh-pages, bootstrapping from local chart package..."
-            bootstrap_dir="$(mktemp -d)"
-            helm package charts/ech0 --destination "$bootstrap_dir"
-            helm repo index "$bootstrap_dir" --url "https://lin-snow.github.io/Ech0"
-            cp "$bootstrap_dir/index.yaml" "$tmpdir/index.yaml"
-            cp "$bootstrap_dir"/ech0-*.tgz "$tmpdir/"
-          fi
-
-          # Remove stale local chart packages from gh-pages.
-          # Keep only files still referenced by index.yaml local URLs.
-          python3 - "$tmpdir/index.yaml" "$tmpdir" <<'PY'
-          import re
-          import sys
-          from pathlib import Path
-
-          index_path = Path(sys.argv[1])
-          pages_dir = Path(sys.argv[2])
-
-          if not index_path.exists():
-              sys.exit(0)
-
-          content = index_path.read_text(encoding="utf-8")
-          referenced = set(re.findall(r'ech0-[0-9A-Za-z_.-]+\.tgz', content))
-
-          for pkg in pages_dir.glob("ech0-*.tgz"):
-              if pkg.name not in referenced:
-                  pkg.unlink()
-                  print(f"Removed stale chart package: {pkg.name}")
-          PY
-
-          # Keep gh-pages as a publish-only minimal branch.
-          # Remove any unrelated files carried over from historical main snapshots.
-          python3 - "$tmpdir/index.yaml" "$tmpdir" <<'PY'
-          import re
-          import shutil
-          import sys
-          from pathlib import Path
-
-          index_path = Path(sys.argv[1])
-          pages_dir = Path(sys.argv[2])
-
-          keep_files = {
-              ".nojekyll",
-              "index.html",
-              "index.yaml",
-              "logo.svg",
-              "favicon.svg",
-          }
-
-          # Keep local chart packages only when referenced by index.yaml.
-          if index_path.exists():
-              content = index_path.read_text(encoding="utf-8")
-              keep_files.update(re.findall(r'ech0-[0-9A-Za-z_.-]+\.tgz', content))
-
-          for child in pages_dir.iterdir():
-              if child.name == ".git":
-                  continue
-              if child.name in keep_files:
-                  continue
-              if child.is_dir():
-                  shutil.rmtree(child)
-              else:
-                  child.unlink()
-              print(f"Pruned unrelated gh-pages item: {child.name}")
-          PY
-
           (
             cd "$tmpdir"
-            git add index.html logo.svg favicon.svg .nojekyll index.yaml
-            shopt -s nullglob
-            chart_pkgs=(ech0-*.tgz)
-            if [ "${#chart_pkgs[@]}" -gt 0 ]; then
-              git add "${chart_pkgs[@]}"
-            fi
+            git add index.html logo.svg favicon.svg .nojekyll
             if git diff --cached --quiet; then
               echo "Release page unchanged; skip commit."
               exit 0
