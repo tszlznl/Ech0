@@ -1,9 +1,9 @@
 name: Release Helm Chart
 
 on:
-  push:
-    tags:
-      - "v*"
+  release:
+    types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -28,19 +28,134 @@ jobs:
           fi
           echo "Detected chart version: ${chart_version}"
 
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      # charts_dir must be the parent of chart folders (each subdir contains Chart.yaml), not the chart path itself.
       - name: Run Chart Releaser
         uses: helm/chart-releaser-action@v1.6.0
         with:
-          charts_dir: ./charts/ech0
+          charts_dir: ./charts
         env:
           CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate release page
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p _site
+          release_rows_file="$(mktemp)"
+
+          gh release list --limit 100 --exclude-drafts --exclude-pre-releases --json tagName,publishedAt > /tmp/releases.json
+
+          python3 - "${release_rows_file}" <<'PY'
+          import json
+          import sys
+
+          output_file = sys.argv[1]
+
+          with open("/tmp/releases.json", "r", encoding="utf-8") as f:
+              releases = json.load(f)
+
+          def version_tuple(tag):
+              if not tag.startswith("v"):
+                  return None
+              parts = tag[1:].split(".")
+              if len(parts) != 3:
+                  return None
+              try:
+                  return tuple(int(p) for p in parts)
+              except ValueError:
+                  return None
+
+          rows = []
+          for r in releases:
+              tag = r.get("tagName", "")
+              vt = version_tuple(tag)
+              if vt is None or vt < (4, 4, 0):
+                  continue
+              published_at = r.get("publishedAt") or ""
+              date = published_at[:10]
+              base = f"https://github.com/lin-snow/Ech0/releases/download/{tag}"
+              page = f"https://github.com/lin-snow/Ech0/releases/tag/{tag}"
+              rows.append(
+                  f'<li><strong>{tag}</strong> <span class="muted">({date})</span> - '
+                  f'<a href="{base}/ech0-linux-amd64.tar.gz">linux/amd64</a> | '
+                  f'<a href="{base}/ech0-linux-arm64.tar.gz">linux/arm64</a> | '
+                  f'<a href="{page}">Release Notes</a></li>'
+              )
+
+          with open(output_file, "w", encoding="utf-8") as out:
+              if not rows:
+                  out.write('<li class="muted">No published release found for v4.4.0+.</li>\n')
+              else:
+                  for row in rows:
+                      out.write(f"{row}\n")
+          PY
+
+          awk -v rows_file="${release_rows_file}" '
+            /<!-- RELEASES -->/ {
+              while ((getline line < rows_file) > 0) {
+                print "          " line
+              }
+              close(rows_file)
+              next
+            }
+            { print }
+          ' release/index.html.tmpl > _site/index.html
+
+          cp docs/imgs/logo.svg _site/logo.svg
+          touch _site/.nojekyll
+
+      - name: Deploy release page to gh-pages
+        run: |
+          set -euo pipefail
+
+          tmpdir="$(mktemp -d)"
+          cleanup() {
+            git worktree remove "$tmpdir" --force 2>/dev/null || true
+            rm -rf "$tmpdir"
+          }
+          trap cleanup EXIT
+
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            git fetch --no-tags origin gh-pages
+            git worktree add --detach "$tmpdir" origin/gh-pages
+          else
+            git worktree add --detach "$tmpdir"
+            (
+              cd "$tmpdir"
+              git checkout --orphan gh-pages
+              rm -rf ./*
+            )
+          fi
+
+          cp _site/index.html "$tmpdir/index.html"
+          cp _site/logo.svg "$tmpdir/logo.svg"
+          cp _site/.nojekyll "$tmpdir/.nojekyll"
+
+          (
+            cd "$tmpdir"
+            git add index.html logo.svg .nojekyll
+            if git diff --cached --quiet; then
+              echo "Release page unchanged; skip commit."
+              exit 0
+            fi
+            git commit -m "docs: update gh-pages release index"
+            git push origin HEAD:gh-pages
+          )
 
       - name: Write post-release validation checklist
         run: |
           {
             echo "## Helm Repo validation checklist"
             echo ""
-            echo "- [ ] Verify gh-pages branch contains \`index.yaml\`"
+            echo "- [ ] Verify release page is available at \`https://lin-snow.github.io/Ech0/\`"
+            echo "- [ ] Verify gh-pages branch contains \`.nojekyll\` and \`index.yaml\`"
             echo "- [ ] Verify release has chart package \`ech0-<version>.tgz\`"
             echo "- [ ] Verify install works:"
             echo "  \`\`\`bash"
