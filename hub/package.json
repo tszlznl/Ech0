@@ -12,16 +12,16 @@
   },
   "dependencies": {
     "@types/markdown-it": "^14.1.2",
-    "@unocss/preset-wind4": "^66.6.7",
+    "@unocss/preset-wind4": "^66.6.8",
     "@vueuse/core": "^14.2.1",
     "floating-vue": "^5.2.2",
     "highlight.js": "^11.11.1",
     "markdown-it": "^14.1.1",
     "photoswipe": "^5.4.4",
     "sass-embedded": "^1.99.0",
-    "unocss": "^66.6.7",
+    "unocss": "^66.6.8",
     "vue": "^3.5.32",
-    "vue-i18n": "^11.3.0",
+    "vue-i18n": "^11.3.2",
     "vue-router": "^5.0.4"
   },
   "devDependencies": {
@@ -29,7 +29,7 @@
     "@vitejs/plugin-vue": "^6.0.5",
     "@vue/tsconfig": "^0.9.1",
     "typescript": "~5.9.3",
-    "vite": "^8.0.5",
+    "vite": "^8.0.8",
     "vite-plugin-pwa": "^1.2.0",
     "vue-tsc": "^3.2.6"
   },

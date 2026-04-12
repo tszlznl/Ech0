@@ -223,6 +223,7 @@ const initUppy = () => {
     uppy.use(Compressor, {
       mimeType: outputMimeType,
       convertTypes: ['image/jpeg', 'image/png', 'image/webp'],
+      convertSize: 0,
     })
   }
 
