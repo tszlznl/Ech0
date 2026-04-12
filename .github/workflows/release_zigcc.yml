@@ -28,14 +28,6 @@ jobs:
             zig_target: aarch64-linux-musl
             output_suffix: ""
           - goos: linux
-            goarch: arm
-            goarm: "7"
-            zig_target: arm-linux-musleabihf
-            zig_mcpu: "baseline+v7a"
-            cgo_cflags: "-march=armv7-a -mfloat-abi=hard"
-            cgo_ldflags: "-static"
-            output_suffix: ""
-          - goos: linux
             goarch: riscv64
             zig_target: riscv64-linux-musl
             output_suffix: ""
