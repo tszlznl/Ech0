@@ -9,12 +9,37 @@ permissions:
 env:
   GO_VERSION: "1.26.2"
   NODE_VERSION: "25"
-  ZIG_VERSION: "0.15.2"
+  ZIG_VERSION: "latest"
 
 jobs:
-  build-zig-arm64:
-    name: Build linux/arm64 with zig cc
+  build-zig-matrix:
+    name: Build ${{ matrix.goos }}/${{ matrix.goarch }} with zig cc
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            zig_target: x86_64-linux-musl
+            output_suffix: ""
+          - goos: linux
+            goarch: arm64
+            zig_target: aarch64-linux-musl
+            output_suffix: ""
+          - goos: linux
+            goarch: arm
+            goarm: "7"
+            zig_target: arm-linux-musleabihf
+            output_suffix: ""
+          - goos: linux
+            goarch: riscv64
+            zig_target: riscv64-linux-musl
+            output_suffix: ""
+          - goos: windows
+            goarch: amd64
+            zig_target: x86_64-windows-gnu
+            output_suffix: ".exe"
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -60,37 +85,49 @@ jobs:
 
       - name: Build backend binary (zig cc)
         env:
-          GOOS: linux
-          GOARCH: arm64
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          GOARM: ${{ matrix.goarm }}
           CGO_ENABLED: 1
-          CC: zig cc -target aarch64-linux-musl
-          CXX: zig c++ -target aarch64-linux-musl
+          ZIG_TARGET: ${{ matrix.zig_target }}
         run: |
           set -euo pipefail
           test -f cmd/ech0/main.go
           STATIC_LDFLAGS="-linkmode external -extldflags '-static'"
-          OUTPUT_NAME="ech0-linux-arm64-zigcc"
+          OUTPUT_NAME="ech0-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.output_suffix }}"
+          export CC="zig cc -target ${ZIG_TARGET}"
+          export CXX="zig c++ -target ${ZIG_TARGET}"
           go build -tags netgo -ldflags "$STATIC_LDFLAGS" -o "${OUTPUT_NAME}" ./cmd/ech0/main.go
 
       - name: Verify binary metadata
         run: |
           set -euo pipefail
-          OUTPUT_NAME="ech0-linux-arm64-zigcc"
+          OUTPUT_NAME="ech0-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.output_suffix }}"
           file "${OUTPUT_NAME}" | tee /tmp/binary-file-info.txt
-          grep -qi "ARM aarch64" /tmp/binary-file-info.txt
-          ldd "${OUTPUT_NAME}" 2>&1 | tee /tmp/binary-ldd-info.txt || true
-          grep -Eqi "not a dynamic executable|statically linked" /tmp/binary-ldd-info.txt
+          if [ "${{ matrix.goos }}" = "linux" ]; then
+            case "${{ matrix.goarch }}" in
+              amd64) grep -Eqi "x86-64|x86_64" /tmp/binary-file-info.txt ;;
+              arm64) grep -Eqi "ARM aarch64|aarch64" /tmp/binary-file-info.txt ;;
+              arm) grep -Eqi "ARM" /tmp/binary-file-info.txt ;;
+              riscv64) grep -Eqi "RISC-V" /tmp/binary-file-info.txt ;;
+            esac
+            ldd "${OUTPUT_NAME}" 2>&1 | tee /tmp/binary-ldd-info.txt || true
+            grep -Eqi "not a dynamic executable|statically linked" /tmp/binary-ldd-info.txt
+          else
+            grep -Eqi "PE32\+|Windows" /tmp/binary-file-info.txt
+          fi
 
       - name: Package binary
         run: |
           set -euo pipefail
-          tar -czf "ech0-linux-arm64-zigcc.tar.gz" "ech0-linux-arm64-zigcc"
+          OUTPUT_NAME="ech0-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.output_suffix }}"
+          tar -czf "ech0-${{ matrix.goos }}-${{ matrix.goarch }}-zigcc.tar.gz" "${OUTPUT_NAME}"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: ech0-linux-arm64-zigcc-asset
-          path: ech0-linux-arm64-zigcc.tar.gz
+          name: ech0-${{ matrix.goos }}-${{ matrix.goarch }}-zigcc-asset
+          path: ech0-${{ matrix.goos }}-${{ matrix.goarch }}-zigcc.tar.gz
           retention-days: 3
 
       - name: Write cutover checklist
@@ -98,9 +135,9 @@ jobs:
           {
             echo "## Zig cc cutover checklist"
             echo ""
-            echo "- [x] linux/arm64 build succeeded with \`zig cc -target aarch64-linux-musl\`"
-            echo "- [x] Output binary passed architecture/static-link verification"
+            echo "- [x] ${{ matrix.goos }}/${{ matrix.goarch }} build succeeded with \`zig cc -target ${{ matrix.zig_target }}\`"
+            echo "- [x] Output binary passed target-format verification"
             echo "- [ ] Run this workflow repeatedly and confirm stability"
-            echo "- [ ] Compare runtime behavior with current musl-gcc build"
-            echo "- [ ] If all checks pass, migrate ARM64 release workflow to zig cc"
+            echo "- [ ] Compare runtime behavior with current release binaries"
+            echo "- [ ] If all checks pass, decide which extra targets should move into release.yml"
           } >> "$GITHUB_STEP_SUMMARY"

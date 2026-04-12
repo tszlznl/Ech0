@@ -11,6 +11,8 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  ARM64_TOOLCHAIN: "zigcc" # options: zigcc | musl
+  ZIG_VERSION: "latest"
   MUSL_TOOLCHAIN_VERSION: "2025-6-20"
   MUSL_TOOLCHAIN_ARCHIVE: "aarch64-linux-musl-cross.tgz"
   MUSL_TOOLCHAIN_SHA256: ""
@@ -56,8 +58,14 @@ jobs:
       - name: Set Go proxy
         run: go env -w GOPROXY=https://proxy.golang.org,direct
 
-      - name: Setup Musl for ARM64 Cross-compilation
-        if: matrix.goarch == 'arm64'
+      - name: Setup Zig for ARM64 Cross-compilation
+        if: matrix.goarch == 'arm64' && env.ARM64_TOOLCHAIN == 'zigcc'
+        uses: mlugg/setup-zig@v2
+        with:
+          version: ${{ env.ZIG_VERSION }}
+
+      - name: Setup Musl for ARM64 Cross-compilation (fallback)
+        if: matrix.goarch == 'arm64' && env.ARM64_TOOLCHAIN == 'musl'
         uses: ./.github/actions/setup-musl-toolchain
         with:
           toolchain-version: ${{ env.MUSL_TOOLCHAIN_VERSION }}
@@ -73,12 +81,26 @@ jobs:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: 1
-          # Dynamically set the C compiler based on the architecture
-          CC: ${{ matrix.goos == 'windows' && 'x86_64-w64-mingw32-gcc' || (matrix.goarch == 'arm64' && 'aarch64-linux-musl-gcc' || 'gcc') }}
+          ARM64_TOOLCHAIN: ${{ env.ARM64_TOOLCHAIN }}
         run: |
+          set -euo pipefail
           # Define linker flags for a static build
           STATIC_LDFLAGS="-linkmode external -extldflags '-static'"
           OUTPUT_NAME="ech0-${{ matrix.goos }}-${{ matrix.goarch }}"
+
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            export CC="x86_64-w64-mingw32-gcc"
+          elif [ "${{ matrix.goarch }}" = "arm64" ]; then
+            if [ "${ARM64_TOOLCHAIN}" = "zigcc" ]; then
+              export CC="zig cc -target aarch64-linux-musl"
+              export CXX="zig c++ -target aarch64-linux-musl"
+            else
+              export CC="aarch64-linux-musl-gcc"
+            fi
+          else
+            export CC="gcc"
+          fi
+
           # 如果是 Windows 平台，给输出文件名加上 .exe 后缀
           if [ "${{ matrix.goos }}" == "windows" ]; then
             OUTPUT_NAME="${OUTPUT_NAME}.exe"
