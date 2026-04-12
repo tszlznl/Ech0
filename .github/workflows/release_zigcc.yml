@@ -31,6 +31,9 @@ jobs:
             goarch: arm
             goarm: "7"
             zig_target: arm-linux-musleabihf
+            zig_mcpu: "baseline+v7a"
+            cgo_cflags: "-march=armv7-a -mfloat-abi=hard"
+            cgo_ldflags: "-static"
             output_suffix: ""
           - goos: linux
             goarch: riscv64
@@ -90,13 +93,21 @@ jobs:
           GOARM: ${{ matrix.goarm }}
           CGO_ENABLED: 1
           ZIG_TARGET: ${{ matrix.zig_target }}
+          ZIG_MCPU: ${{ matrix.zig_mcpu }}
+          CGO_CFLAGS: ${{ matrix.cgo_cflags }}
+          CGO_LDFLAGS: ${{ matrix.cgo_ldflags }}
         run: |
           set -euo pipefail
           test -f cmd/ech0/main.go
           STATIC_LDFLAGS="-linkmode external -extldflags '-static'"
           OUTPUT_NAME="ech0-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.output_suffix }}"
-          export CC="zig cc -target ${ZIG_TARGET}"
-          export CXX="zig c++ -target ${ZIG_TARGET}"
+          if [ -n "${ZIG_MCPU:-}" ]; then
+            export CC="zig cc -target ${ZIG_TARGET} -mcpu=${ZIG_MCPU}"
+            export CXX="zig c++ -target ${ZIG_TARGET} -mcpu=${ZIG_MCPU}"
+          else
+            export CC="zig cc -target ${ZIG_TARGET}"
+            export CXX="zig c++ -target ${ZIG_TARGET}"
+          fi
           go build -tags netgo -ldflags "$STATIC_LDFLAGS" -o "${OUTPUT_NAME}" ./cmd/ech0/main.go
 
       - name: Verify binary metadata
