@@ -73,24 +73,12 @@ watch(feedLayoutIsMasonry, () => {
   nextTick(() => scheduleLayout())
 })
 
-const mainColumn = ref<HTMLElement | null>(null)
 const sentinelRef = ref<HTMLElement | null>(null)
-const backTopStyle = ref<Record<string, string>>({ right: '24px' })
 const showBackTop = ref(false)
 let sentinelObserver: IntersectionObserver | null = null
 
 const updateShowBackTop = () => {
   showBackTop.value = window.scrollY > 300
-}
-
-const updatePosition = () => {
-  const column = mainColumn.value
-  if (!column) return
-  const rect = column.getBoundingClientRect?.()
-  if (!rect) return
-  const rightOffset = window.innerWidth - rect.right
-  const safeRight = Math.max(24, rightOffset - 160)
-  backTopStyle.value = { right: `${safeRight}px` }
 }
 
 const onSentinelVisible = () => {
@@ -113,7 +101,6 @@ const setupSentinelObserver = () => {
 }
 
 onMounted(async () => {
-  window.addEventListener('resize', updatePosition)
   window.addEventListener('scroll', updateShowBackTop, { passive: true })
 
   loadingHub.value = true
@@ -173,12 +160,10 @@ watch(
 )
 
 function scheduleLayout() {
-  updatePosition()
   updateShowBackTop()
 }
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', updatePosition)
   window.removeEventListener('scroll', updateShowBackTop)
   sentinelObserver?.disconnect()
   sentinelObserver = null
@@ -276,7 +261,7 @@ onBeforeUnmount(() => {
             : 'max-w-[min(100%,34rem)]'
         "
       >
-      <div ref="mainColumn" class="w-full text-[var(--color-text-muted)]">
+      <div class="w-full text-[var(--color-text-muted)]">
         <section v-if="loadingHub" class="hub-explore-mono my-8">
           <TheLoadingIndicator label="Loading hub.json…" />
         </section>
@@ -365,8 +350,8 @@ onBeforeUnmount(() => {
 
     <div
       v-show="showBackTop"
-      :style="backTopStyle"
       class="fixed bottom-6 z-50 transition-all duration-500"
+      style="right: max(1rem, env(safe-area-inset-right, 0px))"
     >
       <TheBackTop class="w-8 h-8 p-1" />
     </div>

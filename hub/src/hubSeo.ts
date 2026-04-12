@@ -16,16 +16,18 @@ const ROUTES = {
     title: 'Ech0 Hub — where echoes meet and ideas resonate',
     description: DEFAULT_DESCRIPTION,
     path: '/',
+    jsonLdType: 'WebSite',
   },
   explore: {
     title: 'Explore — Ech0 Hub',
     description:
       'Browse public Ech0 instances in one aggregated timeline — discover voices from across the web.',
     path: '/explore',
+    jsonLdType: 'CollectionPage',
   },
 } as const
 
-const OG_IMAGE = `${HUB_SITE_ORIGIN}/logo.svg`
+const OG_IMAGE = `${HUB_SITE_ORIGIN}/android-chrome-512x512.png`
 
 function ensureMeta(attr: 'name' | 'property', key: string, content: string) {
   const selector = attr === 'name' ? `meta[name="${key}"]` : `meta[property="${key}"]`
@@ -46,6 +48,17 @@ function ensureLinkCanonical(href: string) {
     document.head.appendChild(el)
   }
   el.setAttribute('href', href)
+}
+
+function ensureJsonLd(content: string) {
+  let el = document.head.querySelector<HTMLScriptElement>('script[data-hub-jsonld="route"]')
+  if (!el) {
+    el = document.createElement('script')
+    el.type = 'application/ld+json'
+    el.dataset.hubJsonld = 'route'
+    document.head.appendChild(el)
+  }
+  el.textContent = content
 }
 
 /**
@@ -76,4 +89,20 @@ export function applyHubRouteMeta(to: RouteLocationNormalized): void {
   ensureMeta('name', 'twitter:image', OG_IMAGE)
 
   ensureLinkCanonical(url)
+  ensureJsonLd(
+    JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': cfg.jsonLdType,
+      name: cfg.title,
+      description: cfg.description,
+      url,
+      isPartOf: {
+        '@type': 'WebSite',
+        name: 'Ech0 Hub',
+        url: `${HUB_SITE_ORIGIN}/`,
+      },
+      image: OG_IMAGE,
+      inLanguage: 'en-US',
+    }),
+  )
 }

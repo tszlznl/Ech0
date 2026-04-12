@@ -12,6 +12,11 @@ const webOtherReal = path.resolve(webSrc, 'utils/other.ts')
 
 // https://vite.dev/config/
 export default defineConfig({
+  /** 默认 5193，避免与 web（5173）、site（5183）同时开发时抢端口 */
+  server: {
+    port: 5193,
+    strictPort: false,
+  },
   resolve: {
     /** 必须在 `@` 之前：仅打包时把 web/utils/other 换成精简 shim，避免拉入 i18n 与整站依赖 */
     alias: [
@@ -46,11 +51,13 @@ export default defineConfig({
         'web-app-manifest-512x512.png',
       ],
       manifest: {
+        id: '/',
         name: 'Ech0 Hub',
         short_name: 'Ech0 Hub',
         description:
           'Discover and connect with resonating voices from public Ech0 instances — one feed, many sites.',
         start_url: '/',
+        scope: '/',
         display: 'standalone',
         background_color: '#f4f1ec',
         theme_color: '#f4f1ec',
@@ -83,9 +90,10 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,svg,png,woff2}'],
+        cleanupOutdatedCaches: true,
       },
       devOptions: {
-        enabled: true,
+        enabled: false,
       },
     }),
   ],

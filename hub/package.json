@@ -6,7 +6,8 @@
   "_comment": "prebuild：在 build 前用 npm --prefix 安装 ../web，供 vue-tsc 解析 ../web/src（否则 TS2307）；不随 install 执行，仅 dev 时需自行在 web 装依赖或先 build。若要与 web 的 pnpm-lock 严格一致可另行 pnpm install。packageManager：与 web 一致，便于 Corepack / CI。hub/public 下 PWA 用 PNG/ico 与 web/public 同名资源一致，为拷贝；更新主站图标后可从 web/public 再 cp 覆盖。",
   "scripts": {
     "dev": "vite",
-    "prebuild": "npm install --prefix ../web",
+    "generate:seo-assets": "node ./scripts/generate-seo-assets.mjs",
+    "prebuild": "pnpm run generate:seo-assets && npm install --prefix ../web",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview"
   },
