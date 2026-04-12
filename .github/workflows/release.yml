@@ -13,6 +13,11 @@ permissions:
   contents: write
   packages: write
 
+env:
+  MUSL_TOOLCHAIN_VERSION: "2025-6-20"
+  MUSL_TOOLCHAIN_ARCHIVE: "aarch64-linux-musl-cross.tgz"
+  MUSL_TOOLCHAIN_SHA256: ""
+
 jobs:
   build-frontend:
     name: Build Frontend
@@ -72,10 +77,11 @@ jobs:
       # 新增步骤：为 arm64 架构安装 musl.cc 交叉编译工具链
       - name: Setup musl.cc for ARM64
         if: matrix.goarch == 'arm64'
-        run: |
-          wget https://github.com/lin-snow/musl-compilers/releases/download/2025-6-20/aarch64-linux-musl-cross.tgz
-          tar -xvf aarch64-linux-musl-cross.tgz
-          echo "$(pwd)/aarch64-linux-musl-cross/bin" >> $GITHUB_PATH
+        uses: ./.github/actions/setup-musl-toolchain
+        with:
+          toolchain-version: ${{ env.MUSL_TOOLCHAIN_VERSION }}
+          archive-name: ${{ env.MUSL_TOOLCHAIN_ARCHIVE }}
+          archive-sha256: ${{ env.MUSL_TOOLCHAIN_SHA256 }}
 
       - name: Build backend binary
         run: |
