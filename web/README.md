@@ -37,3 +37,16 @@ pnpm build
 ```sh
 pnpm lint
 ```
+
+## Vite 8 Known Warning (DevTools)
+
+When running `pnpm install`, you may still see peer warnings under
+`vite-plugin-vue-devtools -> vite-plugin-inspect -> vite-dev-rpc/vite-hot-client`.
+This is currently caused by upstream peer range metadata lagging behind Vite 8.
+
+Current strategy in this project:
+
+- Keep `vite-plugin-vue-devtools` enabled for development (`pnpm dev`).
+- Treat those peer warnings as non-blocking if `pnpm dev`, `pnpm build`, and
+  `pnpm test:unit` all pass.
+- Re-evaluate once upstream stable releases officially widen Vite 8 peer ranges.

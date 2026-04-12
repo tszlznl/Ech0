@@ -23,6 +23,8 @@ export default defineConfig(({ command }) => ({
     UnoCSS(),
     viteCompression({
       deleteOriginFile: false,
+      threshold: 10240,
+      filter: (file) => /\.(js|mjs|css|html|svg)$/i.test(file),
     }),
 
     welcomePlugin(), // 欢迎横幅插件
@@ -44,11 +46,15 @@ export default defineConfig(({ command }) => ({
     // 当使用embed时则调整构建输出到后端的template/dist目录
     outDir: '../template/dist',
     emptyOutDir: true,
+    reportCompressedSize: false,
     rollupOptions: {
       output: {
         // 代码分割：将重型库打包到单独的 chunk 中，利用浏览器缓存
         manualChunks(id) {
           const normalizedId = id.replaceAll('\\', '/')
+          if (normalizedId.includes('/node_modules/@uppy/')) {
+            return 'uppy'
+          }
           if (normalizedId.includes('/node_modules/floating-vue/')) {
             return 'floating-vue'
           }

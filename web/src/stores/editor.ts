@@ -11,10 +11,12 @@ import { getFileToAddUrl } from '@/utils/other'
 import { createExternalFile, globalFileRegistry, useFileAttachments } from '@/lib/file'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { i18n } from '@/locales'
+import router from '@/router'
 
 const EDITOR_DRAFT_STORAGE_KEY = 'editor_echo_draft_v1'
 const EDITOR_DRAFT_TTL_MS = 24 * 60 * 60 * 1000
 const EDITOR_DRAFT_SAVE_DEBOUNCE_MS = 600
+const HOME_TIMELINE_SCROLL_KEY = 'home:timeline:scrollTop'
 
 type EditorDraft = {
   savedAt: number
@@ -111,6 +113,19 @@ export const useEditorStore = defineStore('editorStore', () => {
 
   const clearLocalDraft = () => {
     localStg.removeItem(EDITOR_DRAFT_STORAGE_KEY)
+  }
+
+  const resetHomeTimelineState = () => {
+    echoStore.searchValue = ''
+    echoStore.filteredTag = null
+    echoStore.isFilteringMode = false
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem(HOME_TIMELINE_SCROLL_KEY)
+    }
+  }
+
+  const jumpToHomeTimeline = () => {
+    void router.push({ name: 'home' }).catch(() => undefined)
   }
 
   const hasDraftContent = () => {
@@ -431,10 +446,12 @@ export const useEditorStore = defineStore('editorStore', () => {
           loading: t('editor.publishing'),
           success: (res) => {
             if (res.code === 1) {
+              resetHomeTimelineState()
               clearEditor()
               echoStore.refreshEchos()
               setMode(Mode.ECH0)
               echoStore.getTags() // 刷新标签列表
+              jumpToHomeTimeline()
               return t('editor.publishSuccess')
             } else {
               return t('editor.publishFailed')
@@ -467,12 +484,14 @@ export const useEditorStore = defineStore('editorStore', () => {
           loading: justSyncFiles ? t('editor.syncingFiles') : t('editor.updating'),
           success: (res) => {
             if (res.code === 1 && !justSyncFiles) {
+              resetHomeTimelineState()
               clearEditor()
               echoStore.refreshEchos()
               isUpdateMode.value = false
               echoStore.echoToUpdate = null
               setMode(Mode.ECH0)
               echoStore.getTags() // 刷新标签列表
+              jumpToHomeTimeline()
               return t('editor.updateSuccess')
             } else if (res.code === 1 && justSyncFiles) {
               return t('editor.updateSuccessWithSync')
