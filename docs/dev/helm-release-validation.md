@@ -28,4 +28,5 @@ Notes:
 - `release_helm.yml` now triggers on `release.published` so release-page generation can read the latest published release metadata.
 - `release_helm.yml` also supports manual rerun from the Actions UI via `workflow_dispatch`.
 - If chart-releaser reports no chart changes and `gh-pages/index.yaml` is missing, the workflow bootstraps a minimal Helm repo index by packaging `charts/ech0` and writing `index.yaml` to `gh-pages`.
+- The deploy step removes stale `ech0-*.tgz` files from `gh-pages`, keeping only packages still referenced by `index.yaml`.
 - If `version` is unchanged, chart-releaser will not produce a new package version.

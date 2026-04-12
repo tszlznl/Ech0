@@ -188,6 +188,28 @@ jobs:
             cp "$bootstrap_dir"/ech0-*.tgz "$tmpdir/"
           fi
 
+          # Remove stale local chart packages from gh-pages.
+          # Keep only files still referenced by index.yaml local URLs.
+          python3 - "$tmpdir/index.yaml" "$tmpdir" <<'PY'
+          import re
+          import sys
+          from pathlib import Path
+
+          index_path = Path(sys.argv[1])
+          pages_dir = Path(sys.argv[2])
+
+          if not index_path.exists():
+              sys.exit(0)
+
+          content = index_path.read_text(encoding="utf-8")
+          referenced = set(re.findall(r'ech0-[0-9A-Za-z_.-]+\.tgz', content))
+
+          for pkg in pages_dir.glob("ech0-*.tgz"):
+              if pkg.name not in referenced:
+                  pkg.unlink()
+                  print(f"Removed stale chart package: {pkg.name}")
+          PY
+
           (
             cd "$tmpdir"
             git add index.html logo.svg favicon.svg .nojekyll index.yaml
