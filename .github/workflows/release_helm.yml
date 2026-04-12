@@ -4,6 +4,11 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag to sync appVersion (e.g. v4.4.4). Leave empty to use latest release."
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -27,6 +32,38 @@ jobs:
             exit 1
           fi
           echo "Detected chart version: ${chart_version}"
+
+      - name: Sync chart appVersion from release tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG_EVENT: ${{ github.event.release.tag_name }}
+          RELEASE_TAG_INPUT: ${{ github.event.inputs.release_tag }}
+        run: |
+          set -euo pipefail
+
+          release_tag=""
+          if [ "${EVENT_NAME}" = "release" ] && [ -n "${RELEASE_TAG_EVENT}" ]; then
+            release_tag="${RELEASE_TAG_EVENT}"
+          elif [ -n "${RELEASE_TAG_INPUT}" ]; then
+            release_tag="${RELEASE_TAG_INPUT}"
+          else
+            release_tag="$(gh release list --limit 1 --json tagName --jq '.[0].tagName')"
+          fi
+
+          if [ -z "${release_tag}" ]; then
+            echo "Failed to resolve release tag for appVersion sync."
+            exit 1
+          fi
+
+          app_version="${release_tag#v}"
+          if [ -z "${app_version}" ]; then
+            echo "Resolved empty appVersion from release tag: ${release_tag}"
+            exit 1
+          fi
+
+          sed -i -E 's/^appVersion: .*/appVersion: "'"${app_version}"'"/' charts/ech0/Chart.yaml
+          echo "Synced appVersion to ${app_version} from tag ${release_tag}"
 
       - name: Configure Git
         run: |

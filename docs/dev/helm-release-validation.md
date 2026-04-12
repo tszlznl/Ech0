@@ -22,6 +22,8 @@ helm upgrade ech0 ech0/ech0
 
 Notes:
 - Before creating a new release tag, bump `charts/ech0/Chart.yaml` `version`.
+- `release_helm.yml` automatically syncs chart `appVersion` from release tag (e.g. `v4.4.4` -> `4.4.4`).
+- For manual runs (`workflow_dispatch`), you can pass `release_tag`; if omitted, the workflow uses the latest release tag.
 - `release_helm.yml` uses `charts_dir: ./charts` because chart-releaser expects the parent folder of chart directories.
 - `release_helm.yml` now triggers on `release.published` so release-page generation can read the latest published release metadata.
 - `release_helm.yml` also supports manual rerun from the Actions UI via `workflow_dispatch`.
