@@ -102,6 +102,8 @@ config:
 # extraEnv:
 #   - name: ECH0_SERVER_MODE
 #     value: "release"
+#   - name: TZ
+#     value: "Asia/Shanghai"
 extraEnv: []
 
 # Additional envFrom sources, e.g. configMapRef or secretRef.

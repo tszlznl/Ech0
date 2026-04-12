@@ -2,7 +2,6 @@
 FROM alpine:latest AS builder
 
 WORKDIR /app
-ENV TZ=Asia/Shanghai
 
 # 获取构建平台信息
 ARG TARGETOS
@@ -47,7 +46,7 @@ RUN mkdir -p /app/template && \
 FROM alpine:latest
 
 WORKDIR /app
-ENV TZ=Asia/Shanghai
+RUN apk add --no-cache tzdata
 
 COPY --from=builder /app /app
 

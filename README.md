@@ -91,6 +91,7 @@ docker run -d \
   -p 6277:6277 \
   -v /opt/ech0/data:/app/data \
   -e JWT_SECRET="Hello Echos" \
+  -e TZ=Asia/Shanghai \
   sn0wl1n/ech0:latest
 ```
 
@@ -185,11 +186,13 @@ docker run -d \
   -p 6277:6277 \
   -v /opt/ech0/data:/app/data \
   -e JWT_SECRET="Hello Echos" \
+  -e TZ=Asia/Shanghai \
   sn0wl1n/ech0:latest
 ```
 
 > 💡 After deployment, access `ip:6277`  
 > 🚷 For better security, replace `Hello Echos` in `-e JWT_SECRET="Hello Echos"` with your own secret  
+> 🕒 Set `TZ` to your local timezone (for example `Asia/Shanghai`, `America/New_York`) to avoid date shifts in visitor statistics  
 > 📍 The first registered account becomes administrator (currently only admins can publish)  
 > 🎈 Data is stored under `/opt/ech0/data`  
 
@@ -202,6 +205,8 @@ Run the following command in that directory:
 ```shell
 docker-compose up -d
 ```
+
+Optional: add `TZ` (for example `Asia/Shanghai`) in `environment` inside `docker-compose.yml` to align date-based stats with your local timezone.
 
 ### 🧙 Script Deployment
 
@@ -228,6 +233,13 @@ Use the online Helm repository:
     ```shell
     # helm install <release-name> <repo-name>/<chart-name>
     helm install ech0 ech0/ech0
+    ```
+
+    To align date-based stats with your local timezone, inject `TZ` through `extraEnv`:
+    ```shell
+    helm install ech0 ech0/ech0 \
+      --set extraEnv[0].name=TZ \
+      --set extraEnv[0].value=Asia/Shanghai
     ```
 
     You can also customize the release name and namespace:
@@ -266,6 +278,7 @@ docker run -d \
   -p 6277:6277 \
   -v /opt/ech0/data:/app/data \
   -e JWT_SECRET="Hello Echos" \
+  -e TZ=Asia/Shanghai \
   sn0wl1n/ech0:latest
 ```
 

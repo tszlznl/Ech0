@@ -10,3 +10,9 @@ services:
       - ./ech0/data:/app/data
     environment:
       - JWT_SECRET="Hello Echos"
+      # Optional: set your local timezone for date-based statistics
+      # - TZ=Asia/Shanghai
+      # - TZ=Asia/Tokyo
+      # - TZ=Europe/Berlin
+      # - TZ=America/New_York
+      # - TZ=UTC

@@ -93,6 +93,7 @@ docker run -d \
   -p 6277:6277 \
   -v /opt/ech0/data:/app/data \
   -e JWT_SECRET="Hello Echos" \
+  -e TZ=Asia/Shanghai \
   sn0wl1n/ech0:latest
 ```
 
@@ -186,11 +187,13 @@ docker run -d \
   -p 6277:6277 \
   -v /opt/ech0/data:/app/data \
   -e JWT_SECRET="Hello Echos" \
+  -e TZ=Asia/Shanghai \
   sn0wl1n/ech0:latest
 ```
 
 > 💡 部署完成后访问 ip:6277 即可使用  
 > 🚷 建议把`-e JWT_SECRET="Hello Echos"`里的`Hello Echos`改成别的内容以提高安全性  
+> 🕒 建议按你所在地区设置 `TZ`（如 `Asia/Shanghai`、`America/New_York`），避免访客统计日期偏差  
 > 📍 首次使用注册的账号会被设置为管理员（目前仅管理员支持发布内容）  
 > 🎈 数据存储在/opt/ech0/data下  
 
@@ -203,6 +206,8 @@ docker run -d \
 ```shell
 docker-compose up -d
 ```
+
+可选：在 `docker-compose.yml` 的 `environment` 中添加 `TZ`（如 `Asia/Shanghai`）以使用本地时区统计日期。
 
 ### 🧙 脚本部署
 
@@ -229,6 +234,13 @@ curl -fsSL "https://raw.githubusercontent.com/lin-snow/Ech0/main/scripts/ech0.sh
     ```shell
     # helm install <发布名称> <仓库名>/<chart名>
     helm install ech0 ech0/ech0
+    ```
+
+    如需按本地时区统计日期，可通过 `extraEnv` 注入 `TZ`：
+    ```shell
+    helm install ech0 ech0/ech0 \
+      --set extraEnv[0].name=TZ \
+      --set extraEnv[0].value=Asia/Shanghai
     ```
 
     你也可以自定义发布名称和命名空间：
@@ -267,6 +279,7 @@ docker run -d \
   -p 6277:6277 \
   -v /opt/ech0/data:/app/data \
   -e JWT_SECRET="Hello Echos" \
+  -e TZ=Asia/Shanghai \
   sn0wl1n/ech0:latest
 ```
 
