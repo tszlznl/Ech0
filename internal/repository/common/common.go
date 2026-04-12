@@ -86,7 +86,7 @@ func (commonRepository *CommonRepository) GetHeatMap(
 
 	err := commonRepository.getDB(ctx).
 		Table("echos").
-		Where("created_at >= ? AND created_at < ?", startUTC, endUTC).
+		Where("datetime(created_at) >= datetime(?) AND datetime(created_at) < datetime(?)", startUTC, endUTC).
 		Order("created_at ASC").
 		Pluck("created_at", &results).Error
 	if err != nil {

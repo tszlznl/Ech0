@@ -270,11 +270,15 @@
     "connectedNodes": "Verbundene Knoten",
     "todayEchoCount": "Echos heute",
     "currentVersion": "Aktuelle Version",
-    "checkingUpdate": "Prüfe auf Updates…",
     "updateAvailable": "Neue Version {version} verfügbar",
     "alreadyLatest": "Bereits auf dem neuesten Stand",
     "checkUpdateFailed": "Update-Prüfung fehlgeschlagen",
-    "clickToCheckUpdate": "Klicken, um auf Updates zu prüfen"
+    "clickToCheckUpdate": "Klicken, um auf Updates zu prüfen",
+    "activityTitle": "Activity",
+    "activityAccent": "Log",
+    "hotTitle": "Trending",
+    "hotAccent": "Echos",
+    "noHotEchos": "Keine beliebten"
   },
   "panelPage": {
     "friend": "Freund",

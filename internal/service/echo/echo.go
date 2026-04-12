@@ -85,6 +85,8 @@ func (echoService *EchoService) PostEcho(ctx context.Context, newEcho *model.Ech
 		return err
 	}
 
+	echoService.echoRepository.InvalidateEchoCaches()
+
 	savedEcho, fetchErr := echoService.echoRepository.GetEchosById(ctx, newEcho.ID)
 	if fetchErr != nil {
 		return fetchErr
@@ -159,6 +161,8 @@ func (echoService *EchoService) DeleteEchoById(ctx context.Context, id string) e
 		return err
 	}
 
+	echoService.echoRepository.InvalidateEchoCaches(id)
+
 	if pubErr := echoService.publisher.EchoDeleted(
 		context.Background(),
 		contracts.EchoDeletedEvent{Echo: model.Echo{ID: id}, User: user},
@@ -186,6 +190,19 @@ func (echoService *EchoService) GetTodayEchos(ctx context.Context, timezone stri
 
 	todayEchos := echoService.echoRepository.GetTodayEchos(showPrivate, timezone)
 	return todayEchos, nil
+}
+
+func (echoService *EchoService) GetHotEchos(ctx context.Context, limit int) ([]model.Echo, error) {
+	userid := viewer.MustFromContext(ctx).UserID()
+	showPrivate := false
+	if userid != "" {
+		user, err := echoService.commonService.CommonGetUserByUserId(ctx, userid)
+		if err != nil {
+			return nil, err
+		}
+		showPrivate = user.IsAdmin
+	}
+	return echoService.echoRepository.GetHotEchos(limit, showPrivate)
 }
 
 func (echoService *EchoService) UpdateEcho(ctx context.Context, echo *model.Echo) error {
@@ -230,6 +247,8 @@ func (echoService *EchoService) UpdateEcho(ctx context.Context, echo *model.Echo
 		return err
 	}
 
+	echoService.echoRepository.InvalidateEchoCaches(echo.ID)
+
 	if pubErr := echoService.publisher.EchoUpdated(
 		context.Background(),
 		contracts.EchoUpdatedEvent{Echo: *echo, User: user},
@@ -244,9 +263,13 @@ func (echoService *EchoService) UpdateEcho(ctx context.Context, echo *model.Echo
 }
 
 func (echoService *EchoService) LikeEcho(ctx context.Context, id string) error {
-	return echoService.transactor.Run(ctx, func(txCtx context.Context) error {
+	if err := echoService.transactor.Run(ctx, func(txCtx context.Context) error {
 		return echoService.echoRepository.LikeEcho(txCtx, id)
-	})
+	}); err != nil {
+		return err
+	}
+	echoService.echoRepository.InvalidateEchoCaches(id)
+	return nil
 }
 
 func (echoService *EchoService) GetEchoById(ctx context.Context, id string) (*model.Echo, error) {

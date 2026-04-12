@@ -270,11 +270,15 @@
     "connectedNodes": "Connected nodes",
     "todayEchoCount": "Today's Echos",
     "currentVersion": "Current version",
-    "checkingUpdate": "Checking for updates...",
     "updateAvailable": "New version {version} available",
     "alreadyLatest": "Already up to date",
     "checkUpdateFailed": "Failed to check for updates",
-    "clickToCheckUpdate": "Click to check for updates"
+    "clickToCheckUpdate": "Click to check for updates",
+    "activityTitle": "Activity",
+    "activityAccent": "Log",
+    "hotTitle": "Trending",
+    "hotAccent": "Echos",
+    "noHotEchos": "No trending echos"
   },
   "panelPage": {
     "friend": "friend",

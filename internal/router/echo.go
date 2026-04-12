@@ -22,6 +22,7 @@ func setupEchoRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	appRouterGroup.AuthRouterGroup.GET("/echo/tag/:tagid", h.EchoHandler.GetEchosByTagId())
 
 	appRouterGroup.AuthRouterGroup.GET("/echo/today", h.EchoHandler.GetTodayEchos())
+	appRouterGroup.AuthRouterGroup.GET("/echo/hot", h.EchoHandler.GetHotEchos())
 	appRouterGroup.AuthRouterGroup.GET("/echo/:id", h.EchoHandler.GetEchoById())
 	appRouterGroup.AuthRouterGroup.POST(
 		"/echo",

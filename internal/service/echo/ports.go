@@ -21,6 +21,7 @@ type Service interface {
 	DeleteTag(ctx context.Context, id string) error
 	GetEchosByTagId(ctx context.Context, tagId string, pageQueryDto commonModel.PageQueryDto) (commonModel.PageQueryResult[[]model.Echo], error)
 	QueryEchos(ctx context.Context, queryDto commonModel.EchoQueryDto) (commonModel.PageQueryResult[[]model.Echo], error)
+	GetHotEchos(ctx context.Context, limit int) ([]model.Echo, error)
 }
 
 type (
@@ -36,6 +37,7 @@ type Repository interface {
 	UpdateEcho(ctx context.Context, echo *model.Echo) error
 	DeleteEchoById(ctx context.Context, id string) error
 	LikeEcho(ctx context.Context, id string) error
+	InvalidateEchoCaches(echoIDs ...string)
 	CreateTag(ctx context.Context, tag *model.Tag) error
 	GetAllTags() ([]model.Tag, error)
 	GetTagsByNames(ctx context.Context, names []string) ([]*model.Tag, error)
@@ -43,4 +45,5 @@ type Repository interface {
 	DeleteTagById(ctx context.Context, id string) error
 	GetEchosByTagId(tagID string, page, pageSize int, search string, showPrivate bool) ([]model.Echo, int64, error)
 	QueryEchos(queryDto commonModel.EchoQueryDto, showPrivate bool) ([]model.Echo, int64, error)
+	GetHotEchos(limit int, showPrivate bool) ([]model.Echo, error)
 }

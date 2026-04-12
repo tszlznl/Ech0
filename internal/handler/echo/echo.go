@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -433,6 +434,30 @@ func (echoHandler *EchoHandler) GetEchosByTagId() gin.HandlerFunc {
 		return res.Response{
 			Data: result,
 			Msg:  commonModel.GET_ECHOS_BY_TAG_ID_SUCCESS,
+		}
+	})
+}
+
+func (echoHandler *EchoHandler) GetHotEchos() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		limit := 5
+		if raw := ctx.Query("limit"); raw != "" {
+			if n, err := strconv.Atoi(raw); err == nil && n > 0 {
+				limit = n
+			}
+		}
+
+		result, err := echoHandler.echoService.GetHotEchos(ctx.Request.Context(), limit)
+		if err != nil {
+			return res.Response{
+				Msg: "",
+				Err: err,
+			}
+		}
+
+		return res.Response{
+			Data: result,
+			Msg:  commonModel.GET_HOT_ECHOS_SUCCESS,
 		}
 	})
 }

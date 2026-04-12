@@ -59,6 +59,13 @@ export function fetchGetTodayEchos() {
   })
 }
 
+export function fetchGetHotEchos(limit = 5) {
+  return request<App.Api.Ech0.Echo[]>({
+    url: `/echo/hot?limit=${limit}`,
+    method: 'GET',
+  })
+}
+
 // 获取Echo详情
 export async function fetchGetEchoById(echoId: string) {
   return request<App.Api.Ech0.Echo>({

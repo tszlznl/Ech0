@@ -45,10 +45,15 @@ func (echoRepository *EchoRepository) CreateEcho(ctx context.Context, echo *mode
 		return result.Error
 	}
 
+	return nil
+}
+
+func (echoRepository *EchoRepository) InvalidateEchoCaches(echoIDs ...string) {
 	ClearEchoPageCache(echoRepository.cache)
 	ClearTodayEchosCache(echoRepository.cache)
-
-	return nil
+	for _, id := range echoIDs {
+		echoRepository.cache.Delete(GetEchoByIDCacheKey(id))
+	}
 }
 
 func (echoRepository *EchoRepository) GetEchosByPage(
@@ -161,10 +166,6 @@ func (echoRepository *EchoRepository) DeleteEchoById(ctx context.Context, id str
 		return gorm.ErrRecordNotFound
 	}
 
-	echoRepository.cache.Delete(GetEchoByIDCacheKey(id))
-	ClearTodayEchosCache(echoRepository.cache)
-	ClearEchoPageCache(echoRepository.cache)
-
 	return nil
 }
 
@@ -201,7 +202,7 @@ func (echoRepository *EchoRepository) GetTodayEchos(showPrivate bool, timezone s
 			if !showPrivate {
 				query = query.Where("private = ?", false)
 			}
-			query = query.Where("created_at >= ? AND created_at < ?", startOfDayUTC, endOfDayUTC)
+			query = query.Where("datetime(created_at) >= datetime(?) AND datetime(created_at) < datetime(?)", startOfDayUTC, endOfDayUTC)
 			if err := query.
 				Preload("EchoFiles", func(db *gorm.DB) *gorm.DB {
 					return db.Order("echo_files.sort_order ASC")
@@ -223,10 +224,6 @@ func (echoRepository *EchoRepository) GetTodayEchos(showPrivate bool, timezone s
 }
 
 func (echoRepository *EchoRepository) UpdateEcho(ctx context.Context, echo *model.Echo) error {
-	ClearEchoPageCache(echoRepository.cache)
-	echoRepository.cache.Delete(GetEchoByIDCacheKey(echo.ID))
-	ClearTodayEchosCache(echoRepository.cache)
-
 	if err := echoRepository.getDB(ctx).Where("echo_id = ?", echo.ID).Delete(&fileModel.EchoFile{}).Error; err != nil {
 		return err
 	}
@@ -288,10 +285,6 @@ func (echoRepository *EchoRepository) LikeEcho(ctx context.Context, id string) e
 		UpdateColumn("fav_count", gorm.Expr("fav_count + ?", 1)).Error; err != nil {
 		return err
 	}
-
-	ClearEchoPageCache(echoRepository.cache)
-	echoRepository.cache.Delete(GetEchoByIDCacheKey(id))
-	ClearTodayEchosCache(echoRepository.cache)
 
 	return nil
 }
@@ -524,4 +517,73 @@ func (echoRepository *EchoRepository) GetEchosByTagId(
 	}
 
 	return echos, total, nil
+}
+
+func (echoRepository *EchoRepository) GetHotEchos(limit int, showPrivate bool) ([]model.Echo, error) {
+	if limit <= 0 {
+		limit = 5
+	}
+	if limit > 20 {
+		limit = 20
+	}
+
+	const recentPool = 10
+
+	recentQuery := echoRepository.db().Model(&model.Echo{}).
+		Select("id").
+		Order("created_at DESC").
+		Limit(recentPool)
+	if !showPrivate {
+		recentQuery = recentQuery.Where("private = ?", false)
+	}
+
+	type hotRow struct {
+		ID string
+	}
+
+	hotQuery := echoRepository.db().Table("(?) AS recent", recentQuery).
+		Select("recent.id, echos.fav_count + COUNT(comments.id) * 2 AS hot_score").
+		Joins("JOIN echos ON echos.id = recent.id").
+		Joins("LEFT JOIN comments ON comments.echo_id = recent.id AND comments.status = 'approved'").
+		Group("recent.id").
+		Order("hot_score DESC").
+		Limit(limit)
+
+	var rows []hotRow
+	if err := hotQuery.Find(&rows).Error; err != nil {
+		return nil, err
+	}
+
+	if len(rows) == 0 {
+		return []model.Echo{}, nil
+	}
+
+	ids := make([]string, len(rows))
+	for i, r := range rows {
+		ids[i] = r.ID
+	}
+
+	var echos []model.Echo
+	if err := echoRepository.db().
+		Where("id IN ?", ids).
+		Preload("EchoFiles", func(db *gorm.DB) *gorm.DB {
+			return db.Order("echo_files.sort_order ASC")
+		}).
+		Preload("EchoFiles.File").
+		Preload("Extension").
+		Preload("Tags").
+		Find(&echos).Error; err != nil {
+		return nil, err
+	}
+
+	idOrder := make(map[string]int, len(ids))
+	for i, id := range ids {
+		idOrder[id] = i
+	}
+	sorted := make([]model.Echo, len(echos))
+	for _, e := range echos {
+		sorted[idOrder[e.ID]] = e
+	}
+
+	return sorted, nil
 }
