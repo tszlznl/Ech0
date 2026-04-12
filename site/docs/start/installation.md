@@ -3,7 +3,7 @@ title: 安装部署
 description: Docker / Compose / 二进制 / Helm；端口、数据与安全要点
 ---
 
-> **推荐顺序**：**Docker 单容器** → Docker Compose → 安装脚本（systemd）→ 克隆仓库后用 Helm → 直接运行二进制。若你是第一次部署，可先读 [快速上手](/docs/start/getting-started) 再回来选方式。下文与仓库根目录 `README.zh.md` 保持一致。
+> **推荐顺序**：**Docker 单容器** → Docker Compose → 安装脚本（systemd）→ 在线 Helm Repo 安装 → 直接运行二进制。若你是第一次部署，可先读 [快速上手](/docs/start/getting-started) 再回来选方式。下文与仓库根目录 `README.zh.md` 保持一致。
 
 ---
 
@@ -98,21 +98,29 @@ curl -fsSL "https://raw.githubusercontent.com/lin-snow/Ech0/main/scripts/ech0.sh
 
 ## Kubernetes（Helm）
 
-项目未提供在线 Helm 仓库，需要**先克隆仓库**再在本地安装：
+推荐使用在线 Helm 仓库安装：
+
+```bash
+helm repo add ech0 https://lin-snow.github.io/Ech0
+helm repo update
+helm install ech0 ech0/ech0
+```
+
+可自定义 release 名与命名空间，例如：
+
+```bash
+helm install my-ech0 ech0/ech0 --namespace my-namespace --create-namespace
+```
+
+`JWT_SECRET` 等可通过 `values.yaml` 或 `--set` 传入，详见 Chart 目录内说明。
+
+如果你需要从本地源码安装，也可以保留旧方式：
 
 ```bash
 git clone https://github.com/lin-snow/Ech0.git
 cd Ech0
 helm install ech0 ./charts/ech0
 ```
-
-可自定义 release 名与命名空间，例如：
-
-```bash
-helm install my-ech0 ./charts/ech0 --namespace my-namespace --create-namespace
-```
-
-`JWT_SECRET` 等可通过 `values.yaml` 或 `--set` 传入，详见 Chart 目录内说明。
 
 ---
 

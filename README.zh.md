@@ -217,24 +217,31 @@ curl -fsSL "https://raw.githubusercontent.com/lin-snow/Ech0/main/scripts/ech0.sh
 
 如果你希望在 Kubernetes 集群中部署 Ech0，可以使用项目提供的 Helm Chart。
 
-由于本项目暂时未提供在线 Helm 仓库，你需要先将代码库克隆到本地，然后从本地目录进行安装。
+推荐使用在线 Helm 仓库安装：
 
-1.  **克隆代码库:**
+1.  **添加 Ech0 Helm 仓库:**
     ```shell
-    git clone https://github.com/lin-snow/Ech0.git
-    cd Ech0
+    helm repo add ech0 https://lin-snow.github.io/Ech0
+    helm repo update
     ```
 
 2.  **使用 Helm 安装:**
     ```shell
-    # helm install <发布名称> <chart目录>
-    helm install ech0 ./charts/ech0
+    # helm install <发布名称> <仓库名>/<chart名>
+    helm install ech0 ech0/ech0
     ```
 
     你也可以自定义发布名称和命名空间：
     ```shell
-    helm install my-ech0 ./charts/ech0 --namespace my-namespace --create-namespace
+    helm install my-ech0 ech0/ech0 --namespace my-namespace --create-namespace
     ```
+
+如果你希望从本地源码安装，也可以：
+```shell
+git clone https://github.com/lin-snow/Ech0.git
+cd Ech0
+helm install ech0 ./charts/ech0
+```
 
 ---
 
@@ -279,22 +286,20 @@ docker image prune -f
 
 ### ☸️ Kubernetes (Helm)
 
-1. **更新代码库:**
-   进入本地的 Ech0 代码库目录，并拉取最新的代码。
+1. **更新 Helm 仓库索引:**
    ```shell
-   cd Ech0
-   git pull
+   helm repo update
    ```
 
 2. **更新 Helm Release:**
    使用 `helm upgrade` 命令更新你的发布版本。
    ```shell
-   # helm upgrade <发布名称> <chart目录>
-   helm upgrade ech0 ./charts/ech0
+   # helm upgrade <发布名称> <仓库名>/<chart名>
+   helm upgrade ech0 ech0/ech0
    ```
    如果你使用了自定义的发布名称和命名空间，请使用对应的名称：
    ```shell
-   helm upgrade my-ech0 ./charts/ech0 --namespace my-namespace
+   helm upgrade my-ech0 ech0/ech0 --namespace my-namespace
    ```
 
 ---

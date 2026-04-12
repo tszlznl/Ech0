@@ -218,12 +218,51 @@ const initUppy = () => {
     note: String(t('uppy.dashboardNote')),
   })
 
-  // 是否启用智能压缩
+  // 智能压缩（基于 @uppy/compressor + compressorjs）
+  //
+  // 行为说明：
+  //   - < 5 MB：仅做质量压缩（quality 0.6），保留原始格式，减小体积
+  //   - ≥ 5 MB：质量压缩 + 格式转换为 WebP（Safari 下为 JPEG）
+  //   上述 5 MB 阈值由 compressorjs 的 convertSize 默认值决定。
+  //
+  // ⚠️ 已知问题与修补（compressor:complete 事件）：
+  //   compressorjs 转换格式后返回的是 Blob 而非 File，Blob 没有 name 属性，
+  //   导致 @uppy/compressor 只能更新 file.type / file.data，无法同步更新
+  //   file.name / file.extension。如果不修正，上传时文件名仍带旧扩展名
+  //   （如 photo.png），但实际内容已是 WebP，后端校验会因为扩展名与 MIME
+  //   不匹配而拒绝上传。下方 compressor:complete 监听器负责在压缩完成、
+  //   上传开始前修正文件名和扩展名。
   if (props.EnableCompressor) {
     uppy.use(Compressor, {
       mimeType: outputMimeType,
       convertTypes: ['image/jpeg', 'image/png', 'image/webp'],
-      convertSize: 0,
+    })
+    uppy.on('compressor:complete', (compressedFiles) => {
+      for (const f of compressedFiles) {
+        const current = uppy!.getFile(f.id)
+        if (!current?.type) continue
+
+        const expectedExt = inferFileExtFromType(current.type)
+        if (!expectedExt || expectedExt === '.bin') continue
+
+        const currentName = current.name || ''
+        const dotIdx = currentName.lastIndexOf('.')
+        const currentExt = dotIdx >= 0 ? currentName.slice(dotIdx) : ''
+
+        if (currentExt.toLowerCase() === expectedExt.toLowerCase()) continue
+
+        const baseName = currentExt ? currentName.slice(0, dotIdx) : currentName
+        const newName = baseName + expectedExt
+
+        uppy!.setFileState(f.id, {
+          name: newName,
+          extension: expectedExt.slice(1),
+          meta: {
+            ...current.meta,
+            name: newName,
+          },
+        })
+      }
     })
   }
 

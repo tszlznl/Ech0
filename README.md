@@ -216,24 +216,31 @@ curl -fsSL "https://raw.githubusercontent.com/lin-snow/Ech0/main/scripts/ech0.sh
 
 If you want to deploy Ech0 in a Kubernetes cluster, you can use the Helm Chart provided by this project.
 
-Since this project does not currently provide an online Helm repository, you need to clone the repository locally and install from the local directory.
+Use the online Helm repository:
 
-1.  **Clone the repository:**
+1.  **Add the Ech0 chart repository:**
     ```shell
-    git clone https://github.com/lin-snow/Ech0.git
-    cd Ech0
+    helm repo add ech0 https://lin-snow.github.io/Ech0
+    helm repo update
     ```
 
 2.  **Install with Helm:**
     ```shell
-    # helm install <release-name> <chart-directory>
-    helm install ech0 ./charts/ech0
+    # helm install <release-name> <repo-name>/<chart-name>
+    helm install ech0 ech0/ech0
     ```
 
     You can also customize the release name and namespace:
     ```shell
-    helm install my-ech0 ./charts/ech0 --namespace my-namespace --create-namespace
+    helm install my-ech0 ech0/ech0 --namespace my-namespace --create-namespace
     ```
+
+If you prefer local installation from source:
+```shell
+git clone https://github.com/lin-snow/Ech0.git
+cd Ech0
+helm install ech0 ./charts/ech0
+```
 
 ---
 
@@ -278,22 +285,20 @@ docker image prune -f
 
 ### ☸️ Kubernetes (Helm)
 
-1. **Update repository:**
-   Enter your local Ech0 repository and pull latest changes.
+1. **Update Helm repository index:**
    ```shell
-   cd Ech0
-   git pull
+   helm repo update
    ```
 
 2. **Upgrade Helm release:**
    Use `helm upgrade` to update your release.
    ```shell
-   # helm upgrade <release-name> <chart-directory>
-   helm upgrade ech0 ./charts/ech0
+   # helm upgrade <release-name> <repo-name>/<chart-name>
+   helm upgrade ech0 ech0/ech0
    ```
    If you used a custom release name and namespace, use matching values:
    ```shell
-   helm upgrade my-ech0 ./charts/ech0 --namespace my-namespace
+   helm upgrade my-ech0 ech0/ech0 --namespace my-namespace
    ```
 
 ---
