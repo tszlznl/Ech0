@@ -6,8 +6,8 @@ import (
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/golang-jwt/jwt/v5"
-	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
 	timeHookUtil "github.com/lin-snow/ech0/internal/util/timehook"
+	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
 	"gorm.io/gorm"
 )
 

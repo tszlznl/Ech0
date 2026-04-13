@@ -144,4 +144,3 @@ func markMigratorDone(db *gorm.DB, markerKey, migratorName string) error {
 	}
 	return db.Save(&marker).Error
 }
-

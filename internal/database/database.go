@@ -197,4 +197,3 @@ func CloseDatabaseFully(db *gorm.DB) error {
 
 	return errors.New(commonModel.DATABASE_CLOSE_FAILED)
 }
-

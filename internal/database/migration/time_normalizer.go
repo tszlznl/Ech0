@@ -164,4 +164,3 @@ func NormalizeLegacyStorageTimesToUTC(db *gorm.DB, sourceTimezone string) (*Time
 	report.FinishedAt = time.Now().UTC()
 	return report, nil
 }
-

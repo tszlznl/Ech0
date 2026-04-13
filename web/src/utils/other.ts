@@ -37,9 +37,9 @@ export const getImageUrl = (image: App.Api.Ech0.FileObject) => getFileUrl(image)
 export const getImageToAddUrl = (image: App.Api.Ech0.FileToAdd) => getFileToAddUrl(image)
 
 export const formatDate = (dateInput: string | number) => {
-  // 当天则显示（时：分）
-  // 非当天但是三内天则显示几天前
-  // 超过三天则显示（时：分 年月日）
+  // 同一本地日历日：刚刚 / N 分钟前 / N 小时前（不按 24h 粗算「天」）
+  // 相差 1～2 个本地日历日：N 天前（与「昨天」语义一致，避免昨夜帖子仍显示「N 小时前」）
+  // 更早：Intl 按 locale 显示完整日期
 
   // 处理 Unix 时间戳（秒或毫秒）和日期字符串
   let date: Date
@@ -53,32 +53,47 @@ export const formatDate = (dateInput: string | number) => {
 
   const now = new Date()
   const diff = now.getTime() - date.getTime()
-  const diffInDays = Math.floor(diff / (1000 * 60 * 60 * 24))
-  const diffInHours = Math.floor(diff / (1000 * 60 * 60))
-  const diffInMinutes = Math.floor(diff / (1000 * 60))
 
   const locale = i18n.global.locale.value || DEFAULT_LOCALE
   const t = (key: string, params?: Record<string, unknown>) =>
     String(i18n.global.t(key, params || {}))
 
-  const diffInSeconds = Math.floor(diff / 1000)
-  if (diffInSeconds < 60) {
-    return t('dateTime.justNow')
-  } else if (diffInMinutes < 60) {
-    return t('dateTime.minutesAgo', { count: diffInMinutes })
-  } else if (diffInHours < 24) {
-    return t('dateTime.hoursAgo', { count: diffInHours })
-  } else if (diffInDays < 3) {
-    return t('dateTime.daysAgo', { count: diffInDays })
-  } else {
-    const formatter = new Intl.DateTimeFormat(locale, {
+  const localMidnight = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  const calendarDaysFromDateToNow = Math.round(
+    (localMidnight(now).getTime() - localMidnight(date).getTime()) / (1000 * 60 * 60 * 24),
+  )
+
+  const longFormatter = () =>
+    new Intl.DateTimeFormat(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       weekday: 'short',
-    })
-    return formatter.format(date)
+    }).format(date)
+
+  if (diff < 0) {
+    return longFormatter()
   }
+
+  const diffInSeconds = Math.floor(diff / 1000)
+  const diffInMinutes = Math.floor(diff / (1000 * 60))
+  const diffInHours = Math.floor(diff / (1000 * 60 * 60))
+
+  if (calendarDaysFromDateToNow === 0) {
+    if (diffInSeconds < 60) {
+      return t('dateTime.justNow')
+    }
+    if (diffInMinutes < 60) {
+      return t('dateTime.minutesAgo', { count: diffInMinutes })
+    }
+    return t('dateTime.hoursAgo', { count: diffInHours })
+  }
+
+  if (calendarDaysFromDateToNow === 1 || calendarDaysFromDateToNow === 2) {
+    return t('dateTime.daysAgo', { count: calendarDaysFromDateToNow })
+  }
+
+  return longFormatter()
 }
 
 // 解析音乐链接（网易云、QQ音乐、Apple Music）

@@ -49,7 +49,6 @@ func TestNormalizeLegacyStorageTimesToUTC_AppliesAndIdempotent(t *testing.T) {
 	if !strings.HasPrefix(createdAt, "2026-01-01T04:00:00") {
 		t.Fatalf("expected UTC shifted value 2026-01-01T04:00:00..., got %s", createdAt)
 	}
-
 }
 
 func TestMigrate_IdempotentByMigratorKey(t *testing.T) {
@@ -98,4 +97,3 @@ func TestMigrate_IdempotentByMigratorKey(t *testing.T) {
 		t.Fatalf("expected migrator marker, got err: %v", err)
 	}
 }
-

@@ -3,8 +3,8 @@ package model
 import (
 	"time"
 
-	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
 	timeHookUtil "github.com/lin-snow/ech0/internal/util/timehook"
+	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
 	"gorm.io/gorm"
 )
 

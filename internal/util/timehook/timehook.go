@@ -75,4 +75,3 @@ func normalizeValue(v reflect.Value) {
 		}
 	}
 }
-
