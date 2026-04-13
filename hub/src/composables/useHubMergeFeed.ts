@@ -9,6 +9,7 @@ import type { EchoPost } from '../types/echo'
 import { queryInstancePage } from '../services/echoApi'
 import { normalizeHubInstanceUrl } from '../utils/hubUrl'
 import { resolveHubInstanceLogo } from '../utils/resolveHubLogoUrl'
+import { timeValueToMs } from '../utils/timeValue'
 
 /** Hub 聚合不展示带 Extension 的 Echo（音乐/视频/GitHub/网站卡片等） */
 function hasNoExtension(post: EchoPost): boolean {
@@ -42,7 +43,7 @@ function toHubEcho(
     user_id: post.user_id ?? '',
     fav_count: post.fav_count ?? 0,
     tags: post.tags ?? [],
-    createdTs: new Date(post.created_at).getTime(),
+    createdTs: timeValueToMs(post.created_at),
     server_name: inst.id,
     server_url: instKey,
     virtual_key: `${instKey}-${post.id}`,

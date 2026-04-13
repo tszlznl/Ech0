@@ -1,9 +1,6 @@
 package model
 
 import (
-	"time"
-
-	timeHookUtil "github.com/lin-snow/ech0/internal/util/timehook"
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
 	"gorm.io/gorm"
 )
@@ -25,9 +22,9 @@ type File struct {
 	Width       int    `gorm:"default:0" json:"width,omitempty"`
 	Height      int    `gorm:"default:0" json:"height,omitempty"`
 
-	Category  string    `gorm:"type:varchar(20);index" json:"category"` // image|video|audio|document|file
-	UserID    string    `gorm:"type:char(36);index;not null" json:"user_id"`
-	CreatedAt time.Time `json:"created_at"`
+	Category  string `gorm:"type:varchar(20);index" json:"category"` // image|video|audio|document|file
+	UserID    string `gorm:"type:char(36);index;not null" json:"user_id"`
+	CreatedAt int64  `gorm:"autoCreateTime" json:"created_at"`
 }
 
 // EchoFile links a File to an Echo with ordering support.
@@ -41,19 +38,18 @@ type EchoFile struct {
 
 // TempFile tracks uploaded files that are pending business confirmation.
 type TempFile struct {
-	ID         string    `gorm:"type:char(36);primaryKey"               json:"id"`
-	FileID     string    `gorm:"type:char(36);not null;uniqueIndex"     json:"file_id"`
-	File       File      `gorm:"foreignKey:FileID;constraint:OnDelete:CASCADE" json:"file,omitempty"`
-	UploaderID string    `gorm:"type:char(36);index;not null"            json:"uploader_id"`
-	ExpireAt   time.Time `gorm:"index;not null"                          json:"expire_at"`
-	CreatedAt  time.Time `gorm:"index"                                   json:"created_at"`
+	ID         string `gorm:"type:char(36);primaryKey"               json:"id"`
+	FileID     string `gorm:"type:char(36);not null;uniqueIndex"     json:"file_id"`
+	File       File   `gorm:"foreignKey:FileID;constraint:OnDelete:CASCADE" json:"file,omitempty"`
+	UploaderID string `gorm:"type:char(36);index;not null"            json:"uploader_id"`
+	ExpireAt   int64  `gorm:"index;not null"                          json:"expire_at"`
+	CreatedAt  int64  `gorm:"autoCreateTime;index"                    json:"created_at"`
 }
 
 func (f *File) BeforeCreate(_ *gorm.DB) error {
 	if f.ID == "" {
 		f.ID = uuidUtil.MustNewV7()
 	}
-	timeHookUtil.NormalizeModelTimesToUTC(f)
 	return nil
 }
 
@@ -68,16 +64,5 @@ func (t *TempFile) BeforeCreate(_ *gorm.DB) error {
 	if t.ID == "" {
 		t.ID = uuidUtil.MustNewV7()
 	}
-	timeHookUtil.NormalizeModelTimesToUTC(t)
-	return nil
-}
-
-func (f *File) BeforeUpdate(_ *gorm.DB) error {
-	timeHookUtil.NormalizeModelTimesToUTC(f)
-	return nil
-}
-
-func (t *TempFile) BeforeUpdate(_ *gorm.DB) error {
-	timeHookUtil.NormalizeModelTimesToUTC(t)
 	return nil
 }

@@ -1,9 +1,6 @@
 package model
 
 import (
-	"time"
-
-	timeHookUtil "github.com/lin-snow/ech0/internal/util/timehook"
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
 	"gorm.io/gorm"
 )
@@ -41,20 +38,14 @@ type Comment struct {
 	IPHash    string     `gorm:"size:128;index" json:"-"`
 	UserAgent string     `gorm:"size:512" json:"-"`
 	Source    SourceType `gorm:"type:varchar(20);not null;index" json:"source"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
+	CreatedAt int64      `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt int64      `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
 func (c *Comment) BeforeCreate(_ *gorm.DB) error {
 	if c.ID == "" {
 		c.ID = uuidUtil.MustNewV7()
 	}
-	timeHookUtil.NormalizeModelTimesToUTC(c)
-	return nil
-}
-
-func (c *Comment) BeforeUpdate(_ *gorm.DB) error {
-	timeHookUtil.NormalizeModelTimesToUTC(c)
 	return nil
 }
 

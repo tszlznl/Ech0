@@ -53,15 +53,15 @@ type IdentityRepo interface {
 	BindOAuth(ctx context.Context, userID string, provider, oauthID, issuer, authType string) error
 	GetUserByOAuthID(ctx context.Context, provider, oauthID string) (model.User, error)
 	GetUserByOIDC(ctx context.Context, provider, oauthID, issuer string) (model.User, error)
-	GetOAuthInfo(userId string, provider string) (model.OAuthBinding, error)
-	GetOAuthOIDCInfo(userId string, provider string, issuer string) (model.OAuthBinding, error)
+	GetOAuthInfo(userId string, provider string) (model.UserExternalIdentity, error)
+	GetOAuthOIDCInfo(userId string, provider string, issuer string) (model.UserExternalIdentity, error)
 }
 
 type PasskeyRepo interface {
 	CreatePasskey(ctx context.Context, passkey *authModel.Passkey) error
 	ListPasskeysByUserID(userID string) ([]authModel.Passkey, error)
 	GetPasskeyByCredentialID(credentialID string) (authModel.Passkey, error)
-	UpdatePasskeyUsage(ctx context.Context, passkeyID string, signCount uint32, lastUsedAt time.Time) error
+	UpdatePasskeyUsage(ctx context.Context, passkeyID string, signCount uint32, lastUsedAt int64) error
 	UpdatePasskeyDeviceName(ctx context.Context, userID, passkeyID string, deviceName string) error
 	DeletePasskeyByID(ctx context.Context, userID, passkeyID string) error
 }

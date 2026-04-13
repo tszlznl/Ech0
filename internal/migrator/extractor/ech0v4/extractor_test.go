@@ -123,7 +123,7 @@ func migrateBaseTables(db *gorm.DB) error {
 }
 
 func seedSourceDB(db *gorm.DB) error {
-	now := time.Now().UTC()
+	now := time.Now().UTC().Unix()
 	echo := echoModel.Echo{
 		ID:        "echo-source-1",
 		Content:   "hello ech0 v4",

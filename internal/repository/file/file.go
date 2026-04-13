@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"strings"
-	"time"
 
 	model "github.com/lin-snow/ech0/internal/model/file"
 	fileService "github.com/lin-snow/ech0/internal/service/file"
@@ -175,7 +174,7 @@ func (r *FileRepository) DeleteTempByID(ctx context.Context, id string) error {
 	return r.getDB(ctx).Where("id = ?", id).Delete(&model.TempFile{}).Error
 }
 
-func (r *FileRepository) ListExpiredTemps(ctx context.Context, olderThan time.Time) ([]model.TempFile, error) {
+func (r *FileRepository) ListExpiredTemps(ctx context.Context, olderThan int64) ([]model.TempFile, error) {
 	var temps []model.TempFile
 	err := r.getDB(ctx).
 		Where("expire_at < ?", olderThan).

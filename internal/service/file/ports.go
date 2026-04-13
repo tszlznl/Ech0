@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"mime/multipart"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
@@ -69,7 +68,7 @@ type FileRepository interface {
 	CreateTemp(ctx context.Context, temp *fileModel.TempFile) error
 	DeleteTempByFileID(ctx context.Context, fileID string) error
 	DeleteTempByID(ctx context.Context, id string) error
-	ListExpiredTemps(ctx context.Context, before time.Time) ([]fileModel.TempFile, error)
+	ListExpiredTemps(ctx context.Context, before int64) ([]fileModel.TempFile, error)
 	Delete(ctx context.Context, id string) error
 	DeleteByRoute(ctx context.Context, storageType, provider, bucket, key string) error
 }

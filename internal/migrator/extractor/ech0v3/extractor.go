@@ -206,7 +206,7 @@ func (e *Extractor) Migrate(ctx context.Context, req spec.MigrateRequest) (spec.
 				Private:   row.Private,
 				UserID:    options.CreatedBy,
 				FavCount:  row.FavCount,
-				CreatedAt: normalizeTime(row.CreatedAt),
+				CreatedAt: normalizeTime(row.CreatedAt).Unix(),
 			}
 			if err := tx.Create(&echo).Error; err != nil {
 				failCount++
@@ -615,7 +615,7 @@ func migrateTags(tx *gorm.DB, sourceDB *gorm.DB, idMap map[int64]string) error {
 			ID:         newTagID,
 			Name:       name,
 			UsageCount: tagRow.UsageCount,
-			CreatedAt:  normalizeTime(tagRow.CreatedAt),
+			CreatedAt:  normalizeTime(tagRow.CreatedAt).Unix(),
 		})
 		existingTags[name] = newTagID
 		tagIDMap[tagRow.ID] = newTagID
@@ -2054,9 +2054,9 @@ func migrateWebhookSetting(tx *gorm.DB, sourceDB *gorm.DB) error {
 			Secret:      v3Webhook.Secret,
 			IsActive:    v3Webhook.IsActive,
 			LastStatus:  v3Webhook.LastStatus,
-			LastTrigger: v3Webhook.LastTrigger,
-			CreatedAt:   v3Webhook.CreatedAt,
-			UpdatedAt:   v3Webhook.UpdatedAt,
+			LastTrigger: normalizeTime(v3Webhook.LastTrigger).Unix(),
+			CreatedAt:   normalizeTime(v3Webhook.CreatedAt).Unix(),
+			UpdatedAt:   normalizeTime(v3Webhook.UpdatedAt).Unix(),
 		})
 	}
 

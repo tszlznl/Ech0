@@ -1,19 +1,16 @@
 package model
 
 import (
-	"time"
-
-	timeHookUtil "github.com/lin-snow/ech0/internal/util/timehook"
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
 	"gorm.io/gorm"
 )
 
 // UserLocalAuth 表示本地账号认证信息。
 type UserLocalAuth struct {
-	UserID       string    `gorm:"type:char(36);primaryKey"`
-	PasswordHash string    `gorm:"size:255;not null"`
-	PasswordAlgo string    `gorm:"size:32;not null;default:md5"`
-	UpdatedAt    time.Time `gorm:"autoUpdateTime"`
+	UserID       string `gorm:"type:char(36);primaryKey"`
+	PasswordHash string `gorm:"size:255;not null"`
+	PasswordAlgo string `gorm:"size:32;not null;default:md5"`
+	UpdatedAt    int64  `gorm:"autoUpdateTime"`
 }
 
 func (UserLocalAuth) TableName() string {
@@ -22,14 +19,14 @@ func (UserLocalAuth) TableName() string {
 
 // UserExternalIdentity 统一 OAuth2/OIDC 的外部身份模型。
 type UserExternalIdentity struct {
-	ID        string    `gorm:"type:char(36);primaryKey"`
-	UserID    string    `gorm:"type:char(36);not null;index"`
-	Provider  string    `gorm:"size:64;not null;index:idx_identity_provider_subject,priority:1"`
-	Subject   string    `gorm:"size:255;not null;index:idx_identity_provider_subject,priority:3"`
-	Issuer    string    `gorm:"size:255;default:'';index:idx_identity_provider_subject,priority:2"`
-	Protocol  string    `gorm:"size:32;not null;default:oauth2"` // oauth2 | oidc
-	CreatedAt time.Time `gorm:"autoCreateTime"`
-	UpdatedAt time.Time `gorm:"autoUpdateTime"`
+	ID        string `gorm:"type:char(36);primaryKey"`
+	UserID    string `gorm:"type:char(36);not null;index"`
+	Provider  string `gorm:"size:64;not null;index:idx_identity_provider_subject,priority:1"`
+	Subject   string `gorm:"size:255;not null;index:idx_identity_provider_subject,priority:3"`
+	Issuer    string `gorm:"size:255;default:'';index:idx_identity_provider_subject,priority:2"`
+	Protocol  string `gorm:"size:32;not null;default:oauth2"` // oauth2 | oidc
+	CreatedAt int64  `gorm:"autoCreateTime"`
+	UpdatedAt int64  `gorm:"autoUpdateTime"`
 }
 
 func (UserExternalIdentity) TableName() string {
@@ -40,23 +37,22 @@ func (e *UserExternalIdentity) BeforeCreate(_ *gorm.DB) error {
 	if e.ID == "" {
 		e.ID = uuidUtil.MustNewV7()
 	}
-	timeHookUtil.NormalizeModelTimesToUTC(e)
 	return nil
 }
 
 // WebAuthnCredential 表示 Passkey 凭证持久化实体。
 type WebAuthnCredential struct {
-	ID             string    `gorm:"type:char(36);primaryKey"`
-	UserID         string    `gorm:"type:char(36);not null;index"`
-	CredentialID   string    `gorm:"size:255;not null;uniqueIndex"`
-	CredentialJSON string    `gorm:"type:text;not null"`
-	PublicKey      string    `gorm:"type:text"`
-	SignCount      uint32    `gorm:"not null;default:0"`
-	LastUsedAt     time.Time `gorm:"index"`
-	DeviceName     string    `gorm:"size:128"`
-	AAGUID         string    `gorm:"size:64"`
-	CreatedAt      time.Time `gorm:"autoCreateTime"`
-	UpdatedAt      time.Time `gorm:"autoUpdateTime"`
+	ID             string `gorm:"type:char(36);primaryKey"`
+	UserID         string `gorm:"type:char(36);not null;index"`
+	CredentialID   string `gorm:"size:255;not null;uniqueIndex"`
+	CredentialJSON string `gorm:"type:text;not null"`
+	PublicKey      string `gorm:"type:text"`
+	SignCount      uint32 `gorm:"not null;default:0"`
+	LastUsedAt     int64  `gorm:"index"`
+	DeviceName     string `gorm:"size:128"`
+	AAGUID         string `gorm:"size:64"`
+	CreatedAt      int64  `gorm:"autoCreateTime"`
+	UpdatedAt      int64  `gorm:"autoUpdateTime"`
 }
 
 func (WebAuthnCredential) TableName() string {
@@ -67,16 +63,5 @@ func (w *WebAuthnCredential) BeforeCreate(_ *gorm.DB) error {
 	if w.ID == "" {
 		w.ID = uuidUtil.MustNewV7()
 	}
-	timeHookUtil.NormalizeModelTimesToUTC(w)
-	return nil
-}
-
-func (e *UserExternalIdentity) BeforeUpdate(_ *gorm.DB) error {
-	timeHookUtil.NormalizeModelTimesToUTC(e)
-	return nil
-}
-
-func (w *WebAuthnCredential) BeforeUpdate(_ *gorm.DB) error {
-	timeHookUtil.NormalizeModelTimesToUTC(w)
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/cloudwego/eino/schema"
 	"github.com/lin-snow/ech0/internal/agent"
@@ -96,7 +97,7 @@ func (agentService *AgentService) buildRecentSummary(ctx context.Context) (strin
 		content := fmt.Sprintf(
 			"用户 %s 在 %s 发布了内容 %d ：%s 。 内容标签为：%v。",
 			e.Username,
-			e.CreatedAt.Format("2006-01-02 15:04"),
+			time.Unix(e.CreatedAt, 0).UTC().Format("2006-01-02 15:04"),
 			i+1,
 			e.Content,
 			e.Tags,

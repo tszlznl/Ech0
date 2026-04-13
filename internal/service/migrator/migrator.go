@@ -424,8 +424,8 @@ func (s *MigratorService) saveGlobalStateWithRetry(ctx context.Context, state mi
 	return lastErr
 }
 
-func nowUTC() time.Time {
-	return time.Now().UTC()
+func nowUTC() int64 {
+	return time.Now().UTC().Unix()
 }
 
 func validateSourceType(sourceType string) error {

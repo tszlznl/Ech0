@@ -1,10 +1,7 @@
 package model
 
 import (
-	"time"
-
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
-	timeHookUtil "github.com/lin-snow/ech0/internal/util/timehook"
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
 	"gorm.io/gorm"
 )
@@ -23,7 +20,7 @@ type Echo struct {
 	Extension *EchoExtension `gorm:"foreignKey:EchoID;constraint:OnDelete:CASCADE" json:"extension,omitempty"`
 	Tags      []Tag          `gorm:"many2many:echo_tags;"                          json:"tags,omitempty"`
 	FavCount  int            `gorm:"default:0"                                     json:"fav_count"`
-	CreatedAt time.Time      `gorm:"index:idx_echos_private_created,priority:2"    json:"created_at"`
+	CreatedAt int64          `gorm:"autoCreateTime;index:idx_echos_private_created,priority:2" json:"created_at"`
 }
 
 type EchoExtension struct {
@@ -31,16 +28,16 @@ type EchoExtension struct {
 	EchoID    string                 `gorm:"type:char(36);not null;uniqueIndex" json:"echo_id"`
 	Type      string                 `gorm:"type:varchar(100);not null"    json:"type"`
 	Payload   map[string]interface{} `gorm:"serializer:json;type:text;not null" json:"payload"`
-	CreatedAt time.Time              `json:"created_at"`
-	UpdatedAt time.Time              `json:"updated_at"`
+	CreatedAt int64                  `gorm:"autoCreateTime"                         json:"created_at"`
+	UpdatedAt int64                  `gorm:"autoUpdateTime"                         json:"updated_at"`
 }
 
 // Tag 定义Tag实体
 type Tag struct {
-	ID         string    `gorm:"type:char(36);primaryKey"              json:"id"`
-	Name       string    `gorm:"type:varchar(50);uniqueIndex;not null" json:"name"`
-	UsageCount int       `gorm:"default:0"                             json:"usage_count"`
-	CreatedAt  time.Time `                                             json:"created_at"`
+	ID         string `gorm:"type:char(36);primaryKey"              json:"id"`
+	Name       string `gorm:"type:varchar(50);uniqueIndex;not null" json:"name"`
+	UsageCount int    `gorm:"default:0"                             json:"usage_count"`
+	CreatedAt  int64  `gorm:"autoCreateTime"                        json:"created_at"`
 }
 
 // EchoTag 纯关系表，联合主键
@@ -53,7 +50,6 @@ func (e *Echo) BeforeCreate(_ *gorm.DB) error {
 	if e.ID == "" {
 		e.ID = uuidUtil.MustNewV7()
 	}
-	timeHookUtil.NormalizeModelTimesToUTC(e)
 	return nil
 }
 
@@ -61,7 +57,6 @@ func (t *Tag) BeforeCreate(_ *gorm.DB) error {
 	if t.ID == "" {
 		t.ID = uuidUtil.MustNewV7()
 	}
-	timeHookUtil.NormalizeModelTimesToUTC(t)
 	return nil
 }
 
@@ -69,22 +64,6 @@ func (e *EchoExtension) BeforeCreate(_ *gorm.DB) error {
 	if e.ID == "" {
 		e.ID = uuidUtil.MustNewV7()
 	}
-	timeHookUtil.NormalizeModelTimesToUTC(e)
-	return nil
-}
-
-func (e *Echo) BeforeUpdate(_ *gorm.DB) error {
-	timeHookUtil.NormalizeModelTimesToUTC(e)
-	return nil
-}
-
-func (t *Tag) BeforeUpdate(_ *gorm.DB) error {
-	timeHookUtil.NormalizeModelTimesToUTC(t)
-	return nil
-}
-
-func (e *EchoExtension) BeforeUpdate(_ *gorm.DB) error {
-	timeHookUtil.NormalizeModelTimesToUTC(e)
 	return nil
 }
 

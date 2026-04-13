@@ -2,11 +2,9 @@ package model
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/golang-jwt/jwt/v5"
-	timeHookUtil "github.com/lin-snow/ech0/internal/util/timehook"
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
 	"gorm.io/gorm"
 )
@@ -124,11 +122,11 @@ type Passkey struct {
 	// PublicKey 为冗余字段（便于排查/展示），存储 credential.PublicKey 的 base64url
 	PublicKey  string `gorm:"type:text"`
 	SignCount  uint32 `gorm:"not null;default:0"`
-	LastUsedAt time.Time
+	LastUsedAt int64
 	DeviceName string `gorm:"size:128"`
 	AAGUID     string `gorm:"size:36"`
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	CreatedAt  int64  `gorm:"autoCreateTime"`
+	UpdatedAt  int64  `gorm:"autoUpdateTime"`
 }
 
 // PasskeyRegisterBeginReq Passkey 注册/绑定 begin 请求
@@ -158,11 +156,11 @@ type PasskeyLoginBeginResp struct {
 
 // PasskeyDeviceDto 用于多设备展示
 type PasskeyDeviceDto struct {
-	ID         string    `json:"id"`
-	DeviceName string    `json:"device_name"`
-	AAGUID     string    `json:"aaguid"`
-	LastUsedAt time.Time `json:"last_used_at"`
-	CreatedAt  time.Time `json:"created_at"`
+	ID         string `json:"id"`
+	DeviceName string `json:"device_name"`
+	AAGUID     string `json:"aaguid"`
+	LastUsedAt int64  `json:"last_used_at"`
+	CreatedAt  int64  `json:"created_at"`
 }
 
 type PasskeyUpdateDeviceNameReq struct {
@@ -173,11 +171,5 @@ func (p *Passkey) BeforeCreate(_ *gorm.DB) error {
 	if p.ID == "" {
 		p.ID = uuidUtil.MustNewV7()
 	}
-	timeHookUtil.NormalizeModelTimesToUTC(p)
-	return nil
-}
-
-func (p *Passkey) BeforeUpdate(_ *gorm.DB) error {
-	timeHookUtil.NormalizeModelTimesToUTC(p)
 	return nil
 }

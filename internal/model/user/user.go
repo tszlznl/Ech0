@@ -21,25 +21,9 @@ type User struct {
 	Locale   string `gorm:"size:16;default:zh-CN"    json:"locale"`
 }
 
-type OAuthBinding struct {
-	ID       string `gorm:"type:char(36);primaryKey" json:"id"`
-	UserID   string `gorm:"type:char(36);not null;index" json:"user_id"` // Ech0 用户 ID
-	Provider string `gorm:"size:64;not null;index"  json:"provider"`     // 例如 "github"，"google"，"qq"，"custom"，"oidc"
-	OAuthID  string `gorm:"size:255;not null;index" json:"oauth_id"`     // OAuth2: oauth_id, OIDC: sub, 第三方平台的用户ID
-	Issuer   string `gorm:"size:255;"               json:"issuer"`       // OIDC: issuer
-	AuthType string `gorm:"size:64;"                json:"auth_type"`    // OAuth2: null || 'oauth2', OIDC: not null && 'oidc'
-}
-
 func (u *User) BeforeCreate(_ *gorm.DB) error {
 	if u.ID == "" {
 		u.ID = uuidUtil.MustNewV7()
-	}
-	return nil
-}
-
-func (o *OAuthBinding) BeforeCreate(_ *gorm.DB) error {
-	if o.ID == "" {
-		o.ID = uuidUtil.MustNewV7()
 	}
 	return nil
 }

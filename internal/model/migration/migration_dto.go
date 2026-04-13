@@ -1,7 +1,5 @@
 package model
 
-import "time"
-
 type CreateMigrationJobRequest struct {
 	SourceType    string         `json:"source_type" binding:"required"`
 	SourcePayload map[string]any `json:"source_payload"`
@@ -24,7 +22,7 @@ type GlobalMigrationStateDTO struct {
 	Status        string         `json:"status"`
 	ErrorMessage  string         `json:"error_message"`
 	SourcePayload map[string]any `json:"source_payload,omitempty"`
-	StartedAt     *time.Time     `json:"started_at,omitempty"`
-	UpdatedAt     *time.Time     `json:"updated_at,omitempty"`
-	FinishedAt    *time.Time     `json:"finished_at,omitempty"`
+	StartedAt     *int64         `json:"started_at,omitempty"`
+	UpdatedAt     *int64         `json:"updated_at,omitempty"`
+	FinishedAt    *int64         `json:"finished_at,omitempty"`
 }

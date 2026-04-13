@@ -87,6 +87,16 @@ const (
 	MigrationGlobalJobStateKey = "migration_global_job_state"
 	// StorageTimeUTCNormalizedKey 是存储层时间统一为 UTC 的幂等标记键
 	StorageTimeUTCNormalizedKey = "storage_time_utc_normalized_v1"
+	// StorageTimeSanitizedKey 是存储层时间脏数据安全修复阶段的幂等标记键
+	StorageTimeSanitizedKey = "storage_time_sanitized_v1"
+	// StorageTimeValidatedKey 是存储层时间可转换性校验阶段的幂等标记键
+	StorageTimeValidatedKey = "storage_time_validated_v1"
+	// StorageTimeUnixMigratedKey 是存储层时间迁移为 Unix 秒级时间戳的幂等标记键
+	StorageTimeUnixMigratedKey = "storage_time_unix_migrated_v1"
+	// StorageTimeSchemaRebuiltKey 是存储层时间字段 schema 对齐阶段的幂等标记键
+	StorageTimeSchemaRebuiltKey = "storage_time_schema_rebuilt_v1"
+	// OAuthBindingsDroppedKey 是历史 oauth_bindings 表清理迁移的幂等标记键
+	OAuthBindingsDroppedKey = "oauth_bindings_dropped_v1"
 )
 
 // PageQueryResult 用于分页查询的结果数据传输对象

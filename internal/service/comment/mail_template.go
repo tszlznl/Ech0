@@ -189,9 +189,9 @@ func notifyStatusStyle(kind string, status model.Status) (label, color, bg strin
 	return "通知", "#6b6458", "#f5f1ea"
 }
 
-func notifyTime(ts time.Time) string {
-	if ts.IsZero() {
-		ts = time.Now()
+func notifyTime(ts int64) string {
+	if ts == 0 {
+		ts = time.Now().Unix()
 	}
-	return ts.Local().Format("2006-01-02 15:04:05")
+	return time.Unix(ts, 0).Local().Format("2006-01-02 15:04:05")
 }

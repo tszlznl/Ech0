@@ -195,14 +195,14 @@ func (echoRepository *EchoRepository) GetTodayEchos(showPrivate bool, timezone s
 			nowUser := time.Now().UTC().In(loc)
 			startOfDayUser := time.Date(nowUser.Year(), nowUser.Month(), nowUser.Day(), 0, 0, 0, 0, loc)
 			endOfDayUser := startOfDayUser.Add(24 * time.Hour)
-			startOfDayUTC := startOfDayUser.UTC()
-			endOfDayUTC := endOfDayUser.UTC()
+			startOfDayUTC := startOfDayUser.UTC().Unix()
+			endOfDayUTC := endOfDayUser.UTC().Unix()
 
 			query := echoRepository.db().Model(&model.Echo{})
 			if !showPrivate {
 				query = query.Where("private = ?", false)
 			}
-			query = query.Where("datetime(created_at) >= datetime(?) AND datetime(created_at) < datetime(?)", startOfDayUTC, endOfDayUTC)
+			query = query.Where("created_at >= ? AND created_at < ?", startOfDayUTC, endOfDayUTC)
 			if err := query.
 				Preload("EchoFiles", func(db *gorm.DB) *gorm.DB {
 					return db.Order("echo_files.sort_order ASC")

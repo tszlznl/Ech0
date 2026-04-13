@@ -1224,7 +1224,7 @@ func (userService *UserService) GetOAuthInfo(
 	}
 
 	// 获取绑定信息
-	var oauthInfoBinding model.OAuthBinding
+	var oauthInfoBinding model.UserExternalIdentity
 	if isOIDC {
 		oauthInfoBinding, err = userService.userRepository.GetOAuthOIDCInfo(
 			user.ID,
@@ -1244,7 +1244,7 @@ func (userService *UserService) GetOAuthInfo(
 	oauthInfo = model.OAuthInfoDto{
 		Provider: oauthInfoBinding.Provider,
 		UserID:   oauthInfoBinding.UserID,
-		OAuthID:  oauthInfoBinding.OAuthID,
+		OAuthID:  oauthInfoBinding.Subject,
 		Issuer:   oauthInfoBinding.Issuer,
 		AuthType: authType,
 	}
@@ -1465,7 +1465,7 @@ func (userService *UserService) PasskeyRegisterFinish(
 		CredentialJSON: string(credJSON),
 		PublicKey:      publicKey,
 		SignCount:      cred.Authenticator.SignCount,
-		LastUsedAt:     time.Now().UTC(),
+		LastUsedAt:     time.Now().UTC().Unix(),
 		DeviceName:     sess.DeviceName,
 		AAGUID:         aaguid,
 	}
@@ -1587,7 +1587,7 @@ func (userService *UserService) PasskeyLoginFinish(
 				ctx,
 				pk.ID,
 				credentialObj.Authenticator.SignCount,
-				time.Now().UTC(),
+				time.Now().UTC().Unix(),
 			)
 		})
 	}

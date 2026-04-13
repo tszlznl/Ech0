@@ -309,22 +309,15 @@ func (userRepository *UserRepository) GetUserByOIDC(
 func (userRepository *UserRepository) GetOAuthInfo(
 	userId string,
 	provider string,
-) (model.OAuthBinding, error) {
+) (model.UserExternalIdentity, error) {
 	var identity model.UserExternalIdentity
 	err := userRepository.db().
 		Where("user_id = ? AND provider = ? AND protocol = ?", userId, provider, string(authModel.AuthTypeOAuth2)).
 		First(&identity).Error
 	if err != nil {
-		return model.OAuthBinding{}, err
+		return model.UserExternalIdentity{}, err
 	}
-
-	return model.OAuthBinding{
-		UserID:   identity.UserID,
-		Provider: identity.Provider,
-		OAuthID:  identity.Subject,
-		Issuer:   identity.Issuer,
-		AuthType: identity.Protocol,
-	}, nil
+	return identity, nil
 }
 
 // GetOAuthOIDCInfo 获取 OIDC 信息
@@ -332,22 +325,16 @@ func (userRepository *UserRepository) GetOAuthOIDCInfo(
 	userId string,
 	provider string,
 	issuer string,
-) (model.OAuthBinding, error) {
+) (model.UserExternalIdentity, error) {
 	var identity model.UserExternalIdentity
 	err := userRepository.db().
 		Where("user_id = ? AND provider = ? AND issuer = ? AND protocol = ?", userId, provider, issuer, string(authModel.AuthTypeOIDC)).
 		First(&identity).
 		Error
 	if err != nil {
-		return model.OAuthBinding{}, err
+		return model.UserExternalIdentity{}, err
 	}
-	return model.OAuthBinding{
-		UserID:   identity.UserID,
-		Provider: identity.Provider,
-		OAuthID:  identity.Subject,
-		Issuer:   identity.Issuer,
-		AuthType: identity.Protocol,
-	}, nil
+	return identity, nil
 }
 
 // -----------------------
@@ -430,7 +417,7 @@ func (userRepository *UserRepository) UpdatePasskeyUsage(
 	ctx context.Context,
 	passkeyID string,
 	signCount uint32,
-	lastUsedAt time.Time,
+	lastUsedAt int64,
 ) error {
 	return userRepository.getDB(ctx).
 		Model(&model.WebAuthnCredential{}).

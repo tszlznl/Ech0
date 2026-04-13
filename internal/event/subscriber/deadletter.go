@@ -43,7 +43,7 @@ func (dlr *DeadLetterResolver) Handle(ctx context.Context, event contracts.DeadL
 	case queueModel.DeadLetterStatusFailed:
 		if deadLetter.Status == queueModel.DeadLetterStatusFailed && deadLetter.RetryCount >= 3 {
 			deadLetter.Status = queueModel.DeadLetterStatusDiscarded
-			deadLetter.UpdatedAt = time.Now().UTC()
+			deadLetter.UpdatedAt = time.Now().UTC().Unix()
 			if err := dlr.queueRepo.UpdateDeadLetter(ctx, &deadLetter); err != nil {
 				return fmt.Errorf("failed to update dead letter to discarded: %v", err)
 			}
@@ -52,8 +52,8 @@ func (dlr *DeadLetterResolver) Handle(ctx context.Context, event contracts.DeadL
 
 		deadLetter.Status = queueModel.DeadLetterStatusProcessing
 		deadLetter.RetryCount += 1
-		deadLetter.UpdatedAt = time.Now().UTC()
-		deadLetter.NextRetry = time.Now().UTC().Add(5 * time.Minute)
+		deadLetter.UpdatedAt = time.Now().UTC().Unix()
+		deadLetter.NextRetry = time.Now().UTC().Add(5 * time.Minute).Unix()
 
 		if err := dlr.queueRepo.UpdateDeadLetter(ctx, &deadLetter); err != nil {
 			return fmt.Errorf("failed to update dead letter to processing: %v", err)
@@ -62,8 +62,8 @@ func (dlr *DeadLetterResolver) Handle(ctx context.Context, event contracts.DeadL
 		if err := dlr.processDeadLetter(ctx, &deadLetter); err != nil {
 			deadLetter.ErrorMsg = err.Error()
 			deadLetter.Status = queueModel.DeadLetterStatusFailed
-			deadLetter.UpdatedAt = time.Now().UTC()
-			deadLetter.NextRetry = time.Now().UTC().Add(15 * time.Minute)
+			deadLetter.UpdatedAt = time.Now().UTC().Unix()
+			deadLetter.NextRetry = time.Now().UTC().Add(15 * time.Minute).Unix()
 			if err := dlr.queueRepo.UpdateDeadLetter(ctx, &deadLetter); err != nil {
 				return fmt.Errorf("failed to update dead letter to failed: %v", err)
 			}
@@ -71,7 +71,7 @@ func (dlr *DeadLetterResolver) Handle(ctx context.Context, event contracts.DeadL
 		}
 
 		deadLetter.Status = queueModel.DeadLetterStatusCompleted
-		deadLetter.UpdatedAt = time.Now().UTC()
+		deadLetter.UpdatedAt = time.Now().UTC().Unix()
 		if err := dlr.queueRepo.UpdateDeadLetter(ctx, &deadLetter); err != nil {
 			return fmt.Errorf("failed to update dead letter to completed: %v", err)
 		}

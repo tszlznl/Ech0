@@ -326,10 +326,10 @@ function credentialToJSON(cred: PublicKeyCredential) {
 }
 
 // 格式化时间
-function formatTime(v: string) {
+function formatTime(v: number) {
   if (!v) return String(t('commonUi.none'))
-  const d = new Date(v)
-  if (Number.isNaN(d.getTime())) return v
+  const d = new Date(v * 1000)
+  if (Number.isNaN(d.getTime())) return String(v)
   return d.toLocaleString()
 }
 

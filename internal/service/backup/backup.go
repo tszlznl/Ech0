@@ -99,7 +99,7 @@ func (bs *BackupService) CreateSnapshot(
 	}
 
 	taskID := uuid.NewString()
-	startedAt := time.Now().UTC()
+	startedAt := time.Now().UTC().Unix()
 	bs.saveSnapshotTaskStatus(&commonModel.SnapshotTaskStatusResult{
 		TaskID:    taskID,
 		Status:    commonModel.SnapshotTaskStatusPending,
@@ -138,7 +138,7 @@ func (bs *BackupService) GetSnapshotTaskStatus(
 }
 
 func (bs *BackupService) runSnapshotTask(taskID, userID string) {
-	startedAt := time.Now().UTC()
+	startedAt := time.Now().UTC().Unix()
 	if existing, ok := bs.loadSnapshotTaskStatus(taskID); ok {
 		startedAt = existing.StartedAt
 	}
@@ -146,7 +146,7 @@ func (bs *BackupService) runSnapshotTask(taskID, userID string) {
 		TaskID:    taskID,
 		Status:    commonModel.SnapshotTaskStatusRunning,
 		StartedAt: startedAt,
-		UpdatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC().Unix(),
 	})
 
 	taskCtx := viewer.WithContext(context.Background(), viewer.NewUserViewer(userID))
@@ -170,11 +170,11 @@ func (bs *BackupService) runSnapshotTask(taskID, userID string) {
 		TaskID:    taskID,
 		Status:    commonModel.SnapshotTaskStatusSuccess,
 		StartedAt: startedAt,
-		UpdatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC().Unix(),
 	})
 }
 
-func (bs *BackupService) failSnapshotTask(taskID string, startedAt time.Time, err error) {
+func (bs *BackupService) failSnapshotTask(taskID string, startedAt int64, err error) {
 	errMsg := commonModel.SNAPSHOT_UPLOAD_FAILED
 	if err != nil {
 		errMsg = err.Error()
@@ -183,7 +183,7 @@ func (bs *BackupService) failSnapshotTask(taskID string, startedAt time.Time, er
 		TaskID:    taskID,
 		Status:    commonModel.SnapshotTaskStatusFailed,
 		StartedAt: startedAt,
-		UpdatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC().Unix(),
 		Error:     errMsg,
 	})
 	logUtil.GetLogger().Warn("Snapshot task failed", zap.String("taskID", taskID), zap.Error(err))

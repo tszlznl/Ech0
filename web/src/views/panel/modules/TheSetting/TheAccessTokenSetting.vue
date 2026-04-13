@@ -69,12 +69,12 @@
                 }}</span>
               </td>
               <td class="px-1 py-2 text-[var(--color-text-secondary)] whitespace-nowrap">
-                {{ new Date(tokenItem.created_at).toLocaleString() }}
+                {{ new Date(tokenItem.created_at * 1000).toLocaleString() }}
               </td>
               <td class="px-1 py-2 text-[var(--color-text-secondary)] whitespace-nowrap">
                 {{
                   tokenItem.expiry
-                    ? new Date(tokenItem.expiry).toLocaleString()
+                    ? new Date(tokenItem.expiry * 1000).toLocaleString()
                     : t('accessTokenSetting.neverExpire')
                 }}
               </td>
@@ -232,7 +232,7 @@
             <div class="mt-1 text-[var(--color-text-primary)]">
               {{
                 selectedToken.expiry
-                  ? new Date(selectedToken.expiry).toLocaleString()
+                  ? new Date(selectedToken.expiry * 1000).toLocaleString()
                   : t('accessTokenSetting.neverExpire')
               }}
             </div>
@@ -242,7 +242,7 @@
               {{ t('accessTokenSetting.createdAt') }}
             </div>
             <div class="mt-1 text-[var(--color-text-primary)]">
-              {{ new Date(selectedToken.created_at).toLocaleString() }}
+              {{ new Date(selectedToken.created_at * 1000).toLocaleString() }}
             </div>
           </div>
           <div class="rounded-md border border-[var(--color-border-subtle)] p-3">

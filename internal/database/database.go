@@ -68,8 +68,7 @@ func IsWriteLocked() bool {
 
 func buildGormConfig(logLevel logger.LogLevel) *gorm.Config {
 	return &gorm.Config{
-		Logger:  logger.Default.LogMode(logLevel),
-		NowFunc: func() time.Time { return time.Now().UTC() },
+		Logger: logger.Default.LogMode(logLevel),
 	}
 }
 
@@ -113,8 +112,14 @@ func InitDatabase() {
 
 	dbMigration.Migrate(
 		GetDB(),
+		dbMigration.WithStopOnError(),
 		dbMigration.WithMigrators(
 			dbMigration.NewLegacyTimeNormalizerMigrator(dbMigration.DefaultLegacySourceTimezone),
+			dbMigration.NewStorageTimeSanitizeMigrator(),
+			dbMigration.NewStorageTimeValidateMigrator(),
+			dbMigration.NewStorageTimeUnixMigrator(),
+			dbMigration.NewStorageTimeSchemaRebuildMigrator(),
+			dbMigration.NewOAuthBindingsDropMigrator(),
 		),
 	)
 }
@@ -133,7 +138,6 @@ func MigrateDB() error {
 		&fileModel.TempFile{},
 		&commonModel.KeyValue{},
 		&connectModel.Connected{},
-		&userModel.OAuthBinding{},
 		&echoModel.Tag{},
 		&echoModel.EchoTag{},
 		&commentModel.Comment{},

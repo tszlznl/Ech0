@@ -26,7 +26,7 @@ type WebhookStore interface {
 		ctx context.Context,
 		id string,
 		status string,
-		lastTrigger time.Time,
+		lastTrigger int64,
 	) error
 }
 
@@ -76,7 +76,7 @@ func (wd *Dispatcher) HandleObservation(ctx context.Context, obs contracts.Webho
 }
 
 func (wd *Dispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webhook, obs contracts.WebhookObservation) {
-	triggerAt := time.Now().UTC()
+	triggerAt := time.Now().UTC().Unix()
 	err := webhookclient.SendWithRetry(wd.client, wh, obs, 3, 500*time.Millisecond)
 	if err != nil {
 		wd.updateWebhookStatus(ctx, wh.ID, "failed", triggerAt)
@@ -93,9 +93,9 @@ func (wd *Dispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webhook, ob
 		deadLetter.Payload = payload
 		deadLetter.ErrorMsg = err.Error()
 		deadLetter.RetryCount = 0
-		deadLetter.NextRetry = time.Now().UTC().Add(6 * time.Hour)
-		deadLetter.CreatedAt = time.Now().UTC()
-		deadLetter.UpdatedAt = time.Now().UTC()
+		deadLetter.NextRetry = time.Now().UTC().Add(6 * time.Hour).Unix()
+		deadLetter.CreatedAt = time.Now().UTC().Unix()
+		deadLetter.UpdatedAt = time.Now().UTC().Unix()
 		deadLetter.Status = queueModel.DeadLetterStatusPending
 
 		if err := wd.transactor.Run(ctx, func(ctx context.Context) error {
@@ -126,7 +126,7 @@ func (wd *Dispatcher) HandleDeadLetter(
 	}
 	webhook := payload.Webhook
 	obs := payload.Event
-	triggerAt := time.Now().UTC()
+	triggerAt := time.Now().UTC().Unix()
 
 	err := webhookclient.SendWithRetry(wd.client, &webhook, obs, 3, 500*time.Millisecond)
 	if err != nil {
@@ -141,7 +141,7 @@ func (wd *Dispatcher) updateWebhookStatus(
 	ctx context.Context,
 	webhookID string,
 	status string,
-	triggerAt time.Time,
+	triggerAt int64,
 ) {
 	if webhookID == "" {
 		return

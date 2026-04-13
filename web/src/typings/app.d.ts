@@ -43,8 +43,8 @@ declare namespace App {
         id: string
         device_name: string
         aaguid: string
-        last_used_at: string
-        created_at: string
+        last_used_at: number
+        created_at: number
       }
     }
 
@@ -102,7 +102,7 @@ declare namespace App {
         url: string
         content_type?: string
         size?: number
-        created_at: string
+        created_at: number
       }
       type FileListResult = {
         items: FileListItem[]
@@ -126,7 +126,7 @@ declare namespace App {
         file_id?: string
         size?: number
         content_type?: string
-        modified_at?: string
+        modified_at?: number
       }
       type FileTreeResult = {
         items: FileTreeNode[]
@@ -184,7 +184,8 @@ declare namespace App {
         extension?: EchoExtension | null
         tags?: Tag[]
         fav_count: number
-        created_at: string
+        /** Unix 秒/毫秒或 ISO 字符串，视 API / 序列化而定 */
+        created_at: number | string
       }
 
       type FileObject = {
@@ -204,7 +205,7 @@ declare namespace App {
         id: string
         name: string
         usage_count: number
-        created_at: string
+        created_at: number | string
       }
 
       type EchoFile = {
@@ -226,7 +227,7 @@ declare namespace App {
           user_id?: string
           width?: number
           height?: number
-          created_at?: string
+          created_at?: number
         }
       }
 
@@ -246,7 +247,7 @@ declare namespace App {
         id?: string
         name: string
         usage_count?: number
-        created_at?: string
+        created_at?: number | string
       }
 
       type EchoToAdd = {
@@ -268,7 +269,7 @@ declare namespace App {
         private: boolean
         user_id: string
         extension?: EchoExtension | null
-        created_at: string
+        created_at: number | string
       }
 
       type PaginationResult = {
@@ -390,9 +391,9 @@ declare namespace App {
         url: string
         is_active: boolean
         last_status: string
-        last_trigger: string
-        created_at: string
-        updated_at: string
+        last_trigger: number
+        created_at: number
+        updated_at: number
       }
 
       type WebhookDto = {
@@ -411,9 +412,9 @@ declare namespace App {
         scopes?: string | string[]
         audience?: 'public-client' | 'cli' | 'integration' | 'mcp-remote'
         jti?: string
-        expiry: string | null
-        last_used_at?: string | null
-        created_at: string
+        expiry: number | null
+        last_used_at?: number | null
+        created_at: number
       }
 
       type AccessTokenDto = {
@@ -443,8 +444,8 @@ declare namespace App {
       type SnapshotTaskStatusResult = {
         task_id: string
         status: SnapshotTaskStatus
-        started_at: string
-        updated_at: string
+        started_at: number
+        updated_at: number
         error?: string
       }
 
@@ -482,8 +483,8 @@ declare namespace App {
         status: CommentStatus
         hot: boolean
         source: 'guest' | 'system'
-        created_at: string
-        updated_at: string
+        created_at: number
+        updated_at: number
       }
 
       type FormMeta = {
@@ -607,7 +608,7 @@ declare namespace App {
         user_id: string
         extension?: Ech0.EchoExtension | null
         fav_count: number
-        created_at: string
+        created_at: number | string
         createdTs: number
         virtual_key: string
         server_name: string

@@ -12,13 +12,8 @@ import (
 
 func TestBuildGormConfig_UsesUTCNowFunc(t *testing.T) {
 	cfg := buildGormConfig(logger.Silent)
-	now := cfg.NowFunc()
-	if now.Location() != time.UTC {
-		t.Fatalf("expected UTC location, got %v", now.Location())
-	}
-	_, offset := now.Zone()
-	if offset != 0 {
-		t.Fatalf("expected UTC offset 0, got %d", offset)
+	if cfg.NowFunc != nil {
+		t.Fatalf("expected nil NowFunc, got configured function")
 	}
 }
 
@@ -33,8 +28,8 @@ func TestMigrateDB_AccessTokenSettingIncludesScopeFields(t *testing.T) {
 		t.Fatalf("migrate db failed: %v", err)
 	}
 
-	expiry := time.Now().UTC().Add(8 * time.Hour)
-	lastUsed := time.Now().UTC()
+	expiry := time.Now().UTC().Add(8 * time.Hour).Unix()
+	lastUsed := time.Now().UTC().Unix()
 	record := settingModel.AccessTokenSetting{
 		UserID:     "user-1",
 		Token:      "token-1",
@@ -45,7 +40,7 @@ func TestMigrateDB_AccessTokenSettingIncludesScopeFields(t *testing.T) {
 		JTI:        "jti-1",
 		Expiry:     &expiry,
 		LastUsedAt: &lastUsed,
-		CreatedAt:  time.Now().UTC(),
+		CreatedAt:  time.Now().UTC().Unix(),
 	}
 
 	if err := GetDB().Create(&record).Error; err != nil {

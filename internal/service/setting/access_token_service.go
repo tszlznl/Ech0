@@ -37,10 +37,10 @@ func (settingService *SettingService) ListAccessTokens(
 
 	// 处理tokens,过滤并删除过期的token
 	var validTokens []model.AccessTokenSetting
-	currentTime := time.Now().UTC()
+	currentTime := time.Now().UTC().Unix()
 
 	for _, token := range tokens {
-		if token.Expiry == nil || token.Expiry.After(currentTime) {
+		if token.Expiry == nil || *token.Expiry > currentTime {
 			// nil 表示永不过期，或者还没过期
 			validTokens = append(validTokens, token)
 		} else {
@@ -102,11 +102,11 @@ func (settingService *SettingService) CreateAccessToken(
 	}
 
 	// 处理数据库存储的 expiry
-	var expiryPtr *time.Time
+	var expiryPtr *int64
 	if expiry == model.NEVER_EXPIRY {
 		expiryPtr = nil // 永不过期，用 NULL
 	} else {
-		t := time.Now().UTC().Add(expiryDuration)
+		t := time.Now().UTC().Add(expiryDuration).Unix()
 		expiryPtr = &t
 	}
 

@@ -2,6 +2,8 @@
 export interface EchoTag {
   id: string
   name: string
+  created_at?: number | string
+  usage_count?: number
 }
 
 /** 帖子正文与附件（Hub 聚合列表接口返回的字段） */
@@ -9,7 +11,8 @@ export interface EchoPost {
   id: string
   content: string
   username?: string
-  created_at: string
+  /** Unix 秒/毫秒或 ISO 字符串 */
+  created_at: number | string
   fav_count?: number
   tags?: EchoTag[]
   echo_files?: App.Api.Ech0.EchoFile[]

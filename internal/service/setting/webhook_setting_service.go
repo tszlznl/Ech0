@@ -163,7 +163,7 @@ func (settingService *SettingService) TestWebhook(ctx context.Context, id string
 	}
 
 	client := webhookclient.NewSafeHTTPClient(5 * time.Second)
-	triggerAt := time.Now().UTC()
+	triggerAt := time.Now().UTC().Unix()
 	sendErr := webhookclient.SendWithRetry(client, webhook, obs, 2, 300*time.Millisecond)
 	status := "success"
 	if sendErr != nil {

@@ -8,7 +8,7 @@
 
 ## 核心原则
 
-1. 存储层统一使用 UTC 语义（`time.Time` + RFC3339 序列化）。
+1. 存储层统一使用 UTC 语义（`int64` Unix 秒级时间戳）。
 2. 面向“用户日历日”的接口，使用客户端上报时区（`X-Timezone`）。
 3. 无用户上下文的站点级统计，使用进程本地时区（`time.Local`，通常由 `TZ` 决定）。
 4. 展示层交给浏览器本地时间能力（`Date` + `Intl.DateTimeFormat`）。
@@ -24,7 +24,7 @@ flowchart TB
     subgraph client [客户端]
         tzFromUA["用户时区来源：浏览器 / 操作系统（Intl 可解析为 IANA 名称）"]
         xTz["HTTP 请求头 X-Timezone"]
-        render["展示层：new Date + Intl.DateTimeFormat（消费 RFC3339）"]
+        render["展示层：new Date + Intl.DateTimeFormat（消费 Unix 秒级时间戳）"]
         tzFromUA --> xTz
     end
 
@@ -49,8 +49,8 @@ flowchart TB
     end
 
     subgraph storage [持久化与 API]
-        db["SQLite + GORM：time.Time，持久化语义 UTC"]
-        api["JSON：RFC3339 时间字符串"]
+        db["SQLite + GORM：int64 Unix 秒级时间戳，持久化语义 UTC"]
+        api["JSON：Unix 秒级 number"]
     end
 
     userApi --> db
@@ -62,7 +62,7 @@ flowchart TB
 
 - **TZ** 只影响服务端 `time.Local`，进而影响**无用户上下文**的站点级逻辑；不替代 `X-Timezone`。
 - **`time/tzdata`** 不决定「默认用哪个时区」，只保证进程能解析 IANA 名称（与请求头校验、按用户时区算日界有关）。
-- **写库**以 UTC 为准（见「存储层 UTC 语义」与全局 `NowFunc` 约定）；**读展示**由浏览器按用户本地时区渲染 API 返回的瞬时时刻。
+- **写库**以 UTC 为准（见「存储层 UTC 语义」）；**读展示**由浏览器按用户本地时区渲染 API 返回的瞬时时刻。
 
 ---
 
@@ -70,8 +70,8 @@ flowchart TB
 
 ## 1) 存储层（Backend -> DB）
 
-- 业务时间戳以 `time.Time` 保存，并在 JSON 中以 RFC3339 输出。
-- 关键写入路径应优先使用 `time.Now().UTC()`，避免存储语义依赖机器本地时区。
+- 业务时间戳以 `int64` Unix 秒级时间戳保存，并在 JSON 中以 number 输出。
+- 关键写入路径应优先使用 `time.Now().UTC().Unix()`，避免存储语义依赖机器本地时区。
 - 对“按天”查询，先基于目标时区算日界，再转 UTC 进行数据库过滤。
 
 典型场景：
@@ -151,7 +151,7 @@ flowchart TB
 2. 后端是否正确 `NormalizeTimezone`。
 3. 查询是否使用“目标时区日界 -> UTC 区间”。
 4. 部署环境 `TZ` 是否符合站点预期（影响 `time.Local` 语义）。
-5. 返回 JSON 时间戳是否为 RFC3339 且可被浏览器正确解析。
+5. 返回 JSON 时间戳是否为 Unix 秒级 number 且可被浏览器正确解析。
 
 ---
 
@@ -170,44 +170,60 @@ flowchart TB
 
 - 审查范围为 `internal/database/database.go` 中 `AutoMigrate` 注册的表。
 - 结论口径（当前版本）：
-  - “统一 UTC（自动）”：依赖 `GORM NowFunc=UTC` + 模型 Hook 自动归一。
+  - “统一 UTC（自动）”：依赖 `autoCreateTime/autoUpdateTime` 自动写入 Unix 秒级时间戳。
   - “统一 UTC（业务赋值）”：字段需要业务计算（如过期/重试），由业务层手动 UTC 赋值。
 
 | 模型（表） | 时间字段 | 当前写入行为 | 结论 |
 |---|---|---|---|
-| `user.UserLocalAuth` (`user_local_auth`) | `updated_at` | 自动更新时间 + Hook UTC 归一 | 统一 UTC（自动） |
-| `user.UserExternalIdentity` (`user_external_identities`) | `created_at`, `updated_at` | 自动时间戳 + Hook UTC 归一 | 统一 UTC（自动） |
-| `user.WebAuthnCredential` (`webauthn_credentials`) | `created_at`, `updated_at`, `last_used_at` | 自动时间戳 + 业务写入 `last_used_at`（UTC）+ Hook 归一 | 统一 UTC（自动+业务） |
-| `echo.Echo` (`echos`) | `created_at` | 自动时间戳 + Hook UTC 归一 | 统一 UTC（自动） |
-| `echo.EchoExtension` (`echo_extensions`) | `created_at`, `updated_at` | 自动时间戳 + Hook UTC 归一 | 统一 UTC（自动） |
-| `echo.Tag` (`tags`) | `created_at` | 自动时间戳 + Hook UTC 归一 | 统一 UTC（自动） |
-| `file.File` (`files`) | `created_at` | 自动时间戳 + Hook UTC 归一 | 统一 UTC（自动） |
-| `file.TempFile` (`temp_files`) | `expire_at`, `created_at` | `expire_at` 业务层按 UTC 计算；`created_at` 自动时间戳 + Hook | 统一 UTC（业务+自动） |
-| `comment.Comment` (`comments`) | `created_at`, `updated_at` | 自动时间戳 + Hook UTC 归一 | 统一 UTC（自动） |
-| `webhook.Webhook` (`webhooks`) | `created_at`, `updated_at`, `last_trigger` | `last_trigger` 业务层 UTC；其余自动时间戳 + Hook | 统一 UTC（业务+自动） |
-| `queue.DeadLetter` (`dead_letters`) | `next_retry`, `created_at`, `updated_at` | `next_retry` 业务层 UTC；其余自动时间戳 + Hook | 统一 UTC（业务+自动） |
-| `migration.MigrationJob` (`migration_jobs`) | `started_at`, `finished_at`, `created_at`, `updated_at` | 迁移状态时间使用 UTC；自动时间戳 + Hook | 统一 UTC（业务+自动） |
-| `setting.AccessTokenSetting` (`access_token_settings`) | `created_at`, `expiry`, `last_used_at` | `expiry` 业务层 UTC；`created_at` 自动时间戳 + Hook（兼容显式场景） | 统一 UTC（业务+自动） |
-| `auth.Passkey` (`passkeys`) | `created_at`, `updated_at`, `last_used_at` | 自动时间戳 + Hook UTC 归一 | 统一 UTC（自动） |
+| `user.UserLocalAuth` (`user_local_auth`) | `updated_at` | 自动更新时间戳 | 统一 UTC（自动） |
+| `user.UserExternalIdentity` (`user_external_identities`) | `created_at`, `updated_at` | 自动时间戳 | 统一 UTC（自动） |
+| `user.WebAuthnCredential` (`webauthn_credentials`) | `created_at`, `updated_at`, `last_used_at` | 自动时间戳 + 业务写入 `last_used_at`（UTC） | 统一 UTC（自动+业务） |
+| `echo.Echo` (`echos`) | `created_at` | 自动时间戳 | 统一 UTC（自动） |
+| `echo.EchoExtension` (`echo_extensions`) | `created_at`, `updated_at` | 自动时间戳 | 统一 UTC（自动） |
+| `echo.Tag` (`tags`) | `created_at` | 自动时间戳 | 统一 UTC（自动） |
+| `file.File` (`files`) | `created_at` | 自动时间戳 | 统一 UTC（自动） |
+| `file.TempFile` (`temp_files`) | `expire_at`, `created_at` | `expire_at` 业务层按 UTC 计算；`created_at` 自动时间戳 | 统一 UTC（业务+自动） |
+| `comment.Comment` (`comments`) | `created_at`, `updated_at` | 自动时间戳 | 统一 UTC（自动） |
+| `webhook.Webhook` (`webhooks`) | `created_at`, `updated_at`, `last_trigger` | `last_trigger` 业务层 UTC；其余自动时间戳 | 统一 UTC（业务+自动） |
+| `queue.DeadLetter` (`dead_letters`) | `next_retry`, `created_at`, `updated_at` | `next_retry` 业务层 UTC；其余自动时间戳 | 统一 UTC（业务+自动） |
+| `migration.MigrationJob` (`migration_jobs`) | `started_at`, `finished_at`, `created_at`, `updated_at` | 迁移状态时间使用 UTC；自动时间戳 | 统一 UTC（业务+自动） |
+| `setting.AccessTokenSetting` (`access_token_settings`) | `created_at`, `expiry`, `last_used_at` | `expiry` 业务层 UTC；`created_at` 自动时间戳 | 统一 UTC（业务+自动） |
+| `auth.Passkey` (`passkeys`) | `created_at`, `updated_at`, `last_used_at` | 自动时间戳 | 统一 UTC（自动） |
 
 ### 审查结论
 
-- 当前持久化模型写入路径已统一到 UTC：  
-  **GORM 全局 `NowFunc=UTC` + 模型 Hook UTC 归一 + 业务字段手动 UTC 赋值**。
+- 当前持久化模型写入路径已统一到 UTC Unix 秒级时间戳：  
+  **GORM `autoCreateTime/autoUpdateTime` + 业务字段手动 UTC 秒级赋值**。
 - “业务语义时间字段”（如 `ExpireAt`、`NextRetry`）继续由业务层显式计算后赋值，属于正确且必要的手动赋值。
 - 历史数据若曾按本地时区写入，纠偏应通过一次性、可幂等的迁移完成，并在方案中明确“历史时刻如何解释再转 UTC”，避免重复执行造成二次平移。
 
 ### 仍需注意的边界
 
-1. 直接执行原生 SQL 写时间字段时，不会自动触发模型 Hook；需显式按 UTC 写入。
+1. 直接执行原生 SQL 写时间字段时，不会触发 `autoCreateTime/autoUpdateTime`；需显式按 UTC 写入。
 2. 非持久化结构（内存态任务状态、模板对象、测试样本）不走 GORM，需手动赋值。
-3. 新增模型若包含时间字段，需接入统一 Hook 约定，避免遗漏。
+3. 新增模型若包含时间字段，优先使用 `int64` + `autoCreateTime/autoUpdateTime` 约定，避免混用格式。
+
+## 历史库升级迁移链路（v1）
+
+升级用户首次启动时，按顺序执行以下 migrator（均有幂等键）：
+
+1. `legacy_time_normalizer`：按配置时区将历史文本时间纠偏到 UTC 文本语义。
+2. `storage_time_sanitize_migrator`：仅做低风险文本修复（空白、分隔符、`T/Z` 规范化）。
+3. `storage_time_validate_migrator`：严格校验 `strftime('%s', value)` 可解析性；发现非法值即中止后续步骤。
+4. `storage_time_unix_migrator`：把时间文本值转换为 Unix 秒级整数值。
+5. `storage_time_schema_rebuild_migrator`：重建表结构，将目标时间列声明类型对齐为 `INTEGER`。
+
+失败处理约定：
+
+- 校验阶段失败时，迁移流程在当前轮次立即停止，不会继续做值转换或 schema 重建。
+- 错误信息会包含非法样本（表、列、rowid、原值）以便人工修复后重启。
+- 每个阶段只执行一次；修复后再次启动会从未完成阶段继续。
 
 ---
 
 ## 存储层 UTC 语义（设计约定）
 
-- **全局时间源**：GORM `NowFunc` 使用 `time.Now().UTC()`，自动生成的时间戳语义为 UTC。
+- **全局时间源**：GORM `autoCreateTime/autoUpdateTime` 对 `int64` 字段使用 Unix 秒级时间戳，语义为 UTC。
 - **写入一致性**：与持久化相关的路径应使用 UTC，避免“写库时刻”依赖进程本地时区。
 - **窗口类逻辑**：限流、去重、滑动窗口等若与库内时间戳对比或共用同一“当前时刻”，应与存储层 UTC 语义对齐，避免基准混用。
 
@@ -215,7 +231,7 @@ flowchart TB
 
 为避免重复赋值与语义冲突，约定如下：
 
-- **默认不手动赋值**：`CreatedAt` / `UpdatedAt` 等模型元数据时间，优先依赖 `NowFunc=UTC` 与模型 Hook 自动处理。
+- **默认不手动赋值**：`CreatedAt` / `UpdatedAt` 等模型元数据时间，优先依赖 `autoCreateTime/autoUpdateTime` 自动处理。
 - **必须手动赋值**：业务语义时间字段（例如 `ExpireAt = now + ttl`、`NextRetry = now + backoff`、事件触发时刻等）。
 - **非持久化对象必须手动赋值**：内存任务状态、模板临时对象、测试构造数据等（不经 GORM，不会触发 Hook）。
 

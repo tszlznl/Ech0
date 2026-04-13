@@ -42,14 +42,14 @@ func (s *CommonService) GetHeatMap(timezone string) ([]commonModel.Heatmap, erro
 	startUser := time.Date(nowUser.Year(), nowUser.Month(), nowUser.Day(), 0, 0, 0, 0, loc).AddDate(0, 0, -29)
 	endUserExclusive := startUser.AddDate(0, 0, 30)
 
-	createdAtList, err := s.commonRepository.GetHeatMap(ctx, startUser.UTC(), endUserExclusive.UTC())
+	createdAtList, err := s.commonRepository.GetHeatMap(ctx, startUser.UTC().Unix(), endUserExclusive.UTC().Unix())
 	if err != nil {
 		return nil, err
 	}
 
 	countMap := make(map[string]int)
 	for _, createdAt := range createdAtList {
-		day := createdAt.In(loc).Format("2006-01-02")
+		day := time.Unix(createdAt, 0).In(loc).Format("2006-01-02")
 		countMap[day]++
 	}
 
@@ -87,7 +87,8 @@ func (s *CommonService) GenerateRSS(ctx *gin.Context) (string, error) {
 
 	for _, msg := range echos {
 		renderedContent := mdUtil.MdToHTML([]byte(msg.Content))
-		title := msg.Username + " - " + msg.CreatedAt.Format("2006-01-02")
+		createdAt := time.Unix(msg.CreatedAt, 0).UTC()
+		title := msg.Username + " - " + createdAt.Format("2006-01-02")
 
 		if len(msg.EchoFiles) > 0 {
 			var imageContent []byte
@@ -112,7 +113,7 @@ func (s *CommonService) GenerateRSS(ctx *gin.Context) (string, error) {
 			Link:        &feeds.Link{Href: fmt.Sprintf("%s://%s/echo/%s", schema, host, msg.ID)},
 			Description: string(renderedContent),
 			Author:      &feeds.Author{Name: msg.Username},
-			Created:     msg.CreatedAt,
+			Created:     createdAt,
 		})
 	}
 

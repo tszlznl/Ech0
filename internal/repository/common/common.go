@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"time"
 
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
@@ -80,13 +79,13 @@ func (commonRepository *CommonRepository) GetAllEchos(ctx context.Context, showP
 
 func (commonRepository *CommonRepository) GetHeatMap(
 	ctx context.Context,
-	startUTC, endUTC time.Time,
-) ([]time.Time, error) {
-	var results []time.Time
+	startUTC, endUTC int64,
+) ([]int64, error) {
+	var results []int64
 
 	err := commonRepository.getDB(ctx).
 		Table("echos").
-		Where("datetime(created_at) >= datetime(?) AND datetime(created_at) < datetime(?)", startUTC, endUTC).
+		Where("created_at >= ? AND created_at < ?", startUTC, endUTC).
 		Order("created_at ASC").
 		Pluck("created_at", &results).Error
 	if err != nil {

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useFetch } from '@vueuse/core'
 import { theToast } from '@/utils/toast'
+import { timeValueToMs } from '@/utils/timeValue'
 import { useConnectStore } from './connect'
 import { i18n } from '@/locales'
 
@@ -214,7 +215,7 @@ export const useHubStore = defineStore('hubStore', () => {
 
       const items = (data.value?.data.items || []).map((echo: App.Api.Ech0.Echo) => ({
         ...echo,
-        createdTs: new Date(echo.created_at).getTime(),
+        createdTs: timeValueToMs(echo.created_at),
         server_name: hubInfoMap.value.get(hubUrl)?.server_name || 'Ech0',
         server_url: hubUrl,
         virtual_key: `${hubUrl}-${echo.id}`,

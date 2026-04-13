@@ -1,12 +1,5 @@
 package model
 
-import (
-	"time"
-
-	timeHookUtil "github.com/lin-snow/ech0/internal/util/timehook"
-	"gorm.io/gorm"
-)
-
 const (
 	MigrationSourceEch0V4 = "ech0_v4"
 	MigrationSourceMemos  = "memos"
@@ -32,22 +25,12 @@ const (
 )
 
 type MigrationJob struct {
-	ID           string     `gorm:"primaryKey;size:64" json:"id"`
-	SourceType   string     `gorm:"type:varchar(64);index" json:"source_type"`
-	Status       string     `gorm:"type:varchar(32);index" json:"status"`
-	ErrorMessage string     `gorm:"type:text" json:"error_message"`
-	StartedAt    *time.Time `json:"started_at"`
-	FinishedAt   *time.Time `json:"finished_at"`
-	CreatedAt    time.Time  `json:"created_at"`
-	UpdatedAt    time.Time  `json:"updated_at"`
-}
-
-func (j *MigrationJob) BeforeCreate(_ *gorm.DB) error {
-	timeHookUtil.NormalizeModelTimesToUTC(j)
-	return nil
-}
-
-func (j *MigrationJob) BeforeUpdate(_ *gorm.DB) error {
-	timeHookUtil.NormalizeModelTimesToUTC(j)
-	return nil
+	ID           string `gorm:"primaryKey;size:64" json:"id"`
+	SourceType   string `gorm:"type:varchar(64);index" json:"source_type"`
+	Status       string `gorm:"type:varchar(32);index" json:"status"`
+	ErrorMessage string `gorm:"type:text" json:"error_message"`
+	StartedAt    *int64 `json:"started_at"`
+	FinishedAt   *int64 `json:"finished_at"`
+	CreatedAt    int64  `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt    int64  `gorm:"autoUpdateTime" json:"updated_at"`
 }

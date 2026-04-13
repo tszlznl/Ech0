@@ -1,7 +1,5 @@
 package model
 
-import "time"
-
 // PageQueryDto 用于分页查询的请求数据传输对象
 //
 // swagger:model PageQueryDto
@@ -104,14 +102,14 @@ type FileListQueryDto struct {
 //
 // swagger:model FileListItemDto
 type FileListItemDto struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Key         string    `json:"key"`
-	StorageType string    `json:"storage_type"`
-	URL         string    `json:"url"`
-	ContentType string    `json:"content_type,omitempty"`
-	Size        int64     `json:"size,omitempty"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Key         string `json:"key"`
+	StorageType string `json:"storage_type"`
+	URL         string `json:"url"`
+	ContentType string `json:"content_type,omitempty"`
+	Size        int64  `json:"size,omitempty"`
+	CreatedAt   int64  `json:"created_at"`
 }
 
 // FileListResultDto 文件列表结果
@@ -144,14 +142,14 @@ type FilePathStreamQueryDto struct {
 //
 // swagger:model FileTreeNodeDto
 type FileTreeNodeDto struct {
-	Name        string    `json:"name"`
-	Path        string    `json:"path"`
-	NodeType    string    `json:"node_type"` // file|folder
-	HasChildren bool      `json:"has_children"`
-	FileID      string    `json:"file_id,omitempty"`
-	Size        int64     `json:"size,omitempty"`
-	ContentType string    `json:"content_type,omitempty"`
-	ModifiedAt  time.Time `json:"modified_at,omitempty"`
+	Name        string `json:"name"`
+	Path        string `json:"path"`
+	NodeType    string `json:"node_type"` // file|folder
+	HasChildren bool   `json:"has_children"`
+	FileID      string `json:"file_id,omitempty"`
+	Size        int64  `json:"size,omitempty"`
+	ContentType string `json:"content_type,omitempty"`
+	ModifiedAt  int64  `json:"modified_at,omitempty"`
 }
 
 // FileTreeResultDto 文件树结果
@@ -191,7 +189,7 @@ type SnapshotTaskCreateResult struct {
 type SnapshotTaskStatusResult struct {
 	TaskID    string             `json:"task_id"`
 	Status    SnapshotTaskStatus `json:"status"`
-	StartedAt time.Time          `json:"started_at"`
-	UpdatedAt time.Time          `json:"updated_at"`
+	StartedAt int64              `json:"started_at"`
+	UpdatedAt int64              `json:"updated_at"`
 	Error     string             `json:"error,omitempty"`
 }

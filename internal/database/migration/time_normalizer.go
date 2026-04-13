@@ -13,20 +13,13 @@ import (
 
 const DefaultLegacySourceTimezone = "Asia/Shanghai"
 
-type TimeColumnMigrationStat struct {
-	Table        string
-	Column       string
-	CandidateRow int64
-	UpdatedRow   int64
-}
-
 type TimeNormalizationReport struct {
 	TimezoneSource string
 	StartedAt      time.Time
 	FinishedAt     time.Time
 	TotalCandidate int64
 	TotalUpdated   int64
-	Details        []TimeColumnMigrationStat
+	Details        []TimeMigrationStat
 }
 
 type legacyTimeNormalizerMigrator struct {
@@ -87,68 +80,31 @@ func NormalizeLegacyStorageTimesToUTC(db *gorm.DB, sourceTimezone string) (*Time
 	report := &TimeNormalizationReport{
 		TimezoneSource: tzName,
 		StartedAt:      time.Now().UTC(),
-		Details:        make([]TimeColumnMigrationStat, 0),
-	}
-
-	plans := []struct {
-		table  string
-		column string
-	}{
-		{"user_local_auth", "updated_at"},
-		{"user_external_identities", "created_at"},
-		{"user_external_identities", "updated_at"},
-		{"webauthn_credentials", "last_used_at"},
-		{"webauthn_credentials", "created_at"},
-		{"webauthn_credentials", "updated_at"},
-		{"echos", "created_at"},
-		{"echo_extensions", "created_at"},
-		{"echo_extensions", "updated_at"},
-		{"tags", "created_at"},
-		{"files", "created_at"},
-		{"temp_files", "expire_at"},
-		{"temp_files", "created_at"},
-		{"comments", "created_at"},
-		{"comments", "updated_at"},
-		{"webhooks", "last_trigger"},
-		{"webhooks", "created_at"},
-		{"webhooks", "updated_at"},
-		{"dead_letters", "next_retry"},
-		{"dead_letters", "created_at"},
-		{"dead_letters", "updated_at"},
-		{"migration_jobs", "started_at"},
-		{"migration_jobs", "finished_at"},
-		{"migration_jobs", "created_at"},
-		{"migration_jobs", "updated_at"},
-		{"access_token_settings", "expiry"},
-		{"access_token_settings", "last_used_at"},
-		{"access_token_settings", "created_at"},
-		{"passkeys", "last_used_at"},
-		{"passkeys", "created_at"},
-		{"passkeys", "updated_at"},
+		Details:        make([]TimeMigrationStat, 0),
 	}
 
 	if err := db.Transaction(func(tx *gorm.DB) error {
-		for _, plan := range plans {
-			stat := TimeColumnMigrationStat{
-				Table:  plan.table,
-				Column: plan.column,
+		for _, plan := range StorageTimeColumnPlans() {
+			stat := TimeMigrationStat{
+				Table:  plan.Table,
+				Column: plan.Column,
 			}
 
-			countSQL := fmt.Sprintf("SELECT COUNT(1) FROM %s WHERE %s IS NOT NULL", plan.table, plan.column)
+			countSQL := fmt.Sprintf("SELECT COUNT(1) FROM %s WHERE %s IS NOT NULL", plan.Table, plan.Column)
 			if err := tx.Raw(countSQL).Scan(&stat.CandidateRow).Error; err != nil {
-				return fmt.Errorf("count %s.%s failed: %w", plan.table, plan.column, err)
+				return fmt.Errorf("count %s.%s failed: %w", plan.Table, plan.Column, err)
 			}
 
 			updateSQL := fmt.Sprintf(
 				"UPDATE %s SET %s = strftime('%%Y-%%m-%%dT%%H:%%M:%%fZ', julianday(%s) - (?/86400.0)) WHERE %s IS NOT NULL",
-				plan.table,
-				plan.column,
-				plan.column,
-				plan.column,
+				plan.Table,
+				plan.Column,
+				plan.Column,
+				plan.Column,
 			)
 			result := tx.Exec(updateSQL, offsetSeconds)
 			if result.Error != nil {
-				return fmt.Errorf("update %s.%s failed: %w", plan.table, plan.column, result.Error)
+				return fmt.Errorf("update %s.%s failed: %w", plan.Table, plan.Column, result.Error)
 			}
 			stat.UpdatedRow = result.RowsAffected
 			report.TotalCandidate += stat.CandidateRow

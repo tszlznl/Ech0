@@ -46,9 +46,9 @@ export interface MigrationStatusPayload extends StartMigrationPayload {
   version: number
   status: 'idle' | 'pending' | 'running' | 'success' | 'failed' | 'cancelled'
   error_message: string
-  started_at?: string
-  updated_at?: string
-  finished_at?: string
+  started_at?: number
+  updated_at?: number
+  finished_at?: number
 }
 
 export function fetchStartMigration(data: StartMigrationPayload) {

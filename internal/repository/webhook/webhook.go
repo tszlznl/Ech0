@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"time"
 
 	model "github.com/lin-snow/ech0/internal/model/webhook"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
@@ -110,7 +109,7 @@ func (webhookRepository *WebhookRepository) UpdateWebhookDeliveryStatus(
 	ctx context.Context,
 	id string,
 	status string,
-	lastTrigger time.Time,
+	lastTrigger int64,
 ) error {
 	tx := webhookRepository.getDB(ctx).
 		Model(&model.Webhook{}).

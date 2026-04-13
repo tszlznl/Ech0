@@ -40,7 +40,7 @@ func (queueRepository *QueueRepository) DeleteDeadLetter(ctx context.Context, id
 // ListDeadLetters 列出所有死信任务
 func (queueRepository *QueueRepository) ListDeadLetters(ctx context.Context, limit int) ([]model.DeadLetter, error) {
 	var deadLetters []model.DeadLetter
-	now := time.Now().UTC()
+	now := time.Now().UTC().Unix()
 	err := queueRepository.getDB(ctx).
 		Where("status IN ? AND next_retry <= ?", []string{
 			model.DeadLetterStatusPending,

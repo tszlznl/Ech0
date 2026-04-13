@@ -336,10 +336,10 @@ const handleCleanupMigration = async () => {
   theToast.success(String(t('migrationSetting.cleaned')))
 }
 
-const formatTime = (iso?: string) => {
-  if (!iso) return ''
-  const dt = new Date(iso)
-  if (Number.isNaN(dt.getTime())) return iso
+const formatTime = (ts?: number) => {
+  if (!ts) return ''
+  const dt = new Date(ts * 1000)
+  if (Number.isNaN(dt.getTime())) return String(ts)
   return dt.toLocaleString(locale.value, { hour12: false })
 }
 

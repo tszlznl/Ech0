@@ -561,7 +561,7 @@ func (s *CommentService) SendTestEmail(ctx context.Context, setting model.System
 		Email:     "author@example.com",
 		Content:   "这是一条测试评论内容，用于预览 Ech0 邮件通知样式。",
 		Status:    model.StatusPending,
-		CreatedAt: time.Now().UTC(),
+		CreatedAt: time.Now().UTC().Unix(),
 	}, serverURL)
 	return s.sendOwnerMail(ctx, setting.EmailNotify, MailMessage{
 		To:       ownerEmail,

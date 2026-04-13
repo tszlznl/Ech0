@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"time"
 
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
@@ -60,6 +59,6 @@ type WebhookRepository interface {
 	GetWebhookByID(ctx context.Context, id string) (*webhookModel.Webhook, error)
 	CreateWebhook(ctx context.Context, webhook *webhookModel.Webhook) error
 	UpdateWebhookByID(ctx context.Context, id string, webhook *webhookModel.Webhook) error
-	UpdateWebhookDeliveryStatus(ctx context.Context, id string, status string, lastTrigger time.Time) error
+	UpdateWebhookDeliveryStatus(ctx context.Context, id string, status string, lastTrigger int64) error
 	DeleteWebhookByID(ctx context.Context, id string) error
 }

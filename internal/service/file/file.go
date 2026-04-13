@@ -171,7 +171,7 @@ func (s *FileService) UploadFile(
 	if err := s.fileRepository.CreateTemp(context.Background(), &fileModel.TempFile{
 		FileID:     fileRecord.ID,
 		UploaderID: user.ID,
-		ExpireAt:   nowUTC.Add(tempFileTTL),
+		ExpireAt:   nowUTC.Add(tempFileTTL).Unix(),
 	}); err != nil {
 		_ = s.fileRepository.Delete(context.Background(), fileRecord.ID)
 		_ = s.DeleteStoredFile(fileRecord.StorageType, fileRecord.Key)
@@ -605,7 +605,7 @@ func (s *FileService) ListFileTree(
 			HasChildren: false,
 			Size:        node.Size,
 			ContentType: node.ContentType,
-			ModifiedAt:  node.LastModified,
+			ModifiedAt:  node.LastModified.Unix(),
 		}
 		if node.IsDir {
 			item.NodeType = treeNodeTypeFolder
@@ -664,7 +664,15 @@ func (s *FileService) StreamFileByID(ctx *gin.Context, id string) {
 		ctx.String(http.StatusNotFound, "文件不存在")
 		return
 	}
-	s.streamReader(ctx, reader, fileRecord.Name, contentType, fileRecord.CreatedAt, fileRecord.ID, string(normalizedStorageType))
+	s.streamReader(
+		ctx,
+		reader,
+		fileRecord.Name,
+		contentType,
+		time.Unix(fileRecord.CreatedAt, 0),
+		fileRecord.ID,
+		string(normalizedStorageType),
+	)
 }
 
 func (s *FileService) StreamFileByPath(ctx *gin.Context, query commonModel.FilePathStreamQueryDto) {
@@ -697,7 +705,7 @@ func (s *FileService) StreamFileByPath(ctx *gin.Context, query commonModel.FileP
 	}
 	selector := s.getSelector()
 	if reader, pathErr := selector.GetByStoragePath(context.Background(), storageType, filePath); pathErr == nil {
-		s.streamReader(ctx, reader, fileName, contentType, time.Now(), "", string(storageType)+":path:"+filePath)
+		s.streamReader(ctx, reader, fileName, contentType, time.Now().UTC(), "", string(storageType)+":path:"+filePath)
 		return
 	}
 	candidates := selector.ResolveKeyCandidatesByPath(storageType, filePath)
@@ -718,7 +726,7 @@ func (s *FileService) StreamFileByPath(ctx *gin.Context, query commonModel.FileP
 		ctx.String(http.StatusNotFound, "文件不存在")
 		return
 	}
-	s.streamReader(ctx, reader, fileName, contentType, time.Now(), "", string(storageType)+":"+resolvedKey)
+	s.streamReader(ctx, reader, fileName, contentType, time.Now().UTC(), "", string(storageType)+":"+resolvedKey)
 }
 
 func (s *FileService) streamReader(
@@ -815,7 +823,7 @@ func (s *FileService) GetFilePresignURL(
 	if err := s.fileRepository.CreateTemp(context.Background(), &fileModel.TempFile{
 		FileID:     fileRecord.ID,
 		UploaderID: userid,
-		ExpireAt:   nowUTC.Add(tempFileTTL),
+		ExpireAt:   nowUTC.Add(tempFileTTL).Unix(),
 	}); err != nil {
 		_ = s.fileRepository.Delete(context.Background(), fileRecord.ID)
 		return result, err
@@ -832,7 +840,7 @@ func (s *FileService) GetFilePresignURL(
 
 func (s *FileService) CleanupOrphanFiles() error {
 	ctx := context.Background()
-	threshold := time.Now().UTC()
+	threshold := time.Now().UTC().Unix()
 	dryRun := isTempCleanupDryRun()
 
 	temps, err := s.fileRepository.ListExpiredTemps(ctx, threshold)

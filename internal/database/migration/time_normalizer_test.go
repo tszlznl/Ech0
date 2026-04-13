@@ -1,6 +1,7 @@
 package migration_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -14,7 +15,8 @@ import (
 )
 
 func TestNormalizeLegacyStorageTimesToUTC_AppliesAndIdempotent(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
+	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
 		Logger:  logger.Default.LogMode(logger.Silent),
 		NowFunc: func() time.Time { return time.Now().UTC() },
 	})
@@ -52,7 +54,8 @@ func TestNormalizeLegacyStorageTimesToUTC_AppliesAndIdempotent(t *testing.T) {
 }
 
 func TestMigrate_IdempotentByMigratorKey(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
+	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
 		Logger:  logger.Default.LogMode(logger.Silent),
 		NowFunc: func() time.Time { return time.Now().UTC() },
 	})

@@ -1,12 +1,5 @@
 package model
 
-import (
-	"time"
-
-	timeHookUtil "github.com/lin-snow/ech0/internal/util/timehook"
-	"gorm.io/gorm"
-)
-
 const (
 	// DeadLetterTypeWebhook webhook 类型的死信任务
 	DeadLetterTypeWebhook = "webhook"
@@ -34,25 +27,15 @@ type ReplayPayload map[string]any
 
 // DeadLetter 死信任务模型
 type DeadLetter struct {
-	ID         int64     `gorm:"primaryKey;index:idx_deadletters_status_retry_id,priority:3" json:"id"`         // 任务 ID
-	Type       string    `gorm:"type"        json:"type"`                                                       // 业务类型，如 "webhook" / "push" / "email"
-	Payload    []byte    `gorm:"payload"     json:"payload"`                                                    // 原始任务数据（序列化 JSON）
-	ErrorMsg   string    `gorm:"error_msg"   json:"error_msg"`                                                  // 失败原因（错误信息）
-	RetryCount int       `gorm:"retry_count" json:"retry_count"`                                                // 重试次数
-	NextRetry  time.Time `gorm:"next_retry;index:idx_deadletters_status_retry_id,priority:2" json:"next_retry"` // 下次重试时间（指数退避）
-	Status     string    `gorm:"status;index:idx_deadletters_status_retry_id,priority:1" json:"status"`         // 任务状态，如 "pending", "processing", "failed", "completed","discarded"
-	CreatedAt  time.Time `gorm:"created_at"  json:"created_at"`
-	UpdatedAt  time.Time `gorm:"updated_at"  json:"updated_at"`
-}
-
-func (dl *DeadLetter) BeforeCreate(_ *gorm.DB) error {
-	timeHookUtil.NormalizeModelTimesToUTC(dl)
-	return nil
-}
-
-func (dl *DeadLetter) BeforeUpdate(_ *gorm.DB) error {
-	timeHookUtil.NormalizeModelTimesToUTC(dl)
-	return nil
+	ID         int64  `gorm:"primaryKey;index:idx_deadletters_status_retry_id,priority:3" json:"id"`         // 任务 ID
+	Type       string `gorm:"type"        json:"type"`                                                       // 业务类型，如 "webhook" / "push" / "email"
+	Payload    []byte `gorm:"payload"     json:"payload"`                                                    // 原始任务数据（序列化 JSON）
+	ErrorMsg   string `gorm:"error_msg"   json:"error_msg"`                                                  // 失败原因（错误信息）
+	RetryCount int    `gorm:"retry_count" json:"retry_count"`                                                // 重试次数
+	NextRetry  int64  `gorm:"next_retry;index:idx_deadletters_status_retry_id,priority:2" json:"next_retry"` // 下次重试时间（指数退避）
+	Status     string `gorm:"status;index:idx_deadletters_status_retry_id,priority:1" json:"status"`         // 任务状态，如 "pending", "processing", "failed", "completed","discarded"
+	CreatedAt  int64  `gorm:"autoCreateTime;column:created_at" json:"created_at"`
+	UpdatedAt  int64  `gorm:"autoUpdateTime;column:updated_at" json:"updated_at"`
 }
 
 func (dl *DeadLetter) SetType(t string) {
