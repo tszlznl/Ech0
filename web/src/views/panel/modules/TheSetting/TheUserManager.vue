@@ -26,17 +26,20 @@
         v-else
         class="mt-2 x-scrollbar overflow-x-auto border border-[var(--color-border-subtle)] rounded-lg"
       >
-        <table class="w-full min-w-[520px] table-fixed text-sm">
+        <table class="w-full min-w-[640px] table-fixed text-sm">
           <thead>
             <tr class="bg-[var(--color-bg-muted)]/70 text-left text-[var(--color-text-muted)]">
-              <th class="w-[52px] px-2 py-2 whitespace-nowrap">#</th>
-              <th class="px-2 py-2 whitespace-nowrap">
+              <th class="w-[40px] px-2 py-2 whitespace-nowrap">#</th>
+              <th class="w-[120px] px-2 py-2 whitespace-nowrap">
                 {{ t('userManager.username') }}
               </th>
-              <th class="w-[60px] px-2 py-2 text-center whitespace-nowrap">
-                {{ t('userManager.permissionChange') }}
+              <th class="px-2 py-2 whitespace-nowrap">
+                {{ t('userManager.email') }}
               </th>
-              <th class="w-[60px] px-2 py-2 text-right whitespace-nowrap">
+              <th class="w-[94px] px-2 py-2 text-center whitespace-nowrap">
+                {{ t('userManager.isAdmin') }}
+              </th>
+              <th class="w-[86px] px-2 py-2 text-right whitespace-nowrap">
                 {{ t('commonUi.actions') }}
               </th>
             </tr>
@@ -50,6 +53,9 @@
               <td class="px-2 py-2 text-[var(--color-text-primary)]">{{ index + 1 }}</td>
               <td class="px-2 py-2 text-[var(--color-text-primary)] font-semibold truncate">
                 {{ user.username }}
+              </td>
+              <td class="px-2 py-2 text-[var(--color-text-muted)] truncate">
+                {{ user.email || '—' }}
               </td>
               <td class="px-2 py-2 text-center">
                 <BaseSwitch v-model="user.is_admin" @click="handleUpdateUserPermission(user.id)" />

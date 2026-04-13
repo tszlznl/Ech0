@@ -448,6 +448,8 @@
     "loading": "Loading...",
     "empty": "No other users...",
     "username": "Username",
+    "email": "Email",
+    "isAdmin": "Admin",
     "permissionChange": "Permission",
     "deleteUser": "Delete user",
     "deleteConfirmTitle": "Are you sure to delete this user?",

@@ -17,7 +17,7 @@ type Service interface {
 	Register(registerDto *authModel.RegisterDto) error
 	UpdateUser(ctx context.Context, userdto model.UserInfoDto) error
 	UpdateUserAdmin(ctx context.Context, id string) error
-	GetAllUsers() ([]model.User, error)
+	GetAllUsers(ctx context.Context) ([]model.User, error)
 	GetOwner() (model.User, error)
 	DeleteUser(ctx context.Context, id string) error
 	GetUserByID(userId string) (model.User, error)

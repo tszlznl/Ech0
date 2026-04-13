@@ -402,8 +402,18 @@ func (userService *UserService) UpdateUserAdmin(ctx context.Context, id string) 
 // 返回:
 //   - []model.User: 用户列表（不包含密码信息）
 //   - error: 获取过程中的错误信息
-func (userService *UserService) GetAllUsers() ([]model.User, error) {
-	allures, err := userService.userRepository.GetAllUsers(context.Background())
+func (userService *UserService) GetAllUsers(ctx context.Context) ([]model.User, error) {
+	// Only Admin can get all users
+	userid := viewer.MustFromContext(ctx).UserID()
+	caller, err := userService.userRepository.GetUserByID(ctx, userid)
+	if err != nil {
+		return nil, err
+	}
+	if !caller.IsAdmin {
+		return nil, errors.New(commonModel.NO_PERMISSION_DENIED)
+	}
+
+	allures, err := userService.userRepository.GetAllUsers(ctx)
 	if err != nil {
 		return nil, err
 	}

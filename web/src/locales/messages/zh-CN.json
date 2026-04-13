@@ -448,6 +448,8 @@
     "loading": "加载中...",
     "empty": "暂无其它用户...",
     "username": "用户名",
+    "email": "邮箱",
+    "isAdmin": "管理员",
     "permissionChange": "权限更改",
     "deleteUser": "删除用户",
     "deleteConfirmTitle": "确定要删除该用户吗？",

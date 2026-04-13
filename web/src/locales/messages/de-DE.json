@@ -448,6 +448,8 @@
     "loading": "Wird geladen…",
     "empty": "Keine weiteren Benutzer vorhanden",
     "username": "Benutzername",
+    "email": "E-Mail",
+    "isAdmin": "Admin",
     "permissionChange": "Berechtigung",
     "deleteUser": "Benutzer löschen",
     "deleteConfirmTitle": "Diesen Benutzer wirklich löschen?",

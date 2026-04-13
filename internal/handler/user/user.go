@@ -184,7 +184,7 @@ func (userHandler *UserHandler) UpdateUserAdmin() gin.HandlerFunc {
 //	@Router			/users [get]
 func (userHandler *UserHandler) GetAllUsers() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		allusers, err := userHandler.userService.GetAllUsers()
+		allusers, err := userHandler.userService.GetAllUsers(ctx.Request.Context())
 		if err != nil {
 			return res.Response{
 				Msg: "",
