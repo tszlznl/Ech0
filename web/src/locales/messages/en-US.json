@@ -263,7 +263,8 @@
     "empty": "No logs",
     "sseFallback": "sse-fallback",
     "sseParseFailed": "Failed to parse SSE log payload",
-    "processFailed": "Failed to process system log"
+    "processFailed": "Failed to process system log",
+    "rawLine": "Raw log line"
   },
   "dashboard": {
     "echoTotal": "Total Echos",
@@ -764,6 +765,7 @@
     "connectHint": "Only http/https URLs are supported.",
     "connect": "Connect",
     "status": "Status",
+    "version": "Version",
     "statusOnline": "Online",
     "statusOffline": "Offline",
     "statusChecking": "Checking",

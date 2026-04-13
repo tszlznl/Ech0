@@ -11,35 +11,41 @@ import (
 	"golang.org/x/mod/semver"
 )
 
+// isHelmChartArtifactStyleTag reports tags used only for Helm chart packages (ech0-<anything>),
+// which must not be treated as application semver releases.
+func isHelmChartArtifactStyleTag(tag string) bool {
+	t := strings.TrimSpace(tag)
+	return len(t) >= 5 && strings.EqualFold(t[:5], "ech0-")
+}
+
+func canonicalStableSemverFromReleaseTag(tag string) string {
+	t := strings.TrimSpace(tag)
+	if t == "" {
+		return ""
+	}
+	if !strings.HasPrefix(t, "v") {
+		t = "v" + t
+	}
+	t = semver.Canonical(t)
+	if t == "" {
+		return ""
+	}
+	if semver.Prerelease(t) != "" {
+		return ""
+	}
+	return t
+}
+
 var latestVersionCache struct {
 	mu        sync.Mutex
 	version   string
 	expiresAt time.Time
 }
 
-// GetLatestVersion 获取最新版本
-func GetLatestVersion() (string, error) {
-	// 规范化 semver 标签
-	normalizeStableSemver := func(tag string) string {
-		t := strings.TrimSpace(tag)
-		if t == "" {
-			return ""
-		}
-		if !strings.HasPrefix(t, "v") {
-			t = "v" + t
-		}
-		t = semver.Canonical(t)
-		if t == "" {
-			return ""
-		}
-		// 只取稳定版本（不含 pre-release）
-		if semver.Prerelease(t) != "" {
-			return ""
-		}
-		return t
-	}
+const listReleasesMaxPages = 10
 
-	// 获取最新版本
+// GetLatestVersion 获取最新版本（跳过 Helm chart 专用 tag：以 ech0- 开头）
+func GetLatestVersion() (string, error) {
 	now := time.Now().UTC()
 	latestVersionCache.mu.Lock()
 	if latestVersionCache.version != "" && now.Before(latestVersionCache.expiresAt) {
@@ -53,15 +59,48 @@ func GetLatestVersion() (string, error) {
 	defer cancel()
 
 	client := github.NewClient(nil)
-	rel, _, err := client.Repositories.GetLatestRelease(ctx, "lin-snow", "Ech0")
-	if err != nil {
-		return "", fmt.Errorf("get latest release failed: %w", err)
+	owner, repo := "lin-snow", "Ech0"
+
+	opts := &github.ListOptions{PerPage: 30, Page: 1}
+	var best string
+pageLoop:
+	for page := 0; page < listReleasesMaxPages; page++ {
+		releases, resp, err := client.Repositories.ListReleases(ctx, owner, repo, opts)
+		if err != nil {
+			return "", fmt.Errorf("list releases failed: %w", err)
+		}
+		for _, rel := range releases {
+			if rel == nil {
+				continue
+			}
+			if rel.GetDraft() {
+				continue
+			}
+			tag := strings.TrimSpace(rel.GetTagName())
+			if tag == "" {
+				continue
+			}
+			if isHelmChartArtifactStyleTag(tag) {
+				continue
+			}
+			if rel.GetPrerelease() {
+				continue
+			}
+			canon := canonicalStableSemverFromReleaseTag(tag)
+			if canon == "" {
+				continue
+			}
+			best = canon
+			break pageLoop
+		}
+		if resp == nil || resp.NextPage == 0 {
+			break
+		}
+		opts.Page = resp.NextPage
 	}
 
-	tag := strings.TrimSpace(rel.GetTagName())
-	best := normalizeStableSemver(tag)
 	if best == "" {
-		return "", fmt.Errorf("invalid semver tag from latest release: %q", tag)
+		return "", fmt.Errorf("no stable application release found (ech0-* chart tags are ignored)")
 	}
 
 	// 保持与 commonModel.Version 一致：返回不带 v 的 X.Y.Z

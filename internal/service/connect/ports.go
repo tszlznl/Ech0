@@ -15,6 +15,7 @@ type Service interface {
 	GetConnect() (model.Connect, error)
 	GetConnectsInfo() ([]model.Connect, error)
 	GetConnects() ([]model.Connected, error)
+	GetConnectsHealth() ([]model.ConnectedHealth, error)
 }
 
 type Repository interface {

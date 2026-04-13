@@ -263,7 +263,8 @@
     "empty": "暂无日志",
     "sseFallback": "sse-fallback",
     "sseParseFailed": "SSE 日志解析失败",
-    "processFailed": "系统日志处理失败"
+    "processFailed": "系统日志处理失败",
+    "rawLine": "查看原始日志行"
   },
   "dashboard": {
     "echoTotal": "Echo 总数",
@@ -764,6 +765,7 @@
     "connectHint": "仅支持 http/https 地址。",
     "connect": "连接",
     "status": "状态",
+    "version": "版本",
     "statusOnline": "在线",
     "statusOffline": "离线",
     "statusChecking": "检测中",

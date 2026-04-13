@@ -22,6 +22,14 @@ type Connected struct {
 	ConnectURL string `                  json:"connect_url"` // 连接地址
 }
 
+// ConnectedHealth 管理后台展示的单个互联项健康状态（由本机后端探测远端 /api/connect）
+type ConnectedHealth struct {
+	ID         string `json:"id"`
+	ConnectURL string `json:"connect_url"`
+	Status     string `json:"status"` // online | offline
+	Version    string `json:"version"`
+}
+
 func (c *Connected) BeforeCreate(_ *gorm.DB) error {
 	if c.ID == "" {
 		c.ID = uuidUtil.MustNewV7()

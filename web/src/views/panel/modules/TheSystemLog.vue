@@ -61,9 +61,16 @@
     <div ref="logContainer" class="log-container text-xs md:text-sm">
       <template v-if="logs.length > 0">
         <div v-for="(line, idx) in logs" :key="`${line.time}-${idx}`" class="log-line">
-          <span class="time">[{{ line.time || '-' }}]</span>
-          <span class="level">[{{ line.level || 'info' }}]</span>
-          <span class="msg">{{ line.msg }}</span>
+          <div class="log-line-main">
+            <span class="time">[{{ line.time || '-' }}]</span>
+            <span class="level">[{{ line.level || 'info' }}]</span>
+            <span class="msg">{{ line.msg }}</span>
+          </div>
+          <div v-if="line.error" class="log-line-detail">{{ line.error }}</div>
+          <details v-if="line.raw" class="log-line-raw">
+            <summary>{{ t('systemLog.rawLine') }}</summary>
+            <pre class="log-line-raw-pre">{{ line.raw }}</pre>
+          </details>
         </div>
       </template>
       <div v-else class="text-[var(--color-text-muted)]">{{ t('systemLog.empty') }}</div>
@@ -129,8 +136,8 @@ const hitFilter = (entry: App.Api.SystemLog.Entry) => {
   if (!currentKeyword) {
     return true
   }
-  const raw = `${entry.msg || ''} ${entry.raw || ''}`.toLowerCase()
-  return raw.includes(currentKeyword)
+  const haystack = `${entry.msg || ''} ${entry.raw || ''} ${entry.error || ''}`.toLowerCase()
+  return haystack.includes(currentKeyword)
 }
 
 const scrollToBottom = async () => {
@@ -308,9 +315,13 @@ onUnmounted(() => {
 .log-line {
   font-family: var(--font-family-mono);
   line-height: 1.55;
-  margin-bottom: 2px;
+  margin-bottom: 0.65rem;
   word-break: break-word;
   color: var(--color-text-secondary);
+}
+
+.log-line-main {
+  display: block;
 }
 
 .time {
@@ -324,6 +335,63 @@ onUnmounted(() => {
 
 .msg {
   color: var(--color-text-primary);
+}
+
+.log-line-detail {
+  display: block;
+  margin-top: 0.25rem;
+  padding-left: 0.35rem;
+  border-left: 2px solid var(--color-border-strong);
+  font-size: 0.92em;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+  white-space: pre-wrap;
+}
+
+.log-line-raw {
+  margin-top: 0.35rem;
+  padding-left: 0;
+  overflow: visible;
+}
+
+/* outside 会被 .log-container 的 overflow 裁切；inside 与首行时间左缘对齐 */
+.log-line-raw > summary {
+  cursor: pointer;
+  user-select: none;
+  display: list-item;
+  list-style-position: inside;
+  list-style-type: disclosure-closed;
+  padding-left: 0;
+  color: var(--color-text-muted);
+  font-size: 0.88em;
+  line-height: 1.55;
+}
+
+.log-line-raw[open] > summary {
+  list-style-type: disclosure-open;
+}
+
+.log-line-raw > summary::-webkit-details-marker {
+  display: list-item;
+}
+
+.log-line-raw > summary::marker {
+  color: var(--color-text-muted);
+}
+
+.log-line-raw-pre {
+  margin: 0.35rem 0 0;
+  padding: 0.5rem 0.6rem;
+  max-height: 12rem;
+  overflow: auto;
+  font-size: 0.82em;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-muted);
+  color: var(--color-text-secondary);
 }
 
 .log-btn {

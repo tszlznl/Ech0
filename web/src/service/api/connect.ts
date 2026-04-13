@@ -26,6 +26,14 @@ export function fetchGetAllConnectInfo() {
   })
 }
 
+/** 服务端探测各远端 /api/connect，返回状态与版本 */
+export function fetchGetConnectsHealth() {
+  return request<App.Api.Connect.ConnectedHealth[]>({
+    url: '/connects/health',
+    method: 'GET',
+  })
+}
+
 // 添加Connect
 export function fetchAddConnect(connectUrl: string) {
   return request<App.Api.Connect.Connected>({

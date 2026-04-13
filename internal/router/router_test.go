@@ -50,6 +50,7 @@ func TestSetupRouter_RegistersKeyRoutes(t *testing.T) {
 		{method: http.MethodGet, path: "/api/agent/recent"},
 		{method: http.MethodPost, path: "/api/connects"},
 		{method: http.MethodDelete, path: "/api/connects/:id"},
+		{method: http.MethodGet, path: "/api/connects/health"},
 		{method: http.MethodGet, path: "/api/system/logs"},
 		{method: http.MethodGet, path: "/api/system/logs/stream"},
 		{method: http.MethodGet, path: "/ws/system/logs"},

@@ -65,7 +65,7 @@
         v-else
         class="mt-4 x-scrollbar overflow-x-auto border border-[var(--color-border-subtle)] rounded-lg"
       >
-        <table class="w-full min-w-[520px] table-fixed text-sm">
+        <table class="w-full min-w-[640px] table-fixed text-sm">
           <thead>
             <tr class="bg-[var(--color-bg-muted)]/70 text-left text-[var(--color-text-muted)]">
               <th class="w-[56px] px-2 py-2 whitespace-nowrap">#</th>
@@ -74,6 +74,9 @@
               </th>
               <th class="w-[110px] px-2 py-2 whitespace-nowrap">
                 {{ t('connectSetting.status') }}
+              </th>
+              <th class="w-[120px] px-2 py-2 whitespace-nowrap">
+                {{ t('connectSetting.version') }}
               </th>
               <th class="w-[88px] px-2 py-2 text-right whitespace-nowrap">
                 {{ t('commonUi.actions') }}
@@ -98,6 +101,12 @@
                   {{ statusLabel(connect.id) }}
                 </span>
               </td>
+              <td
+                class="px-2 py-2 text-[var(--color-text-secondary)] font-mono text-xs truncate"
+                :title="versionText(connect.id)"
+              >
+                {{ versionText(connect.id) }}
+              </td>
               <td class="px-2 py-2 text-right">
                 <BaseButton
                   class="h-8 w-8 !p-1.5"
@@ -121,7 +130,7 @@ import BaseButton from '@/components/common/BaseButton.vue'
 import Disconnect from '@/components/icons/disconnect.vue'
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { fetchAddConnect, fetchDeleteConnect, fetchGetConnect } from '@/service/api'
+import { fetchAddConnect, fetchDeleteConnect, fetchGetConnectsHealth } from '@/service/api'
 import { theToast } from '@/utils/toast'
 
 import { useConnectStore } from '@/stores'
@@ -138,7 +147,8 @@ const connectsEdit = ref<boolean>(false)
 const connectUrl = ref<string>('')
 const connectUrlError = ref<string>('')
 const isSubmitting = ref<boolean>(false)
-const statusById = ref<Record<string, 'checking' | 'online' | 'offline'>>({})
+const healthById = ref<Record<string, { status: 'online' | 'offline'; version: string }>>({})
+const healthLoading = ref(false)
 
 const isValidConnectUrl = (value: string) => {
   try {
@@ -155,38 +165,59 @@ const handleCancelConnect = () => {
   connectsEdit.value = false
 }
 
+const rowStatus = (id: string): 'checking' | 'online' | 'offline' => {
+  if (healthLoading.value) return 'checking'
+  const row = healthById.value[id]
+  if (!row) return 'checking'
+  return row.status
+}
+
 const statusClass = (id: string) => {
-  const current = statusById.value[id] || 'checking'
+  const current = rowStatus(id)
   if (current === 'online') return 'status-success'
   if (current === 'offline') return 'status-failed'
   return 'status-checking'
 }
 
 const statusLabel = (id: string) => {
-  const current = statusById.value[id] || 'checking'
+  const current = rowStatus(id)
   if (current === 'online') return t('connectSetting.statusOnline')
   if (current === 'offline') return t('connectSetting.statusOffline')
   return t('connectSetting.statusChecking')
 }
 
-const refreshConnectivityStatus = async () => {
-  const list = [...connects.value]
-  const nextState: Record<string, 'checking' | 'online' | 'offline'> = {}
-  for (const connect of list) {
-    nextState[connect.id] = 'checking'
-  }
-  statusById.value = nextState
+const versionText = (id: string) => {
+  if (healthLoading.value) return '—'
+  const row = healthById.value[id]
+  if (!row || row.status !== 'online' || !row.version?.trim()) return '—'
+  return row.version.trim()
+}
 
-  await Promise.all(
-    list.map(async (connect) => {
-      try {
-        const res = await fetchGetConnect(connect.connect_url, true)
-        statusById.value[connect.id] = res.code === 1 ? 'online' : 'offline'
-      } catch {
-        statusById.value[connect.id] = 'offline'
+const refreshConnectivityStatus = async () => {
+  if (connects.value.length === 0) {
+    healthById.value = {}
+    return
+  }
+  healthLoading.value = true
+  try {
+    const res = await fetchGetConnectsHealth()
+    if (res.code !== 1 || !res.data) {
+      healthById.value = {}
+      return
+    }
+    const next: Record<string, { status: 'online' | 'offline'; version: string }> = {}
+    for (const row of res.data) {
+      next[row.id] = {
+        status: row.status === 'online' ? 'online' : 'offline',
+        version: row.version ?? '',
       }
-    }),
-  )
+    }
+    healthById.value = next
+  } catch {
+    healthById.value = {}
+  } finally {
+    healthLoading.value = false
+  }
 }
 
 const refreshConnectData = async () => {

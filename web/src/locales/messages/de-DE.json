@@ -263,7 +263,8 @@
     "empty": "Keine Logeinträge",
     "sseFallback": "SSE-Fallback",
     "sseParseFailed": "SSE-Logdaten konnten nicht geparst werden",
-    "processFailed": "Systemlog-Verarbeitung fehlgeschlagen"
+    "processFailed": "Systemlog-Verarbeitung fehlgeschlagen",
+    "rawLine": "Roh-Logzeile anzeigen"
   },
   "dashboard": {
     "echoTotal": "Echos gesamt",
@@ -764,6 +765,7 @@
     "connectHint": "Nur http-/https-URLs werden unterstützt.",
     "connect": "Verbinden",
     "status": "Status",
+    "version": "Version",
     "statusOnline": "Online",
     "statusOffline": "Offline",
     "statusChecking": "Wird geprüft",

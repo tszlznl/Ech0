@@ -3,6 +3,8 @@ import { toast } from 'vue-sonner'
 
 // 定义自定义通知选项接口
 interface customToastOptions {
+  /** 相同 id 会替换已有 toast，避免同一错误连弹多次 */
+  id?: string | number
   duration?: number
   description?: string
   action?: {
@@ -31,6 +33,7 @@ function show(
   toast[type](content, {
     duration: options?.duration ?? defaultToastOptions.duration,
     description: options?.description ?? defaultToastOptions.description,
+    ...(options?.id !== undefined ? { id: options.id } : {}),
     ...(options?.action?.label
       ? {
           action: {

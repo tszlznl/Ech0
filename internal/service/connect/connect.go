@@ -25,6 +25,8 @@ const (
 	connectFanoutMaxConcurrency = 8
 	connectsInfoSingleflightKey = "connects_info"
 	siteMetricsTimezone         = "UTC"
+	healthProbeTimeout          = 5 * time.Second
+	healthOverallTimeout        = 30 * time.Second
 )
 
 type ConnectService struct {
@@ -499,4 +501,75 @@ func (connectService *ConnectService) GetConnects() ([]model.Connected, error) {
 
 	// 返回查询到的 connects
 	return connects, nil
+}
+
+// GetConnectsHealth 探测每个已保存互联地址的可达性并返回远端实例版本（即时探测，不做缓存）
+func (connectService *ConnectService) GetConnectsHealth() ([]model.ConnectedHealth, error) {
+	connects, err := connectService.connectRepository.GetAllConnects(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	if len(connects) == 0 {
+		return []model.ConnectedHealth{}, nil
+	}
+
+	out := make([]model.ConnectedHealth, len(connects))
+	probeCtx, cancelProbe := context.WithTimeout(context.Background(), healthOverallTimeout)
+	defer cancelProbe()
+
+	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, connectFanoutMaxConcurrency)
+
+	for i := range connects {
+		wg.Add(1)
+		go func(i int, conn model.Connected) {
+			defer wg.Done()
+			select {
+			case semaphore <- struct{}{}:
+			case <-probeCtx.Done():
+				out[i] = model.ConnectedHealth{
+					ID: conn.ID, ConnectURL: conn.ConnectURL,
+					Status: "offline", Version: "",
+				}
+				return
+			}
+			defer func() { <-semaphore }()
+
+			h := model.ConnectedHealth{
+				ID: conn.ID, ConnectURL: conn.ConnectURL,
+				Status: "offline", Version: "",
+			}
+
+			url := httpUtil.TrimURL(conn.ConnectURL) + "/api/connect"
+			resp, err := httpUtil.SendRequest(url, "GET", struct {
+				Header  string
+				Content string
+			}{
+				Header:  "Ech0_URL",
+				Content: conn.ConnectURL,
+			}, healthProbeTimeout)
+			if err != nil {
+				out[i] = h
+				return
+			}
+
+			var connectInfo commonModel.Result[model.Connect]
+			if err := json.Unmarshal(resp, &connectInfo); err != nil {
+				out[i] = h
+				return
+			}
+
+			if connectInfo.Code != 1 || connectInfo.Data.ServerURL == "" {
+				out[i] = h
+				return
+			}
+
+			h.Status = "online"
+			h.Version = connectInfo.Data.Version
+			out[i] = h
+		}(i, connects[i])
+	}
+
+	wg.Wait()
+	return out, nil
 }

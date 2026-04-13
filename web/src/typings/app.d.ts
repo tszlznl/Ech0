@@ -562,6 +562,14 @@ declare namespace App {
         id: string
         connect_url: string
       }
+
+      /** GET /api/connects/health */
+      type ConnectedHealth = {
+        id: string
+        connect_url: string
+        status: 'online' | 'offline'
+        version: string
+      }
     }
 
     namespace SystemLog {

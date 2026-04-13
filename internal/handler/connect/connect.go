@@ -169,3 +169,30 @@ func (connectHandler *ConnectHandler) GetConnects() gin.HandlerFunc {
 		}
 	})
 }
+
+// GetConnectsHealth 探测已保存互联地址的可达性及远端版本
+//
+//	@Summary		获取互联健康状态
+//	@Description	由服务端请求各远端 /api/connect，返回每个已保存连接的状态与版本
+//	@Tags			连接管理
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	handler.Response{data=[]connectModel.ConnectedHealth}	"成功"
+//	@Failure		200	{object}	handler.Response										"失败"
+//	@Router			/connects/health [get]
+func (connectHandler *ConnectHandler) GetConnectsHealth() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		rows, err := connectHandler.connectService.GetConnectsHealth()
+		if err != nil {
+			return res.Response{
+				Msg: "",
+				Err: err,
+			}
+		}
+
+		return res.Response{
+			Data: rows,
+			Msg:  commonModel.GET_CONNECT_HEALTH_SUCCESS,
+		}
+	})
+}

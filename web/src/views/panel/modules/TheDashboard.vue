@@ -128,9 +128,12 @@ const loadDashboardStats = async () => {
   loading.value = false
 }
 
+const CHECK_UPDATE_ERR_TOAST_ID = 'dashboard-check-update-error'
+
 const handleCheckUpdate = async () => {
   if (checkingUpdate.value) return
   checkingUpdate.value = true
+  let failed = false
   try {
     const res = await fetchCheckUpdate()
     if (res.code === 1 && res.data) {
@@ -142,12 +145,15 @@ const handleCheckUpdate = async () => {
         theToast.info(String(t('dashboard.alreadyLatest')))
       }
     } else {
-      theToast.error(String(t('dashboard.checkUpdateFailed')))
+      failed = true
     }
   } catch {
-    theToast.error(String(t('dashboard.checkUpdateFailed')))
+    failed = true
   } finally {
     checkingUpdate.value = false
+  }
+  if (failed) {
+    theToast.error(String(t('dashboard.checkUpdateFailed')), { id: CHECK_UPDATE_ERR_TOAST_ID })
   }
 }
 
