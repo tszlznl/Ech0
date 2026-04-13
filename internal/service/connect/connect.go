@@ -211,6 +211,33 @@ func (connectService *ConnectService) GetConnectsInfo() ([]model.Connect, error)
 	return cloneConnects(connects), nil
 }
 
+// fetchPeerConnectInfo 请求对端 GET /api/connect，成功时返回解析后的 Connect（与 GetConnectsInfo 探测逻辑一致）。
+func fetchPeerConnectInfo(peerConnectURL string, requestTimeout time.Duration) (model.Connect, error) {
+	url := httpUtil.TrimURL(peerConnectURL) + "/api/connect"
+	resp, err := httpUtil.SendRequest(url, "GET", struct {
+		Header  string
+		Content string
+	}{
+		Header:  "Ech0_URL",
+		Content: peerConnectURL,
+	}, requestTimeout)
+	if err != nil {
+		return model.Connect{}, err
+	}
+
+	var connectInfo commonModel.Result[model.Connect]
+	if err := json.Unmarshal(resp, &connectInfo); err != nil {
+		return model.Connect{}, fmt.Errorf("JSON解析失败: %w", err)
+	}
+	if connectInfo.Code != 1 {
+		return model.Connect{}, fmt.Errorf("响应码无效: %d, 消息: %s", connectInfo.Code, connectInfo.Message)
+	}
+	if connectInfo.Data.ServerURL == "" {
+		return model.Connect{}, fmt.Errorf("服务器URL为空")
+	}
+	return connectInfo.Data, nil
+}
+
 func (connectService *ConnectService) fetchConnectsInfo() ([]model.Connect, error) {
 	// 总超时时间：给予足够的缓冲，避免单个慢连接导致整体超时
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
@@ -252,8 +279,6 @@ func (connectService *ConnectService) fetchConnectsInfo() ([]model.Connect, erro
 			}
 			defer func() { <-semaphore }()
 
-			url := httpUtil.TrimURL(conn.ConnectURL) + "/api/connect"
-
 			var lastErr error
 			for attempt := 0; attempt < maxRetries; attempt++ {
 				select {
@@ -279,85 +304,15 @@ func (connectService *ConnectService) fetchConnectsInfo() ([]model.Connect, erro
 					}
 				}
 
-				resp, err := httpUtil.SendRequest(url, "GET", struct {
-					Header  string
-					Content string
-				}{
-					Header:  "Ech0_URL",
-					Content: conn.ConnectURL,
-				}, requestTimeout) // 传入自定义超时时间
+				data, err := fetchPeerConnectInfo(conn.ConnectURL, requestTimeout)
 				if err != nil {
 					lastErr = err
 					logUtil.GetLogger().Error("fetch connection info failed",
 						zap.String("module", "connect"),
 						zap.String("connect_url", conn.ConnectURL),
 						zap.Int("attempt", attempt+1),
-						zap.Error(err),
-					)
-
-					// 如果是最后一次重试，记录最终失败
-					if attempt == maxRetries-1 {
-						logUtil.GetLogger().Error("fetch connection info exhausted retries",
-							zap.String("module", "connect"),
-							zap.String("connect_url", conn.ConnectURL),
-							zap.Int("retries", maxRetries),
-							zap.Error(lastErr),
-						)
-					}
-					continue
-				}
-
-				var connectInfo commonModel.Result[model.Connect]
-				if err := json.Unmarshal(resp, &connectInfo); err != nil {
-					lastErr = fmt.Errorf("JSON解析失败: %w", err)
-					logUtil.GetLogger().Error("parse connection info failed",
-						zap.String("module", "connect"),
-						zap.String("connect_url", conn.ConnectURL),
-						zap.Int("attempt", attempt+1),
 						zap.Error(lastErr),
 					)
-
-					if attempt == maxRetries-1 {
-						logUtil.GetLogger().Error("fetch connection info exhausted retries",
-							zap.String("module", "connect"),
-							zap.String("connect_url", conn.ConnectURL),
-							zap.Int("retries", maxRetries),
-							zap.Error(lastErr),
-						)
-					}
-					continue
-				}
-
-				// 验证响应数据
-				if connectInfo.Code != 1 {
-					lastErr = fmt.Errorf("响应码无效: %d, 消息: %s", connectInfo.Code, connectInfo.Message)
-					logUtil.GetLogger().Error("validate connection info failed",
-						zap.String("module", "connect"),
-						zap.String("connect_url", conn.ConnectURL),
-						zap.Int("attempt", attempt+1),
-						zap.Error(lastErr),
-					)
-
-					if attempt == maxRetries-1 {
-						logUtil.GetLogger().Error("fetch connection info exhausted retries",
-							zap.String("module", "connect"),
-							zap.String("connect_url", conn.ConnectURL),
-							zap.Int("retries", maxRetries),
-							zap.Error(lastErr),
-						)
-					}
-					continue
-				}
-
-				if connectInfo.Data.ServerURL == "" {
-					lastErr = fmt.Errorf("服务器URL为空")
-					logUtil.GetLogger().Error("validate connection info failed",
-						zap.String("module", "connect"),
-						zap.String("connect_url", conn.ConnectURL),
-						zap.Int("attempt", attempt+1),
-						zap.Error(lastErr),
-					)
-
 					if attempt == maxRetries-1 {
 						logUtil.GetLogger().Error("fetch connection info exhausted retries",
 							zap.String("module", "connect"),
@@ -371,24 +326,24 @@ func (connectService *ConnectService) fetchConnectsInfo() ([]model.Connect, erro
 
 				// 成功获取有效数据，检查重复并发送
 				seenMutex.Lock()
-				if _, exists := seenURLs[connectInfo.Data.ServerURL]; exists {
+				if _, exists := seenURLs[data.ServerURL]; exists {
 					seenMutex.Unlock()
 					logUtil.GetLogger().Info("connection info duplicated",
 						zap.String("module", "connect"),
 						zap.String("connect_url", conn.ConnectURL),
-						zap.String("server_url", connectInfo.Data.ServerURL),
+						zap.String("server_url", data.ServerURL),
 					)
 					return // 重复数据，直接返回
 				}
-				seenURLs[connectInfo.Data.ServerURL] = struct{}{}
+				seenURLs[data.ServerURL] = struct{}{}
 				seenMutex.Unlock()
 
 				logUtil.GetLogger().Info("fetch connection info succeeded",
 					zap.String("module", "connect"),
 					zap.String("connect_url", conn.ConnectURL),
-					zap.String("server_name", connectInfo.Data.ServerName),
+					zap.String("server_name", data.ServerName),
 				)
-				connectChan <- connectInfo.Data
+				connectChan <- data
 				return // 成功处理，退出重试循环
 			}
 		}(conn)
@@ -540,32 +495,13 @@ func (connectService *ConnectService) GetConnectsHealth() ([]model.ConnectedHeal
 				Status: "offline", Version: "",
 			}
 
-			url := httpUtil.TrimURL(conn.ConnectURL) + "/api/connect"
-			resp, err := httpUtil.SendRequest(url, "GET", struct {
-				Header  string
-				Content string
-			}{
-				Header:  "Ech0_URL",
-				Content: conn.ConnectURL,
-			}, healthProbeTimeout)
+			data, err := fetchPeerConnectInfo(conn.ConnectURL, healthProbeTimeout)
 			if err != nil {
 				out[i] = h
 				return
 			}
-
-			var connectInfo commonModel.Result[model.Connect]
-			if err := json.Unmarshal(resp, &connectInfo); err != nil {
-				out[i] = h
-				return
-			}
-
-			if connectInfo.Code != 1 || connectInfo.Data.ServerURL == "" {
-				out[i] = h
-				return
-			}
-
 			h.Status = "online"
-			h.Version = connectInfo.Data.Version
+			h.Version = data.Version
 			out[i] = h
 		}(i, connects[i])
 	}
