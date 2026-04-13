@@ -26,3 +26,10 @@ export function timeValueToMs(raw: unknown): number {
   }
   return 0
 }
+
+/** 与后端 `int64` Unix 秒对齐；由 `timeValueToMs` 向下取整。 */
+export function timeValueToUnixSeconds(raw: unknown): number {
+  const ms = timeValueToMs(raw)
+  if (ms <= 0) return 0
+  return Math.floor(ms / 1000)
+}

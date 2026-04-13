@@ -2,6 +2,7 @@
 export interface EchoTag {
   id: string
   name: string
+  /** 原始可能为 ISO 文本；经 `queryInstancePage` 后为 Unix 秒（number） */
   created_at?: number | string
   usage_count?: number
 }
@@ -11,7 +12,9 @@ export interface EchoPost {
   id: string
   content: string
   username?: string
-  /** Unix 秒/毫秒或 ISO 字符串 */
+  /**
+   * 原始可能为 ISO 文本或 Unix（秒/毫秒）；经 `queryInstancePage` 后为 Unix 秒（number）。
+   */
   created_at: number | string
   fav_count?: number
   tags?: EchoTag[]

@@ -4,20 +4,20 @@
 
 - 保证不同时区用户看到“正确的本地时间”。
 - 保证后端存储与计算语义一致，避免跨时区数据错位。
-- 保持部署简单：优先复用运行环境时区（`time.Local` / `TZ`），不引入多套冲突配置。
+- 保持部署简单：站点级统计固定使用 UTC，不依赖运行环境 `TZ`。
 
 ## 核心原则
 
 1. 存储层统一使用 UTC 语义（`int64` Unix 秒级时间戳）。
 2. 面向“用户日历日”的接口，使用客户端上报时区（`X-Timezone`）。
-3. 无用户上下文的站点级统计，使用进程本地时区（`time.Local`，通常由 `TZ` 决定）。
+3. 无用户上下文的站点级统计，固定按 UTC 日界。
 4. 展示层交给浏览器本地时间能力（`Date` + `Intl.DateTimeFormat`）。
 
 ---
 
 ## 架构分层
 
-下图按「数据流」组织：左侧是**客户端如何产生/展示时间**，中间是**服务端进程内两套时钟语义**（用户时区 vs 站点本地时区），右侧是**持久化与 API 序列化**。环境变量与标准库职责与下文「`tzdata`、`TZ`、`X-Timezone`」一节一致。
+下图按「数据流」组织：左侧是**客户端如何产生/展示时间**，中间是**服务端进程内两套时钟语义**（用户时区 vs 站点固定 UTC），右侧是**持久化与 API 序列化**。环境变量与标准库职责与下文「`tzdata`、`TZ`、`X-Timezone`」一节一致。
 
 ```mermaid
 flowchart TB
@@ -29,23 +29,18 @@ flowchart TB
     end
 
     subgraph server [服务端 Go 进程]
-        subgraph host [操作系统与进程环境]
-            tzEnv["环境变量 TZ（IANA，如 Europe/Berlin）"]
-        end
         subgraph gotime [Go 标准库时间语义]
             tzdata["time/tzdata：编译内嵌 IANA 规则，供 LoadLocation 等使用"]
-            tLocal["time.Local：进程「本地时区」，通常由 TZ 决定"]
             tUtc["time.Now().UTC()：存储与「日界转 UTC」计算基准"]
         end
         norm["NormalizeTimezone / LoadLocationOrUTC（非法 X-Timezone 回退 UTC）"]
         userApi["用户上下文接口（today / heatmap 等）"]
         siteApi["站点上下文接口（connect / visitor 等）"]
-        tzEnv --> tLocal
         tzdata -. 解析 IANA 名称 .-> norm
         xTz --> norm
         norm --> userApi
         tUtc --> userApi
-        tLocal --> siteApi
+        tUtc --> siteApi
     end
 
     subgraph storage [持久化与 API]
@@ -60,7 +55,7 @@ flowchart TB
 
 说明（图中未逐点画箭头，但语义成立）：
 
-- **TZ** 只影响服务端 `time.Local`，进而影响**无用户上下文**的站点级逻辑；不替代 `X-Timezone`。
+- **TZ** 不再影响站点级统计日界（固定 UTC）；不替代 `X-Timezone`。
 - **`time/tzdata`** 不决定「默认用哪个时区」，只保证进程能解析 IANA 名称（与请求头校验、按用户时区算日界有关）。
 - **写库**以 UTC 为准（见「存储层 UTC 语义」）；**读展示**由浏览器按用户本地时区渲染 API 返回的瞬时时刻。
 
@@ -92,9 +87,8 @@ flowchart TB
 
 ## 4) 站点级时间语义（无用户上下文）
 
-- `connect`、`visitor` 等无用户请求上下文的逻辑，使用 `time.Local`。
-- `time.Local` 来源于运行环境（容器/系统）时区设置，通常由 `TZ` 决定。
-- 若环境未配置可识别时区，按代码兜底回退 `UTC`。
+- `connect`、`visitor` 等无用户请求上下文的逻辑，固定使用 UTC 日界。
+- 部署时无需配置 `TZ` 即可保持站点级统计口径一致。
 
 ---
 
@@ -107,8 +101,8 @@ flowchart TB
 
 ## `TZ`（部署时环境变量）
 
-- 作用：决定进程本地时区（`time.Local`）。
-- 影响无用户上下文的站点级逻辑。
+- 作用：可影响进程本地时间显示/日志等非站点统计语义。
+- 不再影响站点级统计（日界固定 UTC）。
 
 ## `X-Timezone`（请求头）
 
@@ -122,7 +116,7 @@ flowchart TB
 - 用户相关接口：
   - 使用 `X-Timezone`，按用户时区计算日界（today、heatmap）。
 - 站点相关接口：
-  - 使用 `time.Local`（由 `TZ`/系统时区决定）。
+  - 固定使用 UTC 日界，不依赖 `TZ`。
 - 时间写入：
   - 默认使用 `time.Now().UTC()`。
 - 时间展示：
@@ -150,7 +144,7 @@ flowchart TB
 1. 前端请求是否携带正确 `X-Timezone`。
 2. 后端是否正确 `NormalizeTimezone`。
 3. 查询是否使用“目标时区日界 -> UTC 区间”。
-4. 部署环境 `TZ` 是否符合站点预期（影响 `time.Local` 语义）。
+4. 站点级统计应固定 UTC，不应受 `TZ` 变化影响。
 5. 返回 JSON 时间戳是否为 Unix 秒级 number 且可被浏览器正确解析。
 
 ---
@@ -160,7 +154,7 @@ flowchart TB
 - 用例 A：`Asia/Shanghai` 用户跨 UTC 日界发布，检查 today/heatmap 是否归到本地正确日期。
 - 用例 B：`America/Los_Angeles` 与 `Asia/Tokyo` 同时访问同数据，today 结果应按各自时区不同。
 - 用例 C：非法 `X-Timezone`，应回退 `UTC` 且接口稳定返回。
-- 用例 D：切换部署 `TZ`，验证 `connect` / `visitor` 的按天统计边界变化符合预期。
+- 用例 D：切换部署 `TZ`，验证 `connect` / `visitor` 的按天统计边界保持不变（UTC 口径）。
 
 ---
 

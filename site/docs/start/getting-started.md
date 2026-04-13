@@ -42,12 +42,10 @@ docker run -d \
   -p 6277:6277 \
   -v /opt/ech0/data:/app/data \
   -e JWT_SECRET="请改为随机长字符串" \
-  -e TZ=Asia/Shanghai \
   sn0wl1n/ech0:latest
 ```
 
 - `-v` 把数据存到宿主机 `/opt/ech0/data`，重装容器也不丢库；路径可按需修改。
-- `-e TZ=…` 为**可选**但建议设置：填 [IANA 时区](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) 名称（如 `Asia/Shanghai`），与服务器本地时间、站点级按日统计一致；更多说明见 [安装部署](/docs/start/installation) 文末「环境变量与进阶配置」。
 - 若端口被占用，把左侧 `6277` 改成例如 `8080:6277`，浏览器则用新端口访问。
 - 命令里的 `JWT_SECRET` 是安全关键，请替换为随机长字符串，勿照抄示例。
 

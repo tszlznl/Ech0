@@ -40,7 +40,7 @@ func (s *Tracker) Record(r *http.Request, ip string) {
 	}
 	event := recordEvent{
 		ipHash: hashIP(ip),
-		at:     time.Now(),
+		at:     time.Now().UTC(),
 	}
 	// 非阻塞写入，队列满时丢弃事件，避免影响请求主路径。
 	select {
@@ -78,7 +78,7 @@ func (s *Tracker) run() {
 		case ev := <-s.recordCh:
 			recordIP(&state, ev)
 		case resp := <-s.queryCh:
-			now := time.Now()
+			now := time.Now().UTC()
 			rotateDay(&state, now.Format(dateLayout))
 			gc(&state, now)
 			resp <- snapshotLast7Days(state.byDay, now)
@@ -87,14 +87,15 @@ func (s *Tracker) run() {
 }
 
 func recordIP(state *runtimeState, ev recordEvent) {
-	today := ev.at.Format(dateLayout)
+	atUTC := ev.at.UTC()
+	today := atUTC.Format(dateLayout)
 	rotateDay(state, today)
-	gc(state, ev.at)
+	gc(state, atUTC)
 
 	ipHash := ev.ipHash
 	stat := state.byDay[today]
 	stat.Date = today
-	if canCountPV(state, ipHash, ev.at) {
+	if canCountPV(state, ipHash, atUTC) {
 		stat.PV++
 	}
 	if _, ok := state.todayUV[ipHash]; !ok {
@@ -113,7 +114,8 @@ func rotateDay(state *runtimeState, today string) {
 }
 
 func gc(state *runtimeState, now time.Time) {
-	today := now.Format(dateLayout)
+	nowUTC := now.UTC()
+	today := nowUTC.Format(dateLayout)
 	cutoff := parseDate(today).AddDate(0, 0, -(keepDays - 1)).Format(dateLayout)
 	for day := range state.byDay {
 		if day < cutoff {
@@ -121,7 +123,7 @@ func gc(state *runtimeState, now time.Time) {
 		}
 	}
 
-	pvCutoff := now.Add(-24 * time.Hour)
+	pvCutoff := nowUTC.Add(-24 * time.Hour)
 	for ipHash, ts := range state.lastPVAt {
 		if ts.Before(pvCutoff) {
 			delete(state.lastPVAt, ipHash)
@@ -130,9 +132,9 @@ func gc(state *runtimeState, now time.Time) {
 }
 
 func parseDate(day string) time.Time {
-	t, err := time.ParseInLocation(dateLayout, day, time.Local)
+	t, err := time.ParseInLocation(dateLayout, day, time.UTC)
 	if err != nil {
-		return time.Now()
+		return time.Now().UTC()
 	}
 	return t
 }
@@ -157,9 +159,10 @@ func canCountPV(state *runtimeState, ipHash string, now time.Time) bool {
 }
 
 func snapshotLast7Days(byDay map[string]DayStat, now time.Time) []DayStat {
+	nowUTC := now.UTC()
 	points := make([]DayStat, 0, keepDays)
 	for i := keepDays - 1; i >= 0; i-- {
-		day := now.AddDate(0, 0, -i).Format(dateLayout)
+		day := nowUTC.AddDate(0, 0, -i).Format(dateLayout)
 		stat, ok := byDay[day]
 		if !ok {
 			stat = DayStat{Date: day}

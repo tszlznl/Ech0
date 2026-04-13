@@ -1,4 +1,19 @@
 import type { ApiResult, EchoPost, EchoQueryPage } from '../types/echo'
+import { timeValueToUnixSeconds } from '../utils/timeValue'
+
+/** 远端可能返回新版 Unix 或旧版 ISO 文本；Hub 侧统一为 Unix 秒（number）。 */
+function normalizeEchoPostTimes(item: EchoPost): EchoPost {
+  return {
+    ...item,
+    created_at: timeValueToUnixSeconds(item.created_at),
+    tags: item.tags?.map((t) => ({
+      ...t,
+      ...(t.created_at != null
+        ? { created_at: timeValueToUnixSeconds(t.created_at) }
+        : {}),
+    })),
+  }
+}
 
 export interface EchoQueryBody {
   page: number
@@ -53,5 +68,5 @@ export async function queryInstancePage(
     throw new Error(r.msg || 'query failed')
   }
 
-  return r.data.items
+  return r.data.items.map(normalizeEchoPostTimes)
 }
