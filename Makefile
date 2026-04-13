@@ -13,7 +13,7 @@ IMAGE_TAG?=latest
 OS?=$(if $(GOHOSTOS),$(GOHOSTOS),linux)
 ARCH?=$(if $(GOHOSTARCH),$(GOHOSTARCH),amd64)
 
-.PHONY: help air-install run dev web-dev lint fmt test wire wire-check build-image push-image
+.PHONY: help air-install run dev web-dev check lint fmt test wire wire-check build-image push-image
 
 AIR_BIN := $(shell command -v air 2>/dev/null || echo "$(GOPATH)/bin/air")
 
@@ -23,6 +23,7 @@ help:
 	@echo "  make dev         - Run backend with Air hot reload"
 	@echo "  make air-install - Install Air to GOPATH/bin"
 	@echo "  make web-dev     - Run frontend dev server"
+	@echo "  make check       - Backend fmt/lint + web format/lint + i18n (scripts/dev_check.sh)"
 	@echo "  make lint        - Run golangci-lint checks"
 	@echo "  make fmt         - Run golangci-lint formatters"
 	@echo "  make test        - Run Go tests"
@@ -46,6 +47,9 @@ dev:
 
 web-dev:
 	cd web && pnpm dev
+
+check:
+	bash scripts/dev_check.sh
 
 lint:
 	golangci-lint run
