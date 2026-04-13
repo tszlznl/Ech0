@@ -2,6 +2,9 @@ package model
 
 import (
 	"time"
+
+	timeHookUtil "github.com/lin-snow/ech0/internal/util/timehook"
+	"gorm.io/gorm"
 )
 
 const (
@@ -40,6 +43,16 @@ type DeadLetter struct {
 	Status     string    `gorm:"status;index:idx_deadletters_status_retry_id,priority:1" json:"status"`         // 任务状态，如 "pending", "processing", "failed", "completed","discarded"
 	CreatedAt  time.Time `gorm:"created_at"  json:"created_at"`
 	UpdatedAt  time.Time `gorm:"updated_at"  json:"updated_at"`
+}
+
+func (dl *DeadLetter) BeforeCreate(_ *gorm.DB) error {
+	timeHookUtil.NormalizeModelTimesToUTC(dl)
+	return nil
+}
+
+func (dl *DeadLetter) BeforeUpdate(_ *gorm.DB) error {
+	timeHookUtil.NormalizeModelTimesToUTC(dl)
+	return nil
 }
 
 func (dl *DeadLetter) SetType(t string) {

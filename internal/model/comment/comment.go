@@ -4,6 +4,7 @@ import (
 	"time"
 
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
+	timeHookUtil "github.com/lin-snow/ech0/internal/util/timehook"
 	"gorm.io/gorm"
 )
 
@@ -48,6 +49,12 @@ func (c *Comment) BeforeCreate(_ *gorm.DB) error {
 	if c.ID == "" {
 		c.ID = uuidUtil.MustNewV7()
 	}
+	timeHookUtil.NormalizeModelTimesToUTC(c)
+	return nil
+}
+
+func (c *Comment) BeforeUpdate(_ *gorm.DB) error {
+	timeHookUtil.NormalizeModelTimesToUTC(c)
 	return nil
 }
 

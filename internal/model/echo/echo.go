@@ -4,6 +4,7 @@ import (
 	"time"
 
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
+	timeHookUtil "github.com/lin-snow/ech0/internal/util/timehook"
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
 	"gorm.io/gorm"
 )
@@ -52,6 +53,7 @@ func (e *Echo) BeforeCreate(_ *gorm.DB) error {
 	if e.ID == "" {
 		e.ID = uuidUtil.MustNewV7()
 	}
+	timeHookUtil.NormalizeModelTimesToUTC(e)
 	return nil
 }
 
@@ -59,6 +61,7 @@ func (t *Tag) BeforeCreate(_ *gorm.DB) error {
 	if t.ID == "" {
 		t.ID = uuidUtil.MustNewV7()
 	}
+	timeHookUtil.NormalizeModelTimesToUTC(t)
 	return nil
 }
 
@@ -66,6 +69,22 @@ func (e *EchoExtension) BeforeCreate(_ *gorm.DB) error {
 	if e.ID == "" {
 		e.ID = uuidUtil.MustNewV7()
 	}
+	timeHookUtil.NormalizeModelTimesToUTC(e)
+	return nil
+}
+
+func (e *Echo) BeforeUpdate(_ *gorm.DB) error {
+	timeHookUtil.NormalizeModelTimesToUTC(e)
+	return nil
+}
+
+func (t *Tag) BeforeUpdate(_ *gorm.DB) error {
+	timeHookUtil.NormalizeModelTimesToUTC(t)
+	return nil
+}
+
+func (e *EchoExtension) BeforeUpdate(_ *gorm.DB) error {
+	timeHookUtil.NormalizeModelTimesToUTC(e)
 	return nil
 }
 

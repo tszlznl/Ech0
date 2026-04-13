@@ -7,7 +7,20 @@ import (
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
+
+func TestBuildGormConfig_UsesUTCNowFunc(t *testing.T) {
+	cfg := buildGormConfig(logger.Silent)
+	now := cfg.NowFunc()
+	if now.Location() != time.UTC {
+		t.Fatalf("expected UTC location, got %v", now.Location())
+	}
+	_, offset := now.Zone()
+	if offset != 0 {
+		t.Fatalf("expected UTC offset 0, got %d", offset)
+	}
+}
 
 func TestMigrateDB_AccessTokenSettingIncludesScopeFields(t *testing.T) {
 	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})

@@ -7,6 +7,7 @@ import (
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/golang-jwt/jwt/v5"
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
+	timeHookUtil "github.com/lin-snow/ech0/internal/util/timehook"
 	"gorm.io/gorm"
 )
 
@@ -172,5 +173,11 @@ func (p *Passkey) BeforeCreate(_ *gorm.DB) error {
 	if p.ID == "" {
 		p.ID = uuidUtil.MustNewV7()
 	}
+	timeHookUtil.NormalizeModelTimesToUTC(p)
+	return nil
+}
+
+func (p *Passkey) BeforeUpdate(_ *gorm.DB) error {
+	timeHookUtil.NormalizeModelTimesToUTC(p)
 	return nil
 }

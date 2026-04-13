@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/lin-snow/ech0/internal/config"
+	dbMigration "github.com/lin-snow/ech0/internal/database/migration"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commentModel "github.com/lin-snow/ech0/internal/model/comment"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
@@ -65,6 +66,13 @@ func IsWriteLocked() bool {
 	return writeLocked.Load()
 }
 
+func buildGormConfig(logLevel logger.LogLevel) *gorm.Config {
+	return &gorm.Config{
+		Logger:  logger.Default.LogMode(logLevel),
+		NowFunc: func() time.Time { return time.Now().UTC() },
+	}
+}
+
 // InitDatabase 初始化数据库连接
 func InitDatabase() {
 	// 读取数据库类型和保存路径
@@ -85,9 +93,7 @@ func InitDatabase() {
 		if config.Config().Database.LogMode == "release" {
 			ll = logger.LogLevel(logger.Silent)
 		}
-		SQLiteDB, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
-			Logger: logger.Default.LogMode(ll),
-		})
+		SQLiteDB, err := gorm.Open(sqlite.Open(dbPath), buildGormConfig(ll))
 		if err != nil {
 			util.HandlePanicError(&commonModel.ServerError{
 				Msg: commonModel.INIT_DATABASE_PANIC,
@@ -104,6 +110,13 @@ func InitDatabase() {
 			Err: err,
 		})
 	}
+
+	dbMigration.Migrate(
+		GetDB(),
+		dbMigration.WithMigrators(
+			dbMigration.NewLegacyTimeNormalizerMigrator(dbMigration.DefaultLegacySourceTimezone),
+		),
+	)
 }
 
 // MigrateDB 执行数据库迁移
@@ -154,9 +167,7 @@ func HotChangeDatabase(newDBPath string) error {
 		ll = logger.LogLevel(logger.Silent)
 	}
 
-	newDB, err := gorm.Open(sqlite.Open(newDBPath), &gorm.Config{
-		Logger: logger.Default.LogMode(ll),
-	})
+	newDB, err := gorm.Open(sqlite.Open(newDBPath), buildGormConfig(ll))
 	if err != nil {
 		return err
 	}
@@ -186,3 +197,4 @@ func CloseDatabaseFully(db *gorm.DB) error {
 
 	return errors.New(commonModel.DATABASE_CLOSE_FAILED)
 }
+

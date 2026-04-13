@@ -164,13 +164,14 @@ func (s *FileService) UploadFile(
 		Height:      height,
 		UserID:      user.ID,
 	}
+	nowUTC := time.Now().UTC()
 	if err := s.fileRepository.Create(context.Background(), fileRecord); err != nil {
 		return commonModel.FileDto{}, err
 	}
 	if err := s.fileRepository.CreateTemp(context.Background(), &fileModel.TempFile{
 		FileID:     fileRecord.ID,
 		UploaderID: user.ID,
-		ExpireAt:   time.Now().UTC().Add(tempFileTTL),
+		ExpireAt:   nowUTC.Add(tempFileTTL),
 	}); err != nil {
 		_ = s.fileRepository.Delete(context.Background(), fileRecord.ID)
 		_ = s.DeleteStoredFile(fileRecord.StorageType, fileRecord.Key)
@@ -807,13 +808,14 @@ func (s *FileService) GetFilePresignURL(
 		Category:    string(category),
 		UserID:      userid,
 	}
+	nowUTC := time.Now().UTC()
 	if err := s.fileRepository.Create(context.Background(), fileRecord); err != nil {
 		return result, err
 	}
 	if err := s.fileRepository.CreateTemp(context.Background(), &fileModel.TempFile{
 		FileID:     fileRecord.ID,
 		UploaderID: userid,
-		ExpireAt:   time.Now().UTC().Add(tempFileTTL),
+		ExpireAt:   nowUTC.Add(tempFileTTL),
 	}); err != nil {
 		_ = s.fileRepository.Delete(context.Background(), fileRecord.ID)
 		return result, err

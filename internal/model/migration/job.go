@@ -1,6 +1,11 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	timeHookUtil "github.com/lin-snow/ech0/internal/util/timehook"
+	"gorm.io/gorm"
+)
 
 const (
 	MigrationSourceEch0V4 = "ech0_v4"
@@ -35,4 +40,14 @@ type MigrationJob struct {
 	FinishedAt   *time.Time `json:"finished_at"`
 	CreatedAt    time.Time  `json:"created_at"`
 	UpdatedAt    time.Time  `json:"updated_at"`
+}
+
+func (j *MigrationJob) BeforeCreate(_ *gorm.DB) error {
+	timeHookUtil.NormalizeModelTimesToUTC(j)
+	return nil
+}
+
+func (j *MigrationJob) BeforeUpdate(_ *gorm.DB) error {
+	timeHookUtil.NormalizeModelTimesToUTC(j)
+	return nil
 }

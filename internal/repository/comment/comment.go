@@ -171,7 +171,7 @@ func (r *CommentRepository) countByFieldWithin(
 	if strings.TrimSpace(value) == "" {
 		return 0, nil
 	}
-	since := time.Now().Add(-time.Duration(seconds) * time.Second)
+	since := time.Now().UTC().Add(-time.Duration(seconds) * time.Second)
 	err := r.getDB(ctx).
 		Model(&model.Comment{}).
 		Where(field+" = ? AND created_at >= ?", value, since).
@@ -184,7 +184,7 @@ func (r *CommentRepository) ExistsRecentDuplicate(
 	echoID, content, email, ipHash, userID string,
 	seconds int64,
 ) (bool, error) {
-	since := time.Now().Add(-time.Duration(seconds) * time.Second)
+	since := time.Now().UTC().Add(-time.Duration(seconds) * time.Second)
 	db := r.getDB(ctx).Model(&model.Comment{}).
 		Where(
 			"echo_id = ? AND content = ? AND created_at >= ?",

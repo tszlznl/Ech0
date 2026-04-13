@@ -85,6 +85,8 @@ const (
 	InstallInitializedKey = "install_initialized"
 	// MigrationGlobalJobStateKey 是全局迁移作业状态键
 	MigrationGlobalJobStateKey = "migration_global_job_state"
+	// StorageTimeUTCNormalizedKey 是存储层时间统一为 UTC 的幂等标记键
+	StorageTimeUTCNormalizedKey = "storage_time_utc_normalized_v1"
 )
 
 // PageQueryResult 用于分页查询的结果数据传输对象

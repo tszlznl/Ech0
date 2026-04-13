@@ -4,6 +4,7 @@ import (
 	"time"
 
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
+	timeHookUtil "github.com/lin-snow/ech0/internal/util/timehook"
 	"gorm.io/gorm"
 )
 
@@ -39,6 +40,7 @@ func (e *UserExternalIdentity) BeforeCreate(_ *gorm.DB) error {
 	if e.ID == "" {
 		e.ID = uuidUtil.MustNewV7()
 	}
+	timeHookUtil.NormalizeModelTimesToUTC(e)
 	return nil
 }
 
@@ -65,5 +67,16 @@ func (w *WebAuthnCredential) BeforeCreate(_ *gorm.DB) error {
 	if w.ID == "" {
 		w.ID = uuidUtil.MustNewV7()
 	}
+	timeHookUtil.NormalizeModelTimesToUTC(w)
+	return nil
+}
+
+func (e *UserExternalIdentity) BeforeUpdate(_ *gorm.DB) error {
+	timeHookUtil.NormalizeModelTimesToUTC(e)
+	return nil
+}
+
+func (w *WebAuthnCredential) BeforeUpdate(_ *gorm.DB) error {
+	timeHookUtil.NormalizeModelTimesToUTC(w)
 	return nil
 }

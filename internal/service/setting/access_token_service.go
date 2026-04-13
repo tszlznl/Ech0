@@ -120,7 +120,6 @@ func (settingService *SettingService) CreateAccessToken(
 		Audience:  audience,
 		JTI:       jti,
 		Expiry:    expiryPtr,
-		CreatedAt: time.Now().UTC(),
 	}
 
 	if err := settingService.transactor.Run(ctx, func(txCtx context.Context) error {
