@@ -283,7 +283,7 @@ definitions:
   model.Tag:
     properties:
       created_at:
-        type: string
+        type: integer
       id:
         type: string
       name:
