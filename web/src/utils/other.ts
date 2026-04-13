@@ -37,9 +37,8 @@ export const getImageUrl = (image: App.Api.Ech0.FileObject) => getFileUrl(image)
 export const getImageToAddUrl = (image: App.Api.Ech0.FileToAdd) => getFileToAddUrl(image)
 
 export const formatDate = (dateInput: string | number) => {
-  // 同一本地日历日：刚刚 / N 分钟前 / N 小时前（不按 24h 粗算「天」）
-  // 相差 1～2 个本地日历日：N 天前（与「昨天」语义一致，避免昨夜帖子仍显示「N 小时前」）
-  // 更早：Intl 按 locale 显示完整日期
+  // <24h：刚刚 / N 分钟前 / N 小时前（按实际经过时间）
+  // 24h～48h：1 天前；48h～72h：2 天前；≥72h：Intl 按 locale 显示完整日期
 
   // 处理 Unix 时间戳（秒或毫秒）和日期字符串
   let date: Date
@@ -58,18 +57,17 @@ export const formatDate = (dateInput: string | number) => {
   const t = (key: string, params?: Record<string, unknown>) =>
     String(i18n.global.t(key, params || {}))
 
-  const localMidnight = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
-  const calendarDaysFromDateToNow = Math.round(
-    (localMidnight(now).getTime() - localMidnight(date).getTime()) / (1000 * 60 * 60 * 24),
-  )
+  const MS_DAY = 24 * 60 * 60 * 1000
 
-  const longFormatter = () =>
-    new Intl.DateTimeFormat(locale, {
+  const longFormatter = () => {
+    const datePart = new Intl.DateTimeFormat(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-      weekday: 'short',
     }).format(date)
+    const weekdayPart = new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(date)
+    return `${datePart} · ${weekdayPart}`
+  }
 
   if (diff < 0) {
     return longFormatter()
@@ -79,7 +77,7 @@ export const formatDate = (dateInput: string | number) => {
   const diffInMinutes = Math.floor(diff / (1000 * 60))
   const diffInHours = Math.floor(diff / (1000 * 60 * 60))
 
-  if (calendarDaysFromDateToNow === 0) {
+  if (diff < MS_DAY) {
     if (diffInSeconds < 60) {
       return t('dateTime.justNow')
     }
@@ -89,8 +87,12 @@ export const formatDate = (dateInput: string | number) => {
     return t('dateTime.hoursAgo', { count: diffInHours })
   }
 
-  if (calendarDaysFromDateToNow === 1 || calendarDaysFromDateToNow === 2) {
-    return t('dateTime.daysAgo', { count: calendarDaysFromDateToNow })
+  if (diff < 2 * MS_DAY) {
+    return t('dateTime.daysAgo', { count: 1 })
+  }
+
+  if (diff < 3 * MS_DAY) {
+    return t('dateTime.daysAgo', { count: 2 })
   }
 
   return longFormatter()
