@@ -419,14 +419,10 @@
     "privateStatus": "私密状态",
     "delete": "删除",
     "update": "更新",
-    "expand": "展开Echo",
-    "like": "点赞",
     "deleteConfirmTitle": "确定要删除吗？",
     "deleteConfirmDesc": "删除后将无法恢复，请谨慎操作",
     "deleteSuccess": "删除成功！",
-    "exitUpdateModeFirst": "请先退出更新模式！",
-    "alreadyLiked": "你已经点赞过了，感谢你的喜欢！",
-    "likeSuccess": "点赞成功！"
+    "exitUpdateModeFirst": "请先退出更新模式！"
   },
   "userSetting": {
     "title": "用户中心",

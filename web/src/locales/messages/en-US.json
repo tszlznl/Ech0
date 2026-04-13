@@ -419,14 +419,10 @@
     "privateStatus": "Private status",
     "delete": "Delete",
     "update": "Update",
-    "expand": "Expand Echo",
-    "like": "Like",
     "deleteConfirmTitle": "Delete this Echo?",
     "deleteConfirmDesc": "This action cannot be undone.",
     "deleteSuccess": "Deleted successfully",
-    "exitUpdateModeFirst": "Please exit update mode first",
-    "alreadyLiked": "You already liked this, thanks for the support!",
-    "likeSuccess": "Liked successfully"
+    "exitUpdateModeFirst": "Please exit update mode first"
   },
   "userSetting": {
     "title": "User Center",

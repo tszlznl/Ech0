@@ -419,14 +419,10 @@
     "privateStatus": "Privat",
     "delete": "Löschen",
     "update": "Bearbeiten",
-    "expand": "Echo aufklappen",
-    "like": "Gefällt mir",
     "deleteConfirmTitle": "Dieses Echo löschen?",
     "deleteConfirmDesc": "Diese Aktion kann nicht rückgängig gemacht werden.",
     "deleteSuccess": "Gelöscht",
-    "exitUpdateModeFirst": "Bitte zuerst den Bearbeitungsmodus verlassen",
-    "alreadyLiked": "Du hast bereits reagiert – danke!",
-    "likeSuccess": "Gefällt mir!"
+    "exitUpdateModeFirst": "Bitte zuerst den Bearbeitungsmodus verlassen"
   },
   "userSetting": {
     "title": "Benutzerverwaltung",
