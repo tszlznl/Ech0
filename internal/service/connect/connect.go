@@ -15,6 +15,7 @@ import (
 	"github.com/lin-snow/ech0/internal/transaction"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	timezoneUtil "github.com/lin-snow/ech0/internal/util/timezone"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
 	"golang.org/x/sync/singleflight"
@@ -147,8 +148,14 @@ func (connectService *ConnectService) GetConnect() (model.Connect, error) {
 		return connect, err
 	}
 
-	// 统计当天发布的数量
-	todayEchos := connectService.echoRepository.GetTodayEchos(true, "UTC")
+	// 统计当天发布的数量（优先复用进程本地时区，未识别时回退 UTC）
+	siteTimezone := "UTC"
+	if time.Local != nil {
+		if localName := strings.TrimSpace(time.Local.String()); localName != "" {
+			siteTimezone = timezoneUtil.NormalizeTimezone(localName)
+		}
+	}
+	todayEchos := connectService.echoRepository.GetTodayEchos(true, siteTimezone)
 	// 统计总发布数量
 	_, totalEchos := connectService.echoRepository.GetEchosByPage(1, 1, "", true)
 
