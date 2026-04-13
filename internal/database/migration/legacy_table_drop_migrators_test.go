@@ -51,3 +51,43 @@ func TestOAuthBindingsDropMigrator_DropTableAndMarkDone(t *testing.T) {
 		t.Fatalf("expected migrator marker, got err: %v", err)
 	}
 }
+
+func TestLegacyInboxesDropMigrator_DropTableAndMarkDone(t *testing.T) {
+	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
+	if err != nil {
+		t.Fatalf("open sqlite failed: %v", err)
+	}
+	database.SetDB(db)
+	if err := database.MigrateDB(); err != nil {
+		t.Fatalf("migrate db failed: %v", err)
+	}
+
+	if err := db.Exec(`CREATE TABLE inboxes (id TEXT PRIMARY KEY)`).Error; err != nil {
+		t.Fatalf("create inboxes failed: %v", err)
+	}
+	if err := db.Exec(`INSERT INTO inboxes (id) VALUES ('i1')`).Error; err != nil {
+		t.Fatalf("insert inboxes row failed: %v", err)
+	}
+
+	dbMigration.Migrate(
+		db,
+		dbMigration.WithStopOnError(),
+		dbMigration.WithMigrators(dbMigration.NewLegacyInboxesDropMigrator()),
+	)
+
+	var exists int64
+	if err := db.Raw("SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name='inboxes'").Scan(&exists).Error; err != nil {
+		t.Fatalf("query sqlite_master failed: %v", err)
+	}
+	if exists != 0 {
+		t.Fatal("expected inboxes to be dropped")
+	}
+
+	var marker commonModel.KeyValue
+	if err := db.Where("key = ?", commonModel.LegacyInboxesDroppedKey).First(&marker).Error; err != nil {
+		t.Fatalf("expected migrator marker, got err: %v", err)
+	}
+}

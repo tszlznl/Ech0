@@ -97,6 +97,8 @@ const (
 	StorageTimeSchemaRebuiltKey = "storage_time_schema_rebuilt_v1"
 	// OAuthBindingsDroppedKey 是历史 oauth_bindings 表清理迁移的幂等标记键
 	OAuthBindingsDroppedKey = "oauth_bindings_dropped_v1"
+	// LegacyInboxesDroppedKey 是已废弃的 inboxes 表清理迁移的幂等标记键
+	LegacyInboxesDroppedKey = "legacy_inboxes_dropped_v1"
 )
 
 // PageQueryResult 用于分页查询的结果数据传输对象

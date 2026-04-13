@@ -22,7 +22,11 @@
         </div>
       </div>
 
-      <div ref="menuRef" class="relative flex items-center justify-center gap-1 h-auto">
+      <div
+        v-if="userStore.isLogin || props.echo.private"
+        ref="menuRef"
+        class="relative flex items-center justify-center gap-1 h-auto"
+      >
         <div
           v-if="!showMenu"
           @click.stop="toggleMenu"
@@ -39,51 +43,23 @@
             <Lock />
           </span>
 
-          <button
-            v-if="userStore.isLogin"
-            @click="handleDeleteEcho(props.echo.id)"
-            v-tooltip="t('echoCard.delete')"
-            class="transform transition-transform duration-200 hover:scale-120"
-          >
-            <Roll />
-          </button>
+          <template v-if="userStore.isLogin">
+            <button
+              @click="handleDeleteEcho(props.echo.id)"
+              v-tooltip="t('echoCard.delete')"
+              class="transform transition-transform duration-200 hover:scale-120"
+            >
+              <Roll />
+            </button>
 
-          <button
-            v-if="userStore.isLogin"
-            @click="handleUpdateEcho()"
-            v-tooltip="t('echoCard.update')"
-            class="transform transition-transform duration-200 hover:scale-120"
-          >
-            <EditEcho />
-          </button>
-
-          <button
-            @click="handleExpandEcho(echo.id)"
-            v-tooltip="t('echoCard.expand')"
-            class="transform transition-transform duration-200 hover:scale-120"
-          >
-            <Expand />
-          </button>
-
-          <div class="flex items-center justify-end" v-tooltip="t('echoCard.like')">
-            <div class="flex items-center gap-1">
-              <button
-                @click="handleLikeEcho(props.echo.id)"
-                :class="[
-                  'transform transition-transform duration-200 hover:scale-120',
-                  isLikeAnimating ? 'scale-110' : 'scale-100',
-                ]"
-              >
-                <GrayLike
-                  class="w-4 h-4 transition-colors duration-200 hover:text-[var(--color-danger)]"
-                />
-              </button>
-
-              <span class="text-sm text-[var(--color-text-muted)]">
-                {{ props.echo.fav_count > 99 ? '99+' : props.echo.fav_count }}
-              </span>
-            </div>
-          </div>
+            <button
+              @click="handleUpdateEcho()"
+              v-tooltip="t('echoCard.update')"
+              class="transform transition-transform duration-200 hover:scale-120"
+            >
+              <EditEcho />
+            </button>
+          </template>
         </div>
       </div>
     </div>
@@ -122,17 +98,14 @@
 
 <script setup lang="ts">
 import { onMounted, ref, onBeforeUnmount, computed, defineAsyncComponent } from 'vue'
-import { fetchDeleteEcho, fetchLikeEcho, fetchGetEchoById } from '@/service/api'
+import { fetchDeleteEcho, fetchGetEchoById } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useUserStore, useEchoStore, useEditorStore } from '@/stores'
 import { TheMdPreview } from '@/components/advanced/md'
 import Roll from '@/components/icons/roll.vue'
 import Lock from '@/components/icons/lock.vue'
 import More from '@/components/icons/more.vue'
-import Expand from '@/components/icons/expand.vue'
-import GrayLike from '@/components/icons/graylike.vue'
 import EditEcho from '@/components/icons/editecho.vue'
-import { localStg } from '@/utils/storage'
 import { useRouter } from 'vue-router'
 import { ImageLayout } from '@/enums/enums'
 import { formatDate } from '@/utils/other'
@@ -150,7 +123,7 @@ const TheExtensionRenderer = defineAsyncComponent(
 const { openConfirm } = useBaseDialog()
 const { t } = useI18n()
 
-const emit = defineEmits(['refresh', 'updateLikeCount'])
+const emit = defineEmits(['refresh'])
 
 type Echo = App.Api.Ech0.Echo
 
@@ -158,8 +131,6 @@ const props = defineProps<{
   echo: Echo
   index?: number
 }>()
-
-const isLikeAnimating = ref(false)
 
 const userStore = useUserStore()
 const echoImageFiles = computed(() =>
@@ -201,32 +172,6 @@ const handleUpdateEcho = async () => {
   await router.push({
     name: 'home',
     query: { tab: 'publish' },
-  })
-}
-
-const LIKE_LIST_KEY = 'likedEchoIds'
-const likedEchoIds: string[] = localStg.getItem(LIKE_LIST_KEY) || []
-const hasLikedEcho = (echoId: string): boolean => {
-  return likedEchoIds.includes(echoId)
-}
-const handleLikeEcho = (echoId: string) => {
-  isLikeAnimating.value = true
-  setTimeout(() => {
-    isLikeAnimating.value = false
-  }, 150)
-
-  if (hasLikedEcho(echoId)) {
-    theToast.success(String(t('echoCard.alreadyLiked')))
-    return
-  }
-
-  fetchLikeEcho(echoId).then((res) => {
-    if (res.code === 1) {
-      likedEchoIds.push(echoId)
-      localStg.setItem(LIKE_LIST_KEY, likedEchoIds)
-      emit('updateLikeCount', echoId)
-      theToast.success(String(t('echoCard.likeSuccess')))
-    }
   })
 }
 

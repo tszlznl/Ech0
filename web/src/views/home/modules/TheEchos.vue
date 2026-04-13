@@ -17,12 +17,7 @@
         :data-index="index"
         class="will-change-transform"
       >
-        <TheEchoCard
-          :echo="echo"
-          :index="index"
-          @refresh="handleRefresh"
-          @update-like-count="handleUpdateLikeCount"
-        />
+        <TheEchoCard :echo="echo" :index="index" @refresh="handleRefresh" />
       </div>
     </TransitionGroup>
     <!-- 加载更多 -->
@@ -195,11 +190,6 @@ const ensureScrollableInZen = async () => {
 // 刷新数据
 const handleRefresh = () => {
   echoStore.refreshEchos()
-}
-
-// 刷新点赞数据
-const handleUpdateLikeCount = (echoId: string) => {
-  echoStore.updateLikeCount(echoId, 1)
 }
 
 onMounted(async () => {
