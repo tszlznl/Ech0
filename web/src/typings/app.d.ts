@@ -563,7 +563,7 @@ declare namespace App {
         connect_url: string
       }
 
-      /** GET /api/connects/health */
+      /** GET /api/connects/health（需登录，connect:read） */
       type ConnectedHealth = {
         id: string
         connect_url: string

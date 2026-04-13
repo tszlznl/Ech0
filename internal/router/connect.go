@@ -12,9 +12,13 @@ func setupConnectRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	appRouterGroup.PublicRouterGroup.GET("/connect", h.ConnectHandler.GetConnect())
 	appRouterGroup.PublicRouterGroup.GET("/connect/list", h.ConnectHandler.GetConnects())
 	appRouterGroup.PublicRouterGroup.GET("/connects/info", h.ConnectHandler.GetConnectsInfo())
-	appRouterGroup.PublicRouterGroup.GET("/connects/health", h.ConnectHandler.GetConnectsHealth())
 
 	// Auth
+	appRouterGroup.AuthRouterGroup.GET(
+		"/connects/health",
+		middleware.RequireScopes(authModel.ScopeConnectRead),
+		h.ConnectHandler.GetConnectsHealth(),
+	)
 	appRouterGroup.AuthRouterGroup.POST(
 		"/connects",
 		middleware.RequireScopes(authModel.ScopeConnectWrite),

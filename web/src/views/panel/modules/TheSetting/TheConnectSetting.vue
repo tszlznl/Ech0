@@ -101,11 +101,13 @@
                   {{ statusLabel(connect.id) }}
                 </span>
               </td>
-              <td
-                class="px-2 py-2 text-[var(--color-text-secondary)] font-mono text-xs truncate"
-                :title="versionText(connect.id)"
-              >
-                {{ versionText(connect.id) }}
+              <td class="px-1 py-2">
+                <span
+                  :class="['status-pill', 'font-mono', versionPillClass(connect.id)]"
+                  :title="versionText(connect.id)"
+                >
+                  {{ versionText(connect.id) }}
+                </span>
               </td>
               <td class="px-2 py-2 text-right">
                 <BaseButton
@@ -191,6 +193,13 @@ const versionText = (id: string) => {
   const row = healthById.value[id]
   if (!row || row.status !== 'online' || !row.version?.trim()) return '—'
   return row.version.trim()
+}
+
+const versionPillClass = (id: string) => {
+  if (healthLoading.value) return 'version-pill-muted'
+  const row = healthById.value[id]
+  const hasVersion = row?.status === 'online' && Boolean(row.version?.trim())
+  return hasVersion ? 'version-pill-yellow' : 'version-pill-muted'
 }
 
 const refreshConnectivityStatus = async () => {
@@ -319,5 +328,27 @@ onMounted(() => {
   color: var(--color-text-muted);
   border-color: var(--color-border-subtle);
   background: color-mix(in srgb, var(--color-bg-muted) 65%, transparent);
+}
+
+/* 版本：与状态 pill 同形，黄色系 */
+.version-pill-yellow,
+.version-pill-muted {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.version-pill-yellow {
+  color: #a16207;
+  border-color: rgba(234, 179, 8, 0.4);
+  background: rgba(250, 204, 21, 0.16);
+}
+
+.version-pill-muted {
+  color: var(--color-text-muted);
+  border-color: rgba(234, 179, 8, 0.22);
+  background: rgba(250, 204, 21, 0.07);
 }
 </style>
