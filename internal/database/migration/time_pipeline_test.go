@@ -121,7 +121,7 @@ func TestTimeMigrationPipeline_StopOnValidateFailure(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected unix migrator marker absent when validate fails")
 	}
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		t.Fatalf("query unix migrator marker failed: %v", err)
 	}
 }
