@@ -8,7 +8,7 @@
           </div>
           <div
             @click="handleExpandEcho(echo.id)"
-            class="flex items-center h-full justify-start leading-none text-sm text-nowrap text-[var(--color-text-secondary)] hover:underline hover:decoration-offset-3 hover:decoration-1 mr-1"
+            class="flex items-center h-full justify-start leading-none text-sm text-nowrap text-[var(--color-accent)] hover:underline hover:decoration-offset-3 hover:decoration-1 mr-1"
           >
             {{ formatDate(props.echo.created_at) }}
           </div>
