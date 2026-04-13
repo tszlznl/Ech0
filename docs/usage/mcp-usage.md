@@ -89,7 +89,7 @@ Ech0 的 MCP 端点采用 **Streamable HTTP**（JSON-RPC over HTTP），与 [MCP
 | Resource | `ech0://posts/recent` | 最近 20 条帖子（可附 `?limit=N`） | `echo:read` |
 | Resource | `ech0://posts/{id}` | 按 UUID 读取单篇帖子 | `echo:read` |
 | Resource | `ech0://tags` | 全部标签及使用次数 | `echo:read` |
-| Resource | `ech0://stats/heatmap` | 过去 365 天每日发帖数（热力图数据） | `echo:read` |
+| Resource | `ech0://stats/heatmap` | 过去 30 个日历日每日发帖数（热力图，UTC 日界） | `echo:read` |
 
 ### Comments
 
