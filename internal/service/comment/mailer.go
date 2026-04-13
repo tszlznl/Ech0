@@ -48,7 +48,7 @@ func (s *GoMailSender) Send(ctx context.Context, cfg MailerConfig, msg MailMessa
 	if err := client.DialWithContext(ctx); err != nil {
 		return err
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	m := mail.NewMsg()
 	if err := m.From(from); err != nil {

@@ -452,16 +452,17 @@ func (c *streamCore) Write(entry zapcore.Entry, fields []zap.Field) error {
 }
 
 type LogStreamHub struct {
-	mu         sync.RWMutex
-	subs       map[int64]chan LogEntry
-	nextID     int64
-	recent     []LogEntry
-	recentCap  int
-	recentPos  int
-	recentLen  int
-	dropPolicy string
-	dropped    atomic.Uint64
-	closed     bool
+	mu               sync.RWMutex
+	subs             map[int64]chan LogEntry
+	nextID           int64
+	recent           []LogEntry
+	recentCap        int
+	recentPos        int
+	recentLen        int
+	dropPolicy       string
+	dropped          atomic.Uint64
+	closed           bool
+	defaultSubBuffer int
 }
 
 func newLogStreamHub(subBufferSize, recentSize int, dropPolicy string) *LogStreamHub {
@@ -472,16 +473,20 @@ func newLogStreamHub(subBufferSize, recentSize int, dropPolicy string) *LogStrea
 		recentSize = 2000
 	}
 	return &LogStreamHub{
-		subs:       make(map[int64]chan LogEntry),
-		recent:     make([]LogEntry, recentSize),
-		recentCap:  recentSize,
-		dropPolicy: dropPolicy,
+		subs:             make(map[int64]chan LogEntry),
+		recent:           make([]LogEntry, recentSize),
+		recentCap:        recentSize,
+		dropPolicy:       dropPolicy,
+		defaultSubBuffer: subBufferSize,
 	}
 }
 
 func (h *LogStreamHub) Subscribe(bufferSize int) (int64, <-chan LogEntry, func()) {
 	if bufferSize <= 0 {
-		bufferSize = 256
+		bufferSize = h.defaultSubBuffer
+		if bufferSize <= 0 {
+			bufferSize = 256
+		}
 	}
 	h.mu.Lock()
 	defer h.mu.Unlock()

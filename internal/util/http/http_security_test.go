@@ -152,7 +152,7 @@ func TestSecureDialContext_blocks_private_ip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to listen: %v", err)
 	}
-	defer ln.Close()
+	defer func() { _ = ln.Close() }()
 
 	dial := SecureDialContext(2 * time.Second)
 	conn, dialErr := dial(context.Background(), "tcp", ln.Addr().String())

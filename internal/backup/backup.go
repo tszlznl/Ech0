@@ -118,22 +118,6 @@ func UnpackZipToDir(zipPath, destDir string) error {
 	return vizip.Unpack(context.Background(), f, info.Size(), dstFS, "")
 }
 
-func copyDirViaVireFS(srcDir, dstDir string) error {
-	srcFS, err := virefs.NewLocalFS(srcDir)
-	if err != nil {
-		return fmt.Errorf("open src dir: %w", err)
-	}
-	dstFS, err := virefs.NewLocalFS(dstDir, virefs.WithCreateRoot())
-	if err != nil {
-		return fmt.Errorf("open dst dir: %w", err)
-	}
-
-	_, err = virefs.Migrate(context.Background(), srcFS, "", dstFS, "",
-		virefs.WithConflictPolicy(virefs.ConflictOverwrite),
-	)
-	return err
-}
-
 func shouldExcludeFromBackup(cleanKey string) bool {
 	backupPrefix := strings.Trim(strings.TrimSpace(backupRelativeDir), "/")
 	tmpPrefix := strings.Trim(strings.TrimSpace(tmpRelativeDir), "/")

@@ -125,7 +125,7 @@ const (
 // Setting 错误相关常量
 const (
 	WEBHOOK_NAME_OR_URL_CANNOT_BE_EMPTY = "未填写 Webhook 名称或 URL"
-	INVALID_WEBHOOK_URL                 = "Webhook URL 不合法或不安全"
+	INVALID_WEBHOOK_URL                 = "webhook URL 不合法或不安全"
 	INVALID_CRON_EXPRESSION             = "无效的 Cron 表达式"
 )
 

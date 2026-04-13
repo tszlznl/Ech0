@@ -896,11 +896,3 @@ func derefString(v *string) string {
 	}
 	return strings.TrimSpace(*v)
 }
-
-func buildDiceBearURL(seed string) string {
-	trimmed := strings.TrimSpace(seed)
-	if trimmed == "" {
-		trimmed = "guest"
-	}
-	return "https://api.dicebear.com/9.x/fun-emoji/svg?seed=" + url.QueryEscape(trimmed)
-}

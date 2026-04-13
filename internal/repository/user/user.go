@@ -238,15 +238,15 @@ func (userRepository *UserRepository) BindOAuth(
 	provider, oauthID, issuer, authType string,
 ) error {
 	protocol := string(authModel.AuthTypeOAuth2)
-	issuer = ""
+	issuerVal := ""
 	if authType == string(authModel.AuthTypeOIDC) {
 		protocol = string(authModel.AuthTypeOIDC)
-		issuer = strings.TrimSpace(issuer)
+		issuerVal = strings.TrimSpace(issuer)
 	}
 
 	var identity model.UserExternalIdentity
 	err := userRepository.getDB(ctx).
-		Where("user_id = ? AND provider = ? AND issuer = ? AND protocol = ?", userID, provider, issuer, protocol).
+		Where("user_id = ? AND provider = ? AND issuer = ? AND protocol = ?", userID, provider, issuerVal, protocol).
 		First(&identity).Error
 	if err == nil {
 		identity.Subject = oauthID
@@ -260,7 +260,7 @@ func (userRepository *UserRepository) BindOAuth(
 		UserID:   userID,
 		Provider: provider,
 		Subject:  oauthID,
-		Issuer:   issuer,
+		Issuer:   issuerVal,
 		Protocol: protocol,
 	}
 	return userRepository.getDB(ctx).Create(&identity).Error
