@@ -20,10 +20,11 @@ docker run -d \
   -p 6277:6277 \
   -v /opt/ech0/data:/app/data \
   -e JWT_SECRET="Hello Echos" \
+  -e TZ=Asia/Shanghai \
   sn0wl1n/ech0:latest
 ```
 
-请把 `JWT_SECRET` 换成与你环境一致的值（与初次部署相同），数据卷路径勿改错。若升级后无法启动，先回滚镜像标签并核对 Release 说明，不要清空数据目录试错。
+请把 `JWT_SECRET` 换成与你环境一致的值（与初次部署相同）；若初次部署已设置 **`TZ`**，升级命令中请一并保留。数据卷路径勿改错。若升级后无法启动，先回滚镜像标签并核对 Release 说明，不要清空数据目录试错。
 
 ---
 
