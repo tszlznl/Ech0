@@ -19,9 +19,9 @@ runs on every published GitHub Release (and can also be triggered manually).
 
 The pipeline performs the following steps (in order):
 
-1. **Validate and sync chart metadata** – Ensures `charts/ech0/Chart.yaml` has
-   a chart `version`, then sets `appVersion` from the release tag (or manual
-   workflow input).
+1. **Sync chart metadata** – Sets `version` and `appVersion` in `charts/ech0/Chart.yaml`
+   from the release tag (or manual workflow input), then validates. Ensures each
+   app release gets a new `ech0-<semver>.tgz`.
 2. **Chart Releaser** – Packages `charts/ech0/` and updates the Helm repository
    on `gh-pages` (`index.yaml` and chart `.tgz` artifacts).
 3. **Generate the release landing page** – Uses `gh release list` for published

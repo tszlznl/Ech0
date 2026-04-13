@@ -23,17 +23,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate chart version metadata
-        run: |
-          set -euo pipefail
-          chart_version="$(awk -F': ' '$1 == "version" {print $2}' charts/ech0/Chart.yaml | tr -d '"')"
-          if [ -z "${chart_version}" ]; then
-            echo "Chart version is empty in charts/ech0/Chart.yaml"
-            exit 1
-          fi
-          echo "Detected chart version: ${chart_version}"
-
-      - name: Sync chart appVersion from release tag
+      - name: Sync chart version and appVersion from release tag
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EVENT_NAME: ${{ github.event_name }}
@@ -52,18 +42,30 @@ jobs:
           fi
 
           if [ -z "${release_tag}" ]; then
-            echo "Failed to resolve release tag for appVersion sync."
+            echo "Failed to resolve release tag for chart metadata sync."
             exit 1
           fi
 
           app_version="${release_tag#v}"
           if [ -z "${app_version}" ]; then
-            echo "Resolved empty appVersion from release tag: ${release_tag}"
+            echo "Resolved empty version from release tag: ${release_tag}"
             exit 1
           fi
 
+          # Package name is ech0-<version>.tgz — must change each app release or chart-releaser skips (skip_existing).
+          sed -i -E 's|^version: .*|version: '"${app_version}"'|' charts/ech0/Chart.yaml
           sed -i -E 's/^appVersion: .*/appVersion: "'"${app_version}"'"/' charts/ech0/Chart.yaml
-          echo "Synced appVersion to ${app_version} from tag ${release_tag}"
+          echo "Synced chart version and appVersion to ${app_version} from tag ${release_tag}"
+
+      - name: Validate chart version metadata
+        run: |
+          set -euo pipefail
+          chart_version="$(awk -F': ' '$1 == "version" {print $2}' charts/ech0/Chart.yaml | tr -d '"' | tr -d '[:space:]')"
+          if [ -z "${chart_version}" ]; then
+            echo "Chart version is empty in charts/ech0/Chart.yaml"
+            exit 1
+          fi
+          echo "Chart package will be ech0-${chart_version}.tgz"
 
       - name: Configure Git
         run: |
