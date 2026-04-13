@@ -17,7 +17,7 @@ func testViewer() viewer.Context {
 
 func testRequest(t *testing.T, method, body string) *http.Request {
 	t.Helper()
-	req := httptest.NewRequest(http.MethodPost, "/mcp", bytes.NewBufferString(body))
+	req := httptest.NewRequest(method, "/mcp", bytes.NewBufferString(body))
 	req = req.WithContext(viewer.WithContext(req.Context(), testViewer()))
 	return req
 }
