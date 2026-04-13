@@ -450,7 +450,6 @@
     "username": "用户名",
     "email": "邮箱",
     "isAdmin": "管理员",
-    "permissionChange": "权限更改",
     "deleteUser": "删除用户",
     "deleteConfirmTitle": "确定要删除该用户吗？",
     "deleteConfirmDesc": "删除后将无法恢复，请谨慎操作"

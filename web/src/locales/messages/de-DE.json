@@ -450,7 +450,6 @@
     "username": "Benutzername",
     "email": "E-Mail",
     "isAdmin": "Admin",
-    "permissionChange": "Berechtigung",
     "deleteUser": "Benutzer löschen",
     "deleteConfirmTitle": "Diesen Benutzer wirklich löschen?",
     "deleteConfirmDesc": "Diese Aktion kann nicht rückgängig gemacht werden."

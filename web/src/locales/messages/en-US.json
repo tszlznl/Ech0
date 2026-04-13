@@ -450,7 +450,6 @@
     "username": "Username",
     "email": "Email",
     "isAdmin": "Admin",
-    "permissionChange": "Permission",
     "deleteUser": "Delete user",
     "deleteConfirmTitle": "Are you sure to delete this user?",
     "deleteConfirmDesc": "This action cannot be undone."
