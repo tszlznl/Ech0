@@ -17,33 +17,52 @@
 
 ## 架构分层
 
+下图按「数据流」组织：左侧是**客户端如何产生/展示时间**，中间是**服务端进程内两套时钟语义**（用户时区 vs 站点本地时区），右侧是**持久化与 API 序列化**。环境变量与标准库职责与下文「`tzdata`、`TZ`、`X-Timezone`」一节一致。
+
 ```mermaid
 flowchart TB
-    subgraph client [Client]
-        browserTZ["浏览器时区 (Intl)"]
-        requestHeader["X-Timezone"]
-        localRender["Date + Intl 本地渲染"]
+    subgraph client [客户端]
+        tzFromUA["用户时区来源：浏览器 / 操作系统（Intl 可解析为 IANA 名称）"]
+        xTz["HTTP 请求头 X-Timezone"]
+        render["展示层：new Date + Intl.DateTimeFormat（消费 RFC3339）"]
+        tzFromUA --> xTz
     end
 
-    subgraph server [Server]
-        userScope["用户上下文接口 (today/heatmap)"]
-        siteScope["站点上下文接口 (connect/visitor)"]
-        timeLocal["time.Local"]
-        utcNow["time.Now().UTC()"]
+    subgraph server [服务端 Go 进程]
+        subgraph host [操作系统与进程环境]
+            tzEnv["环境变量 TZ（IANA，如 Europe/Berlin）"]
+        end
+        subgraph gotime [Go 标准库时间语义]
+            tzdata["time/tzdata：编译内嵌 IANA 规则，供 LoadLocation 等使用"]
+            tLocal["time.Local：进程「本地时区」，通常由 TZ 决定"]
+            tUtc["time.Now().UTC()：存储与「日界转 UTC」计算基准"]
+        end
+        norm["NormalizeTimezone / LoadLocationOrUTC（非法 X-Timezone 回退 UTC）"]
+        userApi["用户上下文接口（today / heatmap 等）"]
+        siteApi["站点上下文接口（connect / visitor 等）"]
+        tzEnv --> tLocal
+        tzdata -. 解析 IANA 名称 .-> norm
+        xTz --> norm
+        norm --> userApi
+        tUtc --> userApi
+        tLocal --> siteApi
     end
 
-    subgraph storage [Storage]
-        db["SQLite/GORM time.Time"]
-        api["JSON RFC3339"]
+    subgraph storage [持久化与 API]
+        db["SQLite + GORM：time.Time，持久化语义 UTC"]
+        api["JSON：RFC3339 时间字符串"]
     end
 
-    browserTZ --> requestHeader --> userScope
-    utcNow --> userScope
-    timeLocal --> siteScope
-    userScope --> db
-    siteScope --> db
-    db --> api --> localRender
+    userApi --> db
+    siteApi --> db
+    db --> api --> render
 ```
+
+说明（图中未逐点画箭头，但语义成立）：
+
+- **TZ** 只影响服务端 `time.Local`，进而影响**无用户上下文**的站点级逻辑；不替代 `X-Timezone`。
+- **`time/tzdata`** 不决定「默认用哪个时区」，只保证进程能解析 IANA 名称（与请求头校验、按用户时区算日界有关）。
+- **写库**以 UTC 为准（见「存储层 UTC 语义」与全局 `NowFunc` 约定）；**读展示**由浏览器按用户本地时区渲染 API 返回的瞬时时刻。
 
 ---
 
@@ -176,7 +195,7 @@ flowchart TB
 - 当前持久化模型写入路径已统一到 UTC：  
   **GORM 全局 `NowFunc=UTC` + 模型 Hook UTC 归一 + 业务字段手动 UTC 赋值**。
 - “业务语义时间字段”（如 `ExpireAt`、`NextRetry`）继续由业务层显式计算后赋值，属于正确且必要的手动赋值。
-- 历史数据通过一次性归一迁移处理（基准时区 `Asia/Shanghai`，带幂等标记）。
+- 历史数据若曾按本地时区写入，纠偏应通过一次性、可幂等的迁移完成，并在方案中明确“历史时刻如何解释再转 UTC”，避免重复执行造成二次平移。
 
 ### 仍需注意的边界
 
@@ -186,48 +205,22 @@ flowchart TB
 
 ---
 
-## 未来演进建议
+## 存储层 UTC 语义（设计约定）
 
-- 为时区关键路径补充可读日志（输入时区、计算出的日界区间、最终 UTC 区间）。
-- 增加集成测试矩阵（多时区 + 夏令时切换日）。
-- 对站点级统计行为在运维文档中给出明确 `TZ` 示例。
+- **全局时间源**：GORM `NowFunc` 使用 `time.Now().UTC()`，自动生成的时间戳语义为 UTC。
+- **写入一致性**：与持久化相关的路径应使用 UTC，避免“写库时刻”依赖进程本地时区。
+- **窗口类逻辑**：限流、去重、滑动窗口等若与库内时间戳对比或共用同一“当前时刻”，应与存储层 UTC 语义对齐，避免基准混用。
 
----
+### 手动赋值规则
 
-## UTC 统一改造（已落地）
+为避免重复赋值与语义冲突，约定如下：
 
-本项目已完成“存储层 UTC 统一”第一阶段改造，规则如下：
+- **默认不手动赋值**：`CreatedAt` / `UpdatedAt` 等模型元数据时间，优先依赖 `NowFunc=UTC` 与模型 Hook 自动处理。
+- **必须手动赋值**：业务语义时间字段（例如 `ExpireAt = now + ttl`、`NextRetry = now + backoff`、事件触发时刻等）。
+- **非持久化对象必须手动赋值**：内存任务状态、模板临时对象、测试构造数据等（不经 GORM，不会触发 Hook）。
 
-- GORM 全局 `NowFunc` 统一为 `time.Now().UTC()`，自动时间戳默认使用 UTC。
-- 关键写入路径（评论、文件临时记录、Passkey、Webhook 更新等）补齐显式 UTC 赋值。
-- 评论限流/去重的时间窗口计算改为 UTC 基准，避免与存储语义错位。
+判断方式：
 
-### 历史数据一次性归一
-
-- 启动时会自动尝试执行一次归一流程（基于幂等标记自动跳过重复转换，无公开 CLI 入口）。
-- 行为：
-  1. 启动后检查幂等标记，未完成则执行归一；
-  2. 按 `Asia/Shanghai` 解释历史时间并转换为 UTC；
-  3. 写入幂等标记，重复执行会自动跳过；
-  4. 输出逐表逐字段的候选行与更新行统计（审计信息）。
-
-### 幂等与安全约定
-
-- 幂等标记键：`storage_time_utc_normalized_v1`（存于 `key_values`）。
-- 若标记存在，迁移命令仅做信息输出，不会二次平移历史时间。
-- 若首次启动触发归一，建议在低峰时段完成部署并观察日志中的统计结果。
-
-### 手动赋值规则（必须遵守）
-
-为避免“重复赋值 + 语义冲突”，统一规则如下：
-
-- **默认不手动赋值**：`CreatedAt/UpdatedAt` 这类模型元数据时间，优先依赖  
-  `GORM NowFunc=UTC + 模型 Hook` 自动处理。
-- **必须手动赋值**：业务语义时间字段（例如 `ExpireAt = now + ttl`、`NextRetry = now + backoff`、事件触发时间等）。
-- **非持久化对象必须手动赋值**：内存任务状态、通知模板临时对象、测试样本构造等（不走 GORM，不会触发 Hook）。
-
-推荐判断法：
-
-1. 字段语义是“创建/更新时间元数据” -> 通常不手动填。
-2. 字段语义是“业务时刻/业务窗口/业务过期点” -> 必须手动算。
+1. 字段表示“创建/更新时间元数据” → 通常不手动填。
+2. 字段表示“业务时刻 / 业务窗口 / 业务过期点” → 由业务按 UTC 显式计算并赋值。
 
