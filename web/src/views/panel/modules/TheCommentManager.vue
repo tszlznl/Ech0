@@ -597,14 +597,14 @@ onMounted(async () => {
 }
 
 .comment-btn-danger {
-  border: 1px solid color-mix(in srgb, #ef4444 35%, var(--color-border-subtle) 65%) !important;
-  background: color-mix(in srgb, #ef4444 9%, var(--color-bg-surface) 91%) !important;
+  border: 1px solid var(--comment-danger-border) !important;
+  background: var(--comment-danger-bg) !important;
   color: #dc2626 !important;
 }
 
 .comment-btn-danger:hover {
   border-color: #f87171 !important;
-  background: color-mix(in srgb, #ef4444 14%, var(--color-bg-surface) 86%) !important;
+  background: var(--comment-danger-hover-bg) !important;
 }
 
 .status-pill {
@@ -619,32 +619,32 @@ onMounted(async () => {
 
 .status-approved {
   color: #059669;
-  border-color: color-mix(in srgb, #10b981 45%, transparent 55%);
-  background: color-mix(in srgb, #10b981 12%, transparent 88%);
+  border-color: var(--comment-status-approved-border);
+  background: var(--comment-status-approved-bg);
 }
 
 .status-rejected {
   color: #d97706;
-  border-color: color-mix(in srgb, #f59e0b 45%, transparent 55%);
-  background: color-mix(in srgb, #f59e0b 14%, transparent 86%);
+  border-color: var(--comment-status-rejected-border);
+  background: var(--comment-status-rejected-bg);
 }
 
 .status-pending {
   color: #0369a1;
-  border-color: color-mix(in srgb, #38bdf8 45%, transparent 55%);
-  background: color-mix(in srgb, #38bdf8 14%, transparent 86%);
+  border-color: var(--comment-status-pending-border);
+  background: var(--comment-status-pending-bg);
 }
 
 .status-hot {
   color: #7c3aed;
-  border-color: color-mix(in srgb, #8b5cf6 45%, transparent 55%);
-  background: color-mix(in srgb, #8b5cf6 14%, transparent 86%);
+  border-color: var(--comment-status-hot-border);
+  background: var(--comment-status-hot-bg);
 }
 
 .status-normal {
   color: var(--color-text-muted);
   border-color: var(--color-border-subtle);
-  background: color-mix(in srgb, var(--color-bg-muted) 65%, transparent 35%);
+  background: var(--comment-status-normal-bg);
 }
 
 .table-action {

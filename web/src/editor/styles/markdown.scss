@@ -95,12 +95,12 @@
   border: 1px solid var(--color-border-subtle);
   border-radius: 0.5rem;
   overflow: hidden;
-  background-color: color-mix(in srgb, var(--color-bg-surface) 86%, transparent);
+  background-color: var(--md-table-bg);
   font-size: 0.88rem;
 }
 
 .echo-markdown thead {
-  background-color: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-canvas) 26%);
+  background-color: var(--md-thead-bg);
 }
 
 .echo-markdown th,
@@ -120,11 +120,11 @@
 }
 
 .echo-markdown tbody tr:nth-child(even) {
-  background-color: color-mix(in srgb, var(--color-bg-canvas) 92%, transparent);
+  background-color: var(--md-tbody-even-bg);
 }
 
 .echo-markdown tbody tr:hover {
-  background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  background-color: var(--md-tbody-hover-bg);
 }
 
 .echo-markdown blockquote {
@@ -184,7 +184,7 @@
   top: 0.5rem;
   right: 0.5rem;
   z-index: 2;
-  border: 1px solid color-mix(in srgb, white 18%, transparent);
+  border: 1px solid var(--md-code-toggle-border);
   background: rgba(15, 23, 42, 0.9);
   color: #f8fafc;
   border-radius: 999px;
@@ -204,7 +204,7 @@
 
 .echo-markdown .code-block-toggle:hover {
   background: rgba(30, 41, 59, 0.95);
-  border-color: color-mix(in srgb, white 30%, transparent);
+  border-color: var(--md-code-toggle-hover-border);
   transform: translateY(-1px);
   box-shadow: 0 8px 18px rgba(2, 6, 23, 0.4);
 }

@@ -101,7 +101,7 @@ onMounted(() => {
   outline: none;
   box-shadow:
     0 0 0 1px var(--color-focus-ring),
-    0 0 0 4px color-mix(in srgb, var(--color-focus-ring) 35%, transparent);
+    0 0 0 4px var(--card-focus-ring-outer);
 }
 
 .github-card__body {

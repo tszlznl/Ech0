@@ -550,7 +550,7 @@ onMounted(async () => {
   border: 1px solid var(--color-border-subtle);
   border-radius: 0.75rem;
   padding: 0.9rem 1rem;
-  background: color-mix(in srgb, var(--color-bg-muted) 45%, transparent);
+  background: var(--webhook-guide-hero-bg);
   min-width: 0;
 }
 
@@ -585,7 +585,7 @@ onMounted(async () => {
   border: 1px solid var(--color-border-subtle);
   border-radius: 0.75rem;
   padding: 0.85rem;
-  background: color-mix(in srgb, var(--color-bg-surface) 70%, transparent);
+  background: var(--webhook-guide-section-bg);
   min-width: 0;
 }
 
@@ -615,7 +615,7 @@ onMounted(async () => {
   font-size: 12px;
   line-height: 1rem;
   color: var(--color-text-secondary);
-  background: color-mix(in srgb, var(--color-bg-muted) 60%, transparent);
+  background: var(--webhook-topic-chip-bg);
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -645,7 +645,7 @@ onMounted(async () => {
   font-size: 0.75rem;
   line-height: 1.1rem;
   color: var(--color-text-primary);
-  background: color-mix(in srgb, var(--color-bg-muted) 65%, transparent);
+  background: var(--webhook-guide-list-code-bg);
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -671,7 +671,7 @@ onMounted(async () => {
   width: 0.35rem;
   height: 0.35rem;
   border-radius: 9999px;
-  background: color-mix(in srgb, var(--color-primary) 70%, transparent);
+  background: var(--webhook-checklist-dot-bg);
 }
 
 .guide-code {
@@ -682,7 +682,7 @@ onMounted(async () => {
   font-size: 12px;
   line-height: 1.4;
   color: var(--color-text-secondary);
-  background: color-mix(in srgb, var(--color-bg-muted) 55%, transparent);
+  background: var(--webhook-guide-code-bg);
 }
 
 .top-action-btn {

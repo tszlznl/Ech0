@@ -327,7 +327,7 @@ onMounted(() => {
 .status-checking {
   color: var(--color-text-muted);
   border-color: var(--color-border-subtle);
-  background: color-mix(in srgb, var(--color-bg-muted) 65%, transparent);
+  background: var(--connect-status-checking-bg);
 }
 
 /* 版本：与状态 pill 同形，黄色系 */

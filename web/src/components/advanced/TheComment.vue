@@ -522,19 +522,19 @@ onBeforeUnmount(() => {
 
 <style scoped>
 :global(:root) {
-  --comment-grid-bg-color: color-mix(in srgb, var(--color-bg-canvas) 88%, #f3f2ee 12%);
+  --comment-grid-bg-color: var(--comment-grid-bg);
   --comment-grid-line-color: rgba(120, 120, 120, 0.08);
   --comment-sticky-bg: #f8f6ee;
-  --comment-sticky-border: color-mix(in srgb, var(--color-border-subtle) 78%, #d4c28f 22%);
+  --comment-sticky-border: var(--comment-sticky-border-color);
   --comment-sticky-shadow-1: rgba(20, 20, 20, 0.05);
   --comment-sticky-shadow-2: rgba(20, 20, 20, 0.06);
 }
 
 :global(:root.dark) {
-  --comment-grid-bg-color: color-mix(in srgb, var(--color-bg-canvas) 95%, #111 5%);
+  --comment-grid-bg-color: var(--comment-grid-bg);
   --comment-grid-line-color: rgba(240, 240, 240, 0.055);
   --comment-sticky-bg: #3a3731;
-  --comment-sticky-border: color-mix(in srgb, var(--color-border-subtle) 84%, #a99662 16%);
+  --comment-sticky-border: var(--comment-sticky-border-color);
   --comment-sticky-shadow-1: rgba(0, 0, 0, 0.36);
   --comment-sticky-shadow-2: rgba(0, 0, 0, 0.32);
 }
@@ -588,7 +588,7 @@ onBeforeUnmount(() => {
   width: 42px;
   height: 12px;
   border-radius: 2px;
-  background: color-mix(in srgb, var(--color-bg-canvas) 84%, #d7d2bf 16%);
+  background: var(--comment-sticky-before-bg);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.3) inset,
     0 1px 2px rgba(0, 0, 0, 0.08);
@@ -643,11 +643,11 @@ onBeforeUnmount(() => {
 }
 
 .comment-form-panel {
-  background: color-mix(in srgb, var(--color-bg-canvas) 92%, #fff 8%);
+  background: var(--comment-form-panel-bg);
   box-shadow:
     0 1px 0 rgba(20, 20, 20, 0.04),
     0 10px 18px rgba(20, 20, 20, 0.08);
-  border-color: color-mix(in srgb, var(--color-border-subtle) 78%, #cabd95 22%);
+  border-color: var(--comment-form-panel-border);
 }
 
 .comment-pill-btn {
@@ -661,8 +661,8 @@ onBeforeUnmount(() => {
   gap: 0.45rem;
   padding: 0.58rem 1rem;
   border-radius: 9999px;
-  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 82%, #cabd95 18%);
-  background: color-mix(in srgb, var(--color-bg-canvas) 92%, #fff 8%);
+  border: 1px solid var(--comment-pill-btn-border);
+  background: var(--comment-form-panel-bg);
   color: var(--color-text-primary);
   font-size: 0.9rem;
   font-weight: 600;
@@ -677,7 +677,7 @@ onBeforeUnmount(() => {
 
 .comment-pill-btn:hover {
   transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--color-border-subtle) 72%, #b7aa7e 28%);
+  border-color: var(--comment-pill-btn-hover-border);
   box-shadow:
     0 1px 0 rgba(20, 20, 20, 0.04),
     0 10px 16px rgba(20, 20, 20, 0.09);
@@ -692,7 +692,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   font-size: 0.9rem;
   line-height: 1;
-  background: color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+  background: var(--comment-pill-icon-bg);
 }
 
 .comment-collapse-btn {
@@ -710,8 +710,8 @@ onBeforeUnmount(() => {
 
 .comment-collapse-btn:hover {
   color: var(--color-text-primary);
-  border-color: color-mix(in srgb, var(--color-border-subtle) 70%, #b7aa7e 30%);
-  background: color-mix(in srgb, var(--color-bg-canvas) 85%, #fff 15%);
+  border-color: var(--comment-collapse-hover-border);
+  background: var(--comment-collapse-hover-bg);
 }
 
 .comment-md-content {
@@ -772,8 +772,8 @@ onBeforeUnmount(() => {
 
 .comment-input-field {
   color: var(--color-text-primary);
-  border-color: color-mix(in srgb, var(--color-border-subtle) 84%, #c9b886 16%);
-  background: color-mix(in srgb, var(--color-bg-canvas) 92%, transparent);
+  border-color: var(--comment-input-border);
+  background: var(--comment-input-bg);
   transition:
     border-color 0.2s ease,
     box-shadow 0.22s ease,
@@ -781,21 +781,21 @@ onBeforeUnmount(() => {
 }
 
 .comment-input-field::placeholder {
-  color: color-mix(in srgb, var(--color-text-muted) 86%, transparent);
+  color: var(--comment-input-placeholder);
 }
 
 .comment-input-field:hover {
-  border-color: color-mix(in srgb, var(--color-border-subtle) 68%, #b9a977 32%);
+  border-color: var(--comment-input-hover-border);
 }
 
 .comment-input-field:focus,
 .comment-input-field:focus-visible {
   outline: none;
-  border-color: color-mix(in srgb, var(--color-accent) 58%, var(--color-border-subtle) 42%);
-  background: color-mix(in srgb, var(--color-bg-canvas) 96%, #fff 4%);
+  border-color: var(--comment-input-focus-border);
+  background: var(--comment-input-focus-bg);
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--color-accent) 42%, transparent),
-    0 0 0 4px color-mix(in srgb, var(--color-accent) 16%, transparent);
+    0 0 0 1px var(--comment-input-focus-ring-inner),
+    0 0 0 4px var(--comment-input-focus-ring-outer);
 }
 
 .comment-textarea {

@@ -13,6 +13,6 @@
 }
 
 .x-scrollbar::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--color-border-subtle) 75%, transparent);
+  background: var(--scrollbar-thumb-bg);
   border-radius: 9999px;
 }

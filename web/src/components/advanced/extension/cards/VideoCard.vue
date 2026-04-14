@@ -63,7 +63,7 @@ const providerLabel = computed(() => (isBilibili.value ? 'Bilibili' : 'YouTube')
   font-size: 0.68rem;
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border-subtle);
-  background: color-mix(in srgb, var(--color-bg-surface) 86%, var(--color-bg-muted) 14%);
+  background: var(--video-provider-badge-bg);
   backdrop-filter: blur(1.2px);
 }
 

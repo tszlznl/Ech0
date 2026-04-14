@@ -99,18 +99,14 @@ body.md-editor-full-open {
   padding: 0.2rem 0.55rem;
   font-size: 0.75rem;
   color: var(--md-editor-toolbar-btn-text);
-  background-color: color-mix(in srgb, var(--md-editor-mini-btn-bg), var(--color-bg-canvas) 46%);
+  background-color: var(--md-editor-mode-toggle-bg);
   transition: all 0.2s ease;
 }
 
 .markdown-editor .mode-toggle-btn:hover {
   color: var(--md-editor-toolbar-btn-hover-text);
   border-color: var(--md-editor-toolbar-btn-hover-border);
-  background-color: color-mix(
-    in srgb,
-    var(--md-editor-mini-btn-hover-bg),
-    var(--color-bg-canvas) 34%
-  );
+  background-color: var(--md-editor-mode-toggle-hover-bg);
 }
 
 .markdown-editor .toolbar {

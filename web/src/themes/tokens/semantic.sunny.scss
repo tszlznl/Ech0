@@ -50,11 +50,3 @@
     --color-danger: oklch(62.1% 0.223 27.2);
   }
 }
-
-@supports (background: color-mix(in srgb, red, blue)) {
-  :root.sunny {
-    --color-focus-ring: color-mix(in srgb, #8b7355 42%, transparent);
-    --color-overlay-strong: color-mix(in srgb, var(--color-text-primary) 48%, transparent);
-    --color-gallery-scrollbar: color-mix(in srgb, var(--color-text-primary) 16%, transparent);
-  }
-}

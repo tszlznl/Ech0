@@ -664,7 +664,7 @@ onMounted(() => {
 
 .tree-row {
   min-height: 2.4rem;
-  border-bottom: 1px solid color-mix(in oklab, var(--color-border-subtle) 70%, transparent);
+  border-bottom: 1px solid var(--storage-tree-row-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -679,11 +679,11 @@ onMounted(() => {
 .root-row {
   cursor: pointer;
   border-bottom: 1px solid var(--color-border-subtle);
-  background: color-mix(in oklab, var(--color-bg-muted) 45%, transparent);
+  background: var(--storage-root-row-bg);
 }
 
 .tree-row:hover {
-  background: color-mix(in oklab, var(--color-bg-muted) 70%, transparent);
+  background: var(--storage-tree-row-hover-bg);
 }
 
 .tree-row.is-file {
@@ -691,7 +691,7 @@ onMounted(() => {
 }
 
 .tree-row.is-selected {
-  background: color-mix(in oklab, var(--color-accent-soft, var(--color-bg-muted)) 85%, transparent);
+  background: var(--storage-tree-row-selected-bg);
 }
 
 .tree-left {
@@ -718,8 +718,8 @@ onMounted(() => {
   font-size: 0.72rem;
   font-weight: 700;
   color: var(--color-accent);
-  background: color-mix(in oklab, var(--color-accent-soft, var(--color-bg-muted)) 70%, transparent);
-  border: 1px solid color-mix(in oklab, var(--color-accent) 35%, var(--color-border-subtle));
+  background: var(--storage-root-mark-bg);
+  border: 1px solid var(--storage-root-mark-border);
 }
 
 .node-name {

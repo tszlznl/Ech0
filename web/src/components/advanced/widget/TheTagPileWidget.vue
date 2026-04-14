@@ -505,10 +505,10 @@ onBeforeUnmount(() => {
   position: absolute;
   padding: 0.32rem 0.78rem;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 78%, transparent);
+  border: 1px solid var(--tag-pill-border);
   box-shadow:
-    0 1px 2px color-mix(in srgb, var(--color-bg-mask) 18%, transparent),
-    inset 0 1px 0 color-mix(in srgb, white 12%, transparent);
+    0 1px 2px var(--tag-pill-shadow-outer),
+    inset 0 1px 0 var(--tag-pill-shadow-inner);
   font-family: var(--font-family-mono);
   font-size: 0.68rem;
   line-height: 1;

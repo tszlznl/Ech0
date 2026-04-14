@@ -125,11 +125,8 @@ function cardStyle(idx: number): Record<string, string> {
   --stack-overlap: 0.22;
   /* 纵向：下一行向上叠到上一行，比例相对邮票高度 */
   --stack-row-overlap: 0.6;
-  --stack-frame-shadow: 0 0 0 1px color-mix(in srgb, var(--color-border-subtle) 85%, transparent);
-  --stack-frame-shadow-hover:
-    0 0 0 1px color-mix(in srgb, var(--color-border-subtle) 85%, transparent),
-    0 0.2rem 0.45rem color-mix(in srgb, var(--color-text-primary) 9%, transparent),
-    0 0.55rem 1rem color-mix(in srgb, var(--color-text-primary) 5%, transparent);
+  --gallery-stack-frame-shadow: var(--gallery-stack-frame-shadow);
+  --gallery-stack-frame-shadow-hover: var(--gallery-stack-frame-shadow-hover);
   width: 100%;
   max-width: 100%;
   margin-left: auto;
@@ -241,13 +238,13 @@ function cardStyle(idx: number): Record<string, string> {
   overflow: hidden;
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
-  box-shadow: var(--stack-frame-shadow);
+  box-shadow: var(--gallery-stack-frame-shadow);
   transition: box-shadow 0.2s ease;
 }
 
 .stack-card:hover :deep(.gallery-image-frame.stack-frame),
 .stack-card:focus-within :deep(.gallery-image-frame.stack-frame) {
-  box-shadow: var(--stack-frame-shadow-hover);
+  box-shadow: var(--gallery-stack-frame-shadow-hover);
 }
 
 :deep(.gallery-image-frame.stack-frame .image-skeleton) {
@@ -292,7 +289,7 @@ function cardStyle(idx: number): Record<string, string> {
 
   .stack-card:hover :deep(.gallery-image-frame.stack-frame),
   .stack-card:focus-within :deep(.gallery-image-frame.stack-frame) {
-    box-shadow: var(--stack-frame-shadow);
+    box-shadow: var(--gallery-stack-frame-shadow);
   }
 }
 </style>

@@ -183,7 +183,7 @@ onMounted(() => {
   position: relative;
   width: 100%;
   border: 1px solid var(--color-border-subtle);
-  background-color: color-mix(in srgb, var(--color-bg-surface) 78%, transparent);
+  background-color: var(--comment-widget-card-bg);
   box-shadow: 0 8px 18px rgba(20, 20, 20, 0.04);
   padding: 14px 12px 12px;
   transform: rotate(-1.1deg);
@@ -202,8 +202,8 @@ onMounted(() => {
   width: 26px;
   height: 26px;
   border-radius: 9999px;
-  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 88%, transparent);
-  background: color-mix(in srgb, var(--color-bg-canvas) 92%, transparent);
+  border: 1px solid var(--comment-widget-jump-border);
+  background: var(--comment-widget-jump-bg);
   color: var(--color-text-secondary);
   display: inline-flex;
   align-items: center;
@@ -239,7 +239,7 @@ onMounted(() => {
   width: 42px;
   height: 12px;
   border-radius: 2px;
-  background: color-mix(in srgb, var(--color-bg-canvas) 84%, #d7d2bf 16%);
+  background: var(--comment-widget-card-before-bg);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.3) inset,
     0 1px 2px rgba(0, 0, 0, 0.08);

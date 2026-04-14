@@ -8,7 +8,7 @@
             type="text"
             v-model="searchContent"
             :placeholder="t('homeTop.searchPlaceholder')"
-            class="h-9 w-full! max-w-none rounded-[var(--radius-xs)]! border-[color-mix(in_srgb,var(--color-border-subtle),transparent_45%)]! bg-transparent! shadow-none! text-[var(--color-text-secondary)] focus:ring-0!"
+            class="h-9 w-full! max-w-none rounded-[var(--radius-xs)]! border-[var(--filter-search-input-border)]! bg-transparent! shadow-none! text-[var(--color-text-secondary)] focus:ring-0!"
             @keyup.enter="($event.target as HTMLInputElement).blur()"
             @blur="handleSearch"
           />
@@ -67,7 +67,7 @@ watch(searchValue, (value) => {
   width: 100%;
   padding: 0.3rem;
   border-radius: var(--radius-xs);
-  background: color-mix(in srgb, var(--color-bg-surface), var(--color-border-subtle) 24%);
+  background: var(--filter-search-shell-bg);
   box-shadow: inset 0 0 0 1px var(--color-border-subtle);
 }
 </style>

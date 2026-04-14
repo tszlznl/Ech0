@@ -182,13 +182,13 @@ watch(showSearchTrigger, (visible) => {
 
 .home-sidebar-nav__link.home-sidebar-nav__link--active {
   color: var(--color-text-primary);
-  background: color-mix(in srgb, var(--color-bg-muted), var(--color-bg-surface) 90%);
+  background: var(--nav-link-active-bg);
   box-shadow: var(--shadow-soft);
 }
 
 .home-sidebar-nav__link.home-sidebar-nav__link--active:hover {
   color: var(--color-text-primary);
-  background: color-mix(in srgb, var(--color-bg-muted), var(--color-bg-surface) 90%);
+  background: var(--nav-link-active-bg);
 }
 
 .home-sidebar-nav__search-trigger {

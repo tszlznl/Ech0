@@ -64,20 +64,8 @@ const handleAddExtension = (extensiontype: ExtensionType) => {
 .editor-mode-panel {
   border-color: var(--md-editor-mini-border);
   --btn-bg-color: var(--md-editor-mini-btn-bg);
-  --btn-ring-color: color-mix(
-    in srgb,
-    var(--md-editor-mini-btn-border),
-    var(--color-bg-canvas) 26%
-  );
-  --btn-hover-bg-color: color-mix(
-    in srgb,
-    var(--md-editor-mini-btn-hover-bg),
-    var(--color-bg-canvas) 38%
-  );
-  --btn-hover-border-color: color-mix(
-    in srgb,
-    var(--md-editor-toolbar-btn-hover-border),
-    var(--color-bg-canvas) 20%
-  );
+  --btn-ring-color: var(--md-editor-actions-ring-color);
+  --btn-hover-bg-color: var(--md-editor-actions-hover-bg);
+  --btn-hover-border-color: var(--md-editor-actions-hover-border);
 }
 </style>
