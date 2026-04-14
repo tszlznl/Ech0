@@ -217,7 +217,6 @@ watch(showSearchTrigger, (visible) => {
     gap: 0.2rem;
     overflow-x: auto;
     white-space: nowrap;
-    scrollbar-width: none;
   }
 
   .home-sidebar-nav__nav::-webkit-scrollbar {
