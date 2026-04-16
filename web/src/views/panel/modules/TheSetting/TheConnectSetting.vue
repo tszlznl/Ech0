@@ -314,14 +314,14 @@ onMounted(() => {
 
 .status-success {
   color: #166534;
-  border-color: rgba(34, 197, 94, 0.35);
-  background: rgba(34, 197, 94, 0.14);
+  border-color: rgb(34 197 94 / 35%);
+  background: rgb(34 197 94 / 14%);
 }
 
 .status-failed {
   color: #991b1b;
-  border-color: rgba(239, 68, 68, 0.35);
-  background: rgba(239, 68, 68, 0.14);
+  border-color: rgb(239 68 68 / 35%);
+  background: rgb(239 68 68 / 14%);
 }
 
 .status-checking {
@@ -342,13 +342,13 @@ onMounted(() => {
 
 .version-pill-yellow {
   color: #a16207;
-  border-color: rgba(234, 179, 8, 0.4);
-  background: rgba(250, 204, 21, 0.16);
+  border-color: rgb(234 179 8 / 40%);
+  background: rgb(250 204 21 / 16%);
 }
 
 .version-pill-muted {
   color: var(--color-text-muted);
-  border-color: rgba(234, 179, 8, 0.22);
-  background: rgba(250, 204, 21, 0.07);
+  border-color: rgb(234 179 8 / 22%);
+  background: rgb(250 204 21 / 7%);
 }
 </style>

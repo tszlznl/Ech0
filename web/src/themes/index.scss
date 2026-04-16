@@ -1,12 +1,12 @@
 // File: src/themes/index.scss
-@use './tokens/foundation.scss';
-@use './light.scss';
-@use './dark.scss';
-@use './sunny.scss';
-@use './custom.scss';
-@use './base.scss';
-@use './tooltip.scss';
-@use './utilities.scss';
+@use './tokens/foundation';
+@use './light';
+@use './dark';
+@use './sunny';
+@use './custom';
+@use './base';
+@use './tooltip';
+@use './utilities';
 
 // 约定：
 // - Uno 类只负责结构、间距、布局等原子能力
@@ -17,6 +17,7 @@
   background-color: var(--color-bg-surface);
   color: var(--color-text-secondary);
 }
+
 .widget-title {
   color: var(--color-text-primary);
 }

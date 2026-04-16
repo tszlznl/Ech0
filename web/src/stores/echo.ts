@@ -93,13 +93,20 @@ export const useEchoStore = defineStore('echoStore', () => {
    * 加载下一页数据。
    * 通过 current > page 判断是否有新页需要加载，避免重复请求。
    * 请求成功后将数据合并进列表并推进 page 计数。
+   *
+   * 注意：`current <= page` 守卫是在 await 之前同步求值的，若两个调用方
+   * （如 main.ts 的预热 + TheEchos.onMounted）在首次请求完成前相继进入，
+   * 两者都会绕过守卫触发重复请求。为此用 `pendingFetch` 复用进行中的 Promise，
+   * 保证同一 page 只发一次。
    */
+  let pendingFetch: Promise<void> | null = null
   async function getEchosByPage() {
     if (current.value <= page.value) return
+    if (pendingFetch) return pendingFetch
 
     isLoading.value = true
 
-    await fetchQueryEchos(buildQueryParams())
+    pendingFetch = fetchQueryEchos(buildQueryParams())
       .then((res) => {
         if (res.code === 1) {
           total.value = res.data.total
@@ -109,7 +116,10 @@ export const useEchoStore = defineStore('echoStore', () => {
       })
       .finally(() => {
         isLoading.value = false
+        pendingFetch = null
       })
+
+    return pendingFetch
   }
 
   /** 重置所有分页状态，清空列表与索引。 */
@@ -168,9 +178,15 @@ export const useEchoStore = defineStore('echoStore', () => {
     }
   }
 
-  /** Store 初始化入口：预加载标签列表。 */
-  const init = () => {
-    getTags()
+  /** 首次访问标签 UI 时懒加载；重复调用不重复请求。 */
+  let tagsLoadPromise: Promise<void> | null = null
+  const ensureTagsLoaded = (): Promise<void> => {
+    if (tagList.value.length > 0) return Promise.resolve()
+    if (tagsLoadPromise) return tagsLoadPromise
+    tagsLoadPromise = getTags().finally(() => {
+      tagsLoadPromise = null
+    })
+    return tagsLoadPromise
   }
 
   return {
@@ -202,6 +218,6 @@ export const useEchoStore = defineStore('echoStore', () => {
     updateEcho,
     updateLikeCount,
     getTags,
-    init,
+    ensureTagsLoaded,
   }
 })

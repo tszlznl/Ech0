@@ -148,12 +148,13 @@ onBeforeUnmount(() => {
   --home-canvas: var(--color-bg-canvas, #f5f3ef);
   --home-accent: #e07020;
   --home-main-max: 28rem;
+
   min-height: 100dvh;
   background: var(--home-canvas);
   color: var(--color-text-primary);
 }
 
-@media (min-width: 820px) {
+@media (width >= 820px) {
   .home-page {
     height: 100dvh;
     overflow: hidden;
@@ -166,7 +167,7 @@ onBeforeUnmount(() => {
   padding: 0 0.75rem;
 }
 
-@media (min-width: 640px) {
+@media (width >= 640px) {
   .home-shell {
     margin-top: 1.25rem;
     margin-bottom: 2rem;
@@ -174,7 +175,7 @@ onBeforeUnmount(() => {
   }
 }
 
-@media (min-width: 820px) {
+@media (width >= 820px) {
   .home-shell {
     margin: 0 auto;
     padding: 0 1rem;
@@ -199,7 +200,7 @@ onBeforeUnmount(() => {
   background: transparent;
 }
 
-@media (min-width: 820px) {
+@media (width >= 820px) {
   .home-layout {
     flex: 1;
     min-height: 0;
@@ -229,7 +230,7 @@ onBeforeUnmount(() => {
   overflow-x: visible;
 }
 
-@media (min-width: 820px) {
+@media (width >= 820px) {
   .home-main {
     min-height: 0;
     align-self: stretch;
@@ -242,8 +243,7 @@ onBeforeUnmount(() => {
   }
 
   .home-main--unclipped {
-    overflow-x: visible;
-    overflow-y: auto;
+    overflow: visible auto;
   }
 
   .home-layout--zen .home-main {
@@ -302,13 +302,13 @@ onBeforeUnmount(() => {
   gap: 0.75rem;
 }
 
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .home-content-block--publish {
     padding-inline: 1.75rem;
   }
 }
 
-@media (min-width: 1024px) {
+@media (width >= 1024px) {
   .home-content-block--publish {
     padding-inline: 2rem;
   }
@@ -320,7 +320,7 @@ onBeforeUnmount(() => {
   margin-bottom: 0.75rem;
 }
 
-@media (min-width: 820px) {
+@media (width >= 820px) {
   .home-aside--mobile {
     display: none !important;
   }
@@ -334,7 +334,7 @@ onBeforeUnmount(() => {
   }
 }
 
-@media (max-width: 819.98px) {
+@media (width <= 819.98px) {
   .home-banner--mobile-hidden {
     display: none;
   }

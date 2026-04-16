@@ -523,20 +523,20 @@ onBeforeUnmount(() => {
 <style scoped>
 :global(:root) {
   --comment-grid-bg-color: var(--comment-grid-bg);
-  --comment-grid-line-color: rgba(120, 120, 120, 0.08);
+  --comment-grid-line-color: rgb(120 120 120 / 8%);
   --comment-sticky-bg: #f8f6ee;
   --comment-sticky-border: var(--comment-sticky-border-color);
-  --comment-sticky-shadow-1: rgba(20, 20, 20, 0.05);
-  --comment-sticky-shadow-2: rgba(20, 20, 20, 0.06);
+  --comment-sticky-shadow-1: rgb(20 20 20 / 5%);
+  --comment-sticky-shadow-2: rgb(20 20 20 / 6%);
 }
 
 :global(:root.dark) {
   --comment-grid-bg-color: var(--comment-grid-bg);
-  --comment-grid-line-color: rgba(240, 240, 240, 0.055);
+  --comment-grid-line-color: rgb(240 240 240 / 5.5%);
   --comment-sticky-bg: #3a3731;
   --comment-sticky-border: var(--comment-sticky-border-color);
-  --comment-sticky-shadow-1: rgba(0, 0, 0, 0.36);
-  --comment-sticky-shadow-2: rgba(0, 0, 0, 0.32);
+  --comment-sticky-shadow-1: rgb(0 0 0 / 36%);
+  --comment-sticky-shadow-2: rgb(0 0 0 / 32%);
 }
 
 .comment-list-board {
@@ -574,7 +574,7 @@ onBeforeUnmount(() => {
   box-shadow:
     0 1px 0 var(--comment-sticky-shadow-1),
     0 8px 14px var(--comment-sticky-shadow-2);
-  transform: translateX(var(--sticky-shift, 0px)) rotate(var(--sticky-rotate, 0deg));
+  transform: translateX(var(--sticky-shift, 0)) rotate(var(--sticky-rotate, 0deg));
   transform-origin: 42% 8%;
   border-radius: 4px;
 }
@@ -590,8 +590,8 @@ onBeforeUnmount(() => {
   border-radius: 2px;
   background: var(--comment-sticky-before-bg);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.3) inset,
-    0 1px 2px rgba(0, 0, 0, 0.08);
+    0 1px 0 rgb(255 255 255 / 30%) inset,
+    0 1px 2px rgb(0 0 0 / 8%);
   opacity: 0.95;
 }
 
@@ -631,7 +631,7 @@ onBeforeUnmount(() => {
   width: 0.55rem;
   height: 0.55rem;
   border-radius: 9999px;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.72);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 72%);
 }
 
 .comment-ready-dot.is-ready {
@@ -645,8 +645,8 @@ onBeforeUnmount(() => {
 .comment-form-panel {
   background: var(--comment-form-panel-bg);
   box-shadow:
-    0 1px 0 rgba(20, 20, 20, 0.04),
-    0 10px 18px rgba(20, 20, 20, 0.08);
+    0 1px 0 rgb(20 20 20 / 4%),
+    0 10px 18px rgb(20 20 20 / 8%);
   border-color: var(--comment-form-panel-border);
 }
 
@@ -671,16 +671,16 @@ onBeforeUnmount(() => {
     box-shadow 0.2s ease,
     border-color 0.2s ease;
   box-shadow:
-    0 1px 0 rgba(20, 20, 20, 0.04),
-    0 6px 12px rgba(20, 20, 20, 0.06);
+    0 1px 0 rgb(20 20 20 / 4%),
+    0 6px 12px rgb(20 20 20 / 6%);
 }
 
 .comment-pill-btn:hover {
   transform: translateY(-1px);
   border-color: var(--comment-pill-btn-hover-border);
   box-shadow:
-    0 1px 0 rgba(20, 20, 20, 0.04),
-    0 10px 16px rgba(20, 20, 20, 0.09);
+    0 1px 0 rgb(20 20 20 / 4%),
+    0 10px 16px rgb(20 20 20 / 9%);
 }
 
 .comment-pill-btn__icon {
@@ -723,7 +723,7 @@ onBeforeUnmount(() => {
 .comment-md-content :deep(p) {
   margin: 0.15rem 0;
   white-space: pre-wrap;
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .comment-preview {
@@ -752,6 +752,7 @@ onBeforeUnmount(() => {
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0;
+
   --cap-widget-width: 100%;
 }
 
@@ -803,13 +804,13 @@ onBeforeUnmount(() => {
   resize: vertical;
 }
 
-@media (max-width: 640px) {
+@media (width <= 640px) {
   .comment-sticky {
     transform: translateX(calc(var(--sticky-shift, 0px) * 0.35))
       rotate(calc(var(--sticky-rotate, 0deg) * 0.35));
     box-shadow:
-      0 1px 0 rgba(20, 20, 20, 0.06),
-      0 8px 14px rgba(20, 20, 20, 0.08);
+      0 1px 0 rgb(20 20 20 / 6%),
+      0 8px 14px rgb(20 20 20 / 8%);
   }
 
   .comment-submit-row {
@@ -832,6 +833,7 @@ onBeforeUnmount(() => {
   .comment-captcha-mount :deep(cap-widget) {
     width: 100% !important;
     max-width: 100% !important;
+
     --cap-widget-height: 40px;
   }
 

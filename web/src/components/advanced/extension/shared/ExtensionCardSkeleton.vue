@@ -38,9 +38,9 @@ const styleVars = computed(() => ({
   border-radius: 999px;
   background: linear-gradient(
     90deg,
-    rgba(130, 130, 130, 0.14) 0%,
-    rgba(130, 130, 130, 0.22) 50%,
-    rgba(130, 130, 130, 0.14) 100%
+    rgb(130 130 130 / 14%) 0%,
+    rgb(130 130 130 / 22%) 50%,
+    rgb(130 130 130 / 14%) 100%
   );
   background-size: 200% 100%;
   animation: skeleton-flow 1.8s ease-in-out infinite;
@@ -50,6 +50,7 @@ const styleVars = computed(() => ({
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }

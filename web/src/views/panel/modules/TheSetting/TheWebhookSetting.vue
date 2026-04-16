@@ -533,17 +533,17 @@ onMounted(async () => {
 
 .status-success {
   color: rgb(34 197 94);
-  background: rgb(34 197 94 / 0.12);
+  background: rgb(34 197 94 / 12%);
 }
 
 .status-failed {
   color: rgb(239 68 68);
-  background: rgb(239 68 68 / 0.12);
+  background: rgb(239 68 68 / 12%);
 }
 
 .status-unknown {
   color: rgb(245 158 11);
-  background: rgb(245 158 11 / 0.14);
+  background: rgb(245 158 11 / 14%);
 }
 
 .guide-hero {
@@ -561,7 +561,6 @@ onMounted(async () => {
   letter-spacing: 0.06em;
   white-space: normal;
   overflow-wrap: anywhere;
-  word-break: break-word;
 }
 
 .guide-title {
@@ -570,7 +569,6 @@ onMounted(async () => {
   font-weight: 700;
   color: var(--color-text-primary);
   overflow-wrap: anywhere;
-  word-break: break-word;
 }
 
 .guide-desc {
@@ -578,7 +576,6 @@ onMounted(async () => {
   font-size: 0.875rem;
   color: var(--color-text-secondary);
   overflow-wrap: anywhere;
-  word-break: break-word;
 }
 
 .guide-section {
@@ -594,7 +591,6 @@ onMounted(async () => {
   font-weight: 600;
   color: var(--color-text-primary);
   overflow-wrap: anywhere;
-  word-break: break-word;
 }
 
 .guide-section-desc {
@@ -602,7 +598,6 @@ onMounted(async () => {
   font-size: 0.8rem;
   color: var(--color-text-muted);
   overflow-wrap: anywhere;
-  word-break: break-word;
 }
 
 .topic-chip {
@@ -618,7 +613,6 @@ onMounted(async () => {
   background: var(--webhook-topic-chip-bg);
   white-space: normal;
   overflow-wrap: anywhere;
-  word-break: break-word;
 }
 
 .guide-list {
@@ -635,7 +629,6 @@ onMounted(async () => {
   color: var(--color-text-secondary);
   min-width: 0;
   overflow-wrap: anywhere;
-  word-break: break-word;
 }
 
 .guide-list code {
@@ -648,7 +641,6 @@ onMounted(async () => {
   background: var(--webhook-guide-list-code-bg);
   white-space: normal;
   overflow-wrap: anywhere;
-  word-break: break-word;
 }
 
 .guide-checklist {

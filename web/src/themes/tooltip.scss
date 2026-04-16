@@ -1,12 +1,12 @@
 .v-popper--theme-tooltip {
   --tooltip-bg-color: var(--color-bg-surface);
   --tooltip-text-color: var(--color-text-secondary);
-  --tooltip-shadow-color: oklch(0% 0 0 / 0.22);
+  --tooltip-shadow-color: oklch(0% 0 0deg / 22%);
 }
 
 :root.dark .v-popper--theme-tooltip {
   --tooltip-bg-color: var(--color-bg-surface);
-  --tooltip-shadow-color: oklch(0% 0 0 / 0.4);
+  --tooltip-shadow-color: oklch(0% 0 0deg / 40%);
 }
 
 .v-popper--theme-tooltip .v-popper__inner {
@@ -43,6 +43,7 @@
     opacity: 0;
     transform: translateY(2px) scale(0.98);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);

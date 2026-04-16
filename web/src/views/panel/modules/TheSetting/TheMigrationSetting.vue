@@ -569,7 +569,7 @@ void migrationStore.init()
   gap: 0.25rem;
 }
 
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .migration-source-grid {
     grid-template-columns: 1fr;
   }

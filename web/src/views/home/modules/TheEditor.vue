@@ -159,7 +159,7 @@ onMounted(() => {
   padding: 0.15rem;
 }
 
-@media (min-width: 640px) {
+@media (width >= 640px) {
   .editor-shell__inner {
     padding: 0.25rem;
   }

@@ -54,12 +54,15 @@ const renderContent = async () => {
   const render = await loadRenderMarkdown()
   if (currentSequence !== renderSequence) return
 
-  rendererReady.value = true
-  html.value = render(content, {
+  const rendered = await render(content, {
     expandLabel: expandLabel.value,
     collapseLabel: collapseLabel.value,
     taskCheckboxLabel: taskCheckboxLabel.value,
   })
+  if (currentSequence !== renderSequence) return
+
+  rendererReady.value = true
+  html.value = rendered
 }
 
 function onRootClick(event: Event) {
@@ -105,11 +108,11 @@ watch(
   background:
     linear-gradient(
       90deg,
-      rgba(140, 140, 140, 0.08) 25%,
-      rgba(140, 140, 140, 0.18) 37%,
-      rgba(140, 140, 140, 0.08) 63%
+      rgb(140 140 140 / 8%) 25%,
+      rgb(140 140 140 / 18%) 37%,
+      rgb(140 140 140 / 8%) 63%
     ),
-    linear-gradient(180deg, rgba(120, 120, 120, 0.05), rgba(120, 120, 120, 0.08));
+    linear-gradient(180deg, rgb(120 120 120 / 5%), rgb(120 120 120 / 8%));
   background-size:
     240% 100%,
     100% 100%;
@@ -122,6 +125,7 @@ watch(
       100% 0,
       0 0;
   }
+
   100% {
     background-position:
       -100% 0,

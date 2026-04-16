@@ -63,6 +63,7 @@ const handleAddExtension = (extensiontype: ExtensionType) => {
 <style scoped>
 .editor-mode-panel {
   border-color: var(--md-editor-mini-border);
+
   --btn-bg-color: var(--md-editor-mini-btn-bg);
   --btn-ring-color: var(--md-editor-actions-ring-color);
   --btn-hover-bg-color: var(--md-editor-actions-hover-bg);

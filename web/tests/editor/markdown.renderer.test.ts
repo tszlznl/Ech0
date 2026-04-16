@@ -6,16 +6,16 @@ function lines(count: number): string {
 }
 
 describe('renderMarkdown renderer behaviors', () => {
-  it('为外链添加 target 与 rel 属性', () => {
-    const html = renderMarkdown('[echo](https://example.com)')
+  it('为外链添加 target 与 rel 属性', async () => {
+    const html = await renderMarkdown('[echo](https://example.com)')
 
     expect(html).toContain('target="_blank"')
     expect(html).toContain('rel="noopener noreferrer"')
   })
 
-  it('仅折叠超过阈值的代码块并替换按钮文案', () => {
+  it('仅折叠超过阈值的代码块并替换按钮文案', async () => {
     const source = ['```ts', lines(18), '```'].join('\n')
-    const html = renderMarkdown(source, {
+    const html = await renderMarkdown(source, {
       expandLabel: '展开<更多>',
       collapseLabel: '收起<更少>',
     })
@@ -26,17 +26,17 @@ describe('renderMarkdown renderer behaviors', () => {
     expect(html).toContain('收起&lt;更少&gt;')
   })
 
-  it('对原始 HTML 输入保持转义，避免脚本注入', () => {
-    const html = renderMarkdown('<script>alert("xss")</script>')
+  it('对原始 HTML 输入保持转义，避免脚本注入', async () => {
+    const html = await renderMarkdown('<script>alert("xss")</script>')
 
     expect(html).toContain('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;')
     expect(html).not.toContain('<script>')
   })
 
-  it('缓存按内容与标签区分，避免错误复用本地化文案', () => {
+  it('缓存按内容与标签区分，避免错误复用本地化文案', async () => {
     const source = ['```ts', lines(18), '```'].join('\n')
-    const htmlA = renderMarkdown(source, { expandLabel: '展开A', collapseLabel: '收起A' })
-    const htmlB = renderMarkdown(source, { expandLabel: '展开B', collapseLabel: '收起B' })
+    const htmlA = await renderMarkdown(source, { expandLabel: '展开A', collapseLabel: '收起A' })
+    const htmlB = await renderMarkdown(source, { expandLabel: '展开B', collapseLabel: '收起B' })
 
     expect(htmlA).toContain('展开A')
     expect(htmlA).not.toContain('展开B')

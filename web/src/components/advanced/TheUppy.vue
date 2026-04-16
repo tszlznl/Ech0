@@ -628,6 +628,7 @@ onBeforeUnmount(() => {
 :deep(.uppy-Dashboard-browse:hover) {
   color: var(--uppy-link-hover-color);
 }
+
 :deep(.uppy-StatusBar) {
   color: var(--uppy-text-color);
   background-color: var(--uppy-panel-bg-color);

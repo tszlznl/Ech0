@@ -72,6 +72,7 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useEchoStore, useUserStore } from '@/stores'
 import { fetchDeleteTagById } from '@/service/api'
 import { storeToRefs } from 'pinia'
@@ -88,6 +89,10 @@ const { tagList } = storeToRefs(echoStore)
 const { isLogin } = storeToRefs(userStore)
 const { t } = useI18n()
 const router = useRouter()
+
+onMounted(() => {
+  echoStore.ensureTagsLoaded()
+})
 
 const { openConfirm } = useBaseDialog()
 const getPopoverPanelClass = (index: number) => {

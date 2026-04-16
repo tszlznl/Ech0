@@ -5,27 +5,27 @@
   /* 参考站 day/light 方向：减少偏黄，转为中性奶油灰 */
   --color-chrome-theme: #eeece6;
   --color-bg-canvas: #f2efe9;
-  --color-bg-surface: #ffffff;
+  --color-bg-surface: #fff;
   --color-bg-muted: #ebe9e4;
   --color-text-primary: #1a1a1a;
   --color-text-secondary: #4a4a4a;
-  --color-text-muted: #888888;
+  --color-text-muted: #888;
   --color-border-subtle: #d8d5cf;
   --color-border-strong: #c6c2ba;
   --color-accent: #8b7355;
   --color-accent-soft: #ebe5dd;
   --color-danger: #ef3331;
-  --color-focus-ring: rgba(139, 115, 85, 0.42);
+  --color-focus-ring: rgb(139 115 85 / 42%);
 
   --color-nav-active-bg: var(--color-accent-soft);
   --color-nav-active-text: var(--color-text-primary);
-  --color-overlay-strong: rgba(26, 26, 26, 0.48);
-  --color-gallery-scrollbar: rgba(26, 26, 26, 0.16);
+  --color-overlay-strong: rgb(26 26 26 / 48%);
+  --color-gallery-scrollbar: rgb(26 26 26 / 16%);
   --color-gallery-hint: var(--color-text-muted);
-  --color-gallery-overlay-text: #ffffff;
-  --color-gallery-stamp-border: #ffffff;
+  --color-gallery-overlay-text: #fff;
+  --color-gallery-stamp-border: #fff;
 
-  --heatmap-bg-color-0: #ffffff;
+  --heatmap-bg-color-0: #fff;
   --heatmap-bg-color-1: #c6e48b;
   --heatmap-bg-color-2: #7bc96f;
   --heatmap-bg-color-3: #239a3b;
@@ -34,19 +34,19 @@
 
 @supports (color: oklch(0% 0 0)) {
   :root.sunny {
-    --selection-text-color: oklch(99.1% 0.01 87.5);
-    --selection-bg-color: oklch(42.3% 0.037 66.5);
-    --color-chrome-theme: oklch(94.3% 0.008 91.5);
-    --color-bg-canvas: oklch(95.3% 0.009 84.6);
-    --color-bg-surface: oklch(100% 0 0);
-    --color-bg-muted: oklch(93.4% 0.007 88.6);
-    --color-text-primary: oklch(21.8% 0 0);
-    --color-text-secondary: oklch(40.9% 0 0);
-    --color-text-muted: oklch(62.7% 0 0);
-    --color-border-subtle: oklch(87.4% 0.009 84.6);
-    --color-border-strong: oklch(81.5% 0.012 84.6);
-    --color-accent: oklch(57.1% 0.053 72.7);
-    --color-accent-soft: oklch(92.4% 0.013 75.4);
-    --color-danger: oklch(62.1% 0.223 27.2);
+    --selection-text-color: oklch(99.1% 0.01 87.5deg);
+    --selection-bg-color: oklch(42.3% 0.037 66.5deg);
+    --color-chrome-theme: oklch(94.3% 0.008 91.5deg);
+    --color-bg-canvas: oklch(95.3% 0.009 84.6deg);
+    --color-bg-surface: oklch(100% 0 0deg);
+    --color-bg-muted: oklch(93.4% 0.007 88.6deg);
+    --color-text-primary: oklch(21.8% 0 0deg);
+    --color-text-secondary: oklch(40.9% 0 0deg);
+    --color-text-muted: oklch(62.7% 0 0deg);
+    --color-border-subtle: oklch(87.4% 0.009 84.6deg);
+    --color-border-strong: oklch(81.5% 0.012 84.6deg);
+    --color-accent: oklch(57.1% 0.053 72.7deg);
+    --color-accent-soft: oklch(92.4% 0.013 75.4deg);
+    --color-danger: oklch(62.1% 0.223 27.2deg);
   }
 }

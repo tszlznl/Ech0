@@ -75,6 +75,7 @@ All scripts come from [`package.json`](package.json). Run them inside `web/` (or
 | `pnpm preview`          | Serve the built `dist` locally for smoke-testing                                 |
 | `pnpm test:unit`        | Run the Vitest suite once (CI mode)                                              |
 | `pnpm lint`             | `eslint . --fix`                                                                 |
+| `pnpm lint:style`       | `stylelint "src/**/*.{vue,css,scss}" --fix` — CSS/SCSS/Vue style blocks (runs in `make check`) |
 | `pnpm format`           | `prettier --write src/`                                                          |
 | `pnpm i18n:check`       | Composite: runs all four i18n guardrails below                                   |
 | `pnpm i18n:key-check`   | en-US / de-DE must mirror the zh-CN key tree (no missing, no extras)             |

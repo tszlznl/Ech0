@@ -184,7 +184,7 @@ onMounted(() => {
   width: 100%;
   border: 1px solid var(--color-border-subtle);
   background-color: var(--comment-widget-card-bg);
-  box-shadow: 0 8px 18px rgba(20, 20, 20, 0.04);
+  box-shadow: 0 8px 18px rgb(20 20 20 / 4%);
   padding: 14px 12px 12px;
   transform: rotate(-1.1deg);
   transform-origin: top center;
@@ -241,8 +241,8 @@ onMounted(() => {
   border-radius: 2px;
   background: var(--comment-widget-card-before-bg);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.3) inset,
-    0 1px 2px rgba(0, 0, 0, 0.08);
+    0 1px 0 rgb(255 255 255 / 30%) inset,
+    0 1px 2px rgb(0 0 0 / 8%);
   opacity: 0.95;
 }
 
@@ -251,6 +251,6 @@ onMounted(() => {
   font-size: 13px;
   line-height: 1.65;
   white-space: normal;
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 </style>

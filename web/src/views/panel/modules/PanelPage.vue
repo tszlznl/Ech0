@@ -415,27 +415,33 @@ const handleLogout = () => {
   0% {
     transform: rotate(0deg) scale(1);
   }
+
   15% {
     transform: rotate(16deg) scale(1.08);
   }
+
   30% {
     transform: rotate(-14deg) scale(1.08);
   }
+
   45% {
     transform: rotate(12deg) scale(1.06);
   }
+
   60% {
     transform: rotate(-10deg) scale(1.04);
   }
+
   75% {
     transform: rotate(7deg) scale(1.02);
   }
+
   100% {
     transform: rotate(0deg) scale(1);
   }
 }
 
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .panel-page-wrap {
     min-height: auto;
     display: block;

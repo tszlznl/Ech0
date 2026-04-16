@@ -257,7 +257,7 @@ onBeforeUnmount(() => {
   border: 2px solid var(--color-bg-surface);
   box-shadow:
     0 0 0 1px var(--color-border-subtle),
-    0 1px 2px rgb(0 0 0 / 0.06);
+    0 1px 2px rgb(0 0 0 / 6%);
 }
 
 .home-header__title {
@@ -287,13 +287,14 @@ onBeforeUnmount(() => {
   45% {
     opacity: 1;
   }
+
   46%,
   100% {
     opacity: 0;
   }
 }
 
-@media (min-width: 640px) {
+@media (width >= 640px) {
   .home-header__title {
     font-size: 1.25rem;
   }

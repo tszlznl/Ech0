@@ -195,6 +195,9 @@ const handleRefresh = () => {
 onMounted(async () => {
   // 获取数据
   bindTimelineScroll()
+  // main.ts 在 `/` 路由上预热了第一页请求，`getEchosByPage` 内置了
+  // `current <= page` 的重复请求守卫，所以这里直接调用即可：
+  // 若预热已完成则快速返回，否则接着完成加载。
   await echoStore.getEchosByPage()
   await ensureScrollableInZen()
 })

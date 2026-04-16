@@ -36,6 +36,7 @@ const segments = Array.from({ length: 12 }, (_, index) => index + 1)
   --spinner-color: var(--color-text-muted);
   --spinner-stroke: 2.4px;
   --label-size: 0.95rem;
+
   display: inline-flex;
   flex-direction: column;
   align-items: center;
@@ -94,7 +95,7 @@ const segments = Array.from({ length: 12 }, (_, index) => index + 1)
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
   border: 0;
   white-space: nowrap;
 }

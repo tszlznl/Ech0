@@ -34,8 +34,7 @@ defineProps<GalleryHorizontalProps>()
 .horizontal-scroll-container {
   position: relative;
   width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: auto hidden;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
@@ -81,6 +80,7 @@ defineProps<GalleryHorizontalProps>()
   100% {
     opacity: 0.5;
   }
+
   50% {
     opacity: 1;
   }

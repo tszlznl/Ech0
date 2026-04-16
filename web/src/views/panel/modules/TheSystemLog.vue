@@ -308,7 +308,7 @@ onUnmounted(() => {
   box-shadow: var(--shadow-sm);
 }
 
-@media (min-width: 1024px) {
+@media (width >= 1024px) {
   .log-container {
     height: 48vh;
   }
@@ -318,7 +318,7 @@ onUnmounted(() => {
   font-family: var(--font-family-mono);
   line-height: 1.55;
   margin-bottom: 0.65rem;
-  word-break: break-word;
+  overflow-wrap: anywhere;
   color: var(--color-text-secondary);
 }
 
@@ -389,7 +389,7 @@ onUnmounted(() => {
   font-size: 0.82em;
   line-height: 1.4;
   white-space: pre-wrap;
-  word-break: break-word;
+  overflow-wrap: anywhere;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border-subtle);
   background: var(--color-bg-muted);
@@ -408,7 +408,7 @@ onUnmounted(() => {
   border-color: var(--color-border-strong);
 }
 
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .log-toolbar-grid {
     grid-template-columns: minmax(8rem, 10rem) minmax(12rem, 1fr) minmax(9rem, 11rem);
     align-items: start;

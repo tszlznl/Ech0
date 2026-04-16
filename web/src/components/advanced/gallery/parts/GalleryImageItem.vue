@@ -62,10 +62,10 @@ withDefaults(
 .echoimg {
   border-radius: 8px;
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.02),
-    0 2px 4px rgba(0, 0, 0, 0.02),
-    0 4px 8px rgba(0, 0, 0, 0.02),
-    0 8px 16px rgba(0, 0, 0, 0.02);
+    0 1px 2px rgb(0 0 0 / 2%),
+    0 2px 4px rgb(0 0 0 / 2%),
+    0 4px 8px rgb(0 0 0 / 2%),
+    0 8px 16px rgb(0 0 0 / 2%);
 }
 
 .gallery-image-frame {
@@ -82,11 +82,11 @@ withDefaults(
   background:
     radial-gradient(
       120% 120% at 50% 30%,
-      rgba(160, 160, 160, 0.18) 0%,
-      rgba(160, 160, 160, 0.1) 55%,
-      rgba(160, 160, 160, 0.07) 100%
+      rgb(160 160 160 / 18%) 0%,
+      rgb(160 160 160 / 10%) 55%,
+      rgb(160 160 160 / 7%) 100%
     ),
-    linear-gradient(180deg, rgba(140, 140, 140, 0.08), rgba(140, 140, 140, 0.11));
+    linear-gradient(180deg, rgb(140 140 140 / 8%), rgb(140 140 140 / 11%));
   animation: skeleton-breathe 2.2s ease-in-out infinite;
 }
 
@@ -95,6 +95,7 @@ withDefaults(
   100% {
     opacity: 0.42;
   }
+
   50% {
     opacity: 0.68;
   }

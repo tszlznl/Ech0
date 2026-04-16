@@ -64,6 +64,8 @@ dev-lint:
 	pnpm -C web format
 	@echo "\033[1;35m=== 前端 web：Lint (eslint . --fix) ===\033[0m"
 	pnpm -C web lint
+	@echo "\033[1;35m=== 前端 web：Stylelint (stylelint --fix) ===\033[0m"
+	pnpm -C web lint:style
 	@echo "\033[1;35m=== 前端 web：i18n 校验 (key / unused / hardcoded / pseudo-smoke) ===\033[0m"
 	pnpm -C web run i18n:check
 	@echo "\033[1;32m=== dev-lint 全部完成 ===\033[0m"

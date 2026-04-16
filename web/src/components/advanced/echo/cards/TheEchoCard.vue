@@ -221,10 +221,11 @@ onBeforeUnmount(() => {
   --axis-line-width: 2px;
   --axis-dot-size: 0.5rem;
   --axis-dot-gap: 0.3rem;
+
   max-width: 100%;
-  overflow-x: clip;
+  overflow: clip visible;
+
   /* 纵向允许溢出绘制，避免时间线内图片（如照片流 hover 放大）被裁切 */
-  overflow-y: visible;
 }
 
 .timeline-marker {
@@ -243,8 +244,7 @@ onBeforeUnmount(() => {
   margin-left: var(--axis-offset);
   max-width: 100%;
   min-width: 0;
-  overflow-x: clip;
-  overflow-y: visible;
+  overflow: clip visible;
 }
 
 .timeline-content::before {

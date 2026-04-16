@@ -1,13 +1,58 @@
 /// <reference types="vitest/config" />
 import { fileURLToPath, URL } from 'node:url'
 
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import UnoCSS from 'unocss/vite'
 import viteCompression from 'vite-plugin-compression'
 
 import { welcomePlugin } from './src/plugins/welcome-plugin'
+
+// Inject modulepreload / prefetch hints into index.html for known chunk groups.
+// Preload target (floating-vue) is on the bootstrap critical path; prefetching
+// `highlight` + `uppy` populates HTTP cache during idle so later usage is free.
+function preloadHintsPlugin(): Plugin {
+  const PRELOAD_RE = /^floating-vue-[^.]+\.js$/
+  const PREFETCH_RE = /^(highlight|uppy)-[^.]+\.js$/
+  return {
+    name: 'ech0-preload-hints',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(_html, ctx) {
+        if (!ctx.bundle) return
+        const tags: Array<{
+          tag: string
+          attrs: Record<string, string | boolean>
+          injectTo: 'head'
+        }> = []
+        for (const fileName of Object.keys(ctx.bundle)) {
+          const base = fileName.split('/').pop() ?? ''
+          if (PRELOAD_RE.test(base)) {
+            tags.push({
+              tag: 'link',
+              attrs: { rel: 'modulepreload', href: `/${fileName}` },
+              injectTo: 'head',
+            })
+          } else if (PREFETCH_RE.test(base)) {
+            tags.push({
+              tag: 'link',
+              attrs: {
+                rel: 'prefetch',
+                href: `/${fileName}`,
+                as: 'script',
+                crossorigin: '',
+              },
+              injectTo: 'head',
+            })
+          }
+        }
+        return tags
+      },
+    },
+  }
+}
 
 // https://vite.dev/config/
 export default defineConfig(({ command }) => ({
@@ -26,6 +71,7 @@ export default defineConfig(({ command }) => ({
       threshold: 10240,
       filter: (file) => /\.(js|mjs|css|html|svg)$/i.test(file),
     }),
+    preloadHintsPlugin(),
 
     welcomePlugin(), // 欢迎横幅插件
   ],

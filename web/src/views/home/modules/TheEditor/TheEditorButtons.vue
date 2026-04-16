@@ -122,7 +122,7 @@ import { storeToRefs } from 'pinia'
 import { useEditorStore, useEchoStore } from '@/stores'
 import { theToast } from '@/utils/toast'
 import { localStg } from '@/utils/storage'
-import { computed, type Component } from 'vue'
+import { computed, onMounted, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const editorStore = useEditorStore()
@@ -140,6 +140,10 @@ const {
 const echoStore = useEchoStore()
 const { tagOptions } = storeToRefs(echoStore)
 const { t } = useI18n()
+
+onMounted(() => {
+  echoStore.ensureTagsLoaded()
+})
 
 type TooltipLine = { label: string; icon?: Component }
 
@@ -212,8 +216,8 @@ const handleExitUpdateMode = () => {
   --btn-ring-color: var(--md-editor-actions-ring-color);
   --btn-hover-bg-color: var(--md-editor-actions-hover-bg);
   --btn-hover-border-color: var(--md-editor-actions-hover-border);
+
   display: flex;
-  align-items: center;
   justify-content: space-between;
   flex-wrap: nowrap;
   gap: 0.6rem;
@@ -247,7 +251,7 @@ const handleExitUpdateMode = () => {
   padding: 0 0.35rem;
 }
 
-@media (min-width: 640px) {
+@media (width >= 640px) {
   .editor-actions__tag-box {
     height: 2.25rem;
   }
@@ -290,7 +294,7 @@ const handleExitUpdateMode = () => {
   box-shadow: var(--md-editor-mini-shell-shadow);
 }
 
-@media (max-width: 639.98px) {
+@media (width <= 639.98px) {
   .editor-actions {
     gap: 0.45rem;
   }

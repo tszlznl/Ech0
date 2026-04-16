@@ -400,6 +400,7 @@ onMounted(() => {
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.35;
   }
@@ -416,6 +417,7 @@ onMounted(() => {
     opacity: 0;
     transform: translateY(0.45rem);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -428,7 +430,7 @@ onMounted(() => {
   }
 }
 
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .stats-grid {
     grid-template-columns: repeat(4, 1fr);
   }
@@ -457,7 +459,7 @@ onMounted(() => {
   }
 }
 
-@media (max-width: 400px) {
+@media (width <= 400px) {
   .stats-grid {
     grid-template-columns: 1fr;
   }

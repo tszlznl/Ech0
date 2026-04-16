@@ -1,46 +1,24 @@
 import MarkdownIt from 'markdown-it'
-import hljs from 'highlight.js/lib/core'
-import bash from 'highlight.js/lib/languages/bash'
-import css from 'highlight.js/lib/languages/css'
-import diff from 'highlight.js/lib/languages/diff'
-import go from 'highlight.js/lib/languages/go'
-import java from 'highlight.js/lib/languages/java'
-import javascript from 'highlight.js/lib/languages/javascript'
-import json from 'highlight.js/lib/languages/json'
-import markdownLang from 'highlight.js/lib/languages/markdown'
-import python from 'highlight.js/lib/languages/python'
-import rust from 'highlight.js/lib/languages/rust'
-import scss from 'highlight.js/lib/languages/scss'
-import sql from 'highlight.js/lib/languages/sql'
-import typescript from 'highlight.js/lib/languages/typescript'
-import xml from 'highlight.js/lib/languages/xml'
-import yaml from 'highlight.js/lib/languages/yaml'
-import 'highlight.js/styles/atom-one-dark.css'
 
-hljs.registerLanguage('bash', bash)
-hljs.registerLanguage('sh', bash)
-hljs.registerLanguage('shell', bash)
-hljs.registerLanguage('css', css)
-hljs.registerLanguage('diff', diff)
-hljs.registerLanguage('go', go)
-hljs.registerLanguage('java', java)
-hljs.registerLanguage('js', javascript)
-hljs.registerLanguage('javascript', javascript)
-hljs.registerLanguage('json', json)
-hljs.registerLanguage('md', markdownLang)
-hljs.registerLanguage('markdown', markdownLang)
-hljs.registerLanguage('py', python)
-hljs.registerLanguage('python', python)
-hljs.registerLanguage('rs', rust)
-hljs.registerLanguage('rust', rust)
-hljs.registerLanguage('scss', scss)
-hljs.registerLanguage('sql', sql)
-hljs.registerLanguage('ts', typescript)
-hljs.registerLanguage('typescript', typescript)
-hljs.registerLanguage('html', xml)
-hljs.registerLanguage('xml', xml)
-hljs.registerLanguage('yml', yaml)
-hljs.registerLanguage('yaml', yaml)
+type HighlightJsModule = (typeof import('./markdown-highlight'))['default']
+
+let hljsInstance: HighlightJsModule | null = null
+let hljsPromise: Promise<HighlightJsModule> | null = null
+
+/**
+ * 按需加载 highlight.js 及其语言包。首屏无代码块的 Echo 将完全跳过这块体积
+ * （约 120KB 未压缩），只在渲染到 ``` 围栏时才触发动态导入。
+ */
+async function ensureHighlighter(): Promise<HighlightJsModule> {
+  if (hljsInstance) return hljsInstance
+  if (!hljsPromise) {
+    hljsPromise = import('./markdown-highlight').then((mod) => {
+      hljsInstance = mod.default
+      return mod.default
+    })
+  }
+  return hljsPromise
+}
 
 const CODE_BLOCK_COLLAPSE_THRESHOLD = 18
 const CODE_BLOCK_COLLAPSED_LINES = 10
@@ -48,6 +26,7 @@ const EXPAND_PLACEHOLDER = '__ECHO_MD_EXPAND__'
 const COLLAPSE_PLACEHOLDER = '__ECHO_MD_COLLAPSE__'
 const TASK_CHECKBOX_LABEL_PLACEHOLDER = '__ECHO_MD_TASK_CHECKBOX_LABEL__'
 const TASK_LIST_MARKER_RE = /^\[( |x|X)\]\s+/
+const CODE_FENCE_RE = /(^|\n)\s{0,3}(```|~~~)/
 const RENDER_CACHE_MAX_SIZE = 120
 const renderCache = new Map<string, string>()
 
@@ -149,9 +128,12 @@ const markdown: MarkdownIt = new MarkdownIt({
   langPrefix: 'language-',
   highlight(str: string, lang: string): string {
     const language = lang?.trim()
-    if (language && hljs.getLanguage(language)) {
+    // hljs 是按需加载的；如果渲染时尚未就绪就退化到转义输出。
+    // renderMarkdown 会在调用 markdown.render 之前 await ensureHighlighter，
+    // 所以进入这里时 hljsInstance 应当已就位（除非完全没有代码块）。
+    if (hljsInstance && language && hljsInstance.getLanguage(language)) {
       try {
-        const rendered = hljs.highlight(str, {
+        const rendered = hljsInstance.highlight(str, {
           language,
           ignoreIllegals: true,
         }).value
@@ -185,10 +167,10 @@ markdown.renderer.rules.link_open = (...args: Parameters<LinkOpenRule>) => {
   return originalLinkOpen(tokens, idx, options, env, self)
 }
 
-export function renderMarkdown(
+export async function renderMarkdown(
   source: string,
   labels?: { expandLabel?: string; collapseLabel?: string; taskCheckboxLabel?: string },
-): string {
+): Promise<string> {
   if (!source) return ''
   const expandLabel = escapeHtml(String(labels?.expandLabel || 'Expand'))
   const collapseLabel = escapeHtml(String(labels?.collapseLabel || 'Collapse'))
@@ -196,6 +178,11 @@ export function renderMarkdown(
   const cacheKey = `${source}\u241f${expandLabel}\u241f${collapseLabel}\u241f${taskCheckboxLabel}`
   const cached = getFromRenderCache(cacheKey)
   if (cached) return cached
+
+  // 只在出现围栏代码块时才加载 hljs。纯文本/链接型 Echo 完全跳过这块体积。
+  if (CODE_FENCE_RE.test(source)) {
+    await ensureHighlighter()
+  }
 
   const rendered = markdown.render(source)
   const finalHtml = rendered

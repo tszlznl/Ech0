@@ -2,8 +2,8 @@
   --selection-text-color: #413a1f;
   --selection-bg-color: #fdfdfd;
 
-  --color-chrome-theme: #333333;
-  --color-bg-canvas: #333333;
+  --color-chrome-theme: #333;
+  --color-bg-canvas: #333;
   --color-bg-surface: #201d1b;
   --color-bg-muted: #292623;
   --color-text-primary: #f0e9e0;
@@ -14,17 +14,17 @@
   --color-accent: #e7b063;
   --color-accent-soft: #493e30;
   --color-danger: #fd6664;
-  --color-focus-ring: rgba(199, 155, 95, 0.38);
+  --color-focus-ring: rgb(199 155 95 / 38%);
 
   --color-nav-active-bg: var(--color-accent-soft);
   --color-nav-active-text: var(--color-text-primary);
-  --color-overlay-strong: rgba(0, 0, 0, 0.5);
-  --color-gallery-scrollbar: rgba(240, 233, 224, 0.22);
+  --color-overlay-strong: rgb(0 0 0 / 50%);
+  --color-gallery-scrollbar: rgb(240 233 224 / 22%);
   --color-gallery-hint: var(--color-text-muted);
-  --color-gallery-overlay-text: #ffffff;
-  --color-gallery-stamp-border: #ffffff;
+  --color-gallery-overlay-text: #fff;
+  --color-gallery-stamp-border: #fff;
 
-  --heatmap-bg-color-0: #ffffff;
+  --heatmap-bg-color-0: #fff;
   --heatmap-bg-color-1: #c6e48b;
   --heatmap-bg-color-2: #7bc96f;
   --heatmap-bg-color-3: #239a3b;
@@ -33,22 +33,22 @@
 
 @supports (color: oklch(0% 0 0)) {
   :root.dark {
-    --selection-text-color: oklch(34.8% 0.043 95.3);
-    --selection-bg-color: oklch(99.4% 0 0);
-    --color-chrome-theme: oklch(32.1% 0 0);
-    --color-bg-canvas: oklch(32.1% 0 0);
-    --color-bg-surface: oklch(23.2% 0.006 52.1);
-    --color-bg-muted: oklch(27.1% 0.007 58.4);
-    --color-text-primary: oklch(93.8% 0.015 77.2);
-    --color-text-secondary: oklch(84.2% 0.01 71.8);
-    --color-text-muted: oklch(70.1% 0.009 70.2);
-    --color-border-subtle: oklch(35.8% 0.005 67.8);
-    --color-border-strong: oklch(47.1% 0.007 70.4);
-    --color-accent: oklch(79.2% 0.114 74.3);
-    --color-accent-soft: oklch(37.2% 0.028 73.1);
-    --color-danger: oklch(70.2% 0.185 23.9);
-    --color-focus-ring: oklch(71.8% 0.094 74.8 / 0.38);
-    --color-overlay-strong: oklch(0% 0 0 / 0.5);
-    --color-gallery-scrollbar: oklch(93.8% 0.015 77.2 / 0.22);
+    --selection-text-color: oklch(34.8% 0.043 95.3deg);
+    --selection-bg-color: oklch(99.4% 0 0deg);
+    --color-chrome-theme: oklch(32.1% 0 0deg);
+    --color-bg-canvas: oklch(32.1% 0 0deg);
+    --color-bg-surface: oklch(23.2% 0.006 52.1deg);
+    --color-bg-muted: oklch(27.1% 0.007 58.4deg);
+    --color-text-primary: oklch(93.8% 0.015 77.2deg);
+    --color-text-secondary: oklch(84.2% 0.01 71.8deg);
+    --color-text-muted: oklch(70.1% 0.009 70.2deg);
+    --color-border-subtle: oklch(35.8% 0.005 67.8deg);
+    --color-border-strong: oklch(47.1% 0.007 70.4deg);
+    --color-accent: oklch(79.2% 0.114 74.3deg);
+    --color-accent-soft: oklch(37.2% 0.028 73.1deg);
+    --color-danger: oklch(70.2% 0.185 23.9deg);
+    --color-focus-ring: oklch(71.8% 0.094 74.8deg / 38%);
+    --color-overlay-strong: oklch(0% 0 0deg / 50%);
+    --color-gallery-scrollbar: oklch(93.8% 0.015 77.2deg / 22%);
   }
 }

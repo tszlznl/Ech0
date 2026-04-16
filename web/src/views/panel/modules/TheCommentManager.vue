@@ -657,7 +657,7 @@ onMounted(async () => {
   opacity: 0.72;
 }
 
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .setting-row {
     align-items: flex-start;
   }

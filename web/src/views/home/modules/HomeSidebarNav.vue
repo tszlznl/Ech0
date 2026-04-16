@@ -211,7 +211,7 @@ watch(showSearchTrigger, (visible) => {
   fill: currentColor;
 }
 
-@media (max-width: 819.98px) {
+@media (width <= 819.98px) {
   .home-sidebar-nav__nav {
     flex-direction: row;
     gap: 0.2rem;

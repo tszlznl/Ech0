@@ -43,7 +43,7 @@ const { t } = useI18n()
   gap: 0.75rem;
 }
 
-@media (max-width: 420px) {
+@media (width <= 420px) {
   .home-banner {
     flex-wrap: wrap;
   }
@@ -51,7 +51,7 @@ const { t } = useI18n()
 
 .home-banner__line {
   margin: 0;
-  font-family: 'Songti SC', 'STSong', var(--font-family-display);
+  font-family: 'Songti SC', STSong, var(--font-family-display);
   font-weight: 550;
   letter-spacing: 0.01em;
   font-size: 0.9375rem;

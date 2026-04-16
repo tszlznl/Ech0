@@ -27,6 +27,7 @@ pnpm dev             # Vite dev server on :5173, proxies to backend on :6277
 pnpm build           # type-check + vite build
 pnpm test:unit       # vitest run
 pnpm lint            # eslint . --fix
+pnpm lint:style      # stylelint --fix (CSS/SCSS/<style> blocks in Vue SFCs)
 pnpm format          # prettier --write src/
 pnpm i18n:check      # runs key / unused / hardcoded / pseudo-smoke checks (required before PR)
 

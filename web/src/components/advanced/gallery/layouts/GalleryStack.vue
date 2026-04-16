@@ -115,18 +115,24 @@ function cardStyle(idx: number): Record<string, string> {
 /* 邮票外框总边长（含白边），勿放大：避免 flex 子项 min-width:auto 按原图撑满屏 */
 .stack-root {
   --stamp-outer: 60px;
+
   /* 画在 img 上的白框宽度（box-sizing: border-box 含在邮票边长内） */
   --stamp-white-border: 2px;
+
   /* 白边与裁切区域的轻微圆角（勿过大，避免不像「邮票」） */
   --stamp-corner-radius: 2px;
+
   /* hover 放大倍数，与下方 min-height / padding 联动，避免被裁切 */
   --stack-hover-scale: 1.25;
+
   /* 横向重叠：仅压住一小部分（0.22 ≈ 22% 宽度），勿过大 */
   --stack-overlap: 0.22;
+
   /* 纵向：下一行向上叠到上一行，比例相对邮票高度 */
   --stack-row-overlap: 0.6;
   --gallery-stack-frame-shadow: var(--gallery-stack-frame-shadow);
   --gallery-stack-frame-shadow-hover: var(--gallery-stack-frame-shadow-hover);
+
   width: 100%;
   max-width: 100%;
   margin-left: auto;
@@ -138,12 +144,11 @@ function cardStyle(idx: number): Record<string, string> {
   position: relative;
   width: 100%;
   max-width: 100%;
-  overflow-x: auto;
-  overflow-y: visible;
+  overflow: auto visible;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
+  scrollbar-color: rgb(0 0 0 / 12%) transparent;
   box-sizing: border-box;
 }
 
@@ -165,18 +170,15 @@ function cardStyle(idx: number): Record<string, string> {
 
 .stack-row {
   display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
+  flex-flow: row nowrap;
   align-items: center;
   width: max-content;
   max-width: 100%;
   min-height: calc(
     var(--stamp-outer) * var(--stack-hover-scale) + var(--stamp-outer) * 0.28 + 0.75rem
   );
-  padding-top: calc(var(--stamp-outer) * (var(--stack-hover-scale) - 1) * 0.38 + 8px);
-  padding-bottom: calc(var(--stamp-outer) * (var(--stack-hover-scale) - 1) * 0.32 + 6px);
-  padding-left: 4px;
-  padding-right: 4px;
+  padding: calc(var(--stamp-outer) * (var(--stack-hover-scale) - 1) * 0.38 + 8px) 4px
+    calc(var(--stamp-outer) * (var(--stack-hover-scale) - 1) * 0.32 + 6px);
   box-sizing: border-box;
 }
 
@@ -189,12 +191,12 @@ function cardStyle(idx: number): Record<string, string> {
   flex: 0 0 auto;
   width: var(--stamp-outer);
   margin-left: calc(var(--stamp-outer) * -1 * var(--stack-overlap));
-  transform: rotate(var(--stack-rot, 0deg)) translateY(var(--stack-y, 0px)) translateZ(0);
+  transform: rotate(var(--stack-rot, 0deg)) translateY(var(--stack-y, 0)) translateZ(0);
   transform-origin: center center;
   transition: transform 0.2s ease;
+
   /* 合成层 + 背面不可见，减轻旋转后位图边缘锯齿（Chrome / Safari） */
   backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
 }
 
 .stack-card--row-start {
@@ -205,7 +207,7 @@ function cardStyle(idx: number): Record<string, string> {
 .stack-card:hover {
   /* 高于任意洗牌后的 stack z（10..10+n），保证可点、可悬停 */
   z-index: 9999 !important;
-  transform: rotate(var(--stack-rot, 0deg)) translateY(var(--stack-y, 0px))
+  transform: rotate(var(--stack-rot, 0deg)) translateY(var(--stack-y, 0))
     scale(var(--stack-hover-scale)) translateZ(0);
 }
 
@@ -237,7 +239,6 @@ function cardStyle(idx: number): Record<string, string> {
   border-radius: var(--stamp-corner-radius) !important;
   overflow: hidden;
   transform: translateZ(0);
-  -webkit-transform: translateZ(0);
   box-shadow: var(--gallery-stack-frame-shadow);
   transition: box-shadow 0.2s ease;
 }
@@ -263,9 +264,9 @@ function cardStyle(idx: number): Record<string, string> {
   border: var(--stamp-white-border) solid #fff;
   box-sizing: border-box;
   box-shadow: none !important;
+
   /* 与父级旋转配合，单独提升图层利于插值采样 */
   transform: translateZ(0);
-  -webkit-transform: translateZ(0);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -274,13 +275,13 @@ function cardStyle(idx: number): Record<string, string> {
   }
 
   .stack-card {
-    transform: translateY(var(--stack-y, 0px)) translateZ(0);
+    transform: translateY(var(--stack-y, 0)) translateZ(0);
     transition: none;
   }
 
   .stack-card:focus-within,
   .stack-card:hover {
-    transform: translateY(var(--stack-y, 0px)) translateZ(0);
+    transform: translateY(var(--stack-y, 0)) translateZ(0);
   }
 
   :deep(.gallery-image-frame.stack-frame) {

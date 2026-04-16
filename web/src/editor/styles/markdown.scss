@@ -3,7 +3,6 @@
   font-family: var(--font-family-sans);
   line-height: 1.6;
   overflow-wrap: anywhere;
-  word-break: break-word;
   max-width: 100%;
   min-width: 0;
   overflow-x: hidden;
@@ -63,19 +62,16 @@
   max-width: 100%;
   white-space: normal;
   overflow-wrap: anywhere;
-  word-break: break-word;
 }
 
 .echo-markdown li > p {
   white-space: normal;
   overflow-wrap: anywhere;
-  word-break: break-word;
 }
 
 .echo-markdown li :is(strong, em, a, code, span) {
   white-space: normal;
   overflow-wrap: anywhere;
-  word-break: break-word;
 }
 
 .echo-markdown li.task-list-item {
@@ -147,8 +143,7 @@
   border-radius: 0.5rem;
   max-width: 100%;
   min-width: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: auto hidden;
   margin: 0.7rem 0;
 }
 
@@ -185,7 +180,7 @@
   right: 0.5rem;
   z-index: 2;
   border: 1px solid var(--md-code-toggle-border);
-  background: rgba(15, 23, 42, 0.9);
+  background: rgb(15 23 42 / 90%);
   color: #f8fafc;
   border-radius: 999px;
   padding: 0.2rem 0.65rem;
@@ -194,7 +189,7 @@
   line-height: 1.4;
   cursor: pointer;
   backdrop-filter: blur(4px);
-  box-shadow: 0 4px 12px rgba(2, 6, 23, 0.35);
+  box-shadow: 0 4px 12px rgb(2 6 23 / 35%);
   transition:
     background-color 0.18s ease,
     border-color 0.18s ease,
@@ -203,10 +198,10 @@
 }
 
 .echo-markdown .code-block-toggle:hover {
-  background: rgba(30, 41, 59, 0.95);
+  background: rgb(30 41 59 / 95%);
   border-color: var(--md-code-toggle-hover-border);
   transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(2, 6, 23, 0.4);
+  box-shadow: 0 8px 18px rgb(2 6 23 / 40%);
 }
 
 .echo-markdown .code-block-toggle:focus-visible {
@@ -223,7 +218,7 @@
   height: 2rem;
   pointer-events: none;
   border-radius: 0 0 0.5rem 0.5rem;
-  background: linear-gradient(to bottom, transparent, rgba(15, 23, 42, 0.95));
+  background: linear-gradient(to bottom, transparent, rgb(15 23 42 / 95%));
 }
 
 .echo-markdown :not(pre) > code {
@@ -238,7 +233,7 @@
   border-left-color: var(--md-blockquote-border);
 }
 
-@media (max-width: 640px) {
+@media (width <= 640px) {
   .echo-markdown {
     font-size: 0.92rem;
   }
