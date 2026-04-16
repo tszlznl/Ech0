@@ -44,19 +44,11 @@
           </span>
 
           <template v-if="userStore.isLogin">
-            <button
-              @click="handleDeleteEcho(props.echo.id)"
-              v-tooltip="t('echoCard.delete')"
-              class="transform transition-transform duration-200 hover:scale-120"
-            >
+            <button @click="handleDeleteEcho(props.echo.id)" v-tooltip="t('echoCard.delete')">
               <Roll />
             </button>
 
-            <button
-              @click="handleUpdateEcho()"
-              v-tooltip="t('echoCard.update')"
-              class="transform transition-transform duration-200 hover:scale-120"
-            >
+            <button @click="handleUpdateEcho()" v-tooltip="t('echoCard.update')">
               <EditEcho />
             </button>
           </template>
