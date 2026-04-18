@@ -144,7 +144,7 @@ watch(showSearchTrigger, (visible) => {
 .home-sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.8rem;
 }
 
 .home-sidebar-nav__mobile-row {
