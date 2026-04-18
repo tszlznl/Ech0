@@ -34,10 +34,10 @@ func TestConvertVisitorHistory(t *testing.T) {
 	}
 }
 
-func TestVisitorCutoffDate_KeepRecentSixDays(t *testing.T) {
+func TestVisitorCutoffDate_KeepRecentSevenDays(t *testing.T) {
 	now := time.Date(2026, 4, 16, 23, 59, 59, 0, time.UTC)
 	cutoff := visitorCutoffDate(now)
-	if cutoff != "2026-04-11" {
-		t.Fatalf("expected cutoff 2026-04-11, got %s", cutoff)
+	if cutoff != "2026-04-10" {
+		t.Fatalf("expected cutoff 2026-04-10, got %s", cutoff)
 	}
 }

@@ -55,7 +55,8 @@ func NewTasker(
 	visitorTracker *visitor.Tracker,
 	visitorRepo *visitorRepository.VisitorRepository,
 ) *Tasker {
-	scheduler, err := gocron.NewScheduler()
+	// 使用 UTC,与 visitor.Tracker 内部日期 key 对齐,避免时区错配导致每日最后一段数据永远无法被快照。
+	scheduler, err := gocron.NewScheduler(gocron.WithLocation(time.UTC))
 	if err != nil {
 		logUtil.GetLogger().Error("Failed to create scheduler", zap.Error(err))
 	}
@@ -121,6 +122,8 @@ func (t *Tasker) Stop(context.Context) error {
 	if !t.started || t.scheduler == nil {
 		return nil
 	}
+	// 优雅退出时补一次快照,避免进程在下一次 cron 触发前停止导致当天数据丢失。
+	t.flushVisitorStat(context.Background())
 	if err := t.scheduler.Shutdown(); err != nil {
 		logUtil.GetLogger().Error("Failed to shutdown scheduler", zap.Error(err))
 		return err
@@ -236,19 +239,13 @@ func (t *Tasker) ScheduleBackupTask(cronExpression string) error {
 }
 
 // VisitorSnapshotTask 定时保存 PV/UV 快照并清理历史数据。
+// 每 60 分钟 upsert 一次当天统计,保证进程非优雅退出时最多丢 1 小时数据。
 func (t *Tasker) VisitorSnapshotTask() error {
 	_, err := t.scheduler.NewJob(
-		gocron.CronJob("59 23 * * *", false),
+		gocron.DurationJob(60*time.Minute),
 		gocron.NewTask(func() {
-			if t.visitorTracker == nil || t.visitorRepo == nil {
-				return
-			}
-			todayStat := t.visitorTracker.TodayStat()
-			if err := t.visitorRepo.UpsertDailyStat(context.Background(), buildVisitorDailyStat(todayStat)); err != nil {
-				logUtil.GetLogger().Error("Failed to upsert visitor daily stat", zap.Error(err))
-				return
-			}
-			// 保留最近 6 天（包括当天快照）。
+			t.flushVisitorStat(context.Background())
+			// 保留最近 7 天（包括当天快照）。
 			cutoff := visitorCutoffDate(time.Now().UTC())
 			if err := t.visitorRepo.DeleteOlderThan(context.Background(), cutoff); err != nil {
 				logUtil.GetLogger().Error("Failed to cleanup visitor stats", zap.Error(err))
@@ -263,11 +260,22 @@ func (t *Tasker) VisitorSnapshotTask() error {
 	return nil
 }
 
+// flushVisitorStat 将当前内存中的今日 PV/UV upsert 到数据库。
+func (t *Tasker) flushVisitorStat(ctx context.Context) {
+	if t.visitorTracker == nil || t.visitorRepo == nil {
+		return
+	}
+	todayStat := t.visitorTracker.TodayStat()
+	if err := t.visitorRepo.UpsertDailyStat(ctx, buildVisitorDailyStat(todayStat)); err != nil {
+		logUtil.GetLogger().Error("Failed to upsert visitor daily stat", zap.Error(err))
+	}
+}
+
 func (t *Tasker) restoreVisitorStats(ctx context.Context) error {
 	if t.visitorTracker == nil || t.visitorRepo == nil {
 		return nil
 	}
-	stats, err := t.visitorRepo.GetRecentDays(ctx, 6)
+	stats, err := t.visitorRepo.GetRecentDays(ctx, 7)
 	if err != nil {
 		logUtil.GetLogger().Error("Failed to load visitor stats", zap.Error(err))
 		return err
@@ -300,7 +308,8 @@ func convertVisitorHistory(stats []visitorModel.DailyStat) []visitor.DayStat {
 }
 
 func visitorCutoffDate(now time.Time) string {
-	return now.UTC().AddDate(0, 0, -5).Format("2006-01-02")
+	// 与 visitor.Tracker 的 keepDays(7)对齐:保留今天及前 6 天,共 7 天。
+	return now.UTC().AddDate(0, 0, -6).Format("2006-01-02")
 }
 
 // ApplyBackupSchedule 在运行期动态更新备份任务。
