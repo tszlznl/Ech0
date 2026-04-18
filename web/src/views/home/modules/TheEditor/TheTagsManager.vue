@@ -4,7 +4,10 @@
       {{ t('editor.tagManagerTitle') }}
     </h2>
     <p class="text-xs text-[var(--color-text-muted)] mb-3">{{ t('editor.tagManagerHint') }}</p>
-    <div class="flex flex-wrap gap-2">
+    <div v-if="tagList.length === 0" class="text-sm text-[var(--color-text-muted)] py-4 text-center">
+      {{ t('editor.tagManagerEmpty') }}
+    </div>
+    <div v-else class="flex flex-wrap gap-2">
       <Popover
         v-for="(tag, index) in tagList"
         :key="tag.id"
