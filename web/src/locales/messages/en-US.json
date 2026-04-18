@@ -840,6 +840,11 @@
   "githubCard": {
     "avatarAlt": "Avatar"
   },
+  "extensionCard": {
+    "music": "Music",
+    "github": "GitHub",
+    "website": "Website"
+  },
   "recentCard": {
     "mysteriousRecent": "The author has been mysterious lately~",
     "generating": "Generating..."

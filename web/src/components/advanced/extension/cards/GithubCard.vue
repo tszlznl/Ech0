@@ -1,5 +1,6 @@
 <template>
-  <ExtensionCardShell v-if="safeGithubURL">
+  <ExtensionCardShell v-if="safeGithubURL" :header-label="t('extensionCard.github')">
+    <template #header-icon><Githubproj /></template>
     <a :href="safeGithubURL" target="_blank" rel="noopener noreferrer" class="github-card__link">
       <div class="github-card__body">
         <div class="github-avatar-wrap">

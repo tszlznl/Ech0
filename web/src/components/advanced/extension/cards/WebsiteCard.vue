@@ -1,5 +1,6 @@
 <template>
-  <ExtensionCardShell>
+  <ExtensionCardShell :header-label="t('extensionCard.website')">
+    <template #header-icon><Link /></template>
     <a
       :href="websiteInfo.site"
       target="_blank"
@@ -19,8 +20,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Link from '@/components/icons/link.vue'
 import ExtensionCardShell from '../shared/ExtensionCardShell.vue'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   website: { title: string; site: string }

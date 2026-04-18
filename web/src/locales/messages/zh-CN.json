@@ -840,6 +840,11 @@
   "githubCard": {
     "avatarAlt": "头像"
   },
+  "extensionCard": {
+    "music": "音乐",
+    "github": "GitHub",
+    "website": "网站"
+  },
   "recentCard": {
     "mysteriousRecent": "作者最近很神秘～",
     "generating": "生成中..."

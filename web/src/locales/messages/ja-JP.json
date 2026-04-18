@@ -840,6 +840,11 @@
   "githubCard": {
     "avatarAlt": "アバター"
   },
+  "extensionCard": {
+    "music": "音楽",
+    "github": "GitHub",
+    "website": "ウェブサイト"
+  },
   "recentCard": {
     "mysteriousRecent": "作者は最近ミステリアス〜",
     "generating": "生成中..."

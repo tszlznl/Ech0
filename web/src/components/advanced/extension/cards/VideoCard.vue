@@ -1,7 +1,7 @@
 <template>
-  <ExtensionCardShell>
+  <ExtensionCardShell :header-label="providerLabel">
+    <template #header-icon><Video /></template>
     <div class="video-shell">
-      <span class="video-provider-badge">{{ providerLabel }}</span>
       <div class="video-frame-wrap">
         <iframe
           v-if="isBilibili"
@@ -37,6 +37,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import Video from '@/components/icons/video.vue'
 import ExtensionCardShell from '../shared/ExtensionCardShell.vue'
 
 const props = defineProps<{
@@ -49,22 +50,7 @@ const providerLabel = computed(() => (isBilibili.value ? 'Bilibili' : 'YouTube')
 
 <style scoped>
 .video-shell {
-  position: relative;
   padding: 0.55rem;
-}
-
-.video-provider-badge {
-  position: absolute;
-  top: 0.9rem;
-  right: 0.95rem;
-  z-index: 1;
-  padding: 0.15rem 0.45rem;
-  border-radius: 9999px;
-  font-size: 0.68rem;
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border-subtle);
-  background: var(--video-provider-badge-bg);
-  backdrop-filter: blur(1.2px);
 }
 
 .video-frame-wrap {

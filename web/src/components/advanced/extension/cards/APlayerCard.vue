@@ -8,7 +8,9 @@
     "
     size="wide"
     padding="compact"
+    :header-label="t('extensionCard.music')"
   >
+    <template #header-icon><Music /></template>
     <div class="music-player-wrap">
       <ExtensionCardSkeleton v-if="showMetingSkeleton" :min-height="104" />
       <meting-js
@@ -37,7 +39,9 @@
   <ExtensionCardShell
     v-else-if="musicInfo && musicInfo.server === MusicProvider.APPLE && musicInfo.id"
     size="wide"
+    :header-label="t('extensionCard.music')"
   >
+    <template #header-icon><Music /></template>
     <div class="music-player-wrap">
       <ExtensionCardSkeleton v-if="showAppleSkeleton" :min-height="175" />
       <iframe
@@ -65,6 +69,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import Music from '@/components/icons/music.vue'
 import { parseMusicURL } from '@/utils/other'
 import { loadExternalScript, loadExternalStyle } from '@/utils/loadExternalAsset'
@@ -74,6 +79,7 @@ import ExtensionCardShell from '../shared/ExtensionCardShell.vue'
 import ExtensionCardSkeleton from '../shared/ExtensionCardSkeleton.vue'
 
 const { SystemSetting, loading } = storeToRefs(useSettingStore())
+const { t } = useI18n()
 
 const props = defineProps<{
   echo: {
