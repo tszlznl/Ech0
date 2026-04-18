@@ -807,6 +807,8 @@
   "markdown": {
     "expand": "Expand",
     "collapse": "Collapse",
+    "copy": "Copy",
+    "copied": "Copied",
     "taskCheckboxLabel": "Task checkbox"
   },
   "baseSelect": {

@@ -36,8 +36,11 @@ const props = defineProps<{
 
 const rootRef = ref<HTMLElement | null>(null)
 const { t } = useI18n()
+const copyResetTimers = new WeakMap<HTMLButtonElement, ReturnType<typeof setTimeout>>()
 const expandLabel = computed(() => String(t('markdown.expand')))
 const collapseLabel = computed(() => String(t('markdown.collapse')))
+const copyLabel = computed(() => String(t('markdown.copy')))
+const copiedLabel = computed(() => String(t('markdown.copied')))
 const taskCheckboxLabel = computed(() => String(t('markdown.taskCheckboxLabel')))
 const html = ref('')
 const rendererReady = ref(Boolean(renderMarkdownFn))
@@ -57,6 +60,8 @@ const renderContent = async () => {
   const rendered = await render(content, {
     expandLabel: expandLabel.value,
     collapseLabel: collapseLabel.value,
+    copyLabel: copyLabel.value,
+    copiedLabel: copiedLabel.value,
     taskCheckboxLabel: taskCheckboxLabel.value,
   })
   if (currentSequence !== renderSequence) return
@@ -71,17 +76,51 @@ function onRootClick(event: Event) {
   if (!(target instanceof HTMLElement)) return
 
   const toggleButton = target.closest<HTMLButtonElement>('.code-block-toggle')
-  if (!toggleButton || !rootRef.value?.contains(toggleButton)) return
+  if (toggleButton && rootRef.value?.contains(toggleButton)) {
+    const block = toggleButton.closest<HTMLElement>('.code-block--collapsible')
+    if (!block) return
 
-  const block = toggleButton.closest<HTMLElement>('.code-block--collapsible')
-  if (!block) return
+    const isCollapsed = block.classList.toggle('code-block--collapsed')
+    const expandLabel = toggleButton.dataset.expandLabel ?? String(t('markdown.expand'))
+    const collapseLabel = toggleButton.dataset.collapseLabel ?? String(t('markdown.collapse'))
 
-  const isCollapsed = block.classList.toggle('code-block--collapsed')
-  const expandLabel = toggleButton.dataset.expandLabel ?? String(t('markdown.expand'))
-  const collapseLabel = toggleButton.dataset.collapseLabel ?? String(t('markdown.collapse'))
+    toggleButton.setAttribute('aria-expanded', String(!isCollapsed))
+    toggleButton.textContent = isCollapsed ? expandLabel : collapseLabel
+    return
+  }
 
-  toggleButton.setAttribute('aria-expanded', String(!isCollapsed))
-  toggleButton.textContent = isCollapsed ? expandLabel : collapseLabel
+  const copyButton = target.closest<HTMLButtonElement>('.code-block-copy')
+  if (copyButton && rootRef.value?.contains(copyButton)) {
+    const block = copyButton.closest<HTMLElement>('.code-block')
+    const codeEl = block?.querySelector<HTMLElement>('pre code')
+    if (!codeEl) return
+
+    const text = codeEl.textContent ?? ''
+    const copyLabel = copyButton.dataset.copyLabel ?? String(t('markdown.copy'))
+    const copiedLabel = copyButton.dataset.copiedLabel ?? String(t('markdown.copied'))
+
+    const markCopied = () => {
+      copyButton.classList.add('is-copied')
+      copyButton.textContent = copiedLabel
+      const prev = copyResetTimers.get(copyButton)
+      if (prev) clearTimeout(prev)
+      copyResetTimers.set(
+        copyButton,
+        setTimeout(() => {
+          copyButton.classList.remove('is-copied')
+          copyButton.textContent = copyLabel
+          copyResetTimers.delete(copyButton)
+        }, 1800),
+      )
+    }
+
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard
+        .writeText(text)
+        .then(markCopied)
+        .catch(() => {})
+    }
+  }
 }
 
 onMounted(() => {

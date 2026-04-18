@@ -88,8 +88,8 @@
   max-width: 100%;
   margin: 0.75rem 0;
   border-collapse: collapse;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 0.5rem;
+  border: 1px solid var(--md-table-border);
+  border-radius: 0.6rem;
   overflow: hidden;
   background-color: var(--md-table-bg);
   font-size: 0.88rem;
@@ -101,8 +101,7 @@
 
 .echo-markdown th,
 .echo-markdown td {
-  border: 1px solid var(--color-border-subtle);
-  padding: 0.45rem 0.6rem;
+  padding: 0.55rem 0.8rem;
   min-width: 6.5rem;
   text-align: left;
   vertical-align: top;
@@ -111,12 +110,14 @@
   overflow-wrap: anywhere;
 }
 
-.echo-markdown th {
+.echo-markdown thead th {
   font-weight: 600;
+  border-bottom: 1px solid var(--md-table-border);
 }
 
-.echo-markdown tbody tr:nth-child(even) {
-  background-color: var(--md-tbody-even-bg);
+.echo-markdown tbody tr + tr > th,
+.echo-markdown tbody tr + tr > td {
+  border-top: 1px solid var(--md-table-row-border);
 }
 
 .echo-markdown tbody tr:hover {
@@ -140,11 +141,10 @@
   display: block;
   font-family: var(--font-family-mono);
   box-sizing: border-box;
-  border-radius: 0.5rem;
   max-width: 100%;
   min-width: 0;
   overflow: auto hidden;
-  margin: 0.7rem 0;
+  margin: 0;
 }
 
 .echo-markdown pre code,
@@ -158,67 +158,112 @@
 
 .echo-markdown .code-block {
   position: relative;
-  margin: 0.7rem 0;
+  margin: 0.75rem 0;
   max-width: 100%;
   min-width: 0;
-  overflow-x: hidden;
-  overflow-x: clip;
-}
-
-.echo-markdown .code-block > pre {
-  margin: 0;
-}
-
-.echo-markdown .code-block--collapsible.code-block--collapsed > pre {
-  max-height: calc(var(--code-max-lines, 10) * 1.6em + 1.2rem);
   overflow: hidden;
+  border-radius: 0.6rem;
+  background: var(--md-code-bg);
+  border: 1px solid var(--md-code-border);
 }
 
+.echo-markdown .code-block__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem 0.35rem 0.85rem;
+  background: var(--md-code-header-bg);
+  border-bottom: 1px dashed var(--md-code-header-border);
+  font-family: var(--font-family-sans);
+}
+
+.echo-markdown .code-block__lang {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--md-code-lang-text);
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.echo-markdown .code-block__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.echo-markdown .code-block-copy,
 .echo-markdown .code-block-toggle {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  z-index: 2;
-  border: 1px solid var(--md-code-toggle-border);
-  background: rgb(15 23 42 / 90%);
-  color: #f8fafc;
-  border-radius: 999px;
-  padding: 0.2rem 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--md-code-action-text);
+  border-radius: 0.35rem;
+  padding: 0.2rem 0.55rem;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.4;
   cursor: pointer;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 4px 12px rgb(2 6 23 / 35%);
+  font-family: inherit;
   transition:
     background-color 0.18s ease,
-    border-color 0.18s ease,
-    transform 0.18s ease,
-    box-shadow 0.18s ease;
+    color 0.18s ease,
+    border-color 0.18s ease;
 }
 
+.echo-markdown .code-block-copy:hover,
 .echo-markdown .code-block-toggle:hover {
-  background: rgb(30 41 59 / 95%);
-  border-color: var(--md-code-toggle-hover-border);
-  transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgb(2 6 23 / 40%);
+  background: var(--md-code-action-hover-bg);
+  color: var(--md-code-action-hover-text);
+  border-color: var(--md-code-action-border);
 }
 
+.echo-markdown .code-block-copy:focus-visible,
 .echo-markdown .code-block-toggle:focus-visible {
-  outline: 2px solid #93c5fd;
+  outline: 2px solid var(--color-focus-ring);
   outline-offset: 1px;
 }
 
-.echo-markdown .code-block--collapsible.code-block--collapsed::after {
+.echo-markdown .code-block-copy.is-copied {
+  color: var(--md-code-action-copied-text);
+}
+
+.echo-markdown .code-block__body {
+  position: relative;
+  overflow: hidden;
+}
+
+.echo-markdown .code-block__body > pre {
+  margin: 0;
+}
+
+.echo-markdown .code-block__body pre code.hljs,
+.echo-markdown .code-block__body pre .hljs {
+  background: transparent;
+  color: var(--md-code-text);
+  padding: 0.75rem 0.9rem;
+}
+
+.echo-markdown .code-block--collapsible.code-block--collapsed .code-block__body > pre {
+  max-height: calc(var(--code-max-lines, 10) * 1.6em + 1.5rem);
+  overflow: hidden;
+}
+
+.echo-markdown .code-block--collapsible.code-block--collapsed .code-block__body::after {
   content: '';
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 2rem;
+  height: 2.25rem;
   pointer-events: none;
-  border-radius: 0 0 0.5rem 0.5rem;
-  background: linear-gradient(to bottom, transparent, rgb(15 23 42 / 95%));
+  background: linear-gradient(to bottom, var(--md-code-bg-transparent), var(--md-code-bg));
 }
 
 .echo-markdown :not(pre) > code {

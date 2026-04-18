@@ -1,5 +1,6 @@
 import { MusicProvider } from '@/enums/enums'
 import { i18n, DEFAULT_LOCALE } from '@/locales'
+import { timeValueToMs } from './timeValue'
 
 const ABSOLUTE_URL_REGEX = /^https?:\/\//i
 const joinBaseAndPath = (baseUrl: string, path: string) =>
@@ -36,19 +37,15 @@ export const getFileToAddUrl = (file: App.Api.Ech0.FileToAdd) => resolveFileUrl(
 export const getImageUrl = (image: App.Api.Ech0.FileObject) => getFileUrl(image)
 export const getImageToAddUrl = (image: App.Api.Ech0.FileToAdd) => getFileToAddUrl(image)
 
-export const formatDate = (dateInput: string | number) => {
+export const formatDate = (dateInput: string | number | null | undefined) => {
   // <24h：刚刚 / N 分钟前 / N 小时前（按实际经过时间）
   // 24h～48h：1 天前；48h～72h：2 天前；≥72h：Intl 按 locale 显示完整日期
 
-  // 处理 Unix 时间戳（秒或毫秒）和日期字符串
-  let date: Date
-  if (typeof dateInput === 'number') {
-    // 如果是数字，判断是秒级还是毫秒级时间戳
-    // 秒级时间戳通常小于 10^12，毫秒级时间戳通常大于 10^12
-    date = new Date(dateInput < 1e12 ? dateInput * 1000 : dateInput)
-  } else {
-    date = new Date(dateInput)
-  }
+  // 统一走 timeValueToMs：兼容 number（秒/毫秒）、ISO 字符串、纯数字字符串；
+  // 无效/缺失时返回 0，此处兜底避免渲染成 1970-01-01。
+  const ms = timeValueToMs(dateInput)
+  if (ms <= 0) return ''
+  const date = new Date(ms)
 
   const now = new Date()
   const diff = now.getTime() - date.getTime()

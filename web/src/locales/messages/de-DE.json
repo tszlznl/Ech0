@@ -807,6 +807,8 @@
   "markdown": {
     "expand": "Ausklappen",
     "collapse": "Einklappen",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
     "taskCheckboxLabel": "Aufgaben-Kontrollkästchen"
   },
   "baseSelect": {

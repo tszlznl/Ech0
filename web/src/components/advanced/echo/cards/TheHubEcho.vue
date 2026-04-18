@@ -71,7 +71,7 @@
     <div class="flex items-center justify-between gap-2">
       <div class="min-w-0 flex flex-1 items-center overflow-hidden">
         <div class="min-w-0 truncate whitespace-nowrap text-sm text-slate-500">
-          {{ formatDate(props.echo.created_at) }}
+          {{ formatDate(props.echo.createdTs) }}
         </div>
         <div
           v-if="props.echo.tags?.[0]?.name"
