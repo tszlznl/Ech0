@@ -15,7 +15,8 @@
     "none": "暂无",
     "localeZhCN": "简体中文",
     "localeEnUS": "English",
-    "localeDeDe": "Deutsch"
+    "localeDeDe": "Deutsch",
+    "localeJaJP": "日本語"
   },
   "editor": {
     "tagPlaceholder": "标签",
@@ -437,6 +438,7 @@
     "localeZhShort": "简中",
     "localeEnShort": "EN",
     "localeDeShort": "DE",
+    "localeJaShort": "JA",
     "usernamePlaceholder": "请输入用户名",
     "emailPlaceholder": "请输入邮箱",
     "passwordPlaceholder": "请输入密码",

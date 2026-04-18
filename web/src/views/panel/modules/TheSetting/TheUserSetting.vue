@@ -154,11 +154,13 @@ const localeOptions = computed(() => [
   { label: String(t('userSetting.localeZhShort')), value: 'zh-CN' },
   { label: String(t('userSetting.localeEnShort')), value: 'en-US' },
   { label: String(t('userSetting.localeDeShort')), value: 'de-DE' },
+  { label: String(t('userSetting.localeJaShort')), value: 'ja-JP' },
 ])
 const localeLabel = computed(() => {
   const locale = userInfo.value.locale
   if (locale === 'en-US') return t('userSetting.localeEnShort')
   if (locale === 'de-DE') return t('userSetting.localeDeShort')
+  if (locale === 'ja-JP') return t('userSetting.localeJaShort')
   return t('userSetting.localeZhShort')
 })
 const { enqueueUpload, waitForTask, clearFinishedUploads } = useFileQueue()

@@ -3,7 +3,7 @@ import { localStg } from '@/utils/storage'
 
 export const LOCALE_STORAGE_KEY = 'locale'
 export const DEFAULT_LOCALE = 'zh-CN'
-export const SUPPORTED_LOCALES = ['zh-CN', 'en-US', 'de-DE'] as const
+export const SUPPORTED_LOCALES = ['zh-CN', 'en-US', 'de-DE', 'ja-JP'] as const
 
 export type AppLocale = (typeof SUPPORTED_LOCALES)[number]
 
@@ -20,6 +20,7 @@ const normalizeLocale = (raw?: string | null): AppLocale => {
   if (langPrefix === 'en') return 'en-US'
   if (langPrefix === 'zh') return 'zh-CN'
   if (langPrefix === 'de') return 'de-DE'
+  if (langPrefix === 'ja') return 'ja-JP'
 
   return DEFAULT_LOCALE
 }

@@ -247,6 +247,7 @@
               'en-US': t('commonUi.localeEnUS'),
               'de-DE': t('commonUi.localeDeDe'),
               'zh-CN': t('commonUi.localeZhCN'),
+              'ja-JP': t('commonUi.localeJaJP'),
             }[SystemSetting.default_locale] || t('commonUi.localeZhCN')
           }}
         </span>
@@ -297,6 +298,7 @@ const localeOptions = computed(() => [
   { label: String(t('commonUi.localeZhCN')), value: 'zh-CN' },
   { label: String(t('commonUi.localeEnUS')), value: 'en-US' },
   { label: String(t('commonUi.localeDeDe')), value: 'de-DE' },
+  { label: String(t('commonUi.localeJaJP')), value: 'ja-JP' },
 ])
 const { enqueueUpload, waitForTask, clearFinishedUploads } = useFileQueue()
 

@@ -15,7 +15,8 @@
     "none": "N/A",
     "localeZhCN": "Simplified Chinese",
     "localeEnUS": "English",
-    "localeDeDe": "German"
+    "localeDeDe": "German",
+    "localeJaJP": "Japanese"
   },
   "editor": {
     "tagPlaceholder": "Tag",
@@ -437,6 +438,7 @@
     "localeZhShort": "简中",
     "localeEnShort": "EN",
     "localeDeShort": "DE",
+    "localeJaShort": "JA",
     "usernamePlaceholder": "Enter username",
     "emailPlaceholder": "Enter email",
     "passwordPlaceholder": "Enter password",

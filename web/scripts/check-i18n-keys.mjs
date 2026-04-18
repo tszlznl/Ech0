@@ -25,6 +25,7 @@ const base = readLocale('zh-CN.json')
 const targets = [
   { name: 'en-US', data: readLocale('en-US.json') },
   { name: 'de-DE', data: readLocale('de-DE.json') },
+  { name: 'ja-JP', data: readLocale('ja-JP.json') },
 ]
 
 let hasError = false
