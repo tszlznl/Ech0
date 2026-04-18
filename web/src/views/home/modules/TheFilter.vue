@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full px-2 mb-1 sm:mb-0">
+  <div class="w-full sm:px-2 mb-1 sm:mb-0">
     <div class="w-full flex flex-col gap-3">
       <div class="flex justify-start items-center gap-2 w-full flex-wrap">
         <div v-if="!isFilteringMode" class="home-filter__search-shell">
