@@ -12,19 +12,10 @@ export async function initStores() {
   const initStore = useInitStore()
 
   themeStore.init()
-  editorStore.init()
-
-  // Fire non-critical settings fetches in parallel — they update reactive state
-  // when they arrive but don't block the homepage first paint.
-  settingStore.getSystemSetting().catch(() => undefined)
-  settingStore.getAgentInfo().catch(() => undefined)
-  settingStore.getHelloEch0().catch(() => undefined)
-
-  // initStore & userStore must resolve before routing decisions, but they can
-  // run concurrently (userStore's autoLogin does not depend on init status).
-  await Promise.all([initStore.init(), userStore.init()])
-
-  if (initStore.initialized && userStore.isLogin && userStore.user?.is_admin) {
-    settingStore.getS3Setting().catch(() => undefined)
+  await initStore.init()
+  await userStore.init()
+  if (initStore.initialized) {
+    await settingStore.init()
   }
+  editorStore.init()
 }

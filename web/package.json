@@ -20,8 +20,8 @@
     "i18n:check": "pnpm run i18n:key-check && pnpm run i18n:unused-check && pnpm run i18n:hardcoded-check && pnpm run i18n:pseudo-smoke",
     "test:unit": "vitest run",
     "lint": "eslint . --fix",
-    "lint:style": "stylelint \"src/**/*.{vue,css,scss}\" --fix",
-    "lint:style:check": "stylelint \"src/**/*.{vue,css,scss}\"",
+    "lint:style": "stylelint \"src/**/*.{vue,css,scss}\" --fix --cache",
+    "lint:style:check": "stylelint \"src/**/*.{vue,css,scss}\" --cache",
     "format": "prettier --write src/"
   },
   "dependencies": {

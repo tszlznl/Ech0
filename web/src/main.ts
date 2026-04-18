@@ -8,9 +8,8 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import { initStores } from './stores/store-init'
-import { useEchoStore, useSettingStore } from '@/stores'
-import { setupI18n, setI18nLocale, LOCALE_STORAGE_KEY } from './locales'
-import { localStg } from '@/utils/storage'
+import { useSettingStore } from './stores/setting'
+import { setupI18n } from './locales'
 
 // 自定义组件
 import BaseDialog from '@/components/common/BaseDialog.vue'
@@ -20,41 +19,18 @@ const pinia = createPinia()
 
 app.use(pinia)
 
-// Pre-warm the homepage timeline in parallel with bootstrap so the first page
-// of echoes is ready by the time <TheEchos> mounts. Uses current URL because
-// the router hasn't resolved yet.
-const pathname = typeof window !== 'undefined' ? (window.location.pathname ?? '') : ''
-if (pathname === '/' || pathname === '') {
-  useEchoStore()
-    .getEchosByPage()
-    .catch(() => undefined)
-}
+// init
+await initStores().catch((e) => {
+  console.error('Failed to initialize stores:', e)
+})
 
-// Whether the user already has a persisted locale. Checked before `setupI18n`
-// because `setupI18n` writes localStorage itself; without this snapshot the
-// server-side default_locale override (for first-time visitors) would be
-// dropped.
-const hadPersistedLocale = Boolean(localStg.getItem(LOCALE_STORAGE_KEY))
-
-// Parallel bootstrap: stores init, i18n messages, floating-vue module.
-const [, i18n, floatingVueModule] = await Promise.all([
-  initStores().catch((e) => {
-    console.error('Failed to initialize stores:', e)
-  }),
-  setupI18n(),
-  import('floating-vue'),
-])
-
-if (!hadPersistedLocale) {
-  const serverLocale = useSettingStore().SystemSetting.default_locale
-  if (serverLocale && serverLocale !== i18n.global.locale.value) {
-    await setI18nLocale(serverLocale).catch(() => undefined)
-  }
-}
+const settingStore = useSettingStore()
+const i18n = await setupI18n(settingStore.SystemSetting.default_locale)
+const { default: FloatingVue } = await import('floating-vue')
 
 app.use(router)
 app.use(i18n)
-app.use(floatingVueModule.default, {
+app.use(FloatingVue, {
   themes: {
     tooltip: {
       triggers: ['hover'],

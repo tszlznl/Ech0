@@ -18,10 +18,7 @@ export default {
     'custom-property-empty-line-before': null,
     // Keep `currentColor` camelCase; both spellings are spec-valid
     'value-keyword-case': null,
-    'selector-pseudo-class-no-unknown': [
-      true,
-      { ignorePseudoClasses: ['deep', 'slotted', 'global'] },
-    ],
+    // Vue 2 legacy deep selectors (Vue 3 `:deep`/`:slotted`/`:global` already handled by recommended-vue/scss)
     'selector-pseudo-element-no-unknown': [
       true,
       { ignorePseudoElements: ['v-deep', 'v-slotted', 'v-global'] },
@@ -30,10 +27,12 @@ export default {
       true,
       {
         ignoreAtRules: [
+          // UnoCSS / Tailwind directives
           'apply',
           'screen',
           'variants',
           'tailwind',
+          // SCSS directives (also needed here because the base rule still runs over .scss sources)
           'use',
           'forward',
           'mixin',
