@@ -35,14 +35,14 @@ func TestRecordIP_UsesUTCDayBoundary(t *testing.T) {
 	}
 }
 
-func TestTrackerLoadHistory_LoadsPastDaysWithoutOverwritingToday(t *testing.T) {
+func TestTrackerLoadHistory_ResumesTodayFromPersistedStats(t *testing.T) {
 	tracker := NewTracker()
 	now := time.Now().UTC()
 	today := now.Format(dateLayout)
 	yesterday := now.AddDate(0, 0, -1).Format(dateLayout)
 
 	tracker.LoadHistory([]DayStat{
-		{Date: today, PV: 999, UV: 999},
+		{Date: today, PV: 7, UV: 3},
 		{Date: yesterday, PV: 12, UV: 8},
 	})
 
@@ -50,8 +50,9 @@ func TestTrackerLoadHistory_LoadsPastDaysWithoutOverwritingToday(t *testing.T) {
 	if todayStat.Date != today {
 		t.Fatalf("expected today date %s, got %s", today, todayStat.Date)
 	}
-	if todayStat.PV != 0 || todayStat.UV != 0 {
-		t.Fatalf("expected today stat to stay zero, got pv=%d uv=%d", todayStat.PV, todayStat.UV)
+	// 重启后应从持久化值继续累计,否则下一次快照会用较小的新值覆盖 DB。
+	if todayStat.PV != 7 || todayStat.UV != 3 {
+		t.Fatalf("expected today stat resumed pv=7 uv=3, got pv=%d uv=%d", todayStat.PV, todayStat.UV)
 	}
 
 	stats := tracker.Last7Days()
