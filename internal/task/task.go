@@ -238,14 +238,13 @@ func (t *Tasker) ScheduleBackupTask(cronExpression string) error {
 	return nil
 }
 
-// VisitorSnapshotTask 定时保存 PV/UV 快照并清理历史数据。
-// 每 60 分钟 upsert 一次当天统计,保证进程非优雅退出时最多丢 1 小时数据。
+// VisitorSnapshotTask 每 60 分钟 upsert 一次当天 PV/UV,并清理超出 7 天窗口的历史行。
+// 优雅退出由 Stop() 的 flushVisitorStat 兜底,非优雅退出最多丢 1 小时数据。
 func (t *Tasker) VisitorSnapshotTask() error {
 	_, err := t.scheduler.NewJob(
 		gocron.DurationJob(60*time.Minute),
 		gocron.NewTask(func() {
 			t.flushVisitorStat(context.Background())
-			// 保留最近 7 天（包括当天快照）。
 			cutoff := visitorCutoffDate(time.Now().UTC())
 			if err := t.visitorRepo.DeleteOlderThan(context.Background(), cutoff); err != nil {
 				logUtil.GetLogger().Error("Failed to cleanup visitor stats", zap.Error(err))

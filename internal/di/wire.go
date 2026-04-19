@@ -32,6 +32,11 @@ import (
 
 var AppSet = app.ProviderSet
 
+// VisitorSet 独立于 HandlerSet/TaskerSet,避免 wire 为两个 Build 各自生成一个 Tracker
+// 导致"WebHandler 写入 #1、Tasker 从 #2 读出恒为 0"的 bug。必须在 BuildApp/BuildServer
+// 顶层引入一次,统一下沉给 BuildHandlers 和 BuildTasker。
+var VisitorSet = wire.NewSet(visitor.NewTracker)
+
 var DomainSet = wire.NewSet(
 	BuildHandlers,
 	BuildMiddlewares,
@@ -76,7 +81,6 @@ var HandlerSet = wire.NewSet(
 	storage.ProviderSet,
 	wire.Bind(new(storage.S3SettingStore), new(*keyvalueRepository.KeyValueRepository)),
 	repository.FileSet,
-	visitor.NewTracker,
 	handler.WebSet,
 
 	repository.UserSet,
@@ -155,7 +159,6 @@ var TaskerSet = wire.NewSet(
 
 	repository.QueueSet,
 	repository.VisitorSet,
-	visitor.NewTracker,
 	task.ProviderSet,
 )
 
@@ -167,6 +170,7 @@ var MigratorSet = wire.NewSet(
 func BuildApp() (*app.App, error) {
 	wire.Build(
 		InfraSet,
+		VisitorSet,
 		DomainSet,
 		RuntimeSet,
 		AppSet,
@@ -186,11 +190,13 @@ func BuildEventRegistrar(
 }
 
 // BuildHandlers 使用 wire 生成的代码来构建 Handlers 实例。
+// tracker 由顶层 BuildApp/BuildServer 注入,保证整个进程只有一个 visitor.Tracker 实例。
 func BuildHandlers(
 	dbProvider func() *gorm.DB,
 	appCache cache.ICache[string, any],
 	tx transaction.Transactor,
 	ebProvider func() *busen.Bus,
+	tracker *visitor.Tracker,
 ) (*handler.Bundle, error) {
 	wire.Build(HandlerSet)
 	return &handler.Bundle{}, nil
@@ -209,6 +215,7 @@ func BuildMiddlewares(
 func BuildServer() (*server.Server, error) {
 	wire.Build(
 		InfraSet,
+		VisitorSet,
 		BuildHandlers,
 		BuildMiddlewares,
 		server.ProviderSet,
@@ -221,6 +228,7 @@ func BuildTasker(
 	appCache cache.ICache[string, any],
 	tx transaction.Transactor,
 	ebProvider func() *busen.Bus,
+	tracker *visitor.Tracker,
 ) (*task.Tasker, error) {
 	wire.Build(TaskerSet)
 	return &task.Tasker{}, nil
