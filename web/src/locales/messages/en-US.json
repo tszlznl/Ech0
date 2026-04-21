@@ -78,6 +78,7 @@
     "locationShare": "Location",
     "locationHint": "Click on the map or enter coordinates",
     "locationUseCurrent": "Use current location",
+    "locationClear": "Clear location",
     "locationGeolocating": "Locating…",
     "locationGeolocationDenied": "Geolocation permission denied. Please pick a point on the map.",
     "locationGeolocationUnsupported": "Geolocation is not supported in this browser",

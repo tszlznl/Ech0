@@ -91,7 +91,7 @@
         {{ t('editor.locationHint') }}
       </p>
 
-      <LocationPicker class="mb-2" :lat-lng="pickerLatLng" auto-locate @change="handleMapChange" />
+      <LocationPicker class="mb-2" :lat-lng="pickerLatLng" @change="handleMapChange" />
 
       <div class="flex flex-wrap items-center gap-2 mb-2">
         <BaseButton
@@ -100,6 +100,13 @@
           @click="handleUseCurrentLocation"
         >
           {{ isGeolocating ? t('editor.locationGeolocating') : t('editor.locationUseCurrent') }}
+        </BaseButton>
+        <BaseButton
+          class="rounded-md px-3 py-2 text-sm whitespace-nowrap"
+          :disabled="!hasLocationSelected"
+          @click="handleClearLocation"
+        >
+          {{ t('editor.locationClear') }}
         </BaseButton>
         <span v-if="isFetchingGeocoding" class="text-[var(--color-text-muted)] text-xs">
           {{ t('editor.locationLookingUp') }}
@@ -191,6 +198,19 @@ watch(displayName, (name) => {
 function handleMapChange(p: { lat: number; lng: number }) {
   editorStore.locationToAdd.latitude = p.lat
   editorStore.locationToAdd.longitude = p.lng
+}
+
+const hasLocationSelected = computed(
+  () =>
+    editorStore.locationToAdd.latitude !== null ||
+    editorStore.locationToAdd.longitude !== null ||
+    !!editorStore.locationToAdd.placeholder.trim(),
+)
+
+function handleClearLocation() {
+  editorStore.locationToAdd.latitude = null
+  editorStore.locationToAdd.longitude = null
+  editorStore.locationToAdd.placeholder = ''
 }
 
 function handleUseCurrentLocation() {

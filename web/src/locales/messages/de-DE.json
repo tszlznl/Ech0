@@ -78,6 +78,7 @@
     "locationShare": "Ort",
     "locationHint": "Klicke auf die Karte oder gib Koordinaten ein",
     "locationUseCurrent": "Aktuellen Ort verwenden",
+    "locationClear": "Ort löschen",
     "locationGeolocating": "Ortung läuft…",
     "locationGeolocationDenied": "Ortung abgelehnt. Bitte wähle einen Punkt auf der Karte.",
     "locationGeolocationUnsupported": "Dein Browser unterstützt keine Ortung",
