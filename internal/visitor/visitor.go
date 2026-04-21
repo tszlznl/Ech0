@@ -38,10 +38,10 @@ type DayStat struct {
 // Tracker 是 PV/UV 统计器的对外句柄。
 // 所有字段都是 channel — 方法本身不持有任何可变状态,状态全在 run goroutine 里。
 type Tracker struct {
-	recordCh chan recordEvent     // 请求上报 → run
-	queryCh  chan chan []DayStat  // "最近 7 天" 查询:外部发一个回传 channel,run 填完再回
-	todayCh  chan chan DayStat    // "今天一条" 查询,模式同上
-	loadCh   chan loadRequest     // 启动时从 DB 回填历史快照
+	recordCh chan recordEvent    // 请求上报 → run
+	queryCh  chan chan []DayStat // "最近 7 天" 查询:外部发一个回传 channel,run 填完再回
+	todayCh  chan chan DayStat   // "今天一条" 查询,模式同上
+	loadCh   chan loadRequest    // 启动时从 DB 回填历史快照
 }
 
 // NewTracker 启动后台 goroutine 并返回句柄。
