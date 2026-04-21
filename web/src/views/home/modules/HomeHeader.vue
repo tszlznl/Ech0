@@ -17,7 +17,12 @@
 
     <div class="home-header__actions">
       <div class="home-header__links">
-        <a href="/rss" v-tooltip="t('homeTop.rssTitle')" class="home-header__link-icon">
+        <a
+          href="/rss"
+          v-tooltip="t('homeTop.rssTitle')"
+          :aria-label="t('homeTop.rssTitle')"
+          class="home-header__link-icon"
+        >
           <Rss class="w-4 h-4" />
         </a>
         <a
@@ -25,6 +30,7 @@
           target="_blank"
           rel="noopener noreferrer"
           v-tooltip="t('homeNav.githubAction')"
+          :aria-label="t('homeNav.githubAction')"
           class="home-header__link-icon"
         >
           <Github class="w-4 h-4" />
