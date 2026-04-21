@@ -2999,6 +2999,13 @@ const docTemplate = `{
         "model.EchoQueryDto": {
             "type": "object",
             "properties": {
+                "dateFrom": {
+                    "description": "DateFrom / DateTo：按 echos.created_at 过滤的 Unix 秒闭区间。\n0 或负数视为未设置。",
+                    "type": "integer"
+                },
+                "dateTo": {
+                    "type": "integer"
+                },
                 "page": {
                     "type": "integer"
                 },

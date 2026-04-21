@@ -10,7 +10,11 @@
           <div class="home-main-track">
             <HomeHeader class="mb-3 mx-1" />
             <aside v-if="!isZenMode" class="home-aside home-aside--mobile">
-              <HomeSidebarNav v-model:mobile-search-open="mobileSearchOpen" class="mx-1" />
+              <HomeSidebarNav
+                v-model:mobile-search-open="mobileSearchOpen"
+                class="mx-1"
+                @open-palette="paletteOpen = true"
+              />
             </aside>
             <div
               v-if="activeTab === 'publish'"
@@ -41,7 +45,7 @@
         <aside v-if="!isZenMode" class="home-aside home-aside--rail">
           <HomeSidebarNav />
           <div class="home-aside__filter-block">
-            <TheFilter />
+            <TheFilter @open-palette="paletteOpen = true" />
             <a
               href="https://github.com/lin-snow/Ech0"
               target="_blank"
@@ -54,6 +58,7 @@
         </aside>
       </div>
     </div>
+    <TheCommandPalette v-model="paletteOpen" />
   </div>
 </template>
 
@@ -63,6 +68,7 @@ import HomeBanner from './HomeBanner.vue'
 import HomeSidebarNav from './HomeSidebarNav.vue'
 import TheFilter from './TheFilter.vue'
 import TheEchos from './TheEchos.vue'
+import TheCommandPalette from './TheCommandPalette.vue'
 import { defineAsyncComponent, onMounted, ref, onBeforeUnmount, computed } from 'vue'
 import { useEchoStore, useZenStore, useUserStore, useSettingStore } from '@/stores'
 import { useRoute } from 'vue-router'
@@ -103,6 +109,21 @@ const mainColumn = ref<HTMLElement | null>(null)
 const TIMELINE_SCROLL_KEY = 'home:timeline:scrollTop'
 let timelineScrollRaf: number | null = null
 
+const paletteOpen = ref<boolean>(false)
+
+const handleGlobalKeydown = (event: KeyboardEvent) => {
+  const isSearchShortcut =
+    (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && event.key === 'k'
+  if (isSearchShortcut) {
+    event.preventDefault()
+    paletteOpen.value = !paletteOpen.value
+    return
+  }
+  if (event.key === 'Escape' && paletteOpen.value) {
+    paletteOpen.value = false
+  }
+}
+
 const saveTimelineScrollPosition = () => {
   if (!mainColumn.value || timelineScrollRaf !== null) return
 
@@ -130,6 +151,7 @@ onMounted(async () => {
   window.requestAnimationFrame(() => {
     restoreTimelineScrollPosition()
   })
+  window.addEventListener('keydown', handleGlobalKeydown)
 })
 
 onBeforeUnmount(() => {
@@ -140,6 +162,7 @@ onBeforeUnmount(() => {
     window.cancelAnimationFrame(timelineScrollRaf)
     timelineScrollRaf = null
   }
+  window.removeEventListener('keydown', handleGlobalKeydown)
 })
 </script>
 

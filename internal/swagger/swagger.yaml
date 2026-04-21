@@ -98,6 +98,13 @@ definitions:
     type: object
   model.EchoQueryDto:
     properties:
+      dateFrom:
+        description: |-
+          DateFrom / DateTo：按 echos.created_at 过滤的 Unix 秒闭区间。
+          0 或负数视为未设置。
+        type: integer
+      dateTo:
+        type: integer
       page:
         type: integer
       pageSize:

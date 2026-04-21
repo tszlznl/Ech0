@@ -181,6 +181,9 @@ declare namespace App {
         tagIds?: string[]
         sortBy?: string
         sortOrder?: string
+        /** 按 created_at 过滤的闭区间，单位 Unix 秒 */
+        dateFrom?: number
+        dateTo?: number
       }
 
       type Echo = {

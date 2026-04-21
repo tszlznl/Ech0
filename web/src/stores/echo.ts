@@ -57,6 +57,19 @@ export const useEchoStore = defineStore('echoStore', () => {
   const isFilteringMode = ref<boolean>(false) // 是否正在按标签过滤
   const filteredTag = ref<App.Api.Ech0.Tag | null>(null) // 当前选中的过滤标签
 
+  // ── 日期范围过滤（由高级搜索面板驱动；单位：Unix 秒） ──
+  const dateFrom = ref<number | null>(null)
+  const dateTo = ref<number | null>(null)
+  const isDateRangeActive = computed(() => dateFrom.value !== null || dateTo.value !== null)
+
+  // ── 多标签过滤（由高级搜索面板驱动）──
+  // 与 filteredTag（单标签点击过滤）独立存在：
+  //   - filteredTag：用户点击 Echo 卡片或标签页进入的“聚焦单标签”模式
+  //   - selectedTagIds：高级搜索面板里可组合多个标签，后端以 OR 语义查询
+  // buildQueryParams 会将二者合并去重传给后端。
+  const selectedTagIds = ref<string[]>([])
+  const isTagSelectionActive = computed(() => selectedTagIds.value.length > 0)
+
   // ─────────────────────────────────────────────
   //  watchers
   // ─────────────────────────────────────────────
@@ -83,10 +96,41 @@ export const useEchoStore = defineStore('echoStore', () => {
       pageSize: pageSize.value,
       search: searchValue.value || undefined,
     }
+    const tagIds = new Set<string>()
     if (isFilteringMode.value && filteredTag.value) {
-      params.tagIds = [filteredTag.value.id]
+      tagIds.add(filteredTag.value.id)
+    }
+    selectedTagIds.value.forEach((id) => tagIds.add(id))
+    if (tagIds.size > 0) {
+      params.tagIds = Array.from(tagIds)
+    }
+    if (dateFrom.value !== null) {
+      params.dateFrom = dateFrom.value
+    }
+    if (dateTo.value !== null) {
+      params.dateTo = dateTo.value
     }
     return params
+  }
+
+  /** 清空日期范围过滤 */
+  const resetDateRange = () => {
+    dateFrom.value = null
+    dateTo.value = null
+  }
+
+  /** 清空面板中的多标签过滤 */
+  const resetSelectedTags = () => {
+    selectedTagIds.value = []
+  }
+
+  /** 从多标签过滤中移除某个标签；若该标签正好是 filteredTag，则一并退出单标签过滤模式 */
+  const removeSelectedTag = (tagId: string) => {
+    selectedTagIds.value = selectedTagIds.value.filter((id) => id !== tagId)
+    if (filteredTag.value?.id === tagId && isFilteringMode.value) {
+      isFilteringMode.value = false
+      filteredTag.value = null
+    }
   }
 
   /**
@@ -209,12 +253,24 @@ export const useEchoStore = defineStore('echoStore', () => {
     isFilteringMode,
     filteredTag,
 
+    // 日期范围过滤
+    dateFrom,
+    dateTo,
+    isDateRangeActive,
+
+    // 多标签过滤
+    selectedTagIds,
+    isTagSelectionActive,
+
     // actions
     getEchosByPage,
     resetPagination,
     refreshEchos,
     clearEchos,
     refreshForSearch,
+    resetDateRange,
+    resetSelectedTags,
+    removeSelectedTag,
     updateEcho,
     updateLikeCount,
     getTags,

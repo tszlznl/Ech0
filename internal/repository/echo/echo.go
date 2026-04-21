@@ -393,6 +393,12 @@ func (echoRepository *EchoRepository) QueryEchos(
 		if queryDto.Search != "" {
 			db = db.Where("echos.content LIKE ?", "%"+queryDto.Search+"%")
 		}
+		if queryDto.DateFrom > 0 {
+			db = db.Where("echos.created_at >= ?", queryDto.DateFrom)
+		}
+		if queryDto.DateTo > 0 {
+			db = db.Where("echos.created_at <= ?", queryDto.DateTo)
+		}
 		return db
 	}
 

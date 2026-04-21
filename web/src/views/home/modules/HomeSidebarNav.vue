@@ -24,7 +24,7 @@
       </button>
     </div>
     <div v-if="showMobileFilter" class="home-sidebar-nav__mobile-filter">
-      <TheFilter />
+      <TheFilter @open-palette="emit('openPalette')" />
     </div>
   </div>
 </template>
@@ -50,6 +50,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{
   (event: 'update:mobileSearchOpen', value: boolean): void
+  (event: 'openPalette'): void
 }>()
 const localSearchOpen = ref(false)
 const searchOpenState = computed({

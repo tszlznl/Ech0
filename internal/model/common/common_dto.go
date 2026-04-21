@@ -19,6 +19,10 @@ type EchoQueryDto struct {
 	TagIDs    []string `json:"tagIds"`
 	SortBy    string   `json:"sortBy"`
 	SortOrder string   `json:"sortOrder"`
+	// DateFrom / DateTo：按 echos.created_at 过滤的 Unix 秒闭区间。
+	// 0 或负数视为未设置。
+	DateFrom int64 `json:"dateFrom"`
+	DateTo   int64 `json:"dateTo"`
 }
 
 // FileDto is the unified response for file operations.
