@@ -171,7 +171,8 @@ onMounted(() => {
 .comment-title-accent {
   font-family: var(--font-family-handwritten);
   color: var(--color-accent);
-  font-size: 18px;
+  font-size: 20px;
+  font-weight: 700;
   margin-top: -2px;
 }
 

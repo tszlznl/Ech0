@@ -63,7 +63,8 @@ const { t } = useI18n()
   margin: 0;
   font-family: var(--font-family-display);
   font-size: 0.75rem;
+  font-weight: 600;
   line-height: 1.35;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 </style>

@@ -119,8 +119,9 @@ onMounted(() => {
 
 .heatmap-date-chip {
   border: 1px solid var(--color-border-subtle);
-  color: var(--color-text-muted);
-  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
   letter-spacing: 0.18em;
   padding: 2px 8px;
   transform: rotate(-1.8deg);
@@ -142,6 +143,7 @@ onMounted(() => {
   font-family: var(--font-family-handwritten);
   color: var(--color-accent);
   font-size: 20px;
+  font-weight: 700;
   margin-top: -2px;
 }
 </style>

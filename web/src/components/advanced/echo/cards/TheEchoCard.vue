@@ -8,7 +8,7 @@
           </div>
           <div
             @click="handleExpandEcho(echo.id)"
-            class="flex items-center h-full justify-start leading-none text-sm text-nowrap text-[var(--color-accent)] hover:underline hover:decoration-offset-3 hover:decoration-1 mr-1"
+            class="flex items-center h-full justify-start leading-none text-sm font-semibold text-nowrap text-[var(--color-accent)] hover:underline hover:decoration-offset-3 hover:decoration-1 mr-1"
           >
             {{ formatDate(props.echo.created_at) }}
           </div>
@@ -16,7 +16,7 @@
         <div
           v-if="!showMenu"
           @click="handleFilterByTag"
-          class="text-sm text-[var(--color-text-muted)] w-24 px-1 truncate text-nowrap hover:cursor-pointer hover:text-[var(--color-text-muted)] hover:underline hover:decoration-offset-3 hover:decoration-1"
+          class="text-sm font-medium text-[var(--color-text-secondary)] w-24 px-1 truncate text-nowrap hover:cursor-pointer hover:text-[var(--color-text-primary)] hover:underline hover:decoration-offset-3 hover:decoration-1"
         >
           <span>{{ props.echo.tags ? `#${props.echo.tags[0]?.name}` : '' }}</span>
         </div>

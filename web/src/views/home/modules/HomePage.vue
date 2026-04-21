@@ -273,19 +273,19 @@ onBeforeUnmount(() => {
   margin-top: 0.5rem;
   padding-inline: 0.5rem;
   font-family: var(--font-family-display);
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.75rem;
   line-height: 1.25;
   letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   text-decoration: none;
   cursor: pointer;
   transition: color 0.2s;
 }
 
 .home-aside__version:hover {
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary);
 }
 
 .home-content-block {
