@@ -214,19 +214,16 @@ watch(
   { immediate: true },
 )
 
-watch(
-  [frequency, hour, minute, weekday, monthday, hourlyInterval, customExpression],
-  () => {
-    if (suppressNextEmit) {
-      suppressNextEmit = false
-      return
-    }
-    const next = buildCron()
-    if (next !== props.modelValue) {
-      emit('update:modelValue', next)
-    }
-  },
-)
+watch([frequency, hour, minute, weekday, monthday, hourlyInterval, customExpression], () => {
+  if (suppressNextEmit) {
+    suppressNextEmit = false
+    return
+  }
+  const next = buildCron()
+  if (next !== props.modelValue) {
+    emit('update:modelValue', next)
+  }
+})
 </script>
 
 <style scoped>
@@ -281,7 +278,7 @@ watch(
   box-shadow: var(--shadow-sm);
   outline: none;
   appearance: none;
-  -webkit-appearance: none;
+  appearance: none;
   background-repeat: no-repeat;
   background-position: right 0.5rem center;
   background-size: 0.8rem 0.8rem;

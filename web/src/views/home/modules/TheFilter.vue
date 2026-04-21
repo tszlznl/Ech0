@@ -34,10 +34,7 @@
         </div>
       </div>
 
-      <div
-        v-if="isDateRangeActive || selectedTagChips.length > 0"
-        class="flex flex-wrap gap-1.5"
-      >
+      <div v-if="isDateRangeActive || selectedTagChips.length > 0" class="flex flex-wrap gap-1.5">
         <div
           v-if="isDateRangeActive"
           class="home-filter__chip"

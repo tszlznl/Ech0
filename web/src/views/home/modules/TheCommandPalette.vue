@@ -24,9 +24,7 @@
             <span
               v-if="activeFilterCount > 0"
               class="palette__badge"
-              :aria-label="
-                t('commandPalette.activeCountSuffix', { count: activeFilterCount })
-              "
+              :aria-label="t('commandPalette.activeCountSuffix', { count: activeFilterCount })"
             >
               {{ activeFilterCount }}
             </span>
@@ -43,9 +41,7 @@
           <div class="palette__body">
             <section class="palette__section">
               <header class="palette__section-header">
-                <span class="palette__section-label">{{
-                  t('commandPalette.dateRangeLabel')
-                }}</span>
+                <span class="palette__section-label">{{ t('commandPalette.dateRangeLabel') }}</span>
                 <button
                   v-if="draftFrom !== null || draftTo !== null"
                   type="button"
@@ -69,9 +65,7 @@
               </div>
               <div class="palette__date-row">
                 <label class="palette__date-field">
-                  <span class="palette__date-label">{{
-                    t('commandPalette.dateFromLabel')
-                  }}</span>
+                  <span class="palette__date-label">{{ t('commandPalette.dateFromLabel') }}</span>
                   <input
                     type="date"
                     class="palette__date-input"
@@ -82,9 +76,7 @@
                 </label>
                 <span class="palette__date-sep">{{ t('commandPalette.rangeSeparator') }}</span>
                 <label class="palette__date-field">
-                  <span class="palette__date-label">{{
-                    t('commandPalette.dateToLabel')
-                  }}</span>
+                  <span class="palette__date-label">{{ t('commandPalette.dateToLabel') }}</span>
                   <input
                     type="date"
                     class="palette__date-input"
@@ -163,11 +155,7 @@
               >
                 {{ t('commandPalette.reset') }}
               </button>
-              <button
-                type="button"
-                class="palette__btn palette__btn--primary"
-                @click="handleApply"
-              >
+              <button type="button" class="palette__btn palette__btn--primary" @click="handleApply">
                 {{ t('commandPalette.apply') }}
               </button>
             </div>
@@ -443,9 +431,9 @@ watch(
   justify-content: center;
   align-items: flex-start;
   padding: clamp(4.5rem, 12vh, 7rem) 1rem 1rem;
-  background: rgb(18 18 20 / 0.42);
+  background: rgb(18 18 20 / 42%);
   backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
 }
 
 .palette__panel {
@@ -458,9 +446,9 @@ watch(
   border-radius: 14px;
   background: var(--color-bg-primary, #fff);
   box-shadow:
-    0 1px 1px rgb(0 0 0 / 0.04),
-    0 20px 45px -18px rgb(0 0 0 / 0.3),
-    0 40px 80px -30px rgb(0 0 0 / 0.22);
+    0 1px 1px rgb(0 0 0 / 4%),
+    0 20px 45px -18px rgb(0 0 0 / 30%),
+    0 40px 80px -30px rgb(0 0 0 / 22%);
   overflow: hidden;
   font-family: var(--font-family-base, inherit);
 }
@@ -816,7 +804,7 @@ watch(
   color: #fff;
   background: var(--color-accent, #e07020);
   border-color: transparent;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
   font-weight: 500;
   letter-spacing: 0.01em;
 }
