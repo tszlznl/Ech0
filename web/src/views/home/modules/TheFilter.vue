@@ -100,7 +100,7 @@ const searchContent = ref<string>(searchValue.value)
 
 const isMac =
   typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform || '')
-const shortcutBadge = computed(() => (isMac ? '⌘K' : 'Ctrl K'))
+const shortcutBadge = computed(() => (isMac ? '⌘K' : 'Ctrl+K'))
 
 const formatDate = (sec: number | null): string => {
   if (sec === null) return '…'
