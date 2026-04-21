@@ -797,6 +797,30 @@
     "invalidUrl": "Invalid Connect URL format, only http/https is supported",
     "disconnectConfirmTitle": "Are you sure you want to disconnect?"
   },
+  "cronEditor": {
+    "frequency": "Frequency",
+    "freqDaily": "Daily",
+    "freqWeekly": "Weekly",
+    "freqMonthly": "Monthly",
+    "freqHourly": "Hourly",
+    "freqCustom": "Custom (Crontab)",
+    "time": "Time",
+    "weekday": "Weekday",
+    "dayOfMonth": "Day of month",
+    "everyInterval": "Interval",
+    "customExpression": "Expression",
+    "customPlaceholder": "e.g. 0 2 * * 0",
+    "weekdaySun": "Sunday",
+    "weekdayMon": "Monday",
+    "weekdayTue": "Tuesday",
+    "weekdayWed": "Wednesday",
+    "weekdayThu": "Thursday",
+    "weekdayFri": "Friday",
+    "weekdaySat": "Saturday",
+    "dayN": "Day {n}",
+    "everyNHours": "Every {n} hour(s)",
+    "preview": "Crontab"
+  },
   "backupScheduleSetting": {
     "title": "Snapshot Settings",
     "description": "Configure automatic snapshot creation and trigger snapshots manually.",
@@ -805,8 +829,7 @@
     "createSnapshotSuccess": "Snapshot created successfully",
     "createSnapshotFailed": "Failed to create snapshot",
     "enableAutoBackup": "Auto create snapshots",
-    "crontab": "Snapshot crontab",
-    "crontabPlaceholder": "Enter snapshot crontab expression"
+    "crontab": "Snapshot schedule"
   },
   "uppy": {
     "dashboardNote": "Paste or choose images to upload!",

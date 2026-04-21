@@ -797,6 +797,30 @@
     "invalidUrl": "Ungültiges URL-Format, nur http/https wird unterstützt",
     "disconnectConfirmTitle": "Verbindung wirklich trennen?"
   },
+  "cronEditor": {
+    "frequency": "Häufigkeit",
+    "freqDaily": "Täglich",
+    "freqWeekly": "Wöchentlich",
+    "freqMonthly": "Monatlich",
+    "freqHourly": "Stündlich",
+    "freqCustom": "Benutzerdefiniert (Crontab)",
+    "time": "Zeit",
+    "weekday": "Wochentag",
+    "dayOfMonth": "Tag des Monats",
+    "everyInterval": "Intervall",
+    "customExpression": "Ausdruck",
+    "customPlaceholder": "z. B. 0 2 * * 0",
+    "weekdaySun": "Sonntag",
+    "weekdayMon": "Montag",
+    "weekdayTue": "Dienstag",
+    "weekdayWed": "Mittwoch",
+    "weekdayThu": "Donnerstag",
+    "weekdayFri": "Freitag",
+    "weekdaySat": "Samstag",
+    "dayN": "Tag {n}",
+    "everyNHours": "Alle {n} Std.",
+    "preview": "Crontab"
+  },
   "backupScheduleSetting": {
     "title": "Snapshot-Einstellungen",
     "description": "Automatische Snapshot-Erstellung konfigurieren und Snapshots manuell auslösen.",
@@ -805,8 +829,7 @@
     "createSnapshotSuccess": "Snapshot erfolgreich erstellt",
     "createSnapshotFailed": "Snapshot konnte nicht erstellt werden",
     "enableAutoBackup": "Snapshots automatisch erstellen",
-    "crontab": "Snapshot-Crontab",
-    "crontabPlaceholder": "Crontab-Ausdruck für Snapshot-Zeitplan eingeben"
+    "crontab": "Snapshot-Zeitplan"
   },
   "uppy": {
     "dashboardNote": "Bilder einfügen oder auswählen!",

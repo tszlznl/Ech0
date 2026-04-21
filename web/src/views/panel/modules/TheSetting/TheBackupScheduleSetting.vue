@@ -34,40 +34,33 @@
         </div>
       </div>
 
-      <div
-        class="flex flex-wrap items-center justify-start text-[var(--color-text-secondary)] gap-2 min-h-10"
-      >
-        <h2 class="font-semibold w-36 shrink-0">
+      <div class="schedule-row">
+        <h2 class="schedule-row__label">
           {{ t('backupScheduleSetting.enableAutoBackup') }}
         </h2>
-        <BaseSwitch v-model="BackupSchedule.enable" :disabled="!scheduleEditMode" />
+        <div class="schedule-row__control">
+          <BaseSwitch v-model="BackupSchedule.enable" :disabled="!scheduleEditMode" />
+        </div>
       </div>
 
-      <div
-        class="flex flex-wrap items-center justify-start text-[var(--color-text-secondary)] gap-2 min-h-10"
-      >
-        <h2 class="font-semibold w-36 shrink-0">
+      <div class="schedule-row schedule-row--top">
+        <h2 class="schedule-row__label">
           {{ t('backupScheduleSetting.crontab') }}
         </h2>
-        <span
-          v-if="!scheduleEditMode"
-          class="flex-1 min-w-0 truncate inline-block align-middle"
-          v-tooltip="BackupSchedule.cron_expression"
-          style="vertical-align: middle"
-        >
-          {{
-            BackupSchedule.cron_expression.length === 0
-              ? t('commonUi.none')
-              : BackupSchedule.cron_expression
-          }}
-        </span>
-        <BaseInput
-          v-else
-          v-model="BackupSchedule.cron_expression"
-          type="text"
-          :placeholder="t('backupScheduleSetting.crontabPlaceholder')"
-          class="w-full py-1!"
-        />
+        <div class="schedule-row__control">
+          <span
+            v-if="!scheduleEditMode"
+            class="block w-full min-w-0 truncate"
+            v-tooltip="BackupSchedule.cron_expression"
+          >
+            {{
+              BackupSchedule.cron_expression.length === 0
+                ? t('commonUi.none')
+                : BackupSchedule.cron_expression
+            }}
+          </span>
+          <CronScheduleEditor v-else v-model="BackupSchedule.cron_expression" />
+        </div>
       </div>
     </div>
   </PanelCard>
@@ -75,10 +68,10 @@
 
 <script setup lang="ts">
 import PanelCard from '@/layout/PanelCard.vue'
-import BaseInput from '@/components/common/BaseInput.vue'
 import BaseSwitch from '@/components/common/BaseSwitch.vue'
 import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
+import CronScheduleEditor from './components/CronScheduleEditor.vue'
 import { computed, ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { fetchUpdateBackupScheduleSetting } from '@/service/api'
@@ -143,4 +136,52 @@ onMounted(async () => {
 })
 </script>
 
-<style scoped></style>
+<style scoped>
+.schedule-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.5rem;
+  color: var(--color-text-secondary);
+}
+
+.schedule-row--top {
+  align-items: flex-start;
+}
+
+.schedule-row__label {
+  flex: 0 0 auto;
+  width: 9rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.schedule-row--top .schedule-row__label {
+  padding-top: 0.2rem;
+}
+
+.schedule-row__control {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (width < 640px) {
+  .schedule-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+  }
+
+  .schedule-row__label {
+    width: auto;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+
+  .schedule-row--top .schedule-row__label {
+    padding-top: 0;
+  }
+}
+</style>

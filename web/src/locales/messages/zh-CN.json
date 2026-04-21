@@ -805,8 +805,31 @@
     "createSnapshotSuccess": "快照创建成功",
     "createSnapshotFailed": "快照创建失败",
     "enableAutoBackup": "自动创建快照",
-    "crontab": "快照计划 Crontab",
-    "crontabPlaceholder": "请输入快照计划 Crontab 表达式"
+    "crontab": "快照计划"
+  },
+  "cronEditor": {
+    "frequency": "频率",
+    "freqDaily": "每天",
+    "freqWeekly": "每周",
+    "freqMonthly": "每月",
+    "freqHourly": "每小时",
+    "freqCustom": "自定义 (Crontab)",
+    "time": "时间",
+    "weekday": "星期",
+    "dayOfMonth": "日期",
+    "everyInterval": "间隔",
+    "customExpression": "表达式",
+    "customPlaceholder": "例如: 0 2 * * 0",
+    "weekdaySun": "周日",
+    "weekdayMon": "周一",
+    "weekdayTue": "周二",
+    "weekdayWed": "周三",
+    "weekdayThu": "周四",
+    "weekdayFri": "周五",
+    "weekdaySat": "周六",
+    "dayN": "{n} 日",
+    "everyNHours": "每 {n} 小时",
+    "preview": "Crontab"
   },
   "uppy": {
     "dashboardNote": "支持粘贴或选择图片上传哦！",

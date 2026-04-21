@@ -797,6 +797,30 @@
     "invalidUrl": "Connect URL の形式が不正です。http/https のみ対応しています",
     "disconnectConfirmTitle": "切断しますか？"
   },
+  "cronEditor": {
+    "frequency": "頻度",
+    "freqDaily": "毎日",
+    "freqWeekly": "毎週",
+    "freqMonthly": "毎月",
+    "freqHourly": "毎時",
+    "freqCustom": "カスタム (Crontab)",
+    "time": "時刻",
+    "weekday": "曜日",
+    "dayOfMonth": "日付",
+    "everyInterval": "間隔",
+    "customExpression": "式",
+    "customPlaceholder": "例: 0 2 * * 0",
+    "weekdaySun": "日曜日",
+    "weekdayMon": "月曜日",
+    "weekdayTue": "火曜日",
+    "weekdayWed": "水曜日",
+    "weekdayThu": "木曜日",
+    "weekdayFri": "金曜日",
+    "weekdaySat": "土曜日",
+    "dayN": "{n} 日",
+    "everyNHours": "{n} 時間ごと",
+    "preview": "Crontab"
+  },
   "backupScheduleSetting": {
     "title": "スナップショット設定",
     "description": "スナップショットの自動作成スケジュールを設定できます。手動作成にも対応します。",
@@ -805,8 +829,7 @@
     "createSnapshotSuccess": "スナップショットを作成しました",
     "createSnapshotFailed": "スナップショットの作成に失敗しました",
     "enableAutoBackup": "スナップショットを自動作成",
-    "crontab": "スナップショット Crontab",
-    "crontabPlaceholder": "Crontab 式を入力してください"
+    "crontab": "スナップショット予定"
   },
   "uppy": {
     "dashboardNote": "画像は貼り付けまたは選択でアップロードできます！",
