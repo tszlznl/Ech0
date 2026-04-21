@@ -433,7 +433,6 @@ watch(
   padding: clamp(4.5rem, 12vh, 7rem) 1rem 1rem;
   background: rgb(18 18 20 / 42%);
   backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
 }
 
 .palette__panel {

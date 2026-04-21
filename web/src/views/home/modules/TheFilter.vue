@@ -170,36 +170,50 @@ watch(selectedTagIds, (ids) => {
   position: relative;
   width: 100%;
   padding: 0.3rem;
+
+  /* 留出 kbd 徽章所需的右内边距，避免输入内容与按钮视觉重叠 */
+  padding-right: 3.25rem;
   border-radius: var(--radius-xs);
   background: var(--filter-search-shell-bg);
   box-shadow: inset 0 0 0 1px var(--color-border-subtle);
 }
 
+/* kbd 徽章：扩大可点击触摸区域（≥32×28），同时保证 AA 级对比度 */
 .home-filter__kbd-hint {
   position: absolute;
   top: 50%;
-  right: 0.55rem;
+  right: 0.4rem;
   transform: translateY(-50%);
-  padding: 0.08rem 0.38rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.75rem;
+  min-width: 2.25rem;
+  padding: 0.25rem 0.5rem;
   font-family: var(--font-family-mono, monospace);
-  font-size: 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 500;
   line-height: 1;
-  color: var(--color-text-muted);
-  background: var(--color-bg-primary, transparent);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-muted);
   border: 1px solid var(--color-border-subtle);
   border-bottom-width: 2px;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   transition:
     color 0.15s ease,
     border-color 0.15s ease,
-    background 0.15s ease;
+    background 0.15s ease,
+    transform 0.08s ease;
 }
 
 .home-filter__kbd-hint:hover {
   color: var(--color-text-primary);
-  background: var(--color-bg-muted);
   border-color: var(--color-border-strong);
+}
+
+.home-filter__kbd-hint:active {
+  transform: translateY(calc(-50% + 1px));
 }
 
 .home-filter__chip {

@@ -278,7 +278,6 @@ watch([frequency, hour, minute, weekday, monthday, hourlyInterval, customExpress
   box-shadow: var(--shadow-sm);
   outline: none;
   appearance: none;
-  appearance: none;
   background-repeat: no-repeat;
   background-position: right 0.5rem center;
   background-size: 0.8rem 0.8rem;
