@@ -82,16 +82,64 @@
         </BaseButton>
       </div>
     </div>
+    <!-- 位置分享 -->
+    <div v-if="editorStore.currentExtensionType === ExtensionType.LOCATION">
+      <div class="text-[var(--color-text-secondary)] font-bold mb-1">
+        {{ t('editor.locationShare') }}
+      </div>
+      <p class="text-[var(--color-text-muted)] text-sm mb-2">
+        {{ t('editor.locationHint') }}
+      </p>
+
+      <LocationPicker class="mb-2" :lat-lng="pickerLatLng" auto-locate @change="handleMapChange" />
+
+      <div class="flex flex-wrap items-center gap-2 mb-2">
+        <BaseButton
+          class="rounded-md px-3 py-2 text-sm whitespace-nowrap"
+          :disabled="isGeolocating"
+          @click="handleUseCurrentLocation"
+        >
+          {{ isGeolocating ? t('editor.locationGeolocating') : t('editor.locationUseCurrent') }}
+        </BaseButton>
+        <span v-if="isFetchingGeocoding" class="text-[var(--color-text-muted)] text-xs">
+          {{ t('editor.locationLookingUp') }}
+        </span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 mb-2">
+        <BaseInput
+          v-model.number="latInput"
+          type="number"
+          :placeholder="t('editor.locationLatPlaceholder')"
+          class="rounded-lg h-auto w-full"
+        />
+        <BaseInput
+          v-model.number="lngInput"
+          type="number"
+          :placeholder="t('editor.locationLngPlaceholder')"
+          class="rounded-lg h-auto w-full"
+        />
+      </div>
+
+      <textarea
+        v-model="editorStore.locationToAdd.placeholder"
+        class="w-full rounded-lg border border-[var(--input-border-color)] bg-[var(--input-bg-color)]! text-[var(--input-text-color)] shadow-[var(--shadow-sm)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--input-focus-ring-color)] resize-y min-h-[5.5rem]"
+        rows="4"
+        :placeholder="t('editor.locationPlaceholderInput')"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
+import LocationPicker from '@/components/advanced/extension/shared/LocationPicker.vue'
+import { useReverseGeocoding } from '@/components/advanced/extension/shared/useReverseGeocoding'
 import { ExtensionType } from '@/enums/enums'
 import { parseMusicURL, extractAndCleanMusicURL } from '@/utils/other' // 导入新函数
 import { useEditorStore } from '@/stores'
-import { ref, watch } from 'vue' // 从 vue 导入 watch
+import { computed, ref, watch } from 'vue' // 从 vue 导入 watch
 import { fetchGetWebsiteTitle } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useI18n } from 'vue-i18n'
@@ -99,6 +147,71 @@ import { useI18n } from 'vue-i18n'
 const editorStore = useEditorStore()
 const isFetchingWebsiteTitle = ref(false)
 const { t } = useI18n()
+
+// =============== Location 扩展 ===============
+const isGeolocating = ref(false)
+
+const latInput = computed<number | null>({
+  get: () => editorStore.locationToAdd.latitude,
+  set: (v) => {
+    editorStore.locationToAdd.latitude = typeof v === 'number' && Number.isFinite(v) ? v : null
+  },
+})
+
+const lngInput = computed<number | null>({
+  get: () => editorStore.locationToAdd.longitude,
+  set: (v) => {
+    editorStore.locationToAdd.longitude = typeof v === 'number' && Number.isFinite(v) ? v : null
+  },
+})
+
+const pickerLatLng = computed(() => {
+  const { latitude, longitude } = editorStore.locationToAdd
+  if (
+    typeof latitude !== 'number' ||
+    typeof longitude !== 'number' ||
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude)
+  ) {
+    return null
+  }
+  return { lat: latitude, lng: longitude }
+})
+
+const latRef = computed(() => editorStore.locationToAdd.latitude)
+const lngRef = computed(() => editorStore.locationToAdd.longitude)
+const { displayName, isFetching: isFetchingGeocoding } = useReverseGeocoding(latRef, lngRef)
+
+watch(displayName, (name) => {
+  if (!name) return
+  if (editorStore.currentExtensionType !== ExtensionType.LOCATION) return
+  editorStore.locationToAdd.placeholder = name
+})
+
+function handleMapChange(p: { lat: number; lng: number }) {
+  editorStore.locationToAdd.latitude = p.lat
+  editorStore.locationToAdd.longitude = p.lng
+}
+
+function handleUseCurrentLocation() {
+  if (!('geolocation' in navigator)) {
+    theToast.error(String(t('editor.locationGeolocationUnsupported')))
+    return
+  }
+  isGeolocating.value = true
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      editorStore.locationToAdd.latitude = pos.coords.latitude
+      editorStore.locationToAdd.longitude = pos.coords.longitude
+      isGeolocating.value = false
+    },
+    () => {
+      isGeolocating.value = false
+      theToast.error(String(t('editor.locationGeolocationDenied')))
+    },
+    { enableHighAccuracy: true, timeout: 8000 },
+  )
+}
 
 const handleFetchWebsiteTitle = async () => {
   const websiteURL = (editorStore.websiteToAdd.site || '').trim()

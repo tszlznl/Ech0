@@ -34,6 +34,13 @@
           :tooltip="t('editor.addWebsiteLink')"
           @click="handleAddExtension(ExtensionType.WEBSITE)"
         />
+        <!-- 添加位置 -->
+        <BaseButton
+          :icon="MapPin"
+          class="w-7 h-7 rounded-xs"
+          :tooltip="t('editor.addLocation')"
+          @click="handleAddExtension(ExtensionType.LOCATION)"
+        />
       </div>
     </div>
   </div>
@@ -44,6 +51,7 @@ import Weblink from '@/components/icons/weblink.vue'
 import Music from '@/components/icons/music.vue'
 import Video from '@/components/icons/video.vue'
 import Githubproj from '@/components/icons/githubproj.vue'
+import MapPin from '@/components/icons/mappin.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 
 import { Mode, ExtensionType } from '@/enums/enums'

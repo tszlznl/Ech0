@@ -2,8 +2,10 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
@@ -455,6 +457,24 @@ func normalizeEchoExtension(ext *model.EchoExtension) (*model.EchoExtension, err
 			"title": title,
 			"site":  httpUtil.TrimURL(site),
 		}
+	case model.Extension_LOCATION:
+		lat, okLat := getPayloadFloat(ext.Payload, "latitude")
+		lng, okLng := getPayloadFloat(ext.Payload, "longitude")
+		if !okLat || !okLng {
+			return nil, fmt.Errorf("extension payload.latitude and payload.longitude are required for LOCATION")
+		}
+		if lat < -90 || lat > 90 || lng < -180 || lng > 180 {
+			return nil, fmt.Errorf("extension payload.latitude/longitude out of range for LOCATION")
+		}
+		placeholder := strings.TrimSpace(getPayloadString(ext.Payload, "placeholder"))
+		if placeholder == "" {
+			return nil, fmt.Errorf("extension payload.placeholder is required for LOCATION")
+		}
+		ext.Payload = map[string]interface{}{
+			"latitude":    lat,
+			"longitude":   lng,
+			"placeholder": placeholder,
+		}
 	default:
 		return nil, fmt.Errorf("unsupported extension type: %s", ext.Type)
 	}
@@ -472,6 +492,34 @@ func getPayloadString(payload map[string]interface{}, key string) string {
 		return ""
 	}
 	return value
+}
+
+// getPayloadFloat extracts a float64 from a JSON-decoded payload.
+// JSON numbers land as float64 by default; accept int and string-encoded numbers as fallbacks.
+func getPayloadFloat(payload map[string]interface{}, key string) (float64, bool) {
+	raw, ok := payload[key]
+	if !ok || raw == nil {
+		return 0, false
+	}
+	switch v := raw.(type) {
+	case float64:
+		return v, true
+	case float32:
+		return float64(v), true
+	case int:
+		return float64(v), true
+	case int64:
+		return float64(v), true
+	case json.Number:
+		if f, err := v.Float64(); err == nil {
+			return f, true
+		}
+	case string:
+		if f, err := strconv.ParseFloat(strings.TrimSpace(v), 64); err == nil {
+			return f, true
+		}
+	}
+	return 0, false
 }
 
 func isEchoEmpty(echo *model.Echo) bool {

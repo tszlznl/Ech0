@@ -79,7 +79,7 @@ Webhook dispatch (`internal/webhook`) and agent processing (`internal/agent`) ar
 
 - **Before a PR**: `make check` is mandatory (enforces backend lint, frontend lint, i18n checks). `go build ./...` and `pnpm build` must pass. Regenerate Swagger (`make swagger`) whenever routes or request/response shapes change and commit `internal/swagger/`.
 - **DI changes**: regenerate with `make wire`; CI runs `make wire-check`.
-- **v3 → v4 migration is not in-place**: export a snapshot in v3 panel, redeploy v4, then use "v3 Migration" in the v4 panel. Migration code lives in `internal/migrator` and `internal/service/migrator`.
+- **Data import**: the admin panel offers a "Data Import" (migration) workflow that currently supports Ech0 v4 → v4 snapshot import and Memos → Ech0. Code lives in `internal/migrator` and `internal/service/migrator`.
 - **Integration comment endpoint**: `POST /api/comments/integration` intentionally bypasses captcha/form-token — it requires an access token with `comment:write` scope and `integration` audience. Preserve this behavior.
 - **Access tokens**: scope/audience/`typ` design is documented at `docs/dev/access-token-scope-design.md`; implementation is authoritative.
 - **Layered import aliases** (required): `xxxHandler`, `xxxService`, `xxxRepository`, `xxxModel`, `xxxUtil`.

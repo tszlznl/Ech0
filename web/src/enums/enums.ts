@@ -13,6 +13,7 @@ export enum ExtensionType {
   VIDEO = 'VIDEO',
   GITHUBPROJ = 'GITHUBPROJ',
   WEBSITE = 'WEBSITE',
+  LOCATION = 'LOCATION',
 }
 
 // 图片布局

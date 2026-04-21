@@ -114,6 +114,7 @@ import Music from '@/components/icons/music.vue'
 import Video from '@/components/icons/video.vue'
 import GithubProj from '@/components/icons/githubproj.vue'
 import Website from '@/components/icons/website.vue'
+import MapPin from '@/components/icons/mappin.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseCombobox from '@/components/common/BaseCombobox.vue'
 import { Mode, ExtensionType } from '@/enums/enums'
@@ -154,6 +155,7 @@ const infoTooltipLines = computed<TooltipLine[]>(() => {
     [ExtensionType.VIDEO]: { label: String(t('editor.extVideo')), icon: Video },
     [ExtensionType.GITHUBPROJ]: { label: String(t('editor.extGithubProject')), icon: GithubProj },
     [ExtensionType.WEBSITE]: { label: String(t('editor.extWebsiteLink')), icon: Website },
+    [ExtensionType.LOCATION]: { label: String(t('editor.extLocation')), icon: MapPin },
   }
 
   const parts: TooltipLine[] = []

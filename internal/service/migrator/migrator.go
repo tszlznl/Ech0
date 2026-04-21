@@ -430,7 +430,7 @@ func nowUTC() int64 {
 
 func validateSourceType(sourceType string) error {
 	switch strings.TrimSpace(sourceType) {
-	case migrationModel.MigrationSourceMemos, migrationModel.MigrationSourceEch0V3, migrationModel.MigrationSourceEch0V4:
+	case migrationModel.MigrationSourceMemos, migrationModel.MigrationSourceEch0V4:
 		return nil
 	default:
 		return errors.New(commonModel.INVALID_REQUEST_BODY)

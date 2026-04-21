@@ -139,7 +139,7 @@ import { fetchUploadMigrationSourceZip } from '@/service/api'
 import { useMigrationStore } from '@/stores'
 import { theToast } from '@/utils/toast'
 
-type MigrationSourceType = 'ech0_v4' | 'ech0_v3' | 'memos'
+type MigrationSourceType = 'ech0_v4' | 'memos'
 
 interface SourceCard {
   value: MigrationSourceType
@@ -150,7 +150,6 @@ interface SourceCard {
 
 const sourceCards = computed<SourceCard[]>(() => [
   { value: 'ech0_v4', title: 'Ech0', desc: String(t('migrationSetting.sourceEch0v4')) },
-  { value: 'ech0_v3', title: 'Ech0 v3', desc: String(t('migrationSetting.sourceEch0v3')) },
   {
     value: 'memos',
     title: 'Memos',
@@ -176,7 +175,6 @@ const statusLabelMap = computed<Record<string, string>>(() => ({
 }))
 const sourceLabelMap = computed<Record<string, string>>(() => ({
   ech0_v4: 'Ech0',
-  ech0_v3: 'Ech0 v3',
   memos: 'Memos',
 }))
 const migrationReport = computed(

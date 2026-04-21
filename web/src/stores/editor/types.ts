@@ -1,0 +1,30 @@
+export type LocationToAdd = {
+  latitude: number | null
+  longitude: number | null
+  placeholder: string
+}
+
+export type ExtensionToAdd = {
+  extension: string
+  extension_type: string
+}
+
+export type WebsiteToAdd = {
+  title: string
+  site: string
+}
+
+export type EditorDraft = {
+  savedAt: number
+  echoToAdd: Pick<App.Api.Ech0.EchoToAdd, 'content' | 'private' | 'layout' | 'extension'>
+  filesToAdd: App.Api.Ech0.FileToAdd[]
+  websiteToAdd: WebsiteToAdd
+  videoURL: string
+  musicURL: string
+  githubRepo: string
+  extensionToAdd: ExtensionToAdd
+  locationToAdd: LocationToAdd
+  tagToAdd: string
+}
+
+export type Translate = (key: string, params?: Record<string, unknown>) => string

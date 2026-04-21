@@ -44,6 +44,7 @@ const {
   videoURL,
   extensionToAdd,
   websiteToAdd,
+  locationToAdd,
   tagToAdd,
   currentExtensionType,
 } = storeToRefs(editorStore)
@@ -107,6 +108,19 @@ const fillEditorFromEchoToUpdate = () => {
         websiteToAdd.value.title = echoToUpdate.value.extension.payload.title || ''
         websiteToAdd.value.site = echoToUpdate.value.extension.payload.site || ''
         break
+      case ExtensionType.LOCATION: {
+        const payload = echoToUpdate.value.extension.payload
+        locationToAdd.value = {
+          latitude: typeof payload.latitude === 'number' ? payload.latitude : null,
+          longitude: typeof payload.longitude === 'number' ? payload.longitude : null,
+          placeholder: payload.placeholder || '',
+        }
+        extensionToAdd.value.extension =
+          typeof payload.latitude === 'number' && typeof payload.longitude === 'number'
+            ? `${payload.latitude},${payload.longitude}`
+            : ''
+        break
+      }
     }
   }
 

@@ -40,7 +40,7 @@ export function fetchGetWebsiteTitle(websiteURL: string) {
 }
 
 export interface StartMigrationPayload {
-  source_type: 'ech0_v4' | 'memos' | 'ech0_v3'
+  source_type: 'ech0_v4' | 'memos'
   source_payload: Record<string, unknown>
 }
 
@@ -83,7 +83,7 @@ export function fetchCleanupMigration() {
 }
 
 export interface UploadMigrationSourceZipResponse {
-  source_type: 'ech0_v4' | 'memos' | 'ech0_v3'
+  source_type: 'ech0_v4' | 'memos'
   tmp_dir: string
   source_payload: Record<string, unknown>
 }

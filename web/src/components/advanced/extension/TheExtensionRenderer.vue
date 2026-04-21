@@ -15,6 +15,10 @@
       v-else-if="echo.extension.type === ExtensionType.WEBSITE"
       :website="echo.extension.payload"
     />
+    <LocationCard
+      v-else-if="echo.extension.type === ExtensionType.LOCATION"
+      :location="echo.extension.payload"
+    />
   </div>
 </template>
 
@@ -25,6 +29,7 @@ const APlayerCard = defineAsyncComponent(() => import('./cards/APlayerCard.vue')
 const VideoCard = defineAsyncComponent(() => import('./cards/VideoCard.vue'))
 const GithubCard = defineAsyncComponent(() => import('./cards/GithubCard.vue'))
 const WebsiteCard = defineAsyncComponent(() => import('./cards/WebsiteCard.vue'))
+const LocationCard = defineAsyncComponent(() => import('./cards/LocationCard.vue'))
 
 defineProps<{
   echo: {

@@ -246,8 +246,6 @@ helm install ech0 ./charts/ech0
 
 ## Upgrading
 
-> ⚠️ Direct upgrade from v3 to v4 is not supported. Please export a snapshot in the v3 panel first, redeploy v4, then use "v3 Migration" in the v4 panel to import your existing data.
-
 ### 🔄 Docker
 
 ```shell

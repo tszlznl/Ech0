@@ -72,6 +72,7 @@ const (
 	Extension_VIDEO      = "VIDEO"
 	Extension_GITHUBPROJ = "GITHUBPROJ"
 	Extension_WEBSITE    = "WEBSITE"
+	Extension_LOCATION   = "LOCATION"
 
 	LayoutWaterfall  = "waterfall"
 	LayoutGrid       = "grid"

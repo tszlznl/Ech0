@@ -3,7 +3,6 @@ package model
 const (
 	MigrationSourceEch0V4 = "ech0_v4"
 	MigrationSourceMemos  = "memos"
-	MigrationSourceEch0V3 = "ech0_v3"
 )
 
 const (
