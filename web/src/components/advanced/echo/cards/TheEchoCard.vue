@@ -128,16 +128,17 @@
   </div>
 </template>
 
+<script lang="ts">
+import { ref } from 'vue'
+
+// Module-scoped: whichever echo id is currently showing its action menu.
+// Declared in a non-setup <script> so it runs once per module, not per instance.
+// Setting this id auto-closes any other card's menu (only one open at a time).
+const activeMenuId = ref<string | null>(null)
+</script>
+
 <script setup lang="ts">
-import {
-  computed,
-  defineAsyncComponent,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  watch,
-} from 'vue'
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, watch } from 'vue'
 import { fetchDeleteEcho, fetchGetEchoById } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useUserStore, useEchoStore, useEditorStore } from '@/stores'
@@ -152,10 +153,6 @@ import { formatDate } from '@/utils/other'
 import { getEchoFilesBy } from '@/utils/echo'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useI18n } from 'vue-i18n'
-
-// module-scoped: whichever echo id is currently showing its action menu.
-// Setting this id auto-closes any other card's menu (only one open at a time).
-const activeMenuId = ref<string | null>(null)
 
 const TheImageGallery = defineAsyncComponent(
   () => import('@/components/advanced/gallery/TheImageGallery.vue'),
