@@ -472,6 +472,7 @@
   },
   "echoCard": {
     "privateStatus": "Privat",
+    "moreActions": "Echo-Aktionen",
     "delete": "Löschen",
     "update": "Bearbeiten",
     "deleteConfirmTitle": "Dieses Echo löschen?",

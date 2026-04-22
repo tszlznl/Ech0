@@ -472,6 +472,7 @@
   },
   "echoCard": {
     "privateStatus": "Private status",
+    "moreActions": "Echo actions",
     "delete": "Delete",
     "update": "Update",
     "deleteConfirmTitle": "Delete this Echo?",

@@ -33,6 +33,9 @@
         <button
           ref="menuTriggerRef"
           type="button"
+          :aria-label="t('echoCard.moreActions')"
+          :aria-expanded="isMenuOpen"
+          aria-haspopup="menu"
           class="w-7 h-7 flex items-center justify-center bg-[var(--color-bg-surface)] ring-1 ring-[var(--color-border-subtle)] ring-inset rounded-full shadow-sm transition-shadow duration-150 hover:shadow-md focus:outline-none"
           @click.stop="toggleMenu"
         >

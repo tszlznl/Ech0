@@ -2,6 +2,7 @@
   <Popover class="relative flex items-center">
     <PopoverButton
       v-tooltip="t('echoDetail.share')"
+      :aria-label="t('echoDetail.share')"
       :class="[
         'flex items-center justify-center transform transition-transform duration-150 outline-none',
         isShareAnimating ? 'scale-160' : 'scale-100',
@@ -52,6 +53,7 @@
           <button
             type="button"
             v-tooltip="t('echoDetail.shareCopyLink')"
+            :aria-label="t('echoDetail.shareCopyLink')"
             class="shrink-0 text-[var(--color-text-muted)] transition-colors duration-150 hover:text-[var(--color-text-primary)] focus:outline-none"
             @click="handleCopyLink"
           >

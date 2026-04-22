@@ -472,6 +472,7 @@
   },
   "echoCard": {
     "privateStatus": "非公開",
+    "moreActions": "Echo 操作",
     "delete": "削除",
     "update": "更新",
     "deleteConfirmTitle": "削除しますか？",

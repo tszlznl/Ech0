@@ -472,6 +472,7 @@
   },
   "echoCard": {
     "privateStatus": "私密状态",
+    "moreActions": "Echo 操作",
     "delete": "删除",
     "update": "更新",
     "deleteConfirmTitle": "确定要删除吗？",
