@@ -1,0 +1,34 @@
+# Ech0 Hub
+
+> Ech0 Hub aggregates public Ech0 microblog instances into a single unified timeline. Client-side SPA (Vue 3 + vue-router) + PWA: posts are fetched from each registered instance in the browser and merged — Hub itself stores no content.
+
+Hub loads a static registry (`/hub.json`) of instance `{id, url}` entries and calls each Ech0 deployment's public API in parallel. Each instance must answer `GET /healthz` with `data.version ≥ 4.4.0` to be included, and must allow the `https://hub.ech0.app` origin in its CORS policy. Posts carrying an `extension` payload are filtered out of the merged feed.
+
+- Live site: https://hub.ech0.app
+- Source (hub app): https://github.com/lin-snow/Ech0/tree/main/hub
+- Parent project: https://www.ech0.app — parent agent guide at https://www.ech0.app/llms.txt
+- Canonical sitemap: https://hub.ech0.app/sitemap.xml
+- Aggregate read endpoint per instance: `GET {url}/api/echo/query`
+- Health / version probe per instance: `GET {url}/healthz`
+
+## Docs
+
+- [Hub README](https://raw.githubusercontent.com/lin-snow/Ech0/main/hub/README.md): Architecture (CSR / SPA / PWA), registration workflow, health-check + version gate, CORS notes, component reuse from `web/`
+- [Federation & Hub guide](https://raw.githubusercontent.com/lin-snow/Ech0/main/site/docs/guide/federation.md): End-user explanation of Connect + Hub (official site)
+- [Ech0 product overview](https://raw.githubusercontent.com/lin-snow/Ech0/main/site/docs/guide/overview.md): Context for what a single Ech0 instance is
+
+## Listing your instance
+
+- [Registration issue template](https://raw.githubusercontent.com/lin-snow/Ech0/main/.github/ISSUE_TEMPLATE/register-hub-instance.yml): "Register on Ech0 Hub" GitHub Issue form (requires GitHub sign-in; applies the `hub` label)
+- [Registration automation workflow](https://raw.githubusercontent.com/lin-snow/Ech0/main/.github/workflows/hub-register-from-issue.yml): GitHub Actions pipeline that parses the issue and opens a PR against `hub/public/hub.json`
+- [Instance registry (JSON, live)](https://hub.ech0.app/hub.json): Current merged instance list (`{id, url}` entries)
+
+## APIs each instance must expose
+
+- [Repository README](https://raw.githubusercontent.com/lin-snow/Ech0/main/README.md): REST API surface; Swagger UI is served at `/swagger/index.html` on every running Ech0 instance
+- [Access tokens](https://raw.githubusercontent.com/lin-snow/Ech0/main/site/docs/guide/accesstoken.md): Not required for Hub itself (it calls public read endpoints); included for integrators building against the same APIs
+
+## Optional
+
+- [CONTRIBUTING](https://raw.githubusercontent.com/lin-snow/Ech0/main/CONTRIBUTING.md): PR workflow and pre-submission checks
+- [License (AGPL-3.0)](https://raw.githubusercontent.com/lin-snow/Ech0/main/LICENSE)
