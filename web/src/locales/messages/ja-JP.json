@@ -144,6 +144,7 @@
     "heading": "見出し",
     "quote": "引用",
     "unorderedList": "箇条書き",
+    "codeBlock": "コードブロック",
     "addedLabel": "追加済み：",
     "noContentAdded": "まだコンテンツが追加されていません"
   },

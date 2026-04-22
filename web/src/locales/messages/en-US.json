@@ -144,6 +144,7 @@
     "heading": "Heading",
     "quote": "Quote",
     "unorderedList": "Unordered list",
+    "codeBlock": "Code block",
     "addedLabel": "Added:",
     "noContentAdded": "No content added yet"
   },

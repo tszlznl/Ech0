@@ -144,6 +144,7 @@
     "heading": "标题",
     "quote": "引用",
     "unorderedList": "无序列表",
+    "codeBlock": "代码块",
     "addedLabel": "已添加：",
     "noContentAdded": "尚未添加内容"
   },

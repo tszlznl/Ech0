@@ -109,6 +109,7 @@ const toolbarItems = computed<Array<{ label: string; icon: string; action: Markd
     { label: String(t('editor.heading')), icon: 'H', action: 'heading' },
     { label: String(t('editor.quote')), icon: '❝', action: 'quote' },
     { label: String(t('editor.unorderedList')), icon: '•', action: 'unorderedList' },
+    { label: String(t('editor.codeBlock')), icon: '</>', action: 'codeBlock' },
   ],
 )
 

@@ -144,6 +144,7 @@
     "heading": "Überschrift",
     "quote": "Zitat",
     "unorderedList": "Aufzählung",
+    "codeBlock": "Codeblock",
     "addedLabel": "Hinzugefügt:",
     "noContentAdded": "Noch keine Inhalte hinzugefügt"
   },
