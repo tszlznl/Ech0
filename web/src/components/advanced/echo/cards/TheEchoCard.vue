@@ -14,7 +14,6 @@
           </div>
         </div>
         <div
-          v-if="!showMenu"
           @click="handleFilterByTag"
           class="text-sm font-medium text-[var(--color-text-secondary)] w-24 px-1 truncate text-nowrap hover:cursor-pointer hover:text-[var(--color-text-primary)] hover:underline hover:decoration-offset-3 hover:decoration-1"
         >
@@ -23,36 +22,77 @@
       </div>
 
       <div
-        v-if="userStore.isLogin || props.echo.private"
-        ref="menuRef"
-        class="relative flex items-center justify-center gap-1 h-auto"
+        v-if="!userStore.isLogin && props.echo.private"
+        v-tooltip="t('echoCard.privateStatus')"
+        class="w-7 h-7 flex items-center justify-center bg-[var(--color-bg-surface)] ring-1 ring-[var(--color-border-subtle)] ring-inset rounded-full shadow-sm"
       >
-        <div
-          v-if="!showMenu"
+        <Lock class="w-4 h-4" />
+      </div>
+
+      <div v-else-if="userStore.isLogin" class="relative flex items-center justify-center">
+        <button
+          ref="menuTriggerRef"
+          type="button"
+          class="w-7 h-7 flex items-center justify-center bg-[var(--color-bg-surface)] ring-1 ring-[var(--color-border-subtle)] ring-inset rounded-full shadow-sm transition-shadow duration-150 hover:shadow-md focus:outline-none"
           @click.stop="toggleMenu"
-          class="w-7 h-7 flex items-center justify-center bg-[var(--color-bg-surface)] ring-1 ring-[var(--color-border-subtle)] ring-inset rounded-full shadow-sm transition"
         >
           <More class="w-5 h-5" />
-        </div>
+        </button>
 
-        <div
-          v-if="showMenu"
-          class="flex items-center gap-4 bg-[var(--color-bg-surface)] rounded-full px-2 py-1 shadow-sm ring-1 ring-[var(--color-border-subtle)] ring-inset"
-        >
-          <span v-if="props.echo.private" v-tooltip="t('echoCard.privateStatus')">
-            <Lock />
-          </span>
+        <Teleport to="body">
+          <transition
+            enter-active-class="transition duration-150 ease-out"
+            enter-from-class="opacity-0 scale-95"
+            enter-to-class="opacity-100 scale-100"
+            leave-active-class="transition duration-100 ease-in"
+            leave-from-class="opacity-100 scale-100"
+            leave-to-class="opacity-0 scale-95"
+          >
+            <div
+              v-if="isMenuOpen"
+              ref="menuPanelRef"
+              :style="menuPanelStyle"
+              class="fixed z-5000 w-36 origin-top-right rounded-[var(--radius-md)] bg-[var(--color-bg-muted)] ring-1 ring-[var(--color-border-subtle)] shadow-[var(--shadow-md)] p-1"
+            >
+              <div
+                v-if="props.echo.private"
+                class="flex items-center gap-1.5 px-2 pt-1 pb-1.5 text-[var(--color-text-muted)]"
+              >
+                <Lock class="w-3 h-3" />
+                <span class="text-[10px] font-semibold tracking-[0.08em] uppercase">
+                  {{ t('echoCard.privateStatus') }}
+                </span>
+              </div>
 
-          <template v-if="userStore.isLogin">
-            <button @click="handleDeleteEcho(props.echo.id)" v-tooltip="t('echoCard.delete')">
-              <Roll />
-            </button>
-
-            <button @click="handleUpdateEcho()" v-tooltip="t('echoCard.update')">
-              <EditEcho />
-            </button>
-          </template>
-        </div>
+              <button
+                type="button"
+                class="menu-row"
+                @click="
+                  () => {
+                    closeMenu()
+                    handleUpdateEcho()
+                  }
+                "
+              >
+                <EditEcho class="w-3.5 h-3.5 shrink-0" />
+                <span>{{ t('echoCard.update') }}</span>
+              </button>
+              <button
+                type="button"
+                class="menu-row menu-row--danger"
+                @click="
+                  () => {
+                    closeMenu()
+                    handleDeleteEcho(props.echo.id)
+                  }
+                "
+              >
+                <Roll class="w-3.5 h-3.5 shrink-0" />
+                <span>{{ t('echoCard.delete') }}</span>
+              </button>
+            </div>
+          </transition>
+        </Teleport>
       </div>
     </div>
 
@@ -89,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, onBeforeUnmount, computed, defineAsyncComponent } from 'vue'
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { fetchDeleteEcho, fetchGetEchoById } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useUserStore, useEchoStore, useEditorStore } from '@/stores'
@@ -174,19 +214,6 @@ const handleExpandEcho = (echoId: string) => {
   })
 }
 
-const showMenu = ref(false)
-const menuRef = ref<HTMLElement | null>(null)
-
-const toggleMenu = () => {
-  showMenu.value = !showMenu.value
-}
-
-const handleClickOutside = (event: MouseEvent) => {
-  if (menuRef.value && !menuRef.value.contains(event.target as Node)) {
-    showMenu.value = false
-  }
-}
-
 const handleFilterByTag = () => {
   if (
     props.echo.tags &&
@@ -199,12 +226,60 @@ const handleFilterByTag = () => {
   }
 }
 
+const isMenuOpen = ref(false)
+const menuTriggerRef = ref<HTMLElement | null>(null)
+const menuPanelRef = ref<HTMLElement | null>(null)
+const menuPanelStyle = ref<Record<string, string>>({})
+
+const MENU_GAP = 8
+
+const updateMenuPosition = () => {
+  if (!isMenuOpen.value || !menuTriggerRef.value) return
+  const rect = menuTriggerRef.value.getBoundingClientRect()
+  const viewportRight = window.innerWidth
+  const right = Math.max(MENU_GAP, viewportRight - rect.right)
+  menuPanelStyle.value = {
+    top: `${rect.bottom + MENU_GAP}px`,
+    right: `${right}px`,
+  }
+}
+
+const closeMenu = () => {
+  isMenuOpen.value = false
+}
+
+const toggleMenu = async () => {
+  isMenuOpen.value = !isMenuOpen.value
+  if (isMenuOpen.value) {
+    await nextTick()
+    updateMenuPosition()
+  }
+}
+
+const handleDocumentClick = (event: MouseEvent) => {
+  if (!isMenuOpen.value) return
+  const target = event.target as Node | null
+  if (!target) return
+  if (menuPanelRef.value?.contains(target) || menuTriggerRef.value?.contains(target)) return
+  closeMenu()
+}
+
+const handleEscape = (event: KeyboardEvent) => {
+  if (event.key === 'Escape') closeMenu()
+}
+
 onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
+  document.addEventListener('click', handleDocumentClick)
+  document.addEventListener('keydown', handleEscape)
+  window.addEventListener('resize', updateMenuPosition)
+  window.addEventListener('scroll', updateMenuPosition, true)
 })
 
 onBeforeUnmount(() => {
-  document.removeEventListener('click', handleClickOutside)
+  document.removeEventListener('click', handleDocumentClick)
+  document.removeEventListener('keydown', handleEscape)
+  window.removeEventListener('resize', updateMenuPosition)
+  window.removeEventListener('scroll', updateMenuPosition, true)
 })
 </script>
 
@@ -256,5 +331,37 @@ onBeforeUnmount(() => {
   width: var(--axis-line-width);
   background-color: var(--color-border-subtle);
   pointer-events: none;
+}
+
+.menu-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease;
+}
+
+.menu-row:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-surface);
+}
+
+.menu-row:focus-visible {
+  outline: none;
+  background: var(--color-bg-surface);
+  box-shadow: inset 0 0 0 1.5px var(--color-border-strong);
+}
+
+.menu-row--danger:hover {
+  color: var(--color-danger);
 }
 </style>
