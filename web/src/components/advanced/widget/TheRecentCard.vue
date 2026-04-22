@@ -85,7 +85,7 @@ onMounted(() => {
 }
 
 .recent-title-accent {
-  font-family: 'Comic Sans MS', cursive;
+  font-family: var(--font-family-handwritten);
   color: var(--color-accent);
   font-size: 20px;
   font-weight: 700;
