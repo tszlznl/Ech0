@@ -431,7 +431,7 @@ watch(
   justify-content: center;
   align-items: flex-start;
   padding: clamp(4.5rem, 12vh, 7rem) 1rem 1rem;
-  background: rgb(18 18 20 / 42%);
+  background: var(--color-overlay-strong);
   backdrop-filter: blur(6px);
 }
 
@@ -443,7 +443,7 @@ watch(
   flex-direction: column;
   border: 1px solid var(--color-border-subtle);
   border-radius: 14px;
-  background: var(--color-bg-primary, #fff);
+  background: var(--color-bg-surface);
   box-shadow:
     0 1px 1px rgb(0 0 0 / 4%),
     0 20px 45px -18px rgb(0 0 0 / 30%),
@@ -705,13 +705,20 @@ watch(
     background 0.15s ease;
 }
 
+/* iOS Safari: appearance:none 会让 ::-webkit-date-and-time-value 塌陷，
+   导致空值时 "年/月/日" 占位文案不可见，这里显式撑开并左对齐。 */
+.palette__date-input::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.2em;
+}
+
 .palette__date-input:hover {
   border-color: var(--color-border-strong);
 }
 
 .palette__date-input:focus {
   border-color: var(--color-accent, #e07020);
-  background: var(--color-bg-primary, #fff);
+  background: var(--color-bg-surface);
 }
 
 .palette__date-sep {
@@ -727,7 +734,7 @@ watch(
   gap: 0.75rem;
   padding: 0.7rem 1rem 0.8rem;
   border-top: 1px solid var(--color-border-subtle);
-  background: color-mix(in srgb, var(--color-bg-muted, #f5f3ef) 45%, transparent);
+  background: color-mix(in srgb, var(--color-bg-muted) 45%, transparent);
 }
 
 .palette__kbd-row {
@@ -755,7 +762,7 @@ watch(
   font-size: 0.68rem;
   line-height: 1;
   color: var(--color-text-secondary);
-  background: var(--color-bg-primary, #fff);
+  background: var(--color-bg-surface);
   border: 1px solid var(--color-border-subtle);
   border-bottom-width: 2px;
   border-radius: 4px;
