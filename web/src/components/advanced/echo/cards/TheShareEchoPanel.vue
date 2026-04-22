@@ -1,9 +1,9 @@
 <template>
-  <Popover class="relative">
+  <Popover class="relative flex items-center">
     <PopoverButton
       v-tooltip="t('echoDetail.share')"
       :class="[
-        'transform transition-transform duration-150 outline-none',
+        'flex items-center justify-center transform transition-transform duration-150 outline-none',
         isShareAnimating ? 'scale-160' : 'scale-100',
       ]"
       @click="triggerAnimation"

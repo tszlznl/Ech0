@@ -71,6 +71,7 @@
       >
         <BaseButton
           :icon="Publish"
+          :disabled="isSubmitting"
           @click="handleAddorUpdate"
           class="w-8 h-8 sm:w-9 sm:h-9 rounded-xs editor-actions__cta"
           :tooltip="t('editor.publishEcho')"
@@ -89,6 +90,7 @@
       <div v-if="currentMode !== Mode.Panel && isUpdateMode === true">
         <BaseButton
           :icon="Update"
+          :disabled="isSubmitting"
           @click="handleAddorUpdate"
           class="w-8 h-8 sm:w-9 sm:h-9 rounded-xs editor-actions__cta"
           :tooltip="t('editor.updateEcho')"
@@ -137,6 +139,7 @@ const {
   hasFile,
   hasExtension,
   extensionToAdd,
+  isSubmitting,
 } = storeToRefs(editorStore)
 const echoStore = useEchoStore()
 const { tagOptions } = storeToRefs(echoStore)

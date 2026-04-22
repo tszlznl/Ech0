@@ -129,7 +129,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from 'vue'
 import { fetchDeleteEcho, fetchGetEchoById } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useUserStore, useEchoStore, useEditorStore } from '@/stores'
@@ -144,6 +152,10 @@ import { formatDate } from '@/utils/other'
 import { getEchoFilesBy } from '@/utils/echo'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useI18n } from 'vue-i18n'
+
+// module-scoped: whichever echo id is currently showing its action menu.
+// Setting this id auto-closes any other card's menu (only one open at a time).
+const activeMenuId = ref<string | null>(null)
 
 const TheImageGallery = defineAsyncComponent(
   () => import('@/components/advanced/gallery/TheImageGallery.vue'),
@@ -226,7 +238,7 @@ const handleFilterByTag = () => {
   }
 }
 
-const isMenuOpen = ref(false)
+const isMenuOpen = computed(() => activeMenuId.value === props.echo.id)
 const menuTriggerRef = ref<HTMLElement | null>(null)
 const menuPanelRef = ref<HTMLElement | null>(null)
 const menuPanelStyle = ref<Record<string, string>>({})
@@ -245,16 +257,19 @@ const updateMenuPosition = () => {
 }
 
 const closeMenu = () => {
-  isMenuOpen.value = false
+  if (isMenuOpen.value) activeMenuId.value = null
 }
 
-const toggleMenu = async () => {
-  isMenuOpen.value = !isMenuOpen.value
-  if (isMenuOpen.value) {
+const toggleMenu = () => {
+  activeMenuId.value = isMenuOpen.value ? null : props.echo.id
+}
+
+watch(isMenuOpen, async (open) => {
+  if (open) {
     await nextTick()
     updateMenuPosition()
   }
-}
+})
 
 const handleDocumentClick = (event: MouseEvent) => {
   if (!isMenuOpen.value) return
@@ -276,6 +291,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  if (isMenuOpen.value) activeMenuId.value = null
   document.removeEventListener('click', handleDocumentClick)
   document.removeEventListener('keydown', handleEscape)
   window.removeEventListener('resize', updateMenuPosition)
