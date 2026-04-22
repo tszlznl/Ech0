@@ -109,5 +109,5 @@ type PageQueryResult[T any] struct {
 
 const (
 	// Version 是当前版本号
-	Version = "4.6.0"
+	Version = "4.6.1"
 )
