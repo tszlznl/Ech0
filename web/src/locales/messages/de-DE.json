@@ -422,8 +422,14 @@
     "like": "Gefällt mir",
     "alreadyLiked": "Du hast bereits reagiert – danke!",
     "likeSuccess": "Gefällt mir!",
-    "copied": "In die Zwischenablage kopiert!",
-    "shareSuffix": "Geteilt über Ech0"
+    "copied": "Link in die Zwischenablage kopiert!",
+    "shareSuffix": "Geteilt über Ech0",
+    "sharePanelTitle": "Dieses Ech0 teilen",
+    "shareSystem": "Systemfreigabe",
+    "shareCopyMarkdown": "Als Markdown kopieren",
+    "shareCopyLink": "Link kopieren",
+    "shareCopyFailed": "Kopieren fehlgeschlagen, bitte erneut versuchen.",
+    "shareMarkdownCopied": "Markdown in die Zwischenablage kopiert!"
   },
   "commentSection": {
     "disabled": "Kommentare sind deaktiviert.",

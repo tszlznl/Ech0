@@ -422,8 +422,14 @@
     "like": "Like",
     "alreadyLiked": "You already liked this, thanks for the support!",
     "likeSuccess": "Liked successfully!",
-    "copied": "Copied to clipboard!",
-    "shareSuffix": "Shared via Ech0"
+    "copied": "Link copied to clipboard!",
+    "shareSuffix": "Shared via Ech0",
+    "sharePanelTitle": "Share this Ech0",
+    "shareSystem": "System share",
+    "shareCopyMarkdown": "Copy as Markdown",
+    "shareCopyLink": "Copy link",
+    "shareCopyFailed": "Copy failed, please try again.",
+    "shareMarkdownCopied": "Markdown copied to clipboard!"
   },
   "commentSection": {
     "disabled": "Commenting is disabled.",

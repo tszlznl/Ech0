@@ -422,8 +422,14 @@
     "like": "点赞",
     "alreadyLiked": "你已经点赞过了，感谢你的喜欢！",
     "likeSuccess": "点赞成功！",
-    "copied": "已复制到剪贴板！",
-    "shareSuffix": "来自 Ech0 分享"
+    "copied": "链接已复制到剪贴板！",
+    "shareSuffix": "来自 Ech0 分享",
+    "sharePanelTitle": "分享这条 Ech0",
+    "shareSystem": "系统分享",
+    "shareCopyMarkdown": "复制为 Markdown",
+    "shareCopyLink": "复制链接",
+    "shareCopyFailed": "复制失败，请重试。",
+    "shareMarkdownCopied": "Markdown 已复制到剪贴板！"
   },
   "commentSection": {
     "disabled": "评论功能未开启。",

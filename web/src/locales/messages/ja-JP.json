@@ -422,8 +422,14 @@
     "like": "いいね",
     "alreadyLiked": "既にいいね済みです。ありがとうございます！",
     "likeSuccess": "いいねしました！",
-    "copied": "クリップボードにコピーしました！",
-    "shareSuffix": "Ech0 からのシェア"
+    "copied": "リンクをクリップボードにコピーしました！",
+    "shareSuffix": "Ech0 からのシェア",
+    "sharePanelTitle": "この Ech0 をシェア",
+    "shareSystem": "システム共有",
+    "shareCopyMarkdown": "Markdown としてコピー",
+    "shareCopyLink": "リンクをコピー",
+    "shareCopyFailed": "コピーに失敗しました。もう一度お試しください。",
+    "shareMarkdownCopied": "Markdown をクリップボードにコピーしました！"
   },
   "commentSection": {
     "disabled": "コメント機能は無効です。",

@@ -66,17 +66,9 @@
         </div>
       </div>
 
-      <div ref="menuRef" class="relative flex items-center justify-center gap-2 h-auto">
-        <div class="flex items-center justify-end" v-tooltip="t('echoDetail.share')">
-          <button
-            @click="handleShareEcho(props.echo.id)"
-            :class="[
-              'transform transition-transform duration-150',
-              isShareAnimating ? 'scale-160' : 'scale-100',
-            ]"
-          >
-            <Share class="w-4 h-4" />
-          </button>
+      <div class="relative flex items-center justify-center gap-2 h-auto">
+        <div class="flex items-center justify-end">
+          <TheShareEchoPanel :echo-id="props.echo.id" :echo-content="props.echo.content" />
         </div>
 
         <div class="flex items-center justify-end" v-tooltip="t('echoDetail.like')">
@@ -104,8 +96,8 @@
 <script setup lang="ts">
 import Verified from '@/components/icons/verified.vue'
 import GrayLike from '@/components/icons/graylike.vue'
-import Share from '@/components/icons/share.vue'
 import TheImageGallery from '@/components/advanced/gallery/TheImageGallery.vue'
+import TheShareEchoPanel from '@/components/advanced/echo/cards/TheShareEchoPanel.vue'
 import { computed, defineAsyncComponent, ref } from 'vue'
 import { fetchLikeEcho } from '@/service/api'
 import { theToast } from '@/utils/toast'
@@ -136,7 +128,6 @@ const echoImageFiles = computed(() =>
 )
 
 const isLikeAnimating = ref(false)
-const isShareAnimating = ref(false)
 
 const LIKE_LIST_KEY = 'likedEchoIds'
 const likedEchoIds: string[] = localStg.getItem(LIKE_LIST_KEY) || []
@@ -161,18 +152,6 @@ const handleLikeEcho = (echoId: string) => {
       emit('updateLikeCount', echoId)
       theToast.info(String(t('echoDetail.likeSuccess')))
     }
-  })
-}
-
-const handleShareEcho = (echoId: string) => {
-  isShareAnimating.value = true
-  setTimeout(() => {
-    isShareAnimating.value = false
-  }, 250)
-
-  const shareUrl = `${window.location.origin}/echo/${echoId}\n ———— ${t('echoDetail.shareSuffix')}`
-  navigator.clipboard.writeText(shareUrl).then(() => {
-    theToast.info(String(t('echoDetail.copied')))
   })
 }
 
