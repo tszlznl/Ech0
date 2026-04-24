@@ -19,39 +19,43 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - goos: linux
-            goarch: amd64
-            zig_target: x86_64-linux-musl
-            output_suffix: ""
-          - goos: linux
+          # - goos: linux
+          #   goarch: amd64
+          #   zig_target: x86_64-linux-musl
+          #   output_suffix: ""
+          # - goos: linux
+          #   goarch: arm64
+          #   zig_target: aarch64-linux-musl
+          #   output_suffix: ""
+          # - goos: linux
+          #   goarch: riscv64
+          #   zig_target: riscv64-linux-musl
+          #   output_suffix: ""
+          # - goos: linux
+          #   goarch: arm
+          #   goarm: "7"
+          #   zig_target: arm-linux-musleabihf
+          #   output_suffix: ""
+          # - goos: linux
+          #   goarch: "386"
+          #   zig_target: x86-linux-musl
+          #   output_suffix: ""
+          # - goos: linux
+          #   goarch: loong64
+          #   zig_target: loongarch64-linux-musl
+          #   output_suffix: ""
+          # - goos: windows
+          #   goarch: amd64
+          #   zig_target: x86_64-windows-gnu
+          #   output_suffix: ".exe"
+          # - goos: windows
+          #   goarch: arm64
+          #   zig_target: aarch64-windows-gnu
+          #   output_suffix: ".exe"
+          - goos: darwin
             goarch: arm64
-            zig_target: aarch64-linux-musl
+            zig_target: aarch64-macos
             output_suffix: ""
-          - goos: linux
-            goarch: riscv64
-            zig_target: riscv64-linux-musl
-            output_suffix: ""
-          - goos: linux
-            goarch: arm
-            goarm: "7"
-            zig_target: arm-linux-musleabihf
-            output_suffix: ""
-          - goos: linux
-            goarch: "386"
-            zig_target: x86-linux-musl
-            output_suffix: ""
-          - goos: linux
-            goarch: loong64
-            zig_target: loongarch64-linux-musl
-            output_suffix: ""
-          - goos: windows
-            goarch: amd64
-            zig_target: x86_64-windows-gnu
-            output_suffix: ".exe"
-          - goos: windows
-            goarch: arm64
-            zig_target: aarch64-windows-gnu
-            output_suffix: ".exe"
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -108,7 +112,13 @@ jobs:
         run: |
           set -euo pipefail
           test -f cmd/ech0/main.go
-          STATIC_LDFLAGS="-linkmode external -extldflags '-static'"
+          if [ "${{ matrix.goos }}" = "darwin" ]; then
+            # macOS 不支持完全静态链接（Apple 不发布 static libSystem），
+            # 保留 external linkmode 让 zig cc 驱动链接，但不加 -static。
+            GO_LDFLAGS="-linkmode external"
+          else
+            GO_LDFLAGS="-linkmode external -extldflags '-static'"
+          fi
           OUTPUT_NAME="ech0-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.output_suffix }}"
           if [ -n "${ZIG_MCPU:-}" ]; then
             export CC="zig cc -target ${ZIG_TARGET} -mcpu=${ZIG_MCPU}"
@@ -117,7 +127,7 @@ jobs:
             export CC="zig cc -target ${ZIG_TARGET}"
             export CXX="zig c++ -target ${ZIG_TARGET}"
           fi
-          go build -tags netgo -ldflags "$STATIC_LDFLAGS" -o "${OUTPUT_NAME}" ./cmd/ech0/main.go
+          go build -tags netgo -ldflags "$GO_LDFLAGS" -o "${OUTPUT_NAME}" ./cmd/ech0/main.go
 
       - name: Verify binary metadata
         run: |
@@ -135,6 +145,12 @@ jobs:
             esac
             ldd "${OUTPUT_NAME}" 2>&1 | tee /tmp/binary-ldd-info.txt || true
             grep -Eqi "not a dynamic executable|statically linked" /tmp/binary-ldd-info.txt
+          elif [ "${{ matrix.goos }}" = "darwin" ]; then
+            grep -Eqi "Mach-O" /tmp/binary-file-info.txt
+            case "${{ matrix.goarch }}" in
+              amd64) grep -Eqi "x86_64" /tmp/binary-file-info.txt ;;
+              arm64) grep -Eqi "arm64" /tmp/binary-file-info.txt ;;
+            esac
           else
             grep -Eqi "PE32\+|Windows" /tmp/binary-file-info.txt
           fi
