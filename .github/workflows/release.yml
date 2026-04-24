@@ -101,15 +101,12 @@ jobs:
       - name: List output files
         run: ls -lh .
 
-      # --- Artifact Packaging and Uploading ---
-      - name: Package binary
-        run: tar -czvf "ech0-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz" "ech0-${{ matrix.goos }}-${{ matrix.goarch }}"
-
+      # --- Artifact Uploading ---
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
           name: ech0-${{ matrix.goos }}-${{ matrix.goarch }}-asset
-          path: ech0-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
+          path: ech0-${{ matrix.goos }}-${{ matrix.goarch }}
           retention-days: 1
 
   prepare-release:
@@ -125,6 +122,16 @@ jobs:
           pattern: ech0-*
           path: ./backend-artifacts
           merge-multiple: true
+
+      - name: Package binaries for release
+        working-directory: ./backend-artifacts
+        run: |
+          set -euo pipefail
+          for bin in ech0-linux-*; do
+            [ -f "$bin" ] || continue
+            chmod +x "$bin"
+            tar -czf "${bin}.tar.gz" "$bin"
+          done
 
       # ✅ 创建 GitHub Release
       - name: Create Release
@@ -148,8 +155,9 @@ jobs:
       - name: 📦 Download backend artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: ech0-* # 下载后端构建产物得到 ech0-*.tar.gz
+          pattern: ech0-* # 下载后端构建产物（裸二进制：ech0-linux-amd64 / ech0-linux-arm64）
           path: ./backend-artifacts
+          merge-multiple: true
 
       - name: 🐳 Login to GitHub Container Registry
         uses: docker/login-action@v4

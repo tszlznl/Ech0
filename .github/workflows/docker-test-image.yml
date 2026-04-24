@@ -89,16 +89,11 @@ jobs:
           OUTPUT_NAME="ech0-linux-${{ matrix.goarch }}"
           go build -tags netgo -ldflags "$STATIC_LDFLAGS" -o "${OUTPUT_NAME}" ./cmd/ech0/main.go
 
-      - name: Package backend binary
-        run: |
-          set -euo pipefail
-          tar -czf "ech0-linux-${{ matrix.goarch }}.tar.gz" "ech0-linux-${{ matrix.goarch }}"
-
       - name: Upload backend artifact
         uses: actions/upload-artifact@v7
         with:
           name: ech0-linux-${{ matrix.goarch }}-asset
-          path: ech0-linux-${{ matrix.goarch }}.tar.gz
+          path: ech0-linux-${{ matrix.goarch }}
           retention-days: 1
 
   build-and-push-image:
