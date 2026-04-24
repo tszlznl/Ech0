@@ -31,9 +31,26 @@ jobs:
             goarch: riscv64
             zig_target: riscv64-linux-musl
             output_suffix: ""
+          - goos: linux
+            goarch: arm
+            goarm: "7"
+            zig_target: arm-linux-musleabihf
+            output_suffix: ""
+          - goos: linux
+            goarch: "386"
+            zig_target: x86-linux-musl
+            output_suffix: ""
+          - goos: linux
+            goarch: loong64
+            zig_target: loongarch64-linux-musl
+            output_suffix: ""
           - goos: windows
             goarch: amd64
             zig_target: x86_64-windows-gnu
+            output_suffix: ".exe"
+          - goos: windows
+            goarch: arm64
+            zig_target: aarch64-windows-gnu
             output_suffix: ".exe"
     steps:
       - name: Checkout code
@@ -110,9 +127,11 @@ jobs:
           if [ "${{ matrix.goos }}" = "linux" ]; then
             case "${{ matrix.goarch }}" in
               amd64) grep -Eqi "x86-64|x86_64" /tmp/binary-file-info.txt ;;
+              "386") grep -Eqi "Intel 80386|i386" /tmp/binary-file-info.txt ;;
               arm64) grep -Eqi "ARM aarch64|aarch64" /tmp/binary-file-info.txt ;;
               arm) grep -Eqi "ARM" /tmp/binary-file-info.txt ;;
               riscv64) grep -Eqi "RISC-V" /tmp/binary-file-info.txt ;;
+              loong64) grep -Eqi "LoongArch" /tmp/binary-file-info.txt ;;
             esac
             ldd "${OUTPUT_NAME}" 2>&1 | tee /tmp/binary-ldd-info.txt || true
             grep -Eqi "not a dynamic executable|statically linked" /tmp/binary-ldd-info.txt
