@@ -47,7 +47,7 @@ FROM alpine:latest
 WORKDIR /app
 
 RUN apk add --no-cache tzdata \
-    && mkdir -p /app/data /app/backup
+    && mkdir -p /app/data
 
 COPY --from=backend-builder /app/ech0 /app/ech0
 
