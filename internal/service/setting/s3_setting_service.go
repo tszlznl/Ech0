@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"strings"
 
@@ -9,7 +10,6 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
-	jsonUtil "github.com/lin-snow/ech0/internal/util/json"
 	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
@@ -34,7 +34,7 @@ func (settingService *SettingService) GetS3Setting(ctx context.Context, setting 
 			setting.PublicRead = true
 
 			// 序列化为 JSON
-			settingToJSON, err := jsonUtil.JSONMarshal(setting)
+			settingToJSON, err := json.Marshal(setting)
 			if err != nil {
 				return err
 			}
@@ -45,7 +45,7 @@ func (settingService *SettingService) GetS3Setting(ctx context.Context, setting 
 			return nil
 		}
 
-		if err := jsonUtil.JSONUnmarshal([]byte(s3Setting), setting); err != nil {
+		if err := json.Unmarshal([]byte(s3Setting), setting); err != nil {
 			return err
 		}
 
@@ -146,7 +146,7 @@ func (settingService *SettingService) UpdateS3Setting(
 		}
 
 		// 序列化为 JSON
-		settingToJSON, err := jsonUtil.JSONMarshal(s3Setting)
+		settingToJSON, err := json.Marshal(s3Setting)
 		if err != nil {
 			return err
 		}

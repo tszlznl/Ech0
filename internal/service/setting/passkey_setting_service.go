@@ -2,13 +2,13 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"strings"
 
 	"github.com/lin-snow/ech0/internal/config"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
-	jsonUtil "github.com/lin-snow/ech0/internal/util/json"
 	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
@@ -43,7 +43,7 @@ func (settingService *SettingService) GetPasskeySetting(
 				setting.WebAuthnAllowedOrigins = append([]string{}, config.Config().Auth.WebAuthn.Origins...)
 			}
 			applyPasskeyBoundaryFallback(setting)
-			settingToJSON, marshalErr := jsonUtil.JSONMarshal(setting)
+			settingToJSON, marshalErr := json.Marshal(setting)
 			if marshalErr != nil {
 				return marshalErr
 			}
@@ -54,7 +54,7 @@ func (settingService *SettingService) GetPasskeySetting(
 			return nil
 		}
 
-		if err := jsonUtil.JSONUnmarshal([]byte(passkeySetting), setting); err != nil {
+		if err := json.Unmarshal([]byte(passkeySetting), setting); err != nil {
 			return err
 		}
 		applyPasskeyBoundaryFallback(setting)
@@ -84,7 +84,7 @@ func (settingService *SettingService) UpdatePasskeySetting(
 		}
 		applyPasskeyBoundaryFallback(passkeySetting)
 
-		settingToJSON, err := jsonUtil.JSONMarshal(passkeySetting)
+		settingToJSON, err := json.Marshal(passkeySetting)
 		if err != nil {
 			return err
 		}
@@ -138,7 +138,7 @@ func (settingService *SettingService) readLegacyPasskeySetting(ctx context.Conte
 		return result, false
 	}
 	var legacy legacyOAuth2Boundary
-	if err := jsonUtil.JSONUnmarshal([]byte(raw), &legacy); err != nil {
+	if err := json.Unmarshal([]byte(raw), &legacy); err != nil {
 		return result, false
 	}
 	result.WebAuthnRPID = strings.TrimSpace(legacy.WebAuthnRPID)

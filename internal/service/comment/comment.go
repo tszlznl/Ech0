@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -16,7 +17,6 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/bytedance/sonic"
 	captchaCfg "github.com/lin-snow/ech0/internal/captcha"
 	"github.com/lin-snow/ech0/internal/config"
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
@@ -510,12 +510,12 @@ func (s *CommentService) getSystemSettingRaw(ctx context.Context) (model.SystemS
 			CaptchaEnabled:  false,
 		}
 		applySettingDefaults(&defaultSetting)
-		buf, _ := sonic.Marshal(defaultSetting)
+		buf, _ := json.Marshal(defaultSetting)
 		_ = s.keyvalueRepository.AddKeyValue(ctx, model.CommentSystemSettingKey, string(buf))
 		return defaultSetting, nil
 	}
 	var setting model.SystemSetting
-	if err := sonic.Unmarshal([]byte(raw), &setting); err != nil {
+	if err := json.Unmarshal([]byte(raw), &setting); err != nil {
 		return model.SystemSetting{}, err
 	}
 	applySettingDefaults(&setting)
@@ -531,7 +531,7 @@ func (s *CommentService) UpdateSystemSetting(ctx context.Context, setting model.
 	if err == nil && strings.TrimSpace(setting.EmailNotify.SMTPPassword) == "" {
 		setting.EmailNotify.SMTPPassword = current.EmailNotify.SMTPPassword
 	}
-	buf, err := sonic.Marshal(setting)
+	buf, err := json.Marshal(setting)
 	if err != nil {
 		return err
 	}
@@ -773,7 +773,7 @@ func (s *CommentService) verifyCaptcha(token, _ string) error {
 		"response": strings.TrimSpace(token),
 		"secret":   captchaCfg.Secret(),
 	}
-	body, err := sonic.Marshal(payload)
+	body, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
@@ -800,7 +800,7 @@ func (s *CommentService) verifyCaptcha(token, _ string) error {
 	var out struct {
 		Success bool `json:"success"`
 	}
-	if err := sonic.ConfigFastest.NewDecoder(resp.Body).Decode(&out); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
 		return err
 	}
 	if out.Success {

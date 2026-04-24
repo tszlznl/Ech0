@@ -2,13 +2,13 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	fmtUtil "github.com/lin-snow/ech0/internal/util/format"
-	jsonUtil "github.com/lin-snow/ech0/internal/util/json"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
@@ -39,7 +39,7 @@ func (settingService *SettingService) GetBackupScheduleSetting(
 			setting.CronExpression = "0 2 * * 0"
 
 			// 序列化为 JSON
-			settingToJSON, err := jsonUtil.JSONMarshal(setting)
+			settingToJSON, err := json.Marshal(setting)
 			if err != nil {
 				return err
 			}
@@ -50,7 +50,7 @@ func (settingService *SettingService) GetBackupScheduleSetting(
 			return nil
 		}
 
-		if err := jsonUtil.JSONUnmarshal([]byte(backupSchedule), setting); err != nil {
+		if err := json.Unmarshal([]byte(backupSchedule), setting); err != nil {
 			return err
 		}
 
@@ -83,7 +83,7 @@ func (settingService *SettingService) UpdateBackupScheduleSetting(
 			return errors.New(commonModel.INVALID_CRON_EXPRESSION)
 		}
 
-		settingToJSON, err := jsonUtil.JSONMarshal(updated)
+		settingToJSON, err := json.Marshal(updated)
 		if err != nil {
 			return err
 		}

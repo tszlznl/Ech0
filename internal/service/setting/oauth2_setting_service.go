@@ -2,13 +2,13 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 
 	"github.com/lin-snow/ech0/internal/config"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
-	jsonUtil "github.com/lin-snow/ech0/internal/util/json"
 	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
@@ -54,7 +54,7 @@ func (settingService *SettingService) GetOAuth2Setting(
 			setting.CORSAllowedOrigins = append([]string{}, config.Config().Web.CORS.AllowedOrigins...)
 
 			// 序列化为 JSON
-			settingToJSON, err := jsonUtil.JSONMarshal(setting)
+			settingToJSON, err := json.Marshal(setting)
 			if err != nil {
 				return err
 			}
@@ -65,7 +65,7 @@ func (settingService *SettingService) GetOAuth2Setting(
 			return nil
 		}
 
-		if err := jsonUtil.JSONUnmarshal([]byte(oauthSetting), setting); err != nil {
+		if err := json.Unmarshal([]byte(oauthSetting), setting); err != nil {
 			return err
 		}
 		applyOAuthBoundaryFallback(setting)
@@ -109,7 +109,7 @@ func (settingService *SettingService) UpdateOAuth2Setting(
 		applyOAuthBoundaryFallback(oauthSetting)
 
 		// 序列化为 JSON
-		settingToJSON, err := jsonUtil.JSONMarshal(oauthSetting)
+		settingToJSON, err := json.Marshal(oauthSetting)
 		if err != nil {
 			return err
 		}

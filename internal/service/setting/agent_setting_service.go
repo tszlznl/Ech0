@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
-	jsonUtil "github.com/lin-snow/ech0/internal/util/json"
 	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
@@ -28,7 +28,7 @@ func (settingService *SettingService) GetAgentInfo(setting *model.AgentSetting) 
 			setting.BaseURL = ""
 
 			// 序列化为 JSON
-			settingToJSON, err := jsonUtil.JSONMarshal(setting)
+			settingToJSON, err := json.Marshal(setting)
 			if err != nil {
 				return err
 			}
@@ -38,7 +38,7 @@ func (settingService *SettingService) GetAgentInfo(setting *model.AgentSetting) 
 			return nil
 		}
 
-		if err := jsonUtil.JSONUnmarshal([]byte(agentSetting), setting); err != nil {
+		if err := json.Unmarshal([]byte(agentSetting), setting); err != nil {
 			return err
 		}
 
@@ -76,7 +76,7 @@ func (settingService *SettingService) GetAgentSettings(
 			setting.BaseURL = ""
 
 			// 序列化为 JSON
-			settingToJSON, err := jsonUtil.JSONMarshal(setting)
+			settingToJSON, err := json.Marshal(setting)
 			if err != nil {
 				return err
 			}
@@ -87,7 +87,7 @@ func (settingService *SettingService) GetAgentSettings(
 			return nil
 		}
 
-		if err := jsonUtil.JSONUnmarshal([]byte(agentSetting), setting); err != nil {
+		if err := json.Unmarshal([]byte(agentSetting), setting); err != nil {
 			return err
 		}
 
@@ -128,7 +128,7 @@ func (settingService *SettingService) UpdateAgentSettings(
 
 	return settingService.transactor.Run(ctx, func(ctx context.Context) error {
 		// 序列化为 JSON
-		settingToJSON, err := jsonUtil.JSONMarshal(setting)
+		settingToJSON, err := json.Marshal(setting)
 		if err != nil {
 			return err
 		}

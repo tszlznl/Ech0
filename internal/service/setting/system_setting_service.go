@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"strings"
 
@@ -10,7 +11,6 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
-	jsonUtil "github.com/lin-snow/ech0/internal/util/json"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
@@ -44,7 +44,7 @@ func (settingService *SettingService) GetSetting(setting *model.SystemSetting) e
 			setting.MetingAPI = httpUtil.TrimURL(setting.MetingAPI)
 
 			// 序列化为 JSON
-			settingToJSON, err := jsonUtil.JSONMarshal(setting)
+			settingToJSON, err := json.Marshal(setting)
 			if err != nil {
 				return err
 			}
@@ -60,7 +60,7 @@ func (settingService *SettingService) GetSetting(setting *model.SystemSetting) e
 			return nil
 		}
 
-		if err := jsonUtil.JSONUnmarshal([]byte(systemSetting), setting); err != nil {
+		if err := json.Unmarshal([]byte(systemSetting), setting); err != nil {
 			return err
 		}
 		setting.DefaultLocale = i18nUtil.ResolveLocale(setting.DefaultLocale)
@@ -106,7 +106,7 @@ func (settingService *SettingService) UpdateSetting(
 		setting.CustomJS = newSetting.CustomJS
 
 		// 序列化为 JSON
-		settingToJSON, err := jsonUtil.JSONMarshal(setting)
+		settingToJSON, err := json.Marshal(setting)
 		if err != nil {
 			return err
 		}
