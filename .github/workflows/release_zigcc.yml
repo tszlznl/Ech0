@@ -102,21 +102,13 @@ jobs:
           GOARM: ${{ matrix.goarm }}
           CGO_ENABLED: 1
           ZIG_TARGET: ${{ matrix.zig_target }}
-          ZIG_MCPU: ${{ matrix.zig_mcpu }}
-          CGO_CFLAGS: ${{ matrix.cgo_cflags }}
-          CGO_LDFLAGS: ${{ matrix.cgo_ldflags }}
         run: |
           set -euo pipefail
           test -f cmd/ech0/main.go
           STATIC_LDFLAGS="-linkmode external -extldflags '-static'"
           OUTPUT_NAME="ech0-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.output_suffix }}"
-          if [ -n "${ZIG_MCPU:-}" ]; then
-            export CC="zig cc -target ${ZIG_TARGET} -mcpu=${ZIG_MCPU}"
-            export CXX="zig c++ -target ${ZIG_TARGET} -mcpu=${ZIG_MCPU}"
-          else
-            export CC="zig cc -target ${ZIG_TARGET}"
-            export CXX="zig c++ -target ${ZIG_TARGET}"
-          fi
+          export CC="zig cc -target ${ZIG_TARGET}"
+          export CXX="zig c++ -target ${ZIG_TARGET}"
           go build -tags netgo -ldflags "$STATIC_LDFLAGS" -o "${OUTPUT_NAME}" ./cmd/ech0/main.go
 
       - name: Verify binary metadata
