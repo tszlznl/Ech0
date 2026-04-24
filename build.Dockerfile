@@ -1,7 +1,7 @@
 # 本地 / make build-image 用多阶段构建；逻辑对齐：
 # - 前端：.github/workflows/release.yml（pnpm + vite → ../template/dist）
 # - 后端 go build：同上 workflow 的 STATIC_LDFLAGS 与 ./cmd/ech0/main.go
-# - 运行镜像：根目录 Dockerfile 最终阶段（alpine + tzdata、data/backup 目录）
+# - 运行镜像：根目录 Dockerfile 最终阶段（alpine + tzdata、data 目录）
 
 # =================== 前端构建阶段 ===================
 FROM node:25-alpine AS frontend-builder
