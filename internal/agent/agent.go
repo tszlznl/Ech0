@@ -3,27 +3,44 @@ package agent
 import (
 	"context"
 	"errors"
+	"fmt"
 
-	"github.com/cloudwego/eino-ext/components/model/claude"
-	"github.com/cloudwego/eino-ext/components/model/deepseek"
-	"github.com/cloudwego/eino-ext/components/model/gemini"
-	"github.com/cloudwego/eino-ext/components/model/ollama"
-	"github.com/cloudwego/eino-ext/components/model/openai"
-	"github.com/cloudwego/eino-ext/components/model/qwen"
-	"github.com/cloudwego/eino/schema"
+	anthropic "github.com/anthropics/anthropic-sdk-go"
+	"github.com/anthropics/anthropic-sdk-go/option"
+	"github.com/anthropics/anthropic-sdk-go/packages/param"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
+	"github.com/sashabaranov/go-openai"
 	"google.golang.org/genai"
 )
 
 const (
 	GEN_RECENT = "gen_recent"
+
+	// anthropicDefaultMaxTokens 是 Anthropic API 必填字段 max_tokens 的默认值
+	anthropicDefaultMaxTokens = 4096
 )
 
+// Role 表示一条对话消息的发送者角色
+type Role string
+
+const (
+	RoleSystem    Role = "system"
+	RoleUser      Role = "user"
+	RoleAssistant Role = "assistant"
+)
+
+// Message 是 Agent 内部使用的对话消息抽象
+type Message struct {
+	Role    Role
+	Content string
+}
+
+// Generate 调用配置的 LLM 提供商生成回复
 func Generate(
 	ctx context.Context,
 	setting model.AgentSetting,
-	in []*schema.Message,
+	in []Message,
 	usePrompt bool,
 	temperature ...float32,
 ) (string, error) {
@@ -36,145 +53,194 @@ func Generate(
 	if setting.Provider == "" {
 		return "", errors.New(commonModel.AGENT_PROVIDER_NOT_FOUND)
 	}
-	if setting.ApiKey == "" {
+	if setting.ApiKey == "" && setting.Provider != string(commonModel.OpenAI) {
+		// OpenAI 兼容场景下 Ollama 等本地服务允许空 ApiKey
 		return "", errors.New(commonModel.AGENT_API_KEY_MISSING)
 	}
 
-	baseURL := ""
-	if setting.BaseURL != "" {
-		baseURL = setting.BaseURL
+	if setting.Prompt != "" && usePrompt {
+		// 维持历史行为：自定义 Prompt 以 user 消息追加在末尾
+		in = append(in, Message{Role: RoleUser, Content: setting.Prompt})
 	}
 
-	apiKey := setting.ApiKey
-	model := setting.Model
-	prompt := setting.Prompt
-	if prompt != "" && usePrompt {
-		// 在对话开头添加系统提示
-		in = append(in, &schema.Message{
-			Role:    schema.User,
-			Content: prompt,
-		})
-	}
 	var t *float32
 	if len(temperature) > 0 {
 		t = &temperature[0]
 	}
 
-	var resp *schema.Message
-	var genErr error
-
-	// 选择服务提供商
 	switch setting.Provider {
 	case string(commonModel.OpenAI):
-		cm, err := openai.NewChatModel(ctx, &openai.ChatModelConfig{
-			APIKey:      apiKey,
-			Model:       model,
-			BaseURL:     baseURL,
-			Temperature: t,
-		})
-		if err != nil {
-			return "", err
-		}
-
-		resp, genErr = cm.Generate(ctx, in)
-
+		return generateOpenAI(ctx, setting, in, t)
 	case string(commonModel.Anthropic):
-		var baseURLPtr *string = nil
-		if len(baseURL) > 0 {
-			baseURLPtr = &baseURL
-		}
-
-		cm, err := claude.NewChatModel(ctx, &claude.Config{
-			APIKey:      apiKey,
-			Model:       model,
-			BaseURL:     baseURLPtr,
-			Temperature: t,
-		})
-		if err != nil {
-			return "", err
-		}
-
-		resp, genErr = cm.Generate(ctx, in)
-
+		return generateAnthropic(ctx, setting, in, t)
 	case string(commonModel.Gemini):
-		client, err := genai.NewClient(ctx, &genai.ClientConfig{
-			APIKey: apiKey,
-		})
-		if err != nil {
-			return "", err
-		}
-		cm, err := gemini.NewChatModel(ctx, &gemini.Config{
-			Client: client,
-			Model:  model,
-		})
-		if err != nil {
-			return "", err
-		}
-
-		resp, genErr = cm.Generate(ctx, in)
-
-	case string(commonModel.Qwen):
-		cm, err := qwen.NewChatModel(ctx, &qwen.ChatModelConfig{
-			APIKey:      apiKey,
-			Model:       setting.Model,
-			BaseURL:     baseURL,
-			Temperature: t,
-		})
-		if err != nil {
-			return "", err
-		}
-
-		resp, genErr = cm.Generate(ctx, in)
-
-	case string(commonModel.DeepSeek):
-		var tValue float32 = 1.0
-		if t != nil {
-			tValue = *t
-		}
-
-		cm, err := deepseek.NewChatModel(ctx, &deepseek.ChatModelConfig{
-			APIKey:      apiKey,
-			Model:       model,
-			BaseURL:     baseURL,
-			Temperature: tValue,
-		})
-		if err != nil {
-			return "", err
-		}
-
-		resp, genErr = cm.Generate(ctx, in)
-
-	case string(commonModel.Ollama):
-		cm, err := ollama.NewChatModel(ctx, &ollama.ChatModelConfig{
-			Model:   model,
-			BaseURL: baseURL,
-		})
-		if err != nil {
-			return "", err
-		}
-
-		resp, genErr = cm.Generate(ctx, in)
-
-	case string(commonModel.Custom):
-		cm, err := openai.NewChatModel(ctx, &openai.ChatModelConfig{
-			APIKey:      apiKey,
-			Model:       model,
-			BaseURL:     baseURL,
-			Temperature: t,
-		})
-		if err != nil {
-			return "", err
-		}
-
-		resp, genErr = cm.Generate(ctx, in)
-
+		return generateGemini(ctx, setting, in, t)
 	default:
 		return "", errors.New(commonModel.AGENT_PROVIDER_NOT_FOUND)
 	}
+}
 
-	if genErr != nil {
-		return "", genErr
+func generateOpenAI(
+	ctx context.Context,
+	setting model.AgentSetting,
+	in []Message,
+	t *float32,
+) (string, error) {
+	cfg := openai.DefaultConfig(setting.ApiKey)
+	if setting.BaseURL != "" {
+		cfg.BaseURL = setting.BaseURL
+	}
+	client := openai.NewClientWithConfig(cfg)
+
+	msgs := make([]openai.ChatCompletionMessage, 0, len(in))
+	for _, m := range in {
+		msgs = append(msgs, openai.ChatCompletionMessage{
+			Role:    toOpenAIRole(m.Role),
+			Content: m.Content,
+		})
 	}
 
-	return resp.Content, nil
+	req := openai.ChatCompletionRequest{
+		Model:    setting.Model,
+		Messages: msgs,
+	}
+	if t != nil {
+		req.Temperature = *t
+	}
+
+	resp, err := client.CreateChatCompletion(ctx, req)
+	if err != nil {
+		return "", err
+	}
+	if len(resp.Choices) == 0 {
+		return "", errors.New("openai: empty response")
+	}
+	return resp.Choices[0].Message.Content, nil
+}
+
+func toOpenAIRole(r Role) string {
+	switch r {
+	case RoleSystem:
+		return openai.ChatMessageRoleSystem
+	case RoleAssistant:
+		return openai.ChatMessageRoleAssistant
+	default:
+		return openai.ChatMessageRoleUser
+	}
+}
+
+func generateAnthropic(
+	ctx context.Context,
+	setting model.AgentSetting,
+	in []Message,
+	t *float32,
+) (string, error) {
+	opts := []option.RequestOption{option.WithAPIKey(setting.ApiKey)}
+	if setting.BaseURL != "" {
+		opts = append(opts, option.WithBaseURL(setting.BaseURL))
+	}
+	client := anthropic.NewClient(opts...)
+
+	var systemBlocks []anthropic.TextBlockParam
+	msgs := make([]anthropic.MessageParam, 0, len(in))
+	for _, m := range in {
+		switch m.Role {
+		case RoleSystem:
+			// Anthropic 把 system 提到顶层 system 字段，不作为消息
+			systemBlocks = append(systemBlocks, anthropic.TextBlockParam{Text: m.Content})
+		case RoleAssistant:
+			msgs = append(msgs, anthropic.NewAssistantMessage(anthropic.NewTextBlock(m.Content)))
+		default:
+			msgs = append(msgs, anthropic.NewUserMessage(anthropic.NewTextBlock(m.Content)))
+		}
+	}
+
+	params := anthropic.MessageNewParams{
+		Model:     anthropic.Model(setting.Model),
+		MaxTokens: anthropicDefaultMaxTokens,
+		Messages:  msgs,
+	}
+	if len(systemBlocks) > 0 {
+		params.System = systemBlocks
+	}
+	if t != nil {
+		params.Temperature = param.NewOpt(float64(*t))
+	}
+
+	resp, err := client.Messages.New(ctx, params)
+	if err != nil {
+		return "", err
+	}
+
+	var out string
+	for _, block := range resp.Content {
+		if block.Type == "text" {
+			out += block.Text
+		}
+	}
+	if out == "" {
+		return "", errors.New("anthropic: empty text response")
+	}
+	return out, nil
+}
+
+func generateGemini(
+	ctx context.Context,
+	setting model.AgentSetting,
+	in []Message,
+	t *float32,
+) (string, error) {
+	cfg := &genai.ClientConfig{
+		APIKey:  setting.ApiKey,
+		Backend: genai.BackendGeminiAPI,
+	}
+	if setting.BaseURL != "" {
+		cfg.HTTPOptions = genai.HTTPOptions{BaseURL: setting.BaseURL}
+	}
+	client, err := genai.NewClient(ctx, cfg)
+	if err != nil {
+		return "", err
+	}
+
+	var systemContent *genai.Content
+	contents := make([]*genai.Content, 0, len(in))
+	for _, m := range in {
+		switch m.Role {
+		case RoleSystem:
+			// Gemini 通过 GenerateContentConfig.SystemInstruction 传递；多条 system 拼接
+			if systemContent == nil {
+				systemContent = &genai.Content{Parts: []*genai.Part{{Text: m.Content}}}
+			} else {
+				systemContent.Parts = append(systemContent.Parts, &genai.Part{Text: m.Content})
+			}
+		case RoleAssistant:
+			contents = append(contents, &genai.Content{
+				Role:  genai.RoleModel,
+				Parts: []*genai.Part{{Text: m.Content}},
+			})
+		default:
+			contents = append(contents, &genai.Content{
+				Role:  genai.RoleUser,
+				Parts: []*genai.Part{{Text: m.Content}},
+			})
+		}
+	}
+
+	genCfg := &genai.GenerateContentConfig{}
+	if systemContent != nil {
+		genCfg.SystemInstruction = systemContent
+	}
+	if t != nil {
+		genCfg.Temperature = t
+	}
+
+	resp, err := client.Models.GenerateContent(ctx, setting.Model, contents, genCfg)
+	if err != nil {
+		return "", err
+	}
+	out := resp.Text()
+	if out == "" {
+		return "", fmt.Errorf("gemini: empty text response")
+	}
+	return out, nil
 }

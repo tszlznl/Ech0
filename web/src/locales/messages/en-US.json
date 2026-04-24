@@ -650,8 +650,7 @@
     "baseUrl": "Base URL",
     "baseUrlPlaceholder": "Enter custom Base URL",
     "prompt": "Prompt",
-    "promptPlaceholder": "Enter custom prompt",
-    "custom": "Custom"
+    "promptPlaceholder": "Enter custom prompt"
   },
   "webhookSetting": {
     "title": "Webhook",

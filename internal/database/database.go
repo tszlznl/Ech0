@@ -122,6 +122,7 @@ func InitDatabase() {
 			dbMigration.NewStorageTimeSchemaRebuildMigrator(),
 			dbMigration.NewOAuthBindingsDropMigrator(),
 			dbMigration.NewLegacyInboxesDropMigrator(),
+			dbMigration.NewAgentProviderCollapseMigrator(),
 		),
 	)
 }

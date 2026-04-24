@@ -111,13 +111,10 @@ func (settingService *SettingService) UpdateAgentSettings(
 	}
 
 	if newSetting.Provider != string(commonModel.OpenAI) &&
-		newSetting.Provider != string(commonModel.DeepSeek) &&
 		newSetting.Provider != string(commonModel.Anthropic) &&
-		newSetting.Provider != string(commonModel.Gemini) &&
-		newSetting.Provider != string(commonModel.Qwen) &&
-		newSetting.Provider != string(commonModel.Ollama) &&
-		newSetting.Provider != string(commonModel.Custom) {
-		newSetting.Provider = string(commonModel.Custom) // 如果提供商不在列表中，默认为 Custom
+		newSetting.Provider != string(commonModel.Gemini) {
+		// 未识别的提供商一律按 OpenAI 兼容协议处理
+		newSetting.Provider = string(commonModel.OpenAI)
 	}
 
 	setting := &model.AgentSetting{

@@ -650,8 +650,7 @@
     "baseUrl": "Base URL",
     "baseUrlPlaceholder": "Eigene Base URL eingeben",
     "prompt": "Prompt",
-    "promptPlaceholder": "Eigenen Prompt eingeben",
-    "custom": "Benutzerdefiniert"
+    "promptPlaceholder": "Eigenen Prompt eingeben"
   },
   "webhookSetting": {
     "title": "Webhook",

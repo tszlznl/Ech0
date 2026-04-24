@@ -650,8 +650,7 @@
     "baseUrl": "Base URL",
     "baseUrlPlaceholder": "カスタム Base URL を入力",
     "prompt": "Prompt",
-    "promptPlaceholder": "カスタム Prompt を入力",
-    "custom": "カスタム"
+    "promptPlaceholder": "カスタム Prompt を入力"
   },
   "webhookSetting": {
     "title": "Webhook",

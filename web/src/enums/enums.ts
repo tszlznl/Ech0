@@ -65,13 +65,9 @@ export enum AccessTokenExpiration {
   NEVER_EXPIRY = 'never', // 永不过期
 }
 
-// Agent LLM Provider
+// Agent LLM Provider —— 仅按协议族区分；OPENAI 同时承担所有 OpenAI 兼容协议（DeepSeek、Qwen、Ollama 等）
 export enum AgentProvider {
   OPENAI = 'openai',
-  DEEPSEEK = 'deepseek',
   ANTHROPIC = 'anthropic',
   GEMINI = 'gemini',
-  QWEN = 'qwen',
-  OLLAMA = 'ollama',
-  CUSTOM = 'custom',
 }

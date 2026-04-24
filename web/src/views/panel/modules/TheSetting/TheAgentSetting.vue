@@ -144,12 +144,8 @@ const agentEditMode = ref<boolean>(false)
 
 const agentProviderOptions = ref<{ label: string; value: AgentProvider }[]>([
   { label: 'OpenAI', value: AgentProvider.OPENAI },
-  { label: 'DeepSeek', value: AgentProvider.DEEPSEEK },
   { label: 'Anthropic', value: AgentProvider.ANTHROPIC },
   { label: 'Gemini', value: AgentProvider.GEMINI },
-  { label: 'Qwen', value: AgentProvider.QWEN },
-  { label: 'Ollama', value: AgentProvider.OLLAMA },
-  { label: String(t('agentSetting.custom')), value: AgentProvider.CUSTOM },
 ])
 
 const handleUpdateAgentSetting = async () => {

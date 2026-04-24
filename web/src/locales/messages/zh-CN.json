@@ -650,8 +650,7 @@
     "baseUrl": "Base URL",
     "baseUrlPlaceholder": "输入自定义 Base URL",
     "prompt": "Prompt",
-    "promptPlaceholder": "输入自定义 Prompt",
-    "custom": "自定义"
+    "promptPlaceholder": "输入自定义 Prompt"
   },
   "webhookSetting": {
     "title": "Webhook",
