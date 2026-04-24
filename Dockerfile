@@ -8,7 +8,7 @@ ARG TARGETARCH
 
 RUN mkdir -p /app/data
 
-COPY backend-artifacts/ech0-${TARGETOS}-${TARGETARCH} /app/ech0
+COPY --chmod=0755 backend-artifacts/ech0-${TARGETOS}-${TARGETARCH} /app/ech0
 
 # =================== 最终镜像 ===================
 FROM alpine:latest
@@ -17,8 +17,6 @@ WORKDIR /app
 RUN apk add --no-cache tzdata
 
 COPY --from=builder /app /app
-
-RUN chmod +x /app/ech0
 
 EXPOSE 6277
 
