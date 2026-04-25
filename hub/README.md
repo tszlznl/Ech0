@@ -2,6 +2,19 @@
 
 Frontend for **[hub.ech0.app](https://hub.ech0.app)**: it loads a static **instance registry JSON**, fetches each Ech0 deployment’s posts API in parallel in the browser, and merges results into a **single unified timeline**.
 
+## How to join Ech0 Hub
+
+Want **your** public Ech0 instance to appear on [hub.ech0.app](https://hub.ech0.app)? Two steps:
+
+1. **Configure CORS on your instance.** Allow the Hub origin to call your instance API — set `Access-Control-Allow-Origin` (or the equivalent on your reverse proxy / CDN) to permit `https://hub.ech0.app`. If you also develop the Hub locally, additionally allow `http://localhost:5173`. If you cannot modify your instance, run a reverse proxy on the Hub domain so requests are same-origin.
+2. **Open the registration issue.** Submit via [**Register on Ech0 Hub**](https://github.com/lin-snow/Ech0/issues/new?template=register-hub-instance.yml) (GitHub sign-in required) and fill in:
+   - **Instance ID** — lowercase letters, digits, and hyphens only; globally unique within Hub.
+   - **Instance URL** — your deployment base URL, **no trailing slash** (e.g. `https://memo.example.com`).
+
+   Once submitted, CI parses the issue and opens a PR that updates [`public/hub.json`](./public/hub.json). After a maintainer merges, your instance shows up in the Hub timeline.
+
+> Requirements: your instance must be reachable over HTTPS, expose the standard Ech0 API, and run version **≥ 4.4.0** (Hub gates aggregation on the version returned by `/healthz`). Instances that fail the health check or are unreachable are dropped from the merged timeline with a visible reason.
+
 ## Architecture
 
 
@@ -13,10 +26,6 @@ Frontend for **[hub.ech0.app](https://hub.ech0.app)**: it loads a static **insta
 
 
 For a detailed task list as the implementation evolves, see the repo root: `docs/superpowers/plans/2026-04-05-ech0-hub-csr-spa-pwa.md`.
-
-## Listing your instance on Hub
-
-Submit via the **“Register on Ech0 Hub”** Issue form in this repository (GitHub sign-in required). The template applies the `hub` label; ensure a label with that name exists (**Settings → Labels**). After submission, Actions parse the issue and **open a PR** that updates `hub/public/hub.json`. It goes live after maintainers merge. Configure **CORS** on your instance to allow `https://hub.ech0.app`.
 
 ## Registration automation workflow
 

@@ -1,0 +1,430 @@
+<p align="left">
+  <a href="https://hellogithub.com/repository/lin-snow/Ech0" target="_blank">
+    <img src="https://api.hellogithub.com/v1/widgets/recommend.svg?rid=8f3cafdd6ef3445dbb1c0ed6dd34c8b5&claim_uid=swhbQfnJvKS0t7I&theme=neutral"
+         alt="Featured｜HelloGitHub"
+         width="250"
+         height="54" />
+  </a>
+</p>
+
+<p align="right">
+  <a title="en-US" href="./README.md">
+    <img src="https://img.shields.io/badge/-English-545759?style=for-the-badge" alt="English">
+  </a>
+  <a title="zh" href="./README.zh.md">
+    <img src="https://img.shields.io/badge/-简体中文-545759?style=for-the-badge" alt="简体中文">
+  </a>
+  <img src="https://img.shields.io/badge/-Deutsch-F54A00?style=for-the-badge" alt="Deutsch">
+  <a title="ja" href="./README.ja.md">
+    <img src="https://img.shields.io/badge/-日本語-545759?style=for-the-badge" alt="日本語">
+  </a>
+</p>
+
+
+<div align="center">
+  <img alt="Ech0" src="./docs/imgs/logo.svg" width="150">
+
+  [Vorschau](https://memo.vaaat.com/) | [Offizielle Seite & Dokumentation](https://www.ech0.app/) | [Releases](https://lin-snow.github.io/Ech0/) | [Ech0 Hub](https://hub.ech0.app/)
+
+  # Ech0
+</div>
+
+<div align="center">
+
+[![GitHub release](https://img.shields.io/github/v/release/lin-snow/Ech0)](https://github.com/lin-snow/Ech0/releases) ![License](https://img.shields.io/github/license/lin-snow/Ech0) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/lin-snow/Ech0) [![Hello Github](https://api.hellogithub.com/v1/widgets/recommend.svg?rid=8f3cafdd6ef3445dbb1c0ed6dd34c8b5&claim_uid=swhbQfnJvKS0t7I&theme=small)](https://hellogithub.com/repository/lin-snow/Ech0)
+
+</div>
+
+> Ein selbstgehosteter persönlicher Microblog, dessen Timeline geteilt, diskutiert und vollständig von dir kontrolliert werden kann.
+
+Tools wie Memos eignen sich hervorragend zum schnellen Festhalten von Gedanken. Ech0 ist für das gebaut, was danach kommt: diese Ideen auf einer persönlichen Timeline zu veröffentlichen, der andere folgen und mit der sie interagieren können.
+Hoste es auf deinem eigenen Server, behalte die volle Kontrolle über deine Inhalte und bewahre dir einen persönlichen Raum, der durch optionale Kommentare und Sharing trotzdem verbunden bleibt.
+Es bleibt dabei leichtgewichtig, einfach zu deployen und vollständig Open Source.
+
+**Gut geeignet, wenn du:**
+- eine persönliche öffentliche oder halböffentliche Timeline auf deiner eigenen Domain betreiben willst
+- kurze Beiträge, Links und Medien über eine schlanke Oberfläche veröffentlichen möchtest
+- Datenhoheit behalten und gleichzeitig RSS sowie optionale Kommentare nutzen willst
+- einen persönlichen Raum mit leichter sozialer Interaktion willst, ohne ein vollwertiges soziales Netzwerk zu betreiben
+
+**Eher nicht geeignet, wenn du brauchst:**
+- einen bidirektionalen Knowledge-Base-Workflow (z. B. Obsidian-artiges PKM)
+- einen Team-orientierten kollaborativen Docs-Workspace (z. B. Notion-artige Dokumente)
+- eine reine Privat-Memo-App ohne Veröffentlichungs- oder Timeline-Fokus
+
+![Oberflächen-Vorschau](./docs/imgs/screenshot.png)
+
+---
+
+<details>
+   <summary><strong>Inhaltsverzeichnis</strong></summary>
+
+- [In 60 Sekunden ausprobieren](#in-60-sekunden-ausprobieren)
+- [Vollständige Funktionsliste](#vollständige-funktionsliste)
+- [Schnelles Deployment](#schnelles-deployment)
+- [Aktualisierung](#aktualisierung)
+- [FAQ](#faq)
+- [Feedback & Community](#feedback--community)
+- [Open Source & Entwicklung](#open-source--entwicklung)
+- [Sponsoren & Danksagungen](#sponsoren--danksagungen)
+- [Star-Verlauf](#star-verlauf)
+
+</details>
+
+---
+
+## In 60 Sekunden ausprobieren
+
+```shell
+docker run -d \
+  --name ech0 \
+  -p 6277:6277 \
+  -v /opt/ech0/data:/app/data \
+  -e JWT_SECRET="Hello Echos" \
+  sn0wl1n/ech0:latest
+```
+
+Öffne anschließend `http://ip:6277`:
+
+1. Registriere deinen ersten Account.
+2. Der erste Account wird automatisch zum Owner (Admin-Rechte).
+3. Standardmäßig dürfen nur privilegierte Accounts veröffentlichen.
+
+Weitere Optionen wie Docker Compose und Helm findest du unter [Schnelles Deployment](#schnelles-deployment).
+
+## Vollständige Funktionsliste
+
+<details>
+<summary><strong>Klicken, um die vollständige Funktionsliste anzuzeigen</strong></summary>
+
+### Highlights
+
+- ☁️ **Leichtgewichtige, effiziente Architektur**: Geringer Ressourcenverbrauch und kompakte Images, geeignet von persönlichen Servern bis zu ARM-Geräten.
+- 🚀 **Schnelles Deployment**: Out-of-the-box-Docker-Deployment, von der Installation bis zum ersten Start mit einem einzigen Befehl.
+- 📦 **Eigenständige Distribution**: Vollständige Binaries und Container-Images ohne zusätzliche Laufzeitabhängigkeiten.
+- 💻 **Plattformübergreifend**: Unterstützt Linux, Windows und ARM-Geräte (z. B. Raspberry Pi).
+
+### Speicher & Daten
+
+- 🗂️ **VireFS Unified Storage Layer**: **VireFS** vereinheitlicht das Mounten und die Verwaltung von lokalem Speicher und S3-kompatiblem Object Storage.
+- ☁️ **S3-Object-Storage-Unterstützung**: Native Unterstützung für S3-kompatiblen Object Storage zur Erweiterung in die Cloud.
+- 📦 **Datensouveränität**: Inhalte und Metadaten bleiben in Nutzerhand und unter Nutzerkontrolle, inklusive RSS-Ausgabe.
+- 🔄 **Datenmigrations-Workflow**: Migrationsimport für historische Daten und Snapshot-Export für Migration und Archivierung.
+- 🔐 **Automatisiertes Backup-System**: Export/Backup über Web, CLI und TUI sowie automatische Hintergrund-Backups.
+
+### Schreiben & Inhalt
+
+- ✍️ **Markdown-Schreiberlebnis**: Auf **markdown-it** basierende Editor-/Rendering-Engine mit Plugin-Erweiterungen und Live-Vorschau.
+- 🧘 **Immersives Zen-Mode-Lesen**: Eine Timeline-Ansicht mit minimaler Ablenkung.
+- 🏷️ **Tag-Verwaltung**: Tag-Organisation, schnelles Filtern und präzise Suche.
+- 🃏 **Rich-Media-Karten**: Karten-Rendering für Website-Links, GitHub-Projekte und mehr.
+- 🎥 **Video-Parsing**: Eingebettete Wiedergabe für Bilibili- und YouTube-Videos.
+
+### Medien & Assets
+
+- 📁 **Visueller Datei-Manager**: Eingebaute Funktionen für Datei-Upload, Browsing und Asset-Verwaltung.
+
+### Soziales & Interaktion
+
+- 💬 **Eingebautes Kommentarsystem**: Kommentare und konfigurierbare Moderation.
+- 🃏 **Inhalts-Interaktion**: Soziale Interaktionen wie Likes und Sharing.
+
+### Authentifizierung & Sicherheit
+
+- 🔑 **OAuth2 / OIDC**: Anbindung an Drittanbieter-Logins über OAuth2 und OIDC.
+- 🙈 **Passkey ohne Passwort**: Anmeldung per Biometrie oder Hardware-Sicherheitsschlüssel.
+- 🔑 **Access-Token-Verwaltung**: Erzeugen und Widerrufen von scopebasierten Tokens für API-Aufrufe und Drittanbieter-Integrationen.
+- 👤 **Mehrbenutzer-Rechteverwaltung**: Mehrbenutzer-Kollaboration und Rechtekontrolle.
+
+### System & Entwicklung
+
+- 🧱 **Busen-Datenbus-Architektur**: Das hauseigene Busen sorgt für entkoppelte Modulkommunikation und zuverlässige Nachrichtenzustellung.
+- 📊 **Strukturiertes Logging**: System-Logs in einheitlichem strukturiertem Format für Lesbarkeit und Analyse.
+- 🖥️ **Echtzeit-Log-Konsole**: Eingebaute Web-Konsole für Live-Log-Streams, Debugging und Troubleshooting.
+- 📟 **TUI-Verwaltung**: Terminal-UI, ideal für die Verwaltung auf Servern.
+- 🧰 **CLI-Toolchain**: CLI-Tools für Automatisierung und Skript-Integration.
+- 🔗 **Open API & Webhook**: Vollständige API- und Webhook-Unterstützung für externe Integrationen und Automation.
+- 🤖 **MCP (Model Context Protocol)**: Eingebauter [MCP Server](./docs/usage/mcp-usage.md) deckt **nahezu vollständig** die Kernfunktionen für die KI-Schicht ab (Beiträge, Dateien, Statistiken usw.) — **Streamable HTTP**, **Tools & Resources**, **scoped JWT**.
+
+### Erlebnis
+
+- 🌍 **Geräteübergreifende Anpassung**: Responsive Design für Desktop, Tablet und mobile Browser.
+- 🌐 **i18n-Mehrsprachigkeit**: Mehrsprachige Oberfläche für unterschiedliche Einsatzszenarien.
+- 👾 **PWA-Unterstützung**: Als Web-App installierbar — fast wie eine native App.
+- 🌗 **Themes & Dark Mode**: Dark Mode und Theme-Erweiterungen.
+
+### Lizenz
+
+- 🎉 **Vollständig Open Source**: Veröffentlicht unter **AGPL-3.0**, ohne Tracking, ohne Abo, ohne SaaS-Abhängigkeit.
+
+</details>
+
+---
+
+## Schnelles Deployment
+
+<details>
+<summary><strong>🐳 Docker-Deployment (empfohlen)</strong></summary>
+
+```shell
+docker run -d \
+  --name ech0 \
+  -p 6277:6277 \
+  -v /opt/ech0/data:/app/data \
+  -e JWT_SECRET="Hello Echos" \
+  sn0wl1n/ech0:latest
+```
+
+> 💡 Nach dem Deployment erreichbar unter `ip:6277`
+> 🚷 Aus Sicherheitsgründen sollte `Hello Echos` in `-e JWT_SECRET="Hello Echos"` durch ein eigenes Secret ersetzt werden
+> 📍 Der erste registrierte Account wird zum Administrator (derzeit dürfen nur Admins veröffentlichen)
+> 🎈 Daten werden unter `/opt/ech0/data` gespeichert
+
+</details>
+
+<details>
+<summary><strong>🐋 Docker Compose</strong></summary>
+
+Lege ein neues Verzeichnis an und platziere deine `docker-compose.yml` darin.
+
+Führe in diesem Verzeichnis aus:
+
+```shell
+docker-compose up -d
+```
+
+</details>
+
+<details>
+<summary><strong>🧙 Skript-Deployment</strong></summary>
+
+```shell
+curl -fsSL "https://raw.githubusercontent.com/lin-snow/Ech0/main/scripts/ech0.sh" -o ech0.sh && bash ech0.sh
+```
+
+> Das Skript installiert und verwaltet Ech0 über systemd. Bei Bedarf bitte mit Root-Rechten ausführen.
+> Mit `bash ech0.sh install /your/path/ech0` lässt sich der Installationspfad anpassen.
+
+</details>
+
+<details>
+<summary><strong>☸️ Kubernetes (Helm)</strong></summary>
+
+Wenn du Ech0 in einem Kubernetes-Cluster bereitstellen möchtest, nutze das mitgelieferte Helm-Chart.
+
+Online-Helm-Repository verwenden:
+
+1.  **Ech0-Chart-Repository hinzufügen:**
+    ```shell
+    helm repo add ech0 https://lin-snow.github.io/Ech0
+    helm repo update
+    ```
+
+2.  **Mit Helm installieren:**
+    ```shell
+    # helm install <release-name> <repo-name>/<chart-name>
+    helm install ech0 ech0/ech0
+    ```
+
+    Release-Name und Namespace lassen sich anpassen:
+    ```shell
+    helm install my-ech0 ech0/ech0 --namespace my-namespace --create-namespace
+    ```
+
+Lokale Installation aus dem Quellcode:
+```shell
+git clone https://github.com/lin-snow/Ech0.git
+cd Ech0
+helm install ech0 ./charts/ech0
+```
+
+</details>
+
+---
+
+## Aktualisierung
+
+<details>
+<summary><strong>🔄 Docker</strong></summary>
+
+```shell
+# Aktuellen Container stoppen
+docker stop ech0
+
+# Container entfernen
+docker rm ech0
+
+# Neuestes Image holen
+docker pull sn0wl1n/ech0:latest
+
+# Neue Version starten
+docker run -d \
+  --name ech0 \
+  -p 6277:6277 \
+  -v /opt/ech0/data:/app/data \
+  -e JWT_SECRET="Hello Echos" \
+  sn0wl1n/ech0:latest
+```
+
+</details>
+
+<details>
+<summary><strong>💎 Docker Compose</strong></summary>
+
+```shell
+# In das Compose-Verzeichnis wechseln
+cd /path/to/compose
+
+# Neuestes Image holen und neu starten
+docker-compose pull && \
+docker-compose up -d --force-recreate
+
+# Alte Images aufräumen
+docker image prune -f
+```
+
+</details>
+
+<details>
+<summary><strong>☸️ Kubernetes (Helm)</strong></summary>
+
+1. **Helm-Repository-Index aktualisieren:**
+   ```shell
+   helm repo update
+   ```
+
+2. **Helm-Release upgraden:**
+   Verwende `helm upgrade`, um deine Release zu aktualisieren.
+   ```shell
+   # helm upgrade <release-name> <repo-name>/<chart-name>
+   helm upgrade ech0 ech0/ech0
+   ```
+   Bei eigenem Release-Namen und Namespace die entsprechenden Werte verwenden:
+   ```shell
+   helm upgrade my-ech0 ech0/ech0 --namespace my-namespace
+   ```
+
+</details>
+
+---
+
+## FAQ
+
+<details>
+<summary><strong>FAQ ausklappen</strong></summary>
+
+1. **Was ist Ech0?**
+   Ech0 ist eine leichtgewichtige Open-Source-Self-Hosting-Plattform zum schnellen Veröffentlichen und Teilen persönlicher Gedanken, Texte und Links. Sie bietet eine schlanke Oberfläche und ein ablenkungsfreies Erlebnis — und deine Daten bleiben in deiner Hand.
+
+2. **Was ist Ech0 nicht?**
+   Ech0 ist keine klassische professionelle Notiz-App (wie Obsidian oder Notion). Der Kern-Use-Case ähnelt eher einem Social-Feed bzw. Microblog-Stream.
+
+3. **Ist Ech0 kostenlos?**
+   Ja. Ech0 ist vollständig kostenlos und Open Source unter AGPL-3.0 — ohne Werbung, Tracking, Abo oder Service-Lock-in.
+
+4. **Wie sichere und importiere ich Daten?**
+   Ech0 unterstützt Datenwiederherstellung/-migration via „Snapshot-Export" und „Migrations-Import". Auf Deployment-Ebene sollte das gemappte Datenverzeichnis (z. B. `/opt/ech0/data`) regelmäßig gesichert werden. Standardmäßig liegen Kerndaten in der lokalen Datenbank; bei aktiviertem Object Storage werden Medien-Assets in das konfigurierte Backend geschrieben.
+
+5. **Unterstützt Ech0 RSS?**
+   Ja. Ech0 unterstützt RSS-Abonnements, sodass du Updates in RSS-Readern verfolgen kannst.
+
+6. **Warum schlägt das Veröffentlichen mit der Meldung „Administrator kontaktieren" fehl?**
+   Das Veröffentlichen ist standardmäßig auf privilegierte Accounts beschränkt. Bei der Initialisierung wird der erste Account zum Owner (mit Verwaltungsrechten). Reguläre Nutzer dürfen erst veröffentlichen, wenn ein privilegierter Account dies explizit erlaubt. Wenn das deine erste Einrichtung ist, prüfe unter [In 60 Sekunden ausprobieren](#in-60-sekunden-ausprobieren), welcher Account Owner ist.
+
+7. **Warum gibt es keine detaillierte Rechtematrix?**
+   Ech0 verwendet derzeit ein leichtgewichtiges Rollenmodell (Owner / Admin / regulärer Nutzer), um den Betrieb einfach und vorhersehbar zu halten. Das Rechtemodell wird auf Basis von Community-Feedback weiterentwickelt.
+
+8. **Warum sehen andere mein Connect-Avatar nicht?**
+   Setze die URL deiner aktuellen Instanz in `Systemeinstellungen — Service-URL`, z. B. `https://memo.vaaat.com` (mit `http://` oder `https://`).
+
+9. **Was ist die Option MetingAPI in den Einstellungen?**
+   Das ist der API-Endpunkt, den Music-Cards verwenden, um abspielbare Stream-Metadaten aufzulösen. Du kannst einen eigenen, vertrauenswürdigen Endpunkt angeben; bleibt das Feld leer, fällt Ech0 auf einen Standard-Resolver zurück. Für den produktiven Einsatz empfiehlt sich ein selbstgehosteter Endpunkt.
+
+10. **Warum zeigt eine neu hinzugefügte Connect nur Teilergebnisse?**
+    Das Backend versucht, Instanz-Informationen für alle Connect-Einträge abzurufen. Ist eine Instanz offline oder nicht erreichbar, wird sie verworfen — nur gültige/erreichbare Connect-Daten werden ans Frontend zurückgegeben.
+
+11. **Wie aktiviere ich Kommentare?**
+    Aktiviere Kommentare in der Kommentar-Verwaltung im Panel und konfiguriere bei Bedarf Moderation und Captcha. Ech0 enthält bereits `gocap` zur Captcha-Verifikation — ein eigener Captcha-Service ist nicht nötig.
+
+12. **Wie konfiguriere ich S3-Speicher?**
+    Trage in den Speichereinstellungen Provider, Endpoint, Bucket, Access Key, Secret Key und weitere Felder ein. Endpoint vorzugsweise ohne `http://` oder `https://`. Wenn Medien direkt vom Browser abgerufen werden, müssen die Objekte über die gewählte Policy lesbar sein (z. B. public-read oder ein gleichwertiges CDN-/Gateway-Setup).
+
+13. **Wie aktiviere ich Passkey-Login?**
+    Konfiguriere unter `SSO — Passkey` `WebAuthn RP ID` und `WebAuthn Origins`. Nach dem Speichern und der Anzeige „Passkey bereit" folgt man den Browser-Prompts, um Biometrie oder Sicherheitsschlüssel zu binden.
+
+14. **Offizielle Erklärung zu Drittanbieter-Integrationen**
+    Drittanbieter-Integrationsplattformen oder -Dienste, die nicht offiziell von Ech0 autorisiert sind, liegen außerhalb des offiziellen Supports. Sicherheitsvorfälle, Datenverluste, Account-Probleme oder andere Risiken durch deren Nutzung liegen in der Verantwortung des Nutzers und des Drittanbieters.
+
+15. **Wie poste ich Kommentare über eine Drittanbieter-Integration (KI / Automation)?**
+    Ech0 stellt einen dedizierten Integration-Endpunkt unter `POST /api/comments/integration` bereit, der Captcha- und Form-Token-Prüfung umgeht. Erstelle in der „Access Token"-Verwaltung ein Token mit Scope `comment:write` und Audience `integration` und sende es im Header `Authorization: Bearer <token>`. Request-Body und Antworten siehe OpenAPI-Doku deiner Instanz unter `/swagger/index.html` (lokal typischerweise `http://localhost:6277/swagger/index.html`). Dieser Endpunkt hat eigene Rate-Limits, und die Kommentare werden mit `source=integration` markiert, sodass sie im Admin-Panel erkennbar sind.
+
+16. **Wo finde ich detaillierte Doku zu Storage-Regeln (lokal vs. S3), Object-Keys und Migration?**
+    Siehe den [Storage-Migration-Guide](./docs/usage/storage-migration.md) im Repo. Er erklärt, wie flache `key`-Werte auf Pfade auf der Festplatte und S3-Objekt-Keys gemappt werden (inkl. `schema.Resolve` und `PathPrefix`), wie gespeicherte `File.url`-Snapshots zur UI passen, den Unterschied zwischen statischem `/api/files`-Zugriff und authentifizierten `stream`-Routen sowie praktische Hinweise zum Wechsel des S3-Anbieters und zur Migration zwischen lokalem Storage und Object Storage.
+
+</details>
+
+---
+
+## Feedback & Community
+
+- Bei Bugs bitte ein [Issue](https://github.com/lin-snow/Ech0/issues) öffnen.
+- Für Feature-Ideen oder Verbesserungen ist [Discussions](https://github.com/lin-snow/Ech0/discussions) der richtige Ort.
+- Offizielle QQ-Gruppe: `1065435773`
+
+### Ech0 Hub beitreten
+
+[Ech0 Hub](https://hub.ech0.app/) ist ein öffentliches Verzeichnis, das die Timelines gelisteter Ech0-Instanzen zusammenführt. Eine Schritt-für-Schritt-Anleitung zum Registrieren **deiner** öffentlichen Instanz findest du in [`hub/README.md`](./hub/README.md).
+
+| Offizielle QQ-Community                                          | Weitere Gruppen |
+| ---------------------------------------------------------------- | --------------- |
+| <img src="./docs/imgs/qq.png" alt="QQ-Gruppe" style="height:250px;"> | —               |
+
+---
+
+## Open Source & Entwicklung
+
+**Governance**
+
+- [Beitragsleitfaden](./CONTRIBUTING.md)
+- [Verhaltenskodex](./CODE_OF_CONDUCT.md)
+- [Sicherheitsrichtlinie](./SECURITY.md)
+- [Lizenz](./LICENSE)
+
+**Entwicklung**
+
+Das lokale Setup, Umgebungsanforderungen und das Front-/Backend-Zusammenspiel sind in **[docs/dev/development.md](./docs/dev/development.md)** dokumentiert. Architektur und Konventionen findest du in [`CLAUDE.md`](./CLAUDE.md) und [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+
+---
+
+## Sponsoren & Danksagungen
+
+Ein großes Dankeschön an alle, die dieses Projekt unterstützt haben — Sponsoren, Beitragende und Nutzer. Die vollständige Sponsorenliste und Spendenkanäle findest du in **[SPONSOR.md](./SPONSOR.md)**.
+
+[![Contributors](https://contrib.rocks/image?repo=lin-snow/Ech0)](https://contrib.rocks/image?repo=lin-snow/Ech0)
+
+![Repobeats analytics image](https://repobeats.axiom.co/api/embed/d69b9177e4a121e31aaed95354ff862c928ca22d.svg "Repobeats analytics image")
+
+---
+
+## Star-Verlauf
+
+<a href="https://www.star-history.com/#lin-snow/Ech0&Timeline">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=lin-snow/Ech0&type=Timeline&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=lin-snow/Ech0&type=Timeline" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=lin-snow/Ech0&type=Timeline" />
+ </picture>
+</a>
+
+---
+
+```cpp
+
+███████╗     ██████╗    ██╗  ██╗     ██████╗
+██╔════╝    ██╔════╝    ██║  ██║    ██╔═████╗
+█████╗      ██║         ███████║    ██║██╔██║
+██╔══╝      ██║         ██╔══██║    ████╔╝██║
+███████╗    ╚██████╗    ██║  ██║    ╚██████╔╝
+╚══════╝     ╚═════╝    ╚═╝  ╚═╝     ╚═════╝
+
+```
