@@ -143,6 +143,20 @@ const restoreTimelineScrollPosition = () => {
   mainColumn.value.scrollTop = scrollTop
 }
 
+// 空闲时预热 EchoView chunk，避免首次点击时间线日期才下载导致的可感知卡顿
+const prefetchEchoView = () => {
+  const trigger = () => {
+    import('@/views/echo/EchoView.vue').catch(() => {})
+  }
+  const ric = (window as Window & { requestIdleCallback?: typeof requestIdleCallback })
+    .requestIdleCallback
+  if (typeof ric === 'function') {
+    ric(trigger, { timeout: 2000 })
+  } else {
+    window.setTimeout(trigger, 1500)
+  }
+}
+
 onMounted(async () => {
   if (mainColumn.value) {
     mainColumn.value.scrollLeft = 0
@@ -152,6 +166,7 @@ onMounted(async () => {
     restoreTimelineScrollPosition()
   })
   window.addEventListener('keydown', handleGlobalKeydown)
+  prefetchEchoView()
 })
 
 onBeforeUnmount(() => {

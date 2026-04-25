@@ -7,6 +7,7 @@ import { Toaster } from 'vue-sonner'
 import { resolveAvatarUrl } from './service/request/shared'
 import 'vue-sonner/style.css'
 import BaseDialog from './components/common/BaseDialog.vue'
+import TheRouteProgress from './components/common/TheRouteProgress.vue'
 
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useBfCacheRestore } from '@/composables/useBfCacheRestore'
@@ -199,6 +200,8 @@ onMounted(() => {
     />
   </div>
   <div class="app-stack">
+    <!-- 路由顶部进度条 - 慢网络下给点击立即视觉反馈 -->
+    <TheRouteProgress />
     <!-- 路由视图 - 带切换动画 -->
     <RouterView v-slot="{ Component }">
       <Transition :name="transitionName" mode="out-in">
