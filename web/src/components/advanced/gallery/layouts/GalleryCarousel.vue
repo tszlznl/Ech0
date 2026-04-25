@@ -11,7 +11,12 @@
         button-class="carousel-slide w-full overflow-hidden"
         frame-class="w-full"
         img-class="w-full h-auto"
-        :frame-style="getAspectRatioStyle(images[carouselIndex]!)"
+        :frame-style="
+          getAspectRatioStyle(
+            images[carouselIndex]!,
+            isLoaded(images[carouselIndex]!, carouselIndex),
+          )
+        "
         @click="open(carouselIndex, $event)"
         @load="markLoaded(images[carouselIndex]!, carouselIndex)"
         @error="markLoaded(images[carouselIndex]!, carouselIndex)"

@@ -13,7 +13,7 @@
       :alt="getAlt(idx)"
       :loaded="isLoaded(image, idx)"
       :button-class="getColSpan(idx, images.length)"
-      :frame-style="getAspectRatioStyle(image)"
+      :frame-style="getAspectRatioStyle(image, isLoaded(image, idx))"
       img-class="block max-w-full h-auto"
       @click="open(idx, $event)"
       @load="markLoaded(image, idx)"

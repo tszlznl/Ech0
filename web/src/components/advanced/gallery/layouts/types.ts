@@ -14,16 +14,25 @@ export type GalleryWithImageKeyProps = GalleryImageHelperProps & {
 }
 
 export type GalleryWithAspectRatioProps = GalleryImageHelperProps & {
-  getAspectRatioStyle: (image: App.Api.Ech0.FileObject) => Record<string, string> | undefined
+  getAspectRatioStyle: (
+    image: App.Api.Ech0.FileObject,
+    loaded: boolean,
+  ) => Record<string, string> | undefined
 }
 
 export type GalleryHorizontalProps = GalleryWithImageKeyProps & {
   scrollHintText: string
-  getHorizontalAspectStyle: (image: App.Api.Ech0.FileObject) => Record<string, string> | undefined
+  getHorizontalAspectStyle: (
+    image: App.Api.Ech0.FileObject,
+    loaded: boolean,
+  ) => Record<string, string> | undefined
 }
 
 export type GalleryStackProps = GalleryWithImageKeyProps
 
 export type GalleryWaterfallProps = GalleryWithImageKeyProps & {
-  getAspectRatioStyle: (image: App.Api.Ech0.FileObject) => Record<string, string> | undefined
+  getAspectRatioStyle: (
+    image: App.Api.Ech0.FileObject,
+    loaded: boolean,
+  ) => Record<string, string> | undefined
 }

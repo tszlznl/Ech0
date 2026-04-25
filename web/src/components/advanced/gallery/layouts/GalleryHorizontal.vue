@@ -12,7 +12,7 @@
           button-class="horizontal-item rounded-lg shrink-0"
           frame-class="h-full"
           img-class="h-full w-auto object-contain"
-          :frame-style="getHorizontalAspectStyle(image)"
+          :frame-style="getHorizontalAspectStyle(image, isLoaded(image, idx))"
           @click="open(idx, $event)"
           @load="markLoaded(image, idx)"
           @error="markLoaded(image, idx)"
