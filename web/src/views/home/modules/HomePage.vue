@@ -143,10 +143,13 @@ const restoreTimelineScrollPosition = () => {
   mainColumn.value.scrollTop = scrollTop
 }
 
-// 空闲时预热 EchoView chunk，避免首次点击时间线日期才下载导致的可感知卡顿
-const prefetchEchoView = () => {
+// 空闲时预热下游 chunk：
+//   - EchoView：点击日期跳详情前提前下好
+//   - markdown core：避免慢网下首屏 echo 卡片显示原文 fallback 的过渡时长
+const prefetchHeavyChunks = () => {
   const trigger = () => {
     import('@/views/echo/EchoView.vue').catch(() => {})
+    import('@/editor/core/markdown').catch(() => {})
   }
   const ric = (window as Window & { requestIdleCallback?: typeof requestIdleCallback })
     .requestIdleCallback
@@ -166,7 +169,7 @@ onMounted(async () => {
     restoreTimelineScrollPosition()
   })
   window.addEventListener('keydown', handleGlobalKeydown)
-  prefetchEchoView()
+  prefetchHeavyChunks()
 })
 
 onBeforeUnmount(() => {

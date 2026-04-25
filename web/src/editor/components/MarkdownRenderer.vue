@@ -1,10 +1,10 @@
 <template>
   <div ref="rootRef" class="echo-markdown">
-    <div
-      v-if="!rendererReady && props.content"
-      class="markdown-renderer-placeholder"
-      aria-hidden="true"
-    ></div>
+    <!-- markdown chunk 还没到时直接显示原文，比一个会呼吸的灰条更有信息量；
+         chunk 到达后会无缝切换到渲染后的 HTML -->
+    <div v-if="!rendererReady && props.content" class="markdown-renderer-fallback">
+      {{ props.content }}
+    </div>
     <div v-else v-html="html"></div>
   </div>
 </template>
@@ -141,40 +141,10 @@ watch(
 </script>
 
 <style scoped>
-.markdown-renderer-placeholder {
-  min-height: 2.75rem;
-  border-radius: 0.5rem;
-  background:
-    linear-gradient(
-      90deg,
-      rgb(140 140 140 / 8%) 25%,
-      rgb(140 140 140 / 18%) 37%,
-      rgb(140 140 140 / 8%) 63%
-    ),
-    linear-gradient(180deg, rgb(120 120 120 / 5%), rgb(120 120 120 / 8%));
-  background-size:
-    240% 100%,
-    100% 100%;
-  animation: markdown-placeholder-wave 1.6s ease-in-out infinite;
-}
-
-@keyframes markdown-placeholder-wave {
-  0% {
-    background-position:
-      100% 0,
-      0 0;
-  }
-
-  100% {
-    background-position:
-      -100% 0,
-      0 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .markdown-renderer-placeholder {
-    animation: none;
-  }
+.markdown-renderer-fallback {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  color: inherit;
 }
 </style>
