@@ -1,27 +1,75 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import HubActiveCreators from '../components/HubActiveCreators.vue'
 import HubHomeFoliageCanvas from '../components/HubHomeFoliageCanvas.vue'
-import { fetchInstancesConnectBundle, type InstanceConnectSummary } from '../services/connectApi'
+import HubToast from '../components/HubToast.vue'
+import { fetchInstanceConnect, type InstanceConnectSummary } from '../services/connectApi'
+import { fetchHealthz, meetsHubMinVersion } from '../services/healthz'
 import { loadHubConfig } from '../services/loadHubConfig'
-import { probeInstances } from '../services/probeInstances'
+import type { HubInstance } from '../types/hub'
 import { getHubSubmitIssueUrl } from '../utils/hubLinks'
+import { normalizeHubInstanceUrl } from '../utils/hubUrl'
+import { HUB_FAN_OUT_LIMIT, pMapLimit } from '../utils/pMapLimit'
 import '../styles/hub-shell.css'
 
 const connectSummaries = ref<InstanceConnectSummary[]>([])
+const toastMessage = ref<string | null>(null)
+
+const abortCtrl = new AbortController()
+
+/**
+ * 把 probe + connect 融合成单实例任务，方便用 pMapLimit 流式 settle —
+ * 每个实例就绪后立刻冒泡到 Active creators，而不是等所有实例都返回。
+ */
+async function loadInstanceSummary(
+  inst: HubInstance,
+  signal: AbortSignal,
+): Promise<InstanceConnectSummary | null> {
+  const h = await fetchHealthz(inst.url, signal)
+  if (!h.ok || !meetsHubMinVersion(h.version)) return null
+  const data = await fetchInstanceConnect(inst.url, signal)
+  if (!data) return null
+  return {
+    urlKey: normalizeHubInstanceUrl(inst.url),
+    id: inst.id,
+    serverName: data.server_name?.trim() || inst.id,
+    username: data.sys_username?.trim() ?? '',
+    rawLogo: data.logo?.trim() ?? '',
+    todayEchos: typeof data.today_echos === 'number' ? data.today_echos : 0,
+  }
+}
 
 onMounted(async () => {
   try {
-    const instances = await loadHubConfig()
+    const instances = await loadHubConfig(abortCtrl.signal)
     if (instances.length === 0) return
-    const probed = await probeInstances(instances)
-    if (probed.eligible.length === 0) return
-    const { summaries } = await fetchInstancesConnectBundle(probed.eligible)
-    connectSummaries.value = summaries
+
+    await pMapLimit(
+      instances,
+      HUB_FAN_OUT_LIMIT,
+      (inst) => loadInstanceSummary(inst, abortCtrl.signal),
+      {
+        onSettled: (r) => {
+          if (r.status !== 'fulfilled' || !r.value) return
+          connectSummaries.value = [...connectSummaries.value, r.value].sort((a, b) =>
+            a.serverName.localeCompare(b.serverName, 'en'),
+          )
+        },
+      },
+    )
+
+    const n = connectSummaries.value.length
+    if (n > 0) {
+      toastMessage.value = `Loaded ${n} instance${n === 1 ? '' : 's'}`
+    }
   } catch {
     /* home: omit noisy errors; explore shows full diagnostics */
   }
+})
+
+onBeforeUnmount(() => {
+  abortCtrl.abort()
 })
 </script>
 
@@ -67,5 +115,6 @@ onMounted(async () => {
 
       <HubActiveCreators v-if="connectSummaries.length > 0" :summaries="connectSummaries" />
     </main>
+    <HubToast :message="toastMessage" />
   </div>
 </template>

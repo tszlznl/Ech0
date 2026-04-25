@@ -9,7 +9,7 @@
         :aria-label="t('commandPalette.title')"
         @mousedown.self="close"
       >
-        <div class="palette__panel" role="document">
+        <div class="palette__panel" role="document" @keydown="onPanelKeydown">
           <div class="palette__search-row">
             <Search class="palette__search-icon" />
             <input
@@ -19,7 +19,6 @@
               class="palette__search-input"
               :placeholder="t('commandPalette.placeholder')"
               :aria-label="t('commandPalette.keywordLabel')"
-              @keydown.enter="handleApply"
             />
             <span
               v-if="activeFilterCount > 0"
@@ -58,6 +57,7 @@
                   type="button"
                   class="palette__pill"
                   :class="{ 'palette__pill--active': activePreset === preset.key }"
+                  @mousedown.prevent
                   @click="applyPreset(preset.key)"
                 >
                   {{ preset.label }}
@@ -66,24 +66,68 @@
               <div class="palette__date-row">
                 <label class="palette__date-field">
                   <span class="palette__date-label">{{ t('commandPalette.dateFromLabel') }}</span>
-                  <input
-                    type="date"
-                    class="palette__date-input"
-                    :value="draftFromStr"
-                    :max="draftToStr || undefined"
-                    @input="onFromInput(($event.target as HTMLInputElement).value)"
-                  />
+                  <span
+                    class="palette__date-control"
+                    :class="{ 'palette__date-control--empty': !draftFromStr }"
+                  >
+                    <svg
+                      class="palette__date-icon"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fill="currentColor"
+                        d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2m0 16H5V10h14zm0-12H5V6h14z"
+                      />
+                    </svg>
+                    <input
+                      type="date"
+                      class="palette__date-input"
+                      :value="draftFromStr"
+                      :max="draftToStr || undefined"
+                      @input="onFromInput(($event.target as HTMLInputElement).value)"
+                    />
+                  </span>
                 </label>
-                <span class="palette__date-sep">{{ t('commandPalette.rangeSeparator') }}</span>
+                <svg
+                  class="palette__date-arrow"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 12h14m0 0l-6-6m6 6l-6 6" />
+                </svg>
                 <label class="palette__date-field">
                   <span class="palette__date-label">{{ t('commandPalette.dateToLabel') }}</span>
-                  <input
-                    type="date"
-                    class="palette__date-input"
-                    :value="draftToStr"
-                    :min="draftFromStr || undefined"
-                    @input="onToInput(($event.target as HTMLInputElement).value)"
-                  />
+                  <span
+                    class="palette__date-control"
+                    :class="{ 'palette__date-control--empty': !draftToStr }"
+                  >
+                    <svg
+                      class="palette__date-icon"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fill="currentColor"
+                        d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2m0 16H5V10h14zm0-12H5V6h14z"
+                      />
+                    </svg>
+                    <input
+                      type="date"
+                      class="palette__date-input"
+                      :value="draftToStr"
+                      :min="draftFromStr || undefined"
+                      @input="onToInput(($event.target as HTMLInputElement).value)"
+                    />
+                  </span>
                 </label>
               </div>
             </section>
@@ -113,6 +157,7 @@
                   type="button"
                   class="palette__pill palette__pill--tag"
                   :class="{ 'palette__pill--active': draftTagIds.includes(tag.id) }"
+                  @mousedown.prevent
                   @click="toggleTag(tag.id)"
                 >
                   <span class="palette__tag-hash">#</span>{{ tag.name }}
@@ -121,6 +166,7 @@
                   v-if="tagList.length > visibleTagLimit"
                   type="button"
                   class="palette__more"
+                  @mousedown.prevent
                   @click="showAllTags = !showAllTags"
                 >
                   {{
@@ -406,6 +452,16 @@ const handleReset = () => {
   draftTagIds.value = []
 }
 
+// Panel-level Enter handler so the keyword input doesn't have to be focused
+// to apply. Buttons keep their native Enter behavior — Enter on a focused
+// button still activates that button instead of submitting.
+const onPanelKeydown = (e: KeyboardEvent) => {
+  if (e.key !== 'Enter' || e.isComposing) return
+  if (e.target instanceof HTMLButtonElement) return
+  e.preventDefault()
+  handleApply()
+}
+
 watch(
   () => props.modelValue,
   (open) => {
@@ -672,37 +728,81 @@ watch(
 .palette__date-row {
   display: flex;
   align-items: flex-end;
-  gap: 0.45rem;
+  gap: 0.4rem;
   flex-wrap: wrap;
 }
 
 .palette__date-field {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  flex: 1 1 8rem;
+  gap: 0.25rem;
+  flex: 1 1 9rem;
   min-width: 0;
 }
 
 .palette__date-label {
-  font-size: 0.68rem;
+  font-size: 0.66rem;
+  font-weight: 500;
   color: var(--color-text-muted);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding-left: 0.1rem;
 }
 
-.palette__date-input {
-  appearance: none;
-  padding: 0.38rem 0.55rem;
-  font-size: 0.82rem;
-  font-family: inherit;
-  color: var(--color-text-primary);
+.palette__date-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.55rem;
   background: var(--color-bg-muted, transparent);
   border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
-  outline: none;
+  cursor: text;
   transition:
     border-color 0.15s ease,
-    background 0.15s ease;
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.palette__date-control:hover {
+  border-color: var(--color-border-strong);
+}
+
+.palette__date-control:focus-within {
+  border-color: var(--color-accent, #e07020);
+  background: var(--color-bg-surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent, #e07020) 14%, transparent);
+}
+
+.palette__date-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.palette__date-control:focus-within .palette__date-icon {
+  color: var(--color-accent, #e07020);
+}
+
+.palette__date-control--empty .palette__date-icon {
+  opacity: 0.7;
+}
+
+.palette__date-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  appearance: none;
+  padding: 0;
+  font-size: 0.82rem;
+  font-family: var(--font-family-mono, inherit);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  color: var(--color-text-primary);
+  background: transparent;
+  border: 0;
+  outline: none;
 }
 
 /* iOS Safari: appearance:none 会让 ::-webkit-date-and-time-value 塌陷，
@@ -712,19 +812,25 @@ watch(
   min-height: 1.2em;
 }
 
-.palette__date-input:hover {
-  border-color: var(--color-border-strong);
+/* The native indicator stays useful (click-to-open native picker) but
+   blends into the row; on hover it tints to accent for affordance. */
+.palette__date-input::-webkit-calendar-picker-indicator {
+  opacity: 0.55;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
 }
 
-.palette__date-input:focus {
-  border-color: var(--color-accent, #e07020);
-  background: var(--color-bg-surface);
+.palette__date-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
-.palette__date-sep {
-  font-size: 0.75rem;
+.palette__date-arrow {
+  width: 1rem;
+  height: 1rem;
+  margin-bottom: 0.6rem;
   color: var(--color-text-muted);
-  padding-bottom: 0.45rem;
+  flex-shrink: 0;
+  opacity: 0.7;
 }
 
 .palette__footer {

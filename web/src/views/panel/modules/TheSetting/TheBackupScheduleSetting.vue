@@ -48,17 +48,18 @@
           {{ t('backupScheduleSetting.crontab') }}
         </h2>
         <div class="schedule-row__control">
-          <span
-            v-if="!scheduleEditMode"
-            class="block w-full min-w-0 truncate"
-            v-tooltip="BackupSchedule.cron_expression"
-          >
-            {{
-              BackupSchedule.cron_expression.length === 0
-                ? t('commonUi.none')
-                : BackupSchedule.cron_expression
-            }}
-          </span>
+          <div v-if="!scheduleEditMode" class="schedule-display">
+            <p class="schedule-display__text">
+              {{ BackupSchedule.cron_expression.length === 0 ? t('commonUi.none') : humanizedCron }}
+            </p>
+            <code
+              v-if="BackupSchedule.cron_expression.length > 0"
+              class="schedule-display__code"
+              v-tooltip="BackupSchedule.cron_expression"
+            >
+              {{ BackupSchedule.cron_expression }}
+            </code>
+          </div>
           <CronScheduleEditor v-else v-model="BackupSchedule.cron_expression" />
         </div>
       </div>
@@ -74,6 +75,7 @@ import BaseButton from '@/components/common/BaseButton.vue'
 import CronScheduleEditor from './components/CronScheduleEditor.vue'
 import { computed, ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { humanizeCron } from '@/utils/cron'
 import { fetchUpdateBackupScheduleSetting } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useSettingStore } from '@/stores'
@@ -88,6 +90,7 @@ const scheduleEditMode = ref<boolean>(false)
 const isSnapshotCreating = computed(
   () => snapshotStatus.value === 'pending' || snapshotStatus.value === 'running',
 )
+const humanizedCron = computed(() => humanizeCron(BackupSchedule.value.cron_expression, t))
 
 const handleUpdateBackupSchedule = async () => {
   const res = await fetchUpdateBackupScheduleSetting(BackupSchedule.value)
@@ -165,6 +168,37 @@ onMounted(async () => {
 .schedule-row__control {
   flex: 1;
   min-width: 0;
+}
+
+.schedule-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.schedule-display__text {
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.schedule-display__code {
+  display: inline-block;
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 0.1rem 0.5rem;
+  font-family: var(--font-family-mono);
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  background: var(--color-bg-muted);
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media (width < 640px) {

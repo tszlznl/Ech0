@@ -25,6 +25,7 @@ export async function loadHubConfig(signal?: AbortSignal): Promise<HubInstance[]
   }
 
   const out: HubInstance[] = []
+  const seen = new Set<string>()
   for (const row of (raw as HubConfig).instances) {
     if (typeof row !== 'object' || row === null) continue
     const id = 'id' in row ? (row as { id: unknown }).id : undefined
@@ -33,7 +34,10 @@ export async function loadHubConfig(signal?: AbortSignal): Promise<HubInstance[]
     try {
       const parsed = new URL(url.trim())
       if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') continue
-      out.push({ id: id.trim(), url: stripTrailingSlash(url.trim()) })
+      const normalized = stripTrailingSlash(url.trim())
+      if (seen.has(normalized)) continue
+      seen.add(normalized)
+      out.push({ id: id.trim(), url: normalized })
     } catch {
       continue
     }

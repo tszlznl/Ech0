@@ -1,5 +1,6 @@
 import { fetchHealthz, meetsHubMinVersion, getMinSupportedVersion } from './healthz'
 import type { HubInstance } from '../types/hub'
+import { HUB_FAN_OUT_LIMIT, pMapLimit } from '../utils/pMapLimit'
 
 export interface ProbeFailure {
   instance: HubInstance
@@ -11,8 +12,12 @@ export interface ProbeResult {
   probeFailures: ProbeFailure[]
 }
 
+type ProbeOutcome =
+  | { kind: 'ok'; instance: HubInstance }
+  | { kind: 'fail'; instance: HubInstance; reason: string }
+
 /**
- * 并行探活：必须 healthz 成功且 version ≥ 4.4.0 才参与聚合。
+ * 受限并发探活：必须 healthz 成功且 version ≥ 4.4.0 才参与聚合。
  */
 export async function probeInstances(
   instances: HubInstance[],
@@ -21,21 +26,23 @@ export async function probeInstances(
   const probeFailures: ProbeFailure[] = []
   const eligible: HubInstance[] = []
 
-  const settled = await Promise.allSettled(
-    instances.map(async (inst) => {
+  const settled = await pMapLimit<HubInstance, ProbeOutcome>(
+    instances,
+    HUB_FAN_OUT_LIMIT,
+    async (inst) => {
       const h = await fetchHealthz(inst.url, signal)
       if (!h.ok) {
-        return { kind: 'fail' as const, instance: inst, reason: h.message }
+        return { kind: 'fail', instance: inst, reason: h.message }
       }
       if (!meetsHubMinVersion(h.version)) {
         return {
-          kind: 'fail' as const,
+          kind: 'fail',
           instance: inst,
           reason: `Version ${h.version} is below the Hub minimum (${getMinSupportedVersion()})`,
         }
       }
-      return { kind: 'ok' as const, instance: inst }
-    }),
+      return { kind: 'ok', instance: inst }
+    },
   )
 
   for (let i = 0; i < settled.length; i++) {

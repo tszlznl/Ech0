@@ -6,6 +6,7 @@ import TheLoadingIndicator from '@/components/common/TheLoadingIndicator.vue'
 import { RouterLink } from 'vue-router'
 import TheBackTop from '@/components/advanced/TheBackTop.vue'
 import HubEchoCard from '../components/HubEchoCard.vue'
+import HubToast from '../components/HubToast.vue'
 import { useHubMergeFeed } from '../composables/useHubMergeFeed'
 import { loadHubConfig } from '../services/loadHubConfig'
 import { probeInstances } from '../services/probeInstances'
@@ -43,6 +44,7 @@ const {
 } = useHubMergeFeed()
 
 const feedError = ref<string | null>(null)
+const toastMessage = ref<string | null>(null)
 
 const exploreLayout = ref<'list' | 'masonry'>(readExploreLayout())
 
@@ -137,6 +139,11 @@ onMounted(async () => {
     setInstanceLogos(logos)
     await prepareInstances(eligibleInstances.value)
     await loadEchoListPage()
+
+    const n = eligibleInstances.value.length
+    if (n > 0) {
+      toastMessage.value = `Loaded ${n} instance${n === 1 ? '' : 's'}`
+    }
   } catch (e) {
     feedError.value = e instanceof Error ? e.message : String(e)
   }
@@ -355,6 +362,7 @@ onBeforeUnmount(() => {
     >
       <TheBackTop class="w-8 h-8 p-1" />
     </div>
+    <HubToast :message="toastMessage" />
   </div>
 </template>
 

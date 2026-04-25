@@ -853,7 +853,11 @@
     "weekdaySat": "Samstag",
     "dayN": "Tag {n}",
     "everyNHours": "Alle {n} Std.",
-    "preview": "Crontab"
+    "humanDaily": "Läuft täglich um {time}",
+    "humanWeekly": "Läuft jeden {weekday} um {time}",
+    "humanMonthly": "Läuft am {day}. jedes Monats um {time}",
+    "humanHourly": "Läuft alle {n} Stunde(n)",
+    "humanCustom": "Läuft nach benutzerdefiniertem Zeitplan"
   },
   "backupScheduleSetting": {
     "title": "Snapshot-Einstellungen",

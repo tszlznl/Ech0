@@ -1,20 +1,14 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import BaseAvatar from '@/components/common/BaseAvatar.vue'
 import { resolveHubInstanceLogo } from '../utils/resolveHubLogoUrl'
 import type { InstanceConnectSummary } from '../services/connectApi'
 
-const props = withDefaults(
-  defineProps<{
-    summaries: InstanceConnectSummary[]
-    max?: number
-  }>(),
-  { max: 7 },
-)
+const props = defineProps<{
+  summaries: InstanceConnectSummary[]
+}>()
 
 const failed = ref<Record<string, boolean>>({})
-
-const items = computed(() => props.summaries.slice(0, props.max))
 
 watch(
   () => props.summaries,
@@ -43,13 +37,13 @@ function dotColor(todayEchos: number): string {
 </script>
 
 <template>
-  <section v-if="items.length > 0" class="mt-12 pt-2">
+  <section v-if="props.summaries.length > 0" class="mt-12 pt-2">
     <p class="mb-4 text-center text-[0.625rem] font-medium uppercase tracking-widest text-[var(--color-text-muted)]">
       Active creators
     </p>
     <div class="mx-auto flex max-w-4xl flex-wrap justify-center gap-x-5 gap-y-4">
       <a
-        v-for="s in items"
+        v-for="s in props.summaries"
         :key="s.urlKey"
         :href="s.urlKey"
         target="_blank"

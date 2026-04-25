@@ -853,7 +853,11 @@
     "weekdaySat": "Saturday",
     "dayN": "Day {n}",
     "everyNHours": "Every {n} hour(s)",
-    "preview": "Crontab"
+    "humanDaily": "Runs every day at {time}",
+    "humanWeekly": "Runs every {weekday} at {time}",
+    "humanMonthly": "Runs on day {day} of every month at {time}",
+    "humanHourly": "Runs every {n} hour(s)",
+    "humanCustom": "Runs on a custom schedule"
   },
   "backupScheduleSetting": {
     "title": "Snapshot Settings",

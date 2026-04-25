@@ -863,7 +863,11 @@
     "weekdaySat": "周六",
     "dayN": "{n} 日",
     "everyNHours": "每 {n} 小时",
-    "preview": "Crontab"
+    "humanDaily": "每天 {time} 执行",
+    "humanWeekly": "每{weekday} {time} 执行",
+    "humanMonthly": "每月 {day} 日 {time} 执行",
+    "humanHourly": "每 {n} 小时执行一次",
+    "humanCustom": "按自定义计划执行"
   },
   "uppy": {
     "dashboardNote": "支持粘贴或选择图片上传哦！",

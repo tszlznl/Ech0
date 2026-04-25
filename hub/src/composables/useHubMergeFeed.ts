@@ -8,6 +8,7 @@ import type { HubInstance } from '../types/hub'
 import type { EchoPost } from '../types/echo'
 import { queryInstancePage } from '../services/echoApi'
 import { normalizeHubInstanceUrl } from '../utils/hubUrl'
+import { HUB_FAN_OUT_LIMIT, pMapLimit } from '../utils/pMapLimit'
 import { resolveHubInstanceLogo } from '../utils/resolveHubLogoUrl'
 import { timeValueToMs } from '../utils/timeValue'
 
@@ -143,7 +144,11 @@ export function useHubMergeFeed() {
       })
     }
 
-    await Promise.all([...hubStates.value.keys()].map((url) => fetchHubPage(url, signal)))
+    await pMapLimit(
+      [...hubStates.value.keys()],
+      HUB_FAN_OUT_LIMIT,
+      (url) => fetchHubPage(url, signal),
+    )
     isPreparing.value = false
   }
 
@@ -187,7 +192,11 @@ export function useHubMergeFeed() {
 
           if (emptyHubsWithMore.length === 0) break
 
-          await Promise.all(emptyHubsWithMore.map((s) => fetchHubPage(s.url, signal)))
+          await pMapLimit(
+            emptyHubsWithMore,
+            HUB_FAN_OUT_LIMIT,
+            (s) => fetchHubPage(s.url, signal),
+          )
           continue
         }
 

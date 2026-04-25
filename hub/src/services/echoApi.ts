@@ -1,5 +1,9 @@
 import type { ApiResult, EchoPost, EchoQueryPage } from '../types/echo'
+import { timeoutSignal } from '../utils/fetchTimeout'
 import { timeValueToUnixSeconds } from '../utils/timeValue'
+
+/** 单页查询会带 10 条带媒体的 echo，给 8s 上限避免拖累归并节奏。 */
+const ECHO_QUERY_TIMEOUT_MS = 8000
 
 /** 远端可能返回新版 Unix 或旧版 ISO 文本；Hub 侧统一为 Unix 秒（number）。 */
 function normalizeEchoPostTimes(item: EchoPost): EchoPost {
@@ -52,7 +56,7 @@ export async function queryInstancePage(
       sortOrder: merged.sortOrder,
     }),
     credentials: 'omit',
-    signal,
+    signal: timeoutSignal(signal, ECHO_QUERY_TIMEOUT_MS),
   })
 
   if (!res.ok) {

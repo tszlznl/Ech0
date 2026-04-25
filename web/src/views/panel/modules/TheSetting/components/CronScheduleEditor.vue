@@ -34,8 +34,8 @@
       >
         <label class="cron-editor__label">{{ t('cronEditor.time') }}</label>
         <input
-          type="time"
           v-model="timeString"
+          type="time"
           :disabled="disabled"
           class="cron-editor__control cron-editor__control--time"
         />
@@ -58,13 +58,18 @@
           :disabled="disabled"
           :placeholder="t('cronEditor.customPlaceholder')"
           class="cron-editor__control cron-editor__control--input"
+          spellcheck="false"
+          autocomplete="off"
         />
       </div>
     </div>
 
-    <div class="cron-editor__preview">
-      <span class="cron-editor__preview-label">{{ t('cronEditor.preview') }}</span>
-      <code class="cron-editor__preview-value">{{ modelValue || '—' }}</code>
+    <div class="cron-editor__summary">
+      <CalendarIcon class="cron-editor__summary-icon" />
+      <div class="cron-editor__summary-body">
+        <span class="cron-editor__summary-text">{{ humanReadable }}</span>
+        <code class="cron-editor__summary-code">{{ modelValue || '—' }}</code>
+      </div>
     </div>
   </div>
 </template>
@@ -72,8 +77,11 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import CalendarIcon from '@/components/icons/date-icon.vue'
+import { buildCron as buildCronExpr, humanizeCron, parseCron as parseCronExpr } from '@/utils/cron'
+import type { CronFrequency } from '@/utils/cron'
 
-type Frequency = 'daily' | 'weekly' | 'monthly' | 'hourly' | 'custom'
+type Frequency = CronFrequency
 
 const props = defineProps<{
   modelValue: string
@@ -138,6 +146,8 @@ const timeString = computed<string>({
   },
 })
 
+const humanReadable = computed(() => humanizeCron(buildCron(), t))
+
 function pad(n: number): string {
   return String(n).padStart(2, '0')
 }
@@ -148,60 +158,26 @@ function clamp(n: number, min: number, max: number): number {
 }
 
 function parseCron(expr: string) {
-  const src = (expr || '').trim()
-
-  const daily = /^(\d+)\s+(\d+)\s+\*\s+\*\s+\*$/.exec(src)
-  if (daily) {
-    minute.value = clamp(parseInt(daily[1], 10), 0, 59)
-    hour.value = clamp(parseInt(daily[2], 10), 0, 23)
-    frequency.value = 'daily'
-    return
-  }
-
-  const weekly = /^(\d+)\s+(\d+)\s+\*\s+\*\s+([0-6])$/.exec(src)
-  if (weekly) {
-    minute.value = clamp(parseInt(weekly[1], 10), 0, 59)
-    hour.value = clamp(parseInt(weekly[2], 10), 0, 23)
-    weekday.value = clamp(parseInt(weekly[3], 10), 0, 6)
-    frequency.value = 'weekly'
-    return
-  }
-
-  const monthly = /^(\d+)\s+(\d+)\s+(\d+)\s+\*\s+\*$/.exec(src)
-  if (monthly) {
-    minute.value = clamp(parseInt(monthly[1], 10), 0, 59)
-    hour.value = clamp(parseInt(monthly[2], 10), 0, 23)
-    monthday.value = clamp(parseInt(monthly[3], 10), 1, 28)
-    frequency.value = 'monthly'
-    return
-  }
-
-  const hourly = /^0\s+\*\/(\d+)\s+\*\s+\*\s+\*$/.exec(src)
-  if (hourly) {
-    hourlyInterval.value = clamp(parseInt(hourly[1], 10), 1, 23)
-    frequency.value = 'hourly'
-    return
-  }
-
-  frequency.value = 'custom'
-  customExpression.value = src
+  const p = parseCronExpr(expr)
+  frequency.value = p.frequency
+  minute.value = p.minute
+  hour.value = p.hour
+  weekday.value = p.weekday
+  monthday.value = p.monthday
+  hourlyInterval.value = p.hourlyInterval
+  customExpression.value = p.custom
 }
 
 function buildCron(): string {
-  switch (frequency.value) {
-    case 'daily':
-      return `${minute.value} ${hour.value} * * *`
-    case 'weekly':
-      return `${minute.value} ${hour.value} * * ${weekday.value}`
-    case 'monthly':
-      return `${minute.value} ${hour.value} ${monthday.value} * *`
-    case 'hourly':
-      return `0 */${hourlyInterval.value} * * *`
-    case 'custom':
-      return customExpression.value.trim()
-    default:
-      return ''
-  }
+  return buildCronExpr({
+    frequency: frequency.value,
+    minute: minute.value,
+    hour: hour.value,
+    weekday: weekday.value,
+    monthday: monthday.value,
+    hourlyInterval: hourlyInterval.value,
+    custom: customExpression.value,
+  })
 }
 
 watch(
@@ -230,14 +206,14 @@ watch([frequency, hour, minute, weekday, monthday, hourlyInterval, customExpress
 .cron-editor {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
   width: 100%;
 }
 
 .cron-editor__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
+  gap: 0.6rem 0.75rem;
 }
 
 @media (width < 480px) {
@@ -249,7 +225,7 @@ watch([frequency, hour, minute, weekday, monthday, hourlyInterval, customExpress
 .cron-editor__field {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.3rem;
   min-width: 0;
 }
 
@@ -258,29 +234,27 @@ watch([frequency, hour, minute, weekday, monthday, hourlyInterval, customExpress
 }
 
 .cron-editor__label {
-  font-size: 0.72rem;
-  font-weight: 500;
+  font-size: 0.7rem;
+  font-weight: 600;
   color: var(--color-text-muted);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
+/* Shared form-input shape for native <select>, <input type=time>, <input type=text>. */
 .cron-editor__control {
   width: 100%;
-  height: 1.9rem;
-  padding: 0 0.55rem;
+  height: 2.1rem;
+  padding: 0 0.65rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--input-border-color);
   background: var(--input-bg-color);
   color: var(--input-text-color);
-  font-size: 0.82rem;
+  font-family: inherit;
+  font-size: 0.85rem;
   line-height: 1;
   box-shadow: var(--shadow-sm);
   outline: none;
-  appearance: none;
-  background-repeat: no-repeat;
-  background-position: right 0.5rem center;
-  background-size: 0.8rem 0.8rem;
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease;
@@ -302,46 +276,88 @@ watch([frequency, hour, minute, weekday, monthday, hourlyInterval, customExpress
   opacity: 0.6;
 }
 
-/* select 右侧箭头 */
+/* Native select: hide browser arrow, paint our own that adapts to the
+   text color (so it works in both light and dark themes, unlike a
+   hardcoded SVG fill). */
 select.cron-editor__control {
-  padding-right: 1.75rem;
+  appearance: none;
+  padding-right: 1.9rem;
   cursor: pointer;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'><path fill='%23888888' d='m12 15.4l-6-6L7.4 8l4.6 4.6L16.6 8L18 9.4z'/></svg>");
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position:
+    calc(100% - 1rem) calc(50% - 2px),
+    calc(100% - 0.65rem) calc(50% - 2px);
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+  color: var(--input-text-color);
+}
+
+select.cron-editor__control::-ms-expand {
+  display: none;
 }
 
 .cron-editor__control--time {
   font-family: var(--font-family-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* iOS Safari collapses ::-webkit-date-and-time-value when appearance:none. */
+.cron-editor__control--time::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.2em;
 }
 
 .cron-editor__control--input {
   font-family: var(--font-family-mono);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
 }
 
-.cron-editor__preview {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.25rem 0.55rem;
-  border-radius: var(--radius-sm);
-  background: var(--color-bg-muted);
-  border: 1px solid var(--color-border-subtle);
-  width: fit-content;
-  max-width: 100%;
+.cron-editor__summary {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-accent, #e07020) 6%, var(--color-bg-muted));
+  border: 1px solid color-mix(in srgb, var(--color-accent, #e07020) 22%, transparent);
 }
 
-.cron-editor__preview-label {
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+.cron-editor__summary-icon {
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.1rem;
+  color: var(--color-accent, #e07020);
+  flex-shrink: 0;
 }
 
-.cron-editor__preview-value {
-  font-family: var(--font-family-mono);
-  font-size: 0.78rem;
+:deep(.cron-editor__summary-icon path) {
+  fill: currentColor;
+}
+
+.cron-editor__summary-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.cron-editor__summary-text {
+  font-size: 0.85rem;
+  font-weight: 500;
   color: var(--color-text-primary);
+  line-height: 1.35;
+}
+
+.cron-editor__summary-code {
+  font-family: var(--font-family-mono);
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  letter-spacing: 0.02em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

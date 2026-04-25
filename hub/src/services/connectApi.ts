@@ -1,6 +1,11 @@
 import type { HubInstance } from '../types/hub'
 import type { ApiResult } from '../types/echo'
+import { timeoutSignal } from '../utils/fetchTimeout'
 import { normalizeHubInstanceUrl } from '../utils/hubUrl'
+import { HUB_FAN_OUT_LIMIT, pMapLimit } from '../utils/pMapLimit'
+
+/** /api/connect 仅返回站点元信息（logo / server_name / today_echos），6s 足够。 */
+const CONNECT_TIMEOUT_MS = 6000
 
 /** 与 web `GET {origin}/api/connect` 一致，用于取站点 logo（见 internal/handler/connect） */
 export async function fetchInstanceConnect(
@@ -8,7 +13,10 @@ export async function fetchInstanceConnect(
   signal?: AbortSignal,
 ): Promise<App.Api.Connect.Connect | null> {
   const base = normalizeHubInstanceUrl(instanceUrl)
-  const res = await fetch(`${base}/api/connect`, { credentials: 'omit', signal })
+  const res = await fetch(`${base}/api/connect`, {
+    credentials: 'omit',
+    signal: timeoutSignal(signal, CONNECT_TIMEOUT_MS),
+  })
   if (!res.ok) return null
   const json: unknown = await res.json()
   if (typeof json !== 'object' || json === null) return null
@@ -27,35 +35,48 @@ export interface InstanceConnectSummary {
   todayEchos: number
 }
 
-/** 单次并行请求：logo Map（供聚合）+ 各实例摘要（供「活跃创作者」等） */
+interface InstanceConnectFetched {
+  urlKey: string
+  rawLogo: string
+  summary: InstanceConnectSummary
+}
+
+/** 受限并发请求：logo Map（供聚合）+ 各实例摘要（供「活跃创作者」等） */
 export async function fetchInstancesConnectBundle(
   instances: HubInstance[],
   signal?: AbortSignal,
 ): Promise<{ logos: Map<string, string>; summaries: InstanceConnectSummary[] }> {
-  const logos = new Map<string, string>()
-  const summaries: InstanceConnectSummary[] = []
-
-  await Promise.all(
-    instances.map(async (inst) => {
+  const settled = await pMapLimit<HubInstance, InstanceConnectFetched | null>(
+    instances,
+    HUB_FAN_OUT_LIMIT,
+    async (inst) => {
       const urlKey = normalizeHubInstanceUrl(inst.url)
-      try {
-        const data = await fetchInstanceConnect(urlKey, signal)
-        if (!data) return
-        const raw = data.logo?.trim() ?? ''
-        if (raw) logos.set(urlKey, raw)
-        summaries.push({
+      const data = await fetchInstanceConnect(urlKey, signal)
+      if (!data) return null
+      const rawLogo = data.logo?.trim() ?? ''
+      return {
+        urlKey,
+        rawLogo,
+        summary: {
           urlKey,
           id: inst.id,
           serverName: data.server_name?.trim() || inst.id,
           username: data.sys_username?.trim() ?? '',
-          rawLogo: raw,
+          rawLogo,
           todayEchos: typeof data.today_echos === 'number' ? data.today_echos : 0,
-        })
-      } catch {
-        /* 单实例失败不影响其它实例 */
+        },
       }
-    }),
+    },
   )
+
+  const logos = new Map<string, string>()
+  const summaries: InstanceConnectSummary[] = []
+  for (const r of settled) {
+    if (r.status !== 'fulfilled' || !r.value) continue
+    const { urlKey, rawLogo, summary } = r.value
+    if (rawLogo) logos.set(urlKey, rawLogo)
+    summaries.push(summary)
+  }
 
   summaries.sort((a, b) => a.serverName.localeCompare(b.serverName, 'en'))
   return { logos, summaries }

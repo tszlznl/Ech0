@@ -1,4 +1,5 @@
 import type { ApiResult } from '../types/echo'
+import { timeoutSignal } from '../utils/fetchTimeout'
 
 export interface HealthzData {
   status: string
@@ -6,6 +7,8 @@ export interface HealthzData {
 }
 
 const MIN_VERSION = '4.4.0'
+/** healthz 是最轻量的握手，超时给 5s 已经远超正常往返。 */
+const HEALTHZ_TIMEOUT_MS = 5000
 
 function parseSemver(s: string): [number, number, number] | null {
   const m = /^(\d+)\.(\d+)\.(\d+)/.exec(s.trim())
@@ -38,7 +41,7 @@ export async function fetchHealthz(
     const res = await fetch(`${instanceUrl}/healthz`, {
       method: 'GET',
       credentials: 'omit',
-      signal,
+      signal: timeoutSignal(signal, HEALTHZ_TIMEOUT_MS),
     })
     if (!res.ok) {
       return { ok: false, message: `HTTP ${res.status}` }

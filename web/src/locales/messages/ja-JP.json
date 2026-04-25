@@ -853,7 +853,11 @@
     "weekdaySat": "土曜日",
     "dayN": "{n} 日",
     "everyNHours": "{n} 時間ごと",
-    "preview": "Crontab"
+    "humanDaily": "毎日 {time} に実行",
+    "humanWeekly": "毎週 {weekday} の {time} に実行",
+    "humanMonthly": "毎月 {day} 日の {time} に実行",
+    "humanHourly": "{n} 時間ごとに実行",
+    "humanCustom": "カスタムスケジュールで実行"
   },
   "backupScheduleSetting": {
     "title": "スナップショット設定",
