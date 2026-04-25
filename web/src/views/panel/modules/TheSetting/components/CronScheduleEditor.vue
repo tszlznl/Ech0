@@ -283,7 +283,8 @@ select.cron-editor__control {
   appearance: none;
   padding-right: 1.9rem;
   cursor: pointer;
-  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+  background-image:
+    linear-gradient(45deg, transparent 50%, currentColor 50%),
     linear-gradient(135deg, currentColor 50%, transparent 50%);
   background-position:
     calc(100% - 1rem) calc(50% - 2px),
