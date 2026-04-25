@@ -31,7 +31,23 @@
 
 <div align="center">
 
-[![GitHub release](https://img.shields.io/github/v/release/lin-snow/Ech0)](https://github.com/lin-snow/Ech0/releases) ![License](https://img.shields.io/github/license/lin-snow/Ech0) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/lin-snow/Ech0) [![Hello Github](https://api.hellogithub.com/v1/widgets/recommend.svg?rid=8f3cafdd6ef3445dbb1c0ed6dd34c8b5&claim_uid=swhbQfnJvKS0t7I&theme=small)](https://hellogithub.com/repository/lin-snow/Ech0)
+[![GitHub release](https://img.shields.io/github/v/release/lin-snow/Ech0?style=flat-square&logo=github&color=blue)](https://github.com/lin-snow/Ech0/releases)
+[![License](https://img.shields.io/github/license/lin-snow/Ech0?style=flat-square&color=orange)](./LICENSE)
+[![Go Report](https://goreportcard.com/badge/github.com/lin-snow/Ech0?style=flat-square)](https://goreportcard.com/report/github.com/lin-snow/Ech0)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/lin-snow/Ech0?style=flat-square&logo=go&logoColor=white)](./go.mod)
+[![Release Build](https://img.shields.io/github/actions/workflow/status/lin-snow/Ech0/release.yml?style=flat-square&logo=github&label=build)](https://github.com/lin-snow/Ech0/actions/workflows/release.yml)
+[![i18n](https://img.shields.io/badge/i18n-4_locales-orange?style=flat-square&logo=googletranslate&logoColor=white)](./web/src/locales/messages)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/lin-snow/Ech0)
+[![Hello Github](https://api.hellogithub.com/v1/widgets/recommend.svg?rid=8f3cafdd6ef3445dbb1c0ed6dd34c8b5&claim_uid=swhbQfnJvKS0t7I&theme=small)](https://hellogithub.com/repository/lin-snow/Ech0)
+
+[![Docker Pulls](https://img.shields.io/docker/pulls/sn0wl1n/ech0?style=flat-square&logo=docker&logoColor=white)](https://hub.docker.com/r/sn0wl1n/ech0)
+[![Docker Image Size](https://img.shields.io/docker/image-size/sn0wl1n/ech0/latest?style=flat-square&logo=docker&logoColor=white)](https://hub.docker.com/r/sn0wl1n/ech0)
+[![Stars](https://img.shields.io/github/stars/lin-snow/Ech0?style=flat-square&logo=github)](https://github.com/lin-snow/Ech0/stargazers)
+[![Forks](https://img.shields.io/github/forks/lin-snow/Ech0?style=flat-square&logo=github)](https://github.com/lin-snow/Ech0/network/members)
+[![Discussions](https://img.shields.io/github/discussions/lin-snow/Ech0?style=flat-square&logo=github)](https://github.com/lin-snow/Ech0/discussions)
+[![Last Commit](https://img.shields.io/github/last-commit/lin-snow/Ech0?style=flat-square&logo=github)](https://github.com/lin-snow/Ech0/commits/main)
+[![Contributors](https://img.shields.io/github/contributors/lin-snow/Ech0?style=flat-square&logo=github)](https://github.com/lin-snow/Ech0/graphs/contributors)
+[![Sponsor](https://img.shields.io/badge/sponsor-Afdian-FF7878?style=flat-square&logo=githubsponsors&logoColor=white)](https://afdian.com/a/l1nsn0w)
 
 </div>
 
