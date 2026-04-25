@@ -56,8 +56,7 @@ It stays lightweight, easy to deploy, and fully open-source.
 
 - [Try in 60 Seconds](#try-in-60-seconds)
 - [Full Feature List](#full-feature-list)
-- [Quick Deployment](#quick-deployment)
-- [Upgrading](#upgrading)
+- [Deployment & Upgrading](#deployment--upgrading)
 - [FAQ](#faq)
 - [Feedback & Community](#feedback--community)
 - [Open Source & Development](#open-source--development)
@@ -156,150 +155,11 @@ See [Quick Deployment](#quick-deployment) for Docker Compose and Helm options.
 
 ---
 
-## Quick Deployment
+## Deployment & Upgrading
 
-<details>
-<summary><strong>🐳 Docker Deployment (Recommended)</strong></summary>
+Detailed instructions for **Docker Compose**, **script install**, **Kubernetes (Helm)**, and **upgrading** an existing instance live in **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
 
-```shell
-docker run -d \
-  --name ech0 \
-  -p 6277:6277 \
-  -v /opt/ech0/data:/app/data \
-  -e JWT_SECRET="Hello Echos" \
-  sn0wl1n/ech0:latest
-```
-
-> 💡 After deployment, access `ip:6277`
-> 🚷 For better security, replace `Hello Echos` in `-e JWT_SECRET="Hello Echos"` with your own secret
-> 📍 The first registered account becomes administrator (currently only admins can publish)
-> 🎈 Data is stored under `/opt/ech0/data`
-
-</details>
-
-<details>
-<summary><strong>🐋 Docker Compose</strong></summary>
-
-Create a new directory and place your `docker-compose.yml` file there. A ready-to-use example lives at [`docker/docker-compose.yml`](./docker/docker-compose.yml).
-
-Run the following command in that directory:
-
-```shell
-docker-compose up -d
-```
-
-</details>
-
-<details>
-<summary><strong>🧙 Script Deployment</strong></summary>
-
-```shell
-curl -fsSL "https://raw.githubusercontent.com/lin-snow/Ech0/main/scripts/ech0.sh" -o ech0.sh && bash ech0.sh
-```
-
-> The script installs and manages Ech0 through systemd, so please run with root privileges when needed.
-> You can run `bash ech0.sh install /your/path/ech0` to customize the install path.
-
-</details>
-
-<details>
-<summary><strong>☸️ Kubernetes (Helm)</strong></summary>
-
-If you want to deploy Ech0 in a Kubernetes cluster, you can use the Helm Chart provided by this project.
-
-Use the online Helm repository:
-
-1.  **Add the Ech0 chart repository:**
-    ```shell
-    helm repo add ech0 https://lin-snow.github.io/Ech0
-    helm repo update
-    ```
-
-2.  **Install with Helm:**
-    ```shell
-    # helm install <release-name> <repo-name>/<chart-name>
-    helm install ech0 ech0/ech0
-    ```
-
-    You can also customize the release name and namespace:
-    ```shell
-    helm install my-ech0 ech0/ech0 --namespace my-namespace --create-namespace
-    ```
-
-If you prefer local installation from source:
-```shell
-git clone https://github.com/lin-snow/Ech0.git
-cd Ech0
-helm install ech0 ./charts/ech0
-```
-
-</details>
-
----
-
-## Upgrading
-
-<details>
-<summary><strong>🔄 Docker</strong></summary>
-
-```shell
-# Stop current container
-docker stop ech0
-
-# Remove container
-docker rm ech0
-
-# Pull latest image
-docker pull sn0wl1n/ech0:latest
-
-# Start new version
-docker run -d \
-  --name ech0 \
-  -p 6277:6277 \
-  -v /opt/ech0/data:/app/data \
-  -e JWT_SECRET="Hello Echos" \
-  sn0wl1n/ech0:latest
-```
-
-</details>
-
-<details>
-<summary><strong>💎 Docker Compose</strong></summary>
-
-```shell
-# Enter compose directory
-cd /path/to/compose
-
-# Pull latest image and recreate
-docker-compose pull && \
-docker-compose up -d --force-recreate
-
-# Clean old images
-docker image prune -f
-```
-
-</details>
-
-<details>
-<summary><strong>☸️ Kubernetes (Helm)</strong></summary>
-
-1. **Update Helm repository index:**
-   ```shell
-   helm repo update
-   ```
-
-2. **Upgrade Helm release:**
-   Use `helm upgrade` to update your release.
-   ```shell
-   # helm upgrade <release-name> <repo-name>/<chart-name>
-   helm upgrade ech0 ech0/ech0
-   ```
-   If you used a custom release name and namespace, use matching values:
-   ```shell
-   helm upgrade my-ech0 ech0/ech0 --namespace my-namespace
-   ```
-
-</details>
+For the simplest path, the [Try in 60 Seconds](#try-in-60-seconds) snippet above is enough to get a single Docker container running.
 
 ---
 
@@ -393,7 +253,15 @@ Local setup, environment requirements, and front-/back-end integration are docum
 
 ## Sponsors & Acknowledgements
 
-A huge thanks to everyone who has supported this project — sponsors, contributors, and users alike. The full sponsor wall and donation channels live in **[SPONSOR.md](./SPONSOR.md)**.
+🌟 If you like **Ech0**, please give the project a Star! 🚀
+
+**Ech0** is fully open-source and free. Ongoing maintenance and improvements rely on community support. If this project helps you, sponsorship is always appreciated. Donate via the QR code below and leave your GitHub name in the note — your contribution will be added to the [sponsor wall](./SPONSOR.md).
+
+|                  Platform                  | QR Code                                                |
+| :----------------------------------------: | :----------------------------------------------------- |
+| [**Afdian**](https://afdian.com/a/l1nsn0w) | <img src="./docs/imgs/pay.jpeg" alt="Pay" width="200"> |
+
+A huge thanks to all sponsors, contributors, and users — see [SPONSOR.md](./SPONSOR.md) for the full sponsor wall.
 
 [![Contributors](https://contrib.rocks/image?repo=lin-snow/Ech0)](https://contrib.rocks/image?repo=lin-snow/Ech0)
 

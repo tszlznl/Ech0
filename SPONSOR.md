@@ -2,7 +2,7 @@
 
 Thanks to everyone who has supported this project! Your support keeps **Ech0** moving forward 💡✨
 
-If **Ech0** has helped you and you would like to sponsor the project, see [Support the Project](#support-the-project) below. After donating, leave your GitHub username (or display name) in the note and you will be added to the table.
+To sponsor the project, see the **Sponsors & Acknowledgements** section in the [main README](./README.md#sponsors--acknowledgements) for the donation QR code and details. After donating, leave your GitHub username (or display name) in the note and you will be added to the table below.
 
 ## Sponsor Wall
 
@@ -21,13 +21,3 @@ If **Ech0** has helped you and you would like to sponsor the project, see [Suppo
 |                  🧑‍💻 Anonymous User                       |   2026-01-23  | —                                                                                   |
 |                      🧑‍💻 ABloom                           |   2026-03-16  | ㊗️ Mumuxue achieves fitness success                                                 |
 |                       🧑‍💻 lmscn                           |   2026-04-01  | Support from www.lmscn.com, really like this project, hope it keeps getting better. |
-
-## Support the Project
-
-🌟 If you like **Ech0**, please give the project a Star! 🚀
-
-**Ech0** is fully open-source and free. Ongoing maintenance and improvements rely on community support. If this project helps you, sponsorship is always appreciated. Donate via the QR code below and leave your GitHub name in the note — your contribution will be displayed publicly on the sponsor wall.
-
-|                  Platform                  | QR Code                                                |
-| :----------------------------------------: | :----------------------------------------------------- |
-| [**Afdian**](https://afdian.com/a/l1nsn0w) | <img src="./docs/imgs/pay.jpeg" alt="Pay" width="200"> |

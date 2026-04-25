@@ -56,8 +56,7 @@ Es bleibt dabei leichtgewichtig, einfach zu deployen und vollständig Open Sourc
 
 - [In 60 Sekunden ausprobieren](#in-60-sekunden-ausprobieren)
 - [Vollständige Funktionsliste](#vollständige-funktionsliste)
-- [Schnelles Deployment](#schnelles-deployment)
-- [Aktualisierung](#aktualisierung)
+- [Deployment & Aktualisierung](#deployment--aktualisierung)
 - [FAQ](#faq)
 - [Feedback & Community](#feedback--community)
 - [Open Source & Entwicklung](#open-source--entwicklung)
@@ -156,150 +155,11 @@ Weitere Optionen wie Docker Compose und Helm findest du unter [Schnelles Deploym
 
 ---
 
-## Schnelles Deployment
+## Deployment & Aktualisierung
 
-<details>
-<summary><strong>🐳 Docker-Deployment (empfohlen)</strong></summary>
+Ausführliche Anleitungen für **Docker Compose**, **Skript-Installation**, **Kubernetes (Helm)** sowie das **Upgrade** einer bestehenden Instanz findest du in **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
 
-```shell
-docker run -d \
-  --name ech0 \
-  -p 6277:6277 \
-  -v /opt/ech0/data:/app/data \
-  -e JWT_SECRET="Hello Echos" \
-  sn0wl1n/ech0:latest
-```
-
-> 💡 Nach dem Deployment erreichbar unter `ip:6277`
-> 🚷 Aus Sicherheitsgründen sollte `Hello Echos` in `-e JWT_SECRET="Hello Echos"` durch ein eigenes Secret ersetzt werden
-> 📍 Der erste registrierte Account wird zum Administrator (derzeit dürfen nur Admins veröffentlichen)
-> 🎈 Daten werden unter `/opt/ech0/data` gespeichert
-
-</details>
-
-<details>
-<summary><strong>🐋 Docker Compose</strong></summary>
-
-Lege ein neues Verzeichnis an und platziere deine `docker-compose.yml` darin. Ein einsatzbereites Beispiel findest du unter [`docker/docker-compose.yml`](./docker/docker-compose.yml).
-
-Führe in diesem Verzeichnis aus:
-
-```shell
-docker-compose up -d
-```
-
-</details>
-
-<details>
-<summary><strong>🧙 Skript-Deployment</strong></summary>
-
-```shell
-curl -fsSL "https://raw.githubusercontent.com/lin-snow/Ech0/main/scripts/ech0.sh" -o ech0.sh && bash ech0.sh
-```
-
-> Das Skript installiert und verwaltet Ech0 über systemd. Bei Bedarf bitte mit Root-Rechten ausführen.
-> Mit `bash ech0.sh install /your/path/ech0` lässt sich der Installationspfad anpassen.
-
-</details>
-
-<details>
-<summary><strong>☸️ Kubernetes (Helm)</strong></summary>
-
-Wenn du Ech0 in einem Kubernetes-Cluster bereitstellen möchtest, nutze das mitgelieferte Helm-Chart.
-
-Online-Helm-Repository verwenden:
-
-1.  **Ech0-Chart-Repository hinzufügen:**
-    ```shell
-    helm repo add ech0 https://lin-snow.github.io/Ech0
-    helm repo update
-    ```
-
-2.  **Mit Helm installieren:**
-    ```shell
-    # helm install <release-name> <repo-name>/<chart-name>
-    helm install ech0 ech0/ech0
-    ```
-
-    Release-Name und Namespace lassen sich anpassen:
-    ```shell
-    helm install my-ech0 ech0/ech0 --namespace my-namespace --create-namespace
-    ```
-
-Lokale Installation aus dem Quellcode:
-```shell
-git clone https://github.com/lin-snow/Ech0.git
-cd Ech0
-helm install ech0 ./charts/ech0
-```
-
-</details>
-
----
-
-## Aktualisierung
-
-<details>
-<summary><strong>🔄 Docker</strong></summary>
-
-```shell
-# Aktuellen Container stoppen
-docker stop ech0
-
-# Container entfernen
-docker rm ech0
-
-# Neuestes Image holen
-docker pull sn0wl1n/ech0:latest
-
-# Neue Version starten
-docker run -d \
-  --name ech0 \
-  -p 6277:6277 \
-  -v /opt/ech0/data:/app/data \
-  -e JWT_SECRET="Hello Echos" \
-  sn0wl1n/ech0:latest
-```
-
-</details>
-
-<details>
-<summary><strong>💎 Docker Compose</strong></summary>
-
-```shell
-# In das Compose-Verzeichnis wechseln
-cd /path/to/compose
-
-# Neuestes Image holen und neu starten
-docker-compose pull && \
-docker-compose up -d --force-recreate
-
-# Alte Images aufräumen
-docker image prune -f
-```
-
-</details>
-
-<details>
-<summary><strong>☸️ Kubernetes (Helm)</strong></summary>
-
-1. **Helm-Repository-Index aktualisieren:**
-   ```shell
-   helm repo update
-   ```
-
-2. **Helm-Release upgraden:**
-   Verwende `helm upgrade`, um deine Release zu aktualisieren.
-   ```shell
-   # helm upgrade <release-name> <repo-name>/<chart-name>
-   helm upgrade ech0 ech0/ech0
-   ```
-   Bei eigenem Release-Namen und Namespace die entsprechenden Werte verwenden:
-   ```shell
-   helm upgrade my-ech0 ech0/ech0 --namespace my-namespace
-   ```
-
-</details>
+Für den schnellsten Einstieg reicht der oben gezeigte [In 60 Sekunden ausprobieren](#in-60-sekunden-ausprobieren)-Befehl bereits aus.
 
 ---
 
@@ -393,7 +253,15 @@ Das lokale Setup, Umgebungsanforderungen und das Front-/Backend-Zusammenspiel si
 
 ## Sponsoren & Danksagungen
 
-Ein großes Dankeschön an alle, die dieses Projekt unterstützt haben — Sponsoren, Beitragende und Nutzer. Die vollständige Sponsorenliste und Spendenkanäle findest du in **[SPONSOR.md](./SPONSOR.md)**.
+🌟 Wenn dir **Ech0** gefällt, gib dem Projekt gerne einen Star! 🚀
+
+**Ech0** ist vollständig Open Source und kostenlos. Wartung und Weiterentwicklung leben von der Unterstützung der Community. Wenn dir das Projekt hilft, freuen wir uns über jede Spende. Scanne den QR-Code unten und hinterlasse deinen GitHub-Namen in der Notiz — du wirst dann auf der [Sponsorenliste](./SPONSOR.md) eingetragen.
+
+|                  Plattform                 | QR-Code                                                |
+| :----------------------------------------: | :----------------------------------------------------- |
+| [**Afdian**](https://afdian.com/a/l1nsn0w) | <img src="./docs/imgs/pay.jpeg" alt="Pay" width="200"> |
+
+Ein großes Dankeschön an alle Sponsoren, Beitragenden und Nutzer — die vollständige Sponsorenliste findest du in [SPONSOR.md](./SPONSOR.md).
 
 [![Contributors](https://contrib.rocks/image?repo=lin-snow/Ech0)](https://contrib.rocks/image?repo=lin-snow/Ech0)
 

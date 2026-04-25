@@ -58,8 +58,7 @@
 
 - [1 分钟试用](#1-分钟上手)
 - [完整能力清单](#完整能力清单)
-- [极速部署](#极速部署)
-- [版本更新](#版本更新)
+- [部署与更新](#部署与更新)
 - [常见问题](#常见问题)
 - [反馈与社区](#反馈与社区)
 - [开源治理与开发](#开源治理与开发)
@@ -158,150 +157,11 @@ docker run -d \
 
 ---
 
-## 极速部署
+## 部署与更新
 
-<details>
-<summary><strong>🐳 Docker 部署（推荐）</strong></summary>
+完整的 **Docker Compose**、**脚本安装**、**Kubernetes (Helm)** 部署说明以及**版本更新**操作流程详见 **[DEPLOYMENT.md](./DEPLOYMENT.md)**。
 
-```shell
-docker run -d \
-  --name ech0 \
-  -p 6277:6277 \
-  -v /opt/ech0/data:/app/data \
-  -e JWT_SECRET="Hello Echos" \
-  sn0wl1n/ech0:latest
-```
-
-> 💡 部署完成后访问 ip:6277 即可使用
-> 🚷 建议把 `-e JWT_SECRET="Hello Echos"` 里的 `Hello Echos` 改成别的内容以提高安全性
-> 📍 首次使用注册的账号会被设置为管理员（目前仅管理员支持发布内容）
-> 🎈 数据存储在 /opt/ech0/data 下
-
-</details>
-
-<details>
-<summary><strong>🐋 Docker Compose</strong></summary>
-
-创建一个新目录并将 `docker-compose.yml` 文件放入其中（可直接参考仓库内的示例 [`docker/docker-compose.yml`](./docker/docker-compose.yml)）。
-
-在该目录下执行以下命令启动服务：
-
-```shell
-docker-compose up -d
-```
-
-</details>
-
-<details>
-<summary><strong>🧙 脚本部署</strong></summary>
-
-```shell
-curl -fsSL "https://raw.githubusercontent.com/lin-snow/Ech0/main/scripts/ech0.sh" -o ech0.sh && bash ech0.sh
-```
-
-> 脚本通过 systemd 安装和管理 Ech0，涉及服务管理时请使用 root 权限执行。
-> 如需自定义安装路径，可执行 `bash ech0.sh install /your/path/ech0`。
-
-</details>
-
-<details>
-<summary><strong>☸️ Kubernetes (Helm)</strong></summary>
-
-如果你希望在 Kubernetes 集群中部署 Ech0，可以使用项目提供的 Helm Chart。
-
-推荐使用在线 Helm 仓库安装：
-
-1.  **添加 Ech0 Helm 仓库:**
-    ```shell
-    helm repo add ech0 https://lin-snow.github.io/Ech0
-    helm repo update
-    ```
-
-2.  **使用 Helm 安装:**
-    ```shell
-    # helm install <发布名称> <仓库名>/<chart名>
-    helm install ech0 ech0/ech0
-    ```
-
-    你也可以自定义发布名称和命名空间：
-    ```shell
-    helm install my-ech0 ech0/ech0 --namespace my-namespace --create-namespace
-    ```
-
-如果你希望从本地源码安装，也可以：
-```shell
-git clone https://github.com/lin-snow/Ech0.git
-cd Ech0
-helm install ech0 ./charts/ech0
-```
-
-</details>
-
----
-
-## 版本更新
-
-<details>
-<summary><strong>🔄 Docker</strong></summary>
-
-```shell
-# 停止当前的容器
-docker stop ech0
-
-# 移除容器
-docker rm ech0
-
-# 拉取最新的镜像
-docker pull sn0wl1n/ech0:latest
-
-# 启动新版本的容器
-docker run -d \
-  --name ech0 \
-  -p 6277:6277 \
-  -v /opt/ech0/data:/app/data \
-  -e JWT_SECRET="Hello Echos" \
-  sn0wl1n/ech0:latest
-```
-
-</details>
-
-<details>
-<summary><strong>💎 Docker Compose</strong></summary>
-
-```shell
-# 进入 compose 文件目录
-cd /path/to/compose
-
-# 拉取最新镜像并重启
-docker-compose pull && \
-docker-compose up -d --force-recreate
-
-# 清理旧镜像
-docker image prune -f
-```
-
-</details>
-
-<details>
-<summary><strong>☸️ Kubernetes (Helm)</strong></summary>
-
-1. **更新 Helm 仓库索引:**
-   ```shell
-   helm repo update
-   ```
-
-2. **更新 Helm Release:**
-   使用 `helm upgrade` 命令更新你的发布版本。
-   ```shell
-   # helm upgrade <发布名称> <仓库名>/<chart名>
-   helm upgrade ech0 ech0/ech0
-   ```
-   如果你使用了自定义的发布名称和命名空间，请使用对应的名称：
-   ```shell
-   helm upgrade my-ech0 ech0/ech0 --namespace my-namespace
-   ```
-
-</details>
+如果只是想最快跑起来，上面的 [1 分钟上手](#1-分钟上手) 已经足够 — 一条 `docker run` 命令即可启动。
 
 ---
 
@@ -396,7 +256,15 @@ docker image prune -f
 
 ## 赞助与致谢
 
-衷心感谢每一位支持过 **Ech0** 的朋友 — 包括赞助者、贡献者与所有用户。完整的赞助名单与赞助方式请见 **[SPONSOR.md](./SPONSOR.md)**。
+🌟 如果你觉得 **Ech0** 不错，欢迎为项目点个 Star！🚀
+
+**Ech0** 完全开源且免费，持续维护和优化离不开大家的支持。如果这个项目对你有所帮助，欢迎通过赞助支持项目的持续发展。你可以扫描下方二维码进行赞助，并在备注中附上你的 GitHub 名称，我们会将你的贡献展示在 [赞助墙](./SPONSOR.md) 上。
+
+|                  支持平台                  |                         二维码                         |
+| :----------------------------------------: | :----------------------------------------------------: |
+| [**爱发电**](https://afdian.com/a/l1nsn0w) | <img src="./docs/imgs/pay.jpeg" alt="Pay" width="200"> |
+
+衷心感谢每一位赞助者、贡献者与用户 — 完整赞助名单见 [SPONSOR.md](./SPONSOR.md)。
 
 [![Contributors](https://contrib.rocks/image?repo=lin-snow/Ech0)](https://contrib.rocks/image?repo=lin-snow/Ech0)
 
