@@ -1,6 +1,6 @@
-name: Feature Request
+name: ✨ Feature Request
 description: Propose a new feature or enhancement for Ech0.
-title: "[Feature] "
+title: "✨ [Feature] "
 labels:
   - enhancement
 body:
