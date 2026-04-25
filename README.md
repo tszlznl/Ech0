@@ -1,35 +1,17 @@
-<p align="left">
-  <a href="https://hellogithub.com/repository/lin-snow/Ech0" target="_blank">
-    <img src="https://api.hellogithub.com/v1/widgets/recommend.svg?rid=8f3cafdd6ef3445dbb1c0ed6dd34c8b5&claim_uid=swhbQfnJvKS0t7I&theme=neutral"
-         alt="Featured｜HelloGitHub"
-         width="250"
-         height="54" />
-  </a>
-</p>
-
-<p align="right">
-  <img src="https://img.shields.io/badge/-English-F54A00?style=for-the-badge" alt="English">
-  <a title="zh" href="./README.zh.md">
-    <img src="https://img.shields.io/badge/-简体中文-545759?style=for-the-badge" alt="简体中文">
-  </a>
-  <a title="de" href="./README.de.md">
-    <img src="https://img.shields.io/badge/-Deutsch-545759?style=for-the-badge" alt="Deutsch">
-  </a>
-  <a title="ja" href="./README.ja.md">
-    <img src="https://img.shields.io/badge/-日本語-545759?style=for-the-badge" alt="日本語">
-  </a>
-</p>
-
-
 <div align="center">
-  <img alt="Ech0" src="./docs/imgs/logo.svg" width="150">
 
-  [Preview](https://memo.vaaat.com/) | [Official Site & Documentation](https://www.ech0.app/) | [Releases](https://lin-snow.github.io/Ech0/) | [Ech0 Hub](https://hub.ech0.app/)
+<a href="https://hellogithub.com/repository/lin-snow/Ech0" target="_blank"><img src="https://api.hellogithub.com/v1/widgets/recommend.svg?rid=8f3cafdd6ef3445dbb1c0ed6dd34c8b5&claim_uid=swhbQfnJvKS0t7I&theme=neutral" alt="Featured｜HelloGitHub" width="250" height="54" /></a>
 
-  # Ech0
-</div>
+<br />
+<br />
 
-<div align="center">
+<img alt="Ech0" src="./docs/imgs/logo.svg" width="150">
+
+# Ech0
+
+[Preview](https://memo.vaaat.com/) · [Official Site & Documentation](https://www.ech0.app/) · [Releases](https://lin-snow.github.io/Ech0/) · [Ech0 Hub](https://hub.ech0.app/)
+
+<img src="https://img.shields.io/badge/-English-F54A00?style=for-the-badge" alt="English"> <a title="zh" href="./README.zh.md"><img src="https://img.shields.io/badge/-简体中文-545759?style=for-the-badge" alt="简体中文"></a> <a title="de" href="./README.de.md"><img src="https://img.shields.io/badge/-Deutsch-545759?style=for-the-badge" alt="Deutsch"></a> <a title="ja" href="./README.ja.md"><img src="https://img.shields.io/badge/-日本語-545759?style=for-the-badge" alt="日本語"></a>
 
 [![GitHub release](https://img.shields.io/github/v/release/lin-snow/Ech0?style=flat-square&logo=github&color=blue)](https://github.com/lin-snow/Ech0/releases)
 [![License](https://img.shields.io/github/license/lin-snow/Ech0?style=flat-square&color=orange)](./LICENSE)
@@ -38,7 +20,6 @@
 [![Release Build](https://img.shields.io/github/actions/workflow/status/lin-snow/Ech0/release.yml?style=flat-square&logo=github&label=build)](https://github.com/lin-snow/Ech0/actions/workflows/release.yml)
 [![i18n](https://img.shields.io/badge/i18n-4_locales-orange?style=flat-square&logo=googletranslate&logoColor=white)](./web/src/locales/messages)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/lin-snow/Ech0)
-[![Hello Github](https://api.hellogithub.com/v1/widgets/recommend.svg?rid=8f3cafdd6ef3445dbb1c0ed6dd34c8b5&claim_uid=swhbQfnJvKS0t7I&theme=small)](https://hellogithub.com/repository/lin-snow/Ech0)
 [![Docker Pulls](https://img.shields.io/docker/pulls/sn0wl1n/ech0?style=flat-square&logo=docker&logoColor=white)](https://hub.docker.com/r/sn0wl1n/ech0)
 [![Docker Image Size](https://img.shields.io/docker/image-size/sn0wl1n/ech0/latest?style=flat-square&logo=docker&logoColor=white)](https://hub.docker.com/r/sn0wl1n/ech0)
 [![Stars](https://img.shields.io/github/stars/lin-snow/Ech0?style=flat-square&logo=github)](https://github.com/lin-snow/Ech0/stargazers)
