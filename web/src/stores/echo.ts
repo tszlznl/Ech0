@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-import { fetchQueryEchos, fetchGetTags } from '@/service/api'
+import { fetchQueryEchos, fetchGetTags, fetchGetEchoById } from '@/service/api'
 
 export const useEchoStore = defineStore('echoStore', () => {
   /**
@@ -214,6 +214,39 @@ export const useEchoStore = defineStore('echoStore', () => {
     }
   }
 
+  // 单条 Echo 的飞行中请求池：用于在路由守卫与组件挂载之间复用同一个 Promise，
+  // 让 echo API 与 EchoView chunk 下载并行，避免分享链接首次访问的串行等待。
+  const pendingEchoMap = new Map<string, Promise<App.Api.Ech0.Echo | null>>()
+
+  const prefetchEcho = (echoId: string): Promise<App.Api.Ech0.Echo | null> => {
+    const id = String(echoId ?? '').trim()
+    if (!id) return Promise.resolve(null)
+
+    const idx = echoIndexMap.value.get(id)
+    if (idx !== undefined && echoList.value[idx]) {
+      return Promise.resolve(echoList.value[idx]!)
+    }
+
+    const existing = pendingEchoMap.get(id)
+    if (existing) return existing
+
+    const promise: Promise<App.Api.Ech0.Echo | null> = fetchGetEchoById(id)
+      .then((res) => {
+        if (res.code === 1 && res.data) {
+          mergeEchoItems(echoList, echoIndexMap, [res.data])
+          return res.data
+        }
+        return null
+      })
+      .catch(() => null)
+      .finally(() => {
+        pendingEchoMap.delete(id)
+      }) as Promise<App.Api.Ech0.Echo | null>
+
+    pendingEchoMap.set(id, promise)
+    return promise
+  }
+
   /** 拉取全部标签列表。 */
   const getTags = async () => {
     const res = await fetchGetTags()
@@ -273,6 +306,7 @@ export const useEchoStore = defineStore('echoStore', () => {
     removeSelectedTag,
     updateEcho,
     updateLikeCount,
+    prefetchEcho,
     getTags,
     ensureTagsLoaded,
   }

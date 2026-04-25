@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useInitStore } from '@/stores/init'
 import { useUserStore } from '@/stores/user'
+import { useEchoStore } from '@/stores/echo'
 
 // 所有路由组件使用懒加载，优化首屏加载性能
 const router = createRouter({
@@ -136,6 +137,15 @@ const router = createRouter({
       path: '/echo/:echoId',
       name: 'echo',
       component: () => import('../views/echo/EchoView.vue'),
+      // 路由解析阶段就触发 echo API，与 EchoView chunk 下载并行，
+      // 让分享链接直达场景少等一次串行的网络往返。
+      beforeEnter: (to) => {
+        const echoId = String(to.params.echoId ?? '').trim()
+        if (echoId) {
+          useEchoStore().prefetchEcho(echoId)
+        }
+        return true
+      },
       meta: {
         title: 'Echo',
         description: 'Read a shared Ech0 post.',

@@ -28,7 +28,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { fetchGetEchoById } from '@/service/api'
 import { ref } from 'vue'
 import TheEchoDetail from '@/components/advanced/echo/cards/TheEchoDetail.vue'
 import TheComment from '@/components/advanced/TheComment.vue'
@@ -74,12 +73,10 @@ onMounted(async () => {
   // 先尝试从 store 获取
   echo.value = getEchoFromStore()
 
-  // 如果 store 里没有，再发请求兜底
+  // 如果 store 里没有，复用 beforeEnter 守卫已发起的请求；
+  // 没走守卫的边缘场景下，prefetchEcho 会直接发起请求。
   if (!echo.value) {
-    const res = await fetchGetEchoById(echoId)
-    if (res.code === 1) {
-      echo.value = res.data
-    }
+    echo.value = await echoStore.prefetchEcho(echoId)
   }
   isLoading.value = false
 })
