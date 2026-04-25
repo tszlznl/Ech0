@@ -93,7 +93,7 @@ build-image:
 	docker build --platform $(OS)/$(ARCH) \
 		--build-arg TARGETOS=$(OS) \
 		--build-arg TARGETARCH=$(ARCH) \
-		-t $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG) -f build.Dockerfile .
+		-t $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG) -f docker/build.Dockerfile .
 push-image:
 	docker push $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
 

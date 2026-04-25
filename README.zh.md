@@ -39,7 +39,6 @@
 [![i18n](https://img.shields.io/badge/i18n-4_locales-orange?style=flat-square&logo=googletranslate&logoColor=white)](./web/src/locales/messages)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/lin-snow/Ech0)
 [![Hello Github](https://api.hellogithub.com/v1/widgets/recommend.svg?rid=8f3cafdd6ef3445dbb1c0ed6dd34c8b5&claim_uid=swhbQfnJvKS0t7I&theme=small)](https://hellogithub.com/repository/lin-snow/Ech0)
-
 [![Docker Pulls](https://img.shields.io/docker/pulls/sn0wl1n/ech0?style=flat-square&logo=docker&logoColor=white)](https://hub.docker.com/r/sn0wl1n/ech0)
 [![Docker Image Size](https://img.shields.io/docker/image-size/sn0wl1n/ech0/latest?style=flat-square&logo=docker&logoColor=white)](https://hub.docker.com/r/sn0wl1n/ech0)
 [![Stars](https://img.shields.io/github/stars/lin-snow/Ech0?style=flat-square&logo=github)](https://github.com/lin-snow/Ech0/stargazers)
@@ -203,7 +202,7 @@ docker run -d \
 <details>
 <summary><strong>🐋 Docker Compose</strong></summary>
 
-创建一个新目录并将 `docker-compose.yml` 文件放入其中。
+创建一个新目录并将 `docker-compose.yml` 文件放入其中（可直接参考仓库内的示例 [`docker/docker-compose.yml`](./docker/docker-compose.yml)）。
 
 在该目录下执行以下命令启动服务：
 

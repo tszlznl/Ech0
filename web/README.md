@@ -290,14 +290,6 @@ See [`CONTRIBUTING.md`](../CONTRIBUTING.md) for the full workflow.
 
 ---
 
-## Recommended IDE setup
-
-[VS Code](https://code.visualstudio.com/) + the official **Vue (Volar)** extension. Disable
-Vetur if it's installed. Volar provides `.vue` type-awareness for the TS language service —
-the same job `vue-tsc` does on the CLI.
-
----
-
 ## Vite 8 peer warnings (DevTools)
 
 `pnpm install` may print peer warnings under

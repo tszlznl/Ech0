@@ -53,7 +53,7 @@ docker run -d \
 
 ## Docker Compose
 
-新建目录，放入 `docker-compose.yml`（可参考仓库示例或下列最小示例），在该目录执行：
+新建目录，放入 `docker-compose.yml`（可参考仓库 [`docker/docker-compose.yml`](https://github.com/lin-snow/Ech0/blob/main/docker/docker-compose.yml) 或下列最小示例），在该目录执行：
 
 ```bash
 docker compose up -d
