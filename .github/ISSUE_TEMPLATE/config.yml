@@ -1,1 +1,8 @@
 blank_issues_enabled: true
+contact_links:
+  - name: Questions & general discussion
+    url: https://github.com/lin-snow/Ech0/discussions
+    about: For usage questions, ideas, or open-ended discussion, please use GitHub Discussions instead of opening an issue.
+  - name: Security vulnerability
+    url: https://github.com/lin-snow/Ech0/security/policy
+    about: Please report security issues privately — do not open a public issue. See SECURITY.md.
