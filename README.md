@@ -84,7 +84,7 @@ Then open `http://ip:6277`:
 2. The first account becomes Owner (admin privileges).
 3. By default, publishing is restricted to privileged accounts.
 
-See [Quick Deployment](#quick-deployment) for Docker Compose and Helm options.
+See [Quick Deployment](./DEPLOYMENT.md#quick-deployment) for Docker Compose and Helm options.
 
 ## Full Feature List
 

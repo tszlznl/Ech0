@@ -84,7 +84,7 @@ docker run -d \
 2. Der erste Account wird automatisch zum Owner (Admin-Rechte).
 3. Standardmäßig dürfen nur privilegierte Accounts veröffentlichen.
 
-Weitere Optionen wie Docker Compose und Helm findest du unter [Schnelles Deployment](#schnelles-deployment).
+Weitere Optionen wie Docker Compose und Helm findest du unter [Schnelles Deployment](./DEPLOYMENT.md#quick-deployment).
 
 ## Vollständige Funktionsliste
 
