@@ -55,10 +55,15 @@ func ResolveLocale(raw ...string) string {
 		}
 	}
 	if len(parts) == 0 {
-		return "zh-CN"
+		return string(commonModel.FallbackLocale)
 	}
 	tag, _, _ := language.ParseAcceptLanguage(strings.Join(parts, ","))
-	best, _, _ := matcher.Match(tag...)
+	best, _, confidence := matcher.Match(tag...)
+	// 没有任何被支持的语言能匹配上时（matcher 会返回列表中的第一项作占位），
+	// 用 FallbackLocale = en-US 作为更国际化的兜底，而不是默默退到 zh-CN。
+	if confidence == language.No {
+		return string(commonModel.FallbackLocale)
+	}
 	base, _ := best.Base()
 	region, _ := best.Region()
 	if region.IsCountry() {
