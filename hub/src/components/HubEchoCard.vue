@@ -4,15 +4,21 @@ import Verified from '@/components/icons/verified.vue'
 import GrayLike from '@/components/icons/graylike.vue'
 import LinkTo from '@/components/icons/linkto.vue'
 import BaseAvatar from '@/components/common/BaseAvatar.vue'
-import TheImageGallery from '@/components/advanced/gallery/TheImageGallery.vue'
 import { TheMdPreview } from '@/components/advanced/md'
-import { computed, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { ImageLayout } from '@/enums/enums'
 import { getEchoFilesBy } from '../utils/echoFiles'
 import { useFetch } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import { localStg } from '../utils/storage'
 import { formatHubDate } from '../utils/formatHubDate'
+
+// 必须保持 defineAsyncComponent。改回静态 import 会让 TheImageGallery 进入 entry chunk
+// 的静态依赖图，与 index 形成循环引用 → 运行时 `A is not a function`（Vue 的 isFunction
+// 在 var 提升后尚未赋值时被调用）。详见 commit 51630d20 之后的 hub.ech0.app 事故。
+const TheImageGallery = defineAsyncComponent(
+  () => import('@/components/advanced/gallery/TheImageGallery.vue'),
+)
 
 type Echo = App.Api.Hub.Echo
 
