@@ -341,7 +341,6 @@
   },
   "homeNav": {
     "themeToggleTitle": "テーマを切替（次：{mode}）",
-    "enterZenMode": "Zen Mode に入る",
     "themeLight": "ライト",
     "themeDark": "ダーク",
     "themeSunny": "サニー",
@@ -350,7 +349,6 @@
   "homeTop": {
     "searchTitle": "検索",
     "searchPlaceholder": "検索...",
-    "exitZenMode": "Zen Mode を終了",
     "rssTitle": "RSS"
   },
   "commandPalette": {
@@ -392,10 +390,11 @@
   },
   "homeFooter": {},
   "homeFeed": {
-    "loadMore": "さらに読み込む",
     "noMore": "これ以上データはありません",
     "noMoreFiltered": "これ以上データはありません",
-    "loading": "読み込み中..."
+    "loading": "読み込み中...",
+    "older": "以前",
+    "newer": "以降"
   },
   "dateTime": {
     "justNow": "たった今",

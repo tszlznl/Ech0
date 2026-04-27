@@ -109,7 +109,6 @@ See [Quick Deployment](./DEPLOYMENT.md#quick-deployment) for Docker Compose and 
 ### Writing & Content
 
 - ✍️ **Markdown Writing Experience**: A **markdown-it** based editing/rendering engine with plugin extension and live preview.
-- 🧘 **Zen Mode Immersive Reading**: A minimal-distraction Timeline browsing mode.
 - 🏷️ **Tag Management System**: Supports tag organization, quick filtering, and precise retrieval.
 - 🃏 **Rich Media Cards**: Supports card rendering for website links, GitHub projects, and more.
 - 🎥 **Video Content Parsing**: Supports embedded parsing/display for Bilibili and YouTube videos.

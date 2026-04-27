@@ -341,7 +341,6 @@
   },
   "homeNav": {
     "themeToggleTitle": "切换主题（下一个：{mode}）",
-    "enterZenMode": "进入 Zen Mode",
     "themeLight": "浅色",
     "themeDark": "深色",
     "themeSunny": "晴日",
@@ -350,7 +349,6 @@
   "homeTop": {
     "searchTitle": "搜索",
     "searchPlaceholder": "搜索...",
-    "exitZenMode": "退出 Zen Mode",
     "rssTitle": "RSS"
   },
   "commandPalette": {
@@ -392,10 +390,11 @@
   },
   "homeFooter": {},
   "homeFeed": {
-    "loadMore": "继续装填",
     "noMore": "没有更多数据了",
     "noMoreFiltered": "没有更多数据了",
-    "loading": "加载中..."
+    "loading": "加载中...",
+    "older": "之前",
+    "newer": "之后"
   },
   "dateTime": {
     "justNow": "刚刚",

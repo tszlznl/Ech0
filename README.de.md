@@ -109,7 +109,6 @@ Weitere Optionen wie Docker Compose und Helm findest du unter [Schnelles Deploym
 ### Schreiben & Inhalt
 
 - ✍️ **Markdown-Schreiberlebnis**: Auf **markdown-it** basierende Editor-/Rendering-Engine mit Plugin-Erweiterungen und Live-Vorschau.
-- 🧘 **Immersives Zen-Mode-Lesen**: Eine Timeline-Ansicht mit minimaler Ablenkung.
 - 🏷️ **Tag-Verwaltung**: Tag-Organisation, schnelles Filtern und präzise Suche.
 - 🃏 **Rich-Media-Karten**: Karten-Rendering für Website-Links, GitHub-Projekte und mehr.
 - 🎥 **Video-Parsing**: Eingebettete Wiedergabe für Bilibili- und YouTube-Videos.

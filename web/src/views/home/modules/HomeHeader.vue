@@ -37,15 +37,6 @@
         </a>
         <button
           type="button"
-          v-tooltip="isZenMode ? t('homeTop.exitZenMode') : t('homeNav.enterZenMode')"
-          :aria-label="isZenMode ? t('homeTop.exitZenMode') : t('homeNav.enterZenMode')"
-          :class="['home-header__link-icon', isZenMode ? 'home-header__link-icon--active' : '']"
-          @click="handleToggleZenMode"
-        >
-          <Zen class="block w-4 h-4" />
-        </button>
-        <button
-          type="button"
           v-tooltip="themeToggleTooltip"
           :aria-label="t('homeNav.themeToggleTitle', { mode: nextThemeModeLabel })"
           class="home-header__link-icon"
@@ -84,7 +75,6 @@
 import LightIcon from '@/components/icons/light.vue'
 import DarkIcon from '@/components/icons/dark.vue'
 import LeafIcon from '@/components/icons/leaf.vue'
-import Zen from '@/components/icons/zen.vue'
 import Github from '@/components/icons/github.vue'
 import Rss from '@/components/icons/rss.vue'
 import Auth from '@/components/icons/auth.vue'
@@ -92,7 +82,7 @@ import Signoff from '@/components/icons/signoff.vue'
 import { storeToRefs } from 'pinia'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useSettingStore, useUserStore, useThemeStore, useZenStore } from '@/stores'
+import { useSettingStore, useUserStore, useThemeStore } from '@/stores'
 import { resolveAvatarUrl } from '@/service/request/shared'
 import { useRouter } from 'vue-router'
 import { theToast } from '@/utils/toast'
@@ -101,11 +91,9 @@ import { useBaseDialog } from '@/composables/useBaseDialog'
 const settingStore = useSettingStore()
 const userStore = useUserStore()
 const themeStore = useThemeStore()
-const zenStore = useZenStore()
 
 const { SystemSetting } = storeToRefs(settingStore)
 const { user, isLogin } = storeToRefs(userStore)
-const { isZenMode } = storeToRefs(zenStore)
 const { t } = useI18n()
 const router = useRouter()
 const { openConfirm } = useBaseDialog()
@@ -189,10 +177,6 @@ const themeToggleTooltip = computed(() => ({
 
 const handleThemeToggle = async () => {
   await themeStore.toggleTheme()
-}
-
-const handleToggleZenMode = () => {
-  zenStore.setZenMode(!isZenMode.value)
 }
 
 const handleGoExplore = async () => {
@@ -331,11 +315,6 @@ onBeforeUnmount(() => {
 
 .home-header__link-icon:hover {
   color: var(--color-text-secondary);
-  background: var(--color-border-subtle);
-}
-
-.home-header__link-icon--active {
-  color: var(--color-text-primary);
   background: var(--color-border-subtle);
 }
 </style>

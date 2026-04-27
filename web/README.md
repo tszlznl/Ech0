@@ -173,7 +173,7 @@ Notable stores:
 - **`setting`** — system settings (title, defaults), agent / LLM provider config, S3 / OAuth2 /
   email settings.
 - **`theme`** — light / dark / sunny variants, applies CSS variables on switch.
-- **`hub`**, **`init`**, **`connect`** (WebSocket), **`zen`** (writing mode).
+- **`hub`**, **`init`**, **`connect`** (WebSocket).
 
 ### Service layer ([`src/service/`](src/service/))
 

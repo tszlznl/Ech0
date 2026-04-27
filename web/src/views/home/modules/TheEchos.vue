@@ -18,28 +18,36 @@
         <TheEchoCard :echo="echo" :index="index" @refresh="handleRefresh" />
       </div>
     </TransitionGroup>
-    <!-- 加载更多 -->
+    <!-- 时间线翻页：Before = 更早（左），After = 更新（右）；缺位用空 span 占位以稳定布局 -->
     <Transition name="fade">
       <div
-        v-if="echoStore.hasMore && !echoStore.isLoading"
-        class="mb-4 mt-1 flex items-center justify-between echos-toolbar"
+        v-if="!echoStore.isLoading && echoStore.total > 0 && echoStore.totalPages > 1"
+        class="echos-toolbar mb-2 mt-1 -ml-1 flex items-center justify-between"
       >
-        <BaseButton
-          v-if="!isZenMode"
-          @click="handleLoadMore"
-          class="rounded-full bg-[var(--btn-bg-color)] !active:bg-[var(--btn-hover-bg-color)] mr-2"
+        <button
+          v-if="canGoOlder"
+          type="button"
+          class="echos-pager echos-pager--older"
+          @click="handleGoToPage(echoStore.currentPage + 1)"
         >
-          <span class="text-[var(--btn-text-color)] text-md text-center px-2 py-1">{{
-            t('homeFeed.loadMore')
-          }}</span>
-        </BaseButton>
-        <TheBackTop class="w-8 h-8 p-1" :target="scrollTarget" />
+          {{ t('homeFeed.older') }}
+        </button>
+        <span v-else aria-hidden="true" />
+        <button
+          v-if="canGoNewer"
+          type="button"
+          class="echos-pager echos-pager--newer"
+          @click="handleGoToPage(echoStore.currentPage - 1)"
+        >
+          {{ t('homeFeed.newer') }}
+        </button>
+        <span v-else aria-hidden="true" />
       </div>
     </Transition>
-    <!-- 没有更多 -->
+    <!-- 没有数据 -->
     <Transition name="fade">
       <div
-        v-if="!echoStore.hasMore && !echoStore.isLoading"
+        v-if="!echoStore.isLoading && echoStore.total === 0"
         class="mx-auto my-5 text-center echos-toolbar"
       >
         <p class="text-xl text-[var(--color-text-muted)]">
@@ -72,13 +80,12 @@
 
 <script setup lang="ts">
 import TheEchoCard from '@/components/advanced/echo/cards/TheEchoCard.vue'
-import { computed, onBeforeUnmount, onMounted, nextTick, ref, watch } from 'vue'
-import { useEchoStore, useSettingStore, useZenStore } from '@/stores'
-import BaseButton from '@/components/common/BaseButton.vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useEchoStore, useSettingStore } from '@/stores'
 import TheLoadingIndicator from '@/components/common/TheLoadingIndicator.vue'
 import { storeToRefs } from 'pinia'
-import TheBackTop from '@/components/advanced/TheBackTop.vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 
 const props = defineProps<{
   scrollTarget?: HTMLElement | null
@@ -88,19 +95,21 @@ const props = defineProps<{
 
 const echoStore = useEchoStore()
 const settingStore = useSettingStore()
-const zenStore = useZenStore()
+const route = useRoute()
+const router = useRouter()
 const { t } = useI18n()
 const { SystemSetting } = storeToRefs(settingStore)
-const { isZenMode } = storeToRefs(zenStore)
 const { isFilteringMode } = storeToRefs(echoStore)
 const footerContent = computed(
   () => SystemSetting.value.footer_content || SystemSetting.value.ICP_number,
 )
 const footerLink = computed(() => SystemSetting.value.footer_link)
 
-// 瀑布式入场：首屏与后续刷新 / load-more 都走"从上往下依次落下"的级联。
-// 通过批内计数器而不是全局 index 来计算 stagger，
-// 这样 load-more 追加的新卡也能在自己的批次里正确瀑布展开，而不是一起顶到封顶延迟。
+const canGoNewer = computed(() => echoStore.currentPage > 1)
+const canGoOlder = computed(() => echoStore.currentPage < echoStore.totalPages)
+
+// 瀑布式入场：批内计数器决定 stagger 时长，
+// 整页换页时新批从 0 重新起跳，不会顶到封顶延迟。
 const hasInitialRendered = ref(false)
 
 let enterBatchIndex = 0
@@ -109,7 +118,7 @@ let enterBatchResetTimer: number | null = null
 const ENTER_DURATION = 420
 const ENTER_STAGGER = 100
 const ENTER_STAGGER_CAP = 600
-const ENTER_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)' // ease-out-quart，轻柔落地
+const ENTER_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)'
 
 const onBeforeEnter = (el: Element) => {
   const element = el as HTMLElement
@@ -123,13 +132,11 @@ const onEnter = (el: Element, done: () => void) => {
   if (enterBatchResetTimer !== null) {
     window.clearTimeout(enterBatchResetTimer)
   }
-  // 一批 enter 结束后重置计数器，保证下一批（刷新、load-more）从 0 重新起跳
   enterBatchResetTimer = window.setTimeout(() => {
     enterBatchIndex = 0
     enterBatchResetTimer = null
   }, 400)
 
-  // 过滤切换 / 点赞刷新等场景有 leave 同时进行，预留 80ms 让 leave 脱流 + move 起步
   const baseDelay = hasInitialRendered.value ? 80 : 0
   const staggerDelay = Math.min(indexInBatch * ENTER_STAGGER, ENTER_STAGGER_CAP)
 
@@ -141,8 +148,8 @@ const onEnter = (el: Element, done: () => void) => {
   }, baseDelay + staggerDelay)
 }
 
-// 离场：先把元素位置快照并切成 absolute 脱离文档流，这样留下的卡片可以立刻
-// 通过 .list-move 滑到新位置，新进来的卡片也不会和还没消失的旧卡重叠。
+// 离场：先把元素位置快照并切成 absolute 脱离文档流，让留下的卡片
+// 通过 .list-move 平滑补位、新进来的卡片不会和旧卡重叠。
 const onBeforeLeave = (el: Element) => {
   const element = el as HTMLElement
   const parent = element.parentElement
@@ -164,128 +171,114 @@ const onLeave = (el: Element, done: () => void) => {
   })
 }
 
-const handleLoadMore = async () => {
-  echoStore.current = echoStore.current + 1
-  await echoStore.getEchosByPage()
-}
-
-const nearBottomThreshold = 240
-let scrollListenerAttachedEl: HTMLElement | null = null
-let rafId: number | null = null
-let ensuringScrollable = false
-
-const getScrollMetrics = (container: HTMLElement) => ({
-  scrollTop: container.scrollTop,
-  viewportHeight: container.clientHeight,
-  fullHeight: container.scrollHeight,
-})
-
-const checkAndLoadMoreInZen = async () => {
+const scrollToTop = () => {
   const container = props.scrollTarget
-  if (!container || !isZenMode.value || echoStore.isLoading || !echoStore.hasMore) return
-  const { scrollTop, viewportHeight, fullHeight } = getScrollMetrics(container)
-  if (scrollTop + viewportHeight + nearBottomThreshold >= fullHeight) {
-    await handleLoadMore()
+  if (container) {
+    container.scrollTo({ top: 0, behavior: 'smooth' })
+  } else if (typeof window !== 'undefined') {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 }
 
-const onTimelineScroll = () => {
-  if (!isZenMode.value || rafId !== null) return
-  rafId = window.requestAnimationFrame(async () => {
-    rafId = null
-    await checkAndLoadMoreInZen()
-  })
+const parsePageQuery = (raw: unknown): number => {
+  const value = Number(Array.isArray(raw) ? raw[0] : raw)
+  if (!Number.isFinite(value) || value < 1) return 1
+  return Math.floor(value)
 }
 
-const bindTimelineScroll = () => {
-  if (scrollListenerAttachedEl === props.scrollTarget) return
-  if (scrollListenerAttachedEl) {
-    scrollListenerAttachedEl.removeEventListener('scroll', onTimelineScroll)
+const handleGoToPage = async (page: number) => {
+  const target = Math.max(1, Math.min(page, echoStore.totalPages || page))
+  if (target === echoStore.currentPage) return
+  const nextQuery = { ...route.query }
+  if (target > 1) {
+    nextQuery.page = String(target)
+  } else {
+    delete nextQuery.page
   }
-  scrollListenerAttachedEl = props.scrollTarget ?? null
-  if (scrollListenerAttachedEl) {
-    scrollListenerAttachedEl.addEventListener('scroll', onTimelineScroll, { passive: true })
-  }
+  await router.replace({ query: nextQuery })
+  // route watcher 会驱动实际的 fetch + scroll
 }
 
-const ensureScrollableInZen = async () => {
-  if (ensuringScrollable || !isZenMode.value) return
-  const container = props.scrollTarget
-  if (!container) return
-  ensuringScrollable = true
-  try {
-    const maxAutoLoads = 3
-    let attempts = 0
-    while (attempts < maxAutoLoads && echoStore.hasMore && !echoStore.isLoading) {
-      await nextTick()
-      const { viewportHeight, fullHeight } = getScrollMetrics(container)
-      if (fullHeight > viewportHeight + 10) break
-      attempts += 1
-      await handleLoadMore()
-    }
-  } finally {
-    ensuringScrollable = false
-  }
-}
-
-// 刷新数据
+// 刷新数据（点赞 / 编辑 / 删除单条 echo 后刷新当前页）
 const handleRefresh = () => {
   echoStore.refreshEchos()
 }
 
+// URL ?page=N → store currentPage：单一来源，避免双向同步歪楼
+watch(
+  () => route.query.page,
+  async (raw) => {
+    const target = parsePageQuery(raw)
+    if (target === echoStore.currentPage && echoStore.echoList.length > 0) return
+    echoStore.currentPage = target
+    await echoStore.fetchCurrentPage()
+    scrollToTop()
+  },
+)
+
+// 过滤模式切换时（进入/退出/切换标签），刷新列表回到第一页
+watch(isFilteringMode, () => {
+  if (Number(route.query.page) > 1) {
+    const nextQuery = { ...route.query }
+    delete nextQuery.page
+    router.replace({ query: nextQuery })
+    return
+  }
+  echoStore.refreshEchos()
+})
+
 onMounted(async () => {
-  // 获取数据
-  bindTimelineScroll()
-  // main.ts 在 `/` 路由上预热了第一页请求，`getEchosByPage` 内置了
-  // `current <= page` 的重复请求守卫，所以这里直接调用即可：
-  // 若预热已完成则快速返回，否则接着完成加载。
-  await echoStore.getEchosByPage()
-  await ensureScrollableInZen()
+  const target = parsePageQuery(route.query.page)
+  echoStore.currentPage = target
+  await echoStore.fetchCurrentPage()
   // 首屏交错动画跑完（最长 ~460ms）后切到淡入模式，避免后续过滤刷新抖动
   window.setTimeout(() => {
     hasInitialRendered.value = true
   }, 500)
-})
-
-watch(
-  () => props.scrollTarget,
-  () => {
-    bindTimelineScroll()
-    ensureScrollableInZen()
-  },
-)
-
-watch(isZenMode, () => {
-  ensureScrollableInZen()
-})
-
-watch(
-  () => [echoStore.echoList.length, echoStore.hasMore, echoStore.isLoading],
-  () => {
-    ensureScrollableInZen()
-  },
-)
-
-// 过滤模式切换时（进入/退出/切换标签），刷新列表
-watch(isFilteringMode, () => {
-  echoStore.refreshEchos()
-})
-
-onBeforeUnmount(() => {
-  if (scrollListenerAttachedEl) {
-    scrollListenerAttachedEl.removeEventListener('scroll', onTimelineScroll)
-    scrollListenerAttachedEl = null
-  }
-  if (rafId !== null) {
-    window.cancelAnimationFrame(rafId)
-    rafId = null
-  }
 })
 </script>
 
 <style scoped>
 .echos-toolbar {
   font-family: var(--font-family-display);
+}
+
+/* 时间线翻页按钮：透明底 + 细边框药丸，贴合纸面色调 */
+.echos-pager {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5rem;
+  padding: 0.4rem 1.1rem;
+  font-family: var(--font-family-display);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition:
+    color 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    transform 0.08s ease;
+}
+
+.echos-pager:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-text-secondary);
+  background: var(--color-border-subtle);
+}
+
+.echos-pager:active {
+  transform: translateY(1px);
+}
+
+.echos-pager:focus-visible {
+  outline: 2px solid var(--color-text-secondary);
+  outline-offset: 2px;
 }
 
 /* 留下的卡片位置变化：用于过滤/刷新时平滑补位 */

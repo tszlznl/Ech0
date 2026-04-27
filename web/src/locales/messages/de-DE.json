@@ -341,7 +341,6 @@
   },
   "homeNav": {
     "themeToggleTitle": "Theme wechseln (nächstes: {mode})",
-    "enterZenMode": "Zen-Modus aktivieren",
     "themeLight": "Hell",
     "themeDark": "Dunkel",
     "themeSunny": "Sonnig",
@@ -350,7 +349,6 @@
   "homeTop": {
     "searchTitle": "Suche",
     "searchPlaceholder": "Suchen…",
-    "exitZenMode": "Zen-Modus verlassen",
     "rssTitle": "RSS"
   },
   "commandPalette": {
@@ -392,10 +390,11 @@
   },
   "homeFooter": {},
   "homeFeed": {
-    "loadMore": "Mehr laden",
     "noMore": "Keine weiteren Daten",
     "noMoreFiltered": "Keine weiteren Daten",
-    "loading": "Wird geladen…"
+    "loading": "Wird geladen…",
+    "older": "Älter",
+    "newer": "Neuer"
   },
   "dateTime": {
     "justNow": "Gerade eben",

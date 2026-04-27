@@ -1,7 +1,7 @@
 <template>
   <div class="home-page">
-    <div class="home-shell" :class="{ 'home-shell--zen': isZenMode }">
-      <div class="home-layout" :class="{ 'home-layout--zen': isZenMode }">
+    <div class="home-shell">
+      <div class="home-layout">
         <div
           ref="mainColumn"
           class="home-main"
@@ -9,7 +9,7 @@
         >
           <div class="home-main-track">
             <HomeHeader class="mb-3 mx-1" />
-            <aside v-if="!isZenMode" class="home-aside home-aside--mobile">
+            <aside class="home-aside home-aside--mobile">
               <HomeSidebarNav
                 v-model:mobile-search-open="mobileSearchOpen"
                 class="mx-1"
@@ -42,7 +42,7 @@
           </div>
         </div>
 
-        <aside v-if="!isZenMode" class="home-aside home-aside--rail">
+        <aside class="home-aside home-aside--rail">
           <HomeSidebarNav />
           <div class="home-aside__filter-block">
             <TheFilter @open-palette="paletteOpen = true" />
@@ -70,7 +70,7 @@ import TheFilter from './TheFilter.vue'
 import TheEchos from './TheEchos.vue'
 import TheCommandPalette from './TheCommandPalette.vue'
 import { defineAsyncComponent, onMounted, ref, onBeforeUnmount, computed } from 'vue'
-import { useEchoStore, useZenStore, useUserStore, useSettingStore } from '@/stores'
+import { useEchoStore, useUserStore, useSettingStore } from '@/stores'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import {
@@ -87,11 +87,9 @@ const HubPage = defineAsyncComponent(() => import('@/views/hub/modules/HubPage.v
 
 const userStore = useUserStore()
 const settingStore = useSettingStore()
-const zenStore = useZenStore()
 const echoStore = useEchoStore()
 const { isLogin } = storeToRefs(userStore)
 const { AgentSetting } = storeToRefs(settingStore)
-const { isZenMode } = storeToRefs(zenStore)
 const { searchingMode, isFilteringMode } = storeToRefs(echoStore)
 const mobileSearchOpen = ref(false)
 const activeTab = computed<'home' | 'publish' | 'status' | 'tags' | 'hub'>(() => {
@@ -226,13 +224,6 @@ onBeforeUnmount(() => {
   }
 }
 
-.home-shell--zen .home-layout {
-  width: 100%;
-  max-width: min(var(--home-main-max), 100%);
-  margin-left: auto;
-  margin-right: auto;
-}
-
 .home-layout {
   display: flex;
   flex-direction: column;
@@ -250,10 +241,6 @@ onBeforeUnmount(() => {
     justify-content: center;
     gap: clamp(1.25rem, 4vw, 2rem);
     padding: 0;
-  }
-
-  .home-layout--zen {
-    justify-content: center;
   }
 }
 
@@ -285,13 +272,6 @@ onBeforeUnmount(() => {
 
   .home-main--unclipped {
     overflow: visible auto;
-  }
-
-  .home-layout--zen .home-main {
-    flex: 0 1 var(--home-main-max);
-    max-width: min(var(--home-main-max), 100%);
-    margin-left: auto;
-    margin-right: auto;
   }
 }
 

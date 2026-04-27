@@ -77,7 +77,7 @@ const emit = defineEmits<{
 const echoStore = useEchoStore()
 const {
   refreshForSearch,
-  getEchosByPage,
+  fetchCurrentPage,
   refreshEchos,
   resetDateRange,
   removeSelectedTag,
@@ -128,7 +128,7 @@ const handleSearch = () => {
   echoStore.searchValue = searchContent.value
   if (searchingMode.value) {
     refreshForSearch()
-    getEchosByPage()
+    fetchCurrentPage()
   }
 }
 
