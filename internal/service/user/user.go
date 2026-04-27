@@ -72,6 +72,13 @@ func (userService *UserService) InitOwner(registerDto *authModel.RegisterDto) er
 		return errors.New("邮箱格式无效")
 	}
 
+	ownerLocale := string(commonModel.DefaultLocale)
+	if requested := strings.TrimSpace(registerDto.Locale); requested != "" {
+		if resolved := i18nUtil.ResolveLocale(requested); resolved != "" {
+			ownerLocale = resolved
+		}
+	}
+
 	var owner model.User
 	if err := userService.transactor.Run(context.Background(), func(ctx context.Context) error {
 		initialized, err := userService.userRepository.IsInitialized(ctx)
@@ -102,7 +109,7 @@ func (userService *UserService) InitOwner(registerDto *authModel.RegisterDto) er
 			Password: cryptoUtil.MD5Encrypt(registerDto.Password),
 			IsAdmin:  true,
 			IsOwner:  true,
-			Locale:   string(commonModel.DefaultLocale),
+			Locale:   ownerLocale,
 		}
 
 		if err := userService.userRepository.CreateUser(ctx, &owner); err != nil {
@@ -112,6 +119,12 @@ func (userService *UserService) InitOwner(registerDto *authModel.RegisterDto) er
 		return userService.userRepository.MarkInitialized(ctx)
 	}); err != nil {
 		return err
+	}
+
+	// 把部署者的语言作为站点默认语言落库（仅当 system_settings 还不存在时生效）。
+	if err := userService.settingService.BootstrapDefaultLocale(context.Background(), ownerLocale); err != nil {
+		logUtil.GetLogger().
+			Warn("Failed to bootstrap default locale on init owner", zap.Error(err))
 	}
 
 	// 发布用户注册事件

@@ -32,6 +32,7 @@ declare namespace App {
         username: string
         password: string
         email?: string
+        locale?: string
       }
 
       // Passkey / WebAuthn

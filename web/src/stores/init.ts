@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { fetchGetInitStatus, fetchInitOwner } from '@/service/api'
+import { i18n } from '@/locales'
 import { localStg } from '@/utils/storage'
 
 const INIT_ALREADY_DONE = 'INIT_ALREADY_DONE'
@@ -34,7 +35,13 @@ export const useInitStore = defineStore('initStore', () => {
   }
 
   const initOwner = async (payload: App.Api.Auth.SignupParams) => {
-    const res = await fetchInitOwner(payload)
+    // 把部署者当前页面生效的 locale（来自 navigator 检测或手动切换）一起提交，
+    // 后端会用它作为 owner.locale 与站点 default_locale，避免新部署被锁成 zh-CN。
+    const enriched: App.Api.Auth.SignupParams = {
+      ...payload,
+      locale: payload.locale || String(i18n.global.locale.value),
+    }
+    const res = await fetchInitOwner(enriched)
     if (res.code === 1) {
       initialized.value = true
       ownerExists.value = true

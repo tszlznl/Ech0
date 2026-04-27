@@ -3215,6 +3215,10 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "locale": {
+                    "description": "Locale 仅在初始化 Owner 时使用：作为部署者偏好的语言写入用户记录与站点默认语言。\n普通注册流程会忽略此字段。",
+                    "type": "string"
+                },
                 "password": {
                     "type": "string"
                 },

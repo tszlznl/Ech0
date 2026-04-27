@@ -69,6 +69,52 @@ func (settingService *SettingService) GetSetting(setting *model.SystemSetting) e
 	})
 }
 
+// BootstrapDefaultLocale 在首次部署时把部署者的语言写入站点默认。
+// 仅当 system_settings KV 还不存在时落库，避免覆盖站长后续在面板里手动选过的值；
+// 入参为空或解析失败时不做任何事，让原有的 zh-CN 兜底逻辑接管。
+func (settingService *SettingService) BootstrapDefaultLocale(
+	ctx context.Context,
+	locale string,
+) error {
+	resolved := strings.TrimSpace(locale)
+	if resolved == "" {
+		return nil
+	}
+	resolved = i18nUtil.ResolveLocale(resolved)
+	if resolved == "" || resolved == string(commonModel.DefaultLocale) {
+		return nil
+	}
+
+	return settingService.transactor.Run(ctx, func(ctx context.Context) error {
+		if _, err := settingService.keyvalueRepository.GetKeyValue(ctx, commonModel.SystemSettingsKey); err == nil {
+			return nil
+		}
+
+		setting := model.SystemSetting{
+			SiteTitle:     config.Config().Setting.SiteTitle,
+			ServerLogo:    config.Config().Setting.ServerLogo,
+			ServerName:    config.Config().Setting.Servername,
+			ServerURL:     httpUtil.TrimURL(config.Config().Setting.Serverurl),
+			AllowRegister: config.Config().Setting.AllowRegister,
+			DefaultLocale: resolved,
+			ICPNumber:     config.Config().Setting.Icpnumber,
+			FooterContent: config.Config().Setting.FooterContent,
+			FooterLink:    httpUtil.TrimURL(config.Config().Setting.FooterLink),
+			MetingAPI:     httpUtil.TrimURL(config.Config().Setting.MetingAPI),
+			CustomCSS:     config.Config().Setting.CustomCSS,
+			CustomJS:      config.Config().Setting.CustomJS,
+		}
+		settingToJSON, err := json.Marshal(setting)
+		if err != nil {
+			return err
+		}
+		if err := settingService.keyvalueRepository.AddKeyValue(ctx, commonModel.SystemSettingsKey, string(settingToJSON)); err != nil {
+			return err
+		}
+		return settingService.keyvalueRepository.AddKeyValue(ctx, commonModel.ServerURLKey, setting.ServerURL)
+	})
+}
+
 // UpdateSetting 更新设置
 func (settingService *SettingService) UpdateSetting(
 	ctx context.Context,
