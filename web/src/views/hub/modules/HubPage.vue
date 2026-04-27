@@ -97,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
+import 'vue-virtual-scroller/index.css'
 
 import BaseButton from '@/components/common/BaseButton.vue'
 import TheLoadingIndicator from '@/components/common/TheLoadingIndicator.vue'
