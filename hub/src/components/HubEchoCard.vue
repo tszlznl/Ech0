@@ -4,7 +4,10 @@ import Verified from '@/components/icons/verified.vue'
 import GrayLike from '@/components/icons/graylike.vue'
 import LinkTo from '@/components/icons/linkto.vue'
 import BaseAvatar from '@/components/common/BaseAvatar.vue'
-import { TheMdPreview } from '@/components/advanced/md'
+// 直接点到 .vue 文件，绕开 md/index.ts 这个 barrel：barrel 同时再导出 TheMdEditor，
+// 而 TheMdEditor → @/stores → @/router 会把整个 web 入口拽回 hub 的 entry chunk，
+// 形成 index ↔ TheMdEditor 静态循环 → 运行时 `A is not a function`。
+import TheMdPreview from '@/components/advanced/md/TheMdPreview.vue'
 import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { ImageLayout } from '@/enums/enums'
 import { getEchoFilesBy } from '../utils/echoFiles'
