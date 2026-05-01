@@ -107,6 +107,32 @@ export function useFilesModule({ t }: FilesModuleDeps) {
     )
   }
 
+  // Reorder a subset of filesToAdd by id, leaving entries whose id is NOT in
+  // `orderedIds` anchored at their original positions. Used by the uploader's
+  // drag-to-reorder so that mixing uploaded files with EXTERNAL/URL-mode entries
+  // in the same editing session doesn't clobber the latter.
+  const reorderFilesByIds = (orderedIds: string[]) => {
+    if (orderedIds.length === 0) return
+    const idSet = new Set(orderedIds)
+    const rank = new Map(orderedIds.map((id, i) => [id, i]))
+    const current = filesToAdd.value
+    const positions: number[] = []
+    const managed: App.Api.Ech0.FileToAdd[] = []
+    current.forEach((file, idx) => {
+      if (file.id && idSet.has(file.id)) {
+        positions.push(idx)
+        managed.push(file)
+      }
+    })
+    if (managed.length === 0) return
+    managed.sort((a, b) => (rank.get(a.id!) ?? 0) - (rank.get(b.id!) ?? 0))
+    const next = current.slice()
+    positions.forEach((pos, i) => {
+      next[pos] = managed[i]
+    })
+    setFilesToAdd(next)
+  }
+
   const removeFileAt = (index: number) => {
     removeAttachment(index)
   }
@@ -134,6 +160,7 @@ export function useFilesModule({ t }: FilesModuleDeps) {
     // methods
     handleAddMoreFile,
     setFilesToAdd,
+    reorderFilesByIds,
     removeFileAt,
     resetFilesState,
     // re-exports used by other modules

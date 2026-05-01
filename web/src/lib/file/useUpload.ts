@@ -47,6 +47,8 @@ export interface QueueItem {
   id: string
   file: File
   originalFile: File
+  /** Pre-compression size in bytes; used to render the original→compressed delta. */
+  originalSize: number
   status: UploadStatus
   progress: number
   error?: string
@@ -139,6 +141,7 @@ export function useUpload(opts: UseUploadOptions) {
         id,
         file,
         originalFile: file,
+        originalSize: file.size,
         status: UPLOAD_STATUS.PENDING,
         progress: 0,
         preview: URL.createObjectURL(file),
@@ -369,6 +372,17 @@ export function useUpload(opts: UseUploadOptions) {
     pump()
   }
 
+  // Reorder two queue items by id. Caller is responsible for any propagation
+  // (e.g. updating the editor's filesToAdd order via reorderFilesByIds).
+  function moveItem(fromId: string, toId: string) {
+    if (fromId === toId) return
+    const from = items.value.findIndex((i) => i.id === fromId)
+    const to = items.value.findIndex((i) => i.id === toId)
+    if (from < 0 || to < 0) return
+    const [moved] = items.value.splice(from, 1)
+    items.value.splice(to, 0, moved)
+  }
+
   function remove(id: string) {
     const idx = items.value.findIndex((i) => i.id === id)
     if (idx < 0) return
@@ -398,6 +412,7 @@ export function useUpload(opts: UseUploadOptions) {
     addFiles,
     retry,
     remove,
+    moveItem,
     cancelAll,
     reset,
   }
