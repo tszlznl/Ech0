@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 package model
 
 // SUCCESS_MESSAGE 成功相关的消息常量

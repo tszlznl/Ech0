@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 import { createRouter, createWebHistory } from 'vue-router'
 import { useInitStore } from '@/stores/init'
 import { useUserStore } from '@/stores/user'
@@ -149,6 +152,15 @@ const router = createRouter({
       meta: {
         title: 'Echo',
         description: 'Read a shared Ech0 post.',
+      },
+    },
+    {
+      path: '/about',
+      name: 'about',
+      component: () => import('../views/about/AboutView.vue'),
+      meta: {
+        title: 'About',
+        description: 'Copyright, license and author information for this Ech0 instance.',
       },
     },
     {

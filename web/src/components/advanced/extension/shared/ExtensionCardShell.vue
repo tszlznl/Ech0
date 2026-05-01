@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <div class="extension-card-shell" :class="[sizeClass, paddingClass]">
     <div v-if="hasHeader" class="extension-card-shell__header">

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 package model
 
 // PageQueryDto 用于分页查询的请求数据传输对象

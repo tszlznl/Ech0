@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { ofetch } from 'ofetch'

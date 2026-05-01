@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 /** 与后端 Echo 模型对齐（见 internal/model/echo） */
 export interface EchoTag {
   id: string

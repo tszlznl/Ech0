@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 /**
  * Hub 仅使用 **light** 语义主题（`web` 的 `:root.light`，见 themes/tokens/semantic.light.scss）。
  * 不读取 localStorage、不响应 dark / sunny，避免与主站主题设置串台。

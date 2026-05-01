@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <div
     class="editor-mode-panel p-3 my-3 border border-dashed border-[var(--dash-line-color)] rounded-xs"

@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <section class="mb-3 text-center">
     <p class="text-[10px] tracking-[0.16em] uppercase text-[var(--color-text-secondary)] mb-2">

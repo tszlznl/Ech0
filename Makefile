@@ -2,9 +2,14 @@
 GOHOSTOS:=$(shell go env GOHOSTOS)
 GOHOSTARCH:=$(shell go env GOHOSTARCH)
 GOPATH:=$(shell go env GOPATH)
-VERSION=$(shell git describe --tags --always)
-BUILD_TIME=$(shell date +%Y-%m-%dT%H:%M:%S)
-GIT_COMMIT=$(shell git rev-parse HEAD)
+VERSION=$(shell git describe --tags --always 2>/dev/null || echo unknown)
+BUILD_TIME=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+GIT_COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
+
+# Inject build metadata into the binary so /hello can return the real commit/time.
+# 这两个变量必须是 var（不能是 const），见 internal/version/version.go。
+VERSION_PKG=github.com/lin-snow/ech0/internal/version
+LDFLAGS=-X $(VERSION_PKG).Commit=$(GIT_COMMIT) -X $(VERSION_PKG).BuildTime=$(BUILD_TIME)
 
 # Docker variables
 DOCKER_REGISTRY?=sn0wl1n
@@ -13,7 +18,7 @@ IMAGE_TAG?=latest
 OS?=$(if $(GOHOSTOS),$(GOHOSTOS),linux)
 ARCH?=$(if $(GOHOSTARCH),$(GOHOSTARCH),amd64)
 
-.PHONY: help air-install run dev web-dev check dev-lint lint fmt test wire wire-check swagger build-image push-image
+.PHONY: help air-install run dev web-dev check dev-lint lint fmt test wire wire-check swagger build build-image push-image
 
 AIR_BIN := $(shell command -v air 2>/dev/null || echo "$(GOPATH)/bin/air")
 
@@ -23,6 +28,7 @@ help:
 	@echo "  make dev         - Run backend with Air hot reload"
 	@echo "  make air-install - Install Air to GOPATH/bin"
 	@echo "  make web-dev     - Run frontend dev server"
+	@echo "  make build       - Build local binary with version/commit injected"
 	@echo "  make check       - Backend fmt/lint + web format/lint + i18n checks"
 	@echo "  make dev-lint    - Backend fmt/lint + web format/lint + i18n checks"
 	@echo "  make lint        - Run golangci-lint checks"
@@ -38,7 +44,10 @@ air-install:
 	go install github.com/air-verse/air@latest
 
 run:
-	go run ./cmd/ech0 serve
+	go run -ldflags "$(LDFLAGS)" ./cmd/ech0 serve
+
+build:
+	go build -ldflags "$(LDFLAGS)" -o ./bin/ech0 ./cmd/ech0
 
 dev:
 	@if [ ! -x "$(AIR_BIN)" ]; then \
@@ -93,6 +102,8 @@ build-image:
 	docker build --platform $(OS)/$(ARCH) \
 		--build-arg TARGETOS=$(OS) \
 		--build-arg TARGETARCH=$(ARCH) \
+		--build-arg GIT_COMMIT=$(GIT_COMMIT) \
+		--build-arg BUILD_TIME=$(BUILD_TIME) \
 		-t $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG) -f docker/build.Dockerfile .
 push-image:
 	docker push $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 package service
 
 import (
@@ -15,6 +18,7 @@ import (
 	"github.com/lin-snow/ech0/internal/transaction"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	versionPkg "github.com/lin-snow/ech0/internal/version"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
 	"golang.org/x/sync/singleflight"
@@ -161,7 +165,7 @@ func (connectService *ConnectService) GetConnect() (model.Connect, error) {
 	connect.TotalEchos = int(totalEchos)
 	connect.TodayEchos = len(todayEchos)
 	connect.SysUsername = owner.Username
-	connect.Version = commonModel.Version
+	connect.Version = versionPkg.Version
 
 	trimmedServerURL := strings.TrimRight(setting.ServerURL, "/")
 	logoPath := strings.TrimSpace(setting.ServerLogo)

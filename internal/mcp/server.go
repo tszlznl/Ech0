@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 package mcp
 
 import (
@@ -9,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	versionPkg "github.com/lin-snow/ech0/internal/version"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
 )
@@ -52,7 +55,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]string{
 			"status":  "ok",
 			"name":    ServerName,
-			"version": commonModel.Version,
+			"version": versionPkg.Version,
 		})
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -136,7 +139,7 @@ func (s *Server) handleInitialize() (*InitializeResult, *RPCError) {
 		},
 		ServerInfo: ServerInfo{
 			Name:    ServerName,
-			Version: commonModel.Version,
+			Version: versionPkg.Version,
 		},
 	}, nil
 }

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 /**
  * 与 web/src/utils/echo.ts 等价，但仅从 @/lib/file/selectors 引入 filter，
  * 避免 @/lib/file 的 barrel 把整个 file 子系统打进 Hub。

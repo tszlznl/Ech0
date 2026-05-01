@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 import { timeValueToMs } from './timeValue'
 
 /** Hub 卡片底部时间展示（不依赖 web/utils/other 的 i18n 相对时间链） */

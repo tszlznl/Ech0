@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <div class="editor-image-panel">
     <h2 class="text-[var(--color-text-secondary)] font-bold my-2">

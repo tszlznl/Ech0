@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 /// <reference types="vitest/config" />
 import { fileURLToPath, URL } from 'node:url'
 

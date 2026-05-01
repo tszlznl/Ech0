@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <div class="px-2">
     <div class="widget bg-transparent! w-full max-w-[19rem] mx-auto rounded-md p-1">

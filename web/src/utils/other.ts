@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 import { MusicProvider } from '@/enums/enums'
 import { i18n, DEFAULT_LOCALE } from '@/locales'
 import { timeValueToMs } from './timeValue'

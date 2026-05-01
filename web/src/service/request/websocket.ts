@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 import { useWebSocket } from '@vueuse/core'
 import { reactive, watch } from 'vue'
 import { i18n } from '@/locales'

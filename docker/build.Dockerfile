@@ -34,11 +34,17 @@ COPY --from=frontend-builder /template/dist /app/template/dist
 
 ARG TARGETOS
 ARG TARGETARCH
+# 构建元数据：commit / build_time。当宿主传入了 ARG（make build-image 默认会传），
+# 直接使用；否则回退到容器内 git / date（要求构建上下文包含 .git）。
+ARG GIT_COMMIT
+ARG BUILD_TIME
 
 # 与 release.yml「Build backend binary with embedded frontend」一致（embed 读取 template/dist）
-RUN CGO_ENABLED=1 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
+RUN COMMIT="${GIT_COMMIT:-$(git rev-parse --short HEAD 2>/dev/null || echo unknown)}" \
+    && BUILD="${BUILD_TIME:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}" \
+    && CGO_ENABLED=1 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
     -tags netgo \
-    -ldflags="-linkmode external -extldflags '-static'" \
+    -ldflags="-linkmode external -extldflags '-static' -X github.com/lin-snow/ech0/internal/version.Commit=${COMMIT} -X github.com/lin-snow/ech0/internal/version.BuildTime=${BUILD}" \
     -o ech0 ./cmd/ech0/main.go
 
 # =================== 最终镜像（对齐根目录 Dockerfile 运行时层）===================

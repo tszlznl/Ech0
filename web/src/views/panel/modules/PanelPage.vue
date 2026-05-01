@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <div class="panel-page-wrap mt-4">
     <div class="panel-shell border p-4 mx-auto flex flex-col max-w-screen-lg w-full mb-12">

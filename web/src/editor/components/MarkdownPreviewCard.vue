@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <article class="markdown-preview-card" :class="{ 'is-long-content': isLongContent }">
     <header class="preview-card-header">{{ t('editor.preview') }}</header>

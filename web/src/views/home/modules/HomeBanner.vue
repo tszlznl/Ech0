@@ -1,16 +1,25 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <section class="home-banner" aria-label="Intro">
     <div class="home-banner__top">
       <p class="home-banner__line">{{ t('homeBio.tagline') }}</p>
     </div>
     <div class="home-banner__meta">
-      <span class="home-banner__powered">Powered by Ech0</span>
+      <RouterLink
+        :to="{ name: 'about' }"
+        class="home-banner__powered"
+        :aria-label="t('about.linkAriaLabel')"
+      >
+        Powered by Ech0
+      </RouterLink>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { RouterLink } from 'vue-router'
 const { t } = useI18n()
 </script>
 
@@ -66,5 +75,12 @@ const { t } = useI18n()
   font-weight: 600;
   line-height: 1.35;
   color: var(--color-text-secondary);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.home-banner__powered:hover {
+  color: var(--color-text-primary);
 }
 </style>

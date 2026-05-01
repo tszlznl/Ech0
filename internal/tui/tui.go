@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 package tui
 
 import (
@@ -8,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	commonModel "github.com/lin-snow/ech0/internal/model/common"
+	versionPkg "github.com/lin-snow/ech0/internal/version"
 )
 
 var (
@@ -150,7 +153,7 @@ func GetEch0Info() string {
 	content := lipgloss.JoinVertical(
 		lipgloss.Left,
 		infoStyle.Render(
-			"📦 "+titleStyle.Render("Version")+": "+highlight.Render(commonModel.Version),
+			"📦 "+titleStyle.Render("Version")+": "+highlight.Render(versionPkg.Version),
 		),
 		infoStyle.Render("🧙 "+titleStyle.Render("Author")+": "+highlight.Render("L1nSn0w")),
 		infoStyle.Render(

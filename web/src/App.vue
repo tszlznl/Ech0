@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2025-2026 lin-snow -->
 <script setup lang="ts">
 import { RouterView, useRouter } from 'vue-router'
 import { computed, onMounted, ref, watch } from 'vue'

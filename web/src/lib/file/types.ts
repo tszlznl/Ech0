@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 import type { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 
 export type FileCategory = (typeof FILE_CATEGORY)[keyof typeof FILE_CATEGORY]

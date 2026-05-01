@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 export { default as TheConnectWidget } from './TheConnectWidget.vue'
 export { default as TheCommentWidget } from './TheCommentWidget.vue'
 export { default as TheHeatMap } from './TheHeatMap.vue'

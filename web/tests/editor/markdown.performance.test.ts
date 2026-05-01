@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 import { describe, expect, it } from 'vitest'
 import { performance } from 'node:perf_hooks'
 import { renderMarkdown } from '../../src/editor/core/markdown'

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 const SIZE_UNITS = ['B', 'KB', 'MB', 'GB'] as const
 
 // Render a byte count as a short human label (e.g. 234 KB, 1.2 MB).

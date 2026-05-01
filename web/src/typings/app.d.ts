@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 declare namespace App {
   /**
    * Namespace Api
@@ -312,8 +315,13 @@ declare namespace App {
 
       type HelloEch0 = {
         hello: string
+        copyright: string
         version: string
-        github: string
+        commit: string
+        build_time: string
+        license: string
+        author: string
+        repo_url: string
       }
 
       type PresignResult = {

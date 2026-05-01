@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 import MarkdownIt from 'markdown-it'
 
 type HighlightJsModule = (typeof import('./markdown-highlight'))['default']

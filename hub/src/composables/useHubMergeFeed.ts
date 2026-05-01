@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 /**
  * 与 web/src/stores/hub.ts 对齐的多源归并：
  * 每实例独立缓冲池 + 按 createdTs 全局多路归并取数（batchSize 条/批）。

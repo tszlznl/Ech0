@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 import { ref, watch, type Ref } from 'vue'
 
 const NOMINATIM_ENDPOINT = 'https://nominatim.openstreetmap.org/reverse'

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 // 处理全局通知工具函数 (基于 vue-sonner)
 import { toast } from 'vue-sonner'
 

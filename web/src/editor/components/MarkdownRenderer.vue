@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <div ref="rootRef" class="echo-markdown">
     <!-- markdown chunk 还没到时直接显示原文，比一个会呼吸的灰条更有信息量；
