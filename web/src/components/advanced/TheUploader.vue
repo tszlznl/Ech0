@@ -16,10 +16,12 @@
       @drop.prevent="handleDrop"
     >
       <span class="text-[var(--color-text-primary)] font-medium">
-        {{ t('uploader.dropHere') }}
+        <slot name="drop-title">{{ t('uploader.dropHere') }}</slot>
       </span>
       <span class="text-xs text-[var(--color-text-muted)]">
-        {{ t('uploader.dropHint', { max: maxFiles }) }}
+        <slot name="drop-hint" :max="maxFiles" :max-file-size="maxFileSize">
+          {{ t('uploader.dropHint', { max: maxFiles }) }}
+        </slot>
       </span>
     </button>
 
@@ -72,7 +74,7 @@
             </span>
             <div class="flex items-center gap-1.5 shrink-0">
               <span class="text-xs text-[var(--color-text-muted)]">
-                {{ formatSize(item.file.size) }}
+                {{ formatBytes(item.file.size) }}
               </span>
               <template v-for="badge in [compressionBadge(item)]" :key="badge?.label">
                 <span
@@ -169,13 +171,24 @@ import { computed, onBeforeUnmount, onMounted, ref, toRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useEditorStore } from '@/stores'
 import { useUpload, UPLOAD_STATUS, type QueueItem, type UploadStatus } from '@/lib/file/useUpload'
+import { formatBytes } from '@/utils/file'
 
-const props = defineProps<{
-  fileStorageType: App.Api.File.StorageType
-  EnableCompressor: boolean
-  fileCategory?: App.Api.File.Category
-  allowedFileTypes?: string[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    fileStorageType: App.Api.File.StorageType
+    EnableCompressor: boolean
+    fileCategory?: App.Api.File.Category
+    allowedFileTypes?: string[]
+    /** Cap on the number of files in the queue (rejected entries beyond this are skipped). */
+    maxFiles?: number
+    /** Per-file size cap in bytes; files above this are rejected with a toast. Unset = no cap. */
+    maxFileSize?: number
+  }>(),
+  {
+    maxFiles: 6,
+    maxFileSize: undefined,
+  },
+)
 
 const editorStore = useEditorStore()
 const { t } = useI18n()
@@ -188,7 +201,8 @@ const allowedTypes = computed(() =>
 )
 const acceptAttr = computed(() => allowedTypes.value.join(','))
 
-const maxFiles = 6
+const maxFiles = computed(() => props.maxFiles)
+const maxFileSize = computed(() => props.maxFileSize)
 
 const { items, isUploading, totalActive, addFiles, retry, remove, moveItem, cancelAll } = useUpload(
   {
@@ -196,7 +210,8 @@ const { items, isUploading, totalActive, addFiles, retry, remove, moveItem, canc
     enableCompressor: toRef(props, 'EnableCompressor'),
     category: props.fileCategory,
     allowedTypes: allowedTypes.value,
-    maxFiles,
+    maxFiles: maxFiles.value,
+    maxFileSize: maxFileSize.value,
     concurrency: 3,
     onAllComplete: (results) => {
       editorStore.handleUppyUploaded(results)
@@ -337,21 +352,6 @@ function onItemDragEnd() {
 
 // ---------- Display helpers ----------
 
-const SIZE_UNITS = ['B', 'KB', 'MB', 'GB'] as const
-
-function formatSize(bytes: number | undefined): string {
-  if (bytes == null || !Number.isFinite(bytes) || bytes < 0) return '—'
-  if (bytes === 0) return '0 B'
-  let value = bytes
-  let unit = 0
-  while (value >= 1024 && unit < SIZE_UNITS.length - 1) {
-    value /= 1024
-    unit++
-  }
-  const fixed = value >= 100 || unit === 0 ? value.toFixed(0) : value.toFixed(1)
-  return `${fixed} ${SIZE_UNITS[unit]}`
-}
-
 type CompressionBadge =
   | { tone: 'savings'; label: string; tooltip: string }
   | { tone: 'none'; label: string; tooltip: string }
@@ -372,8 +372,8 @@ function compressionBadge(item: QueueItem): CompressionBadge {
         tone: 'savings',
         label: `−${pct}%`,
         tooltip: t('uploader.compressionTooltip', {
-          from: formatSize(before),
-          to: formatSize(after),
+          from: formatBytes(before),
+          to: formatBytes(after),
         }),
       }
     }

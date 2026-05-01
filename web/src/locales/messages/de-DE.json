@@ -886,6 +886,7 @@
     "statusError": "Fehlgeschlagen",
     "uploadingProgress": "{active} Datei(en) werden hochgeladen…",
     "maxFilesReached": "Maximal {max} Dateien; weitere ignoriert",
+    "fileTooLarge": "{name} überschreitet das Limit von {max} pro Datei und wurde übersprungen",
     "uploadError": "Beim Hochladen ist ein Fehler aufgetreten 😢",
     "loginRequired": "Bitte zuerst anmelden, um Bilder hochzuladen 😢",
     "missingFileIdentifier": "Upload-Antwort enthält keinen Dateibezeichner – Bindung an Echo nicht möglich",

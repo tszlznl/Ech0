@@ -886,6 +886,7 @@
     "statusError": "失败",
     "uploadingProgress": "正在上传 {active} 个文件...",
     "maxFilesReached": "最多 {max} 个文件，已忽略多余的",
+    "fileTooLarge": "{name} 超过单文件 {max} 上限，已跳过",
     "uploadError": "上传图片时发生错误 😢",
     "loginRequired": "请先登录再上传图片 😢",
     "missingFileIdentifier": "上传响应缺少文件标识，无法绑定到 Echo，请重试",

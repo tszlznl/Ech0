@@ -886,6 +886,7 @@
     "statusError": "Failed",
     "uploadingProgress": "Uploading {active} file(s)...",
     "maxFilesReached": "Max {max} files; extras ignored",
+    "fileTooLarge": "{name} exceeds the {max} per-file limit; skipped",
     "uploadError": "An error occurred while uploading image 😢",
     "loginRequired": "Please log in before uploading images 😢",
     "missingFileIdentifier": "Upload response missing file identifier; cannot bind to Echo",

@@ -1,0 +1,16 @@
+const SIZE_UNITS = ['B', 'KB', 'MB', 'GB'] as const
+
+// Render a byte count as a short human label (e.g. 234 KB, 1.2 MB).
+// Returns "—" for missing/invalid input rather than throwing, so it's safe in templates.
+export function formatBytes(bytes: number | undefined | null): string {
+  if (bytes == null || !Number.isFinite(bytes) || bytes < 0) return '—'
+  if (bytes === 0) return '0 B'
+  let value = bytes
+  let unit = 0
+  while (value >= 1024 && unit < SIZE_UNITS.length - 1) {
+    value /= 1024
+    unit++
+  }
+  const fixed = value >= 100 || unit === 0 ? value.toFixed(0) : value.toFixed(1)
+  return `${fixed} ${SIZE_UNITS[unit]}`
+}

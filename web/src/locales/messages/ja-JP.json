@@ -886,6 +886,7 @@
     "statusError": "失敗",
     "uploadingProgress": "{active} 件をアップロード中…",
     "maxFilesReached": "最大 {max} 件まで。超過分は無視されました",
+    "fileTooLarge": "{name} はファイルサイズ上限 {max} を超えたためスキップしました",
     "uploadError": "画像のアップロード中にエラーが発生しました 😢",
     "loginRequired": "画像をアップロードするには先にログインしてください 😢",
     "missingFileIdentifier": "アップロード応答にファイル識別子が含まれていません。Echo に紐付けできないため再試行してください",

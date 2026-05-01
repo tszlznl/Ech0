@@ -4,6 +4,7 @@ import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
 import { theToast } from '@/utils/toast'
+import { formatBytes } from '@/utils/file'
 import { getImageSize } from '@/utils/image'
 import { compressImage, inferFileExtFromType } from './compress'
 import { getPresign, updateFileMeta } from './api/adapter'
@@ -70,6 +71,8 @@ export interface UseUploadOptions {
   category?: App.Api.File.Category
   allowedTypes?: string[]
   maxFiles?: number
+  /** Optional per-file size cap in bytes; files above this are rejected with a toast. */
+  maxFileSize?: number
   concurrency?: number
   onAllComplete: (files: App.Api.Ech0.FileToAdd[]) => void
 }
@@ -102,6 +105,7 @@ export function useUpload(opts: UseUploadOptions) {
   const category = opts.category ?? FILE_CATEGORY.IMAGE
   const allowedTypes = opts.allowedTypes?.length ? opts.allowedTypes : ['image/*']
   const maxFiles = opts.maxFiles ?? 6
+  const maxFileSize = opts.maxFileSize
   const concurrency = opts.concurrency ?? 3
 
   let inFlight = 0
@@ -132,6 +136,7 @@ export function useUpload(opts: UseUploadOptions) {
     const existingIds = new Set(items.value.map((i) => i.id))
     let remaining = Math.max(0, maxFiles - liveCount())
     let rejected = false
+    const oversized: string[] = []
 
     for (const file of files) {
       if (remaining <= 0) {
@@ -139,6 +144,10 @@ export function useUpload(opts: UseUploadOptions) {
         break
       }
       if (!isAllowed(file)) continue
+      if (maxFileSize != null && file.size > maxFileSize) {
+        oversized.push(file.name)
+        continue
+      }
       const id = genId(file)
       if (existingIds.has(id)) continue
       existingIds.add(id)
@@ -157,6 +166,16 @@ export function useUpload(opts: UseUploadOptions) {
 
     if (rejected) {
       theToast.info(String(t('uploader.maxFilesReached', { max: maxFiles })))
+    }
+    if (oversized.length > 0 && maxFileSize != null) {
+      theToast.error(
+        String(
+          t('uploader.fileTooLarge', {
+            name: oversized[0] + (oversized.length > 1 ? ` (+${oversized.length - 1})` : ''),
+            max: formatBytes(maxFileSize),
+          }),
+        ),
+      )
     }
 
     pump()
