@@ -127,7 +127,9 @@ const fillEditorFromEchoToUpdate = () => {
   }
 
   const tags = echoToUpdate.value?.tags
-  tagToAdd.value = Array.isArray(tags) && tags.length > 0 ? (tags[0]?.name ?? '') : ''
+  tagToAdd.value = Array.isArray(tags)
+    ? tags.map((tag) => tag?.name).filter((name): name is string => !!name)
+    : []
   echoToAdd.value.private = echoToUpdate.value?.private || false
   echoToAdd.value.layout = echoToUpdate.value?.layout || ImageLayout.WATERFALL
   window.scrollTo({ top: 0, behavior: 'smooth' })

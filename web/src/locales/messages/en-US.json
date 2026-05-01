@@ -19,7 +19,10 @@
     "localeJaJP": "Japanese"
   },
   "editor": {
-    "tagPlaceholder": "Tag",
+    "tagPickerTooltip": "Pick tags",
+    "tagPickerEmpty": "No tags available yet.",
+    "tagPickerGoToManage": "Go to Tag Manager",
+    "tagPickerLimit": "Up to {max} tags allowed",
     "mainPlaceholder": "Share what's on your mind~",
     "preview": "Preview",
     "showPreview": "Show preview",

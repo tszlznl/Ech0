@@ -21,7 +21,7 @@ type DraftModuleDeps = {
   githubRepo: Ref<string>
   extensionToAdd: Ref<ExtensionToAdd>
   locationToAdd: Ref<LocationToAdd>
-  tagToAdd: Ref<string>
+  tagToAdd: Ref<string[]>
   isUpdateMode: Ref<boolean>
   resetAttachments: (files: App.Api.Ech0.FileToAdd[]) => void
   t: Translate
@@ -55,7 +55,7 @@ export function useDraftModule(deps: DraftModuleDeps) {
 
   const hasDraftContent = () => {
     const hasText = !!echoToAdd.value.content?.trim()
-    const hasTag = !!String(tagToAdd.value ?? '').trim()
+    const hasTag = Array.isArray(tagToAdd.value) && tagToAdd.value.length > 0
     const hasFiles = filesToAdd.value.length > 0
     const hasWebsiteInput = !!websiteToAdd.value.title.trim() || !!websiteToAdd.value.site.trim()
     const hasExtInput =
@@ -114,7 +114,7 @@ export function useDraftModule(deps: DraftModuleDeps) {
         longitude: locationToAdd.value.longitude,
         placeholder: locationToAdd.value.placeholder || '',
       },
-      tagToAdd: tagToAdd.value || '',
+      tagToAdd: Array.isArray(tagToAdd.value) ? [...tagToAdd.value] : [],
     }
     localStg.setItem(EDITOR_DRAFT_STORAGE_KEY, draft)
   }
@@ -175,7 +175,7 @@ export function useDraftModule(deps: DraftModuleDeps) {
                 : null,
             placeholder: draft.locationToAdd?.placeholder || '',
           }
-          tagToAdd.value = draft.tagToAdd || ''
+          tagToAdd.value = Array.isArray(draft.tagToAdd) ? [...draft.tagToAdd] : []
           theToast.info(t('editor.restoreDraftRecovered'))
         } finally {
           isRestoringDraft.value = false

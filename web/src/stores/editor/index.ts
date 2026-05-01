@@ -39,7 +39,7 @@ export const useEditorStore = defineStore('editorStore', () => {
     layout: ImageLayout.WATERFALL,
     extension: null,
   })
-  const tagToAdd = ref<string>('')
+  const tagToAdd = ref<string[]>([])
 
   const hasContent = computed(() => !!echoToAdd.value.content?.trim())
 
@@ -112,7 +112,7 @@ export const useEditorStore = defineStore('editorStore', () => {
     }
     files.resetFilesState()
     extension.resetExtensionState()
-    tagToAdd.value = ''
+    tagToAdd.value = []
     draft.clearLocalDraft()
   }
 
@@ -192,7 +192,10 @@ export const useEditorStore = defineStore('editorStore', () => {
         }))
 
       // 回填标签板块
-      echoToAdd.value.tags = tagToAdd.value?.trim() ? [{ name: tagToAdd.value.trim() }] : []
+      echoToAdd.value.tags = (tagToAdd.value ?? [])
+        .map((name) => name.trim())
+        .filter((name) => name.length > 0)
+        .map((name) => ({ name }))
 
       if (checkIsEmptyEcho(echoToAdd.value)) {
         const errMsg = isUpdateMode.value ? t('editor.updateEchoEmpty') : t('editor.addEchoEmpty')

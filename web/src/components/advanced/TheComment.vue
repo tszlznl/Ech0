@@ -163,7 +163,10 @@
         <div v-if="loading" class="text-sm text-[var(--color-text-muted)]">
           {{ t('commentSection.loading') }}
         </div>
-        <div v-else-if="comments.length === 0" class="text-sm text-[var(--color-text-muted)]">
+        <div
+          v-else-if="comments.length === 0 && !commentFormExpanded"
+          class="text-sm text-[var(--color-text-muted)]"
+        >
           {{ t('commentSection.empty') }}
         </div>
         <div v-else class="space-y-4 pt-1">
@@ -652,15 +655,24 @@ onBeforeUnmount(() => {
   font-weight: 600;
   line-height: 1.2;
   cursor: pointer;
+  outline: 0 solid transparent;
   transition:
     color 0.15s ease,
     border-color 0.15s ease,
-    background-color 0.15s ease;
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .comment-pill-btn:hover {
   color: var(--color-text-primary);
   border-color: var(--color-text-secondary);
+}
+
+.comment-pill-btn:focus,
+.comment-pill-btn:focus-visible {
+  outline: 0 solid transparent;
+  border-color: var(--color-border-subtle);
+  box-shadow: 0 0 0 3px var(--color-bg-muted);
 }
 
 .comment-pill-btn__icon {

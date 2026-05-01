@@ -27,7 +27,7 @@ export type EditorDraft = {
   githubRepo: string
   extensionToAdd: ExtensionToAdd
   locationToAdd: LocationToAdd
-  tagToAdd: string
+  tagToAdd: string[]
 }
 
 export type Translate = (key: string, params?: Record<string, unknown>) => string

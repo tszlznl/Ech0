@@ -26,21 +26,49 @@
         class="w-8 h-8 sm:w-9 sm:h-9 rounded-xs"
         :tooltip="t('editor.togglePrivacy')"
       />
-      <!-- Tag Add or Select -->
-      <div v-if="currentMode === Mode.ECH0" class="editor-actions__tag">
-        <div class="editor-actions__tag-box">
-          <span class="text-[var(--color-text-muted)]">#</span>
-          <BaseCombobox
-            :key="tagOptions.length"
-            v-model="tagToAdd"
-            :multiple="false"
-            :options="tagOptions"
-            :placeholder="t('editor.tagPlaceholder')"
-            wrapper-class="h-full border-transparent shadow-none bg-transparent rounded-[var(--radius-xs)]"
-            input-class="w-20 h-full text-[var(--color-text-secondary)]"
-          />
-        </div>
-      </div>
+      <!-- Tag Multi-Select -->
+      <Popover v-if="currentMode === Mode.ECH0" class="editor-actions__tag">
+        <PopoverButton
+          v-tooltip="tagTriggerTooltip"
+          :aria-label="tagTriggerTooltip"
+          class="cursor-pointer p-1.5 w-8 h-8 sm:w-9 sm:h-9 rounded-xs ring-inset ring-1 ring-[var(--btn-ring-color)] text-[var(--btn-text-color)] outline-none shadow-[var(--btn-shadow)] bg-[var(--btn-bg-color)] hover:bg-[var(--btn-hover-bg-color)] hover:ring-[var(--btn-hover-border-color)] focus-visible:ring-2 focus-visible:ring-[var(--btn-focus-ring-color)] transition-colors duration-200 relative inline-flex items-center justify-center"
+        >
+          <TagSetting class="w-full h-full" />
+        </PopoverButton>
+
+        <transition
+          enter-active-class="transition duration-150 ease-out"
+          enter-from-class="opacity-0 -translate-y-1"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition duration-100 ease-in"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 -translate-y-1"
+        >
+          <PopoverPanel class="editor-actions__tag-panel">
+            <div v-if="tagOptions.length === 0" class="editor-actions__tag-empty">
+              <p class="editor-actions__tag-empty-text">{{ t('editor.tagPickerEmpty') }}</p>
+              <button type="button" class="editor-actions__tag-empty-link" @click="goToTagManager">
+                {{ t('editor.tagPickerGoToManage') }} →
+              </button>
+            </div>
+            <div v-else class="editor-actions__tag-chip-list">
+              <button
+                v-for="name in tagOptions"
+                :key="name"
+                type="button"
+                class="editor-actions__tag-chip"
+                :class="{
+                  'editor-actions__tag-chip--selected': tagToAdd.includes(name),
+                  'editor-actions__tag-chip--disabled': isTagChipDisabled(name),
+                }"
+                @click="toggleTag(name)"
+              >
+                #{{ name }}
+              </button>
+            </div>
+          </PopoverPanel>
+        </transition>
+      </Popover>
     </div>
 
     <div class="editor-actions__right">
@@ -120,7 +148,8 @@ import GithubProj from '@/components/icons/githubproj.vue'
 import Website from '@/components/icons/website.vue'
 import MapPin from '@/components/icons/mappin.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
-import BaseCombobox from '@/components/common/BaseCombobox.vue'
+import TagSetting from '@/components/icons/tagsetting.vue'
+import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
 import { Mode, ExtensionType } from '@/enums/enums'
 import { FILE_STORAGE_TYPE } from '@/constants/file'
 import { storeToRefs } from 'pinia'
@@ -215,6 +244,36 @@ const handlePrivate = () => {
 const handleExitUpdateMode = () => {
   editorStore.handleExitUpdateMode()
 }
+
+const MAX_TAGS = 3
+
+const tagTriggerTooltip = computed(() =>
+  tagToAdd.value.length > 0
+    ? `${t('editor.tagPickerTooltip')} · ${tagToAdd.value.length}/${MAX_TAGS}`
+    : t('editor.tagPickerTooltip'),
+)
+
+const isTagChipDisabled = (name: string) =>
+  tagToAdd.value.length >= MAX_TAGS && !tagToAdd.value.includes(name)
+
+const toggleTag = (name: string) => {
+  const next = [...tagToAdd.value]
+  const idx = next.indexOf(name)
+  if (idx >= 0) {
+    next.splice(idx, 1)
+  } else {
+    if (next.length >= MAX_TAGS) {
+      theToast.warning(String(t('editor.tagPickerLimit', { max: MAX_TAGS })))
+      return
+    }
+    next.push(name)
+  }
+  tagToAdd.value = next
+}
+
+const goToTagManager = () => {
+  editorStore.setMode(Mode.TagManage)
+}
 </script>
 
 <style scoped>
@@ -243,25 +302,101 @@ const handleExitUpdateMode = () => {
 }
 
 .editor-actions__tag {
-  min-width: 0;
-  flex: 0 1 7rem;
+  position: relative;
+  flex: 0 0 auto;
 }
 
-.editor-actions__tag-box {
-  display: flex;
-  align-items: center;
-  gap: 0.2rem;
-  height: 2rem;
+.editor-actions__tag-panel {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  width: 16rem;
+  max-height: 16rem;
+  overflow-y: auto;
+  padding: 0.55rem;
   border-radius: var(--radius-xs);
-  border: 1px dashed var(--md-editor-mini-btn-border);
-  background: var(--md-editor-mini-btn-bg);
-  padding: 0 0.35rem;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--md-editor-mini-bg);
+  box-shadow: var(--md-editor-mini-shell-shadow);
 }
 
-@media (width >= 640px) {
-  .editor-actions__tag-box {
-    height: 2.25rem;
-  }
+.editor-actions__tag-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.editor-actions__tag-empty-text {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.editor-actions__tag-empty-link {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-accent);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.editor-actions__tag-empty-link:hover {
+  text-decoration: underline;
+}
+
+.editor-actions__tag-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.editor-actions__tag-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.55rem;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--color-border-subtle);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.3;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.editor-actions__tag-chip:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-text-secondary);
+}
+
+.editor-actions__tag-chip--selected {
+  color: var(--color-bg-canvas);
+  background: var(--color-text-primary);
+  border-style: solid;
+  border-color: var(--color-text-primary);
+}
+
+.editor-actions__tag-chip--selected:hover {
+  color: var(--color-bg-canvas);
+}
+
+.editor-actions__tag-chip--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.editor-actions__tag-chip--disabled:hover {
+  color: var(--color-text-muted);
+  border-color: var(--color-border-subtle);
+  background: transparent;
 }
 
 .editor-actions__right {

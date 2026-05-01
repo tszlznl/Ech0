@@ -19,7 +19,10 @@
     "localeJaJP": "日本語"
   },
   "editor": {
-    "tagPlaceholder": "标签",
+    "tagPickerTooltip": "选择标签",
+    "tagPickerEmpty": "暂无可选标签",
+    "tagPickerGoToManage": "前往标签管理",
+    "tagPickerLimit": "最多只能选择 {max} 个标签",
     "mainPlaceholder": "一吐为快~",
     "preview": "预览",
     "showPreview": "显示预览",

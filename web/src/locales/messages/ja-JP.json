@@ -19,7 +19,10 @@
     "localeJaJP": "日本語"
   },
   "editor": {
-    "tagPlaceholder": "タグ",
+    "tagPickerTooltip": "タグを選択",
+    "tagPickerEmpty": "選択できるタグがありません",
+    "tagPickerGoToManage": "タグ管理へ移動",
+    "tagPickerLimit": "選択できるタグは最大 {max} 個です",
     "mainPlaceholder": "さあ、思いのままに〜",
     "preview": "プレビュー",
     "showPreview": "プレビューを表示",

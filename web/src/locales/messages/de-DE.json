@@ -19,7 +19,10 @@
     "localeJaJP": "Japanisch"
   },
   "editor": {
-    "tagPlaceholder": "Tag",
+    "tagPickerTooltip": "Tags auswählen",
+    "tagPickerEmpty": "Noch keine Tags verfügbar",
+    "tagPickerGoToManage": "Zur Tag-Verwaltung",
+    "tagPickerLimit": "Maximal {max} Tags möglich",
     "mainPlaceholder": "Was bewegt dich gerade?",
     "preview": "Vorschau",
     "showPreview": "Vorschau einblenden",
