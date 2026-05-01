@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 package handler
 
 import (
@@ -13,6 +16,7 @@ import (
 	service "github.com/lin-snow/ech0/internal/service/common"
 	errorUtil "github.com/lin-snow/ech0/internal/util/err"
 	timezoneUtil "github.com/lin-snow/ech0/internal/util/timezone"
+	versionPkg "github.com/lin-snow/ech0/internal/version"
 )
 
 type CommonHandler struct {
@@ -73,14 +77,17 @@ func (commonHandler *CommonHandler) GetRss(ctx *gin.Context) {
 
 func (commonHandler *CommonHandler) HelloEch0() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
+		// Embeds versionPkg.Info so version / commit / build_time / license /
+		// author / repo_url are all flattened into the JSON top level — the
+		// frontend About page reads them directly as the single source of truth.
 		hello := struct {
-			Hello   string `json:"hello"`
-			Version string `json:"version"`
-			Github  string `json:"github"`
+			Hello     string `json:"hello"`
+			Copyright string `json:"copyright"`
+			versionPkg.Info
 		}{
-			Hello:   "Hello, Ech0! 👋",
-			Version: commonModel.Version,
-			Github:  "https://github.com/lin-snow/Ech0",
+			Hello:     "Hello, Ech0! 👋",
+			Copyright: versionPkg.Copyright(),
+			Info:      versionPkg.Get(),
 		}
 
 		return res.Response{
@@ -99,7 +106,7 @@ func (commonHandler *CommonHandler) Healthz() gin.HandlerFunc {
 				Version string `json:"version"`
 			}{
 				Status:  "ok",
-				Version: commonModel.Version,
+				Version: versionPkg.Version,
 			},
 		}
 	})

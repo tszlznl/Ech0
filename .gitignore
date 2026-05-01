@@ -60,6 +60,7 @@ yarn-error.log
 /data/*
 temp
 tmp/
+bin/
 build-errors.log
 **/node_modules
 template/dist/**

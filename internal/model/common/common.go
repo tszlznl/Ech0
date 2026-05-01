@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 package model
 
 // Heatmap 用于存储热力图数据
@@ -107,8 +110,3 @@ type PageQueryResult[T any] struct {
 	Total int64 `json:"total"`
 	Items T     `json:"items"`
 }
-
-const (
-	// Version 是当前版本号
-	Version = "4.6.4"
-)

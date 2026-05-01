@@ -2,7 +2,7 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-cmd = "go build -o ./tmp/main ./cmd/ech0"
+cmd = "go build -ldflags \"-X github.com/lin-snow/ech0/internal/version.Commit=$(git rev-parse --short HEAD 2>/dev/null || echo unknown) -X github.com/lin-snow/ech0/internal/version.BuildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)\" -o ./tmp/main ./cmd/ech0"
 entrypoint = ["./tmp/main", "serve"]
 include_ext = ["go", "yaml", "yml", "toml", "json"]
 exclude_dir = ["tmp", "web", "data", "backup", "template", "node_modules", ".git", ".idea", ".vscode"]

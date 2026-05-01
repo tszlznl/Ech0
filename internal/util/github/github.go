@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 package util
 
 import (
@@ -103,7 +106,7 @@ pageLoop:
 		return "", fmt.Errorf("no stable application release found (ech0-* chart tags are ignored)")
 	}
 
-	// 保持与 commonModel.Version 一致：返回不带 v 的 X.Y.Z
+	// 保持与 versionPkg.Version 一致：返回不带 v 的 X.Y.Z
 	result := strings.TrimPrefix(best, "v")
 
 	latestVersionCache.mu.Lock()

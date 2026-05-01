@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 package handler
 
 import (
@@ -13,6 +16,7 @@ import (
 	githubUtil "github.com/lin-snow/ech0/internal/util/github"
 	jwtUtil "github.com/lin-snow/ech0/internal/util/jwt"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	versionPkg "github.com/lin-snow/ech0/internal/version"
 	"go.uber.org/zap"
 	"golang.org/x/mod/semver"
 )
@@ -110,13 +114,13 @@ func (dashboardHandler *DashboardHandler) CheckUpdate() gin.HandlerFunc {
 			return res.Response{Msg: "检查更新失败", Err: err}
 		}
 
-		cur := semver.Canonical("v" + strings.TrimPrefix(strings.TrimSpace(commonModel.Version), "v"))
+		cur := semver.Canonical("v" + strings.TrimPrefix(strings.TrimSpace(versionPkg.Version), "v"))
 		lat := semver.Canonical("v" + strings.TrimPrefix(strings.TrimSpace(latestVersion), "v"))
 		hasUpdate := cur != "" && lat != "" && semver.Compare(lat, cur) > 0
 
 		return res.Response{
 			Data: gin.H{
-				"current_version": commonModel.Version,
+				"current_version": versionPkg.Version,
 				"latest_version":  latestVersion,
 				"has_update":      hasUpdate,
 			},

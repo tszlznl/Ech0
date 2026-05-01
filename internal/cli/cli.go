@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 package cli
 
 import (
@@ -10,8 +13,8 @@ import (
 	"github.com/lin-snow/ech0/internal/backup"
 	"github.com/lin-snow/ech0/internal/config"
 	"github.com/lin-snow/ech0/internal/di"
-	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	"github.com/lin-snow/ech0/internal/tui"
+	versionPkg "github.com/lin-snow/ech0/internal/version"
 )
 
 func isWebPortInUse() bool {
@@ -68,7 +71,7 @@ func DoBackup() {
 func DoVersion() {
 	item := struct{ Title, Msg string }{
 		Title: "📦 当前版本",
-		Msg:   "v" + commonModel.Version,
+		Msg:   "v" + versionPkg.Version,
 	}
 	tui.PrintCLIWithBox(item)
 }
