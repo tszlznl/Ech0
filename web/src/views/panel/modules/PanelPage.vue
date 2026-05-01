@@ -157,10 +157,6 @@
           <BaseButton :icon="Auth" @click="router.push('/auth')" :class="getBottomButtonClasses()">
             {{ t('panelPage.login') }}
           </BaseButton>
-
-          <div class="panel-version my-2 ml-3">
-            {{ t('panelPage.version', { version: settingStore.hello?.version || '--' }) }}
-          </div>
         </div>
 
         <!-- 路由内容 -->
@@ -223,11 +219,11 @@ const dateText = computed(() => {
 // 统一的按钮样式计算函数
 const getButtonClasses = (routeName: string) => {
   const baseClasses =
-    'w-full flex items-center gap-2 pl-3 py-1.5 rounded-[var(--radius-md)] transition-all duration-200 border-none !shadow-none !ring-0 justify-start bg-transparent hover:bg-[var(--color-bg-muted)] whitespace-nowrap'
+    'w-full flex items-center gap-2 pl-3 py-1.5 rounded-[var(--radius-md)] transition-all duration-200 border-none !ring-0 justify-start bg-transparent whitespace-nowrap'
   const activeClasses =
     currentRoute.value === routeName
-      ? 'text-[var(--color-nav-active-text)]! bg-[var(--color-nav-active-bg)]!'
-      : 'text-[var(--color-text-secondary)]'
+      ? 'text-[var(--color-text-primary)]! bg-[var(--nav-link-active-bg)]! shadow-[var(--shadow-soft)]!'
+      : 'text-[var(--color-text-secondary)] !shadow-none hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-muted)]'
 
   return `${baseClasses} ${activeClasses}`
 }
@@ -314,11 +310,6 @@ const handleLogout = () => {
   max-width: 53rem;
   width: 100%;
   padding-left: 0.2rem;
-}
-
-.panel-version {
-  color: var(--color-text-muted);
-  font-family: var(--font-family-display);
 }
 
 .panel-welcome {

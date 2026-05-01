@@ -72,14 +72,8 @@
 
     <div class="flex items-center justify-between gap-2">
       <div class="min-w-0 flex flex-1 items-center overflow-hidden">
-        <div class="min-w-0 truncate whitespace-nowrap text-sm text-slate-500">
+        <div class="min-w-0 truncate whitespace-nowrap text-sm text-[var(--color-text-muted)]">
           {{ formatDate(props.echo.createdTs) }}
-        </div>
-        <div
-          v-if="props.echo.tags?.[0]?.name"
-          class="hidden min-w-0 flex-shrink truncate whitespace-nowrap text-xs text-[var(--color-text-muted)] sm:block sm:ml-1"
-        >
-          #{{ props.echo.tags[0]?.name }}
         </div>
       </div>
 

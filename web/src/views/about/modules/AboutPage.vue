@@ -111,7 +111,7 @@ const settingStore = useSettingStore()
 const AUTHOR_GITHUB = 'https://github.com/lin-snow'
 
 const FALLBACK_REPO = 'https://github.com/lin-snow/Ech0'
-const FALLBACK_AUTHOR = 'lin-snow'
+const FALLBACK_AUTHOR = 'L1nSn0w'
 const FALLBACK_LICENSE = 'AGPL-3.0-or-later'
 
 const version = computed(() => settingStore.hello?.version || '--')

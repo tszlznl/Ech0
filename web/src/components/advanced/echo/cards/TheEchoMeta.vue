@@ -102,7 +102,7 @@ const handleLikeEcho = (echoId: string) => {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  padding: 0.5rem 0rem 0;
+  padding: 0.5rem 0 0;
 }
 
 .echo-meta-line {
