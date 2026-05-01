@@ -876,6 +876,8 @@
     "removeItem": "削除",
     "reorderHint": "ドラッグで画像の並び順を変更できます",
     "compressionTooltip": "圧縮前 {from} → 圧縮後 {to}",
+    "compressionNone": "原本",
+    "compressionNoneTooltip": "既に最適またはサポート外の形式のため、圧縮していません",
     "statusPending": "待機中",
     "statusCompressing": "圧縮中",
     "statusSuccess": "完了",

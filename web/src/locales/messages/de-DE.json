@@ -876,6 +876,8 @@
     "removeItem": "Entfernen",
     "reorderHint": "Ziehen zum Sortieren der Bilder",
     "compressionTooltip": "Vorher {from} → Nachher {to}",
+    "compressionNone": "Original",
+    "compressionNoneTooltip": "Bereits optimal oder Format nicht unterstützt – keine Komprimierung angewendet",
     "statusPending": "Wartend",
     "statusCompressing": "Wird komprimiert",
     "statusSuccess": "Hochgeladen",

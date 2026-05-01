@@ -876,6 +876,8 @@
     "removeItem": "Remove",
     "reorderHint": "Drag to reorder images",
     "compressionTooltip": "Before {from} → After {to}",
+    "compressionNone": "Original",
+    "compressionNoneTooltip": "Already optimal or format unsupported — no compression applied",
     "statusPending": "Pending",
     "statusCompressing": "Compressing",
     "statusSuccess": "Uploaded",

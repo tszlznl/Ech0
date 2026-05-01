@@ -49,6 +49,12 @@ export interface QueueItem {
   originalFile: File
   /** Pre-compression size in bytes; used to render the original→compressed delta. */
   originalSize: number
+  /**
+   * True if the compression branch ran for this item (regardless of whether it produced
+   * smaller bytes). Lets the UI distinguish "compressor was off" from "compressor ran
+   * but the file was already optimal / format wasn't supported".
+   */
+  compressionAttempted?: boolean
   status: UploadStatus
   progress: number
   error?: string
@@ -184,6 +190,7 @@ export function useUpload(opts: UseUploadOptions) {
       let working = item.file
       if (opts.enableCompressor.value && working.type.startsWith('image/')) {
         item.status = UPLOAD_STATUS.COMPRESSING
+        item.compressionAttempted = true
         try {
           working = await compressImage(working)
           item.file = working
@@ -368,6 +375,7 @@ export function useUpload(opts: UseUploadOptions) {
     item.error = undefined
     item.progress = 0
     item.file = item.originalFile
+    item.compressionAttempted = false
     item.delivered = false
     pump()
   }

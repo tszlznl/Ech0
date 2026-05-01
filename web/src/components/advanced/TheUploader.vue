@@ -32,12 +32,12 @@
       @change="handleInputChange"
     />
 
-    <!-- Per-file thumbnail cards -->
-    <ul v-if="items.length > 0" class="mt-2 grid grid-cols-2 gap-2">
+    <!-- Per-file rows -->
+    <ul v-if="items.length > 0" class="mt-2 flex flex-col gap-1.5">
       <li
         v-for="item in items"
         :key="item.id"
-        class="group relative flex gap-2 p-2 rounded-md ring-1 ring-inset ring-[var(--md-editor-mini-border)] bg-[var(--color-bg-surface-alt,transparent)] transition-colors"
+        class="flex items-center gap-2 px-2 py-1.5 rounded-md ring-1 ring-inset ring-[var(--md-editor-mini-border)] bg-[var(--color-bg-surface-alt,transparent)] transition-colors"
         :class="[
           isReorderable(item) ? 'cursor-grab active:cursor-grabbing' : '',
           dragOverId === item.id && draggingId !== item.id
@@ -53,98 +53,83 @@
         @drop.prevent="onItemDrop(item)"
         @dragend="onItemDragEnd"
       >
-        <!-- Thumbnail with status overlay -->
-        <div
-          class="relative w-16 h-16 shrink-0 rounded-sm overflow-hidden bg-[var(--color-bg-muted)]"
-        >
-          <img :src="item.preview" alt="" class="w-full h-full object-cover" />
-          <div
-            v-if="item.status === UPLOAD_STATUS.SUCCESS"
-            class="absolute inset-0 bg-[var(--color-success,#16a34a)]/15 flex items-center justify-center"
-          >
-            <span class="text-base text-[var(--color-success,#16a34a)] font-bold">✓</span>
-          </div>
-          <div
-            v-else-if="item.status === UPLOAD_STATUS.ERROR"
-            class="absolute inset-0 bg-[var(--color-danger,#dc2626)]/20 flex items-center justify-center"
-          >
-            <span class="text-base text-[var(--color-danger,#dc2626)] font-bold">!</span>
-          </div>
-          <div
-            v-else-if="item.status === UPLOAD_STATUS.CANCELLED"
-            class="absolute inset-0 bg-black/30 flex items-center justify-center"
-          >
-            <span class="text-sm text-white">×</span>
-          </div>
-        </div>
+        <!-- Thumbnail -->
+        <img
+          :src="item.preview"
+          alt=""
+          class="w-10 h-10 object-cover rounded-sm shrink-0 bg-[var(--color-bg-muted)]"
+        />
 
         <!-- Info column -->
-        <div class="flex-1 min-w-0 flex flex-col justify-between">
-          <div class="min-w-0">
-            <div
-              class="text-sm truncate text-[var(--color-text-primary)] leading-tight"
+        <div class="flex-1 min-w-0">
+          <!-- Filename (left) | size + compression badge + status (right) -->
+          <div class="flex items-center justify-between gap-2">
+            <span
+              class="flex-1 min-w-0 text-sm truncate text-[var(--color-text-primary)]"
               :title="item.file.name"
             >
               {{ item.file.name }}
-            </div>
-            <div class="mt-0.5 text-xs text-[var(--color-text-muted)] flex items-center gap-1.5">
-              <span>{{ formatSize(item.file.size) }}</span>
-              <span
-                v-if="compressionDelta(item)"
-                class="px-1 rounded bg-[var(--color-accent-soft)] text-[var(--color-accent)]"
-                :title="
-                  t('uploader.compressionTooltip', {
-                    from: formatSize(item.originalSize),
-                    to: formatSize(item.file.size),
-                  })
-                "
-              >
-                {{ compressionDelta(item) }}
+            </span>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <span class="text-xs text-[var(--color-text-muted)]">
+                {{ formatSize(item.file.size) }}
+              </span>
+              <template v-for="badge in [compressionBadge(item)]" :key="badge?.label">
+                <span
+                  v-if="badge"
+                  class="text-xs px-1 rounded"
+                  :class="
+                    badge.tone === 'savings'
+                      ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent)]'
+                      : 'bg-[var(--color-border-subtle)] text-[var(--color-text-muted)]'
+                  "
+                  :title="badge.tooltip"
+                >
+                  {{ badge.label }}
+                </span>
+              </template>
+              <span class="text-xs" :class="statusColorClass(item.status)">
+                {{ statusLabel(item) }}
               </span>
             </div>
           </div>
 
-          <!-- Progress bar OR status text OR error -->
-          <div class="mt-1">
+          <!-- Progress bar / error text -->
+          <div
+            v-if="
+              item.status === UPLOAD_STATUS.UPLOADING || item.status === UPLOAD_STATUS.COMPRESSING
+            "
+            class="mt-1 h-1 rounded-full bg-[var(--color-border-subtle,#e5e7eb)] overflow-hidden"
+          >
             <div
-              v-if="
-                item.status === UPLOAD_STATUS.UPLOADING || item.status === UPLOAD_STATUS.COMPRESSING
-              "
-              class="h-1 rounded-full bg-[var(--color-border-subtle,#e5e7eb)] overflow-hidden"
-            >
-              <div
-                class="h-full bg-[var(--color-accent)] transition-all"
-                :style="{
-                  width: (item.status === UPLOAD_STATUS.COMPRESSING ? 100 : item.progress) + '%',
-                }"
-              />
-            </div>
-            <div
-              v-else-if="item.status === UPLOAD_STATUS.ERROR && item.error"
-              class="text-xs text-[var(--color-danger,#dc2626)] truncate"
-              :title="item.error"
-            >
-              {{ item.error }}
-            </div>
-            <div v-else class="text-xs" :class="statusColorClass(item.status)">
-              {{ statusLabel(item) }}
-            </div>
+              class="h-full bg-[var(--color-accent)] transition-all"
+              :style="{
+                width: (item.status === UPLOAD_STATUS.COMPRESSING ? 100 : item.progress) + '%',
+              }"
+            />
+          </div>
+          <div
+            v-else-if="item.status === UPLOAD_STATUS.ERROR && item.error"
+            class="mt-0.5 text-xs text-[var(--color-danger,#dc2626)] truncate"
+            :title="item.error"
+          >
+            {{ item.error }}
           </div>
         </div>
 
-        <!-- Actions (top-right floating) -->
-        <div class="absolute top-1 right-1 flex items-center gap-1">
+        <!-- Actions -->
+        <div class="flex items-center gap-1 shrink-0">
           <button
             v-if="item.status === UPLOAD_STATUS.ERROR || item.status === UPLOAD_STATUS.CANCELLED"
             type="button"
-            class="text-xs px-1.5 py-0.5 rounded cursor-pointer text-[var(--color-accent)] bg-[var(--color-bg-surface)] hover:bg-[var(--color-accent-soft)] shadow-sm"
+            class="text-xs px-2 py-0.5 rounded cursor-pointer text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)]"
             @click.stop="retry(item.id)"
           >
             {{ t('uploader.retry') }}
           </button>
           <button
             type="button"
-            class="w-5 h-5 flex items-center justify-center rounded-full cursor-pointer text-[var(--color-text-muted)] bg-[var(--color-bg-surface)] hover:text-[var(--color-danger,#dc2626)] shadow-sm"
+            class="text-xs px-2 py-0.5 rounded cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-border-subtle)]"
             @click.stop="remove(item.id)"
             :title="t('uploader.removeItem')"
           >
@@ -367,14 +352,37 @@ function formatSize(bytes: number | undefined): string {
   return `${fixed} ${SIZE_UNITS[unit]}`
 }
 
-// Returns a "−42%" badge when post-compression size is meaningfully smaller, else null.
-function compressionDelta(item: QueueItem): string | null {
+type CompressionBadge =
+  | { tone: 'savings'; label: string; tooltip: string }
+  | { tone: 'none'; label: string; tooltip: string }
+  | null
+
+// Three states for the compression badge:
+//   - savings: compressor ran AND output was meaningfully smaller → "−42%"
+//   - none:    compressor ran but no benefit (already optimal, or format unsupported) → "原始"
+//   - null:    compressor was off for this item → no badge
+function compressionBadge(item: QueueItem): CompressionBadge {
+  if (!item.compressionAttempted) return null
   const before = item.originalSize
   const after = item.file.size
-  if (!before || !after || after >= before) return null
-  const pct = Math.round((1 - after / before) * 100)
-  if (pct < 1) return null
-  return `−${pct}%`
+  if (before > 0 && after > 0 && after < before) {
+    const pct = Math.round((1 - after / before) * 100)
+    if (pct >= 1) {
+      return {
+        tone: 'savings',
+        label: `−${pct}%`,
+        tooltip: t('uploader.compressionTooltip', {
+          from: formatSize(before),
+          to: formatSize(after),
+        }),
+      }
+    }
+  }
+  return {
+    tone: 'none',
+    label: t('uploader.compressionNone'),
+    tooltip: t('uploader.compressionNoneTooltip'),
+  }
 }
 
 function statusLabel(item: QueueItem): string {

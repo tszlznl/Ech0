@@ -142,7 +142,7 @@ const layoutOptions = computed(() => [
 .editor-image-panel {
   margin: 0.75rem 0;
   padding: 0.75rem;
-  border: 1px dashed var(--md-editor-mini-border);
+  border: 1px dashed var(--color-border-strong);
   border-radius: var(--radius-xs);
 }
 </style>
