@@ -23,7 +23,7 @@ const (
 	License = "AGPL-3.0-or-later"
 
 	// Author is the primary author / copyright holder.
-	Author = "lin-snow"
+	Author = "L1nSn0w"
 
 	// RepoURL is the canonical source repository URL. AGPL-3.0 §13 requires
 	// network users be able to obtain the corresponding source — this URL

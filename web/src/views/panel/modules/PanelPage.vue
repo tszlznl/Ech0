@@ -185,7 +185,7 @@ import Logout from '@/components/icons/logout.vue'
 import Log from '@/components/icons/log.vue'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useUserStore, useSettingStore } from '@/stores'
+import { useUserStore } from '@/stores'
 import { useRouter, useRoute } from 'vue-router'
 import { theToast } from '@/utils/toast'
 import { useBaseDialog } from '@/composables/useBaseDialog'
@@ -194,7 +194,6 @@ const { openConfirm } = useBaseDialog()
 const { t, locale } = useI18n()
 
 const userStore = useUserStore()
-const settingStore = useSettingStore()
 const router = useRouter()
 const route = useRoute()
 
