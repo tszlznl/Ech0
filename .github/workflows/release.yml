@@ -168,13 +168,20 @@ jobs:
             tar -czf "${bin}.tar.gz" "$bin"
           done
 
-      # ✅ 创建 GitHub Release
-      - name: Create Release
+      # release-please typically creates the GitHub release first (when the
+      # release PR is merged); this step uploads the build artifacts to that
+      # existing release. If the tag was pushed manually instead (hot-fix
+      # flow), this step creates the release fresh.
+      #
+      # draft: false is REQUIRED — softprops/action-gh-release applies draft
+      # state on update too, and would otherwise demote a release-please-
+      # published release back to draft.
+      - name: Upload artifacts to GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           files: |
             ./backend-artifacts/*.tar.gz
-          draft: true
+          draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,34 @@
+name: release-please
+
+# Watches main for conventional commits. When user-visible changes accumulate,
+# opens (or updates) a release PR titled `chore(main): release X.Y.Z` containing:
+#   - bumped Version in internal/version/version.go (via x-release-please-version marker)
+#   - bumped manifest in .release-please-manifest.json
+#   - new CHANGELOG.md entry assembled from feat/fix/perf/refactor commit subjects
+#
+# Merging that release PR creates the annotated tag vX.Y.Z and a published
+# GitHub release. The tag push then triggers .github/workflows/release.yml,
+# which builds binaries / Docker images and uploads them to the existing
+# release.
+#
+# Tags created here are server-side annotated and inherit GitHub's web-flow
+# Verified badge; see docs/dev/release-process.md for the signing story.
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Open / update release PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          config-file: .release-please-config.json
+          manifest-file: .release-please-manifest.json
