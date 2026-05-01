@@ -908,16 +908,13 @@
   },
   "about": {
     "linkAriaLabel": "About this Ech0 instance",
-    "tagline": "A self-hosted, lightweight publishing platform for your thoughts.",
     "copyrightHeading": "Copyright",
     "licenseLine": "Released under the",
-    "agplNotice": "As a network service, Ech0 follows AGPL-3.0 §13: users interacting with this instance are entitled to receive its corresponding source code.",
     "authorHeading": "Author",
     "authorGithub": "GitHub Profile",
     "sourceHeading": "Source Code",
-    "sourceDescription": "The full source code of Ech0 is publicly available on GitHub.",
     "viewSource": "View source on GitHub",
-    "viewSourceAtCommit": "View source @ {commit} on GitHub",
+    "viewSourceAtCommit": "View source {'@'} {commit} on GitHub",
     "viewRelease": "Release notes for v{version}",
     "buildTime": "Built {time}",
     "poweredBy": "Built with care · Powered by Ech0"
