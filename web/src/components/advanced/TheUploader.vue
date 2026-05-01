@@ -54,7 +54,9 @@
             </span>
           </div>
           <div
-            v-if="item.status === 'uploading' || item.status === 'compressing'"
+            v-if="
+              item.status === UPLOAD_STATUS.UPLOADING || item.status === UPLOAD_STATUS.COMPRESSING
+            "
             class="mt-1 h-1 rounded-full bg-[var(--color-border-subtle,#e5e7eb)] overflow-hidden"
           >
             <div
@@ -63,7 +65,7 @@
             />
           </div>
           <div
-            v-else-if="item.status === 'error' && item.error"
+            v-else-if="item.status === UPLOAD_STATUS.ERROR && item.error"
             class="text-xs text-[var(--color-danger,#dc2626)] truncate mt-0.5"
             :title="item.error"
           >
@@ -72,7 +74,7 @@
         </div>
         <div class="flex items-center gap-1 shrink-0">
           <button
-            v-if="item.status === 'error' || item.status === 'cancelled'"
+            v-if="item.status === UPLOAD_STATUS.ERROR || item.status === UPLOAD_STATUS.CANCELLED"
             type="button"
             class="text-xs px-2 py-0.5 rounded cursor-pointer text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)]"
             @click="retry(item.id)"
@@ -111,7 +113,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, toRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useEditorStore } from '@/stores'
-import { useUpload, type QueueItem, type UploadStatus } from '@/lib/file/useUpload'
+import { useUpload, UPLOAD_STATUS, type QueueItem, type UploadStatus } from '@/lib/file/useUpload'
 
 const props = defineProps<{
   fileStorageType: App.Api.File.StorageType
@@ -208,17 +210,17 @@ onBeforeUnmount(() => {
 
 function statusLabel(item: QueueItem): string {
   switch (item.status) {
-    case 'pending':
+    case UPLOAD_STATUS.PENDING:
       return t('uploader.statusPending')
-    case 'compressing':
+    case UPLOAD_STATUS.COMPRESSING:
       return t('uploader.statusCompressing')
-    case 'uploading':
+    case UPLOAD_STATUS.UPLOADING:
       return `${item.progress}%`
-    case 'success':
+    case UPLOAD_STATUS.SUCCESS:
       return t('uploader.statusSuccess')
-    case 'cancelled':
+    case UPLOAD_STATUS.CANCELLED:
       return t('uploader.statusCancelled')
-    case 'error':
+    case UPLOAD_STATUS.ERROR:
       return t('uploader.statusError')
     default:
       return ''
@@ -227,12 +229,12 @@ function statusLabel(item: QueueItem): string {
 
 function statusColorClass(status: UploadStatus): string {
   switch (status) {
-    case 'success':
+    case UPLOAD_STATUS.SUCCESS:
       return 'text-[var(--color-success,#16a34a)]'
-    case 'error':
+    case UPLOAD_STATUS.ERROR:
       return 'text-[var(--color-danger,#dc2626)]'
-    case 'uploading':
-    case 'compressing':
+    case UPLOAD_STATUS.UPLOADING:
+    case UPLOAD_STATUS.COMPRESSING:
       return 'text-[var(--color-accent)]'
     default:
       return 'text-[var(--color-text-muted)]'

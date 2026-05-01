@@ -1,12 +1,19 @@
+export const UPLOAD_KIND = {
+  LOCAL: 'local',
+  S3: 's3',
+} as const
+
+export type UploadKind = (typeof UPLOAD_KIND)[keyof typeof UPLOAD_KIND]
+
 export type UploadTarget =
   | {
-      kind: 'local'
+      kind: typeof UPLOAD_KIND.LOCAL
       endpoint: string
       authHeader: string
       fields: Record<string, string>
     }
   | {
-      kind: 's3'
+      kind: typeof UPLOAD_KIND.S3
       presignUrl: string
       contentType: string
     }
@@ -61,7 +68,7 @@ export function httpUpload(
 
     const xhr = new XMLHttpRequest()
 
-    if (target.kind === 'local') {
+    if (target.kind === UPLOAD_KIND.LOCAL) {
       xhr.open('POST', target.endpoint, true)
       if (target.authHeader) {
         xhr.setRequestHeader('Authorization', target.authHeader)
@@ -107,7 +114,7 @@ export function httpUpload(
       reject(new DOMException('Aborted', 'AbortError'))
     }
 
-    if (target.kind === 'local') {
+    if (target.kind === UPLOAD_KIND.LOCAL) {
       const fd = new FormData()
       fd.append('file', file)
       for (const [k, v] of Object.entries(target.fields)) {

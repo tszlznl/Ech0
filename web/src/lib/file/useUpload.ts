@@ -8,15 +8,40 @@ import { getImageSize } from '@/utils/image'
 import { compressImage, inferFileExtFromType } from './compress'
 import { getPresign, updateFileMeta } from './api/adapter'
 import { globalFileRegistry } from './registry/file-registry'
-import { httpUpload } from './upload'
+import { httpUpload, UPLOAD_KIND } from './upload'
 
-export type UploadStatus =
-  | 'pending'
-  | 'compressing'
-  | 'uploading'
-  | 'success'
-  | 'error'
-  | 'cancelled'
+export const UPLOAD_STATUS = {
+  PENDING: 'pending',
+  COMPRESSING: 'compressing',
+  UPLOADING: 'uploading',
+  SUCCESS: 'success',
+  ERROR: 'error',
+  CANCELLED: 'cancelled',
+} as const
+
+export type UploadStatus = (typeof UPLOAD_STATUS)[keyof typeof UPLOAD_STATUS]
+
+// Statuses representing work in progress — anything else is settled (success/error/cancelled).
+const ACTIVE_STATUSES = [
+  UPLOAD_STATUS.PENDING,
+  UPLOAD_STATUS.COMPRESSING,
+  UPLOAD_STATUS.UPLOADING,
+] as const satisfies readonly UploadStatus[]
+
+function isActiveStatus(status: UploadStatus): boolean {
+  return (ACTIVE_STATUSES as readonly UploadStatus[]).includes(status)
+}
+
+// Pick the first non-empty string field from `obj` for any of the candidate keys.
+// Used for resilient parsing of upload responses where backend snake/camel/Pascal naming
+// has varied historically (id vs file_id vs ID, key vs object_key, …).
+function pickField(obj: Record<string, unknown>, keys: readonly string[]): string {
+  for (const k of keys) {
+    const v = obj[k]
+    if (v != null && v !== '') return String(v)
+  }
+  return ''
+}
 
 export interface QueueItem {
   id: string
@@ -73,19 +98,8 @@ export function useUpload(opts: UseUploadOptions) {
 
   let inFlight = 0
 
-  const isUploading = computed(() =>
-    items.value.some(
-      (i) => i.status === 'pending' || i.status === 'compressing' || i.status === 'uploading',
-    ),
-  )
-
-  const successCount = computed(() => items.value.filter((i) => i.status === 'success').length)
-  const totalActive = computed(
-    () =>
-      items.value.filter(
-        (i) => i.status === 'pending' || i.status === 'compressing' || i.status === 'uploading',
-      ).length,
-  )
+  const isUploading = computed(() => items.value.some((i) => isActiveStatus(i.status)))
+  const totalActive = computed(() => items.value.filter((i) => isActiveStatus(i.status)).length)
 
   function genId(file: File): string {
     return `${file.name}|${file.size}|${file.lastModified}`
@@ -96,7 +110,9 @@ export function useUpload(opts: UseUploadOptions) {
   }
 
   function liveCount(): number {
-    return items.value.filter((i) => i.status !== 'cancelled' && i.status !== 'error').length
+    return items.value.filter(
+      (i) => i.status !== UPLOAD_STATUS.CANCELLED && i.status !== UPLOAD_STATUS.ERROR,
+    ).length
   }
 
   function addFiles(files: File[]) {
@@ -123,7 +139,7 @@ export function useUpload(opts: UseUploadOptions) {
         id,
         file,
         originalFile: file,
-        status: 'pending',
+        status: UPLOAD_STATUS.PENDING,
         progress: 0,
         preview: URL.createObjectURL(file),
       })
@@ -139,17 +155,15 @@ export function useUpload(opts: UseUploadOptions) {
 
   function pump() {
     while (inFlight < concurrency) {
-      const next = items.value.find((i) => i.status === 'pending')
+      const next = items.value.find((i) => i.status === UPLOAD_STATUS.PENDING)
       if (!next) break
       void processItem(next)
     }
 
-    const stillWorking = items.value.some(
-      (i) => i.status === 'pending' || i.status === 'compressing' || i.status === 'uploading',
-    )
+    const stillWorking = items.value.some((i) => isActiveStatus(i.status))
     if (!stillWorking && inFlight === 0) {
       const undelivered = items.value.filter(
-        (i) => i.status === 'success' && i.result && !i.delivered,
+        (i) => i.status === UPLOAD_STATUS.SUCCESS && i.result && !i.delivered,
       )
       if (undelivered.length > 0) {
         for (const item of undelivered) item.delivered = true
@@ -166,7 +180,7 @@ export function useUpload(opts: UseUploadOptions) {
     try {
       let working = item.file
       if (opts.enableCompressor.value && working.type.startsWith('image/')) {
-        item.status = 'compressing'
+        item.status = UPLOAD_STATUS.COMPRESSING
         try {
           working = await compressImage(working)
           item.file = working
@@ -177,11 +191,11 @@ export function useUpload(opts: UseUploadOptions) {
       }
 
       if (ctl.signal.aborted) {
-        item.status = 'cancelled'
+        item.status = UPLOAD_STATUS.CANCELLED
         return
       }
 
-      item.status = 'uploading'
+      item.status = UPLOAD_STATUS.UPLOADING
       item.progress = 0
 
       const result =
@@ -190,7 +204,7 @@ export function useUpload(opts: UseUploadOptions) {
           : await uploadToLocal(working, item, ctl.signal)
 
       item.result = result
-      item.status = 'success'
+      item.status = UPLOAD_STATUS.SUCCESS
       item.progress = 100
 
       globalFileRegistry.upsert({
@@ -206,9 +220,9 @@ export function useUpload(opts: UseUploadOptions) {
       })
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
-        item.status = 'cancelled'
+        item.status = UPLOAD_STATUS.CANCELLED
       } else {
-        item.status = 'error'
+        item.status = UPLOAD_STATUS.ERROR
         const msg =
           (err instanceof Error ? err.message : String(err)) || String(t('uploader.uploadError'))
         item.error = msg
@@ -229,7 +243,7 @@ export function useUpload(opts: UseUploadOptions) {
     const res = await httpUpload(
       file,
       {
-        kind: 'local',
+        kind: UPLOAD_KIND.LOCAL,
         endpoint: `${backendURL}/api/files/upload`,
         authHeader: authStore.authHeader,
         fields: {
@@ -246,9 +260,9 @@ export function useUpload(opts: UseUploadOptions) {
     )
 
     const payload = extractUploadPayload(res.responseBody)
-    const fileId = String(payload.id || payload.file_id || payload.ID || '')
-    const fileKey = String(payload.key || payload.object_key || '')
-    const fileUrl = String(payload.url || payload.file_url || payload.access_url || '')
+    const fileId = pickField(payload, ['id', 'file_id', 'ID'])
+    const fileKey = pickField(payload, ['key', 'object_key'])
+    const fileUrl = pickField(payload, ['url', 'file_url', 'access_url'])
     if (!fileId || !fileUrl) {
       throw new Error(String(t('uploader.missingFileIdentifier')))
     }
@@ -285,7 +299,7 @@ export function useUpload(opts: UseUploadOptions) {
     await httpUpload(
       file,
       {
-        kind: 's3',
+        kind: UPLOAD_KIND.S3,
         presignUrl: presign.presign_url,
         contentType,
       },
@@ -346,8 +360,8 @@ export function useUpload(opts: UseUploadOptions) {
   function retry(id: string) {
     const item = items.value.find((i) => i.id === id)
     if (!item) return
-    if (item.status !== 'error' && item.status !== 'cancelled') return
-    item.status = 'pending'
+    if (item.status !== UPLOAD_STATUS.ERROR && item.status !== UPLOAD_STATUS.CANCELLED) return
+    item.status = UPLOAD_STATUS.PENDING
     item.error = undefined
     item.progress = 0
     item.file = item.originalFile
@@ -380,7 +394,6 @@ export function useUpload(opts: UseUploadOptions) {
   return {
     items,
     isUploading,
-    successCount,
     totalActive,
     addFiles,
     retry,
