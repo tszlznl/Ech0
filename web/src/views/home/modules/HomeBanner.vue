@@ -13,6 +13,14 @@
       >
         Powered by Ech0
       </RouterLink>
+      <RouterLink
+        :to="{ name: 'about' }"
+        class="home-banner__about"
+        :aria-label="t('about.linkAriaLabel')"
+        :title="t('about.linkAriaLabel')"
+      >
+        <Exclamation class="home-banner__about-icon" />
+      </RouterLink>
     </div>
   </section>
 </template>
@@ -20,6 +28,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
+import Exclamation from '@/components/icons/exclamation.vue'
 const { t } = useI18n()
 </script>
 
@@ -82,5 +91,36 @@ const { t } = useI18n()
 
 .home-banner__powered:hover {
   color: var(--color-text-primary);
+}
+
+.home-banner__about {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  outline: none;
+  transition:
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.home-banner__about:hover {
+  color: var(--color-accent);
+  transform: translateY(-1px);
+}
+
+.home-banner__about:focus-visible {
+  color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent-soft);
+}
+
+.home-banner__about-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 2.5rem;
 }
 </style>
