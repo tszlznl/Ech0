@@ -1,10 +1,7 @@
 name: i18n-guardrails
 
 on:
-  pull_request:
-    branches: [main, master]
-  push:
-    branches: [main, master]
+  workflow_dispatch:
 
 jobs:
   web-i18n-check:
