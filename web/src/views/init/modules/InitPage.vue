@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <main class="min-h-screen w-full px-4 flex items-center justify-center">
     <div class="w-full max-w-[18rem]">

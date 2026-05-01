@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 import type { RouteLocationNormalized } from 'vue-router'
 
 /** Public origin for canonical, Open Graph, and sitemap (override via `VITE_HUB_SITE_ORIGIN`). */

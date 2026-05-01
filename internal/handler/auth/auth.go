@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 // Package handler 提供认证相关的 HTTP 端点：token 刷新、登出、OAuth code 交换。
 //
 // 这三个端点均为公开路由（不经过 JWTAuthMiddleware），因为：

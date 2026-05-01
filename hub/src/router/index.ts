@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 import { createRouter, createWebHistory } from 'vue-router'
 import { applyHubRouteMeta } from '../hubSeo'
 import HomeView from '../views/HomeView.vue'

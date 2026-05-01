@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 import { request, requestWithDirectUrlAndData } from '../request'
 
 // 统一查询 Echos（支持分页、搜索、标签过滤、排序）

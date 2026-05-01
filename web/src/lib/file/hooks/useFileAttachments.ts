@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 import { computed, ref } from 'vue'
 import { AttachmentManager } from '../attachments/attachment-manager'
 import type { FileAttachment, FileValidationRule } from '../types'

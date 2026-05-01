@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <div
     class="w-full max-w-sm bg-[var(--color-bg-surface)] h-auto p-3.5 sm:p-4 shadow rounded-sm mx-auto"

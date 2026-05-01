@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 import 'virtual:uno.css'
 import '../../web/src/themes/index.scss'
 /** 首屏前为 html 固定挂上 light（Hub 仅 light 主题） */

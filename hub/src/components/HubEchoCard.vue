@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2025-2026 lin-snow -->
 <script setup lang="ts">
 /** 结构与 web/src/components/advanced/echo/cards/TheHubEcho.vue 一致（Hub 聚合侧不展示 Extension）。 */
 import Verified from '@/components/icons/verified.vue'

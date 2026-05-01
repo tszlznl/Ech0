@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 import { computed, ref } from 'vue'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { createExternalFile, globalFileRegistry, useFileAttachments } from '@/lib/file'

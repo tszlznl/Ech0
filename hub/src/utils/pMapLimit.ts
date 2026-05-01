@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 /**
  * 受限并发版的 `Promise.allSettled`：保留入参顺序、不因单项失败拒绝整体。
  *

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 import type { HubInstance } from '../types/hub'
 import type { ApiResult } from '../types/echo'
 import { timeoutSignal } from '../utils/fetchTimeout'

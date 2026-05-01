@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
 //go:generate go run -mod=mod github.com/google/wire/cmd/wire
 //go:build wireinject
 // +build wireinject

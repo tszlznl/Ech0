@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <div class="w-[88%] mx-auto mb-4">
     <div class="horizontal-scroll-container">
