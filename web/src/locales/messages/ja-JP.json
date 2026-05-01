@@ -483,7 +483,8 @@
     "deleteConfirmTitle": "削除しますか？",
     "deleteConfirmDesc": "削除すると復元できません。慎重に操作してください",
     "deleteSuccess": "削除しました！",
-    "exitUpdateModeFirst": "先に更新モードを終了してください！"
+    "exitUpdateModeFirst": "先に更新モードを終了してください！",
+    "openDetail": "詳細を開く"
   },
   "userSetting": {
     "title": "ユーザーセンター",

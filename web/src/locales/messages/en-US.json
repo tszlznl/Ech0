@@ -483,7 +483,8 @@
     "deleteConfirmTitle": "Delete this Echo?",
     "deleteConfirmDesc": "This action cannot be undone.",
     "deleteSuccess": "Deleted successfully",
-    "exitUpdateModeFirst": "Please exit update mode first"
+    "exitUpdateModeFirst": "Please exit update mode first",
+    "openDetail": "Open detail"
   },
   "userSetting": {
     "title": "User Center",

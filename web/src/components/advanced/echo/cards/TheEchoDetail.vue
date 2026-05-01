@@ -102,7 +102,7 @@ const logo = computed(() => resolveAvatarUrl(SystemSetting.value?.server_logo))
 }
 
 .echo-detail-body {
-  padding: 1rem 0 2rem;
+  padding: 2rem 0 2rem;
 }
 
 .echo-username {

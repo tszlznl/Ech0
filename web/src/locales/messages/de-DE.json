@@ -483,7 +483,8 @@
     "deleteConfirmTitle": "Dieses Echo löschen?",
     "deleteConfirmDesc": "Diese Aktion kann nicht rückgängig gemacht werden.",
     "deleteSuccess": "Gelöscht",
-    "exitUpdateModeFirst": "Bitte zuerst den Bearbeitungsmodus verlassen"
+    "exitUpdateModeFirst": "Bitte zuerst den Bearbeitungsmodus verlassen",
+    "openDetail": "Detail öffnen"
   },
   "userSetting": {
     "title": "Benutzerverwaltung",

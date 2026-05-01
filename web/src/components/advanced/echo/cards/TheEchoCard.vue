@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
-  <div class="echo-timeline w-full">
+  <div class="echo-timeline group w-full">
     <div class="echo-header-sticky flex justify-between items-center">
       <div class="flex justify-start items-center h-9">
         <div class="flex items-center h-full pr-1">
@@ -10,10 +10,19 @@
           </div>
           <div
             @click="handleExpandEcho(echo.id)"
-            class="flex items-center h-full justify-start leading-none text-sm font-semibold text-nowrap text-[var(--color-accent)] hover:underline hover:decoration-offset-3 hover:decoration-1 mr-1"
+            class="flex items-center h-full justify-start leading-none text-sm font-semibold text-nowrap text-[var(--color-accent)] cursor-pointer hover:underline hover:decoration-offset-3 hover:decoration-1 mr-1"
           >
             {{ formatDate(props.echo.created_at) }}
           </div>
+          <button
+            type="button"
+            class="echo-open-btn flex items-center justify-center w-6 h-6 rounded-sm text-[var(--color-text-muted)] opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:text-[var(--color-text-primary)] focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-border-subtle)]"
+            :aria-label="t('echoCard.openDetail')"
+            v-tooltip="t('echoCard.openDetail')"
+            @click="handleExpandEcho(echo.id)"
+          >
+            <Open class="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
@@ -146,6 +155,7 @@ import Roll from '@/components/icons/roll.vue'
 import Lock from '@/components/icons/lock.vue'
 import More from '@/components/icons/more.vue'
 import EditEcho from '@/components/icons/editecho.vue'
+import Open from '@/components/icons/open.vue'
 import { useRouter } from 'vue-router'
 import { ImageLayout } from '@/enums/enums'
 import { formatDate } from '@/utils/other'
