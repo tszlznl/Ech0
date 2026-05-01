@@ -3,10 +3,7 @@
 <template>
   <div class="about-page">
     <div class="about-back-wrap">
-      <BaseButton
-        @click="$router.push({ name: 'home' })"
-        :tooltip="t('commonNav.backHome')"
-      >
+      <BaseButton @click="$router.push({ name: 'home' })" :tooltip="t('commonNav.backHome')">
         <Arrow class="text-2xl rotate-180" />
       </BaseButton>
     </div>
@@ -27,12 +24,7 @@
         <h2 class="about-section__heading">{{ t('about.authorHeading') }}</h2>
         <p class="about-section__line">
           <span class="about-section__value">{{ author }}</span>
-          <a
-            :href="AUTHOR_GITHUB"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="about-chip"
-          >
+          <a :href="AUTHOR_GITHUB" target="_blank" rel="noopener noreferrer" class="about-chip">
             <Github class="about-chip__icon" />
             <span>{{ t('about.authorGithub') }}</span>
           </a>
