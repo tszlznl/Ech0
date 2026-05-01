@@ -18,8 +18,40 @@ env:
   MUSL_TOOLCHAIN_SHA256: ""
 
 jobs:
+  # Refuse to build a release when the tag (vX.Y.Z) and the Version constant
+  # in internal/version/version.go disagree. Otherwise the published artifacts
+  # would lie about their own version in /hello, /healthz, the About page, etc.
+  verify-version:
+    name: Verify tag matches internal/version.Version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Compare tag and source version
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          TAG_VERSION="${TAG#v}"
+          SRC_VERSION="$(grep -E '^[[:space:]]*Version[[:space:]]*=[[:space:]]*"' internal/version/version.go \
+                          | head -n1 \
+                          | sed -E 's/.*"([^"]+)".*/\1/')"
+
+          if [ -z "$SRC_VERSION" ]; then
+            echo "::error::Could not extract Version from internal/version/version.go"
+            exit 1
+          fi
+
+          echo "tag        = ${TAG}"
+          echo "tag_version = ${TAG_VERSION}"
+          echo "src_version = ${SRC_VERSION}"
+
+          if [ "$TAG_VERSION" != "$SRC_VERSION" ]; then
+            echo "::error title=Version mismatch::Git tag ${TAG} → ${TAG_VERSION}, but internal/version/version.go declares ${SRC_VERSION}. Bump the const before tagging (see docs/dev/release-process.md)."
+            exit 1
+          fi
+
   build:
     name: Build Frontend & Backend
+    needs: [verify-version]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
