@@ -69,6 +69,10 @@ Your PR description should include:
 
 For large changes, consider splitting into smaller, reviewable PRs.
 
+## Releasing
+
+Maintainers cutting a new release should follow the documented procedure in [`docs/dev/release-process.md`](docs/dev/release-process.md). User-visible changes per release are tracked in [`CHANGELOG.md`](CHANGELOG.md); add an entry under `[Unreleased]` whenever your PR introduces a change a self-hoster needs to know about.
+
 ## Code style
 
 - Match existing project style and layout; avoid introducing patterns that conflict with current conventions.

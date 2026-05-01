@@ -18,7 +18,11 @@ IMAGE_TAG?=latest
 OS?=$(if $(GOHOSTOS),$(GOHOSTOS),linux)
 ARCH?=$(if $(GOHOSTARCH),$(GOHOSTARCH),amd64)
 
-.PHONY: help air-install run dev web-dev check dev-lint lint fmt test wire wire-check swagger build build-image push-image
+.PHONY: help air-install run dev web-dev check dev-lint lint fmt test wire wire-check swagger build bump build-image push-image
+
+# Semver pattern: X.Y.Z, optionally followed by a -prerelease suffix.
+# (escape $ so make doesn't expand, then escape $$ to a literal $ in shell)
+SEMVER_PATTERN := ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$$
 
 AIR_BIN := $(shell command -v air 2>/dev/null || echo "$(GOPATH)/bin/air")
 
@@ -29,6 +33,8 @@ help:
 	@echo "  make air-install - Install Air to GOPATH/bin"
 	@echo "  make web-dev     - Run frontend dev server"
 	@echo "  make build       - Build local binary with version/commit injected"
+	@echo "  make bump NEW_VERSION=X.Y.Z"
+	@echo "                   - Bump internal/version.Version + sanity-check (does NOT commit/tag)"
 	@echo "  make check       - Backend fmt/lint + web format/lint + i18n checks"
 	@echo "  make dev-lint    - Backend fmt/lint + web format/lint + i18n checks"
 	@echo "  make lint        - Run golangci-lint checks"
@@ -48,6 +54,53 @@ run:
 
 build:
 	go build -ldflags "$(LDFLAGS)" -o ./bin/ech0 ./cmd/ech0
+
+# Prepare a clean version-bump commit. This target only EDITS files —
+# it never auto-commits, never tags, never pushes. The next-step commands
+# are printed for the developer to run after eyeballing the diff.
+# See docs/dev/release-process.md for the full procedure.
+bump:
+	@if [ -z "$(NEW_VERSION)" ]; then \
+		echo "✘ Usage: make bump NEW_VERSION=X.Y.Z"; \
+		echo "  e.g. make bump NEW_VERSION=4.6.5"; \
+		exit 1; \
+	fi
+	@echo "$(NEW_VERSION)" | grep -Eq '$(SEMVER_PATTERN)' \
+		|| { echo "✘ '$(NEW_VERSION)' is not valid semver (expected X.Y.Z[-prerelease])"; exit 1; }
+	@if [ -n "$$(git status --porcelain)" ]; then \
+		echo "✘ Working tree dirty — commit or stash first so the bump commit is clean."; \
+		git status --short; \
+		exit 1; \
+	fi
+	@OLD_VERSION="$$(grep -E '^[[:space:]]*Version[[:space:]]*=[[:space:]]*\"' internal/version/version.go \
+	                  | head -n1 \
+	                  | sed -E 's/.*\"([^\"]+)\".*/\1/')"; \
+	if [ -z "$$OLD_VERSION" ]; then \
+		echo "✘ Could not extract current Version from internal/version/version.go"; \
+		exit 1; \
+	fi; \
+	if [ "$$OLD_VERSION" = "$(NEW_VERSION)" ]; then \
+		echo "✘ Version is already $$OLD_VERSION — nothing to bump."; \
+		exit 1; \
+	fi; \
+	echo "→ bumping $$OLD_VERSION → $(NEW_VERSION)"; \
+	sed -i.bak -E 's/^([[:space:]]*Version[[:space:]]*=[[:space:]]*\")[^\"]+(\")/\1$(NEW_VERSION)\2/' internal/version/version.go; \
+	rm -f internal/version/version.go.bak
+	@echo "→ verifying go build still succeeds..."
+	@go build ./... >/dev/null || { echo "✘ go build failed after bump — reverting"; git checkout -- internal/version/version.go; exit 1; }
+	@echo ""
+	@echo "✓ Version bumped. Diff:"
+	@git --no-pager diff -- internal/version/version.go
+	@echo ""
+	@echo "Next steps (review the diff above, then run):"
+	@echo ""
+	@echo "  # 1. Update CHANGELOG.md: rename [Unreleased] → [$(NEW_VERSION)] - $$(date -u +%Y-%m-%d), open a new empty [Unreleased]"
+	@echo "  # 2. Commit + tag:"
+	@echo "       git commit -am 'chore(release): v$(NEW_VERSION)'"
+	@echo "       git tag -a v$(NEW_VERSION) -m 'Release v$(NEW_VERSION)'"
+	@echo "  # 3. Push to trigger release workflow:"
+	@echo "       git push origin main"
+	@echo "       git push origin v$(NEW_VERSION)"
 
 dev:
 	@if [ ! -x "$(AIR_BIN)" ]; then \
