@@ -923,7 +923,7 @@
     "viewSourceAtCommit": "在 GitHub 上查看 commit {'@'} {commit} 的源代码",
     "viewRelease": "v{version} 发布说明",
     "buildTime": "构建时间 {time}",
-    "poweredBy": "用心打造 · Powered by Ech0"
+    "poweredBy": "用❤️打造 · Powered by Ech0"
   },
   "echoPage": {
     "loadingDetail": "正在加载 Echo 详情..."

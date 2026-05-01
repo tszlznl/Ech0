@@ -923,7 +923,7 @@
     "viewSourceAtCommit": "Quellcode {'@'} {commit} auf GitHub ansehen",
     "viewRelease": "Release-Notes für v{version}",
     "buildTime": "Gebaut am {time}",
-    "poweredBy": "Mit Sorgfalt gebaut · Powered by Ech0"
+    "poweredBy": "Mit ❤️ gebaut · Powered by Ech0"
   },
   "echoPage": {
     "loadingDetail": "Echo-Details werden geladen…"

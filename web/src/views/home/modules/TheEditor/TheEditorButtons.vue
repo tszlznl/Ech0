@@ -27,48 +27,54 @@
         :tooltip="t('editor.togglePrivacy')"
       />
       <!-- Tag Multi-Select -->
-      <Popover v-if="currentMode === Mode.ECH0" class="editor-actions__tag">
-        <PopoverButton
-          v-tooltip="tagTriggerTooltip"
-          :aria-label="tagTriggerTooltip"
-          class="cursor-pointer p-1.5 w-8 h-8 sm:w-9 sm:h-9 rounded-xs ring-inset ring-1 ring-[var(--btn-ring-color)] text-[var(--btn-text-color)] outline-none shadow-[var(--btn-shadow)] bg-[var(--btn-bg-color)] hover:bg-[var(--btn-hover-bg-color)] hover:ring-[var(--btn-hover-border-color)] focus-visible:ring-2 focus-visible:ring-[var(--btn-focus-ring-color)] transition-colors duration-200 relative inline-flex items-center justify-center"
-        >
-          <TagSetting class="w-full h-full" />
-        </PopoverButton>
+      <div v-if="currentMode === Mode.ECH0" class="editor-actions__tag">
+        <Popover>
+          <PopoverButton
+            v-tooltip="tagTriggerTooltip"
+            :aria-label="tagTriggerTooltip"
+            class="cursor-pointer p-1.5 w-8 h-8 sm:w-9 sm:h-9 rounded-xs ring-inset ring-1 ring-[var(--btn-ring-color)] text-[var(--btn-text-color)] outline-none shadow-[var(--btn-shadow)] bg-[var(--btn-bg-color)] hover:bg-[var(--btn-hover-bg-color)] hover:ring-[var(--btn-hover-border-color)] focus-visible:ring-2 focus-visible:ring-[var(--btn-focus-ring-color)] transition-colors duration-200 relative inline-flex items-center justify-center"
+          >
+            <TagSetting class="w-full h-full" />
+          </PopoverButton>
 
-        <transition
-          enter-active-class="transition duration-150 ease-out"
-          enter-from-class="opacity-0 -translate-y-1"
-          enter-to-class="opacity-100 translate-y-0"
-          leave-active-class="transition duration-100 ease-in"
-          leave-from-class="opacity-100 translate-y-0"
-          leave-to-class="opacity-0 -translate-y-1"
-        >
-          <PopoverPanel class="editor-actions__tag-panel">
-            <div v-if="tagOptions.length === 0" class="editor-actions__tag-empty">
-              <p class="editor-actions__tag-empty-text">{{ t('editor.tagPickerEmpty') }}</p>
-              <button type="button" class="editor-actions__tag-empty-link" @click="goToTagManager">
-                {{ t('editor.tagPickerGoToManage') }} →
-              </button>
-            </div>
-            <div v-else class="editor-actions__tag-chip-list">
-              <button
-                v-for="name in tagOptions"
-                :key="name"
-                type="button"
-                class="editor-actions__tag-chip"
-                :class="{
-                  'editor-actions__tag-chip--selected': tagToAdd.includes(name),
-                  'editor-actions__tag-chip--disabled': isTagChipDisabled(name),
-                }"
-                @click="toggleTag(name)"
-              >
-                #{{ name }}
-              </button>
-            </div>
-          </PopoverPanel>
-        </transition>
-      </Popover>
+          <transition
+            enter-active-class="transition duration-150 ease-out"
+            enter-from-class="opacity-0 -translate-y-1"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition duration-100 ease-in"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 -translate-y-1"
+          >
+            <PopoverPanel class="editor-actions__tag-panel">
+              <div v-if="tagOptions.length === 0" class="editor-actions__tag-empty">
+                <p class="editor-actions__tag-empty-text">{{ t('editor.tagPickerEmpty') }}</p>
+                <button
+                  type="button"
+                  class="editor-actions__tag-empty-link"
+                  @click="goToTagManager"
+                >
+                  {{ t('editor.tagPickerGoToManage') }} →
+                </button>
+              </div>
+              <div v-else class="editor-actions__tag-chip-list">
+                <button
+                  v-for="name in tagOptions"
+                  :key="name"
+                  type="button"
+                  class="editor-actions__tag-chip"
+                  :class="{
+                    'editor-actions__tag-chip--selected': tagToAdd.includes(name),
+                    'editor-actions__tag-chip--disabled': isTagChipDisabled(name),
+                  }"
+                  @click="toggleTag(name)"
+                >
+                  #{{ name }}
+                </button>
+              </div>
+            </PopoverPanel>
+          </transition>
+        </Popover>
+      </div>
     </div>
 
     <div class="editor-actions__right">
@@ -283,6 +289,8 @@ const goToTagManager = () => {
   --btn-hover-bg-color: var(--md-editor-actions-hover-bg);
   --btn-hover-border-color: var(--md-editor-actions-hover-border);
 
+  position: relative;
+  z-index: 50;
   display: flex;
   justify-content: space-between;
   flex-wrap: nowrap;
@@ -304,11 +312,12 @@ const goToTagManager = () => {
 .editor-actions__tag {
   position: relative;
   flex: 0 0 auto;
+  isolation: isolate;
 }
 
 .editor-actions__tag-panel {
   position: absolute;
-  z-index: 30;
+  z-index: 100;
   top: calc(100% + 0.4rem);
   left: 0;
   width: 16rem;

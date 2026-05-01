@@ -923,7 +923,7 @@
     "viewSourceAtCommit": "GitHub で commit {'@'} {commit} のソースを見る",
     "viewRelease": "v{version} リリースノート",
     "buildTime": "ビルド時刻 {time}",
-    "poweredBy": "心を込めて · Powered by Ech0"
+    "poweredBy": "❤️ を込めて · Powered by Ech0"
   },
   "echoPage": {
     "loadingDetail": "Echo の詳細を読み込み中..."
