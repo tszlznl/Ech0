@@ -122,7 +122,8 @@ const author = computed(() => settingStore.hello?.author || FALLBACK_AUTHOR)
 const license = computed(() => settingStore.hello?.license || FALLBACK_LICENSE)
 const repoURL = computed(() => settingStore.hello?.repo_url || FALLBACK_REPO)
 const copyright = computed(
-  () => settingStore.hello?.copyright || `Copyright (C) ${new Date().getFullYear()} ${author.value}`,
+  () =>
+    settingStore.hello?.copyright || `Copyright (C) ${new Date().getFullYear()} ${author.value}`,
 )
 
 // AGPL-3.0 §13 anchor: when we know the exact commit, link the user to /tree/<commit>
@@ -131,9 +132,7 @@ const sourceURL = computed(() =>
   hasCommit.value ? `${repoURL.value}/tree/${commit.value}` : repoURL.value,
 )
 const sourceLinkLabel = computed(() =>
-  hasCommit.value
-    ? t('about.viewSourceAtCommit', { commit: commit.value })
-    : t('about.viewSource'),
+  hasCommit.value ? t('about.viewSourceAtCommit', { commit: commit.value }) : t('about.viewSource'),
 )
 </script>
 
