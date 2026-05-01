@@ -109,6 +109,10 @@ const logo = computed(() => resolveAvatarUrl(SystemSetting.value?.server_logo))
   padding: 2rem 0;
 }
 
+.echo-detail-body :deep(.image-gallery-container > div) {
+  width: 100%;
+}
+
 .echo-username {
   font-family: var(--font-family-display);
 }
