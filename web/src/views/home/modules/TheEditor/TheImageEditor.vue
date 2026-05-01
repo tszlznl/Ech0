@@ -68,7 +68,7 @@
 
     <div class="my-1">
       <!-- 图片上传 -->
-      <TheUppy
+      <TheUploader
         v-if="fileToAdd.storage_type !== FILE_STORAGE_TYPE.EXTERNAL"
         :fileStorageType="fileToAdd.storage_type"
         :EnableCompressor="enableCompressor"
@@ -110,7 +110,7 @@ import BaseButton from '@/components/common/BaseButton.vue'
 import BaseSelect from '@/components/common/BaseSelect.vue'
 import BaseSwitch from '@/components/common/BaseSwitch.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
-import TheUppy from '@/components/advanced/TheUppy.vue'
+import TheUploader from '@/components/advanced/TheUploader.vue'
 import { localStg } from '@/utils/storage'
 import { useI18n } from 'vue-i18n'
 
@@ -142,7 +142,7 @@ const layoutOptions = computed(() => [
 .editor-image-panel {
   margin: 0.75rem 0;
   padding: 0.75rem;
-  border: 1px dashed var(--md-editor-mini-border);
+  border: 1px dashed var(--color-border-strong);
   border-radius: var(--radius-xs);
 }
 </style>

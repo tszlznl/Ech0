@@ -868,18 +868,27 @@
     "enableAutoBackup": "Snapshots automatisch erstellen",
     "crontab": "Snapshot-Zeitplan"
   },
-  "uppy": {
-    "dashboardNote": "Bilder einfügen oder auswählen!",
+  "uploader": {
+    "dropHere": "Ziehen, Einfügen oder Klicken zum Auswählen",
+    "dropHint": "Bis zu {max} Dateien gleichzeitig",
+    "cancelAll": "Alle abbrechen",
+    "retry": "Wiederholen",
+    "removeItem": "Entfernen",
+    "reorderHint": "Ziehen zum Sortieren der Bilder",
+    "compressionTooltip": "Vorher {from} → Nachher {to}",
+    "compressionNone": "Original",
+    "compressionNoneTooltip": "Bereits optimal oder Format nicht unterstützt – keine Komprimierung angewendet",
+    "statusPending": "Wartend",
+    "statusCompressing": "Wird komprimiert",
+    "statusSuccess": "Hochgeladen",
+    "statusCancelled": "Abgebrochen",
+    "statusError": "Fehlgeschlagen",
+    "uploadingProgress": "{active} Datei(en) werden hochgeladen…",
+    "maxFilesReached": "Maximal {max} Dateien; weitere ignoriert",
+    "uploadError": "Beim Hochladen ist ein Fehler aufgetreten 😢",
     "loginRequired": "Bitte zuerst anmelden, um Bilder hochzuladen 😢",
-    "uploadingImageWait": "Bilder werden hochgeladen, bitte warten… ⏳",
-    "uploadImageError": "Beim Hochladen ist ein Fehler aufgetreten 😢",
-    "uploadSuccess": "Upload erfolgreich! 🎉",
     "missingFileIdentifier": "Upload-Antwort enthält keinen Dateibezeichner – Bindung an Echo nicht möglich",
-    "missingFileId": "Upload-Antwort enthält keine Datei-ID – Bindung an Echo nicht möglich",
-    "fileMetaFillbackFailed": "Datei-Metadaten konnten nicht zurückgeschrieben werden",
-    "uploadSuccessNoFileId": "Upload erfolgreich, aber Datei-ID konnte nicht gelesen werden. Backend-Antwort prüfen",
-    "uploadingTaskSwitchBlocked": "Upload läuft. Bitte Upload-Modus später wechseln 😢",
-    "uploadingSwitchCompressBlocked": "Komprimierungsmodus kann während des Uploads nicht gewechselt werden"
+    "fileMetaFillbackFailed": "Datei-Metadaten konnten nicht zurückgeschrieben werden"
   },
   "markdown": {
     "expand": "Ausklappen",
@@ -922,7 +931,8 @@
     "github": "GitHub",
     "website": "Webseite",
     "location": "Ort",
-    "locationOpenInMaps": "In Google Maps öffnen"
+    "locationOpenInMaps": "In Google Maps öffnen",
+    "jump": "Öffnen"
   },
   "recentCard": {
     "mysteriousRecent": "Der Autor war in letzter Zeit eher zurückhaltend…",

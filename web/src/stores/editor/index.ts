@@ -323,6 +323,7 @@ export const useEditorStore = defineStore('editorStore', () => {
     clearExtension: extension.clearExtension,
     handleUppyUploaded,
     setFilesToAdd: files.setFilesToAdd,
+    reorderFilesByIds: files.reorderFilesByIds,
     removeFileAt: files.removeFileAt,
   }
 })

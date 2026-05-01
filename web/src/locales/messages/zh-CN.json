@@ -868,18 +868,27 @@
     "humanHourly": "每 {n} 小时执行一次",
     "humanCustom": "按自定义计划执行"
   },
-  "uppy": {
-    "dashboardNote": "支持粘贴或选择图片上传哦！",
+  "uploader": {
+    "dropHere": "拖拽 / 粘贴 / 点击选择图片",
+    "dropHint": "支持多选，最多 {max} 张",
+    "cancelAll": "取消全部",
+    "retry": "重试",
+    "removeItem": "移除",
+    "reorderHint": "拖动可以调整图片顺序",
+    "compressionTooltip": "压缩前 {from} → 压缩后 {to}",
+    "compressionNone": "原始",
+    "compressionNoneTooltip": "已是最优编码或不支持的格式，未再压缩",
+    "statusPending": "待上传",
+    "statusCompressing": "压缩中",
+    "statusSuccess": "已上传",
+    "statusCancelled": "已取消",
+    "statusError": "失败",
+    "uploadingProgress": "正在上传 {active} 个文件...",
+    "maxFilesReached": "最多 {max} 个文件，已忽略多余的",
+    "uploadError": "上传图片时发生错误 😢",
     "loginRequired": "请先登录再上传图片 😢",
-    "uploadingImageWait": "正在上传图片，请稍等... ⏳",
-    "uploadImageError": "上传图片时发生错误 😢",
-    "uploadSuccess": "好耶,上传成功！🎉",
     "missingFileIdentifier": "上传响应缺少文件标识，无法绑定到 Echo，请重试",
-    "missingFileId": "上传响应缺少文件ID，无法绑定到 Echo，请重试",
-    "fileMetaFillbackFailed": "文件元数据回填失败",
-    "uploadSuccessNoFileId": "上传成功但未解析到文件ID，请检查后端上传响应结构",
-    "uploadingTaskSwitchBlocked": "当前有文件正在上传，请稍后再切换上传方式 😢",
-    "uploadingSwitchCompressBlocked": "正在上传中，无法切换压缩模式"
+    "fileMetaFillbackFailed": "文件元数据回填失败"
   },
   "markdown": {
     "expand": "展开",
@@ -922,7 +931,8 @@
     "github": "GitHub",
     "website": "网站",
     "location": "位置",
-    "locationOpenInMaps": "在 Google Maps 打开"
+    "locationOpenInMaps": "在 Google Maps 打开",
+    "jump": "跳转"
   },
   "recentCard": {
     "mysteriousRecent": "作者最近很神秘～",

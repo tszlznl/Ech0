@@ -6,12 +6,15 @@
           <slot name="header-icon"></slot>
         </span>
         <span class="extension-card-shell__header-label">{{ headerLabel }}</span>
-        <span
-          v-if="headerBadge !== undefined && headerBadge !== ''"
-          class="extension-card-shell__header-badge"
-        >
-          {{ headerBadge }}
-        </span>
+        <div v-if="hasHeaderEnd" class="extension-card-shell__header-end">
+          <span
+            v-if="headerBadge !== undefined && headerBadge !== ''"
+            class="extension-card-shell__header-badge"
+          >
+            {{ headerBadge }}
+          </span>
+          <slot name="header-actions"></slot>
+        </div>
       </slot>
     </div>
     <div class="extension-card-shell__body">
@@ -42,6 +45,12 @@ const slots = useSlots()
 
 const hasHeader = computed(
   () => Boolean(slots.header) || Boolean(slots['header-icon']) || Boolean(props.headerLabel),
+)
+
+const hasHeaderEnd = computed(
+  () =>
+    Boolean(slots['header-actions']) ||
+    (props.headerBadge !== undefined && props.headerBadge !== ''),
 )
 
 const sizeClass = computed(() =>
@@ -103,8 +112,14 @@ const paddingClass = computed(() => {
   letter-spacing: 0.01em;
 }
 
-.extension-card-shell__header-badge {
+.extension-card-shell__header-end {
   margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.extension-card-shell__header-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
