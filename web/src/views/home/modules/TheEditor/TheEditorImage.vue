@@ -10,7 +10,8 @@
   >
     <button
       @click="handleRemoveImage"
-      class="absolute -top-3 -right-4 bg-[var(--color-accent-soft)] hover:bg-[var(--color-danger)]/30 text-[var(--color-text-secondary)] rounded-lg w-7 h-7 flex items-center justify-center shadow-[var(--shadow-sm)]"
+      :disabled="isDeleting"
+      class="absolute -top-3 -right-4 bg-[var(--color-accent-soft)] hover:bg-[var(--color-danger)]/30 text-[var(--color-text-secondary)] rounded-lg w-7 h-7 flex items-center justify-center shadow-[var(--shadow-sm)] disabled:opacity-60 disabled:cursor-not-allowed"
       v-tooltip="t('editor.removeImage')"
     >
       <Close class="w-4 h-4" />
@@ -75,6 +76,7 @@ const { t } = useI18n()
 // const emit = defineEmits(['handleAddorUpdateEcho'])
 
 const fileIndex = ref<number>(0) // 临时文件索引变量
+const isDeleting = ref<boolean>(false)
 const echoStore = useEchoStore()
 const { echoToUpdate } = storeToRefs(echoStore)
 const editorStore = useEditorStore()
@@ -90,6 +92,7 @@ const previewItems = computed(() =>
 const { open: openPreview } = usePhotoSwipeGallery(previewItems)
 
 const handleRemoveImage = () => {
+  if (isDeleting.value) return
   if (
     fileIndex.value < 0 ||
     fileIndex.value >= filesToAdd.value.length ||
@@ -103,31 +106,38 @@ const handleRemoveImage = () => {
   openConfirm({
     title: String(t('editor.removeImageConfirmTitle')),
     description: '',
-    onConfirm: () => {
-      const fileToDelete: App.Api.Ech0.FileToDelete = {
-        id: String(filesToAdd.value[index]?.id || ''),
-      }
+    onConfirm: async () => {
+      if (isDeleting.value) return
+      const target = filesToAdd.value[index]
+      const fileId = String(target?.id || '')
+      const source = String(target?.storage_type || '')
+      const needsRemoteDelete =
+        (source === FILE_STORAGE_TYPE.LOCAL || source === FILE_STORAGE_TYPE.OBJECT) && !!fileId
 
-      const source = String(filesToAdd.value[index]?.storage_type || '')
-      if (
-        (source === FILE_STORAGE_TYPE.LOCAL || source === FILE_STORAGE_TYPE.OBJECT) &&
-        fileToDelete.id
-      ) {
-        deleteFileById(fileToDelete.id).then(() => {
-          // 这里不管图片是否远程删除成功都强制删除图片
-          // 从数组中删除图片
-          editorStore.removeFileAt(index)
-
-          // 如果删除成功且当前处于Echo更新模式，则需要立马执行更新（图片删除操作不可逆，需要立马更新确保后端数据同步）
-          if (isUpdateMode.value && echoToUpdate.value) {
-            editorStore.handleAddOrUpdateEcho(true)
+      isDeleting.value = true
+      try {
+        if (needsRemoteDelete) {
+          try {
+            await deleteFileById(fileId)
+          } catch {
+            // Per design, local removal proceeds even if the backend delete fails;
+            // surface a warning so the user knows the backend file may be orphaned.
+            theToast.error(String(t('editor.removeImageRemoteFailed')))
           }
-        })
-      } else {
-        editorStore.removeFileAt(index)
-      }
+        }
 
-      fileIndex.value = 0
+        editorStore.removeFileAt(index)
+
+        // Keep the carousel near the removed slot rather than snapping back to 0.
+        const nextLen = filesToAdd.value.length
+        fileIndex.value = nextLen === 0 ? 0 : Math.min(index, nextLen - 1)
+
+        if (isUpdateMode.value && echoToUpdate.value) {
+          editorStore.handleAddOrUpdateEcho(true)
+        }
+      } finally {
+        isDeleting.value = false
+      }
     },
   })
 }

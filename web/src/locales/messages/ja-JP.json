@@ -113,6 +113,7 @@
     "removeImage": "画像を削除",
     "invalidImageIndex": "画像インデックスが無効です。削除できません！",
     "removeImageConfirmTitle": "この画像を削除しますか？",
+    "removeImageRemoteFailed": "エディタから削除しましたが、サーバー側の削除に失敗しました。バックエンドにファイルが残っている可能性があります",
     "restoreDraftTitle": "ローカル下書きを復元",
     "restoreDraftDesc": "未公開のローカル下書きが見つかりました。復元しますか？",
     "restoreDraftRecovered": "ローカル下書きを復元しました",

@@ -113,6 +113,7 @@
     "removeImage": "Bild entfernen",
     "invalidImageIndex": "Ungültiger Bildindex – Entfernen nicht möglich",
     "removeImageConfirmTitle": "Dieses Bild entfernen?",
+    "removeImageRemoteFailed": "Bild aus dem Editor entfernt, aber serverseitiges Löschen fehlgeschlagen – die Datei könnte auf dem Backend zurückbleiben",
     "restoreDraftTitle": "Lokalen Entwurf wiederherstellen",
     "restoreDraftDesc": "Es wurde ein unveröffentlichter Entwurf gefunden. Wiederherstellen?",
     "restoreDraftRecovered": "Lokaler Entwurf wiederhergestellt",
