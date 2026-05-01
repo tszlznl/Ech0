@@ -910,7 +910,6 @@
     "linkAriaLabel": "关于本 Ech0 实例",
     "tagline": "一个自托管的轻量级个人发布平台。",
     "copyrightHeading": "版权",
-    "copyrightLine": "Copyright (C) {year} {holder}. 保留所有权利。",
     "licenseLine": "本软件以",
     "agplNotice": "作为网络服务，Ech0 遵循 AGPL-3.0 第 13 条：与本实例交互的用户有权获取其对应版本的源代码。",
     "authorHeading": "作者",
@@ -918,7 +917,9 @@
     "sourceHeading": "源代码",
     "sourceDescription": "Ech0 的完整源代码在 GitHub 上公开可用。",
     "viewSource": "在 GitHub 上查看源代码",
+    "viewSourceAtCommit": "在 GitHub 上查看 commit @ {commit} 的源代码",
     "viewRelease": "v{version} 发布说明",
+    "buildTime": "构建时间 {time}",
     "poweredBy": "用心打造 · Powered by Ech0"
   },
   "echoPage": {

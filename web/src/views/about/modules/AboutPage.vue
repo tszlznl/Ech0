@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <div class="about-page">
     <div class="about-shell">
@@ -12,7 +14,8 @@
         <div class="about-title">
           <h1 class="about-title__name">Ech0</h1>
           <span class="about-title__version">
-            v{{ settingStore.hello?.version || '--' }}
+            v{{ version }}
+            <span v-if="hasCommit" class="about-title__commit"> · {{ commit }}</span>
           </span>
         </div>
         <p class="about-title__tagline">{{ t('about.tagline') }}</p>
@@ -20,18 +23,16 @@
 
       <section class="about-card">
         <h2 class="about-card__heading">{{ t('about.copyrightHeading') }}</h2>
-        <p class="about-card__text">
-          {{ t('about.copyrightLine', { year: copyrightYears, holder: AUTHOR_NAME }) }}
-        </p>
+        <p class="about-card__text">{{ copyright }}</p>
         <p class="about-card__text about-card__text--muted">
           {{ t('about.licenseLine') }}
           <a
-            :href="`${REPO_URL}/blob/main/LICENSE`"
+            :href="`${repoURL}/blob/main/LICENSE`"
             target="_blank"
             rel="noopener noreferrer"
             class="about-link"
           >
-            AGPL-3.0-or-later
+            {{ license }}
           </a>
         </p>
         <p class="about-card__text about-card__text--muted">
@@ -41,7 +42,7 @@
 
       <section class="about-card">
         <h2 class="about-card__heading">{{ t('about.authorHeading') }}</h2>
-        <p class="about-card__text">{{ AUTHOR_NAME }}</p>
+        <p class="about-card__text">{{ author }}</p>
         <div class="about-links">
           <a
             :href="AUTHOR_GITHUB"
@@ -62,24 +63,27 @@
         </p>
         <div class="about-links">
           <a
-            :href="REPO_URL"
+            :href="sourceURL"
             target="_blank"
             rel="noopener noreferrer"
             class="about-link about-link--row"
           >
             <Github class="about-link__icon" />
-            <span>{{ t('about.viewSource') }}</span>
+            <span>{{ sourceLinkLabel }}</span>
           </a>
           <a
-            :href="`${REPO_URL}/releases/tag/v${settingStore.hello?.version}`"
+            v-if="version && version !== '--'"
+            :href="`${repoURL}/releases/tag/v${version}`"
             target="_blank"
             rel="noopener noreferrer"
             class="about-link about-link--row"
-            v-if="settingStore.hello?.version"
           >
             <Info class="about-link__icon" />
-            <span>{{ t('about.viewRelease', { version: settingStore.hello.version }) }}</span>
+            <span>{{ t('about.viewRelease', { version }) }}</span>
           </a>
+          <p v-if="buildTime" class="about-card__text about-card__text--muted about-build-time">
+            {{ t('about.buildTime', { time: buildTime }) }}
+          </p>
         </div>
       </section>
 
@@ -102,15 +106,35 @@ import Info from '@/components/icons/info.vue'
 const { t } = useI18n()
 const settingStore = useSettingStore()
 
-const AUTHOR_NAME = 'lin-snow'
+// Author profile URL is intentionally hardcoded — it points to the person's
+// GitHub user page, not to the repository, so it is not part of /hello.
 const AUTHOR_GITHUB = 'https://github.com/lin-snow'
-const REPO_URL = 'https://github.com/lin-snow/Ech0'
-const PROJECT_START_YEAR = 2024
 
-const copyrightYears = computed(() => {
-  const current = new Date().getFullYear()
-  return current > PROJECT_START_YEAR ? `${PROJECT_START_YEAR}-${current}` : `${PROJECT_START_YEAR}`
-})
+const FALLBACK_REPO = 'https://github.com/lin-snow/Ech0'
+const FALLBACK_AUTHOR = 'lin-snow'
+const FALLBACK_LICENSE = 'AGPL-3.0-or-later'
+
+const version = computed(() => settingStore.hello?.version || '--')
+const commit = computed(() => settingStore.hello?.commit || '')
+const hasCommit = computed(() => commit.value !== '' && commit.value !== 'unknown')
+const buildTime = computed(() => settingStore.hello?.build_time || '')
+const author = computed(() => settingStore.hello?.author || FALLBACK_AUTHOR)
+const license = computed(() => settingStore.hello?.license || FALLBACK_LICENSE)
+const repoURL = computed(() => settingStore.hello?.repo_url || FALLBACK_REPO)
+const copyright = computed(
+  () => settingStore.hello?.copyright || `Copyright (C) ${new Date().getFullYear()} ${author.value}`,
+)
+
+// AGPL-3.0 §13 anchor: when we know the exact commit, link the user to /tree/<commit>
+// so the source they receive matches the running binary. Falls back to repo root.
+const sourceURL = computed(() =>
+  hasCommit.value ? `${repoURL.value}/tree/${commit.value}` : repoURL.value,
+)
+const sourceLinkLabel = computed(() =>
+  hasCommit.value
+    ? t('about.viewSourceAtCommit', { commit: commit.value })
+    : t('about.viewSource'),
+)
 </script>
 
 <style scoped>
@@ -165,6 +189,12 @@ const copyrightYears = computed(() => {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-text-secondary);
+}
+
+.about-title__commit {
+  font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, monospace);
+  font-weight: 500;
+  color: var(--color-text-muted);
 }
 
 .about-title__tagline {
@@ -239,6 +269,13 @@ const copyrightYears = computed(() => {
   font-size: 1.125rem;
   color: var(--color-text-secondary);
   transition: color 0.15s ease;
+}
+
+.about-build-time {
+  margin-top: 0.25rem;
+  font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
 }
 
 .about-footer {

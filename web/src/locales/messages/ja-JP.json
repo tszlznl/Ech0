@@ -910,7 +910,6 @@
     "linkAriaLabel": "この Ech0 インスタンスについて",
     "tagline": "セルフホスト型の軽量パブリッシングプラットフォーム。",
     "copyrightHeading": "著作権",
-    "copyrightLine": "Copyright (C) {year} {holder}. All rights reserved.",
     "licenseLine": "本ソフトウェアは",
     "agplNotice": "ネットワークサービスとして、Ech0 は AGPL-3.0 第 13 条に従います：本インスタンスを利用するユーザーは、対応するソースコードを取得する権利を有します。",
     "authorHeading": "作者",
@@ -918,7 +917,9 @@
     "sourceHeading": "ソースコード",
     "sourceDescription": "Ech0 の完全なソースコードは GitHub で公開されています。",
     "viewSource": "GitHub でソースを見る",
+    "viewSourceAtCommit": "GitHub で commit @ {commit} のソースを見る",
     "viewRelease": "v{version} リリースノート",
+    "buildTime": "ビルド時刻 {time}",
     "poweredBy": "心を込めて · Powered by Ech0"
   },
   "echoPage": {

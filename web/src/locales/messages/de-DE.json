@@ -910,7 +910,6 @@
     "linkAriaLabel": "Über diese Ech0-Instanz",
     "tagline": "Eine selbst gehostete, leichtgewichtige Publishing-Plattform für deine Gedanken.",
     "copyrightHeading": "Urheberrecht",
-    "copyrightLine": "Copyright (C) {year} {holder}. Alle Rechte vorbehalten.",
     "licenseLine": "Veröffentlicht unter der",
     "agplNotice": "Als Netzwerkdienst folgt Ech0 der AGPL-3.0 §13: Nutzer, die mit dieser Instanz interagieren, haben Anspruch auf den entsprechenden Quellcode.",
     "authorHeading": "Autor",
@@ -918,7 +917,9 @@
     "sourceHeading": "Quellcode",
     "sourceDescription": "Der vollständige Quellcode von Ech0 ist auf GitHub öffentlich verfügbar.",
     "viewSource": "Quellcode auf GitHub ansehen",
+    "viewSourceAtCommit": "Quellcode @ {commit} auf GitHub ansehen",
     "viewRelease": "Release-Notes für v{version}",
+    "buildTime": "Gebaut am {time}",
     "poweredBy": "Mit Sorgfalt gebaut · Powered by Ech0"
   },
   "echoPage": {
