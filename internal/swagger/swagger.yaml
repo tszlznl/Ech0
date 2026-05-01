@@ -88,6 +88,13 @@ definitions:
       version:
         type: string
     type: object
+  model.CreateTagDto:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
   model.EchoExtensionDto:
     properties:
       payload:
@@ -2081,6 +2088,28 @@ paths:
       summary: 近七天访客统计
       tags:
       - 系统
+  /tag:
+    post:
+      consumes:
+      - application/json
+      description: '管理员显式创建一个标签（不依赖于 Echo 内容中的 #tag 触发）'
+      parameters:
+      - description: 标签内容
+        in: body
+        name: tag
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateTagDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建失败
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: 创建标签
+      tags:
+      - Tag
   /tag/{id}:
     delete:
       consumes:

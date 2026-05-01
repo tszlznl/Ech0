@@ -321,6 +321,42 @@ func (echoHandler *EchoHandler) GetAllTags() gin.HandlerFunc {
 	})
 }
 
+// CreateTag 创建标签
+//
+//	@Summary		创建标签
+//	@Description	管理员显式创建一个标签（不依赖于 Echo 内容中的 #tag 触发）
+//	@Tags			Tag
+//	@Accept			json
+//	@Produce		json
+//	@Param			tag	body		model.CreateTagDto	true	"标签内容"
+//	@Success		200	{object}	handler.Response	"创建成功"
+//	@Failure		200	{object}	handler.Response	"创建失败"
+//	@Router			/tag [post]
+func (echoHandler *EchoHandler) CreateTag() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		var request model.CreateTagDto
+		if err := ctx.ShouldBindJSON(&request); err != nil {
+			return res.Response{
+				Msg: commonModel.INVALID_REQUEST_BODY,
+				Err: err,
+			}
+		}
+
+		tag, err := echoHandler.echoService.CreateTag(ctx.Request.Context(), request.Name)
+		if err != nil {
+			return res.Response{
+				Msg: "",
+				Err: err,
+			}
+		}
+
+		return res.Response{
+			Data: tag,
+			Msg:  commonModel.CREATE_TAG_SUCCESS,
+		}
+	})
+}
+
 // DeleteTag 删除标签
 //
 //	@Summary		删除标签

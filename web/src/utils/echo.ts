@@ -61,3 +61,23 @@ function normalizeStorageType(raw: unknown): App.Api.File.StorageType {
   if (value === FILE_STORAGE_TYPE.EXTERNAL) return FILE_STORAGE_TYPE.EXTERNAL
   return FILE_STORAGE_TYPE.LOCAL
 }
+
+// 估算 markdown 内容的"字数"。中文按字符计、英文按空白分词。
+// 目标只是给读者一个量级，不追求精确。
+export function countWords(content: string | null | undefined): number {
+  if (!content) return 0
+  const stripped = content
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`[^`]*`/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/[#>*_~`[\]()!\-]+/g, ' ')
+    .trim()
+  if (!stripped) return 0
+  const cjk = stripped.match(/[一-鿿぀-ヿ가-힯]/g)?.length ?? 0
+  const ascii = stripped
+    .replace(/[一-鿿぀-ヿ가-힯]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean).length
+  return cjk + ascii
+}

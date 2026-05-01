@@ -6,6 +6,29 @@
       {{ t('editor.tagManagerTitle') }}
     </h2>
     <p class="text-xs text-[var(--color-text-muted)] mb-3">{{ t('editor.tagManagerHint') }}</p>
+
+    <form v-if="isLogin" class="flex items-center gap-2 mb-4" @submit.prevent="handleCreateTag">
+      <div
+        class="flex items-center gap-1 flex-1 border border-dashed border-[var(--color-border-subtle)] rounded-sm px-2 py-1 focus-within:border-[var(--color-text-secondary)] transition-colors"
+      >
+        <span class="text-[var(--color-text-muted)] select-none">#</span>
+        <input
+          v-model="newTagName"
+          type="text"
+          maxlength="50"
+          :placeholder="t('editor.createTagPlaceholder')"
+          class="flex-1 bg-transparent text-sm outline-none text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)]"
+        />
+      </div>
+      <button
+        type="submit"
+        :disabled="isCreating || newTagName.trim() === ''"
+        class="text-sm font-medium px-3 py-1 rounded-sm border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-text-secondary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        {{ t('editor.createTagButton') }}
+      </button>
+    </form>
+
     <div
       v-if="tagList.length === 0"
       class="text-sm text-[var(--color-text-muted)] py-4 text-center"
@@ -80,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useEchoStore, useUserStore } from '@/stores'
 import { fetchDeleteTagById } from '@/service/api'
 import { storeToRefs } from 'pinia'
@@ -90,6 +113,7 @@ import Trashbin from '@/components/icons/trashbin.vue'
 import Filter from '@/components/icons/filter.vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import { theToast } from '@/utils/toast'
 
 const echoStore = useEchoStore()
 const userStore = useUserStore()
@@ -97,6 +121,27 @@ const { tagList } = storeToRefs(echoStore)
 const { isLogin } = storeToRefs(userStore)
 const { t } = useI18n()
 const router = useRouter()
+
+const newTagName = ref('')
+const isCreating = ref(false)
+
+const handleCreateTag = async () => {
+  const name = newTagName.value.trim().replace(/^#+/, '').trim()
+  if (!name) {
+    theToast.warning(String(t('editor.createTagEmpty')))
+    return
+  }
+  isCreating.value = true
+  try {
+    const tag = await echoStore.createTag(name)
+    if (tag) {
+      newTagName.value = ''
+      theToast.success(String(t('editor.createTagSuccess')))
+    }
+  } finally {
+    isCreating.value = false
+  }
+}
 
 onMounted(() => {
   echoStore.ensureTagsLoaded()

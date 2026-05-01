@@ -3,7 +3,7 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-import { fetchQueryEchos, fetchGetTags, fetchGetEchoById } from '@/service/api'
+import { fetchQueryEchos, fetchGetTags, fetchGetEchoById, fetchCreateTag } from '@/service/api'
 
 export const useEchoStore = defineStore('echoStore', () => {
   const normalizeEchoId = (echo: App.Api.Ech0.Echo): string => String(echo?.id ?? '').trim()
@@ -221,6 +221,15 @@ export const useEchoStore = defineStore('echoStore', () => {
     }
   }
 
+  const createTag = async (name: string) => {
+    const res = await fetchCreateTag(name)
+    if (res.code === 1) {
+      await getTags()
+      return res.data
+    }
+    return null
+  }
+
   let tagsLoadPromise: Promise<void> | null = null
   const ensureTagsLoaded = (): Promise<void> => {
     if (tagList.value.length > 0) return Promise.resolve()
@@ -273,5 +282,6 @@ export const useEchoStore = defineStore('echoStore', () => {
     prefetchEcho,
     getTags,
     ensureTagsLoaded,
+    createTag,
   }
 })

@@ -1,17 +1,15 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
-  <div class="w-full max-w-sm bg-[var(--color-bg-surface)] h-auto p-5 shadow rounded-md mx-auto">
-    <div class="flex flex-row items-center gap-2 mt-2 mb-4">
-      <div>
-        <img
-          :src="logo"
-          alt="logo"
-          loading="lazy"
-          decoding="async"
-          class="w-10 h-10 sm:w-12 sm:h-12 rounded-full ring-1 ring-[var(--color-border-subtle)] shadow-[var(--shadow-sm)] object-cover"
-        />
-      </div>
+  <article class="echo-detail w-full max-w-sm mx-auto">
+    <header class="echo-detail-head">
+      <img
+        :src="logo"
+        alt="logo"
+        loading="lazy"
+        decoding="async"
+        class="w-10 h-10 sm:w-12 sm:h-12 rounded-full ring-1 ring-[var(--color-border-subtle)] shadow-[var(--shadow-sm)] object-cover"
+      />
       <div class="flex flex-col">
         <div class="flex items-center gap-1">
           <h2
@@ -19,106 +17,59 @@
           >
             {{ SystemSetting.server_name }}
           </h2>
-
-          <div>
-            <Verified class="text-sky-500 w-5 h-5" />
-          </div>
+          <Verified class="text-sky-500 w-5 h-5" />
         </div>
-        <span class="echo-username text-[var(--color-text-secondary)]">@ {{ echo.username }} </span>
+        <span class="echo-username text-[var(--color-text-secondary)]">@ {{ echo.username }}</span>
       </div>
-    </div>
+    </header>
 
-    <div>
-      <div class="py-4">
-        <template
-          v-if="
-            props.echo.layout === ImageLayout.GRID ||
-            props.echo.layout === ImageLayout.HORIZONTAL ||
-            props.echo.layout === ImageLayout.STACK
-          "
-        >
-          <div class="mb-3">
-            <TheMdPreview :content="props.echo.content" />
-          </div>
+    <TheEchoMeta :echo="props.echo" />
 
-          <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" />
-        </template>
-
-        <template v-else>
-          <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" />
-
-          <div class="mt-3">
-            <TheMdPreview :content="props.echo.content" />
-          </div>
-        </template>
-
-        <div v-if="props.echo.extension" class="my-4">
-          <TheExtensionRenderer :echo="props.echo" />
+    <section class="echo-detail-body">
+      <template
+        v-if="
+          props.echo.layout === ImageLayout.GRID ||
+          props.echo.layout === ImageLayout.HORIZONTAL ||
+          props.echo.layout === ImageLayout.STACK
+        "
+      >
+        <div class="mb-3">
+          <TheMdPreview :content="props.echo.content" />
         </div>
+
+        <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" />
+      </template>
+
+      <template v-else>
+        <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" />
+
+        <div class="mt-3">
+          <TheMdPreview :content="props.echo.content" />
+        </div>
+      </template>
+
+      <div v-if="props.echo.extension" class="my-4">
+        <TheExtensionRenderer :echo="props.echo" />
       </div>
-    </div>
-
-    <div class="flex justify-between items-center">
-      <div class="flex justify-start items-center h-auto">
-        <div class="flex justify-start text-sm text-[var(--color-text-muted)] mr-1">
-          {{ formatDate(props.echo.created_at) }}
-        </div>
-        <div class="text-sm text-[var(--color-text-muted)] w-18 truncate text-nowrap">
-          <span>{{ props.echo.tags ? `#${props.echo.tags[0]?.name}` : '' }}</span>
-        </div>
-      </div>
-
-      <div class="relative flex items-center justify-center gap-2 h-auto">
-        <div class="flex items-center justify-end">
-          <TheShareEchoPanel :echo-id="props.echo.id" :echo-content="props.echo.content" />
-        </div>
-
-        <div class="flex items-center justify-end" v-tooltip="t('echoDetail.like')">
-          <div class="flex items-center gap-1">
-            <button
-              @click="handleLikeEcho(props.echo.id)"
-              :class="[
-                'transform transition-transform duration-150',
-                isLikeAnimating ? 'scale-160' : 'scale-100',
-              ]"
-            >
-              <GrayLike class="w-4 h-4" />
-            </button>
-
-            <span class="text-sm text-[var(--color-text-muted)]">
-              {{ props.echo.fav_count > 99 ? '99+' : props.echo.fav_count }}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+    </section>
+  </article>
 </template>
 
 <script setup lang="ts">
 import Verified from '@/components/icons/verified.vue'
-import GrayLike from '@/components/icons/graylike.vue'
 import TheImageGallery from '@/components/advanced/gallery/TheImageGallery.vue'
-import TheShareEchoPanel from '@/components/advanced/echo/cards/TheShareEchoPanel.vue'
-import { computed, defineAsyncComponent, ref } from 'vue'
-import { fetchLikeEcho } from '@/service/api'
-import { theToast } from '@/utils/toast'
-import { localStg } from '@/utils/storage'
+import TheEchoMeta from '@/components/advanced/echo/cards/TheEchoMeta.vue'
+import { computed, defineAsyncComponent } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useSettingStore } from '@/stores'
 import { resolveAvatarUrl } from '@/service/request/shared'
 import { ImageLayout } from '@/enums/enums'
-import { formatDate } from '@/utils/other'
 import { getEchoFilesBy } from '@/utils/echo'
 import { TheMdPreview } from '@/components/advanced/md'
-import { useI18n } from 'vue-i18n'
 
 const TheExtensionRenderer = defineAsyncComponent(
   () => import('@/components/advanced/extension/TheExtensionRenderer.vue'),
 )
-
-const emit = defineEmits(['updateLikeCount'])
-const { t } = useI18n()
 
 type Echo = App.Api.Ech0.Echo
 
@@ -129,34 +80,6 @@ const echoImageFiles = computed(() =>
   getEchoFilesBy(props.echo, { categories: ['image'], dedupeBy: 'id' }),
 )
 
-const isLikeAnimating = ref(false)
-
-const LIKE_LIST_KEY = 'likedEchoIds'
-const likedEchoIds: string[] = localStg.getItem(LIKE_LIST_KEY) || []
-const hasLikedEcho = (echoId: string): boolean => {
-  return likedEchoIds.includes(echoId)
-}
-const handleLikeEcho = (echoId: string) => {
-  isLikeAnimating.value = true
-  setTimeout(() => {
-    isLikeAnimating.value = false
-  }, 250)
-
-  if (hasLikedEcho(echoId)) {
-    theToast.info(String(t('echoDetail.alreadyLiked')))
-    return
-  }
-
-  fetchLikeEcho(echoId).then((res) => {
-    if (res.code === 1) {
-      likedEchoIds.push(echoId)
-      localStg.setItem(LIKE_LIST_KEY, likedEchoIds)
-      emit('updateLikeCount', echoId)
-      theToast.info(String(t('echoDetail.likeSuccess')))
-    }
-  })
-}
-
 const settingStore = useSettingStore()
 
 const { SystemSetting } = storeToRefs(settingStore)
@@ -164,6 +87,24 @@ const logo = computed(() => resolveAvatarUrl(SystemSetting.value?.server_logo))
 </script>
 
 <style scoped lang="css">
+.echo-detail {
+  background-color: transparent;
+  padding: 0.5rem 0.25rem;
+}
+
+.echo-detail-head {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.echo-detail-body {
+  padding: 1rem 0 2rem 0;
+}
+
 .echo-username {
   font-family: var(--font-family-display);
 }

@@ -15,12 +15,6 @@
             {{ formatDate(props.echo.created_at) }}
           </div>
         </div>
-        <div
-          @click="handleFilterByTag"
-          class="text-sm font-medium text-[var(--color-text-secondary)] w-24 px-1 truncate text-nowrap hover:cursor-pointer hover:text-[var(--color-text-primary)] hover:underline hover:decoration-offset-3 hover:decoration-1"
-        >
-          <span>{{ props.echo.tags ? `#${props.echo.tags[0]?.name}` : '' }}</span>
-        </div>
       </div>
 
       <div
@@ -226,18 +220,6 @@ const handleExpandEcho = (echoId: string) => {
     name: 'echo',
     params: { echoId: echoId },
   })
-}
-
-const handleFilterByTag = () => {
-  if (
-    props.echo.tags &&
-    props.echo.tags.length > 0 &&
-    props.echo.tags[0] &&
-    props.echo.tags[0].id
-  ) {
-    echoStore.filteredTag = props.echo.tags[0]
-    echoStore.isFilteringMode = true
-  }
 }
 
 const isMenuOpen = computed(() => activeMenuId.value === props.echo.id)

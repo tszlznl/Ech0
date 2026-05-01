@@ -110,6 +110,15 @@ export function fetchDeleteTagById(tagId: string) {
   })
 }
 
+// 创建标签（管理员显式创建，独立于 Echo 内容里的 #tag）
+export function fetchCreateTag(name: string) {
+  return request<App.Api.Ech0.Tag>({
+    url: `/tag`,
+    method: 'POST',
+    data: { name },
+  })
+}
+
 // @deprecated 请使用 fetchQueryEchos
 export async function fetchGetEchosByTagId(
   tagId: string,

@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
-  <div id="comments" class="w-full max-w-sm h-auto px-0 py-4 my-4 mx-auto">
+  <div id="comments" class="w-full max-w-sm h-auto px-0 py-2 mx-auto">
     <div
       v-if="formMeta && !formMeta.enable_comment"
       class="rounded-lg border border-[var(--color-border-subtle)] p-3 text-sm text-[var(--color-text-muted)]"
@@ -11,14 +11,154 @@
 
     <template v-else>
       <div class="mb-4 comment-list-board">
-        <div class="mb-2 flex items-center justify-between">
-          <h3 class="font-semibold text-[var(--color-text-primary)]">
-            {{ t('commentSection.title') }}
-          </h3>
-          <span class="text-xs text-[var(--color-text-muted)]">{{
-            t('commentSection.count', { total: comments.length })
-          }}</span>
+        <div class="mb-3 flex items-center justify-between gap-2">
+          <button
+            type="button"
+            class="comment-pill-btn shrink-0"
+            :aria-expanded="commentFormExpanded"
+            @click="commentFormExpanded = !commentFormExpanded"
+          >
+            <Comments class="comment-pill-btn__icon" aria-hidden="true" />
+            <span>{{ t('commentSection.publishComment') }}</span>
+          </button>
+          <div class="flex items-center gap-2 min-w-0">
+            <slot name="title-actions" />
+          </div>
         </div>
+
+        <form
+          v-if="commentFormExpanded"
+          class="comment-form-panel rounded-lg border border-[var(--color-border-subtle)] p-3 mb-4"
+          @submit.prevent="submitComment"
+        >
+          <div class="mb-2 flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <h3 class="font-semibold text-[var(--color-text-primary)]">
+                {{ t('commentSection.publishComment') }}
+              </h3>
+              <span
+                class="inline-flex items-center gap-1 rounded-full px-2 py-[2px] text-[11px] text-[var(--color-text-muted)]"
+                v-tooltip="t('commentSection.markdownSupported')"
+              >
+                <MarkdownIcon class="h-3.5 w-3.5" />
+              </span>
+            </div>
+            <span class="comment-ready-indicator">
+              <i
+                class="comment-ready-dot"
+                :class="profileReady ? 'is-ready' : 'is-not-ready'"
+                aria-hidden="true"
+              ></i>
+            </span>
+          </div>
+
+          <article
+            class="comment-sticky comment-preview relative mb-2 rounded-[4px] border p-3"
+            :style="getStickyCardStyle(0)"
+          >
+            <div class="mb-2 flex items-center gap-2">
+              <BaseAvatar
+                :seed="previewAvatarSeed"
+                :size="32"
+                alt="avatar"
+                class="h-8 w-8 rounded-full object-cover"
+              />
+              <div class="min-w-0">
+                <div class="truncate text-sm font-medium text-[var(--color-text-primary)]">
+                  {{ previewNickname }}
+                </div>
+                <div class="text-xs text-[var(--color-text-muted)]">
+                  {{ t('commentSection.livePreview') }}
+                </div>
+              </div>
+            </div>
+            <TheMdPreview
+              class="comment-md-content"
+              :content="form.content || t('commentSection.previewPlaceholder')"
+            />
+          </article>
+
+          <div v-if="!isPrivilegedUser" class="space-y-2">
+            <input
+              v-model.trim="form.nickname"
+              type="text"
+              class="comment-input-field w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+              :placeholder="t('commentSection.nicknameRequired')"
+            />
+            <input
+              v-model.trim="form.email"
+              type="email"
+              class="comment-input-field w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+              :placeholder="t('commentSection.emailRequired')"
+            />
+            <input
+              v-model.trim="form.website"
+              type="url"
+              class="comment-input-field w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+              :placeholder="t('commentSection.websiteOptional')"
+            />
+          </div>
+
+          <textarea
+            v-model.trim="form.content"
+            class="comment-input-field comment-textarea mt-2 min-h-24 w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+            :placeholder="t('commentSection.commentPlaceholder')"
+            maxlength="200"
+          />
+          <div
+            class="mt-1 text-right text-xs"
+            :class="contentTooLong ? 'text-red-500' : 'text-[var(--color-text-muted)]'"
+          >
+            {{ contentLength }}/200
+          </div>
+
+          <input
+            v-model="form.hp_field"
+            type="text"
+            tabindex="-1"
+            autocomplete="off"
+            class="hidden"
+          />
+
+          <div class="comment-submit-row mt-3">
+            <div v-if="needCaptcha" class="comment-captcha-wrap">
+              <div ref="captchaMountRef" class="comment-captcha-mount"></div>
+              <p v-if="captchaError" class="comment-captcha-error text-xs text-red-500">
+                {{ captchaError }}
+              </p>
+            </div>
+            <button
+              v-if="showSubmitButton"
+              type="submit"
+              class="comment-submit-btn rounded-md bg-[var(--color-text-primary)] px-4 py-1 text-sm text-[var(--color-bg-canvas)]"
+              :disabled="submitting || !canSubmit"
+            >
+              {{ submitting ? t('commentSection.submitting') : t('commentSection.submitComment') }}
+            </button>
+          </div>
+
+          <div
+            v-if="submitNotice"
+            class="mt-3 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-canvas)] p-3 text-sm"
+          >
+            <div class="font-medium text-[var(--color-text-primary)]">
+              {{
+                submitNotice.status === 'approved'
+                  ? t('commentSection.commentPublished')
+                  : t('commentSection.commentSubmittedPending')
+              }}
+            </div>
+            <div class="mt-1 text-xs text-[var(--color-text-muted)]">
+              {{ submitNoticeText }}
+            </div>
+            <div
+              v-if="submitNotice.contentPreview"
+              class="mt-2 rounded border border-[var(--color-border-subtle)] px-2 py-1 text-xs text-[var(--color-text-muted)]"
+            >
+              {{ submitNotice.contentPreview }}
+            </div>
+          </div>
+        </form>
 
         <div v-if="loading" class="text-sm text-[var(--color-text-muted)]">
           {{ t('commentSection.loading') }}
@@ -69,160 +209,6 @@
           </article>
         </div>
       </div>
-
-      <button
-        v-if="!commentFormExpanded"
-        type="button"
-        class="comment-pill-btn"
-        @click="commentFormExpanded = true"
-      >
-        <span class="comment-pill-btn__icon" aria-hidden="true">+</span>
-        <span>{{ t('commentSection.publishComment') }}</span>
-      </button>
-
-      <form
-        v-else
-        class="comment-form-panel rounded-lg border border-[var(--color-border-subtle)] p-3"
-        @submit.prevent="submitComment"
-      >
-        <div class="mb-2 flex items-center justify-between">
-          <div class="flex items-center gap-1.5">
-            <h3 class="font-semibold text-[var(--color-text-primary)]">
-              {{ t('commentSection.publishComment') }}
-            </h3>
-            <span
-              class="inline-flex items-center gap-1 rounded-full px-2 py-[2px] text-[11px] text-[var(--color-text-muted)]"
-              v-tooltip="t('commentSection.markdownSupported')"
-            >
-              <MarkdownIcon class="h-3.5 w-3.5" />
-            </span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="comment-ready-indicator">
-              <i
-                class="comment-ready-dot"
-                :class="profileReady ? 'is-ready' : 'is-not-ready'"
-                aria-hidden="true"
-              ></i>
-            </span>
-            <button
-              type="button"
-              class="comment-collapse-btn"
-              :aria-label="t('commentSection.collapsePublishComment')"
-              @click="commentFormExpanded = false"
-            >
-              {{ t('commentSection.collapse') }}
-            </button>
-          </div>
-        </div>
-
-        <article
-          class="comment-sticky comment-preview relative mb-2 rounded-[4px] border p-3"
-          :style="getStickyCardStyle(0)"
-        >
-          <div class="mb-2 flex items-center gap-2">
-            <BaseAvatar
-              :seed="previewAvatarSeed"
-              :size="32"
-              alt="avatar"
-              class="h-8 w-8 rounded-full object-cover"
-            />
-            <div class="min-w-0">
-              <div class="truncate text-sm font-medium text-[var(--color-text-primary)]">
-                {{ previewNickname }}
-              </div>
-              <div class="text-xs text-[var(--color-text-muted)]">
-                {{ t('commentSection.livePreview') }}
-              </div>
-            </div>
-          </div>
-          <TheMdPreview
-            class="comment-md-content"
-            :content="form.content || t('commentSection.previewPlaceholder')"
-          />
-        </article>
-
-        <div v-if="!isPrivilegedUser" class="space-y-2">
-          <input
-            v-model.trim="form.nickname"
-            type="text"
-            class="comment-input-field w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
-            :placeholder="t('commentSection.nicknameRequired')"
-          />
-          <input
-            v-model.trim="form.email"
-            type="email"
-            class="comment-input-field w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
-            :placeholder="t('commentSection.emailRequired')"
-          />
-          <input
-            v-model.trim="form.website"
-            type="url"
-            class="comment-input-field w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
-            :placeholder="t('commentSection.websiteOptional')"
-          />
-        </div>
-
-        <textarea
-          v-model.trim="form.content"
-          class="comment-input-field comment-textarea mt-2 min-h-24 w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
-          :placeholder="t('commentSection.commentPlaceholder')"
-          maxlength="200"
-        />
-        <div
-          class="mt-1 text-right text-xs"
-          :class="contentTooLong ? 'text-red-500' : 'text-[var(--color-text-muted)]'"
-        >
-          {{ contentLength }}/200
-        </div>
-
-        <input
-          v-model="form.hp_field"
-          type="text"
-          tabindex="-1"
-          autocomplete="off"
-          class="hidden"
-        />
-
-        <div class="comment-submit-row mt-3">
-          <div v-if="needCaptcha" class="comment-captcha-wrap">
-            <div ref="captchaMountRef" class="comment-captcha-mount"></div>
-            <p v-if="captchaError" class="comment-captcha-error text-xs text-red-500">
-              {{ captchaError }}
-            </p>
-          </div>
-          <button
-            v-if="showSubmitButton"
-            type="submit"
-            class="comment-submit-btn rounded-md bg-[var(--color-text-primary)] px-4 py-1 text-sm text-[var(--color-bg-canvas)]"
-            :disabled="submitting || !canSubmit"
-          >
-            {{ submitting ? t('commentSection.submitting') : t('commentSection.submitComment') }}
-          </button>
-        </div>
-
-        <div
-          v-if="submitNotice"
-          class="mt-3 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-canvas)] p-3 text-sm"
-        >
-          <div class="font-medium text-[var(--color-text-primary)]">
-            {{
-              submitNotice.status === 'approved'
-                ? t('commentSection.commentPublished')
-                : t('commentSection.commentSubmittedPending')
-            }}
-          </div>
-          <div class="mt-1 text-xs text-[var(--color-text-muted)]">
-            {{ submitNoticeText }}
-          </div>
-          <div
-            v-if="submitNotice.contentPreview"
-            class="mt-2 rounded border border-[var(--color-border-subtle)] px-2 py-1 text-xs text-[var(--color-text-muted)]"
-          >
-            {{ submitNotice.contentPreview }}
-          </div>
-        </div>
-      </form>
     </template>
   </div>
 </template>
@@ -238,6 +224,7 @@ import BaseAvatar from '@/components/common/BaseAvatar.vue'
 import { TheMdPreview } from '@/components/advanced/md'
 import Verified from '../icons/verified.vue'
 import MarkdownIcon from '../icons/markdown.vue'
+import Comments from '../icons/comments.vue'
 import { useI18n } from 'vue-i18n'
 
 type CapSolveDetail = {
@@ -653,67 +640,33 @@ onBeforeUnmount(() => {
 }
 
 .comment-pill-btn {
-  width: fit-content;
-  min-width: 132px;
-  max-width: 180px;
-  margin-inline: auto;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  padding: 0.58rem 1rem;
+  gap: 0.4rem;
+  padding: 0.25rem 0.7rem 0.25rem 0.4rem;
   border-radius: 9999px;
-  border: 1px solid var(--comment-pill-btn-border);
-  background: var(--comment-form-panel-bg);
-  color: var(--color-text-primary);
-  font-size: 0.9rem;
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-secondary);
+  background: transparent;
+  font-size: 0.85rem;
   font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
-  box-shadow:
-    0 1px 0 rgb(20 20 20 / 4%),
-    0 6px 12px rgb(20 20 20 / 6%);
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .comment-pill-btn:hover {
-  transform: translateY(-1px);
-  border-color: var(--comment-pill-btn-hover-border);
-  box-shadow:
-    0 1px 0 rgb(20 20 20 / 4%),
-    0 10px 16px rgb(20 20 20 / 9%);
+  color: var(--color-text-primary);
+  border-color: var(--color-text-secondary);
 }
 
 .comment-pill-btn__icon {
-  width: 1.1rem;
-  height: 1.1rem;
-  border-radius: 9999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  line-height: 1;
-  background: var(--comment-pill-icon-bg);
-}
-
-.comment-collapse-btn {
-  padding: 0.18rem 0.55rem;
-  border-radius: 9999px;
-  border: 1px solid var(--color-border-subtle);
-  color: var(--color-text-muted);
-  font-size: 0.72rem;
-  line-height: 1.2;
-  transition:
-    color 0.2s ease,
-    border-color 0.2s ease,
-    background-color 0.2s ease;
-}
-
-.comment-collapse-btn:hover {
-  color: var(--color-text-primary);
-  border-color: var(--comment-collapse-hover-border);
-  background: var(--comment-collapse-hover-bg);
+  width: 1.05rem;
+  height: 1.05rem;
+  flex-shrink: 0;
 }
 
 .comment-md-content {

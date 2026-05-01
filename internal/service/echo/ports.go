@@ -21,6 +21,7 @@ type Service interface {
 	LikeEcho(ctx context.Context, id string) error
 	GetEchoById(ctx context.Context, id string) (*model.Echo, error)
 	GetAllTags() ([]model.Tag, error)
+	CreateTag(ctx context.Context, name string) (*model.Tag, error)
 	DeleteTag(ctx context.Context, id string) error
 	GetEchosByTagId(ctx context.Context, tagId string, pageQueryDto commonModel.PageQueryDto) (commonModel.PageQueryResult[[]model.Echo], error)
 	QueryEchos(ctx context.Context, queryDto commonModel.EchoQueryDto) (commonModel.PageQueryResult[[]model.Echo], error)

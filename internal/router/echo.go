@@ -45,6 +45,11 @@ func setupEchoRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 		middleware.RequireScopes(authModel.ScopeEchoWrite),
 		h.EchoHandler.DeleteEcho(),
 	)
+	appRouterGroup.AuthRouterGroup.POST(
+		"/tag",
+		middleware.RequireScopes(authModel.ScopeEchoWrite),
+		h.EchoHandler.CreateTag(),
+	)
 	appRouterGroup.AuthRouterGroup.DELETE(
 		"/tag/:id",
 		middleware.RequireScopes(authModel.ScopeEchoWrite),

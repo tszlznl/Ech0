@@ -8,6 +8,10 @@ type EchoExtensionDto struct {
 	Payload map[string]interface{} `json:"payload"`
 }
 
+type CreateTagDto struct {
+	Name string `json:"name" binding:"required"`
+}
+
 type EchoUpsertDto struct {
 	ID        string            `json:"id,omitempty"`
 	Content   string            `json:"content"`

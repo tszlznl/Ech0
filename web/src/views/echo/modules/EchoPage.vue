@@ -17,8 +17,8 @@
       </div>
 
       <div v-if="echo" class="w-full sm:mt-1 mx-auto">
-        <TheEchoDetail :echo="echo" @update-like-count="handleUpdateLikeCount" />
-        <TheComment class="my-2" />
+        <TheEchoDetail :echo="echo" />
+        <TheEchoInteractions :echo="echo" @update-like-count="handleUpdateLikeCount" />
       </div>
       <div v-else class="w-full sm:mt-1 text-[var(--color-text-muted)]">
         <p class="text-center">{{ t('echoPage.loadingDetail') }}</p>
@@ -32,7 +32,7 @@ import { onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ref } from 'vue'
 import TheEchoDetail from '@/components/advanced/echo/cards/TheEchoDetail.vue'
-import TheComment from '@/components/advanced/TheComment.vue'
+import TheEchoInteractions from '@/components/advanced/echo/cards/TheEchoInteractions.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import Arrow from '@/components/icons/arrow.vue'
 import { useEchoStore } from '@/stores'

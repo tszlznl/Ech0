@@ -2493,6 +2493,40 @@ const docTemplate = `{
                 }
             }
         },
+        "/tag": {
+            "post": {
+                "description": "管理员显式创建一个标签（不依赖于 Echo 内容中的 #tag 触发）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tag"
+                ],
+                "summary": "创建标签",
+                "parameters": [
+                    {
+                        "description": "标签内容",
+                        "name": "tag",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CreateTagDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建失败",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/tag/{id}": {
             "delete": {
                 "description": "根据ID删除指定的标签",
@@ -2980,6 +3014,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.CreateTagDto": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
                     "type": "string"
                 }
             }

@@ -308,6 +308,40 @@ func (echoService *EchoService) GetAllTags() ([]model.Tag, error) {
 	return echoService.echoRepository.GetAllTags()
 }
 
+func (echoService *EchoService) CreateTag(ctx context.Context, name string) (*model.Tag, error) {
+	userid := viewer.MustFromContext(ctx).UserID()
+	user, err := echoService.commonService.CommonGetUserByUserId(ctx, userid)
+	if err != nil {
+		return nil, err
+	}
+	if !user.IsAdmin {
+		return nil, errors.New(commonModel.NO_PERMISSION_DENIED)
+	}
+
+	cleaned := strings.TrimSpace(strings.TrimPrefix(name, "#"))
+	if cleaned == "" {
+		return nil, errors.New(commonModel.INVALID_PARAMS)
+	}
+
+	existing, err := echoService.echoRepository.GetTagsByNames(ctx, []string{cleaned})
+	if err != nil {
+		return nil, err
+	}
+	for _, t := range existing {
+		if t != nil && t.Name == cleaned {
+			return t, nil
+		}
+	}
+
+	newTag := model.Tag{Name: cleaned, UsageCount: 0}
+	if err := echoService.transactor.Run(ctx, func(txCtx context.Context) error {
+		return echoService.echoRepository.CreateTag(txCtx, &newTag)
+	}); err != nil {
+		return nil, err
+	}
+	return &newTag, nil
+}
+
 func (echoService *EchoService) DeleteTag(ctx context.Context, id string) error {
 	userid := viewer.MustFromContext(ctx).UserID()
 	user, err := echoService.commonService.CommonGetUserByUserId(ctx, userid)

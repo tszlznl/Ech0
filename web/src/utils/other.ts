@@ -40,6 +40,21 @@ export const getFileToAddUrl = (file: App.Api.Ech0.FileToAdd) => resolveFileUrl(
 export const getImageUrl = (image: App.Api.Ech0.FileObject) => getFileUrl(image)
 export const getImageToAddUrl = (image: App.Api.Ech0.FileToAdd) => getFileToAddUrl(image)
 
+// 精确到分钟的绝对时间，按当前 locale 渲染。用于详情页等需要确切时间戳的位置。
+export const formatDateTime = (dateInput: string | number | null | undefined) => {
+  const ms = timeValueToMs(dateInput)
+  if (ms <= 0) return ''
+  const locale = i18n.global.locale.value || DEFAULT_LOCALE
+  return new Intl.DateTimeFormat(locale, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(new Date(ms))
+}
+
 export const formatDate = (dateInput: string | number | null | undefined) => {
   // <24h：刚刚 / N 分钟前 / N 小时前（按实际经过时间）
   // 24h～48h：1 天前；48h～72h：2 天前；≥72h：Intl 按 locale 显示完整日期
