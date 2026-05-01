@@ -122,7 +122,7 @@ const onTrackPointerDown = (event: PointerEvent) => {
   // Distinguish thumb-drag vs track-click: if the press lands inside the
   // current thumb, keep the cursor's offset within the thumb so it doesn't
   // snap; otherwise center the thumb under the cursor.
-  const thumbLeftPx = (max <= 0 ? 0 : (scrollLeft.value / max) * travel)
+  const thumbLeftPx = max <= 0 ? 0 : (scrollLeft.value / max) * travel
   const localX = event.clientX - rect.left
   const insideThumb = localX >= thumbLeftPx && localX <= thumbLeftPx + thumbWidthPx
   const grabOffset = insideThumb ? localX - thumbLeftPx : thumbWidthPx / 2
@@ -169,8 +169,7 @@ const onTrackPointerDown = (event: PointerEvent) => {
 .horizontal-scroll-container {
   position: relative;
   width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: auto hidden;
   scrollbar-width: none;
 }
 
