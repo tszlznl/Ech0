@@ -72,6 +72,7 @@
         v-if="fileToAdd.storage_type !== FILE_STORAGE_TYPE.EXTERNAL"
         :fileStorageType="fileToAdd.storage_type"
         :EnableCompressor="enableCompressor"
+        :maxFileSize="IMAGE_MAX_FILE_SIZE"
       />
 
       <!-- 图片直链 -->
@@ -113,6 +114,10 @@ import BaseInput from '@/components/common/BaseInput.vue'
 import TheUploader from '@/components/advanced/TheUploader.vue'
 import { localStg } from '@/utils/storage'
 import { useI18n } from 'vue-i18n'
+
+// Mirror the backend's default image upload cap (config.go: ImageMaxSize = 20 MiB)
+// so an oversized file is rejected up-front instead of after a wasted upload.
+const IMAGE_MAX_FILE_SIZE = 20 * 1024 * 1024
 
 const editorStore = useEditorStore()
 const { fileToAdd, fileUploading, echoToAdd } = storeToRefs(editorStore)
