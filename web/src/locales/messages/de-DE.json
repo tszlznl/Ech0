@@ -922,7 +922,8 @@
     "github": "GitHub",
     "website": "Webseite",
     "location": "Ort",
-    "locationOpenInMaps": "In Google Maps öffnen"
+    "locationOpenInMaps": "In Google Maps öffnen",
+    "jump": "Öffnen"
   },
   "recentCard": {
     "mysteriousRecent": "Der Autor war in letzter Zeit eher zurückhaltend…",

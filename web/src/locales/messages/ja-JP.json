@@ -922,7 +922,8 @@
     "github": "GitHub",
     "website": "ウェブサイト",
     "location": "位置情報",
-    "locationOpenInMaps": "Google マップで開く"
+    "locationOpenInMaps": "Google マップで開く",
+    "jump": "開く"
   },
   "recentCard": {
     "mysteriousRecent": "作者は最近ミステリアス〜",

@@ -922,7 +922,8 @@
     "github": "GitHub",
     "website": "网站",
     "location": "位置",
-    "locationOpenInMaps": "在 Google Maps 打开"
+    "locationOpenInMaps": "在 Google Maps 打开",
+    "jump": "跳转"
   },
   "recentCard": {
     "mysteriousRecent": "作者最近很神秘～",
