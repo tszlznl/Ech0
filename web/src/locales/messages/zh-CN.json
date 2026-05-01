@@ -445,6 +445,7 @@
     "loading": "评论加载中...",
     "empty": "暂无评论，来做第一个留言的人吧。",
     "publishComment": "发表评论",
+    "commentCount": "{count} 条评论",
     "markdownSupported": "支持 Markdown 语法",
     "livePreview": "实时预览",
     "previewPlaceholder": "在这里输入评论内容，将实时预览贴纸效果。",

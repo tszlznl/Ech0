@@ -445,6 +445,7 @@
     "loading": "Kommentare werden geladen…",
     "empty": "Noch keine Kommentare. Sei die erste Person!",
     "publishComment": "Kommentar schreiben",
+    "commentCount": "{count} Kommentare",
     "markdownSupported": "Markdown wird unterstützt",
     "livePreview": "Live-Vorschau",
     "previewPlaceholder": "Schreibe hier deinen Kommentar, um die Vorschau zu sehen.",

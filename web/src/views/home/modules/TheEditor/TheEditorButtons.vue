@@ -449,5 +449,16 @@ const goToTagManager = () => {
   .editor-actions {
     gap: 0.45rem;
   }
+
+  .editor-actions__tag {
+    position: static;
+  }
+
+  .editor-actions__tag-panel {
+    left: 0.35rem;
+    right: 0.35rem;
+    width: auto;
+    max-width: none;
+  }
 }
 </style>

@@ -17,8 +17,8 @@
       </div>
 
       <div v-if="echo" class="w-full sm:mt-1 mx-auto">
-        <TheEchoDetail :echo="echo" />
-        <TheEchoInteractions :echo="echo" @update-like-count="handleUpdateLikeCount" />
+        <TheEchoDetail :echo="echo" @update-like-count="handleUpdateLikeCount" />
+        <TheEchoInteractions />
       </div>
       <div v-else class="w-full sm:mt-1 text-[var(--color-text-muted)]">
         <p class="text-center">{{ t('echoPage.loadingDetail') }}</p>

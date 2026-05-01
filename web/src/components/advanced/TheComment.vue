@@ -21,9 +21,9 @@
             <Comments class="comment-pill-btn__icon" aria-hidden="true" />
             <span>{{ t('commentSection.publishComment') }}</span>
           </button>
-          <div class="flex items-center gap-2 min-w-0">
-            <slot name="title-actions" />
-          </div>
+          <span class="comment-count-text">
+            {{ t('commentSection.commentCount', { count: comments.length }) }}
+          </span>
         </div>
 
         <form
@@ -533,7 +533,7 @@ onBeforeUnmount(() => {
 
 .comment-list-board {
   position: relative;
-  padding: 0.75rem;
+  padding: 0.75rem 0;
   border-radius: 10px;
 }
 
@@ -679,6 +679,12 @@ onBeforeUnmount(() => {
   width: 1.05rem;
   height: 1.05rem;
   flex-shrink: 0;
+}
+
+.comment-count-text {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
 }
 
 .comment-md-content {

@@ -445,6 +445,7 @@
     "loading": "コメントを読み込み中...",
     "empty": "コメントはまだありません。最初のコメントを投稿しましょう。",
     "publishComment": "コメントを投稿",
+    "commentCount": "{count} 件のコメント",
     "markdownSupported": "Markdown 記法に対応",
     "livePreview": "ライブプレビュー",
     "previewPlaceholder": "ここにコメントを入力すると、ステッカー効果をリアルタイムでプレビューできます。",

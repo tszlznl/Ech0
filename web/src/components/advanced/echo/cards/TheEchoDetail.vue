@@ -23,8 +23,6 @@
       </div>
     </header>
 
-    <TheEchoMeta :echo="props.echo" />
-
     <section class="echo-detail-body">
       <template
         v-if="
@@ -52,6 +50,8 @@
         <TheExtensionRenderer :echo="props.echo" />
       </div>
     </section>
+
+    <TheEchoMeta :echo="props.echo" @update-like-count="(id) => emit('updateLikeCount', id)" />
   </article>
 </template>
 
@@ -75,6 +75,10 @@ type Echo = App.Api.Ech0.Echo
 
 const props = defineProps<{
   echo: Echo
+}>()
+
+const emit = defineEmits<{
+  (e: 'updateLikeCount', echoId: string): void
 }>()
 const echoImageFiles = computed(() =>
   getEchoFilesBy(props.echo, { categories: ['image'], dedupeBy: 'id' }),

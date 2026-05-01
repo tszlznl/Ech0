@@ -445,6 +445,7 @@
     "loading": "Loading comments...",
     "empty": "No comments yet. Be the first to leave one.",
     "publishComment": "Post comment",
+    "commentCount": "{count} comments",
     "markdownSupported": "Markdown supported",
     "livePreview": "Live preview",
     "previewPlaceholder": "Type your comment here to preview the sticky-note style.",
