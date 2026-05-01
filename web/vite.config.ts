@@ -51,9 +51,6 @@ export default defineConfig(({ command }) => ({
         // 代码分割：将重型库打包到单独的 chunk 中，利用浏览器缓存
         manualChunks(id) {
           const normalizedId = id.replaceAll('\\', '/')
-          if (normalizedId.includes('/node_modules/@uppy/')) {
-            return 'uppy'
-          }
           if (normalizedId.includes('/node_modules/floating-vue/')) {
             return 'floating-vue'
           }

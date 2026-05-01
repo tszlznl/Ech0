@@ -44,17 +44,6 @@
   --switch-thumb-color: #f8f8f8;
   --switch-label-color: var(--color-text-secondary);
 
-  --uppy-bg-color: var(--color-bg-canvas);
-  --uppy-panel-bg-color: var(--color-bg-surface);
-  --uppy-dropzone-bg-color: #282422;
-  --uppy-dropzone-border-color: var(--color-border-strong);
-  --uppy-dropzone-title-color: #dbd0c3;
-  --uppy-link-color: var(--color-accent);
-  --uppy-link-hover-color: #fbbe67;
-  --uppy-text-color: var(--color-text-primary);
-  --uppy-muted-text-color: var(--color-text-muted);
-  --uppy-shadow-inset: inset 0 0 0 1px rgb(145 135 124 / 28%), inset 0 1px 3px rgb(0 0 0 / 42%);
-
   --md-editor-bg-color: var(--color-bg-surface);
   --md-editor-border-color: var(--color-border-subtle);
   --md-editor-mini-shell-bg: #2d2c2c;
@@ -196,11 +185,6 @@
     --select-disabled-bg-color: oklch(27% 0 0deg);
     --switch-track-off-color: oklch(35% 0.004 76deg);
     --switch-thumb-color: oklch(98% 0 0deg);
-    --uppy-dropzone-bg-color: oklch(26.4% 0.007 61.7deg);
-    --uppy-dropzone-title-color: oklch(86.4% 0.022 74.1deg);
-    --uppy-link-hover-color: oklch(84.1% 0.126 74.4deg);
-    --uppy-shadow-inset:
-      inset 0 0 0 1px oklch(63% 0.02 72deg / 28%), inset 0 1px 3px oklch(0% 0 0deg / 42%);
     --md-editor-mini-shell-shadow: 0 1px 2px oklch(0% 0 0deg / 18%);
     --md-editor-full-shadow: 0 14px 46px oklch(0% 0 0deg / 56%);
     --md-editor-backdrop-color: oklch(2% 0 0deg / 46%);
