@@ -868,18 +868,22 @@
     "enableAutoBackup": "スナップショットを自動作成",
     "crontab": "スナップショット予定"
   },
-  "uppy": {
-    "dashboardNote": "画像は貼り付けまたは選択でアップロードできます！",
+  "uploader": {
+    "dropHere": "ドラッグ / 貼り付け / クリックで画像選択",
+    "dropHint": "最大 {max} 枚まで一括選択可能",
+    "cancelAll": "すべてキャンセル",
+    "retry": "再試行",
+    "statusPending": "待機中",
+    "statusCompressing": "圧縮中",
+    "statusSuccess": "完了",
+    "statusCancelled": "キャンセル",
+    "statusError": "失敗",
+    "uploadingProgress": "{active} 件をアップロード中…",
+    "maxFilesReached": "最大 {max} 件まで。超過分は無視されました",
+    "uploadError": "画像のアップロード中にエラーが発生しました 😢",
     "loginRequired": "画像をアップロードするには先にログインしてください 😢",
-    "uploadingImageWait": "画像をアップロード中です。少々お待ちください... ⏳",
-    "uploadImageError": "画像のアップロード中にエラーが発生しました 😢",
-    "uploadSuccess": "やったね、アップロード成功！🎉",
     "missingFileIdentifier": "アップロード応答にファイル識別子が含まれていません。Echo に紐付けできないため再試行してください",
-    "missingFileId": "アップロード応答にファイルIDが含まれていません。Echo に紐付けできないため再試行してください",
-    "fileMetaFillbackFailed": "ファイルメタデータのバックフィルに失敗しました",
-    "uploadSuccessNoFileId": "アップロードに成功しましたがファイルIDを取得できませんでした。バックエンドのアップロード応答構造を確認してください",
-    "uploadingTaskSwitchBlocked": "アップロード中のファイルがあります。アップロード方式の切替は完了後にしてください 😢",
-    "uploadingSwitchCompressBlocked": "アップロード中は圧縮モードを切り替えできません"
+    "fileMetaFillbackFailed": "ファイルメタデータのバックフィルに失敗しました"
   },
   "markdown": {
     "expand": "展開",

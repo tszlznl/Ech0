@@ -868,18 +868,22 @@
     "enableAutoBackup": "Auto create snapshots",
     "crontab": "Snapshot schedule"
   },
-  "uppy": {
-    "dashboardNote": "Paste or choose images to upload!",
+  "uploader": {
+    "dropHere": "Drag, paste or click to select images",
+    "dropHint": "Up to {max} files at a time",
+    "cancelAll": "Cancel all",
+    "retry": "Retry",
+    "statusPending": "Pending",
+    "statusCompressing": "Compressing",
+    "statusSuccess": "Uploaded",
+    "statusCancelled": "Cancelled",
+    "statusError": "Failed",
+    "uploadingProgress": "Uploading {active} file(s)...",
+    "maxFilesReached": "Max {max} files; extras ignored",
+    "uploadError": "An error occurred while uploading image 😢",
     "loginRequired": "Please log in before uploading images 😢",
-    "uploadingImageWait": "Uploading images, please wait... ⏳",
-    "uploadImageError": "An error occurred while uploading image 😢",
-    "uploadSuccess": "Upload successful! 🎉",
     "missingFileIdentifier": "Upload response missing file identifier; cannot bind to Echo",
-    "missingFileId": "Upload response missing file ID; cannot bind to Echo",
-    "fileMetaFillbackFailed": "Failed to write back file metadata",
-    "uploadSuccessNoFileId": "Upload succeeded but file ID could not be parsed. Check backend response",
-    "uploadingTaskSwitchBlocked": "Files are uploading. Please switch upload mode later 😢",
-    "uploadingSwitchCompressBlocked": "Cannot switch compression mode while uploading"
+    "fileMetaFillbackFailed": "Failed to write back file metadata"
   },
   "markdown": {
     "expand": "Expand",
