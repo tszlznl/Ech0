@@ -46,16 +46,10 @@
         />
         <div class="flex-1 min-w-0">
           <div class="flex items-center justify-between gap-2">
-            <span
-              class="text-sm truncate text-[var(--color-text-primary)]"
-              :title="item.file.name"
-            >
+            <span class="text-sm truncate text-[var(--color-text-primary)]" :title="item.file.name">
               {{ item.file.name }}
             </span>
-            <span
-              class="text-xs shrink-0"
-              :class="statusColorClass(item.status)"
-            >
+            <span class="text-xs shrink-0" :class="statusColorClass(item.status)">
               {{ statusLabel(item) }}
             </span>
           </div>

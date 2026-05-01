@@ -83,8 +83,7 @@ export function useUpload(opts: UseUploadOptions) {
   const totalActive = computed(
     () =>
       items.value.filter(
-        (i) =>
-          i.status === 'pending' || i.status === 'compressing' || i.status === 'uploading',
+        (i) => i.status === 'pending' || i.status === 'compressing' || i.status === 'uploading',
       ).length,
   )
 
@@ -97,9 +96,7 @@ export function useUpload(opts: UseUploadOptions) {
   }
 
   function liveCount(): number {
-    return items.value.filter(
-      (i) => i.status !== 'cancelled' && i.status !== 'error',
-    ).length
+    return items.value.filter((i) => i.status !== 'cancelled' && i.status !== 'error').length
   }
 
   function addFiles(files: File[]) {
@@ -329,8 +326,7 @@ export function useUpload(opts: UseUploadOptions) {
       resolvedHeight = updated.height
       resolvedContentType = updated.contentType ?? resolvedContentType
     } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : String(t('uploader.fileMetaFillbackFailed'))
+      const msg = err instanceof Error ? err.message : String(t('uploader.fileMetaFillbackFailed'))
       theToast.error(msg)
     }
 
