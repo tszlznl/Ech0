@@ -152,6 +152,15 @@ const router = createRouter({
       },
     },
     {
+      path: '/about',
+      name: 'about',
+      component: () => import('../views/about/AboutView.vue'),
+      meta: {
+        title: 'About',
+        description: 'Copyright, license and author information for this Ech0 instance.',
+      },
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('../views/404/NotFoundView.vue'),

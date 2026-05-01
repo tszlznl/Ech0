@@ -906,6 +906,21 @@
   "commonNav": {
     "backHome": "Zurück zur Startseite"
   },
+  "about": {
+    "linkAriaLabel": "Über diese Ech0-Instanz",
+    "tagline": "Eine selbst gehostete, leichtgewichtige Publishing-Plattform für deine Gedanken.",
+    "copyrightHeading": "Urheberrecht",
+    "copyrightLine": "Copyright (C) {year} {holder}. Alle Rechte vorbehalten.",
+    "licenseLine": "Veröffentlicht unter der",
+    "agplNotice": "Als Netzwerkdienst folgt Ech0 der AGPL-3.0 §13: Nutzer, die mit dieser Instanz interagieren, haben Anspruch auf den entsprechenden Quellcode.",
+    "authorHeading": "Autor",
+    "authorGithub": "GitHub-Profil",
+    "sourceHeading": "Quellcode",
+    "sourceDescription": "Der vollständige Quellcode von Ech0 ist auf GitHub öffentlich verfügbar.",
+    "viewSource": "Quellcode auf GitHub ansehen",
+    "viewRelease": "Release-Notes für v{version}",
+    "poweredBy": "Mit Sorgfalt gebaut · Powered by Ech0"
+  },
   "echoPage": {
     "loadingDetail": "Echo-Details werden geladen…"
   },
