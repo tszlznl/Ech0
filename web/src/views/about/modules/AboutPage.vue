@@ -252,7 +252,7 @@ const sourceLinkLabel = computed(() =>
 }
 
 .about-corner::before {
-  inset: 0 0 auto 0;
+  inset: 0 0 auto;
   height: 1px;
 }
 
