@@ -6,7 +6,32 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 
 For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/lin-snow/Ech0/releases) — earlier release notes are not retroactively imported here.
 
-## [Unreleased]
+## [4.7.2] - 2026-05-02
+
+### Added
+
+- **In-header back button on the Echo detail page**, replacing the standalone arrow that used to sit above the card. Right-aligned, pill-shaped, ringed; falls back to `/` when there is no history to pop. New translation key `commonNav.back` across `zh-CN` / `en-US` / `ja-JP` / `de-DE`.
+
+### Changed
+
+- **LCP image priority**: the first image of the timeline's first Echo card and of the Echo detail gallery are now loaded with `loading="eager"` and `fetchpriority="high"`. A new `priority` prop is threaded through `TheImageGallery` → all gallery layouts (Carousel / Grid / Horizontal / Stack / Waterfall) → `GalleryImageItem`; everything else stays lazy + async.
+- **Echo detail header divider** is now dashed instead of solid, to visually decouple the meta strip from the body.
+- **Timeline enter animation** flipped: Echo cards now drop in from `translateY(-18px)` instead of rising from `+18px`, so the stagger reads as "newest falling into place" rather than continued scroll.
+
+### Fixed
+
+- **Mobile scroll restoration on `/`**: the homepage now also persists the `window` scroll position (key `home:window:scrollTop`) in addition to the inner timeline column. Returning from a detail page on small viewports — where scrolling happens on `window`, not on `mainColumn` — no longer snaps to the top.
+- **First-paint scroll snap-back**: scroll restoration now waits for the first batch of Echos to render (`echoList.length > 0 && !isLoading`) before applying the saved offset, eliminating the "scrolls to 0, then jumps back" flicker on slow networks.
+- **Router `scrollBehavior`**: non-`home` routes now honor `savedPosition` for browser back/forward and reset to top on fresh navigation; `home` continues to manage its own restore inside `HomePage`.
+
+### Performance
+
+- **Long-lived browser cache for uploaded media**: `StaticFileSecurity` now emits `Cache-Control: public, max-age=31536000, immutable` for inlineable MIME types (image/audio). This is safe because stored filenames are content-hashed by the storage layer — reusing a key implies identical bytes — so cached responses can never go stale against a different payload.
+
+### Internal
+
+- **`scripts/check.sh`** consolidates the pre-PR pipeline (SPDX header check + backend fmt/lint/swagger + frontend format/lint/stylelint/i18n) into a single orchestrator that runs every step even on failure and prints a summary table. `make check` / `make dev-lint` now delegate to it. Two new shortcuts: `make spdx` and `make spdx-check`.
+- Sponsor wall: added `@star-uu` and corrected the sponsorship date.
 
 ## [4.7.1] - 2026-05-01
 
@@ -53,5 +78,6 @@ For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/
 
   Practical risk in this repo was negligible (the vulnerable code only runs at PWA build time on developer-controlled input), but the alerts are now resolved at the supply-chain level.
 
-[Unreleased]: https://github.com/lin-snow/Ech0/compare/v4.7.1...HEAD
+[Unreleased]: https://github.com/lin-snow/Ech0/compare/v4.7.2...HEAD
+[4.7.2]: https://github.com/lin-snow/Ech0/compare/v4.7.1...v4.7.2
 [4.7.1]: https://github.com/lin-snow/Ech0/compare/v4.7.0...v4.7.1
