@@ -21,4 +21,4 @@ To sponsor the project, see the **Sponsors & Acknowledgements** section in the [
 |                  🧑‍💻 Anonymous User                       |   2026-01-23  | —                                                                                   |
 |                      🧑‍💻 ABloom                           |   2026-03-16  | ㊗️ Mumuxue achieves fitness success                                                 |
 |                       🧑‍💻 lmscn                           |   2026-04-01  | Support from www.lmscn.com, really like this project, hope it keeps getting better. |
-|     [@star-uu](https://github.com/star-uu)         |   2026-04-01  | -                                                            |
+|     [@star-uu](https://github.com/star-uu)         |   2026-05-01  | -                                                            |
