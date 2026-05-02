@@ -18,7 +18,7 @@ IMAGE_TAG?=latest
 OS?=$(if $(GOHOSTOS),$(GOHOSTOS),linux)
 ARCH?=$(if $(GOHOSTARCH),$(GOHOSTARCH),amd64)
 
-.PHONY: help air-install run dev web-dev check dev-lint lint fmt test wire wire-check swagger build bump build-image push-image
+.PHONY: help air-install run dev web-dev check dev-lint lint fmt test wire wire-check swagger spdx spdx-check build bump build-image push-image
 
 # Semver pattern: X.Y.Z, optionally followed by a -prerelease suffix.
 # (escape $ so make doesn't expand, then escape $$ to a literal $ in shell)
@@ -43,6 +43,8 @@ help:
 	@echo "  make wire        - Generate DI code via Wire"
 	@echo "  make wire-check  - Verify Wire code is up-to-date"
 	@echo "  make swagger     - Regenerate Swagger docs"
+	@echo "  make spdx        - Add SPDX/Copyright headers to new .go/.ts/.vue files"
+	@echo "  make spdx-check  - Fail if any source file is missing the SPDX header"
 	@echo "  make build-image - Build Docker image"
 	@echo "  make push-image  - Push Docker image"
 
@@ -116,21 +118,7 @@ check:
 	$(MAKE) dev-lint
 
 dev-lint:
-	@echo "\033[1;34m=== 后端：格式化 (golangci-lint fmt，同 make fmt) ===\033[0m"
-	$(MAKE) fmt
-	@echo "\033[1;34m=== 后端：Lint (golangci-lint run，同 make lint) ===\033[0m"
-	$(MAKE) lint
-	@echo "\033[1;34m=== 后端：Swagger 文档生成 (swag init，同 make swagger) ===\033[0m"
-	$(MAKE) swagger
-	@echo "\033[1;35m=== 前端 web：格式化 (prettier --write src/) ===\033[0m"
-	pnpm -C web format
-	@echo "\033[1;35m=== 前端 web：Lint (eslint . --fix) ===\033[0m"
-	pnpm -C web lint
-	@echo "\033[1;35m=== 前端 web：Stylelint (stylelint --fix) ===\033[0m"
-	pnpm -C web lint:style
-	@echo "\033[1;35m=== 前端 web：i18n 校验 (key / unused / hardcoded / pseudo-smoke) ===\033[0m"
-	pnpm -C web run i18n:check
-	@echo "\033[1;32m=== dev-lint 全部完成 ===\033[0m"
+	@bash scripts/check.sh
 
 lint:
 	golangci-lint run
@@ -149,6 +137,12 @@ wire-check: wire
 
 swagger:
 	swag init -g internal/server/server.go -o internal/swagger --parseInternal
+
+spdx:
+	node scripts/add-spdx-headers.mjs
+
+spdx-check:
+	node scripts/add-spdx-headers.mjs --check
 
 build-image:
 	@echo "Building image for platform: $(OS)/$(ARCH)"
