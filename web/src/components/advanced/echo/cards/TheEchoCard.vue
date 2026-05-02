@@ -117,11 +117,19 @@
             <TheMdPreview :content="props.echo.content" />
           </div>
 
-          <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" />
+          <TheImageGallery
+            :images="echoImageFiles"
+            :layout="props.echo.layout"
+            :priority="props.index === 0"
+          />
         </template>
 
         <template v-else>
-          <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" />
+          <TheImageGallery
+            :images="echoImageFiles"
+            :layout="props.echo.layout"
+            :priority="props.index === 0"
+          />
 
           <div class="mx-auto w-11/12 pl-1 mt-3">
             <TheMdPreview :content="props.echo.content" />

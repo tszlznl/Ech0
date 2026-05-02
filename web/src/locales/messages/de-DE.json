@@ -910,7 +910,8 @@
     "pleaseSelect": "Bitte wählen"
   },
   "commonNav": {
-    "backHome": "Zurück zur Startseite"
+    "backHome": "Zurück zur Startseite",
+    "back": "Zurück"
   },
   "about": {
     "linkAriaLabel": "Über diese Ech0-Instanz",

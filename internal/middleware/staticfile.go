@@ -22,6 +22,9 @@ var inlineableMIMEPrefixes = []string{
 //   - X-Content-Type-Options: nosniff (prevents MIME-sniffing attacks).
 //   - Content-Disposition: attachment for non-image/audio files (forces download
 //     instead of in-browser execution).
+//   - Cache-Control: long-lived immutable cache for inlineable assets (image/audio).
+//     Stored filenames are content-hashed (see storage layer), so reusing a key
+//     implies identical bytes.
 func StaticFileSecurity() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("X-Content-Type-Options", "nosniff")
@@ -36,7 +39,11 @@ func StaticFileSecurity() gin.HandlerFunc {
 			}
 		}
 
-		if !isInlineableMIME(ct) {
+		if isInlineableMIME(ct) {
+			if c.Writer.Header().Get("Cache-Control") == "" {
+				c.Header("Cache-Control", "public, max-age=31536000, immutable")
+			}
+		} else {
 			basename := filepath.Base(c.Request.URL.Path)
 			c.Header("Content-Disposition", "attachment; filename=\""+basename+"\"")
 		}

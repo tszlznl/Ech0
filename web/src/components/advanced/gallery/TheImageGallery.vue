@@ -12,6 +12,7 @@
       :mark-loaded="markImageLoaded"
       :open="openGallery"
       :get-aspect-ratio-style="getAspectRatioStyle"
+      :priority="props.priority"
     />
 
     <GalleryGrid
@@ -23,6 +24,7 @@
       :is-loaded="isImageLoaded"
       :mark-loaded="markImageLoaded"
       :open="openGallery"
+      :priority="props.priority"
     />
 
     <GalleryCarousel
@@ -34,6 +36,7 @@
       :mark-loaded="markImageLoaded"
       :open="openGallery"
       :get-aspect-ratio-style="getAspectRatioStyle"
+      :priority="props.priority"
     />
 
     <GalleryHorizontal
@@ -47,6 +50,7 @@
       :mark-loaded="markImageLoaded"
       :open="openGallery"
       :get-horizontal-aspect-style="getHorizontalAspectStyle"
+      :priority="props.priority"
     />
 
     <GalleryStack
@@ -58,6 +62,7 @@
       :is-loaded="isImageLoaded"
       :mark-loaded="markImageLoaded"
       :open="openGallery"
+      :priority="props.priority"
     />
   </div>
 </template>
@@ -74,11 +79,16 @@ import GalleryCarousel from './layouts/GalleryCarousel.vue'
 import GalleryHorizontal from './layouts/GalleryHorizontal.vue'
 import GalleryStack from './layouts/GalleryStack.vue'
 
-const props = defineProps<{
-  images?: App.Api.Ech0.FileObject[]
-  baseUrl?: string
-  layout?: ImageLayout | string | undefined
-}>()
+const props = withDefaults(
+  defineProps<{
+    images?: App.Api.Ech0.FileObject[]
+    baseUrl?: string
+    layout?: ImageLayout | string | undefined
+    /** 当本组的第一张图是页面 LCP 时设为 true。 */
+    priority?: boolean
+  }>(),
+  { priority: false },
+)
 
 const { t } = useI18n()
 

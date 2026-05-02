@@ -14,7 +14,8 @@
         :alt="alt"
         :width="image.width || undefined"
         :height="image.height || undefined"
-        :loading="loading"
+        :loading="effectiveLoading"
+        :fetchpriority="priority ? 'high' : undefined"
         decoding="async"
         class="echoimg transition-opacity duration-300"
         :class="[imgClass, loaded ? 'opacity-100' : 'opacity-0']"
@@ -27,24 +28,22 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 const emit = defineEmits<{
   (e: 'click', sourceElement: HTMLElement | null): void
   (e: 'load'): void
   (e: 'error'): void
 }>()
 
-const handleClick = (event: MouseEvent) => {
-  const sourceElement = event.currentTarget
-  emit('click', sourceElement instanceof HTMLElement ? sourceElement : null)
-}
-
-withDefaults(
+const props = withDefaults(
   defineProps<{
     image: App.Api.Ech0.FileObject
     src: string
     alt: string
     loaded: boolean
     loading?: 'lazy' | 'eager'
+    priority?: boolean
     buttonClass?: string
     frameClass?: string
     imgClass?: string
@@ -52,12 +51,21 @@ withDefaults(
   }>(),
   {
     loading: 'lazy',
+    priority: false,
     buttonClass: 'w-fit',
     frameClass: '',
     imgClass: 'block max-w-full h-auto',
     frameStyle: undefined,
   },
 )
+
+// priority 隐含 eager，避免父层忘改 loading 时拖慢 LCP。
+const effectiveLoading = computed(() => (props.priority ? 'eager' : props.loading))
+
+const handleClick = (event: MouseEvent) => {
+  const sourceElement = event.currentTarget
+  emit('click', sourceElement instanceof HTMLElement ? sourceElement : null)
+}
 </script>
 
 <style scoped>

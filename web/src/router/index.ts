@@ -9,6 +9,18 @@ import { useEchoStore } from '@/stores/echo'
 // 所有路由组件使用懒加载，优化首屏加载性能
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  // 浏览器前进/后退时恢复滚动位置；其它跳转回到顶部。
+  // home 路由由 HomePage 自己在 echo 列表渲染完成后恢复滚动，避免内容未撑开时
+  // savedPosition 被夹到 0、出现一次"跳到顶部再跳回"的闪烁。
+  scrollBehavior(to, _from, savedPosition) {
+    if (to.name === 'home') {
+      return false
+    }
+    if (savedPosition) {
+      return savedPosition
+    }
+    return { top: 0 }
+  },
   routes: [
     {
       path: '/',

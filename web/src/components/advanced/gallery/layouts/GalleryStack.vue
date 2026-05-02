@@ -17,6 +17,7 @@
               :src="resolvedSrcs[cell.idx] || ''"
               :alt="getAlt(cell.idx)"
               :loaded="isLoaded(cell.image, cell.idx)"
+              :priority="!!priority && cell.idx === 0"
               button-class="stack-btn"
               frame-class="stack-frame"
               img-class="stack-img"

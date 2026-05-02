@@ -910,7 +910,8 @@
     "pleaseSelect": "请选择"
   },
   "commonNav": {
-    "backHome": "返回首页"
+    "backHome": "返回首页",
+    "back": "返回"
   },
   "about": {
     "linkAriaLabel": "关于本 Ech0 实例",

@@ -10,6 +10,7 @@
         :alt="getAlt(carouselIndex)"
         :loaded="isLoaded(images[carouselIndex]!, carouselIndex)"
         loading="eager"
+        :priority="!!priority && carouselIndex === 0"
         button-class="carousel-slide w-full overflow-hidden"
         frame-class="w-full"
         img-class="w-full h-auto"

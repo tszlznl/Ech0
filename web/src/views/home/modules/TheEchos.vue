@@ -125,7 +125,8 @@ const ENTER_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)'
 const onBeforeEnter = (el: Element) => {
   const element = el as HTMLElement
   element.style.opacity = '0'
-  element.style.transform = 'translateY(18px)'
+  // 起始位置在最终位置上方 18px，配合 stagger 形成"自上而下落入"的视觉。
+  element.style.transform = 'translateY(-18px)'
 }
 
 const onEnter = (el: Element, done: () => void) => {

@@ -21,6 +21,14 @@
         </div>
         <span class="echo-username text-[var(--color-text-secondary)]">@ {{ echo.username }}</span>
       </div>
+      <button
+        type="button"
+        class="echo-detail-back ml-auto cursor-pointer rounded-full px-4 py-1 text-sm font-medium ring-1 ring-inset ring-[var(--color-border-subtle)] text-[var(--color-text-primary)] bg-transparent transition-colors duration-200 hover:bg-[var(--color-bg-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+        :aria-label="t('commonNav.back')"
+        @click="goBack"
+      >
+        {{ t('commonNav.back') }}
+      </button>
     </header>
 
     <section class="echo-detail-body">
@@ -35,11 +43,11 @@
           <TheMdPreview :content="props.echo.content" />
         </div>
 
-        <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" />
+        <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" priority />
       </template>
 
       <template v-else>
-        <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" />
+        <TheImageGallery :images="echoImageFiles" :layout="props.echo.layout" priority />
 
         <div class="mt-3">
           <TheMdPreview :content="props.echo.content" />
@@ -61,6 +69,8 @@ import TheImageGallery from '@/components/advanced/gallery/TheImageGallery.vue'
 import TheEchoMeta from '@/components/advanced/echo/cards/TheEchoMeta.vue'
 import { computed, defineAsyncComponent } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useSettingStore } from '@/stores'
 import { resolveAvatarUrl } from '@/service/request/shared'
 import { ImageLayout } from '@/enums/enums'
@@ -88,6 +98,17 @@ const settingStore = useSettingStore()
 
 const { SystemSetting } = storeToRefs(settingStore)
 const logo = computed(() => resolveAvatarUrl(SystemSetting.value?.server_logo))
+
+const router = useRouter()
+const { t } = useI18n()
+
+const goBack = () => {
+  if (window.history.length > 2) {
+    window.history.back()
+  } else {
+    router.push({ name: 'home' })
+  }
+}
 </script>
 
 <style scoped lang="css">
@@ -102,7 +123,7 @@ const logo = computed(() => resolveAvatarUrl(SystemSetting.value?.server_logo))
   align-items: center;
   gap: 0.5rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--color-border-subtle);
+  border-bottom: 1px dashed var(--color-border-subtle);
 }
 
 .echo-detail-body {

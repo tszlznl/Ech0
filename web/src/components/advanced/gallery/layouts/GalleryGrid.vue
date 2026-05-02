@@ -10,6 +10,7 @@
         :src="resolvedSrcs[idx] || ''"
         :alt="getAlt(idx)"
         :loaded="isLoaded(image, idx)"
+        :priority="!!priority && idx === 0"
         button-class="w-full overflow-hidden aspect-square relative"
         frame-class="h-full"
         img-class="w-full h-full object-cover"

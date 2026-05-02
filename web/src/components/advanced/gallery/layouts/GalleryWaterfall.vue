@@ -14,6 +14,7 @@
       :src="resolvedSrcs[idx] || ''"
       :alt="getAlt(idx)"
       :loaded="isLoaded(image, idx)"
+      :priority="!!priority && idx === 0"
       :button-class="getColSpan(idx, images.length)"
       :frame-style="getAspectRatioStyle(image, isLoaded(image, idx))"
       img-class="block max-w-full h-auto"

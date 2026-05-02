@@ -71,7 +71,7 @@ import HomeSidebarNav from './HomeSidebarNav.vue'
 import TheFilter from './TheFilter.vue'
 import TheEchos from './TheEchos.vue'
 import TheCommandPalette from './TheCommandPalette.vue'
-import { defineAsyncComponent, onMounted, ref, onBeforeUnmount, computed } from 'vue'
+import { defineAsyncComponent, onMounted, ref, onBeforeUnmount, computed, watch } from 'vue'
 import { useEchoStore, useUserStore, useSettingStore } from '@/stores'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
@@ -107,7 +107,9 @@ const shouldHideBannerOnMobile = computed(
 
 const mainColumn = ref<HTMLElement | null>(null)
 const TIMELINE_SCROLL_KEY = 'home:timeline:scrollTop'
+const WINDOW_SCROLL_KEY = 'home:window:scrollTop'
 let timelineScrollRaf: number | null = null
+let windowScrollRaf: number | null = null
 
 const paletteOpen = ref<boolean>(false)
 
@@ -134,13 +136,28 @@ const saveTimelineScrollPosition = () => {
   })
 }
 
+// 手机布局下滚动发生在 window 上，单独持久化以便恢复。
+const saveWindowScrollPosition = () => {
+  if (windowScrollRaf !== null) return
+  windowScrollRaf = window.requestAnimationFrame(() => {
+    windowScrollRaf = null
+    sessionStorage.setItem(WINDOW_SCROLL_KEY, String(window.scrollY))
+  })
+}
+
 const restoreTimelineScrollPosition = () => {
-  if (!mainColumn.value) return
-  const raw = sessionStorage.getItem(TIMELINE_SCROLL_KEY)
-  if (!raw) return
-  const scrollTop = Number(raw)
-  if (!Number.isFinite(scrollTop) || scrollTop < 0) return
-  mainColumn.value.scrollTop = scrollTop
+  if (mainColumn.value) {
+    const raw = sessionStorage.getItem(TIMELINE_SCROLL_KEY)
+    const scrollTop = raw ? Number(raw) : 0
+    if (Number.isFinite(scrollTop) && scrollTop > 0) {
+      mainColumn.value.scrollTop = scrollTop
+    }
+  }
+  const rawWindow = sessionStorage.getItem(WINDOW_SCROLL_KEY)
+  const windowTop = rawWindow ? Number(rawWindow) : 0
+  if (Number.isFinite(windowTop) && windowTop > 0) {
+    window.scrollTo({ top: windowTop, behavior: 'auto' })
+  }
 }
 
 // 空闲时预热下游 chunk：
@@ -165,9 +182,19 @@ onMounted(async () => {
     mainColumn.value.scrollLeft = 0
     mainColumn.value.addEventListener('scroll', saveTimelineScrollPosition, { passive: true })
   }
-  window.requestAnimationFrame(() => {
-    restoreTimelineScrollPosition()
-  })
+  window.addEventListener('scroll', saveWindowScrollPosition, { passive: true })
+  // 等首批 echo 渲染后再恢复滚动位置，否则容器高度还没撑开，scrollTop 会被夹到 0。
+  const stopScrollRestoreWatch = watch(
+    () => echoStore.echoList.length > 0 && !echoStore.isLoading,
+    (ready) => {
+      if (!ready) return
+      stopScrollRestoreWatch()
+      window.requestAnimationFrame(() => {
+        restoreTimelineScrollPosition()
+      })
+    },
+    { immediate: true, flush: 'post' },
+  )
   window.addEventListener('keydown', handleGlobalKeydown)
   prefetchHeavyChunks()
 })
@@ -180,6 +207,11 @@ onBeforeUnmount(() => {
     window.cancelAnimationFrame(timelineScrollRaf)
     timelineScrollRaf = null
   }
+  if (windowScrollRaf !== null) {
+    window.cancelAnimationFrame(windowScrollRaf)
+    windowScrollRaf = null
+  }
+  window.removeEventListener('scroll', saveWindowScrollPosition)
   window.removeEventListener('keydown', handleGlobalKeydown)
 })
 </script>

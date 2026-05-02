@@ -3,19 +3,6 @@
 <template>
   <div class="px-3 pb-4 py-2 mt-4 sm:mt-6 mb-10 mx-auto flex justify-center items-center">
     <div class="w-full sm:max-w-lg mx-auto">
-      <div class="mx-auto max-w-sm">
-        <!-- 返回上一页 -->
-        <BaseButton
-          @click="goBack"
-          class="text-[var(--color-text-primary)] rounded-md shadow-none! border-none! ring-0! bg-transparent! group"
-          :tooltip="t('commonNav.backHome')"
-        >
-          <Arrow
-            class="w-9 h-9 rotate-180 transition-transform duration-200 group-hover:-translate-x-1"
-          />
-        </BaseButton>
-      </div>
-
       <div v-if="echo" class="w-full sm:mt-1 mx-auto">
         <TheEchoDetail :echo="echo" @update-like-count="handleUpdateLikeCount" />
         <TheEchoInteractions />
@@ -29,16 +16,13 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { ref } from 'vue'
 import TheEchoDetail from '@/components/advanced/echo/cards/TheEchoDetail.vue'
 import TheEchoInteractions from '@/components/advanced/echo/cards/TheEchoInteractions.vue'
-import BaseButton from '@/components/common/BaseButton.vue'
-import Arrow from '@/components/icons/arrow.vue'
 import { useEchoStore } from '@/stores'
 import { useI18n } from 'vue-i18n'
 
-const router = useRouter()
 const route = useRoute()
 const { t } = useI18n()
 const echoId = route.params.echoId as string
@@ -64,13 +48,6 @@ const handleUpdateLikeCount = () => {
   }
 }
 
-const goBack = () => {
-  if (window.history.length > 2) {
-    window.history.back()
-  } else {
-    router.push({ name: 'home' }) // 没有历史记录则跳首页
-  }
-}
 onMounted(async () => {
   // 先尝试从 store 获取
   echo.value = getEchoFromStore()

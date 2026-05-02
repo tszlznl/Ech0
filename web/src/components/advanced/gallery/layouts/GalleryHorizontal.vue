@@ -11,6 +11,7 @@
           :src="resolvedSrcs[idx] || ''"
           :alt="getAlt(idx)"
           :loaded="isLoaded(image, idx)"
+          :priority="!!priority && idx === 0"
           button-class="horizontal-item rounded-lg shrink-0"
           frame-class="h-full"
           img-class="h-full w-auto object-contain"

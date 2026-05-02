@@ -910,7 +910,8 @@
     "pleaseSelect": "Please select"
   },
   "commonNav": {
-    "backHome": "Back to home"
+    "backHome": "Back to home",
+    "back": "back"
   },
   "about": {
     "linkAriaLabel": "About this Ech0 instance",

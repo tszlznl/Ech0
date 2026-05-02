@@ -910,7 +910,8 @@
     "pleaseSelect": "選択してください"
   },
   "commonNav": {
-    "backHome": "ホームに戻る"
+    "backHome": "ホームに戻る",
+    "back": "戻る"
   },
   "about": {
     "linkAriaLabel": "この Ech0 インスタンスについて",
