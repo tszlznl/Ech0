@@ -1,0 +1,341 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ech0 — Carousel poster</title>
+<style>
+  :root {
+    --bg:        #f5f4ed;
+    --ivory:     #faf9f5;
+    --warm-sand: #e8e6dc;
+    --near-black:#141413;
+    --dark-warm: #3d3d3a;
+    --olive:     #504e49;
+    --stone:     #6b6a64;
+    --border:    #e8e6dc;
+    --border-soft:#e5e3d8;
+    --brand:        #F54A00;
+    --brand-dark:   #C73A00;
+    --tag-soft:   #FBEEE3;
+    --tag-mid:    #F8E0CB;
+    --tag-strong: #F4D2B0;
+    --serif: "Charter", Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --sans:  var(--serif);
+    --mono:  "JetBrains Mono", "SF Mono", "Fira Code", Consolas, Monaco, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  strong, b { font-weight: 500; }
+  em, i { font-style: normal; color: var(--brand); }
+  html, body {
+    background: #2a2926;
+    font-family: var(--serif);
+    color: var(--near-black);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 56px;
+    padding: 56px 0 96px;
+  }
+  .card {
+    width: 1242px;
+    height: 1656px;
+    background: var(--bg);
+    color: var(--near-black);
+    position: relative;
+    overflow: hidden;
+    padding: 96px 96px 88px;
+    box-shadow: 0 12px 60px rgba(0,0,0,0.35);
+    display: flex;
+    flex-direction: column;
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font: 500 18px/1 var(--mono);
+    color: var(--stone);
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+  }
+  .eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--brand); display: inline-block; }
+  .eyebrow .sep { color: var(--border); }
+  .footer {
+    margin-top: auto;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+    padding-top: 36px;
+    border-top: 1px solid var(--border);
+    font: 500 18px/1.4 var(--mono);
+    color: var(--stone);
+    letter-spacing: 0.4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .footer .meta-l { display: flex; align-items: center; gap: 14px; }
+  .footer .lockup { display: inline-flex; align-items: center; gap: 12px; }
+  .footer .lockup .name { font: 500 20px/1 var(--serif); color: var(--dark-warm); letter-spacing: 0; text-transform: none; }
+  .footer .meta-r { text-align: right; }
+  .tag {
+    font: 500 18px/1 var(--mono);
+    padding: 9px 14px;
+    border-radius: 4px;
+    color: var(--brand-dark);
+    background: var(--tag-mid);
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tag.solid { color: var(--ivory); background: var(--brand); }
+  .tag.ghost { background: transparent; box-shadow: 0 0 0 1px var(--border); color: var(--dark-warm); }
+  .dash-list { list-style: none; padding: 0; }
+  .dash-list li {
+    position: relative;
+    padding-left: 24px;
+    margin-bottom: 22px;
+    font: 500 26px/1.45 var(--serif);
+    color: var(--dark-warm);
+  }
+  .dash-list li::before { content: "\2013"; position: absolute; left: 0; top: 0; color: var(--brand); font-weight: 500; }
+  .dash-list li .sub { display: block; margin-top: 6px; font: 400 19px/1.45 var(--serif); color: var(--olive); letter-spacing: 0.2px; }
+
+  /* Card 1 — Cover */
+  .c-cover .lockup-top { display: flex; align-items: center; gap: 22px; }
+  .c-cover .lockup-top img { width: 96px; height: 96px; border-radius: 16px; display: block; }
+  .c-cover .lockup-top .word { font: 500 56px/1 var(--serif); color: var(--near-black); letter-spacing: -0.5px; }
+  .c-cover .lockup-top .badge { margin-left: 14px; font: 500 14px/1 var(--mono); color: var(--brand-dark); background: var(--tag-soft); padding: 7px 11px; border-radius: 3px; letter-spacing: 1.2px; text-transform: uppercase; align-self: center; }
+  .c-cover .hero { margin-top: 88px; margin-bottom: auto; }
+  .c-cover h1.display { font: 500 172px/0.96 var(--serif); letter-spacing: -4px; color: var(--near-black); text-wrap: balance; }
+  .c-cover h1.display .l2 { color: var(--brand); }
+  .c-cover h1.display .period { color: var(--brand); }
+  .c-cover .lede { margin-top: 64px; max-width: 920px; font: 500 32px/1.5 var(--serif); color: var(--dark-warm); }
+  .c-cover .tag-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 64px; }
+
+  /* Card 2 — What */
+  .c-what .number-mark { margin-top: 36px; font: 500 240px/0.85 var(--serif); color: var(--brand); letter-spacing: -8px; font-variant-numeric: tabular-nums; }
+  .c-what h2 { margin-top: 36px; font: 500 132px/1 var(--serif); letter-spacing: -3px; color: var(--near-black); text-wrap: balance; }
+  .c-what .body { margin-top: 72px; max-width: 980px; }
+  .c-what .body h6 { font: 500 14px/1 var(--mono); color: var(--stone); letter-spacing: 1.6px; text-transform: uppercase; margin-bottom: 22px; }
+  .c-what .body p { font: 500 30px/1.5 var(--serif); color: var(--dark-warm); }
+  .c-what .body p + p { margin-top: 26px; }
+  .c-what .compare { margin-top: 72px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  .c-what .compare .col { border-top: 1px solid var(--border); padding-top: 22px; }
+  .c-what .compare .col .name { font: 500 24px/1.2 var(--serif); color: var(--near-black); }
+  .c-what .compare .col.self .name { color: var(--brand); }
+  .c-what .compare .col .what { margin-top: 8px; font: 400 18px/1.4 var(--serif); color: var(--olive); }
+  .c-what .quote { margin-top: auto; border-left: 3px solid var(--brand); padding: 6px 0 6px 22px; font: 500 28px/1.55 var(--serif); color: var(--olive); max-width: 980px; }
+  .c-what .quote .cite { display: block; margin-top: 14px; font: 500 14px/1 var(--mono); color: var(--stone); letter-spacing: 1.2px; text-transform: uppercase; }
+
+  /* Card 3 — Fit */
+  .c-fit h2 { margin-top: 36px; font: 500 120px/1 var(--serif); letter-spacing: -2.6px; color: var(--near-black); text-wrap: balance; }
+  .c-fit .lede { margin-top: 32px; max-width: 880px; font: 500 24px/1.5 var(--serif); color: var(--olive); }
+  .c-fit .split { margin-top: 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; }
+  .c-fit .split .col { border-top: 2px solid var(--near-black); padding-top: 28px; }
+  .c-fit .split .col.no { border-top-color: var(--border); opacity: 0.92; }
+  .c-fit .split .col h5 { font: 500 14px/1 var(--mono); letter-spacing: 1.6px; text-transform: uppercase; color: var(--brand); margin-bottom: 6px; }
+  .c-fit .split .col.no h5 { color: var(--stone); }
+  .c-fit .split .col h5 .label { display: block; margin-top: 12px; font: 500 30px/1.2 var(--serif); color: var(--near-black); letter-spacing: 0; text-transform: none; }
+  .c-fit .split .col ul { margin-top: 30px; }
+
+  /* Card 4 — Capabilities */
+  .c-cap h2 { margin-top: 36px; font: 500 120px/1 var(--serif); letter-spacing: -2.6px; color: var(--near-black); }
+  .c-cap .lede { margin-top: 28px; max-width: 880px; font: 500 24px/1.5 var(--serif); color: var(--olive); }
+  .c-cap .grid { margin-top: 72px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 56px; row-gap: 40px; }
+  .c-cap .item { border-top: 1px solid var(--border); padding-top: 22px; display: grid; grid-template-columns: 64px 1fr; column-gap: 18px; }
+  .c-cap .item .num { font: 500 28px/1 var(--mono); color: var(--brand); letter-spacing: 0.4px; font-variant-numeric: tabular-nums; }
+  .c-cap .item .body h4 { font: 500 32px/1.15 var(--serif); color: var(--near-black); letter-spacing: -0.2px; }
+  .c-cap .item .body p { margin-top: 12px; font: 400 19px/1.5 var(--serif); color: var(--olive); letter-spacing: 0.2px; }
+
+  /* Card 5 — Deploy */
+  .c-deploy h2 { margin-top: 36px; font: 500 132px/1 var(--serif); letter-spacing: -2.8px; color: var(--near-black); }
+  .c-deploy h2 .l2 { color: var(--brand); }
+  .c-deploy .lede { margin-top: 28px; max-width: 880px; font: 500 24px/1.5 var(--serif); color: var(--olive); }
+  .c-deploy .code { margin-top: 64px; background: var(--ivory); border: 1px solid var(--border); border-radius: 10px; padding: 40px 44px; font: 500 28px/1.55 var(--mono); color: var(--near-black); white-space: pre; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.05); }
+  .c-deploy .code .k { color: var(--brand); }
+  .c-deploy .code .c { color: var(--stone); }
+  .c-deploy .code .s { color: var(--dark-warm); }
+  .c-deploy .steps { margin-top: 64px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+  .c-deploy .step { border-top: 1px solid var(--border); padding-top: 22px; }
+  .c-deploy .step .num { font: 500 22px/1 var(--mono); color: var(--brand); letter-spacing: 0.4px; margin-bottom: 14px; font-variant-numeric: tabular-nums; }
+  .c-deploy .step h5 { font: 500 28px/1.3 var(--serif); color: var(--near-black); }
+  .c-deploy .step p { margin-top: 10px; font: 400 18px/1.45 var(--serif); color: var(--olive); }
+
+  /* Card 6 — CTA */
+  .c-cta h2 { margin-top: 60px; font: 500 156px/0.98 var(--serif); letter-spacing: -3.4px; color: var(--near-black); text-wrap: balance; }
+  .c-cta h2 .l2 { color: var(--brand); }
+  .c-cta .lede { margin-top: 36px; max-width: 880px; font: 500 26px/1.5 var(--serif); color: var(--olive); }
+  .c-cta .links { margin-top: 80px; display: grid; grid-template-columns: 1fr; gap: 18px; }
+  .c-cta .link { display: grid; grid-template-columns: 200px 1fr auto; align-items: center; gap: 28px; padding: 28px 32px; border: 1px solid var(--border); border-radius: 10px; background: var(--ivory); }
+  .c-cta .link .label { font: 500 16px/1 var(--mono); color: var(--brand); letter-spacing: 1.4px; text-transform: uppercase; }
+  .c-cta .link .url { font: 500 28px/1 var(--serif); color: var(--near-black); letter-spacing: 0.2px; }
+  .c-cta .link .desc { font: 400 18px/1.4 var(--serif); color: var(--olive); text-align: right; max-width: 360px; }
+  .c-cta .closer { margin-top: auto; border-top: 2px solid var(--near-black); padding-top: 28px; display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; }
+  .c-cta .closer .echo { font: 500 32px/1.2 var(--serif); color: var(--dark-warm); letter-spacing: -0.3px; }
+  .c-cta .closer .echo .sub { display: block; margin-top: 10px; font: 400 18px/1.3 var(--serif); color: var(--olive); letter-spacing: 0.2px; }
+  .c-cta .closer .meta { text-align: right; font: 500 16px/1.5 var(--mono); color: var(--stone); letter-spacing: 1.2px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <section class="card c-cover" data-screen-label="01 Cover">
+    <div class="lockup-top">
+      <img src="mopmztw2-logo.svg" alt="Ech0 logo">
+      <div class="word">Ech0</div>
+      <div class="badge">v4.7 · Open Source</div>
+    </div>
+    <div class="hero">
+      <h1 class="display">
+        Your thoughts<span class="period">.</span><br>
+        <span class="l2">Your server<span class="period">.</span></span>
+      </h1>
+      <p class="lede">
+        A self-hosted personal microblog where your timeline can be shared, discussed, and fully owned — built as a single Go binary you run on your own server.
+      </p>
+      <div class="tag-row">
+        <span class="tag solid">● Self-hosted</span>
+        <span class="tag">Single Go Binary</span>
+        <span class="tag">AGPL-3.0</span>
+        <span class="tag ghost">Docker · Linux · ARM</span>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="meta-l">
+        <span class="lockup"><span class="name">lin-snow / Ech0</span></span>
+      </div>
+      <div class="meta-r">
+        <span>github.com/lin-snow/Ech0</span> &nbsp;·&nbsp; <span>01 / 06</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="card c-what" data-screen-label="02 What">
+    <div class="eyebrow"><span class="dot"></span><span>02 / 06</span><span class="sep">·</span><span>Definition</span></div>
+    <div class="number-mark">02</div>
+    <h2>Beyond memos.</h2>
+    <div class="body">
+      <h6>The pitch</h6>
+      <p>Tools like Memos are great for capturing private thoughts. <strong>Ech0 is built for what comes next:</strong> publishing those ideas as a personal timeline that others can follow, comment on, and subscribe to via RSS.</p>
+      <p>It is social-lite, not a social network — and the server is yours.</p>
+    </div>
+    <div class="compare">
+      <div class="col">
+        <div class="name">Memos</div>
+        <div class="what">Private capture. Personal notes app.</div>
+      </div>
+      <div class="col self">
+        <div class="name">Ech0</div>
+        <div class="what">Public timeline. Self-hosted. RSS &amp; comments built in.</div>
+      </div>
+      <div class="col">
+        <div class="name">Mastodon</div>
+        <div class="what">Federated social network. Heavier ops.</div>
+      </div>
+    </div>
+    <blockquote class="quote">
+      "Lightweight, easy to deploy, and fully open-source — your microblog, on your terms."
+      <span class="cite">— README</span>
+    </blockquote>
+    <div class="footer">
+      <div class="meta-l"><span class="lockup"><span class="name">Ech0</span></span><span>· Self-hosted Microblog</span></div>
+      <div class="meta-r"><span>02 / 06</span></div>
+    </div>
+  </section>
+
+  <section class="card c-fit" data-screen-label="03 Fit">
+    <div class="eyebrow"><span class="dot"></span><span>03 / 06</span><span class="sep">·</span><span>Fit</span></div>
+    <h2>Built for. Not built for.</h2>
+    <p class="lede">Ech0 is honest about what it is. Here's where it earns its keep — and where another tool will serve you better.</p>
+    <div class="split">
+      <div class="col yes">
+        <h5>Reach for it when —<span class="label">It fits.</span></h5>
+        <ul class="dash-list">
+          <li>You want a personal public timeline on your own domain.</li>
+          <li>You want to publish short posts, links and media from one clean UI.</li>
+          <li>You want data ownership — and still want RSS &amp; comments.</li>
+          <li>You want to stay social-lite, not run a full social network.</li>
+        </ul>
+      </div>
+      <div class="col no">
+        <h5>Probably not if you need —<span class="label">Pick something else.</span></h5>
+        <ul class="dash-list">
+          <li>A bi-directional knowledge base (Obsidian-style PKM).</li>
+          <li>A team-first collaborative docs workspace (Notion-style).</li>
+          <li>A private-only memo app — no publishing, no timeline.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="meta-l"><span class="lockup"><span class="name">Ech0</span></span><span>· Honest about what it is</span></div>
+      <div class="meta-r"><span>03 / 06</span></div>
+    </div>
+  </section>
+
+  <section class="card c-cap" data-screen-label="04 Capabilities">
+    <div class="eyebrow"><span class="dot"></span><span>04 / 06</span><span class="sep">·</span><span>Capabilities</span></div>
+    <h2>What it does.</h2>
+    <p class="lede">Six things that ship in the box. Plus i18n, PWA, dark mode, TUI client and webhooks.</p>
+    <div class="grid">
+      <div class="item"><div class="num">01</div><div class="body"><h4>Single Go Binary</h4><p>One container, no runtime deps. Linux, Windows, ARM (Raspberry Pi). Backups are a copy of one folder.</p></div></div>
+      <div class="item"><div class="num">02</div><div class="body"><h4>Markdown &amp; Tags</h4><p>markdown-it engine with live preview and plugins. Fast tag filtering across the whole timeline.</p></div></div>
+      <div class="item"><div class="num">03</div><div class="body"><h4>RSS · Comments · Likes</h4><p>Built-in comment system and RSS feed. Social-lite interaction, your moderation rules.</p></div></div>
+      <div class="item"><div class="num">04</div><div class="body"><h4>VireFS · Local + S3</h4><p>Unified storage layer. Mount local disk and S3-compatible buckets together, swap any time.</p></div></div>
+      <div class="item"><div class="num">05</div><div class="body"><h4>OAuth2 · OIDC · Passkey</h4><p>SSO out of the box. Passwordless sign-in via biometrics or hardware keys.</p></div></div>
+      <div class="item"><div class="num">06</div><div class="body"><h4>MCP for AI</h4><p>Built-in MCP server exposes posts, files and stats to your AI workflow over Streamable HTTP.</p></div></div>
+    </div>
+    <div class="footer">
+      <div class="meta-l"><span class="lockup"><span class="name">Ech0</span></span><span>· Plus i18n · PWA · Dark mode · TUI · Webhook</span></div>
+      <div class="meta-r"><span>04 / 06</span></div>
+    </div>
+  </section>
+
+  <section class="card c-deploy" data-screen-label="05 Deploy">
+    <div class="eyebrow"><span class="dot"></span><span>05 / 06</span><span class="sep">·</span><span>Deploy</span></div>
+    <h2>60 seconds. <span class="l2">One command.</span></h2>
+    <p class="lede">No database to provision. No build step. Pull the image, mount a folder, set a secret. That's it.</p>
+<pre class="code"><span class="k">docker run</span> -d \
+  --name ech0 \
+  -p <span class="s">6277:6277</span> \
+  -v <span class="s">/opt/ech0/data:/app/data</span> \
+  -e JWT_SECRET=<span class="s">"Hello Echos"</span> \
+  <span class="s">sn0wl1n/ech0:latest</span>
+<span class="c"># then open http://&lt;your-ip&gt;:6277</span></pre>
+    <div class="steps">
+      <div class="step"><div class="num">01</div><h5>Run the container.</h5><p>One command, sixty seconds, done.</p></div>
+      <div class="step"><div class="num">02</div><h5>Register the first account.</h5><p>It auto-promotes to Owner.</p></div>
+      <div class="step"><div class="num">03</div><h5>Publish.</h5><p>RSS, comments, MCP — all on by default.</p></div>
+    </div>
+    <div class="footer">
+      <div class="meta-l"><span class="lockup"><span class="name">Ech0</span></span><span>· Compose · Helm · Script — see DEPLOYMENT.md</span></div>
+      <div class="meta-r"><span>05 / 06</span></div>
+    </div>
+  </section>
+
+  <section class="card c-cta" data-screen-label="06 CTA">
+    <div class="eyebrow"><span class="dot"></span><span>06 / 06</span><span class="sep">·</span><span>Next</span></div>
+    <h2>Star it. <span class="l2">Self-host it.</span></h2>
+    <p class="lede">Open source, no tracking, no subscription, no SaaS lock-in. If it earns a place on your server, leave a star — that's how the project finds its next reader.</p>
+    <div class="links">
+      <div class="link"><span class="label">GitHub</span><span class="url">github.com/lin-snow/Ech0</span><span class="desc">Source · Issues · Discussions</span></div>
+      <div class="link"><span class="label">Site &amp; Docs</span><span class="url">www.ech0.app</span><span class="desc">Official site &amp; full documentation</span></div>
+      <div class="link"><span class="label">Hub</span><span class="url">hub.ech0.app</span><span class="desc">Public timeline directory</span></div>
+      <div class="link"><span class="label">Demo</span><span class="url">memo.vaaat.com</span><span class="desc">A live Ech0 instance to browse</span></div>
+    </div>
+    <div class="closer">
+      <div class="echo">Your thoughts. Your server.<span class="sub">AGPL-3.0 · No tracking · No subscription · No SaaS dependency</span></div>
+      <div class="meta">Ech0 v4.7<br>06 / 06</div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
