@@ -123,6 +123,14 @@ func (authService *AuthService) BindOAuth(
 		return "", err
 	}
 
+	// 在签发 state JWT 前校验，避免非法 redirect 进入 state 后只能在回调阶段才被发现
+	// （GHSA-p64j-f4x9-wq66）。空值保留旧行为：在回调阶段统一拦截。
+	if redirectURI != "" {
+		if _, err := authService.parseAndValidateClientRedirect(redirectURI); err != nil {
+			return "", err
+		}
+	}
+
 	state, nonce, err := jwtUtil.GenerateOAuthState(
 		string(authModel.OAuth2ActionBind),
 		userID,
@@ -145,6 +153,14 @@ func (authService *AuthService) GetOAuthLoginURL(provider string, redirectURI st
 	setting, err := authService.getOAuthSetting(provider)
 	if err != nil {
 		return "", err
+	}
+
+	// 在签发 state JWT 前校验，避免非法 redirect 进入 state 后只能在回调阶段才被发现
+	// （GHSA-p64j-f4x9-wq66）。空值保留旧行为：在回调阶段统一拦截。
+	if redirectURI != "" {
+		if _, err := authService.parseAndValidateClientRedirect(redirectURI); err != nil {
+			return "", err
+		}
 	}
 
 	state, nonce, err := jwtUtil.GenerateOAuthState(
@@ -472,14 +488,24 @@ func (authService *AuthService) parseAndValidateClientRedirect(redirect string) 
 	if len(allowed) == 0 {
 		return nil, errors.New(commonModel.INVALID_PARAMS)
 	}
+	// 按 RFC 6749 §3.1.2 进行 scheme+host+path 的精确比对：仅校验 scheme+host
+	// 会让攻击者把同源任意路径塞进 state（GHSA-p64j-f4x9-wq66），事后通过 Referer
+	// 泄漏、第三方分析脚本、宿主上的 open-redirect 链路把一次性 exchange code 转给
+	// 攻击者。query/fragment 不参与比对：服务器会在校验通过后向 redirect URL 追加
+	// ?code=...，允许调用方携带额外查询参数。
+	redirectNorm := strings.ToLower(redirectURL.Scheme) + "://" +
+		strings.ToLower(redirectURL.Host) +
+		redirectURL.Path
 	matched := false
 	for _, item := range allowed {
 		allowURL, parseErr := url.Parse(strings.TrimSpace(item))
 		if parseErr != nil || allowURL == nil || allowURL.Host == "" {
 			continue
 		}
-		if strings.EqualFold(redirectURL.Scheme, allowURL.Scheme) &&
-			strings.EqualFold(redirectURL.Host, allowURL.Host) {
+		allowNorm := strings.ToLower(allowURL.Scheme) + "://" +
+			strings.ToLower(allowURL.Host) +
+			allowURL.Path
+		if redirectNorm == allowNorm {
 			matched = true
 			break
 		}
