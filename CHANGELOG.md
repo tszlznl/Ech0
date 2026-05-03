@@ -6,6 +6,27 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 
 For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/lin-snow/Ech0/releases) — earlier release notes are not retroactively imported here.
 
+## [4.7.3] - 2026-05-03
+
+This is primarily a security release: six advisories disclosed since v4.7.2 are addressed. All deployments are encouraged to upgrade.
+
+### Changed
+
+- **Editor publish controls** split the old "toggle privacy" icon into two explicit actions, **Publish as public** and **Publish as private**. The previous flow required clicking a toggle and then publish, which often surprised users into publishing with the wrong visibility. New translation keys `publishEchoPublic` / `publishEchoPrivate`; legacy `togglePrivacy` / `privacySwitched` / `privacyPrivate` / `privacyPublic` removed.
+
+### Security
+
+- **[GHSA-rj4g-rqgh-rx9h](https://github.com/advisories/GHSA-rj4g-rqgh-rx9h)** — Commenter email PII leak on public endpoints. `GET /api/comments` and `/api/comments/public` returned the raw `Comment` struct, exposing every guest commenter's email (plus `user_id`, `ip_hash`, `user_agent`) to any unauthenticated caller. Public endpoints now serialize a `PublicComment` DTO that strips those fields; admin `/panel/comments` keeps the full struct for moderation.
+- **[GHSA-3v85-fqvh-7rxf](https://github.com/advisories/GHSA-3v85-fqvh-7rxf)** — Stored XSS via the RSS feed. `GenerateRSS` interpolated tag names with `%s` and rendered echo bodies with raw-HTML markdown enabled, both wrapped inside Atom `<summary type="html">`. RSS readers that honour `type="html"` decoded the entities and executed any embedded `<script>`. Tag names are now HTML-escaped, the markdown renderer skips raw HTML for the RSS path, and tag write paths reject `<>"'&` as defence in depth.
+- **[GHSA-pj6q-4vq4-r8cg](https://github.com/advisories/GHSA-pj6q-4vq4-r8cg)** — Like-spam on the public Echo endpoint. Anonymous `PUT /echo/like/:id` had no rate limit or de-duplication, so a single IP could arbitrarily inflate `fav_count` and repeatedly trigger four-key cache invalidation. New `RateLimitWithIdempotency` middleware combines a 2 rps / 5 burst per-IP token bucket with a 1-hour idempotency window keyed on `(IP, echoID)`; repeated requests inside the window return the same response shape as a fresh success, so clients see no behaviour change.
+- **[GHSA-8mc6-xjpr-h98x](https://github.com/advisories/GHSA-8mc6-xjpr-h98x)** — SSRF via the Connect peer-info fetch. `fetchPeerConnectInfo` used the raw `SendRequest` helper with no URL validation, so an admin-added peer URL could point at private networks or cloud metadata (e.g. `169.254.169.254`, `kubernetes.default.svc`); the public `GET /api/connects/info` then triggered the outbound request. Switched to `SendSafeRequest` (URL allowlist + `SecureDialContext` against DNS rebinding); `AddConnect` also rejects malicious URLs at insertion time.
+- **[GHSA-p64j-f4x9-wq66](https://github.com/advisories/GHSA-p64j-f4x9-wq66)** — OAuth redirect URI bypass. `parseAndValidateClientRedirect` only compared scheme+host, so an attacker could supply any same-host path; the server still appended `?code=<one-time>` there, where Referer leaks, third-party analytics, or an open-redirect on the same host could hand the code over and let the attacker exchange it for the victim's tokens. Comparison is now scheme+host+path per RFC 6749 §3.1.2 (query/fragment still excluded — the server needs to append `?code=...`). `GetOAuthLoginURL` and `BindOAuth` also reject bad redirect URIs before signing the state JWT.
+- **[GHSA-fpw6-hrg5-q5x5](https://github.com/advisories/GHSA-fpw6-hrg5-q5x5)** — Access tokens issued with `NEVER_EXPIRY` could not be revoked. All three revocation paths failed: `/api/auth/logout` panicked dereferencing nil `ExpiresAt`, `RevokeToken` skipped the cache write because `remainTTL <= 0`, and admin "Delete Token" only removed the DB row without writing the blacklist — so a leaked token kept authenticating until `JWT_SECRET` was rotated. `CreateAccessClaimsWithExpiry` now falls back to a 100-year `ExpiresAt` (semantically still "never expires" but every revocation path receives a positive TTL); `Logout` tolerates legacy nil `ExpiresAt`; `DeleteAccessToken` looks up the JTI and writes it to the blacklist before deleting the row. Known limitation: the blacklist is still in-memory `ristretto` and is dropped on process restart.
+
+### Internal
+
+- **`tldts` / `tldts-core`** bumped to 7.0.30 in `web/`.
+
 ## [4.7.2] - 2026-05-02
 
 ### Added
@@ -78,6 +99,7 @@ For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/
 
   Practical risk in this repo was negligible (the vulnerable code only runs at PWA build time on developer-controlled input), but the alerts are now resolved at the supply-chain level.
 
-[Unreleased]: https://github.com/lin-snow/Ech0/compare/v4.7.2...HEAD
+[Unreleased]: https://github.com/lin-snow/Ech0/compare/v4.7.3...HEAD
+[4.7.3]: https://github.com/lin-snow/Ech0/compare/v4.7.2...v4.7.3
 [4.7.2]: https://github.com/lin-snow/Ech0/compare/v4.7.1...v4.7.2
 [4.7.1]: https://github.com/lin-snow/Ech0/compare/v4.7.0...v4.7.1
