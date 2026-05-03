@@ -84,6 +84,12 @@ func (connectService *ConnectService) AddConnect(ctx context.Context, connected 
 		// 去除连接地址前后的空格和斜杠
 		connected.ConnectURL = httpUtil.TrimURL(connected.ConnectURL)
 
+		// SSRF 防护：拒绝指向私网/回环/云元数据等地址的对端 URL。
+		// 运行时 fetchPeerConnectInfo 也会再次校验，这里在入库前就拦截，避免恶意记录污染存储。
+		if err := httpUtil.ValidatePublicHTTPURL(connected.ConnectURL + "/api/connect"); err != nil {
+			return errors.New(commonModel.INVALID_CONNECTION_URL)
+		}
+
 		// 检查连接地址是否已存在
 		connectedList, err := connectService.connectRepository.GetAllConnects(txCtx)
 		if err != nil {
@@ -216,12 +222,11 @@ func (connectService *ConnectService) GetConnectsInfo() ([]model.Connect, error)
 }
 
 // fetchPeerConnectInfo 请求对端 GET /api/connect，成功时返回解析后的 Connect（与 GetConnectsInfo 探测逻辑一致）。
+// 使用 SendSafeRequest 进行 SSRF 防护：拒绝指向私网/回环/云元数据等地址的对端 URL，
+// 并通过 SecureDialContext 防御 DNS rebinding。
 func fetchPeerConnectInfo(peerConnectURL string, requestTimeout time.Duration) (model.Connect, error) {
 	url := httpUtil.TrimURL(peerConnectURL) + "/api/connect"
-	resp, err := httpUtil.SendRequest(url, "GET", struct {
-		Header  string
-		Content string
-	}{
+	resp, err := httpUtil.SendSafeRequest(url, "GET", httpUtil.Header{
 		Header:  "Ech0_URL",
 		Content: peerConnectURL,
 	}, requestTimeout)
