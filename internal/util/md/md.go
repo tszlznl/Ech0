@@ -25,11 +25,15 @@ func MdToHTML(md []byte) []byte {
 	doc := p.Parse(md)
 
 	// 创建 HTML 渲染器
+	// SkipHTML 丢弃 markdown 中的原始 HTML 块/内联，阻止 <script> 等标签被原样输出。
+	// 该函数仅服务于 RSS Atom <summary type="html"> 渲染，前端正文走客户端 markdown-it，
+	// 因此关闭原始 HTML 透传不会影响 Web UI。
 	htmlFlags := html.CommonFlags |
 		html.Safelink |
 		html.HrefTargetBlank |
 		html.NoopenerLinks |
-		html.NoreferrerLinks
+		html.NoreferrerLinks |
+		html.SkipHTML
 	opts := html.RendererOptions{Flags: htmlFlags}
 	renderer := html.NewRenderer(opts)
 

@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	stdhtml "html"
 	"strings"
 	"time"
 
@@ -120,7 +121,13 @@ func (s *CommonService) GenerateRSS(ctx *gin.Context) (string, error) {
 
 				if len(msg.Tags) > 0 {
 					for _, tag := range msg.Tags {
-						renderedContent = fmt.Appendf(renderedContent, "<br /><span class=\"tag\">#%s</span>", tag.Name)
+						// 标签名进入 RSS Atom <summary type="html"> 后会被订阅器二次解码并渲染成 HTML，
+						// 必须先做 HTML 实体转义阻断 stored XSS（GHSA-3v85-fqvh-7rxf）。
+						renderedContent = fmt.Appendf(
+							renderedContent,
+							"<br /><span class=\"tag\">#%s</span>",
+							stdhtml.EscapeString(tag.Name),
+						)
 					}
 				}
 

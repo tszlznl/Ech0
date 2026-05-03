@@ -268,6 +268,29 @@ func (echoService *EchoService) UpdateEcho(ctx context.Context, echo *model.Echo
 }
 
 func (echoService *EchoService) LikeEcho(ctx context.Context, id string) error {
+	echo, err := echoService.echoRepository.GetEchosById(ctx, id)
+	if err != nil {
+		return err
+	}
+	if echo == nil {
+		return errors.New(commonModel.ECHO_NOT_FOUND)
+	}
+	// 与 GetEchoById 的可见性规则保持一致：匿名调用方禁止点赞私密 echo，
+	// 已认证非管理员同样禁止；管理员（含 MCP 路径）允许。
+	if echo.Private {
+		userID := viewer.MustFromContext(ctx).UserID()
+		if userID == "" {
+			return errors.New(commonModel.NO_PERMISSION_DENIED)
+		}
+		user, err := echoService.commonService.CommonGetUserByUserId(ctx, userID)
+		if err != nil {
+			return err
+		}
+		if !user.IsAdmin {
+			return errors.New(commonModel.NO_PERMISSION_DENIED)
+		}
+	}
+
 	if err := echoService.transactor.Run(ctx, func(txCtx context.Context) error {
 		return echoService.echoRepository.LikeEcho(txCtx, id)
 	}); err != nil {
@@ -322,6 +345,9 @@ func (echoService *EchoService) CreateTag(ctx context.Context, name string) (*mo
 	if cleaned == "" {
 		return nil, errors.New(commonModel.INVALID_PARAMS)
 	}
+	if !isSafeTagName(cleaned) {
+		return nil, errors.New(commonModel.INVALID_PARAMS)
+	}
 
 	existing, err := echoService.echoRepository.GetTagsByNames(ctx, []string{cleaned})
 	if err != nil {
@@ -363,9 +389,13 @@ func (echoService *EchoService) ProcessEchoTags(ctx context.Context, echo *model
 	var names []string
 	for _, tag := range echo.Tags {
 		name := strings.TrimSpace(strings.TrimPrefix(tag.Name, "#"))
-		if name != "" {
-			names = append(names, name)
+		if name == "" {
+			continue
 		}
+		if !isSafeTagName(name) {
+			return errors.New(commonModel.INVALID_PARAMS)
+		}
+		names = append(names, name)
 	}
 
 	existingTags, err := echoService.echoRepository.GetTagsByNames(ctx, names)
@@ -449,6 +479,12 @@ func (echoService *EchoService) QueryEchos(
 		Items: echos,
 		Total: total,
 	}, nil
+}
+
+// isSafeTagName 拒绝包含 HTML 元字符的标签名，配合 RSS 渲染端的 HTML 转义形成纵深防御
+// （GHSA-3v85-fqvh-7rxf）。即使后续新增其他出口忘记转义，含 <>"'& 的标签也无法落库。
+func isSafeTagName(name string) bool {
+	return !strings.ContainsAny(name, "<>\"'&")
 }
 
 func normalizeEchoExtension(ext *model.EchoExtension) (*model.EchoExtension, error) {
