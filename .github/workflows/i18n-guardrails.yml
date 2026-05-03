@@ -3,6 +3,9 @@ name: i18n-guardrails
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   web-i18n-check:
     runs-on: ubuntu-latest
