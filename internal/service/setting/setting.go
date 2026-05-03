@@ -17,6 +17,7 @@ type SettingService struct {
 	keyvalueRepository KeyValueRepository
 	settingRepository  SettingRepository
 	webhookRepository  WebhookRepository
+	tokenRevoker       TokenRevoker
 	publisher          *publisher.Publisher
 }
 
@@ -28,6 +29,7 @@ func NewSettingService(
 	keyvalueRepository KeyValueRepository,
 	settingRepository SettingRepository,
 	webhookRepository WebhookRepository,
+	tokenRevoker TokenRevoker,
 	publisher *publisher.Publisher,
 ) *SettingService {
 	return &SettingService{
@@ -38,6 +40,7 @@ func NewSettingService(
 		keyvalueRepository: keyvalueRepository,
 		webhookRepository:  webhookRepository,
 		settingRepository:  settingRepository,
+		tokenRevoker:       tokenRevoker,
 		publisher:          publisher,
 	}
 }

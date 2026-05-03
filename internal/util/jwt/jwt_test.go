@@ -35,6 +35,25 @@ func TestCreateClaims_WithSessionType(t *testing.T) {
 	}
 }
 
+// TestCreateAccessClaimsWithExpiry_NeverExpiryGetsFiniteExp 防止回归：
+// expiry=0 (NEVER_EXPIRY) 必须仍然填充 ExpiresAt，否则 logout/RevokeToken 路径会
+// 走进 nil-deref panic 与黑名单跳过的 GHSA-fpw6-hrg5-q5x5 缺陷。
+func TestCreateAccessClaimsWithExpiry_NeverExpiryGetsFiniteExp(t *testing.T) {
+	user := userModel.User{ID: "u-never", Username: "never"}
+	claimsAny := CreateAccessClaimsWithExpiry(user, 0, []string{"profile:read"}, "cli", "jti-never")
+	claims, ok := claimsAny.(authModel.MyClaims)
+	if !ok {
+		t.Fatalf("unexpected claims type %T", claimsAny)
+	}
+	if claims.ExpiresAt == nil {
+		t.Fatal("expiry=0 must still set ExpiresAt to finite far-future date")
+	}
+	atLeast := time.Now().UTC().Add(50 * 365 * 24 * time.Hour)
+	if claims.ExpiresAt.Before(atLeast) {
+		t.Fatalf("expected ExpiresAt to be at least 50 years away, got %v", claims.ExpiresAt.Time)
+	}
+}
+
 func TestParseToken_RejectsTokenWithoutType(t *testing.T) {
 	legacyToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":  "u-legacy",

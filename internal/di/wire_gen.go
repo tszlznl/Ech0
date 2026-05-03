@@ -139,10 +139,10 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 	fileService := service2.NewFileService(tx, commonRepository, keyValueRepository, fileRepository, manager, publisherPublisher)
 	settingRepository := repository6.NewSettingRepository(dbProvider)
 	webhookRepository := repository.NewWebhookRepository(dbProvider)
-	settingService := service3.NewSettingService(tx, commonService, fileService, manager, keyValueRepository, settingRepository, webhookRepository, publisherPublisher)
+	authRepository := repository7.NewAuthRepository(dbProvider, appCache)
+	settingService := service3.NewSettingService(tx, commonService, fileService, manager, keyValueRepository, settingRepository, webhookRepository, authRepository, publisherPublisher)
 	userService := service4.NewUserService(tx, userRepository, settingService, fileService, publisherPublisher)
 	userHandler := handler3.NewUserHandler(userService)
-	authRepository := repository7.NewAuthRepository(dbProvider, appCache)
 	authService := auth.NewAuthService(tx, authRepository, authRepository, settingService)
 	authHandler := handler4.NewAuthHandler(authService, userService)
 	echoRepository := repository8.NewEchoRepository(dbProvider, appCache)
@@ -214,7 +214,8 @@ func BuildTasker(dbProvider func() *gorm.DB, appCache cache.ICache[string, any],
 	commonService := service.NewCommonService(commonRepository, appCache)
 	settingRepository := repository6.NewSettingRepository(dbProvider)
 	webhookRepository := repository.NewWebhookRepository(dbProvider)
-	settingService := service3.NewSettingService(tx, commonService, fileService, manager, keyValueRepository, settingRepository, webhookRepository, publisherPublisher)
+	authRepository := repository7.NewAuthRepository(dbProvider, appCache)
+	settingService := service3.NewSettingService(tx, commonService, fileService, manager, keyValueRepository, settingRepository, webhookRepository, authRepository, publisherPublisher)
 	queueRepository := repository2.NewQueueRepository(dbProvider)
 	visitorRepository := repository12.NewVisitorRepository(dbProvider)
 	tasker := task.NewTasker(fileService, settingService, publisherPublisher, queueRepository, manager, tracker, visitorRepository)
@@ -254,7 +255,7 @@ var HandlerSet = wire.NewSet(publisher.New, wire.Bind(new(service6.EventPublishe
 
 var MiddlewareSet = wire.NewSet(repository13.AuthSet, middleware.ProviderSet)
 
-var TaskerSet = wire.NewSet(publisher.New, storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository13.FileSet, repository13.KeyValueSet, repository13.WebhookSet, repository13.SettingSet, service13.SettingSet, repository13.EchoSet, service13.EchoSet, repository13.CommonSet, service13.FileSet, service13.CommonSet, repository13.QueueSet, repository13.VisitorSet, task.ProviderSet)
+var TaskerSet = wire.NewSet(publisher.New, storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository13.FileSet, repository13.KeyValueSet, repository13.WebhookSet, repository13.AuthSet, repository13.SettingSet, service13.SettingSet, repository13.EchoSet, service13.EchoSet, repository13.CommonSet, service13.FileSet, service13.CommonSet, repository13.QueueSet, repository13.VisitorSet, task.ProviderSet)
 
 var MigratorSet = wire.NewSet(migrator.ProviderSet)
 

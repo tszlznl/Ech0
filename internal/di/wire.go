@@ -150,6 +150,9 @@ var TaskerSet = wire.NewSet(
 	repository.KeyValueSet,
 	repository.WebhookSet,
 
+	// SettingService 需要 TokenRevoker (管理员删 token 时写黑名单)，
+	// 而 TokenRevoker 由 AuthSet 提供，因此 Tasker 也得包含一份。
+	repository.AuthSet,
 	repository.SettingSet,
 	service.SettingSet,
 

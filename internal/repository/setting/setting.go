@@ -53,6 +53,19 @@ func (settingRepository *SettingRepository) CreateAccessToken(
 	return db.Create(token).Error
 }
 
+// GetAccessTokenByID 按 ID 读取访问令牌；用于在删除前取出 JTI 写入黑名单
+// (GHSA-fpw6-hrg5-q5x5)。
+func (settingRepository *SettingRepository) GetAccessTokenByID(
+	ctx context.Context,
+	id string,
+) (model.AccessTokenSetting, error) {
+	var token model.AccessTokenSetting
+	if err := settingRepository.getDB(ctx).Where("id = ?", id).First(&token).Error; err != nil {
+		return model.AccessTokenSetting{}, err
+	}
+	return token, nil
+}
+
 // DeleteAccessTokenByID 删除访问令牌
 func (settingRepository *SettingRepository) DeleteAccessTokenByID(
 	ctx context.Context,

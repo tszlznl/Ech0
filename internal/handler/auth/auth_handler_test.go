@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/lin-snow/ech0/internal/config"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
@@ -424,6 +425,52 @@ func TestLogout_WithBothTokens_RevokesBoth(t *testing.T) {
 	}
 	if len(revokedJTIs) != 2 {
 		t.Fatalf("expected 2 revoked JTIs (refresh + access), got %d", len(revokedJTIs))
+	}
+}
+
+// TestLogout_LegacyNeverExpireAccessToken_DoesNotPanic 防止回归：
+// 历史版本签发的访问令牌（NEVER_EXPIRY 选项）没有 exp claim；旧 logout 直接
+// .Time 解引用导致 panic+500，JTI 永远进不了黑名单 (GHSA-fpw6-hrg5-q5x5)。
+func TestLogout_LegacyNeverExpireAccessToken_DoesNotPanic(t *testing.T) {
+	var revoked []string
+	var revokedTTL time.Duration
+	auth := &fakeAuthService{
+		revokeTokenFn: func(jti string, ttl time.Duration) {
+			revoked = append(revoked, jti)
+			revokedTTL = ttl
+		},
+	}
+	h := NewAuthHandler(auth, &fakeUserService{})
+	r := gin.New()
+	r.POST("/api/auth/logout", h.Logout())
+
+	// 手工签一个无 exp 的 access token，模拟升级前签发的 NEVER_EXPIRY 令牌。
+	legacy := jwt.NewWithClaims(jwt.SigningMethodHS256, authModel.MyClaims{
+		Userid:   "u",
+		Username: "u",
+		Type:     authModel.TokenTypeAccess,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID: "legacy-jti",
+		},
+	})
+	signed, err := legacy.SignedString(config.Config().Security.JWTSecret)
+	if err != nil {
+		t.Fatalf("sign legacy token: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/logout", nil)
+	req.Header.Set("Authorization", "Bearer "+signed)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 (no panic), got %d body=%s", rec.Code, rec.Body.String())
+	}
+	if len(revoked) != 1 || revoked[0] != "legacy-jti" {
+		t.Fatalf("expected JTI 'legacy-jti' to be revoked, got %v", revoked)
+	}
+	if revokedTTL <= 0 {
+		t.Fatalf("revoke TTL must be positive so blacklist actually persists, got %v", revokedTTL)
 	}
 }
 

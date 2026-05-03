@@ -88,6 +88,15 @@ func CreateAccessClaimsWithExpiry(
 	if audience != "" {
 		audiences = jwt.ClaimStrings{audience}
 	}
+	// expiry <= 0 历史上表示"永不过期"。但缺失 exp claim 会让 logout/RevokeToken
+	// 路径无法计算剩余 TTL，导致 nil 解引用 panic 与黑名单写入被跳过
+	// (GHSA-fpw6-hrg5-q5x5)。这里统一回落到 100 年的有限过期时间：仍然实质等同
+	// 永不过期，但 ExpiresAt 始终非 nil，吊销路径都能正常工作。
+	const neverExpiryFallback = int64(100 * 365 * 24 * 3600)
+	if expiry <= 0 {
+		expiry = neverExpiryFallback
+	}
+
 	claims := authModel.MyClaims{
 		Userid:   user.ID,
 		Username: user.Username,
@@ -98,14 +107,10 @@ func CreateAccessClaimsWithExpiry(
 			Subject:   user.Username,
 			Audience:  audiences,
 			ID:        jti,
+			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Duration(expiry) * time.Second)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			NotBefore: jwt.NewNumericDate(time.Now().UTC().Add(-leeway)),
 		},
-	}
-
-	// expiry = 0 表示永不过期
-	if expiry > 0 {
-		claims.ExpiresAt = jwt.NewNumericDate(time.Now().UTC().Add(time.Duration(expiry) * time.Second))
 	}
 
 	return claims

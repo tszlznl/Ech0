@@ -39,6 +39,9 @@ var (
 		wire.Bind(new(authService.AuthRepo), new(*authRepository.AuthRepository)),
 		wire.Bind(new(authService.TokenRevoker), new(*authRepository.AuthRepository)),
 		wire.Bind(new(authService.Repository), new(*authRepository.AuthRepository)),
+		// 让 SettingService 也能注入 TokenRevoker，以便管理员删除访问令牌时
+		// 立即把 JTI 写入黑名单 (GHSA-fpw6-hrg5-q5x5)。
+		wire.Bind(new(settingService.TokenRevoker), new(*authRepository.AuthRepository)),
 	)
 	UserSet = wire.NewSet(
 		userRepository.NewUserRepository,

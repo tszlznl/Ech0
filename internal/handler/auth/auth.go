@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/lin-snow/ech0/internal/config"
 	i18nUtil "github.com/lin-snow/ech0/internal/i18n"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
@@ -154,8 +155,7 @@ func (h *AuthHandler) Logout() gin.HandlerFunc {
 		refreshTokenStr, _ := cookieUtil.GetRefreshTokenFromCookie(ctx)
 		if refreshTokenStr != "" {
 			if claims, err := jwtUtil.ParseRefreshToken(refreshTokenStr); err == nil && claims.ID != "" {
-				remaining := time.Until(claims.ExpiresAt.Time)
-				h.authService.RevokeToken(claims.ID, remaining)
+				h.authService.RevokeToken(claims.ID, remainingTTLFromClaims(claims.ExpiresAt))
 			}
 		}
 
@@ -163,14 +163,26 @@ func (h *AuthHandler) Logout() gin.HandlerFunc {
 		authHeader := ctx.GetHeader("Authorization")
 		if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
 			if claims, err := jwtUtil.ParseToken(authHeader[7:]); err == nil && claims.ID != "" {
-				remaining := time.Until(claims.ExpiresAt.Time)
-				h.authService.RevokeToken(claims.ID, remaining)
+				h.authService.RevokeToken(claims.ID, remainingTTLFromClaims(claims.ExpiresAt))
 			}
 		}
 
 		cookieUtil.ClearRefreshTokenCookie(ctx)
 		ctx.JSON(http.StatusOK, commonModel.OK[any](nil))
 	}
+}
+
+// remainingTTLFromClaims 计算 token 剩余有效期，用于黑名单 TTL。
+//
+// 兼容历史"永不过期"访问令牌（升级前签发，无 exp claim 即 ExpiresAt == nil）。
+// 直接 .Time 解引用会 nil-deref panic 让 logout 返回 500、JTI 进不了黑名单
+// (GHSA-fpw6-hrg5-q5x5)。新版本签发的 token 始终带 exp，本兜底只为吃掉旧 token。
+func remainingTTLFromClaims(expiresAt *jwt.NumericDate) time.Duration {
+	const legacyNeverFallback = 100 * 365 * 24 * time.Hour
+	if expiresAt == nil {
+		return legacyNeverFallback
+	}
+	return time.Until(expiresAt.Time)
 }
 
 // Exchange 用一次性 code 换取 token pair（OAuth 回调专用）。

@@ -5,6 +5,7 @@ package service
 
 import (
 	"context"
+	"time"
 
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
@@ -55,7 +56,14 @@ type KeyValueRepository interface {
 type SettingRepository interface {
 	ListAccessTokens(ctx context.Context, userID string) ([]model.AccessTokenSetting, error)
 	CreateAccessToken(ctx context.Context, token *model.AccessTokenSetting) error
+	GetAccessTokenByID(ctx context.Context, id string) (model.AccessTokenSetting, error)
 	DeleteAccessTokenByID(ctx context.Context, id string) error
+}
+
+// TokenRevoker 写入 JTI 黑名单。SettingService 在管理员删除访问令牌时调用，
+// 让 token 立刻失效而不是等到自然过期 (GHSA-fpw6-hrg5-q5x5)。
+type TokenRevoker interface {
+	RevokeToken(jti string, remainTTL time.Duration)
 }
 
 type WebhookRepository interface {
