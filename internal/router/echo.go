@@ -4,15 +4,29 @@
 package router
 
 import (
+	"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
 	"github.com/lin-snow/ech0/internal/handler"
 	"github.com/lin-snow/ech0/internal/middleware"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
+	commonModel "github.com/lin-snow/ech0/internal/model/common"
 )
 
 // setupEchoRoutes 设置Echo路由
 func setupEchoRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	// Public
-	appRouterGroup.PublicRouterGroup.PUT("/echo/like/:id", h.EchoHandler.LikeEcho())
+	// 点赞接口保持匿名可访问，但叠加 IP 维度的限速 + (IP, echoID) 维度的去重窗口，
+	// 防止匿名调用方反复刷 fav_count、放大数据库与缓存压力。窗口内的重复请求按
+	// 幂等处理，返回与正常成功路径形状一致的响应。
+	appRouterGroup.PublicRouterGroup.PUT(
+		"/echo/like/:id",
+		middleware.RateLimitWithIdempotency(2, 5, time.Hour, "id", func(c *gin.Context) {
+			c.JSON(http.StatusOK, commonModel.OK[any](nil, commonModel.LIKE_ECHO_SUCCESS))
+		}),
+		h.EchoHandler.LikeEcho(),
+	)
 	appRouterGroup.PublicRouterGroup.GET("/tags", h.EchoHandler.GetAllTags())
 
 	// Auth
