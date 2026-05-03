@@ -18,14 +18,6 @@
         class="w-8 h-8 sm:w-9 sm:h-9 rounded-xs"
         :tooltip="t('editor.addImage')"
       />
-      <!-- Privacy Set -->
-      <BaseButton
-        v-if="currentMode === Mode.ECH0"
-        :icon="echoToAdd.private ? Private : Public"
-        @click="handlePrivate"
-        class="w-8 h-8 sm:w-9 sm:h-9 rounded-xs"
-        :tooltip="t('editor.togglePrivacy')"
-      />
       <!-- Tag Multi-Select -->
       <div v-if="currentMode === Mode.ECH0" class="editor-actions__tag">
         <Popover>
@@ -99,20 +91,6 @@
         </div>
       </div>
 
-      <!-- Publish -->
-      <div
-        v-if="
-          currentMode !== Mode.Panel && currentMode !== Mode.TagManage && isUpdateMode === false
-        "
-      >
-        <BaseButton
-          :icon="Publish"
-          :disabled="isSubmitting"
-          @click="handleAddorUpdate"
-          class="w-8 h-8 sm:w-9 sm:h-9 rounded-xs editor-actions__cta"
-          :tooltip="t('editor.publishEcho')"
-        />
-      </div>
       <!-- Exit Update -->
       <div v-if="currentMode !== Mode.Panel && isUpdateMode === true">
         <BaseButton
@@ -122,16 +100,53 @@
           :tooltip="t('editor.exitUpdateMode')"
         />
       </div>
-      <!-- Update -->
-      <div v-if="currentMode !== Mode.Panel && isUpdateMode === true">
-        <BaseButton
-          :icon="Update"
+      <!-- Publish / Update with privacy choice -->
+      <Popover
+        v-if="currentMode !== Mode.Panel && currentMode !== Mode.TagManage"
+        class="editor-actions__publish"
+      >
+        <PopoverButton
+          v-tooltip="publishTriggerTooltip"
+          :aria-label="publishTriggerTooltip"
           :disabled="isSubmitting"
-          @click="handleAddorUpdate"
-          class="w-8 h-8 sm:w-9 sm:h-9 rounded-xs editor-actions__cta"
-          :tooltip="t('editor.updateEcho')"
-        />
-      </div>
+          :class="[
+            'cursor-pointer p-1.5 w-8 h-8 sm:w-9 sm:h-9 rounded-xs ring-inset ring-1 ring-[var(--btn-ring-color)] text-[var(--btn-text-color)] outline-none shadow-[var(--btn-shadow)] bg-[var(--btn-bg-color)] transition-colors duration-200 relative inline-flex items-center justify-center editor-actions__cta',
+            isSubmitting
+              ? 'cursor-not-allowed opacity-70'
+              : 'hover:bg-[var(--btn-hover-bg-color)] hover:ring-[var(--btn-hover-border-color)] focus-visible:ring-2 focus-visible:ring-[var(--btn-focus-ring-color)]',
+          ]"
+        >
+          <component :is="isUpdateMode ? Update : Publish" class="w-full h-full" />
+        </PopoverButton>
+
+        <transition
+          enter-active-class="transition duration-150 ease-out"
+          enter-from-class="opacity-0 -translate-y-1"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition duration-100 ease-in"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 -translate-y-1"
+        >
+          <PopoverPanel v-slot="{ close }" class="editor-actions__publish-panel">
+            <button
+              type="button"
+              class="editor-actions__publish-option"
+              @click="handlePublishWithPrivacy(false, close)"
+            >
+              <Public class="editor-actions__publish-option-icon" />
+              <span>{{ t('editor.publishEchoPublic') }}</span>
+            </button>
+            <button
+              type="button"
+              class="editor-actions__publish-option"
+              @click="handlePublishWithPrivacy(true, close)"
+            >
+              <Private class="editor-actions__publish-option-icon" />
+              <span>{{ t('editor.publishEchoPrivate') }}</span>
+            </button>
+          </PopoverPanel>
+        </transition>
+      </Popover>
     </div>
   </div>
 </template>
@@ -216,9 +231,16 @@ const infoTooltipLines = computed<TooltipLine[]>(() => {
   return parts
 })
 
-const handleAddorUpdate = () => {
+const handlePublishWithPrivacy = (isPrivate: boolean, close: () => void) => {
+  if (isSubmitting.value) return
+  echoToAdd.value.private = isPrivate
+  close()
   editorStore.handleAddOrUpdate()
 }
+
+const publishTriggerTooltip = computed(() =>
+  isUpdateMode.value ? t('editor.updateEcho') : t('editor.publishEcho'),
+)
 
 const handleChangeMode = () => {
   editorStore.toggleMode()
@@ -234,17 +256,6 @@ const handleAddImageMode = () => {
   }
 
   editorStore.setMode(Mode.Image)
-}
-
-const handlePrivate = () => {
-  editorStore.togglePrivate()
-  theToast.info(
-    String(
-      t('editor.privacySwitched', {
-        mode: echoToAdd.value.private ? t('editor.privacyPrivate') : t('editor.privacyPublic'),
-      }),
-    ),
-  )
 }
 
 const handleExitUpdateMode = () => {
@@ -445,6 +456,57 @@ const goToTagManager = () => {
   box-shadow: var(--md-editor-mini-shell-shadow);
 }
 
+.editor-actions__publish {
+  position: relative;
+  flex: 0 0 auto;
+  isolation: isolate;
+}
+
+.editor-actions__publish-panel {
+  position: absolute;
+  z-index: 100;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 11rem;
+  padding: 0.4rem;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--md-editor-mini-bg);
+  box-shadow: var(--md-editor-mini-shell-shadow);
+}
+
+.editor-actions__publish-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-xs);
+  border: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: 0.8rem;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.editor-actions__publish-option:hover {
+  background: var(--md-editor-actions-hover-bg);
+  color: var(--color-text-primary);
+}
+
+.editor-actions__publish-option-icon {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
 @media (width <= 639.98px) {
   .editor-actions {
     gap: 0.45rem;
@@ -459,6 +521,10 @@ const goToTagManager = () => {
     right: 0.35rem;
     width: auto;
     max-width: none;
+  }
+
+  .editor-actions__publish-panel {
+    right: 0.35rem;
   }
 }
 </style>

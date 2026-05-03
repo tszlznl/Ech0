@@ -116,10 +116,6 @@ export const useEditorStore = defineStore('editorStore', () => {
     draft.clearLocalDraft()
   }
 
-  const togglePrivate = () => {
-    echoToAdd.value.private = !echoToAdd.value.private
-  }
-
   const handleUppyUploaded = async (uploadedFiles: App.Api.Ech0.FileToAdd[]) => {
     for (const file of uploadedFiles) {
       if (!file.url) {
@@ -319,7 +315,6 @@ export const useEditorStore = defineStore('editorStore', () => {
     toggleMode,
     clearEditor,
     handleAddMoreFile: files.handleAddMoreFile,
-    togglePrivate,
     handleAddOrUpdateEcho,
     handleAddOrUpdate,
     handleExitUpdateMode,
