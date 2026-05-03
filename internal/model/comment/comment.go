@@ -45,6 +45,45 @@ type Comment struct {
 	UpdatedAt int64      `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
+// PublicComment 是面向匿名访问者的安全投影，剥离 Email/IPHash/UserAgent/UserID
+// 等可能用于关联或骚扰的字段。仅供 /api/comments、/api/comments/public 与 MCP
+// 公共资源等无鉴权出口使用。后台管理仍直接返回 Comment 以便审核。
+type PublicComment struct {
+	ID        string     `json:"id"`
+	EchoID    string     `json:"echo_id"`
+	Nickname  string     `json:"nickname"`
+	Website   string     `json:"website,omitempty"`
+	Content   string     `json:"content"`
+	Status    Status     `json:"status"`
+	Hot       bool       `json:"hot"`
+	Source    SourceType `json:"source"`
+	CreatedAt int64      `json:"created_at"`
+	UpdatedAt int64      `json:"updated_at"`
+}
+
+func ToPublicComment(c Comment) PublicComment {
+	return PublicComment{
+		ID:        c.ID,
+		EchoID:    c.EchoID,
+		Nickname:  c.Nickname,
+		Website:   c.Website,
+		Content:   c.Content,
+		Status:    c.Status,
+		Hot:       c.Hot,
+		Source:    c.Source,
+		CreatedAt: c.CreatedAt,
+		UpdatedAt: c.UpdatedAt,
+	}
+}
+
+func ToPublicComments(in []Comment) []PublicComment {
+	out := make([]PublicComment, len(in))
+	for i := range in {
+		out[i] = ToPublicComment(in[i])
+	}
+	return out
+}
+
 func (c *Comment) BeforeCreate(_ *gorm.DB) error {
 	if c.ID == "" {
 		c.ID = uuidUtil.MustNewV7()

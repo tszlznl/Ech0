@@ -329,24 +329,28 @@ func (s *CommentService) checkIntegrationRateLimit(ctx context.Context, ipHash, 
 	return nil
 }
 
-func (s *CommentService) ListPublicByEchoID(ctx context.Context, echoID string) ([]model.Comment, error) {
+func (s *CommentService) ListPublicByEchoID(ctx context.Context, echoID string) ([]model.PublicComment, error) {
 	setting, err := s.GetSystemSetting(ctx)
 	if err != nil {
 		return nil, err
 	}
 	if !setting.EnableComment {
-		return []model.Comment{}, nil
+		return []model.PublicComment{}, nil
 	}
-	return s.repo.ListPublicByEchoID(ctx, strings.TrimSpace(echoID))
+	rows, err := s.repo.ListPublicByEchoID(ctx, strings.TrimSpace(echoID))
+	if err != nil {
+		return nil, err
+	}
+	return model.ToPublicComments(rows), nil
 }
 
-func (s *CommentService) ListPublicComments(ctx context.Context, limit int) ([]model.Comment, error) {
+func (s *CommentService) ListPublicComments(ctx context.Context, limit int) ([]model.PublicComment, error) {
 	setting, err := s.GetSystemSetting(ctx)
 	if err != nil {
 		return nil, err
 	}
 	if !setting.EnableComment {
-		return []model.Comment{}, nil
+		return []model.PublicComment{}, nil
 	}
 	if limit <= 0 {
 		limit = 30
@@ -354,7 +358,11 @@ func (s *CommentService) ListPublicComments(ctx context.Context, limit int) ([]m
 	if limit > 100 {
 		limit = 100
 	}
-	return s.repo.ListPublicComments(ctx, limit)
+	rows, err := s.repo.ListPublicComments(ctx, limit)
+	if err != nil {
+		return nil, err
+	}
+	return model.ToPublicComments(rows), nil
 }
 
 func (s *CommentService) ListPanelComments(

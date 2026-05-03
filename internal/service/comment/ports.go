@@ -26,8 +26,8 @@ type Service interface {
 		userAgent string,
 		dto *model.CreateIntegrationCommentDto,
 	) (model.CreateCommentResult, error)
-	ListPublicByEchoID(ctx context.Context, echoID string) ([]model.Comment, error)
-	ListPublicComments(ctx context.Context, limit int) ([]model.Comment, error)
+	ListPublicByEchoID(ctx context.Context, echoID string) ([]model.PublicComment, error)
+	ListPublicComments(ctx context.Context, limit int) ([]model.PublicComment, error)
 	ListPanelComments(ctx context.Context, query model.ListCommentQuery) (model.PageResult[model.Comment], error)
 	GetCommentByID(ctx context.Context, id string) (model.Comment, error)
 	UpdateCommentStatus(ctx context.Context, id string, status model.Status) error
