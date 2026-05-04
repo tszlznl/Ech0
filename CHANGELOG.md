@@ -6,6 +6,30 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 
 For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/lin-snow/Ech0/releases) — earlier release notes are not retroactively imported here.
 
+## [4.7.4] - 2026-05-04
+
+### Changed
+
+- **Hub Echo card redesign**. The card displayed in the cross-instance Hub feed has been visually rebuilt to read as a quoted post rather than a miniature timeline card:
+  - Header is now a two-segment row — avatar + instance name (with the verified badge) on the left, an Ech0 logo on the right that links directly to the source Echo page (replacing the redundant footer "jump to echo" icon).
+  - The `@username` line was removed; only the instance name (`server_name`) is shown, since for hub consumers the source instance is the meaningful identity.
+  - Avatar shrunk from `w-10 h-10 sm:w-12 sm:h-12` (40/48px) to `w-6 h-6 sm:w-7 sm:h-7` (24/28px).
+  - Card padding tightened (`p-3.5 sm:p-4` → `p-3 sm:p-3.5`) and corner radius bumped (`rounded-sm` → `rounded-lg`).
+  - A subtle accent bar (`var(--color-accent)`, 3 × 16–18 px) is rendered at the left edge of the card, vertically centered with the avatar, as a visual citation marker.
+  - Body text size and paragraph spacing pulled in to match a quoted-post density (`font-size: 0.9rem`, `line-height: 1.55`, paragraph margin 0.55rem).
+  - Body text and embedded gallery now share the card's natural padding edge — `TheImageGallery`'s internal `w-[88%] mx-auto` was overridden at the hub-card level so gallery, body, date row, and like row all align to the same vertical guides. The override is scoped via `:deep()` so the main timeline's gallery presentation is unchanged.
+  - Footer simplified to a single row: date on the left, like button + count on the right, both in `text-xs` muted style; the dedicated "jump to echo" icon was removed (already covered by the header logo).
+
+- **CLI / TUI strings translated to English**. The interactive `ech0` TUI menu, all `cobra` command descriptions (`ech0`, `ech0 serve`, `ech0 backup`, `ech0 version`, `ech0 info`, `ech0 hello`), and the boxed startup / shutdown messages were emitted in Simplified Chinese only. They are now in English so non-Chinese-speaking operators can use the binary without guessing.
+
+### Internal
+
+- **`internal/cli/cli.go` + `cmd/*.go`** — strings only, no behavioural change.
+- **`fix(workflow): add permissions for content access in i18n-guardrails`** — the i18n-guardrails GitHub Actions workflow needed `contents: read` to check out repository content under stricter default token permissions; without it the workflow could not read source files on protected branches.
+- **Dependency bumps (`web/`)**: `vue-virtual-scroller` 3.0.0 → 3.0.2, `stylelint` 17.9.1 → 17.10.0.
+- **Dependency bumps (Go)**: `github.com/caarlos0/env/v11` 11.4.0 → 11.4.1, `github.com/go-webauthn/webauthn` 0.17.0 → 0.17.2, `go.uber.org/zap` 1.27.1 → 1.28.0, `google.golang.org/genai` 1.54.0 → 1.55.0.
+- **Design assets** (`docs/design/`): added social-preview templates (1280×640 JPG/PNG) and a six-frame `Ech0_carousel/` design source for marketing/release imagery. New screenshots under `docs/imgs/` for the v4.7.0 about page, dashboard, and a no-sidebar variant. Documentation only — not shipped in the binary.
+
 ## [4.7.3] - 2026-05-03
 
 This is primarily a security release: six advisories disclosed since v4.7.2 are addressed. All deployments are encouraged to upgrade.
@@ -99,7 +123,8 @@ This is primarily a security release: six advisories disclosed since v4.7.2 are 
 
   Practical risk in this repo was negligible (the vulnerable code only runs at PWA build time on developer-controlled input), but the alerts are now resolved at the supply-chain level.
 
-[Unreleased]: https://github.com/lin-snow/Ech0/compare/v4.7.3...HEAD
+[Unreleased]: https://github.com/lin-snow/Ech0/compare/v4.7.4...HEAD
+[4.7.4]: https://github.com/lin-snow/Ech0/compare/v4.7.3...v4.7.4
 [4.7.3]: https://github.com/lin-snow/Ech0/compare/v4.7.2...v4.7.3
 [4.7.2]: https://github.com/lin-snow/Ech0/compare/v4.7.1...v4.7.2
 [4.7.1]: https://github.com/lin-snow/Ech0/compare/v4.7.0...v4.7.1
