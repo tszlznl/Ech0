@@ -2,107 +2,104 @@
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <div
-    class="w-full max-w-sm bg-[var(--color-bg-surface)] h-auto p-3.5 sm:p-4 shadow rounded-sm mx-auto"
+    class="hub-echo-card relative w-full max-w-sm bg-[var(--color-bg-surface)] h-auto p-3 sm:p-3.5 shadow rounded-lg mx-auto"
   >
-    <div class="flex flex-row items-center gap-2 mt-1 mb-3">
-      <div>
-        <img
-          :src="echo.logo"
-          alt="logo"
-          loading="lazy"
-          decoding="async"
-          class="w-10 h-10 sm:w-12 sm:h-12 rounded-full ring-1 ring-[var(--color-border-subtle)] shadow-[var(--shadow-sm)] object-cover"
-        />
-      </div>
-      <div class="flex flex-col">
-        <div class="flex items-center gap-1">
+    <div class="flex flex-row items-center justify-between gap-2 mt-1 mb-3">
+      <div class="flex flex-row items-center gap-2 min-w-0">
+        <div class="flex-none">
+          <img
+            :src="echo.logo"
+            alt="logo"
+            loading="lazy"
+            decoding="async"
+            class="w-6 h-6 sm:w-7 sm:h-7 rounded-full ring-1 ring-[var(--color-border-subtle)] shadow-[var(--shadow-sm)] object-cover"
+          />
+        </div>
+        <div class="flex items-center gap-1 min-w-0">
           <h2
-            class="text-[var(--color-text-primary)] font-bold overflow-hidden whitespace-nowrap text-center"
+            class="text-[var(--color-text-primary)] font-bold overflow-hidden whitespace-nowrap truncate"
           >
             <a :href="echo.server_url" target="_blank">{{ echo.server_name }}</a>
           </h2>
 
-          <div>
-            <Verified class="text-sky-500 w-5 h-5" />
+          <div class="flex-none">
+            <Verified class="text-sky-500 w-4 h-4 sm:w-5 sm:h-5" />
           </div>
         </div>
-        <span class="hub-echo-username text-[var(--color-text-secondary)]"
-          >@ {{ echo.username }}
+      </div>
+
+      <a
+        :href="`${echo.server_url}/echo/${echo.id}`"
+        target="_blank"
+        rel="noopener noreferrer"
+        v-tooltip="t('hubEcho.jumpToEcho')"
+        class="flex-none opacity-70 hover:opacity-100 transition-opacity"
+      >
+        <img
+          src="/Ech0.svg"
+          alt="Ech0"
+          loading="lazy"
+          decoding="async"
+          class="w-5 h-5 sm:w-6 sm:h-6 object-contain"
+        />
+      </a>
+    </div>
+
+    <div class="hub-echo-body py-1.5">
+      <template
+        v-if="
+          props.echo.layout === ImageLayout.GRID ||
+          props.echo.layout === ImageLayout.HORIZONTAL ||
+          props.echo.layout === ImageLayout.STACK
+        "
+      >
+        <div class="mb-2.5">
+          <TheMdPreview :content="props.echo.content" />
+        </div>
+
+        <TheImageGallery
+          :images="echoImageFiles"
+          :baseUrl="echo.server_url"
+          :layout="props.echo.layout"
+        />
+      </template>
+
+      <template v-else>
+        <TheImageGallery
+          :images="echoImageFiles"
+          :baseUrl="echo.server_url"
+          :layout="props.echo.layout"
+        />
+
+        <div class="mt-2.5">
+          <TheMdPreview :content="props.echo.content" />
+        </div>
+      </template>
+
+      <div v-if="props.echo.extension" class="my-2.5">
+        <TheExtensionRenderer :echo="props.echo" />
+      </div>
+    </div>
+
+    <div class="mt-1 flex items-center justify-between gap-2">
+      <div class="min-w-0 truncate whitespace-nowrap text-xs text-[var(--color-text-muted)]">
+        {{ formatDate(props.echo.createdTs) }}
+      </div>
+
+      <div class="flex flex-none items-center gap-1" v-tooltip="t('hubEcho.like')">
+        <button
+          @click="handleLikeEcho()"
+          :class="[
+            'transform transition-transform duration-150',
+            isLikeAnimating ? 'scale-160' : 'scale-100',
+          ]"
+        >
+          <GrayLike class="w-4 h-4" />
+        </button>
+
+        <span class="text-xs text-[var(--color-text-muted)]">
+          {{ fav_count > 99 ? '99+' : fav_count }}
         </span>
-      </div>
-    </div>
-
-    <div>
-      <div class="py-2.5">
-        <template
-          v-if="
-            props.echo.layout === ImageLayout.GRID ||
-            props.echo.layout === ImageLayout.HORIZONTAL ||
-            props.echo.layout === ImageLayout.STACK
-          "
-        >
-          <div class="mx-auto w-11/12 pl-1 mb-3">
-            <TheMdPreview :content="props.echo.content" />
-          </div>
-
-          <TheImageGallery
-            :images="echoImageFiles"
-            :baseUrl="echo.server_url"
-            :layout="props.echo.layout"
-          />
-        </template>
-
-        <template v-else>
-          <TheImageGallery
-            :images="echoImageFiles"
-            :baseUrl="echo.server_url"
-            :layout="props.echo.layout"
-          />
-
-          <div class="mx-auto w-11/12 pl-1 mt-3">
-            <TheMdPreview :content="props.echo.content" />
-          </div>
-        </template>
-
-        <div v-if="props.echo.extension" class="my-3">
-          <TheExtensionRenderer :echo="props.echo" />
-        </div>
-      </div>
-    </div>
-
-    <div class="flex items-center justify-between gap-2">
-      <div class="min-w-0 flex flex-1 items-center overflow-hidden">
-        <div class="min-w-0 truncate whitespace-nowrap text-sm text-[var(--color-text-muted)]">
-          {{ formatDate(props.echo.createdTs) }}
-        </div>
-      </div>
-
-      <div ref="menuRef" class="relative flex h-auto flex-none items-center justify-center gap-2">
-        <a
-          :href="`${server_url}/echo/${echo_id}`"
-          target="_blank"
-          v-tooltip="t('hubEcho.jumpToEcho')"
-        >
-          <LinkTo class="w-4 h-4" />
-        </a>
-
-        <div class="flex items-center justify-end" v-tooltip="t('hubEcho.like')">
-          <div class="flex items-center gap-1">
-            <button
-              @click="handleLikeEcho()"
-              :class="[
-                'transform transition-transform duration-150',
-                isLikeAnimating ? 'scale-160' : 'scale-100',
-              ]"
-            >
-              <GrayLike class="w-4 h-4" />
-            </button>
-
-            <span class="text-sm text-[var(--color-text-muted)]">
-              {{ fav_count > 99 ? '99+' : fav_count }}
-            </span>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -111,7 +108,6 @@
 <script setup lang="ts">
 import Verified from '@/components/icons/verified.vue'
 import GrayLike from '@/components/icons/graylike.vue'
-import LinkTo from '@/components/icons/linkto.vue'
 import TheImageGallery from '@/components/advanced/gallery/TheImageGallery.vue'
 import { TheMdPreview } from '@/components/advanced/md'
 import { computed, defineAsyncComponent, ref, watch } from 'vue'
@@ -180,7 +176,48 @@ const handleLikeEcho = async () => {
 </script>
 
 <style scoped lang="css">
-.hub-echo-username {
-  font-family: var(--font-family-display);
+.hub-echo-card::before {
+  content: '';
+  position: absolute;
+
+  /* 与头像水平居中对齐：card padding-top (p-3 = 0.75rem) + header mt-1 (0.25rem) + (avatar 1.5rem - bar 1rem) / 2 */
+  top: 1.25rem;
+  left: 0;
+  width: 3px;
+  height: 1rem;
+  border-radius: 0 2px 2px 0;
+  background: var(--color-accent);
+  opacity: 0.85;
+}
+
+@media (width >= 640px) {
+  .hub-echo-card::before {
+    /* sm: padding-top 0.875rem + mt-1 0.25rem + (avatar 1.75rem - bar 1.125rem) / 2 */
+    top: 1.4375rem;
+    height: 1.125rem;
+  }
+}
+
+.hub-echo-body :deep(p),
+.hub-echo-body :deep(li) {
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.hub-echo-body :deep(p) {
+  margin: 0 0 0.55rem;
+}
+
+.hub-echo-body :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+/* Gallery 各 layout 内部硬编码了 w-[88%] mx-auto + mb-4，
+   在 hub 卡片里需要拉满到与正文同宽，并去掉外层多余的下边距（外部已用 mt/mb 控制） */
+.hub-echo-body :deep(.image-gallery-container) > div {
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: 0;
 }
 </style>
