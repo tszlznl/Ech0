@@ -11,7 +11,7 @@ import (
 // backupCmd 是备份数据的命令
 var backupCmd = &cobra.Command{
 	Use:   "backup",
-	Short: "备份数据",
+	Short: "Back up data",
 	Run: func(cmd *cobra.Command, args []string) {
 		cli.DoBackup()
 	},

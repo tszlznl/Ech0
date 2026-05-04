@@ -11,7 +11,7 @@ import (
 // serveCmd 是启动 Web 服务的命令
 var serveCmd = &cobra.Command{
 	Use:   "serve",
-	Short: "启动 Web 服务（阻塞）",
+	Short: "Start the web server (blocking)",
 	Run: func(cmd *cobra.Command, args []string) {
 		cli.DoServeWithBlock()
 	},
@@ -20,8 +20,8 @@ var serveCmd = &cobra.Command{
 // webCmd 是仅启动 Web 服务并阻塞的命令
 var webCmd = &cobra.Command{
 	Use:        "web",
-	Short:      "（兼容别名）仅启动 Web 服务（阻塞）",
-	Deprecated: "请使用 `serve`，`web` 后续版本将移除",
+	Short:      "(Compatibility alias) Start the web server (blocking)",
+	Deprecated: "use `serve` instead; `web` will be removed in a future release",
 	Hidden:     true,
 	Run: func(cmd *cobra.Command, args []string) {
 		cli.DoServeWithBlock()

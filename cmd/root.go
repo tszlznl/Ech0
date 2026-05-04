@@ -14,8 +14,8 @@ import (
 // 默认启动CLI With TUI
 var rootCmd = &cobra.Command{
 	Use:   "ech0",
-	Short: "面向个人的新一代开源、自托管、专注思想流动的轻量级发布平台",
-	Long:  `面向个人的新一代开源、自托管、专注思想流动的轻量级发布平台`,
+	Short: "A self-hosted, lightweight microblog platform for personal thoughts",
+	Long:  `Ech0 is a new-generation open-source, self-hosted, lightweight publishing platform focused on the flow of personal thoughts.`,
 
 	// 这个 Run 会在没有子命令时执行
 	Run: func(cmd *cobra.Command, args []string) {
@@ -26,7 +26,7 @@ var rootCmd = &cobra.Command{
 // tuiCmd 是启动 Ech0 TUI 的命令
 var tuiCmd = &cobra.Command{
 	Use:   "tui",
-	Short: "启动 Ech0 TUI",
+	Short: "Launch the Ech0 TUI",
 	Run: func(cmd *cobra.Command, args []string) {
 		cli.DoTui()
 	},
@@ -35,7 +35,7 @@ var tuiCmd = &cobra.Command{
 // versionCmd 是查看当前版本信息的命令
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "查看当前版本信息",
+	Short: "Print version information",
 	Run: func(cmd *cobra.Command, args []string) {
 		cli.DoVersion()
 	},
@@ -44,7 +44,7 @@ var versionCmd = &cobra.Command{
 // infoCmd 是查看当前信息的命令
 var infoCmd = &cobra.Command{
 	Use:   "info",
-	Short: "查看当前信息",
+	Short: "Print Ech0 information",
 	Run: func(cmd *cobra.Command, args []string) {
 		cli.DoEch0Info()
 	},
@@ -53,7 +53,7 @@ var infoCmd = &cobra.Command{
 // helloCmd 是输出 Ech0 Logo 的命令
 var helloCmd = &cobra.Command{
 	Use:   "hello",
-	Short: "输出 Ech0 Logo",
+	Short: "Print the Ech0 logo",
 	Run: func(cmd *cobra.Command, args []string) {
 		cli.DoHello()
 	},
