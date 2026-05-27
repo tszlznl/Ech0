@@ -54,5 +54,5 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          pnpm dlx wrangler@4 pages project create ech0-hub --production-branch=main 2>/dev/null || true
-          pnpm dlx wrangler@4 pages deploy hub/dist --project-name=ech0-hub --branch=main
+          pnpm dlx wrangler@4 pages project create ech0app-hub --production-branch=main 2>/dev/null || true
+          pnpm dlx wrangler@4 pages deploy hub/dist --project-name=ech0app-hub --branch=main
