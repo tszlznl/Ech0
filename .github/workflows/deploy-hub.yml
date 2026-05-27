@@ -1,0 +1,55 @@
+# Deploy hub/ (Vue + Vite PWA) to Cloudflare Pages -> hub.ech0.app
+# hub imports from ../web/src (vite alias) and its prebuild runs
+# `npm install --prefix ../web`, so the full repo checkout + web/ must be present.
+name: Deploy hub
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "hub/**"
+      - "web/**"
+      - ".github/workflows/deploy-hub.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-hub-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 25
+          cache: "pnpm"
+          cache-dependency-path: "hub/pnpm-lock.yaml"
+
+      - name: Install hub deps
+        working-directory: hub
+        run: pnpm install --frozen-lockfile
+
+      # `pnpm build` runs the prebuild step, which generates SEO assets and
+      # installs ../web (via `npm install --prefix ../web`) so vue-tsc can
+      # resolve the ../web/src imports.
+      - name: Build
+        working-directory: hub
+        run: pnpm build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy hub/dist --project-name=ech0-hub --branch=main
