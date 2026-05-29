@@ -8,6 +8,7 @@ import (
 	agentHandler "github.com/lin-snow/ech0/internal/handler/agent"
 	authHandler "github.com/lin-snow/ech0/internal/handler/auth"
 	backupHandler "github.com/lin-snow/ech0/internal/handler/backup"
+	chatHandler "github.com/lin-snow/ech0/internal/handler/chat"
 	commentHandler "github.com/lin-snow/ech0/internal/handler/comment"
 	commonHandler "github.com/lin-snow/ech0/internal/handler/common"
 	connectHandler "github.com/lin-snow/ech0/internal/handler/connect"
@@ -36,6 +37,7 @@ var (
 	BackupSet    = wire.NewSet(backupHandler.NewBackupHandler)
 	DashboardSet = wire.NewSet(dashboardHandler.NewDashboardHandler)
 	AgentSet     = wire.NewSet(agentHandler.NewAgentHandler)
+	ChatSet      = wire.NewSet(chatHandler.NewChatHandler)
 	MigrationSet = wire.NewSet(migrationHandler.NewMigrationHandler)
 	MCPSet       = wire.NewSet(mcp.NewHandler)
 )

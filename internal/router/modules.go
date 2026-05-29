@@ -149,6 +149,12 @@ func featureRouteModules() []RouteModule {
 			},
 		},
 		routeModule{
+			name: "chat",
+			register: func(ctx *RouterContext) {
+				setupChatRoutes(ctx.Groups, ctx.Handlers)
+			},
+		},
+		routeModule{
 			name: "migration",
 			register: func(ctx *RouterContext) {
 				setupMigrationRoutes(ctx.Groups, ctx.Handlers)

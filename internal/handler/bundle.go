@@ -7,6 +7,7 @@ import (
 	agentHandler "github.com/lin-snow/ech0/internal/handler/agent"
 	authHandler "github.com/lin-snow/ech0/internal/handler/auth"
 	backupHandler "github.com/lin-snow/ech0/internal/handler/backup"
+	chatHandler "github.com/lin-snow/ech0/internal/handler/chat"
 	commentHandler "github.com/lin-snow/ech0/internal/handler/comment"
 	commonHandler "github.com/lin-snow/ech0/internal/handler/common"
 	connectHandler "github.com/lin-snow/ech0/internal/handler/connect"
@@ -37,6 +38,7 @@ type Bundle struct {
 	MigrationHandler *migrationHandler.MigrationHandler
 	DashboardHandler *dashboardHandler.DashboardHandler
 	AgentHandler     *agentHandler.AgentHandler
+	ChatHandler      *chatHandler.ChatHandler
 	MCPHandler       *mcp.Handler
 }
 
@@ -56,6 +58,7 @@ func NewBundle(
 	migrationHandler *migrationHandler.MigrationHandler,
 	dashboardHandler *dashboardHandler.DashboardHandler,
 	agentHandler *agentHandler.AgentHandler,
+	chatHandler *chatHandler.ChatHandler,
 	mcpHandler *mcp.Handler,
 ) *Bundle {
 	return &Bundle{
@@ -73,6 +76,7 @@ func NewBundle(
 		MigrationHandler: migrationHandler,
 		DashboardHandler: dashboardHandler,
 		AgentHandler:     agentHandler,
+		ChatHandler:      chatHandler,
 		MCPHandler:       mcpHandler,
 	}
 }

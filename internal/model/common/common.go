@@ -81,6 +81,10 @@ const (
 	BackupScheduleKey = "backup_schedule"
 	// AgentSettingKey 是 Agent 设置的键
 	AgentSettingKey = "agent_setting"
+	// EmbeddingSettingKey 是 Embedding 向量设置的键
+	EmbeddingSettingKey = "embedding_setting"
+	// EmbeddingIndexStateKey 记录当前已建索引所用的 model/dim（换模型后据此判定需重建）
+	EmbeddingIndexStateKey = "embedding_index_state"
 	// ReleaseVersionKey 是发布版本号的键
 	ReleaseVersionKey = "release_version"
 	// InstallInitializedKey 是安装流程完成状态键

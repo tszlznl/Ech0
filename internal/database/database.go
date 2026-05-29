@@ -10,6 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	sqlite_vec "github.com/asg017/sqlite-vec-go-bindings/cgo"
 	"github.com/lin-snow/ech0/internal/config"
 	dbMigration "github.com/lin-snow/ech0/internal/database/migration"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
@@ -17,6 +18,7 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	connectModel "github.com/lin-snow/ech0/internal/model/connect"
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
+	embeddingModel "github.com/lin-snow/ech0/internal/model/embedding"
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
 	migrationModel "github.com/lin-snow/ech0/internal/model/migration"
 	queueModel "github.com/lin-snow/ech0/internal/model/queue"
@@ -96,6 +98,9 @@ func InitDatabase() {
 		if config.Config().Database.LogMode == "release" {
 			ll = logger.LogLevel(logger.Silent)
 		}
+		// 注册 sqlite-vec 为进程级自动扩展：之后所有新建的 sqlite 连接（含热切换）
+		// 都会自动加载 vec0 虚表能力，无需自定义 driver / ConnectHook。
+		sqlite_vec.Auto()
 		SQLiteDB, err := gorm.Open(sqlite.Open(dbPath), buildGormConfig(ll))
 		if err != nil {
 			util.HandlePanicError(&commonModel.ServerError{
@@ -140,6 +145,7 @@ func MigrateDB() error {
 		&userModel.WebAuthnCredential{},
 		&echoModel.Echo{},
 		&echoModel.EchoExtension{},
+		&embeddingModel.EchoEmbedding{},
 		&fileModel.File{},
 		&fileModel.EchoFile{},
 		&fileModel.TempFile{},

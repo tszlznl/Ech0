@@ -15,6 +15,7 @@ import (
 	agentHandler "github.com/lin-snow/ech0/internal/handler/agent"
 	authHandler "github.com/lin-snow/ech0/internal/handler/auth"
 	backupHandler "github.com/lin-snow/ech0/internal/handler/backup"
+	chatHandler "github.com/lin-snow/ech0/internal/handler/chat"
 	commentHandler "github.com/lin-snow/ech0/internal/handler/comment"
 	commonHandler "github.com/lin-snow/ech0/internal/handler/common"
 	connectHandler "github.com/lin-snow/ech0/internal/handler/connect"
@@ -311,6 +312,7 @@ func buildTestHandlers() *handler.Bundle {
 		migrationHandler.NewMigrationHandler(nil),
 		dashboardHandler.NewDashboardHandler(nil),
 		agentHandler.NewAgentHandler(nil),
+		chatHandler.NewChatHandler(nil, nil),
 		mcp.NewHandler(nil, nil, nil, nil, nil, nil, nil, nil),
 	)
 }

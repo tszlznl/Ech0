@@ -4,6 +4,7 @@ go 1.26.2
 
 require (
 	github.com/anthropics/anthropic-sdk-go v1.45.0
+	github.com/asg017/sqlite-vec-go-bindings v0.1.6
 	github.com/aws/aws-sdk-go-v2 v1.41.7
 	github.com/aws/aws-sdk-go-v2/config v1.32.18
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.17

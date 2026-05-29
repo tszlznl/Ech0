@@ -66,6 +66,7 @@ var EventSet = wire.NewSet(
 	repository.KeyValueSet,
 	repository.QueueSet,
 	repository.WebhookSet,
+	repository.EmbeddingSet,
 
 	wire.Bind(new(eventregistry.WebhookObserver), new(*webhook.Dispatcher)),
 	wire.Bind(new(eventsubscriber.DeadLetterProcessor), new(*webhook.Dispatcher)),
@@ -74,6 +75,8 @@ var EventSet = wire.NewSet(
 	eventsubscriber.NewBackupScheduler,
 	eventsubscriber.NewDeadLetterResolver,
 	eventsubscriber.NewAgentProcessor,
+	eventsubscriber.NewEmbeddingProcessor,
+	service.EmbeddingSet,
 	ProvideSubscriptionProviders,
 	eventregistry.NewEventRegistry,
 )
@@ -125,6 +128,11 @@ var HandlerSet = wire.NewSet(
 
 	service.AgentSet,
 	handler.AgentSet,
+
+	repository.EmbeddingSet,
+	service.EmbeddingSet,
+	service.ChatSet,
+	handler.ChatSet,
 
 	service.BackupSet,
 	handler.BackupSet,
@@ -257,6 +265,7 @@ func ProvideSubscriptionProviders(
 	dlr *eventsubscriber.DeadLetterResolver,
 	bs *eventsubscriber.BackupScheduler,
 	ap *eventsubscriber.AgentProcessor,
+	ep *eventsubscriber.EmbeddingProcessor,
 ) []eventregistry.SubscriptionProvider {
-	return []eventregistry.SubscriptionProvider{dlr, bs, ap}
+	return []eventregistry.SubscriptionProvider{dlr, bs, ap, ep}
 }

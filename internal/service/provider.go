@@ -8,11 +8,13 @@ import (
 	agentService "github.com/lin-snow/ech0/internal/service/agent"
 	authService "github.com/lin-snow/ech0/internal/service/auth"
 	backupService "github.com/lin-snow/ech0/internal/service/backup"
+	chatService "github.com/lin-snow/ech0/internal/service/chat"
 	commentService "github.com/lin-snow/ech0/internal/service/comment"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
 	connectService "github.com/lin-snow/ech0/internal/service/connect"
 	dashboardService "github.com/lin-snow/ech0/internal/service/dashboard"
 	echoService "github.com/lin-snow/ech0/internal/service/echo"
+	embeddingService "github.com/lin-snow/ech0/internal/service/embedding"
 	fileService "github.com/lin-snow/ech0/internal/service/file"
 	initService "github.com/lin-snow/ech0/internal/service/init"
 	migratorService "github.com/lin-snow/ech0/internal/service/migrator"
@@ -67,6 +69,15 @@ var (
 	AgentSet = wire.NewSet(
 		agentService.NewAgentService,
 		wire.Bind(new(agentService.Service), new(*agentService.AgentService)),
+	)
+	EmbeddingSet = wire.NewSet(
+		embeddingService.NewEmbeddingService,
+		wire.Bind(new(embeddingService.Service), new(*embeddingService.EmbeddingService)),
+		wire.Bind(new(embeddingService.Indexer), new(*embeddingService.EmbeddingService)),
+	)
+	ChatSet = wire.NewSet(
+		chatService.NewChatService,
+		wire.Bind(new(chatService.Service), new(*chatService.ChatService)),
 	)
 	MigratorSet = wire.NewSet(
 		migratorService.NewMigratorService,

@@ -11,6 +11,7 @@ import (
 	commonRepository "github.com/lin-snow/ech0/internal/repository/common"
 	connectRepository "github.com/lin-snow/ech0/internal/repository/connect"
 	echoRepository "github.com/lin-snow/ech0/internal/repository/echo"
+	embeddingRepository "github.com/lin-snow/ech0/internal/repository/embedding"
 	fileRepository "github.com/lin-snow/ech0/internal/repository/file"
 	initRepository "github.com/lin-snow/ech0/internal/repository/init"
 	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
@@ -22,10 +23,12 @@ import (
 	webhookRepository "github.com/lin-snow/ech0/internal/repository/webhook"
 	agentService "github.com/lin-snow/ech0/internal/service/agent"
 	authService "github.com/lin-snow/ech0/internal/service/auth"
+	chatService "github.com/lin-snow/ech0/internal/service/chat"
 	commentService "github.com/lin-snow/ech0/internal/service/comment"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
 	connectService "github.com/lin-snow/ech0/internal/service/connect"
 	echoService "github.com/lin-snow/ech0/internal/service/echo"
+	embeddingService "github.com/lin-snow/ech0/internal/service/embedding"
 	fileService "github.com/lin-snow/ech0/internal/service/file"
 	initService "github.com/lin-snow/ech0/internal/service/init"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
@@ -51,6 +54,11 @@ var (
 		echoRepository.NewEchoRepository,
 		wire.Bind(new(echoService.Repository), new(*echoRepository.EchoRepository)),
 		wire.Bind(new(connectService.EchoRepository), new(*echoRepository.EchoRepository)),
+		wire.Bind(new(embeddingService.EchoReader), new(*echoRepository.EchoRepository)),
+	)
+	EmbeddingSet = wire.NewSet(
+		embeddingRepository.NewEmbeddingRepository,
+		wire.Bind(new(embeddingService.Repository), new(*embeddingRepository.EmbeddingRepository)),
 	)
 	CommonSet = wire.NewSet(
 		commonRepository.NewCommonRepository,
@@ -75,6 +83,8 @@ var (
 		wire.Bind(new(settingService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
 		wire.Bind(new(agentService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
 		wire.Bind(new(commentService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
+		wire.Bind(new(embeddingService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
+		wire.Bind(new(chatService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
 	)
 	SettingSet = wire.NewSet(
 		settingRepository.NewSettingRepository,
