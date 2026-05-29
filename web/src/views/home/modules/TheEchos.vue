@@ -192,14 +192,9 @@ const parsePageQuery = (raw: unknown): number => {
 const handleGoToPage = async (page: number) => {
   const target = Math.max(1, Math.min(page, echoStore.totalPages || page))
   if (target === echoStore.currentPage) return
-  const nextQuery = { ...route.query }
-  if (target > 1) {
-    nextQuery.page = String(target)
-  } else {
-    delete nextQuery.page
-  }
-  await router.replace({ query: nextQuery })
-  // route watcher 会驱动实际的 fetch + scroll
+  // currentPage 是分页的唯一真实来源：改它会触发 fetch，并由下面的 watcher 把 URL ?page 同步过去。
+  await echoStore.goToPage(target)
+  scrollToTop()
 }
 
 // 刷新数据（点赞 / 编辑 / 删除单条 echo 后刷新当前页）
@@ -207,26 +202,36 @@ const handleRefresh = () => {
   echoStore.refreshEchos()
 }
 
-// URL ?page=N → store currentPage：单一来源，避免双向同步歪楼
+// 分页同步：currentPage 为唯一真实来源，URL ?page 仅作镜像（便于深链 / 浏览器前进后退）。
+// 过滤条件变化时 refreshEchos() 会把 currentPage 归 1，这里随之去掉 URL 的 page，
+// 避免 currentPage 与 URL 失配后翻页按钮点击无效（target 恰好等于陈旧的 URL page → router 不导航）。
+watch(
+  () => echoStore.currentPage,
+  (page) => {
+    if (parsePageQuery(route.query.page) === page) return
+    const nextQuery = { ...route.query }
+    if (page > 1) {
+      nextQuery.page = String(page)
+    } else {
+      delete nextQuery.page
+    }
+    router.replace({ query: nextQuery })
+  },
+)
+
+// URL ?page 变化（浏览器前进/后退、深链）→ 同步到 store 并拉取对应页
 watch(
   () => route.query.page,
   async (raw) => {
     const target = parsePageQuery(raw)
-    if (target === echoStore.currentPage && echoStore.echoList.length > 0) return
-    echoStore.currentPage = target
-    await echoStore.fetchCurrentPage()
+    if (target === echoStore.currentPage) return
+    await echoStore.goToPage(target)
     scrollToTop()
   },
 )
 
-// 过滤模式切换时（进入/退出/切换标签），刷新列表回到第一页
+// 过滤模式切换时（进入/退出/切换标签），刷新列表回到第一页（URL 的 page 由上面的 watcher 同步清理）
 watch(isFilteringMode, () => {
-  if (Number(route.query.page) > 1) {
-    const nextQuery = { ...route.query }
-    delete nextQuery.page
-    router.replace({ query: nextQuery })
-    return
-  }
   echoStore.refreshEchos()
 })
 
