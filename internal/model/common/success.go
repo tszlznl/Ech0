@@ -30,6 +30,7 @@ const (
 	GET_ECHOS_BY_TAG_ID_SUCCESS = "获取标签下的Echos成功"
 	QUERY_ECHOS_SUCCESS         = "查询Echos成功"
 	GET_HOT_ECHOS_SUCCESS       = "获取热门Echos成功"
+	GET_RANDOM_ECHO_SUCCESS     = "随机获取Echo成功"
 )
 
 // Common 成功相关常量

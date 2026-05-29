@@ -962,6 +962,29 @@ const docTemplate = `{
                 }
             }
         },
+        "/echo/random": {
+            "get": {
+                "description": "从当前可见范围内随机返回一篇 Echo。需走认证路由（无有效 token 时按匿名处理，仅返回公开内容；管理员可随机到私密）。无可见内容时 data 为 null。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Echo"
+                ],
+                "summary": "随机返回一篇Echo",
+                "responses": {
+                    "200": {
+                        "description": "获取失败",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/echo/tag/{tagid}": {
             "get": {
                 "description": "Deprecated: 请使用 POST /echo/query 的 tagIds 参数替代。根据标签 ID 获取包含该标签的 Echo 列表，支持 query 分页与搜索",

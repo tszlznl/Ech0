@@ -1117,6 +1117,22 @@ paths:
       summary: 统一查询 Echo 列表
       tags:
       - Echo
+  /echo/random:
+    get:
+      consumes:
+      - application/json
+      description: 从当前可见范围内随机返回一篇 Echo。需走认证路由（无有效 token 时按匿名处理，仅返回公开内容；管理员可随机到私密）。无可见内容时
+        data 为 null。
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取失败
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: 随机返回一篇Echo
+      tags:
+      - Echo
   /echo/tag/{tagid}:
     get:
       consumes:

@@ -511,3 +511,30 @@ func (echoHandler *EchoHandler) GetHotEchos() gin.HandlerFunc {
 		}
 	})
 }
+
+// GetRandomEcho 随机返回一篇 Echo
+//
+//	@Summary		随机返回一篇Echo
+//	@Description	从当前可见范围内随机返回一篇 Echo。需走认证路由（无有效 token 时按匿名处理，仅返回公开内容；管理员可随机到私密）。无可见内容时 data 为 null。
+//	@Tags			Echo
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	handler.Response	"获取成功"
+//	@Failure		200	{object}	handler.Response	"获取失败"
+//	@Router			/echo/random [get]
+func (echoHandler *EchoHandler) GetRandomEcho() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		echo, err := echoHandler.echoService.GetRandomEcho(ctx.Request.Context())
+		if err != nil {
+			return res.Response{
+				Msg: "",
+				Err: err,
+			}
+		}
+
+		return res.Response{
+			Data: echo,
+			Msg:  commonModel.GET_RANDOM_ECHO_SUCCESS,
+		}
+	})
+}

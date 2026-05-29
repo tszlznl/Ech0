@@ -597,3 +597,37 @@ func (echoRepository *EchoRepository) GetHotEchos(limit int, showPrivate bool) (
 
 	return sorted, nil
 }
+
+// GetRandomEcho 随机返回一篇 Echo。故意绕过 echo_cache（随机语义要求每次可能不同）。
+// 非管理员视角（showPrivate=false）只随机到公开 echo；无可见内容时返回 (nil, nil)，不视为错误。
+func (echoRepository *EchoRepository) GetRandomEcho(showPrivate bool) (*model.Echo, error) {
+	// SQLite / PostgreSQL 用 RANDOM()，MySQL 用 RAND()
+	randomExpr := "RANDOM()"
+	if echoRepository.db().Dialector.Name() == "mysql" {
+		randomExpr = "RAND()"
+	}
+
+	query := echoRepository.db().Model(&model.Echo{})
+	if !showPrivate {
+		query = query.Where("private = ?", false)
+	}
+
+	var echos []model.Echo
+	if err := query.
+		Preload("EchoFiles", func(db *gorm.DB) *gorm.DB {
+			return db.Order("echo_files.sort_order ASC")
+		}).
+		Preload("EchoFiles.File").
+		Preload("Extension").
+		Preload("Tags").
+		Order(randomExpr).
+		Limit(1).
+		Find(&echos).Error; err != nil {
+		return nil, err
+	}
+
+	if len(echos) == 0 {
+		return nil, nil
+	}
+	return &echos[0], nil
+}

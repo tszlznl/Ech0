@@ -210,6 +210,19 @@ func (echoService *EchoService) GetHotEchos(ctx context.Context, limit int) ([]m
 	return echoService.echoRepository.GetHotEchos(limit, showPrivate)
 }
 
+func (echoService *EchoService) GetRandomEcho(ctx context.Context) (*model.Echo, error) {
+	userid := viewer.MustFromContext(ctx).UserID()
+	showPrivate := false
+	if userid != "" {
+		user, err := echoService.commonService.CommonGetUserByUserId(ctx, userid)
+		if err != nil {
+			return nil, err
+		}
+		showPrivate = user.IsAdmin
+	}
+	return echoService.echoRepository.GetRandomEcho(showPrivate)
+}
+
 func (echoService *EchoService) UpdateEcho(ctx context.Context, echo *model.Echo) error {
 	userid := viewer.MustFromContext(ctx).UserID()
 	user, err := echoService.commonService.CommonGetUserByUserId(ctx, userid)
