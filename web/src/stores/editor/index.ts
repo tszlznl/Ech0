@@ -83,6 +83,14 @@ export const useEditorStore = defineStore('editorStore', () => {
     void router.push({ name: 'home' }).catch(() => undefined)
   }
 
+  // 编辑完成后返回时间线：仅去掉 ?tab，保留 ?page 等 query，
+  // 让时间线重挂载时按原页码重新拉取，停留在被编辑那条所在的页面。
+  const backToTimelineTab = () => {
+    const query = { ...router.currentRoute.value.query }
+    delete query.tab
+    void router.push({ name: 'home', query }).catch(() => undefined)
+  }
+
   const setMode = (mode: Mode) => {
     currentMode.value = mode
   }
@@ -242,14 +250,14 @@ export const useEditorStore = defineStore('editorStore', () => {
           loading: justSyncFiles ? t('editor.syncingFiles') : t('editor.updating'),
           success: (res) => {
             if (res.code === 1 && !justSyncFiles) {
-              resetHomeTimelineState()
               clearEditor()
-              echoStore.refreshEchos()
               isUpdateMode.value = false
               echoStore.echoToUpdate = null
               setMode(Mode.ECH0)
               echoStore.getTags()
-              jumpToHomeTimeline()
+              // 不重置分页 / 不跳回顶部：返回当前页，时间线重挂载会按 ?page 重新拉取，
+              // 服务器返回的数据已含本次编辑结果，用户原地即可看到刚编辑的那条。
+              backToTimelineTab()
               return t('editor.updateSuccess')
             } else if (res.code === 1 && justSyncFiles) {
               return t('editor.updateSuccessWithSync')

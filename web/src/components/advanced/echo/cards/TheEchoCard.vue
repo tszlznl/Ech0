@@ -227,9 +227,10 @@ const handleUpdateEcho = async () => {
   }
 
   editorStore.isUpdateMode = true
+  // 保留当前的 ?page 等 query，编辑完返回时间线时才能回到原来那一页（而非跳回第 1 页）
   await router.push({
     name: 'home',
-    query: { tab: 'publish' },
+    query: { ...router.currentRoute.value.query, tab: 'publish' },
   })
 }
 
