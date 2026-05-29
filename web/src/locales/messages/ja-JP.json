@@ -350,7 +350,8 @@
     "sso": "シングルサインオン",
     "extension": "機能拡張",
     "advance": "外部連携",
-    "systemLog": "システムログ"
+    "systemLog": "システムログ",
+    "chat": "AI チャット"
   },
   "homeNav": {
     "themeToggleTitle": "テーマを切替（次：{mode}）",
@@ -983,5 +984,36 @@
   },
   "websocket": {
     "invalidMessage": "無効な WebSocket メッセージを受信しました"
+  },
+  "embeddingSetting": {
+    "title": "ベクトルインデックス",
+    "intro": "Echo のベクトルインデックスを作成すると、AI チャットで過去の内容を検索・振り返りできます。Embedding サービスは生成用 LLM とは別に設定します。",
+    "enable": "インデックスを有効化",
+    "modelName": "Embedding モデル",
+    "modelPlaceholder": "例: text-embedding-3-small",
+    "dim": "ベクトル次元数",
+    "dimPlaceholder": "モデルと一致させる必要があります（例: 1536）",
+    "apiKey": "API Key",
+    "apiKeyPlaceholder": "API Key を入力（ローカルサービスは空欄可）",
+    "baseUrl": "カスタム API URL",
+    "baseUrlPlaceholder": "https://api.openai.com/v1",
+    "baseUrlHint": "任意。OpenAI 互換の /v1/embeddings である必要があります。",
+    "reindex": "インデックス再構築",
+    "reindexHint": "すべての過去の Echo のベクトルを再生成します。モデルや次元の変更後に一度実行してください。",
+    "reindexAction": "再構築を開始",
+    "reindexResult": "{indexed}/{total} 件をインデックス化、{failed} 件失敗。"
+  },
+  "chatPanel": {
+    "title": "AI チャット",
+    "intro": "過去の Echo を振り返り、まとめます。質問に関連する Echo を読み取って回答し、根拠が足りない場合は正直にそう伝えます。",
+    "suggestionsTitle": "こう聞いてみましょう：",
+    "suggestion1": "最近わたしが注目し考えていたことをまとめて",
+    "suggestion2": "この期間の気分の変化は？",
+    "suggestion3": "書き留めた断片的なアイデアをまとめて",
+    "sources": "参照元",
+    "inputPlaceholder": "過去の Echo について質問…（Enter で送信、Shift+Enter で改行）",
+    "send": "送信",
+    "clear": "クリア",
+    "errorGeneric": "エラーが発生しました。後でもう一度お試しいただくか、モデルとインデックス設定をご確認ください。"
   }
 }

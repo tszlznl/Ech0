@@ -350,7 +350,8 @@
     "sso": "SSO",
     "extension": "Erweiterungen",
     "advance": "Integrationen",
-    "systemLog": "Logs"
+    "systemLog": "Logs",
+    "chat": "KI-Chat"
   },
   "homeNav": {
     "themeToggleTitle": "Theme wechseln (nächstes: {mode})",
@@ -983,5 +984,36 @@
   },
   "websocket": {
     "invalidMessage": "Ungültige WebSocket-Nachricht empfangen"
+  },
+  "embeddingSetting": {
+    "title": "Vektorindex",
+    "intro": "Erstelle einen Vektorindex deiner Echos, um sie im KI-Chat zu durchsuchen und zu reflektieren. Der Embedding-Dienst wird unabhängig vom Generierungs-LLM konfiguriert.",
+    "enable": "Index aktivieren",
+    "modelName": "Embedding-Modell",
+    "modelPlaceholder": "z. B. text-embedding-3-small",
+    "dim": "Vektordimension",
+    "dimPlaceholder": "Muss zum Modell passen, z. B. 1536",
+    "apiKey": "API-Key",
+    "apiKeyPlaceholder": "API-Key eingeben (bei lokalen Diensten leer lassen)",
+    "baseUrl": "Eigene API-URL",
+    "baseUrlPlaceholder": "https://api.openai.com/v1",
+    "baseUrlHint": "Optional. Muss ein OpenAI-kompatibler /v1/embeddings-Endpunkt sein.",
+    "reindex": "Index neu aufbauen",
+    "reindexHint": "Vektoren für alle bisherigen Echos neu erzeugen. Einmal nach Modell- oder Dimensionswechsel ausführen.",
+    "reindexAction": "Neuaufbau starten",
+    "reindexResult": "{indexed}/{total} indiziert, {failed} fehlgeschlagen."
+  },
+  "chatPanel": {
+    "title": "KI-Chat",
+    "intro": "Reflektiere und fasse deine vergangenen Echos zusammen. Es liest die für deine Frage relevantesten Echos und sagt dir ehrlich, wenn die Grundlage nicht ausreicht.",
+    "suggestionsTitle": "Frag zum Beispiel:",
+    "suggestion1": "Fasse zusammen, womit ich mich in letzter Zeit beschäftigt habe",
+    "suggestion2": "Wie hat sich meine Stimmung in dieser Zeit verändert",
+    "suggestion3": "Bündle die verstreuten Ideen, die ich notiert habe",
+    "sources": "Quellen",
+    "inputPlaceholder": "Frag nach deinen vergangenen Echos… (Enter zum Senden, Shift+Enter für Zeilenumbruch)",
+    "send": "Senden",
+    "clear": "Leeren",
+    "errorGeneric": "Etwas ist schiefgelaufen. Bitte versuche es später erneut oder prüfe Modell- und Index-Einstellungen."
   }
 }

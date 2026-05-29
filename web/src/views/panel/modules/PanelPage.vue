@@ -110,6 +110,15 @@
             {{ t('panelPageNav.comment') }}
           </BaseButton>
 
+          <!-- AI 对话 -->
+          <BaseButton
+            :icon="Robot"
+            @click="router.push('/panel/chat')"
+            :class="getButtonClasses('panel-chat')"
+          >
+            {{ t('panelPageNav.chat') }}
+          </BaseButton>
+
           <!-- 单点登录 -->
           <BaseButton
             :icon="Sso"
@@ -183,6 +192,7 @@ import Data from '@/components/icons/data.vue'
 import Sso from '@/components/icons/sso.vue'
 import Logout from '@/components/icons/logout.vue'
 import Log from '@/components/icons/log.vue'
+import Robot from '@/components/icons/robot.vue'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUserStore } from '@/stores'
@@ -240,6 +250,7 @@ const routeOptions = computed(() => [
   { label: String(t('panelPageNav.storage')), value: '/panel/storage' },
   { label: String(t('panelPageNav.dataManagement')), value: '/panel/data-management' },
   { label: String(t('panelPageNav.comment')), value: '/panel/comment' },
+  { label: String(t('panelPageNav.chat')), value: '/panel/chat' },
   { label: String(t('panelPageNav.sso')), value: '/panel/sso' },
   { label: String(t('panelPageNav.extension')), value: '/panel/extension' },
   { label: String(t('panelPageNav.advance')), value: '/panel/advance' },

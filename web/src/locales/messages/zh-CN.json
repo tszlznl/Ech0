@@ -350,7 +350,8 @@
     "sso": "单点登录",
     "extension": "功能扩展",
     "advance": "外部集成",
-    "systemLog": "系统日志"
+    "systemLog": "系统日志",
+    "chat": "AI 对话"
   },
   "homeNav": {
     "themeToggleTitle": "切换主题（下一个：{mode}）",
@@ -983,5 +984,36 @@
   },
   "websocket": {
     "invalidMessage": "收到无效的 WebSocket 消息"
+  },
+  "embeddingSetting": {
+    "title": "向量索引设置",
+    "intro": "为你的 Echo 建立向量索引后，才能在 AI 对话中检索与回顾过往内容。Embedding 服务独立于生成所用的 LLM 配置。",
+    "enable": "启用索引",
+    "modelName": "Embedding 模型",
+    "modelPlaceholder": "如 text-embedding-3-small",
+    "dim": "向量维度",
+    "dimPlaceholder": "需与所选模型一致，如 1536",
+    "apiKey": "API Key",
+    "apiKeyPlaceholder": "请输入 API Key（本地服务可留空）",
+    "baseUrl": "自定义 API 地址",
+    "baseUrlPlaceholder": "https://api.openai.com/v1",
+    "baseUrlHint": "可选。需为 OpenAI 兼容的 /v1/embeddings 接口。",
+    "reindex": "重建索引",
+    "reindexHint": "为全部历史 Echo 重新生成向量。更换模型或维度后需执行一次。",
+    "reindexAction": "开始重建",
+    "reindexResult": "已索引 {indexed}/{total} 条，失败 {failed} 条。"
+  },
+  "chatPanel": {
+    "title": "AI 对话",
+    "intro": "基于你过往的 Echo 进行回顾与综合。它读取与你问题相关的若干条 Echo 后作答，缺乏依据时会如实说明。",
+    "suggestionsTitle": "试试这样问：",
+    "suggestion1": "总结我最近一段时间在关注和思考什么",
+    "suggestion2": "我这段时间的心情有什么变化",
+    "suggestion3": "把我记过的零散想法汇总一下",
+    "sources": "引用来源",
+    "inputPlaceholder": "问问关于你过往 Echo 的事…（Enter 发送，Shift+Enter 换行）",
+    "send": "发送",
+    "clear": "清空",
+    "errorGeneric": "对话出错了，请稍后再试或检查模型与索引设置。"
   }
 }

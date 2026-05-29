@@ -90,6 +90,11 @@ const router = createRouter({
           component: () => import('../views/panel/modules/TheCommentManager.vue'),
         },
         {
+          path: 'chat',
+          name: 'panel-chat',
+          component: () => import('../views/panel/modules/TheChat.vue'),
+        },
+        {
           path: 'advance',
           name: 'panel-advance',
           component: () => import('../views/panel/modules/TheAdvance.vue'),

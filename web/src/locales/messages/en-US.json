@@ -350,7 +350,8 @@
     "sso": "SSO",
     "extension": "Extensions",
     "advance": "Integrations",
-    "systemLog": "Logs"
+    "systemLog": "Logs",
+    "chat": "AI Chat"
   },
   "homeNav": {
     "themeToggleTitle": "Toggle theme (next: {mode})",
@@ -983,5 +984,36 @@
   },
   "websocket": {
     "invalidMessage": "Received invalid WebSocket message"
+  },
+  "embeddingSetting": {
+    "title": "Vector Index",
+    "intro": "Build a vector index of your echos to enable retrieval and reflection in AI Chat. The embedding service is configured independently from the generation LLM.",
+    "enable": "Enable index",
+    "modelName": "Embedding model",
+    "modelPlaceholder": "e.g. text-embedding-3-small",
+    "dim": "Vector dimension",
+    "dimPlaceholder": "Must match the model, e.g. 1536",
+    "apiKey": "API Key",
+    "apiKeyPlaceholder": "Enter API Key (leave empty for local services)",
+    "baseUrl": "Custom API URL",
+    "baseUrlPlaceholder": "https://api.openai.com/v1",
+    "baseUrlHint": "Optional. Must be an OpenAI-compatible /v1/embeddings endpoint.",
+    "reindex": "Rebuild index",
+    "reindexHint": "Regenerate vectors for all past echos. Run once after changing model or dimension.",
+    "reindexAction": "Start rebuild",
+    "reindexResult": "Indexed {indexed}/{total}, {failed} failed."
+  },
+  "chatPanel": {
+    "title": "AI Chat",
+    "intro": "Reflect on and summarize your past echos. It reads the echos most relevant to your question, and tells you honestly when there isn't enough to go on.",
+    "suggestionsTitle": "Try asking:",
+    "suggestion1": "Summarize what I've been focusing on and thinking about lately",
+    "suggestion2": "How has my mood changed over this period",
+    "suggestion3": "Pull together the scattered ideas I've jotted down",
+    "sources": "Sources",
+    "inputPlaceholder": "Ask about your past echos… (Enter to send, Shift+Enter for newline)",
+    "send": "Send",
+    "clear": "Clear",
+    "errorGeneric": "Something went wrong. Please retry later or check your model and index settings."
   }
 }
