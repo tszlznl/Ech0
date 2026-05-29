@@ -89,7 +89,7 @@ type BackupScheduleDto struct {
 
 type AgentSettingDto struct {
 	Enable   bool   `json:"enable"`   // 是否启用 Agent 功能
-	Provider string `json:"provider"` // LLM 提供商 （OpenAI、DeepSeek、Anthropic、Gemini、阿里百炼、Ollama等）
+	Protocol string `json:"protocol"` // LLM 接口协议（OpenAI 兼容/Anthropic/Gemini，OpenAI 兼容覆盖 DeepSeek、Qwen、Ollama 等）
 	Model    string `json:"model"`    // LLM 模型名称
 	ApiKey   string `json:"api_key"`  // LLM API Key
 	Prompt   string `json:"prompt"`   // Agent 额外使用的提示词

@@ -477,7 +477,7 @@ declare namespace App {
 
       type AgentSetting = {
         enable: boolean
-        provider: string
+        protocol: string
         model: string
         api_key: string
         prompt: string
@@ -486,7 +486,7 @@ declare namespace App {
 
       type AgentSettingDto = {
         enable: boolean
-        provider: string
+        protocol: string
         model: string
         api_key: string
         prompt: string

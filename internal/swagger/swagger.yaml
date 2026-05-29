@@ -55,8 +55,9 @@ definitions:
       prompt:
         description: Agent 额外使用的提示词
         type: string
-      provider:
-        description: LLM 提供商 （OpenAI、DeepSeek、Anthropic、Gemini、阿里百炼、Ollama等）
+      protocol:
+        description: LLM 接口协议（OpenAI 兼容/Anthropic/Gemini，OpenAI 兼容覆盖 DeepSeek、Qwen、Ollama
+          等）
         type: string
     type: object
   model.BackupScheduleDto:

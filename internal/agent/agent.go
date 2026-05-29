@@ -53,10 +53,10 @@ func Generate(
 	if setting.Model == "" {
 		return "", errors.New(commonModel.AGENT_MODEL_MISSING)
 	}
-	if setting.Provider == "" {
-		return "", errors.New(commonModel.AGENT_PROVIDER_NOT_FOUND)
+	if setting.Protocol == "" {
+		return "", errors.New(commonModel.AGENT_PROTOCOL_NOT_FOUND)
 	}
-	if setting.ApiKey == "" && setting.Provider != string(commonModel.OpenAI) {
+	if setting.ApiKey == "" && setting.Protocol != string(commonModel.OpenAI) {
 		// OpenAI 兼容场景下 Ollama 等本地服务允许空 ApiKey
 		return "", errors.New(commonModel.AGENT_API_KEY_MISSING)
 	}
@@ -71,7 +71,7 @@ func Generate(
 		t = &temperature[0]
 	}
 
-	switch setting.Provider {
+	switch setting.Protocol {
 	case string(commonModel.OpenAI):
 		return generateOpenAI(ctx, setting, in, t)
 	case string(commonModel.Anthropic):
@@ -79,7 +79,7 @@ func Generate(
 	case string(commonModel.Gemini):
 		return generateGemini(ctx, setting, in, t)
 	default:
-		return "", errors.New(commonModel.AGENT_PROVIDER_NOT_FOUND)
+		return "", errors.New(commonModel.AGENT_PROTOCOL_NOT_FOUND)
 	}
 }
 

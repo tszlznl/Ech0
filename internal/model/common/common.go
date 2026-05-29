@@ -13,7 +13,7 @@ type (
 	UploadFileType string
 	S3Provider     string
 	OAuth2Provider string
-	AgentProvider  string
+	AgentProtocol  string
 	Locale         string
 )
 
@@ -42,11 +42,11 @@ const (
 
 const (
 	// OpenAI 协议（覆盖 OpenAI 官方、DeepSeek、Qwen、Ollama 以及任意 OpenAI 兼容服务）
-	OpenAI AgentProvider = "openai"
+	OpenAI AgentProtocol = "openai"
 	// Anthropic 协议
-	Anthropic AgentProvider = "anthropic"
+	Anthropic AgentProtocol = "anthropic"
 	// Gemini 原生协议
-	Gemini AgentProvider = "gemini"
+	Gemini AgentProtocol = "gemini"
 )
 
 const (
@@ -101,8 +101,10 @@ const (
 	OAuthBindingsDroppedKey = "oauth_bindings_dropped_v1"
 	// LegacyInboxesDroppedKey 是已废弃的 inboxes 表清理迁移的幂等标记键
 	LegacyInboxesDroppedKey = "legacy_inboxes_dropped_v1"
-	// AgentProviderCollapsedKey 是 Agent provider 枚举从 7 项收敛为 3 项的幂等标记键
-	AgentProviderCollapsedKey = "agent_provider_collapsed_v1"
+	// AgentProtocolCollapsedKey 是 Agent 协议枚举从 7 项收敛为 3 项的幂等标记键
+	AgentProtocolCollapsedKey = "agent_provider_collapsed_v1"
+	// AgentSettingProtocolRenamedKey 是把 agent_setting JSON 里 "provider" 字段重命名为 "protocol" 的幂等标记键
+	AgentSettingProtocolRenamedKey = "agent_setting_protocol_renamed_v1"
 )
 
 // PageQueryResult 用于分页查询的结果数据传输对象

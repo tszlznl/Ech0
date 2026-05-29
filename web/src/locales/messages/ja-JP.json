@@ -663,13 +663,17 @@
   "agentSetting": {
     "title": "Agent 設定",
     "enableAgent": "Agent を有効化",
-    "provider": "プロバイダ",
+    "protocol": "API プロトコル",
+    "protocolOpenAI": "OpenAI 互換",
+    "protocolAnthropic": "Anthropic",
+    "protocolGemini": "Gemini",
     "modelName": "モデル名",
     "modelPlaceholder": "モデル名を入力",
     "apiKey": "API Key",
     "apiKeyPlaceholder": "API Key を入力",
     "baseUrl": "Base URL",
     "baseUrlPlaceholder": "カスタム Base URL を入力",
+    "baseUrlHint": "「OpenAI 互換」プロトコルを選んだ場合、ここに DeepSeek や Ollama などのサービスのエンドポイントを入力します",
     "prompt": "Prompt",
     "promptPlaceholder": "カスタム Prompt を入力"
   },

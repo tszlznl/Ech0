@@ -663,13 +663,17 @@
   "agentSetting": {
     "title": "Agent-Einstellungen",
     "enableAgent": "Agent aktivieren",
-    "provider": "Anbieter",
+    "protocol": "API-Protokoll",
+    "protocolOpenAI": "OpenAI-kompatibel",
+    "protocolAnthropic": "Anthropic",
+    "protocolGemini": "Gemini",
     "modelName": "Modellname",
     "modelPlaceholder": "Modellname eingeben",
     "apiKey": "API Key",
     "apiKeyPlaceholder": "API Key eingeben",
     "baseUrl": "Base URL",
     "baseUrlPlaceholder": "Eigene Base URL eingeben",
+    "baseUrlHint": "Beim Protokoll „OpenAI-kompatibel“ hier die API-Adresse von Diensten wie DeepSeek oder Ollama eingeben",
     "prompt": "Prompt",
     "promptPlaceholder": "Eigenen Prompt eingeben"
   },

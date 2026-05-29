@@ -16,7 +16,7 @@ import {
   fetchGetAgentInfo,
   fetchHelloEch0,
 } from '@/service/api'
-import { S3Provider, OAuth2Provider, AgentProvider } from '@/enums/enums'
+import { S3Provider, OAuth2Provider, AgentProtocol } from '@/enums/enums'
 import { useUserStore } from './user'
 
 const SNAPSHOT_TASK_ID_STORAGE_KEY = 'backup_snapshot_task_id'
@@ -84,7 +84,7 @@ export const useSettingStore = defineStore('settingStore', () => {
   })
   const AgentSetting = ref<App.Api.Setting.AgentSetting>({
     enable: false,
-    provider: AgentProvider.OPENAI,
+    protocol: AgentProtocol.OPENAI,
     model: '',
     api_key: '',
     prompt: '',
@@ -259,7 +259,7 @@ export const useSettingStore = defineStore('settingStore', () => {
     if (res.code === 1) {
       AgentSetting.value.enable = res.data.enable
       AgentSetting.value.model = res.data.model
-      AgentSetting.value.provider = res.data.provider
+      AgentSetting.value.protocol = res.data.protocol
     }
   }
 

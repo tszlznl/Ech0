@@ -663,13 +663,17 @@
   "agentSetting": {
     "title": "Agent Settings",
     "enableAgent": "Enable Agent",
-    "provider": "Provider",
+    "protocol": "API Protocol",
+    "protocolOpenAI": "OpenAI Compatible",
+    "protocolAnthropic": "Anthropic",
+    "protocolGemini": "Gemini",
     "modelName": "Model name",
     "modelPlaceholder": "Enter model name",
     "apiKey": "API Key",
     "apiKeyPlaceholder": "Enter API Key",
     "baseUrl": "Base URL",
     "baseUrlPlaceholder": "Enter custom Base URL",
+    "baseUrlHint": "For the OpenAI Compatible protocol, enter the API endpoint of services like DeepSeek or Ollama here.",
     "prompt": "Prompt",
     "promptPlaceholder": "Enter custom prompt"
   },

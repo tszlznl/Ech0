@@ -24,7 +24,7 @@ func (settingService *SettingService) GetAgentInfo(setting *model.AgentSetting) 
 		if err != nil {
 			// 数据库中不存在数据，返回默认值
 			setting.Enable = false
-			setting.Provider = string(commonModel.OpenAI)
+			setting.Protocol = string(commonModel.OpenAI)
 			setting.Model = ""
 			setting.ApiKey = ""
 			setting.Prompt = ""
@@ -72,7 +72,7 @@ func (settingService *SettingService) GetAgentSettings(
 		if err != nil {
 			// 数据库中不存在数据，返回默认值
 			setting.Enable = false
-			setting.Provider = string(commonModel.OpenAI)
+			setting.Protocol = string(commonModel.OpenAI)
 			setting.Model = ""
 			setting.ApiKey = ""
 			setting.Prompt = ""
@@ -113,16 +113,16 @@ func (settingService *SettingService) UpdateAgentSettings(
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	if newSetting.Provider != string(commonModel.OpenAI) &&
-		newSetting.Provider != string(commonModel.Anthropic) &&
-		newSetting.Provider != string(commonModel.Gemini) {
-		// 未识别的提供商一律按 OpenAI 兼容协议处理
-		newSetting.Provider = string(commonModel.OpenAI)
+	if newSetting.Protocol != string(commonModel.OpenAI) &&
+		newSetting.Protocol != string(commonModel.Anthropic) &&
+		newSetting.Protocol != string(commonModel.Gemini) {
+		// 未识别的接口协议一律按 OpenAI 兼容协议处理
+		newSetting.Protocol = string(commonModel.OpenAI)
 	}
 
 	setting := &model.AgentSetting{
 		Enable:   newSetting.Enable,
-		Provider: newSetting.Provider,
+		Protocol: newSetting.Protocol,
 		Model:    newSetting.Model,
 		ApiKey:   newSetting.ApiKey,
 		Prompt:   newSetting.Prompt,

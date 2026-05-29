@@ -663,13 +663,17 @@
   "agentSetting": {
     "title": "Agent 设置",
     "enableAgent": "启用 Agent",
-    "provider": "提供商",
+    "protocol": "接口协议",
+    "protocolOpenAI": "OpenAI 兼容",
+    "protocolAnthropic": "Anthropic",
+    "protocolGemini": "Gemini",
     "modelName": "模型名称",
     "modelPlaceholder": "输入模型名称",
     "apiKey": "API Key",
     "apiKeyPlaceholder": "输入 API Key",
     "baseUrl": "Base URL",
     "baseUrlPlaceholder": "输入自定义 Base URL",
+    "baseUrlHint": "选「OpenAI 兼容」协议时，在此填入 DeepSeek、Ollama 等服务的接口地址",
     "prompt": "Prompt",
     "promptPlaceholder": "输入自定义 Prompt"
   },

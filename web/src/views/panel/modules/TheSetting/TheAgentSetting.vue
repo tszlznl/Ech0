@@ -28,16 +28,16 @@
         <BaseSwitch v-model="AgentSetting.enable" :disabled="!agentEditMode" />
       </div>
 
-      <!-- LLM 提供商 -->
+      <!-- LLM 接口协议 -->
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
       >
         <h2 class="font-semibold min-w-24 w-max shrink-0 whitespace-nowrap">
-          {{ t('agentSetting.provider') }}:
+          {{ t('agentSetting.protocol') }}:
         </h2>
         <BaseSelect
-          v-model="AgentSetting.provider"
-          :options="agentProviderOptions"
+          v-model="AgentSetting.protocol"
+          :options="agentProtocolOptions"
           :disabled="!agentEditMode"
           class="w-40 h-8"
         />
@@ -101,6 +101,12 @@
           class="w-full py-1!"
         />
       </div>
+      <p
+        v-if="agentEditMode"
+        class="text-xs text-[var(--color-text-secondary)] opacity-70 mt-1 ml-26"
+      >
+        {{ t('agentSetting.baseUrlHint') }}
+      </p>
 
       <!-- Prompt -->
       <div class="flex justify-start text-[var(--color-text-secondary)] gap-2 mt-2">
@@ -129,13 +135,13 @@ import BaseSwitch from '@/components/common/BaseSwitch.vue'
 import BaseSelect from '@/components/common/BaseSelect.vue'
 import BaseTextArea from '@/components/common/BaseTextArea.vue'
 import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { fetchUpdateAgentSettings } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
-import { AgentProvider } from '@/enums/enums'
+import { AgentProtocol } from '@/enums/enums'
 
 const settingStore = useSettingStore()
 const { t } = useI18n()
@@ -144,10 +150,10 @@ const { AgentSetting } = storeToRefs(settingStore)
 
 const agentEditMode = ref<boolean>(false)
 
-const agentProviderOptions = ref<{ label: string; value: AgentProvider }[]>([
-  { label: 'OpenAI', value: AgentProvider.OPENAI },
-  { label: 'Anthropic', value: AgentProvider.ANTHROPIC },
-  { label: 'Gemini', value: AgentProvider.GEMINI },
+const agentProtocolOptions = computed<{ label: string; value: AgentProtocol }[]>(() => [
+  { label: t('agentSetting.protocolOpenAI'), value: AgentProtocol.OPENAI },
+  { label: t('agentSetting.protocolAnthropic'), value: AgentProtocol.ANTHROPIC },
+  { label: t('agentSetting.protocolGemini'), value: AgentProtocol.GEMINI },
 ])
 
 const handleUpdateAgentSetting = async () => {
