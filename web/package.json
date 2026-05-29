@@ -44,9 +44,9 @@
     "photoswipe": "^5.4.4",
     "pinia": "^3.0.4",
     "vditor": "^3.11.2",
-    "vue": "^3.5.34",
+    "vue": "^3.5.35",
     "vue-i18n": "^11.4.4",
-    "vue-router": "^5.0.7",
+    "vue-router": "^5.1.0",
     "vue-sonner": "^2.0.9",
     "vue-virtual-scroller": "3.0.4"
   },
@@ -81,7 +81,7 @@
     "vite-plugin-compression": "^0.5.1",
     "vite-plugin-vue-devtools": "^8.1.2",
     "vitest": "^4.1.7",
-    "vue-tsc": "^3.3.1"
+    "vue-tsc": "^3.3.2"
   },
   "packageManager": "pnpm@10.33.2+sha512.a90faf6feeab71ad6c6e57f94e0fe1a12f5dcc22cd754db40ae9593eb6a3e0b6b12e3540218bb37ae083404b1f2ce6db2a4121e979829b4aff94b99f49da1cf8"
 }
