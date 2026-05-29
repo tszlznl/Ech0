@@ -99,7 +99,7 @@
 import PanelCard from '@/layout/PanelCard.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseTextArea from '@/components/common/BaseTextArea.vue'
-import Trumpet from '@/components/icons/trumpet.vue'
+import Trumpet from '@/components/icons/next.vue'
 import Delete from '@/components/icons/delete.vue'
 import { ref, computed, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
