@@ -27,6 +27,7 @@ type Service interface {
 	QueryEchos(ctx context.Context, queryDto commonModel.EchoQueryDto) (commonModel.PageQueryResult[[]model.Echo], error)
 	GetHotEchos(ctx context.Context, limit int) ([]model.Echo, error)
 	GetRandomEcho(ctx context.Context) (*model.Echo, error)
+	GetOnThisDayEchos(ctx context.Context, timezone string) ([]model.Echo, error)
 }
 
 type (
@@ -52,4 +53,5 @@ type Repository interface {
 	QueryEchos(queryDto commonModel.EchoQueryDto, showPrivate bool) ([]model.Echo, int64, error)
 	GetHotEchos(limit int, showPrivate bool) ([]model.Echo, error)
 	GetRandomEcho(showPrivate bool) (*model.Echo, error)
+	GetOnThisDayEchos(showPrivate bool, timezone string) []model.Echo
 }

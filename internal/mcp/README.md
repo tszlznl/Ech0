@@ -14,7 +14,7 @@ MCP-compatible client / Host
 │  Gin Router  /mcp  (POST + GET)              │
 │  ├─ middleware.RateLimit                     │
 │  ├─ middleware.OriginGuard                   │
-│  ├─ middleware.JWTAuthMiddleware             │
+│  ├─ middleware.RequireAuth             │
 │  └─ Handler.ServeEndpoint()                  │
 └──────────────┬───────────────────────────────┘
                │

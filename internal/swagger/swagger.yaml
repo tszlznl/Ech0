@@ -1036,6 +1036,21 @@ paths:
       summary: 点赞Echo
       tags:
       - Echo
+  /echo/onthisday:
+    get:
+      consumes:
+      - application/json
+      description: 返回过去年份中与今天同一「月-日」发布的 Echo（即「那年今日」）。需走认证路由（无有效 token 时按匿名处理，仅返回公开内容；管理员可包含私密）。按客户端时区头判定「今天」，结果按发布时间倒序。
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取失败
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: 那年今日（On this day）
+      tags:
+      - Echo
   /echo/page:
     get:
       consumes:

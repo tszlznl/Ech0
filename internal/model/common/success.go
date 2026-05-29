@@ -17,20 +17,21 @@ const (
 
 // Echo 成功相关常量
 const (
-	POST_ECHO_SUCCESS           = "发布Echo成功！"
-	GET_ECHOS_BY_PAGE_SUCCESS   = "获取Echos成功！"
-	DELETE_ECHO_SUCCESS         = "删除Echo成功"
-	GET_TODAY_ECHOS_SUCCESS     = "获取当日Echos成功"
-	UPDATE_ECHO_SUCCESS         = "更新Echo成功"
-	LIKE_ECHO_SUCCESS           = "点赞Echo成功"
-	GET_ECHO_BY_ID_SUCCESS      = "获取Echo成功"
-	GET_ALL_TAGS_SUCCESS        = "获取所有标签成功"
-	CREATE_TAG_SUCCESS          = "创建标签成功"
-	DELETE_TAG_SUCCESS          = "删除标签成功"
-	GET_ECHOS_BY_TAG_ID_SUCCESS = "获取标签下的Echos成功"
-	QUERY_ECHOS_SUCCESS         = "查询Echos成功"
-	GET_HOT_ECHOS_SUCCESS       = "获取热门Echos成功"
-	GET_RANDOM_ECHO_SUCCESS     = "随机获取Echo成功"
+	POST_ECHO_SUCCESS             = "发布Echo成功！"
+	GET_ECHOS_BY_PAGE_SUCCESS     = "获取Echos成功！"
+	DELETE_ECHO_SUCCESS           = "删除Echo成功"
+	GET_TODAY_ECHOS_SUCCESS       = "获取当日Echos成功"
+	UPDATE_ECHO_SUCCESS           = "更新Echo成功"
+	LIKE_ECHO_SUCCESS             = "点赞Echo成功"
+	GET_ECHO_BY_ID_SUCCESS        = "获取Echo成功"
+	GET_ALL_TAGS_SUCCESS          = "获取所有标签成功"
+	CREATE_TAG_SUCCESS            = "创建标签成功"
+	DELETE_TAG_SUCCESS            = "删除标签成功"
+	GET_ECHOS_BY_TAG_ID_SUCCESS   = "获取标签下的Echos成功"
+	QUERY_ECHOS_SUCCESS           = "查询Echos成功"
+	GET_HOT_ECHOS_SUCCESS         = "获取热门Echos成功"
+	GET_RANDOM_ECHO_SUCCESS       = "随机获取Echo成功"
+	GET_ON_THIS_DAY_ECHOS_SUCCESS = "获取那年今日Echos成功"
 )
 
 // Common 成功相关常量

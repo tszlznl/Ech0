@@ -223,6 +223,19 @@ func (echoService *EchoService) GetRandomEcho(ctx context.Context) (*model.Echo,
 	return echoService.echoRepository.GetRandomEcho(showPrivate)
 }
 
+func (echoService *EchoService) GetOnThisDayEchos(ctx context.Context, timezone string) ([]model.Echo, error) {
+	userid := viewer.MustFromContext(ctx).UserID()
+	showPrivate := false
+	if userid != "" {
+		user, err := echoService.commonService.CommonGetUserByUserId(ctx, userid)
+		if err != nil {
+			return nil, err
+		}
+		showPrivate = user.IsAdmin
+	}
+	return echoService.echoRepository.GetOnThisDayEchos(showPrivate, timezone), nil
+}
+
 func (echoService *EchoService) UpdateEcho(ctx context.Context, echo *model.Echo) error {
 	userid := viewer.MustFromContext(ctx).UserID()
 	user, err := echoService.commonService.CommonGetUserByUserId(ctx, userid)

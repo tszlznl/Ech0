@@ -173,7 +173,7 @@ func normalizeScopes(scopes []string) []string {
 
 // DeleteAccessToken 删除访问令牌。
 //
-// 删除前先把 JTI 写入黑名单，让 JWTAuthMiddleware 立刻拒绝该 token；否则光删 DB 行
+// 删除前先把 JTI 写入黑名单，让鉴权中间件立刻拒绝该 token；否则光删 DB 行
 // 不会让已签发的 JWT 失效，泄漏 token 仍可继续访问到自然过期 (GHSA-fpw6-hrg5-q5x5)。
 //
 // 注意：黑名单当前是 in-memory ristretto，重启会丢；不过对于会自然过期的 token，

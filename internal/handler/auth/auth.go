@@ -3,7 +3,7 @@
 
 // Package handler 提供认证相关的 HTTP 端点：token 刷新、登出、OAuth code 交换。
 //
-// 这三个端点均为公开路由（不经过 JWTAuthMiddleware），因为：
+// 这三个端点均为公开路由（不经过鉴权中间件 RequireAuth/OptionalAuth），因为：
 //   - /refresh 通过 HttpOnly Cookie 中的 refresh_token 鉴权
 //   - /logout 是 best-effort 操作（无 Cookie 也返回 200）
 //   - /exchange 通过一次性 code 鉴权（code 由 OAuth 回调流程生成）

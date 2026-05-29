@@ -538,3 +538,31 @@ func (echoHandler *EchoHandler) GetRandomEcho() gin.HandlerFunc {
 		}
 	})
 }
+
+// GetOnThisDayEchos 那年今日
+//
+//	@Summary		那年今日（On this day）
+//	@Description	返回过去年份中与今天同一「月-日」发布的 Echo（即「那年今日」）。需走认证路由（无有效 token 时按匿名处理，仅返回公开内容；管理员可包含私密）。按客户端时区头判定「今天」，结果按发布时间倒序。
+//	@Tags			Echo
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	handler.Response	"获取成功"
+//	@Failure		200	{object}	handler.Response	"获取失败"
+//	@Router			/echo/onthisday [get]
+func (echoHandler *EchoHandler) GetOnThisDayEchos() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		timezone := timezoneUtil.NormalizeTimezone(ctx.GetHeader(timezoneUtil.DefaultTimezoneHeader))
+		result, err := echoHandler.echoService.GetOnThisDayEchos(ctx.Request.Context(), timezone)
+		if err != nil {
+			return res.Response{
+				Msg: "",
+				Err: err,
+			}
+		}
+
+		return res.Response{
+			Data: result,
+			Msg:  commonModel.GET_ON_THIS_DAY_ECHOS_SUCCESS,
+		}
+	})
+}

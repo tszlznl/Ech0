@@ -123,7 +123,7 @@ func GenerateToken(claim jwt.Claims) (string, error) {
 }
 
 // ParseToken 解析 JWT（仅接受 typ=session / typ=access）。
-// 用于 JWTAuthMiddleware 鉴权和 AuthHandler.Logout 吊销 access_token。
+// 用于鉴权中间件（RequireAuth/OptionalAuth）和 AuthHandler.Logout 吊销 access_token。
 // 不接受 typ=refresh，防止 refresh_token 被当作 access_token 使用。
 func ParseToken(tokenString string) (*authModel.MyClaims, error) {
 	claims, err := parseTokenRaw(tokenString)

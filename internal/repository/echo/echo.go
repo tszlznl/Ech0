@@ -631,3 +631,72 @@ func (echoRepository *EchoRepository) GetRandomEcho(showPrivate bool) (*model.Ec
 	}
 	return &echos[0], nil
 }
+
+// GetOnThisDayEchos 返回「那年今日」——过去年份中与今天同一「月-日」发布的 Echo。
+// 在 Go 侧按用户时区算出每个过去年份当日的 [0点, 次日0点) Unix 区间再 OR 查询，
+// 走 (private, created_at) 索引、不依赖任何 DB 方言专属的日期函数。无匹配/空库返回空切片。
+func (echoRepository *EchoRepository) GetOnThisDayEchos(showPrivate bool, timezone string) []model.Echo {
+	loc := timezoneUtil.LoadLocationOrUTC(timezoneUtil.NormalizeTimezone(timezone))
+	now := time.Now().In(loc)
+	month, day, currentYear := now.Month(), now.Day(), now.Year()
+
+	// 找出最早一条 Echo 所在年份，限定回溯范围
+	minQuery := echoRepository.db().Model(&model.Echo{})
+	if !showPrivate {
+		minQuery = minQuery.Where("private = ?", false)
+	}
+	var minTs int64
+	if err := minQuery.Select("MIN(created_at)").Scan(&minTs).Error; err != nil || minTs == 0 {
+		return []model.Echo{}
+	}
+	earliestYear := time.Unix(minTs, 0).In(loc).Year()
+
+	unixRanges := onThisDayUnixRanges(earliestYear, currentYear, month, day, loc)
+	if len(unixRanges) == 0 {
+		return []model.Echo{}
+	}
+
+	conds := make([]string, 0, len(unixRanges))
+	args := make([]any, 0, len(unixRanges)*2+1)
+	for _, r := range unixRanges {
+		conds = append(conds, "(created_at >= ? AND created_at < ?)")
+		args = append(args, r[0], r[1])
+	}
+
+	where := "(" + strings.Join(conds, " OR ") + ")"
+	if !showPrivate {
+		where += " AND private = ?"
+		args = append(args, false)
+	}
+
+	var echos []model.Echo
+	if err := echoRepository.db().
+		Where(where, args...).
+		Preload("EchoFiles", func(db *gorm.DB) *gorm.DB {
+			return db.Order("echo_files.sort_order ASC")
+		}).
+		Preload("EchoFiles.File").
+		Preload("Extension").
+		Preload("Tags").
+		Order("created_at DESC").
+		Find(&echos).Error; err != nil {
+		return []model.Echo{}
+	}
+	return echos
+}
+
+// onThisDayUnixRanges 计算 [earliestYear, currentYear) 区间内每个「存在 month-day 这一天」的过去年份，
+// 其当日 [0点, 次日0点) 的 Unix 秒区间（按给定时区，逐年计算以正确处理 DST 导致的非 24h 天）。
+// 对非闰年的 2/29 等不存在的日期（time.Date 会归一化成 3/1）直接跳过。
+func onThisDayUnixRanges(earliestYear, currentYear int, month time.Month, day int, loc *time.Location) [][2]int64 {
+	var ranges [][2]int64
+	for y := earliestYear; y < currentYear; y++ {
+		start := time.Date(y, month, day, 0, 0, 0, 0, loc)
+		if start.Month() != month || start.Day() != day {
+			continue
+		}
+		end := start.AddDate(0, 0, 1)
+		ranges = append(ranges, [2]int64{start.Unix(), end.Unix()})
+	}
+	return ranges
+}

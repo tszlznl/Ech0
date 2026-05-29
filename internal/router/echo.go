@@ -29,22 +29,26 @@ func setupEchoRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	)
 	appRouterGroup.PublicRouterGroup.GET("/tags", h.EchoHandler.GetAllTags())
 
-	// Auth
-	// 读接口保留“可匿名降级”行为：无 token 或无效 token 时由 JWT 中间件降级为匿名用户继续访问。
-	appRouterGroup.AuthRouterGroup.POST("/echo/query", h.EchoHandler.QueryEchos())
+	// 公开可读接口：注册到「可匿名降级」组——无 token / 无效 token 按匿名继续，
+	// 携带有效 token 时按用户身份（管理员可见私密内容）。是否匿名由所在路由组决定，
+	// 不再依赖中间件内部的 path 名单。
+	appRouterGroup.OptionalAuthRouterGroup.POST("/echo/query", h.EchoHandler.QueryEchos())
 
 	// Deprecated: 以下分页/标签查询接口保留向后兼容，请优先使用 POST /echo/query
 	//nolint:staticcheck // SA1019: 兼容旧客户端
-	appRouterGroup.AuthRouterGroup.GET("/echo/page", h.EchoHandler.GetEchosByPage())
+	appRouterGroup.OptionalAuthRouterGroup.GET("/echo/page", h.EchoHandler.GetEchosByPage())
 	//nolint:staticcheck // SA1019: 兼容旧客户端
-	appRouterGroup.AuthRouterGroup.POST("/echo/page", h.EchoHandler.GetEchosByPage())
+	appRouterGroup.OptionalAuthRouterGroup.POST("/echo/page", h.EchoHandler.GetEchosByPage())
 	//nolint:staticcheck // SA1019: 兼容旧客户端
-	appRouterGroup.AuthRouterGroup.GET("/echo/tag/:tagid", h.EchoHandler.GetEchosByTagId())
+	appRouterGroup.OptionalAuthRouterGroup.GET("/echo/tag/:tagid", h.EchoHandler.GetEchosByTagId())
 
-	appRouterGroup.AuthRouterGroup.GET("/echo/today", h.EchoHandler.GetTodayEchos())
-	appRouterGroup.AuthRouterGroup.GET("/echo/hot", h.EchoHandler.GetHotEchos())
-	appRouterGroup.AuthRouterGroup.GET("/echo/random", h.EchoHandler.GetRandomEcho())
-	appRouterGroup.AuthRouterGroup.GET("/echo/:id", h.EchoHandler.GetEchoById())
+	appRouterGroup.OptionalAuthRouterGroup.GET("/echo/today", h.EchoHandler.GetTodayEchos())
+	appRouterGroup.OptionalAuthRouterGroup.GET("/echo/hot", h.EchoHandler.GetHotEchos())
+	appRouterGroup.OptionalAuthRouterGroup.GET("/echo/random", h.EchoHandler.GetRandomEcho())
+	appRouterGroup.OptionalAuthRouterGroup.GET("/echo/onthisday", h.EchoHandler.GetOnThisDayEchos())
+	appRouterGroup.OptionalAuthRouterGroup.GET("/echo/:id", h.EchoHandler.GetEchoById())
+
+	// 写操作：强制鉴权 + scope 校验。
 	appRouterGroup.AuthRouterGroup.POST(
 		"/echo",
 		middleware.RequireScopes(authModel.ScopeEchoWrite),

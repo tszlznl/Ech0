@@ -83,6 +83,29 @@ func TestSetupRouter_AuthGroupProtected(t *testing.T) {
 	}
 }
 
+// 锁住「公开可读 echo 接口匿名可达」契约：这些路由注册在 OptionalAuthRouterGroup，
+// 无 token 时应被放行（非 401），而非被强制鉴权拦截。若有人误把它们挪回强制组，此用例会失败。
+func TestSetupRouter_PublicEchoRoutesAllowAnonymous(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	initTestDatabase(t)
+	engine := gin.New()
+	SetupRouter(engine, buildTestHandlers(), buildTestMWDeps())
+
+	for _, path := range []string{
+		"/api/echo/today",
+		"/api/echo/hot",
+		"/api/echo/random",
+		"/api/echo/onthisday",
+	} {
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		rec := httptest.NewRecorder()
+		engine.ServeHTTP(rec, req)
+		if rec.Code == http.StatusUnauthorized {
+			t.Fatalf("expected %s to be anonymously reachable, got 401", path)
+		}
+	}
+}
+
 func TestSetupRouter_AllUsersRouteProtected(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	initTestDatabase(t)
@@ -104,7 +127,7 @@ func TestSetupRouter_AccessTokenWithoutRequiredScopeGetsForbidden(t *testing.T) 
 	engine := gin.New()
 
 	api := engine.Group("/api")
-	api.Use(middleware.NoCache(), middleware.JWTAuthMiddleware(nil))
+	api.Use(middleware.NoCache(), middleware.RequireAuth(nil))
 	api.PUT(
 		"/settings",
 		middleware.RequireScopes(authModel.ScopeAdminSettings),
@@ -141,7 +164,7 @@ func TestSetupRouter_AccessTokenWithScopePasses(t *testing.T) {
 	engine := gin.New()
 
 	api := engine.Group("/api")
-	api.Use(middleware.NoCache(), middleware.JWTAuthMiddleware(nil))
+	api.Use(middleware.NoCache(), middleware.RequireAuth(nil))
 	api.PUT(
 		"/settings",
 		middleware.RequireScopes(authModel.ScopeAdminSettings),
