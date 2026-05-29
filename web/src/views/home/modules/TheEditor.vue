@@ -47,6 +47,7 @@ const {
   extensionToAdd,
   websiteToAdd,
   locationToAdd,
+  tweetToAdd,
   tagToAdd,
   currentExtensionType,
 } = storeToRefs(editorStore)
@@ -121,6 +122,16 @@ const fillEditorFromEchoToUpdate = () => {
           typeof payload.latitude === 'number' && typeof payload.longitude === 'number'
             ? `${payload.latitude},${payload.longitude}`
             : ''
+        break
+      }
+      case ExtensionType.TWEET: {
+        const payload = echoToUpdate.value.extension.payload
+        tweetToAdd.value = {
+          url: payload.url || '',
+          username: payload.username || '',
+          statusId: payload.statusId || '',
+        }
+        extensionToAdd.value.extension = payload.url || ''
         break
       }
     }
