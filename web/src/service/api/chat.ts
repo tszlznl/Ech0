@@ -3,21 +3,16 @@
 
 import { useAuthStore } from '@/stores/auth'
 import { i18n } from '@/locales'
+import { getApiUrl } from '@/service/request/shared'
 
 /**
- * 解析 baseURL（与 service/request 的代理逻辑保持一致），用于原生 fetch 读取 SSE。
+ * 解析 Chat 请求地址，用于原生 fetch 读取 SSE。
  * 不走 ofetch 是因为需要逐块读取 ReadableStream 做流式渲染。
+ * 复用 getApiUrl()（与全站请求同一套 baseURL+proxy 逻辑）：开发环境拼出含 host 的完整后端地址，
+ * 生产环境拼出同源 /api 前缀——避免手写逻辑丢失 host 或漏掉 /api 前缀导致 404。
  */
 function resolveChatURL(): string {
-  const base = import.meta.env.VITE_SERVICE_BASE_URL ?? ''
-  let url = `${base}/chat`
-  if (import.meta.env.VITE_PROXY === 'YES') {
-    const proxyUrl = import.meta.env.VITE_PROXY_URL
-    if (proxyUrl) {
-      url = `${proxyUrl}/chat`
-    }
-  }
-  return url
+  return `${getApiUrl()}/chat`
 }
 
 interface ChatStreamHandlers {

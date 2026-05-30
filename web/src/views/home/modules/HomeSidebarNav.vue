@@ -35,7 +35,7 @@
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useEchoStore, useUserStore } from '@/stores'
+import { useEchoStore, useSettingStore, useUserStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import Search from '@/components/icons/search.vue'
 import TheFilter from './TheFilter.vue'
@@ -45,8 +45,10 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const echoStore = useEchoStore()
+const settingStore = useSettingStore()
 const { isLogin } = storeToRefs(userStore)
 const { searchingMode, isFilteringMode } = storeToRefs(echoStore)
+const { AgentSetting } = storeToRefs(settingStore)
 const props = defineProps<{
   mobileSearchOpen?: boolean
 }>()
@@ -111,10 +113,13 @@ const items = [
     labelKey: 'homeSidebar.plaza',
     kind: 'homeTab',
   },
+  { id: 'chat', to: { name: 'chat' }, labelKey: 'homeSidebar.chat', kind: 'route' },
 ] as const
 
 const visibleItems = computed(() =>
   items.filter((item) => {
+    // 对话入口：仅登录且 Agent 已开启时显示，避免未配置模型的用户被误导
+    if (item.id === 'chat') return isLogin.value && AgentSetting.value.enable
     if (item.id === 'publish' || item.id === 'panel') return isLogin.value
     return true
   }),

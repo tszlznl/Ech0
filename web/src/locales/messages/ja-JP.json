@@ -405,7 +405,8 @@
     "publish": "投稿",
     "plaza": "探索",
     "status": "ステータス",
-    "tags": "タグ"
+    "tags": "タグ",
+    "chat": "チャット"
   },
   "homeBio": {
     "tagline": "ようこそ"
@@ -1006,13 +1007,11 @@
     "reindexResult": "{indexed}/{total} 件をインデックス化、{failed} 件失敗。"
   },
   "chatPanel": {
-    "title": "AI チャット",
     "intro": "過去の Echo を振り返り、まとめます。質問に関連する Echo を読み取って回答し、根拠が足りない場合は正直にそう伝えます。",
     "suggestionsTitle": "こう聞いてみましょう：",
     "suggestion1": "最近わたしが注目し考えていたことをまとめて",
     "suggestion2": "この期間の気分の変化は？",
     "suggestion3": "書き留めた断片的なアイデアをまとめて",
-    "sources": "参照元",
     "inputPlaceholder": "過去の Echo について質問…（Enter で送信、Shift+Enter で改行）",
     "send": "送信",
     "clear": "クリア",

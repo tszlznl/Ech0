@@ -405,7 +405,8 @@
     "publish": "发布",
     "plaza": "探索",
     "status": "状态",
-    "tags": "标签"
+    "tags": "标签",
+    "chat": "对话"
   },
   "homeBio": {
     "tagline": "欢迎光临"
@@ -1006,13 +1007,11 @@
     "reindexResult": "已索引 {indexed}/{total} 条，失败 {failed} 条。"
   },
   "chatPanel": {
-    "title": "AI 对话",
     "intro": "基于你过往的 Echo 进行回顾与综合。它读取与你问题相关的若干条 Echo 后作答，缺乏依据时会如实说明。",
     "suggestionsTitle": "试试这样问：",
     "suggestion1": "总结我最近一段时间在关注和思考什么",
     "suggestion2": "我这段时间的心情有什么变化",
     "suggestion3": "把我记过的零散想法汇总一下",
-    "sources": "引用来源",
     "inputPlaceholder": "问问关于你过往 Echo 的事…（Enter 发送，Shift+Enter 换行）",
     "send": "发送",
     "clear": "清空",

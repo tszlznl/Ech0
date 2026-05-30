@@ -405,7 +405,8 @@
     "publish": "Publish",
     "plaza": "Explore",
     "status": "Status",
-    "tags": "Tags"
+    "tags": "Tags",
+    "chat": "Chat"
   },
   "homeBio": {
     "tagline": "Welcome"
@@ -1006,13 +1007,11 @@
     "reindexResult": "Indexed {indexed}/{total}, {failed} failed."
   },
   "chatPanel": {
-    "title": "AI Chat",
     "intro": "Reflect on and summarize your past echos. It reads the echos most relevant to your question, and tells you honestly when there isn't enough to go on.",
     "suggestionsTitle": "Try asking:",
     "suggestion1": "Summarize what I've been focusing on and thinking about lately",
     "suggestion2": "How has my mood changed over this period",
     "suggestion3": "Pull together the scattered ideas I've jotted down",
-    "sources": "Sources",
     "inputPlaceholder": "Ask about your past echos… (Enter to send, Shift+Enter for newline)",
     "send": "Send",
     "clear": "Clear",
