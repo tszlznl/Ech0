@@ -25,10 +25,10 @@ STEPS=(
   "go-fmt|$C_HDR|后端：格式化 (golangci-lint fmt)|golangci-lint fmt"
   "go-lint|$C_HDR|后端：Lint (golangci-lint run)|golangci-lint run"
   "swagger|$C_HDR|后端：Swagger 文档生成 (swag init)|swag init -g internal/server/server.go -o internal/swagger --parseInternal"
-  "web-format|$C_HDR_WEB|前端 web：格式化 (prettier --write src/)|pnpm -C web format"
-  "web-lint|$C_HDR_WEB|前端 web：Lint (eslint . --fix)|pnpm -C web lint"
-  "web-style|$C_HDR_WEB|前端 web：Stylelint (stylelint --fix)|pnpm -C web lint:style"
-  "web-i18n|$C_HDR_WEB|前端 web：i18n 校验 (key / unused / hardcoded / pseudo-smoke)|pnpm -C web run i18n:check"
+  "web-format|$C_HDR_WEB|前端 web：格式化 (prettier --write src/)|(cd web && pnpm format)"
+  "web-lint|$C_HDR_WEB|前端 web：Lint (eslint . --fix)|(cd web && pnpm lint)"
+  "web-style|$C_HDR_WEB|前端 web：Stylelint (stylelint --fix)|(cd web && pnpm lint:style)"
+  "web-i18n|$C_HDR_WEB|前端 web：i18n 校验 (key / unused / hardcoded / pseudo-smoke)|(cd web && pnpm run i18n:check)"
 )
 
 keys=()
