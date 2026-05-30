@@ -7,6 +7,29 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/lin-snow/Ech0/releases) — earlier release notes are not retroactively imported here.
 
 
+## [4.9.0] - 2026-05-31
+
+### Added
+
+- **LLM Chat — talk to your timeline (RAG).** A new owner-only AI chat that answers questions over your own echos. Echos are incrementally indexed into a `sqlite-vec` vector store on create/update/delete (plus an admin full-reindex endpoint), retrieved top-k by semantic similarity, and answered with streaming SSE. Supports multi-turn conversation memory and tool-calling retrieval (`search_echos`, with tag / date filters). Embedding is configured independently via an OpenAI-compatible `/v1/embeddings` endpoint; the chat itself speaks the OpenAI or Anthropic protocol. An optional **multimodal** mode feeds matched echo images to the model, and retrieval hits surface their Extension shares (music / website / location) and image thumbnails in the UI. Entry point lives in the homepage sidebar with a dedicated `/chat` view; all settings are grouped under the Copilot panel.
+- **"On This Day" API** — returns echos posted on this date in previous years.
+- **Random Echo API** — returns a single random echo.
+
+### Fixed
+
+- **Editing an echo returns to the same timeline page** instead of jumping back to the top.
+- **TWEET extension data is restored when editing an echo**, so Tweet/X cards no longer lose their embed on save.
+- **Timeline pager stays in sync with the URL** after filter changes.
+
+### Internal
+
+- **`agent` package refactored into a `copilot` domain** with a protocol abstraction (renamed from "provider"), tool-calling retrieval, and a `GenerateStream` API (real streaming on OpenAI; single-block v1 fallback on Anthropic). The Gemini integration was dropped.
+- **Frontend typings split** — `app.d.ts` broken into per-domain `.d.ts` files.
+- **Toolchain**: pnpm bumped to 11.5.0; `check.sh` hardened.
+- **CI**: auto-deploy `site` & `hub` to Cloudflare Pages.
+- **Dependency bumps (Go)**: `go-patch-minor` group (6 updates).
+- **Dependency bumps (`web/`)**: `vue` 3.5.35, `vue-router` 5.1.0, `vue-tsc` 3.3.2, `npm-run-all2` 8.0.4 → 9.0.1, plus the `web-patch-minor` group (4 updates).
+
 ## [4.8.2] - 2026-05-23
 
 ### Fixed
