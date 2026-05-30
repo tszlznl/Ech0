@@ -350,8 +350,7 @@
     "sso": "シングルサインオン",
     "extension": "機能拡張",
     "advance": "外部連携",
-    "systemLog": "システムログ",
-    "chat": "AI チャット"
+    "systemLog": "システムログ"
   },
   "homeNav": {
     "themeToggleTitle": "テーマを切替（次：{mode}）",
@@ -662,7 +661,7 @@
     "exportFailed": "エクスポートに失敗しました"
   },
   "agentSetting": {
-    "title": "Agent 設定",
+    "title": "モデル",
     "enableAgent": "Agent を有効化",
     "protocol": "API プロトコル",
     "protocolOpenAI": "OpenAI 互換",
@@ -984,6 +983,9 @@
   },
   "websocket": {
     "invalidMessage": "無効な WebSocket メッセージを受信しました"
+  },
+  "copilotSetting": {
+    "title": "Ech0 Copilot"
   },
   "embeddingSetting": {
     "title": "ベクトルインデックス",

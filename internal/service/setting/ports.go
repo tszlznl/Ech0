@@ -38,6 +38,8 @@ type Service interface {
 	GetAgentInfo(setting *model.AgentSetting) error
 	GetAgentSettings(ctx context.Context, setting *model.AgentSetting) error
 	UpdateAgentSettings(ctx context.Context, newSetting *model.AgentSettingDto) error
+	GetEmbeddingSetting(ctx context.Context) (model.EmbeddingSetting, error)
+	UpdateEmbeddingSetting(ctx context.Context, dto model.EmbeddingSettingDto) error
 }
 
 type (

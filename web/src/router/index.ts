@@ -90,11 +90,6 @@ const router = createRouter({
           component: () => import('../views/panel/modules/TheCommentManager.vue'),
         },
         {
-          path: 'chat',
-          name: 'panel-chat',
-          component: () => import('../views/panel/modules/TheChat.vue'),
-        },
-        {
           path: 'advance',
           name: 'panel-advance',
           component: () => import('../views/panel/modules/TheAdvance.vue'),
@@ -151,6 +146,17 @@ const router = createRouter({
       meta: {
         title: 'Hub',
         description: 'Discover and explore curated content in Ech0 hub.',
+      },
+    },
+    {
+      path: '/chat',
+      name: 'chat',
+      component: () => import('../views/chat/ChatView.vue'),
+      meta: {
+        title: 'Chat',
+        description: 'Reflect on and summarize your past echos with AI.',
+        requiresAuth: true,
+        noindex: true,
       },
     },
     {

@@ -149,6 +149,19 @@ definitions:
           $ref: '#/definitions/model.Tag'
         type: array
     type: object
+  model.EmbeddingSettingDto:
+    properties:
+      api_key:
+        type: string
+      base_url:
+        type: string
+      dim:
+        type: integer
+      enable:
+        type: boolean
+      model:
+        type: string
+    type: object
   model.LoginDto:
     properties:
       password:
@@ -1198,6 +1211,42 @@ paths:
       summary: 获取今天的Echo列表
       tags:
       - Echo
+  /embedding/settings:
+    get:
+      consumes:
+      - application/json
+      description: 获取系统的 Embedding 向量相关设置
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取 Embedding 设置失败
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: 获取 Embedding 设置
+      tags:
+      - 系统设置
+    put:
+      consumes:
+      - application/json
+      description: 更新系统的 Embedding 向量相关设置
+      parameters:
+      - description: 新的 Embedding 设置
+        in: body
+        name: settings
+        required: true
+        schema:
+          $ref: '#/definitions/model.EmbeddingSettingDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新 Embedding 设置失败
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: 更新 Embedding 设置
+      tags:
+      - 系统设置
   /file/{id}:
     delete:
       description: 根据 ID 删除文件

@@ -350,8 +350,7 @@
     "sso": "SSO",
     "extension": "Erweiterungen",
     "advance": "Integrationen",
-    "systemLog": "Logs",
-    "chat": "KI-Chat"
+    "systemLog": "Logs"
   },
   "homeNav": {
     "themeToggleTitle": "Theme wechseln (nächstes: {mode})",
@@ -662,7 +661,7 @@
     "exportFailed": "Export fehlgeschlagen"
   },
   "agentSetting": {
-    "title": "Agent-Einstellungen",
+    "title": "Modell",
     "enableAgent": "Agent aktivieren",
     "protocol": "API-Protokoll",
     "protocolOpenAI": "OpenAI-kompatibel",
@@ -984,6 +983,9 @@
   },
   "websocket": {
     "invalidMessage": "Ungültige WebSocket-Nachricht empfangen"
+  },
+  "copilotSetting": {
+    "title": "Ech0 Copilot"
   },
   "embeddingSetting": {
     "title": "Vektorindex",

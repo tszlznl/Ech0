@@ -25,6 +25,7 @@ import (
 	handler11 "github.com/lin-snow/ech0/internal/handler/connect"
 	handler14 "github.com/lin-snow/ech0/internal/handler/dashboard"
 	handler5 "github.com/lin-snow/ech0/internal/handler/echo"
+	handler17 "github.com/lin-snow/ech0/internal/handler/embedding"
 	handler6 "github.com/lin-snow/ech0/internal/handler/file"
 	handler8 "github.com/lin-snow/ech0/internal/handler/init"
 	handler13 "github.com/lin-snow/ech0/internal/handler/migration"
@@ -180,9 +181,10 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 	embeddingRepository := repository3.NewEmbeddingRepository(dbProvider)
 	embeddingService := service.NewEmbeddingService(embeddingRepository, keyValueRepository, echoRepository)
 	chatService := service14.NewChatService(embeddingService, keyValueRepository)
-	chatHandler := handler16.NewChatHandler(chatService, embeddingService)
+	chatHandler := handler16.NewChatHandler(chatService)
+	embeddingHandler := handler17.NewEmbeddingHandler(embeddingService)
 	mcpHandler := mcp.NewHandler(echoService, userService, commentService, fileService, commonService, connectService, agentService, settingService)
-	bundle := handler.NewBundle(webHandler, userHandler, authHandler, echoHandler, fileHandler, commentHandler, initHandler, commonHandler, settingHandler, connectHandler, backupHandler, migrationHandler, dashboardHandler, agentHandler, chatHandler, mcpHandler)
+	bundle := handler.NewBundle(webHandler, userHandler, authHandler, echoHandler, fileHandler, commentHandler, initHandler, commonHandler, settingHandler, connectHandler, backupHandler, migrationHandler, dashboardHandler, agentHandler, chatHandler, embeddingHandler, mcpHandler)
 	return bundle, nil
 }
 
@@ -263,7 +265,7 @@ var RuntimeSet = server.ProviderSet
 
 var EventSet = wire.NewSet(repository14.EchoSet, repository14.UserSet, repository14.KeyValueSet, repository14.QueueSet, repository14.WebhookSet, repository14.EmbeddingSet, wire.Bind(new(registry.WebhookObserver), new(*webhook.Dispatcher)), wire.Bind(new(subscriber.DeadLetterProcessor), new(*webhook.Dispatcher)), webhook.NewDispatcher, subscriber.NewBackupScheduler, subscriber.NewDeadLetterResolver, subscriber.NewAgentProcessor, subscriber.NewEmbeddingProcessor, service15.EmbeddingSet, ProvideSubscriptionProviders, registry.NewEventRegistry)
 
-var HandlerSet = wire.NewSet(publisher.New, wire.Bind(new(service7.EventPublisher), new(*publisher.Publisher)), storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository14.FileSet, handler.WebSet, repository14.UserSet, repository14.AuthSet, service15.UserSet, service15.AuthSet, handler.UserSet, handler.AuthSet, repository14.EchoSet, service15.EchoSet, handler.EchoSet, repository14.CommentSet, service15.CommentSet, handler.CommentSet, repository14.CommonSet, service15.FileSet, handler.FileSet, repository14.InitSet, service15.InitSet, handler.InitSet, service15.CommonSet, handler.CommonSet, repository14.WebhookSet, repository14.KeyValueSet, repository14.SettingSet, service15.SettingSet, handler.SettingSet, repository14.ConnectSet, service15.ConnectSet, handler.ConnectSet, service15.DashboardSet, handler.DashboardSet, service15.AgentSet, handler.AgentSet, repository14.EmbeddingSet, service15.EmbeddingSet, service15.ChatSet, handler.ChatSet, service15.BackupSet, handler.BackupSet, repository14.MigrationSet, service15.MigratorSet, handler.MigrationSet, handler.MCPSet, handler.NewBundle)
+var HandlerSet = wire.NewSet(publisher.New, wire.Bind(new(service7.EventPublisher), new(*publisher.Publisher)), storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository14.FileSet, handler.WebSet, repository14.UserSet, repository14.AuthSet, service15.UserSet, service15.AuthSet, handler.UserSet, handler.AuthSet, repository14.EchoSet, service15.EchoSet, handler.EchoSet, repository14.CommentSet, service15.CommentSet, handler.CommentSet, repository14.CommonSet, service15.FileSet, handler.FileSet, repository14.InitSet, service15.InitSet, handler.InitSet, service15.CommonSet, handler.CommonSet, repository14.WebhookSet, repository14.KeyValueSet, repository14.SettingSet, service15.SettingSet, handler.SettingSet, repository14.ConnectSet, service15.ConnectSet, handler.ConnectSet, service15.DashboardSet, handler.DashboardSet, service15.AgentSet, handler.AgentSet, repository14.EmbeddingSet, service15.EmbeddingSet, handler.EmbeddingSet, service15.ChatSet, handler.ChatSet, service15.BackupSet, handler.BackupSet, repository14.MigrationSet, service15.MigratorSet, handler.MigrationSet, handler.MCPSet, handler.NewBundle)
 
 var MiddlewareSet = wire.NewSet(repository14.AuthSet, middleware.ProviderSet)
 

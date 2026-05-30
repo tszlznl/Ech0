@@ -4,14 +4,14 @@
   <div class="w-full px-2">
     <!-- 连接设置 -->
     <TheConnectSetting class="mb-3" />
-    <!-- Agent 设置 -->
-    <TheAgentSetting />
+    <!-- Ech0 Copilot 设置 -->
+    <TheCopilotSetting class="mb-3" />
   </div>
 </template>
 
 <script setup lang="ts">
 import TheConnectSetting from './TheSetting/TheConnectSetting.vue'
-import TheAgentSetting from './TheSetting/TheAgentSetting.vue'
+import TheCopilotSetting from './TheCopilot/TheCopilotSetting.vue'
 </script>
 
 <style scoped></style>

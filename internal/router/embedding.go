@@ -9,11 +9,12 @@ import (
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 )
 
-// setupChatRoutes 注册 Chat 流式问答路由（owner / 管理员）。
-func setupChatRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
+// setupEmbeddingRoutes 注册 Embedding 向量索引操作路由（owner / 管理员）。
+// 注意：Embedding 设置（get/update）归口到 setupSettingRoutes。
+func setupEmbeddingRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	appRouterGroup.AuthRouterGroup.POST(
-		"/chat",
+		"/embedding/reindex",
 		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.ChatHandler.Ask(),
+		h.EmbeddingHandler.Reindex(),
 	)
 }

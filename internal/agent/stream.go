@@ -130,7 +130,7 @@ func streamOpenAI(
 		ch <- StreamChunk{Err: err}
 		return
 	}
-	defer stream.Close()
+	defer func() { _ = stream.Close() }()
 
 	for {
 		resp, recvErr := stream.Recv()

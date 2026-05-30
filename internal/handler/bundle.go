@@ -13,6 +13,7 @@ import (
 	connectHandler "github.com/lin-snow/ech0/internal/handler/connect"
 	dashboardHandler "github.com/lin-snow/ech0/internal/handler/dashboard"
 	echoHandler "github.com/lin-snow/ech0/internal/handler/echo"
+	embeddingHandler "github.com/lin-snow/ech0/internal/handler/embedding"
 	fileHandler "github.com/lin-snow/ech0/internal/handler/file"
 	initHandler "github.com/lin-snow/ech0/internal/handler/init"
 	migrationHandler "github.com/lin-snow/ech0/internal/handler/migration"
@@ -39,6 +40,7 @@ type Bundle struct {
 	DashboardHandler *dashboardHandler.DashboardHandler
 	AgentHandler     *agentHandler.AgentHandler
 	ChatHandler      *chatHandler.ChatHandler
+	EmbeddingHandler *embeddingHandler.EmbeddingHandler
 	MCPHandler       *mcp.Handler
 }
 
@@ -59,6 +61,7 @@ func NewBundle(
 	dashboardHandler *dashboardHandler.DashboardHandler,
 	agentHandler *agentHandler.AgentHandler,
 	chatHandler *chatHandler.ChatHandler,
+	embeddingHandler *embeddingHandler.EmbeddingHandler,
 	mcpHandler *mcp.Handler,
 ) *Bundle {
 	return &Bundle{
@@ -77,6 +80,7 @@ func NewBundle(
 		DashboardHandler: dashboardHandler,
 		AgentHandler:     agentHandler,
 		ChatHandler:      chatHandler,
+		EmbeddingHandler: embeddingHandler,
 		MCPHandler:       mcpHandler,
 	}
 }

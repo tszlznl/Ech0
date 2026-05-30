@@ -129,4 +129,15 @@ func setupSettingRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 		middleware.RequireScopes(authModel.ScopeAdminSettings),
 		h.SettingHandler.UpdateAgentSettings(),
 	)
+
+	appRouterGroup.AuthRouterGroup.GET(
+		"/embedding/settings",
+		middleware.RequireScopes(authModel.ScopeAdminSettings),
+		h.SettingHandler.GetEmbeddingSettings(),
+	)
+	appRouterGroup.AuthRouterGroup.PUT(
+		"/embedding/settings",
+		middleware.RequireScopes(authModel.ScopeAdminSettings),
+		h.SettingHandler.UpdateEmbeddingSettings(),
+	)
 }

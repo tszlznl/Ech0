@@ -1,34 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2025-2026 lin-snow
 
-import { request } from '../request'
 import { useAuthStore } from '@/stores/auth'
 import { i18n } from '@/locales'
-
-// 获取 Embedding 向量设置
-export function fetchGetEmbeddingSettings() {
-  return request<App.Api.Chat.EmbeddingSetting>({
-    url: '/chat/embedding/settings',
-    method: 'GET',
-  })
-}
-
-// 更新 Embedding 向量设置
-export function fetchUpdateEmbeddingSettings(data: App.Api.Chat.EmbeddingSettingDto) {
-  return request<null>({
-    url: '/chat/embedding/settings',
-    method: 'PUT',
-    data,
-  })
-}
-
-// 触发全量重建向量索引
-export function fetchReindexEmbeddings() {
-  return request<App.Api.Chat.ReindexResult>({
-    url: '/chat/reindex',
-    method: 'POST',
-  })
-}
 
 /**
  * 解析 baseURL（与 service/request 的代理逻辑保持一致），用于原生 fetch 读取 SSE。

@@ -603,7 +603,7 @@ func (echoRepository *EchoRepository) GetHotEchos(limit int, showPrivate bool) (
 func (echoRepository *EchoRepository) GetRandomEcho(showPrivate bool) (*model.Echo, error) {
 	// SQLite / PostgreSQL 用 RANDOM()，MySQL 用 RAND()
 	randomExpr := "RANDOM()"
-	if echoRepository.db().Dialector.Name() == "mysql" {
+	if echoRepository.db().Name() == "mysql" {
 		randomExpr = "RAND()"
 	}
 

@@ -660,6 +660,58 @@ func (settingHandler *SettingHandler) UpdateBackupScheduleSetting() gin.HandlerF
 	})
 }
 
+// GetEmbeddingSettings 获取 Embedding 向量设置
+//
+//	@Summary		获取 Embedding 设置
+//	@Description	获取系统的 Embedding 向量相关设置
+//	@Tags			系统设置
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	handler.Response	"获取 Embedding 设置成功"
+//	@Failure		200	{object}	handler.Response	"获取 Embedding 设置失败"
+//	@Router			/embedding/settings [get]
+func (settingHandler *SettingHandler) GetEmbeddingSettings() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		setting, err := settingHandler.settingService.GetEmbeddingSetting(ctx.Request.Context())
+		if err != nil {
+			return res.Response{Err: err}
+		}
+		return res.Response{
+			Data: setting,
+			Msg:  commonModel.GET_SETTINGS_SUCCESS,
+		}
+	})
+}
+
+// UpdateEmbeddingSettings 更新 Embedding 向量设置
+//
+//	@Summary		更新 Embedding 设置
+//	@Description	更新系统的 Embedding 向量相关设置
+//	@Tags			系统设置
+//	@Accept			json
+//	@Produce		json
+//	@Param			settings	body		model.EmbeddingSettingDto	true	"新的 Embedding 设置"
+//	@Success		200			{object}	handler.Response			"更新 Embedding 设置成功"
+//	@Failure		200			{object}	handler.Response			"更新 Embedding 设置失败"
+//	@Router			/embedding/settings [put]
+func (settingHandler *SettingHandler) UpdateEmbeddingSettings() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		var dto model.EmbeddingSettingDto
+		if err := ctx.ShouldBindJSON(&dto); err != nil {
+			return res.Response{
+				Msg: commonModel.INVALID_REQUEST_BODY,
+				Err: err,
+			}
+		}
+		if err := settingHandler.settingService.UpdateEmbeddingSetting(ctx.Request.Context(), dto); err != nil {
+			return res.Response{Err: err}
+		}
+		return res.Response{
+			Msg: commonModel.UPDATE_SETTINGS_SUCCESS,
+		}
+	})
+}
+
 // GetAgentInfo 获取 Agent 信息
 //
 //	@Summary		获取 Agent 信息

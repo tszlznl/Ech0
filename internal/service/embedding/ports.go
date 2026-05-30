@@ -9,18 +9,18 @@ import (
 
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	model "github.com/lin-snow/ech0/internal/model/embedding"
-	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 )
 
 // Service 是 Embedding 索引与检索的对外接口。
+//
+// Embedding 设置的读写已移交 setting 域（settingService），故此接口不再暴露
+// GetSetting/UpdateSetting；本服务内部仍按需读取该设置用于索引与检索。
 type Service interface {
 	IndexEcho(ctx context.Context, echo echoModel.Echo) error
 	RemoveEcho(ctx context.Context, echoID string) error
 	Backfill(ctx context.Context) (BackfillResult, error)
 	Search(ctx context.Context, query string, k int) ([]model.SearchResult, error)
 	Enabled(ctx context.Context) bool
-	GetSetting(ctx context.Context) (settingModel.EmbeddingSetting, error)
-	UpdateSetting(ctx context.Context, dto settingModel.EmbeddingSettingDto) error
 }
 
 // Indexer 是事件订阅者使用的最小接口（仅增量索引）。

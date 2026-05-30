@@ -155,6 +155,12 @@ func featureRouteModules() []RouteModule {
 			},
 		},
 		routeModule{
+			name: "embedding",
+			register: func(ctx *RouterContext) {
+				setupEmbeddingRoutes(ctx.Groups, ctx.Handlers)
+			},
+		},
+		routeModule{
 			name: "migration",
 			register: func(ctx *RouterContext) {
 				setupMigrationRoutes(ctx.Groups, ctx.Handlers)

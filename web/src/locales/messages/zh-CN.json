@@ -350,8 +350,7 @@
     "sso": "单点登录",
     "extension": "功能扩展",
     "advance": "外部集成",
-    "systemLog": "系统日志",
-    "chat": "AI 对话"
+    "systemLog": "系统日志"
   },
   "homeNav": {
     "themeToggleTitle": "切换主题（下一个：{mode}）",
@@ -662,7 +661,7 @@
     "exportFailed": "导出失败"
   },
   "agentSetting": {
-    "title": "Agent 设置",
+    "title": "模型",
     "enableAgent": "启用 Agent",
     "protocol": "接口协议",
     "protocolOpenAI": "OpenAI 兼容",
@@ -985,8 +984,11 @@
   "websocket": {
     "invalidMessage": "收到无效的 WebSocket 消息"
   },
+  "copilotSetting": {
+    "title": "Ech0 Copilot"
+  },
   "embeddingSetting": {
-    "title": "向量索引设置",
+    "title": "向量索引",
     "intro": "为你的 Echo 建立向量索引后，才能在 AI 对话中检索与回顾过往内容。Embedding 服务独立于生成所用的 LLM 配置。",
     "enable": "启用索引",
     "modelName": "Embedding 模型",

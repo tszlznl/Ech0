@@ -131,6 +131,7 @@ var HandlerSet = wire.NewSet(
 
 	repository.EmbeddingSet,
 	service.EmbeddingSet,
+	handler.EmbeddingSet,
 	service.ChatSet,
 	handler.ChatSet,
 

@@ -350,8 +350,7 @@
     "sso": "SSO",
     "extension": "Extensions",
     "advance": "Integrations",
-    "systemLog": "Logs",
-    "chat": "AI Chat"
+    "systemLog": "Logs"
   },
   "homeNav": {
     "themeToggleTitle": "Toggle theme (next: {mode})",
@@ -662,7 +661,7 @@
     "exportFailed": "Export failed"
   },
   "agentSetting": {
-    "title": "Agent Settings",
+    "title": "Model",
     "enableAgent": "Enable Agent",
     "protocol": "API Protocol",
     "protocolOpenAI": "OpenAI Compatible",
@@ -984,6 +983,9 @@
   },
   "websocket": {
     "invalidMessage": "Received invalid WebSocket message"
+  },
+  "copilotSetting": {
+    "title": "Ech0 Copilot"
   },
   "embeddingSetting": {
     "title": "Vector Index",

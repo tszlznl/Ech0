@@ -14,6 +14,7 @@ import (
 	connectHandler "github.com/lin-snow/ech0/internal/handler/connect"
 	dashboardHandler "github.com/lin-snow/ech0/internal/handler/dashboard"
 	echoHandler "github.com/lin-snow/ech0/internal/handler/echo"
+	embeddingHandler "github.com/lin-snow/ech0/internal/handler/embedding"
 	fileHandler "github.com/lin-snow/ech0/internal/handler/file"
 	initHandler "github.com/lin-snow/ech0/internal/handler/init"
 	migrationHandler "github.com/lin-snow/ech0/internal/handler/migration"
@@ -38,6 +39,7 @@ var (
 	DashboardSet = wire.NewSet(dashboardHandler.NewDashboardHandler)
 	AgentSet     = wire.NewSet(agentHandler.NewAgentHandler)
 	ChatSet      = wire.NewSet(chatHandler.NewChatHandler)
+	EmbeddingSet = wire.NewSet(embeddingHandler.NewEmbeddingHandler)
 	MigrationSet = wire.NewSet(migrationHandler.NewMigrationHandler)
 	MCPSet       = wire.NewSet(mcp.NewHandler)
 )

@@ -50,25 +50,6 @@ func (s *EmbeddingService) getSetting(ctx context.Context) (settingModel.Embeddi
 	return setting, nil
 }
 
-func (s *EmbeddingService) GetSetting(ctx context.Context) (settingModel.EmbeddingSetting, error) {
-	return s.getSetting(ctx)
-}
-
-func (s *EmbeddingService) UpdateSetting(ctx context.Context, dto settingModel.EmbeddingSettingDto) error {
-	setting := settingModel.EmbeddingSetting{
-		Enable:  dto.Enable,
-		Model:   strings.TrimSpace(dto.Model),
-		ApiKey:  strings.TrimSpace(dto.ApiKey),
-		BaseURL: strings.TrimSpace(dto.BaseURL),
-		Dim:     dto.Dim,
-	}
-	encoded, err := json.Marshal(setting)
-	if err != nil {
-		return err
-	}
-	return s.kv.AddOrUpdateKeyValue(ctx, commonModel.EmbeddingSettingKey, string(encoded))
-}
-
 func (s *EmbeddingService) Enabled(ctx context.Context) bool {
 	setting, err := s.getSetting(ctx)
 	if err != nil {

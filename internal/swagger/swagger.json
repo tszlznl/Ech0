@@ -1137,6 +1137,61 @@
                 }
             }
         },
+        "/embedding/settings": {
+            "get": {
+                "description": "获取系统的 Embedding 向量相关设置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "系统设置"
+                ],
+                "summary": "获取 Embedding 设置",
+                "responses": {
+                    "200": {
+                        "description": "获取 Embedding 设置失败",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新系统的 Embedding 向量相关设置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "系统设置"
+                ],
+                "summary": "更新 Embedding 设置",
+                "parameters": [
+                    {
+                        "description": "新的 Embedding 设置",
+                        "name": "settings",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.EmbeddingSettingDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新 Embedding 设置失败",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/file/stream": {
             "get": {
                 "description": "按路径读取并返回文件流",
@@ -3143,6 +3198,26 @@
                     "items": {
                         "$ref": "#/definitions/model.Tag"
                     }
+                }
+            }
+        },
+        "model.EmbeddingSettingDto": {
+            "type": "object",
+            "properties": {
+                "api_key": {
+                    "type": "string"
+                },
+                "base_url": {
+                    "type": "string"
+                },
+                "dim": {
+                    "type": "integer"
+                },
+                "enable": {
+                    "type": "boolean"
+                },
+                "model": {
+                    "type": "string"
                 }
             }
         },
