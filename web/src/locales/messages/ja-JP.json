@@ -405,8 +405,7 @@
     "publish": "投稿",
     "plaza": "探索",
     "status": "ステータス",
-    "tags": "タグ",
-    "chat": "チャット"
+    "tags": "タグ"
   },
   "homeBio": {
     "tagline": "ようこそ"
@@ -675,7 +674,8 @@
     "baseUrlPlaceholder": "カスタム Base URL を入力",
     "baseUrlHint": "「OpenAI 互換」プロトコルを選んだ場合、ここに DeepSeek や Ollama などのサービスのエンドポイントを入力します",
     "prompt": "Prompt",
-    "promptPlaceholder": "カスタム Prompt を入力"
+    "promptPlaceholder": "カスタム Prompt を入力",
+    "promptHint": "カスタム Prompt は「最近のまとめ」にのみ適用され、チャットでは使用されません"
   },
   "webhookSetting": {
     "title": "Webhook",
@@ -1006,18 +1006,26 @@
     "reindexConfirmDesc": "モデルまたは次元が変更されたため、既存のインデックスは無効になりました。すべての過去の Echo のベクトルを再生成する必要があります。今すぐ再構築しますか？"
   },
   "chatPanel": {
-    "intro": "過去の Echo を振り返り、まとめます。質問に関連する Echo を読み取って回答し、根拠が足りない場合は正直にそう伝えます。",
     "suggestionsTitle": "こう聞いてみましょう：",
     "suggestion1": "最近わたしが注目し考えていたことをまとめて",
     "suggestion2": "この期間の気分の変化は？",
     "suggestion3": "書き留めた断片的なアイデアをまとめて",
-    "inputPlaceholder": "過去の Echo について質問…（Enter で送信、Shift+Enter で改行）",
+    "inputPlaceholder": "あなたの Echo と対話",
     "send": "送信",
     "clear": "クリア",
     "clearConfirmTitle": "すべての会話を消去しますか？",
     "clearConfirmDesc": "現在のセッションのすべての会話履歴が削除され、元に戻すことはできません。",
     "clearSuccess": "会話を消去しました",
     "searching": "検索中：{query}",
-    "errorGeneric": "エラーが発生しました。後でもう一度お試しいただくか、モデルとインデックス設定をご確認ください。"
+    "errorGeneric": "エラーが発生しました。後でもう一度お試しいただくか、モデルとインデックス設定をご確認ください。",
+    "sourcesMore": "他 {count} 件を表示",
+    "sourcesLess": "折りたたむ"
+  },
+  "chatLauncher": {
+    "title": "チャット",
+    "greeting": "何について話しましょうか？",
+    "placeholder": "何でも聞いてください…",
+    "kbdEnter": "開始",
+    "kbdClose": "閉じる"
   }
 }

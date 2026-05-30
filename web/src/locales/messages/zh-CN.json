@@ -405,8 +405,7 @@
     "publish": "发布",
     "plaza": "探索",
     "status": "状态",
-    "tags": "标签",
-    "chat": "对话"
+    "tags": "标签"
   },
   "homeBio": {
     "tagline": "欢迎光临"
@@ -675,7 +674,8 @@
     "baseUrlPlaceholder": "输入自定义 Base URL",
     "baseUrlHint": "选「OpenAI 兼容」协议时，在此填入 DeepSeek、Ollama 等服务的接口地址",
     "prompt": "Prompt",
-    "promptPlaceholder": "输入自定义 Prompt"
+    "promptPlaceholder": "输入自定义 Prompt",
+    "promptHint": "自定义 Prompt 仅作用于「近期总结」，Chat 对话不会使用它"
   },
   "webhookSetting": {
     "title": "Webhook",
@@ -1006,18 +1006,26 @@
     "reindexConfirmDesc": "模型或维度已变更，历史索引已失效，需要为全部历史 Echo 重新生成向量。是否立即重建？"
   },
   "chatPanel": {
-    "intro": "基于你过往的 Echo 进行回顾与综合。它读取与你问题相关的若干条 Echo 后作答，缺乏依据时会如实说明。",
     "suggestionsTitle": "试试这样问：",
     "suggestion1": "总结我最近一段时间在关注和思考什么",
     "suggestion2": "我这段时间的心情有什么变化",
     "suggestion3": "把我记过的零散想法汇总一下",
-    "inputPlaceholder": "问问关于你过往 Echo 的事…（Enter 发送，Shift+Enter 换行）",
+    "inputPlaceholder": "和你的 Echo 对话",
     "send": "发送",
     "clear": "清空",
     "clearConfirmTitle": "清除所有对话？",
     "clearConfirmDesc": "将删除当前会话的全部对话记录，且无法恢复。",
     "clearSuccess": "已清除对话",
     "searching": "正在检索：{query}",
-    "errorGeneric": "对话出错了，请稍后再试或检查模型与索引设置。"
+    "errorGeneric": "对话出错了，请稍后再试或检查模型与索引设置。",
+    "sourcesMore": "展开其余 {count} 条来源",
+    "sourcesLess": "收起来源"
+  },
+  "chatLauncher": {
+    "title": "对话",
+    "greeting": "想聊点什么？",
+    "placeholder": "问点什么…",
+    "kbdEnter": "进入对话",
+    "kbdClose": "关闭"
   }
 }

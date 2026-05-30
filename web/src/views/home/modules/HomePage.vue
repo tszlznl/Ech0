@@ -16,6 +16,7 @@
                 v-model:mobile-search-open="mobileSearchOpen"
                 class="mx-1"
                 @open-palette="paletteOpen = true"
+                @open-chat="chatLauncherOpen = true"
               />
             </aside>
             <div
@@ -47,7 +48,11 @@
         <aside class="home-aside home-aside--rail">
           <HomeSidebarNav />
           <div class="home-aside__filter-block">
-            <TheFilter @open-palette="paletteOpen = true" />
+            <TheFilter
+              show-chat-trigger
+              @open-palette="paletteOpen = true"
+              @open-chat="chatLauncherOpen = true"
+            />
             <a
               href="https://github.com/lin-snow/Ech0"
               target="_blank"
@@ -61,6 +66,7 @@
       </div>
     </div>
     <TheCommandPalette v-model="paletteOpen" />
+    <TheChatLauncher v-model="chatLauncherOpen" />
   </div>
 </template>
 
@@ -71,6 +77,7 @@ import HomeSidebarNav from './HomeSidebarNav.vue'
 import TheFilter from './TheFilter.vue'
 import TheEchos from './TheEchos.vue'
 import TheCommandPalette from './TheCommandPalette.vue'
+import TheChatLauncher from './TheChatLauncher.vue'
 import { defineAsyncComponent, onMounted, ref, onBeforeUnmount, computed, watch } from 'vue'
 import { useEchoStore, useUserStore, useSettingStore } from '@/stores'
 import { useRoute } from 'vue-router'
@@ -112,17 +119,28 @@ let timelineScrollRaf: number | null = null
 let windowScrollRaf: number | null = null
 
 const paletteOpen = ref<boolean>(false)
+const chatLauncherOpen = ref<boolean>(false)
+// 对话入口：仅登录且 Agent 已开启时可用，与原侧边栏入口的可见条件保持一致
+const chatAvailable = computed(() => isLogin.value && AgentSetting.value.enable)
 
 const handleGlobalKeydown = (event: KeyboardEvent) => {
-  const isSearchShortcut =
-    (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && event.key === 'k'
+  const withModifier = (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey
+  const isSearchShortcut = withModifier && event.key === 'k'
   if (isSearchShortcut) {
     event.preventDefault()
     paletteOpen.value = !paletteOpen.value
     return
   }
-  if (event.key === 'Escape' && paletteOpen.value) {
-    paletteOpen.value = false
+  // Cmd/Ctrl+J 唤起对话快捷输入框（仅在对话可用时拦截，否则放行给浏览器）
+  const isChatShortcut = withModifier && event.key === 'j'
+  if (isChatShortcut && chatAvailable.value) {
+    event.preventDefault()
+    chatLauncherOpen.value = !chatLauncherOpen.value
+    return
+  }
+  if (event.key === 'Escape') {
+    if (paletteOpen.value) paletteOpen.value = false
+    if (chatLauncherOpen.value) chatLauncherOpen.value = false
   }
 }
 

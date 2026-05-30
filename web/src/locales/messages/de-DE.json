@@ -405,8 +405,7 @@
     "publish": "Veröffentlichen",
     "plaza": "Erkunden",
     "status": "Status",
-    "tags": "Tags",
-    "chat": "Chat"
+    "tags": "Tags"
   },
   "homeBio": {
     "tagline": "Willkommen"
@@ -675,7 +674,8 @@
     "baseUrlPlaceholder": "Eigene Base URL eingeben",
     "baseUrlHint": "Beim Protokoll „OpenAI-kompatibel“ hier die API-Adresse von Diensten wie DeepSeek oder Ollama eingeben",
     "prompt": "Prompt",
-    "promptPlaceholder": "Eigenen Prompt eingeben"
+    "promptPlaceholder": "Eigenen Prompt eingeben",
+    "promptHint": "Der eigene Prompt wirkt nur auf die „aktuelle Zusammenfassung“ und wird im Chat nicht verwendet."
   },
   "webhookSetting": {
     "title": "Webhook",
@@ -1006,18 +1006,26 @@
     "reindexConfirmDesc": "Modell oder Dimension wurde geändert, daher ist der alte Index ungültig. Die Vektoren aller bisherigen Echos müssen neu erzeugt werden. Jetzt neu aufbauen?"
   },
   "chatPanel": {
-    "intro": "Reflektiere und fasse deine vergangenen Echos zusammen. Es liest die für deine Frage relevantesten Echos und sagt dir ehrlich, wenn die Grundlage nicht ausreicht.",
     "suggestionsTitle": "Frag zum Beispiel:",
     "suggestion1": "Fasse zusammen, womit ich mich in letzter Zeit beschäftigt habe",
     "suggestion2": "Wie hat sich meine Stimmung in dieser Zeit verändert",
     "suggestion3": "Bündle die verstreuten Ideen, die ich notiert habe",
-    "inputPlaceholder": "Frag nach deinen vergangenen Echos… (Enter zum Senden, Shift+Enter für Zeilenumbruch)",
+    "inputPlaceholder": "Sprich mit deinen Echos",
     "send": "Senden",
     "clear": "Leeren",
     "clearConfirmTitle": "Alle Nachrichten löschen?",
     "clearConfirmDesc": "Dadurch werden alle Nachrichten der aktuellen Sitzung gelöscht. Dies kann nicht rückgängig gemacht werden.",
     "clearSuccess": "Unterhaltung gelöscht",
     "searching": "Suche: {query}",
-    "errorGeneric": "Etwas ist schiefgelaufen. Bitte versuche es später erneut oder prüfe Modell- und Index-Einstellungen."
+    "errorGeneric": "Etwas ist schiefgelaufen. Bitte versuche es später erneut oder prüfe Modell- und Index-Einstellungen.",
+    "sourcesMore": "{count} weitere anzeigen",
+    "sourcesLess": "Weniger anzeigen"
+  },
+  "chatLauncher": {
+    "title": "Chat",
+    "greeting": "Worüber möchtest du reden?",
+    "placeholder": "Frag etwas…",
+    "kbdEnter": "Starten",
+    "kbdClose": "Schließen"
   }
 }

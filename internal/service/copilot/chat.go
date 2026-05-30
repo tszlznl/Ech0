@@ -78,9 +78,13 @@ func (s *CopilotService) AskStream(ctx context.Context, question string, locale 
 	allTags, _ := s.echoService.GetAllTags()
 	today := time.Now().UTC().Format("2006-01-02")
 
+	// 多轮记忆：加载已持久化的会话并投影成模型历史（在 persistTurn 之前加载，本轮 question
+	// 不在其中，由 buildChatMessages 单独追加，不重复计入）。
+	history := historyForModel(s.loadSession(ctx, userID), locale, maxHistoryTokens)
+
 	stream, err := agent.Run(ctx, agent.RunRequest{
 		Setting:  agentSetting,
-		Messages: buildChatMessages(question, locale, today, tagNamesForPrompt(allTags)),
+		Messages: buildChatMessages(history, question, locale, today, tagNamesForPrompt(allTags)),
 		Tools:    []agent.Tool{s.searchEchosTool(allTags)},
 		Temp:     &chatTemperature,
 	})

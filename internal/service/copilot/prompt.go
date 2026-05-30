@@ -40,16 +40,17 @@ Answering requirements:
 - Be concise and natural, you may use emoji and line breaks, do not output HTML tags.
 Always answer in the same language as the user's question.`
 
-// buildChatMessages 组装 Chat 一轮对话的初始消息（system + 用户问题）。
+// buildChatMessages 组装 Chat 一轮对话的消息：system → 历史多轮 → 本轮问题。
 // today（YYYY-MM-DD）与 tagNames 作为检索上下文拼进 system，让模型能把相对时间换算成
 // date_from/date_to、并从已知标签里挑 tags。
-// 历史多轮接入点：未来在此把会话历史拼进 system 与 question 之间即可（设计 §11）。
-func buildChatMessages(question, locale, today string, tagNames []string) []agent.Message {
+// history 是经 historyForModel 裁剪好的过往多轮（已剥旧工具结果、按 token 预算截断）。
+func buildChatMessages(history []agent.Message, question, locale, today string, tagNames []string) []agent.Message {
 	sys := chatSystemPromptFor(locale) + buildContextBlock(locale, today, tagNames)
-	return []agent.Message{
-		{Role: agent.RoleSystem, Content: sys},
-		{Role: agent.RoleUser, Content: question},
-	}
+	msgs := make([]agent.Message, 0, len(history)+2)
+	msgs = append(msgs, agent.Message{Role: agent.RoleSystem, Content: sys})
+	msgs = append(msgs, history...)
+	msgs = append(msgs, agent.Message{Role: agent.RoleUser, Content: question})
+	return msgs
 }
 
 // buildContextBlock 生成注入 system prompt 的检索上下文块（当前日期 + 可用标签）。
@@ -90,6 +91,20 @@ func chatSystemPromptFor(locale string) string {
 		return chatSystemPrompt
 	}
 	return chatSystemPromptEN
+}
+
+// recentSourcesNote{ZH,EN} 是折进「最近一轮 assistant 文本」的检索依据标注块（含一个 %s 占位
+// 给 formatSearchResults 的命中文本），让用户追问上一轮结果细节时模型直接有据，无需重检索。
+const recentSourcesNoteZH = "（上一轮检索到的 Echo 依据，供追问其细节时参考：\n%s）"
+
+const recentSourcesNoteEN = "(Echos retrieved in the previous turn, for reference when asked about their details:\n%s)"
+
+// recentSourcesNoteFor 按 locale 选择检索依据标注块文案。
+func recentSourcesNoteFor(locale string) string {
+	if strings.HasPrefix(strings.ToLower(locale), "zh") {
+		return recentSourcesNoteZH
+	}
+	return recentSourcesNoteEN
 }
 
 // summarySystemPromptFor 按 locale 选择「近况总结」系统提示词。

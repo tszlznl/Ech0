@@ -24,6 +24,16 @@
       >
         <Search class="home-sidebar-nav__search-icon" />
       </button>
+      <!-- 对话入口：移动端与搜索放大镜成对，仅登录且 Agent 开启时出现 -->
+      <button
+        v-if="chatAvailable"
+        type="button"
+        class="home-sidebar-nav__chat-trigger"
+        :aria-label="t('chatLauncher.title')"
+        @click="emit('openChat')"
+      >
+        <Chat class="home-sidebar-nav__chat-icon" />
+      </button>
     </div>
     <div v-if="showMobileFilter" class="home-sidebar-nav__mobile-filter">
       <TheFilter @open-palette="emit('openPalette')" />
@@ -38,6 +48,7 @@ import { useI18n } from 'vue-i18n'
 import { useEchoStore, useSettingStore, useUserStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import Search from '@/components/icons/search.vue'
+import Chat from '@/components/icons/chat.vue'
 import TheFilter from './TheFilter.vue'
 
 const { t } = useI18n()
@@ -49,12 +60,14 @@ const settingStore = useSettingStore()
 const { isLogin } = storeToRefs(userStore)
 const { searchingMode, isFilteringMode } = storeToRefs(echoStore)
 const { AgentSetting } = storeToRefs(settingStore)
+const chatAvailable = computed(() => isLogin.value && AgentSetting.value.enable)
 const props = defineProps<{
   mobileSearchOpen?: boolean
 }>()
 const emit = defineEmits<{
   (event: 'update:mobileSearchOpen', value: boolean): void
   (event: 'openPalette'): void
+  (event: 'openChat'): void
 }>()
 const localSearchOpen = ref(false)
 const searchOpenState = computed({
@@ -113,13 +126,10 @@ const items = [
     labelKey: 'homeSidebar.plaza',
     kind: 'homeTab',
   },
-  { id: 'chat', to: { name: 'chat' }, labelKey: 'homeSidebar.chat', kind: 'route' },
 ] as const
 
 const visibleItems = computed(() =>
   items.filter((item) => {
-    // 对话入口：仅登录且 Agent 已开启时显示，避免未配置模型的用户被误导
-    if (item.id === 'chat') return isLogin.value && AgentSetting.value.enable
     if (item.id === 'publish' || item.id === 'panel') return isLogin.value
     return true
   }),
@@ -199,7 +209,8 @@ watch(showSearchTrigger, (visible) => {
   background: var(--nav-link-active-bg);
 }
 
-.home-sidebar-nav__search-trigger {
+.home-sidebar-nav__search-trigger,
+.home-sidebar-nav__chat-trigger {
   display: none;
   border: 0;
   background: transparent;
@@ -210,12 +221,14 @@ watch(showSearchTrigger, (visible) => {
   display: none;
 }
 
-.home-sidebar-nav__search-icon {
+.home-sidebar-nav__search-icon,
+.home-sidebar-nav__chat-icon {
   width: 1rem;
   height: 1rem;
 }
 
-:deep(.home-sidebar-nav__search-icon path) {
+:deep(.home-sidebar-nav__search-icon path),
+:deep(.home-sidebar-nav__chat-icon path) {
   fill: currentColor;
 }
 
@@ -239,7 +252,8 @@ watch(showSearchTrigger, (visible) => {
     line-height: 1.2;
   }
 
-  .home-sidebar-nav__search-trigger {
+  .home-sidebar-nav__search-trigger,
+  .home-sidebar-nav__chat-trigger {
     display: inline-flex;
     flex-shrink: 0;
     align-items: center;
@@ -252,7 +266,8 @@ watch(showSearchTrigger, (visible) => {
       background 0.2s;
   }
 
-  .home-sidebar-nav__search-trigger:hover {
+  .home-sidebar-nav__search-trigger:hover,
+  .home-sidebar-nav__chat-trigger:hover {
     color: var(--color-text-secondary);
     background: var(--color-bg-muted);
   }

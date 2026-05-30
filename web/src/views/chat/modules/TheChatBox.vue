@@ -66,17 +66,12 @@
             </div>
           </template>
 
-          <!-- 引用来源：极小的 accent 文字链，无边框 -->
-          <div v-if="msg.sources && msg.sources.length > 0" class="sources">
-            <button
-              v-for="src in msg.sources"
-              :key="src.echo_id"
-              class="sources__link"
-              @click="goToEcho(src.echo_id)"
-            >
-              <span class="sources__mark">↗</span>{{ formatSource(src) }}
-            </button>
-          </div>
+          <!-- 引用来源：默认展示前三条，其余折叠（ChatSources 内部管理展开态） -->
+          <ChatSources
+            v-if="msg.sources && msg.sources.length > 0"
+            :sources="msg.sources"
+            @open="goToEcho"
+          />
         </div>
       </div>
     </div>
@@ -112,20 +107,21 @@
       </Transition>
     </div>
 
-    <!-- 线下留白区：空态放安静的预设问题，否则放一句说明 -->
+    <!-- 线下留白区：输入框为空时常驻预设场景，开始输入则淡出 -->
     <div class="understory">
-      <template v-if="messages.length === 0">
-        <p class="understory__hint">{{ t('chatPanel.suggestionsTitle') }}</p>
-        <button
-          v-for="(s, i) in suggestions"
-          :key="i"
-          class="understory__suggestion"
-          @click="send(s)"
-        >
-          {{ s }}
-        </button>
-      </template>
-      <p v-else class="understory__intro">{{ t('chatPanel.intro') }}</p>
+      <Transition name="understory-fade">
+        <div v-if="showSuggestions" class="understory__list">
+          <p class="understory__hint">{{ t('chatPanel.suggestionsTitle') }}</p>
+          <button
+            v-for="(s, i) in suggestions"
+            :key="i"
+            class="understory__suggestion"
+            @click="send(s)"
+          >
+            {{ s }}
+          </button>
+        </div>
+      </Transition>
     </div>
   </div>
 </template>
@@ -135,15 +131,17 @@ import Back from '@/components/icons/back.vue'
 import Close from '@/components/icons/close.vue'
 import { TheMdPreview } from '@/components/advanced/md'
 import AnimatedMarkdown from './AnimatedMarkdown.vue'
+import ChatSources from './ChatSources.vue'
 import { ref, computed, nextTick, onBeforeUnmount, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { chatStream } from '@/service/api'
 import { getChatSession, clearChatSession } from '@/service/api/chat'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { theToast } from '@/utils/toast'
 
 const { t } = useI18n()
+const route = useRoute()
 const router = useRouter()
 const { openConfirm } = useBaseDialog()
 
@@ -174,6 +172,9 @@ const suggestions = computed<string[]>(() => [
   t('chatPanel.suggestion2'),
   t('chatPanel.suggestion3'),
 ])
+
+// 输入框为空且非流式时展示预设场景；开始输入或发送后淡出
+const showSuggestions = computed<boolean>(() => !loading.value && input.value.trim().length === 0)
 
 const scrollToBottom = () => {
   nextTick(() => {
@@ -211,12 +212,6 @@ const autoGrow = () => {
   if (!el) return
   el.style.height = 'auto'
   el.style.height = `${Math.min(el.scrollHeight, window.innerHeight * 0.28)}px`
-}
-
-const formatSource = (src: App.Api.Chat.ChatSource): string => {
-  const day = new Date(src.echo_created * 1000).toISOString().slice(0, 10)
-  const text = src.content.length > 40 ? src.content.slice(0, 40) + '…' : src.content
-  return ` ${day} · ${text}`
 }
 
 const goHome = () => router.push('/')
@@ -323,6 +318,14 @@ onMounted(async () => {
   } catch {
     // 恢复失败静默忽略，保持空态
   }
+
+  // 由快捷输入框（Cmd/Ctrl+J）带入的问题：恢复历史后自动发送，并清掉 query 防止刷新重发
+  const initialQuery = route.query.q
+  const q = Array.isArray(initialQuery) ? initialQuery[0] : initialQuery
+  if (typeof q === 'string' && q.trim().length > 0) {
+    void router.replace({ query: {} })
+    send(q)
+  }
 })
 
 onBeforeUnmount(stopStick)
@@ -350,12 +353,17 @@ onBeforeUnmount(stopStick)
   width: 2.25rem;
   height: 2.25rem;
   border: none;
-  background: transparent;
+  border-radius: 999px;
+
+  /* 磨砂圆底：无论背后滚动到什么文字都保持可辨，移动端窄屏尤甚 */
+  background: color-mix(in srgb, var(--color-bg-canvas) 70%, transparent);
+  backdrop-filter: blur(8px);
   color: var(--color-text-muted);
   cursor: pointer;
-  opacity: 0.45;
+  opacity: 0.7;
   transition:
     opacity 0.2s ease,
+    background 0.2s ease,
     color 0.2s ease;
 }
 
@@ -369,6 +377,7 @@ onBeforeUnmount(stopStick)
 
 .ghost-ctrl:hover {
   opacity: 1;
+  background: color-mix(in srgb, var(--color-bg-canvas) 88%, transparent);
   color: var(--color-text-primary);
 }
 
@@ -397,7 +406,7 @@ onBeforeUnmount(stopStick)
     to bottom,
     transparent 0,
     #000 4.5rem,
-    #000 calc(100% - 2.5rem),
+    #000 calc(100% - 1rem),
     transparent 100%
   );
 }
@@ -550,41 +559,6 @@ onBeforeUnmount(stopStick)
   }
 }
 
-/* ── 引用来源 ───────────────────────────────── */
-.sources {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  margin-top: 0.35rem;
-}
-
-.sources__link {
-  display: inline-flex;
-  align-items: baseline;
-  max-width: 32rem;
-  border: none;
-  background: transparent;
-  padding: 0;
-  font-size: 0.72rem;
-  line-height: 1.5;
-  color: var(--color-text-muted);
-  text-align: left;
-  cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: color 0.18s ease;
-}
-
-.sources__link:hover {
-  color: var(--color-accent);
-}
-
-.sources__mark {
-  color: var(--color-accent);
-  opacity: 0.8;
-}
-
 /* ── 输入区：下边框就是 75vh 那条横线 ───────── */
 .composer {
   position: absolute;
@@ -597,13 +571,35 @@ onBeforeUnmount(stopStick)
   display: flex;
   align-items: flex-end;
   gap: 0.6rem;
-  border-bottom: 1px solid var(--color-border-strong);
-  transition: border-color 0.25s ease;
 }
 
-.composer--active,
-.composer:focus-within {
-  border-bottom-color: var(--color-accent);
+/* 发丝线：两端淡出的渐变，避免满宽硬边显得空荡 */
+.composer::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-border-strong) 18%,
+    var(--color-border-strong) 82%,
+    transparent
+  );
+  transition: background 0.25s ease;
+}
+
+.composer--active::after,
+.composer:focus-within::after {
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-accent) 15%,
+    var(--color-accent) 85%,
+    transparent
+  );
 }
 
 .composer__field {
@@ -694,10 +690,26 @@ onBeforeUnmount(stopStick)
   transform: translateX(-50%);
   width: min(42rem, calc(100% - 3rem));
   padding-top: 1.5rem;
+}
+
+.understory__list {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.35rem;
+}
+
+.understory-fade-enter-active,
+.understory-fade-leave-active {
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+.understory-fade-enter-from,
+.understory-fade-leave-to {
+  opacity: 0;
+  transform: translateY(4px);
 }
 
 .understory__hint {
@@ -726,14 +738,6 @@ onBeforeUnmount(stopStick)
 .understory__suggestion:hover {
   color: var(--color-accent);
   transform: translateX(3px);
-}
-
-.understory__intro {
-  font-size: 0.78rem;
-  line-height: 1.65;
-  color: var(--color-text-muted);
-  opacity: 0.75;
-  max-width: 34rem;
 }
 
 @media (width <= 640px) {

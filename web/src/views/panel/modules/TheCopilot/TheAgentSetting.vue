@@ -72,13 +72,15 @@
       <span v-if="!editMode" class="block truncate opacity-80">
         {{ AgentSetting.prompt.length === 0 ? t('commonUi.none') : AgentSetting.prompt }}
       </span>
-      <BaseTextArea
-        v-else
-        v-model="AgentSetting.prompt"
-        :placeholder="t('agentSetting.promptPlaceholder')"
-        class="w-full"
-        :rows="4"
-      />
+      <template v-else>
+        <BaseTextArea
+          v-model="AgentSetting.prompt"
+          :placeholder="t('agentSetting.promptPlaceholder')"
+          class="w-full"
+          :rows="4"
+        />
+        <p class="text-xs opacity-70 mt-1">{{ t('agentSetting.promptHint') }}</p>
+      </template>
     </div>
   </div>
 </template>

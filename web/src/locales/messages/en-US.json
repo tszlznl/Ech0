@@ -405,8 +405,7 @@
     "publish": "Publish",
     "plaza": "Explore",
     "status": "Status",
-    "tags": "Tags",
-    "chat": "Chat"
+    "tags": "Tags"
   },
   "homeBio": {
     "tagline": "Welcome"
@@ -675,7 +674,8 @@
     "baseUrlPlaceholder": "Enter custom Base URL",
     "baseUrlHint": "For the OpenAI Compatible protocol, enter the API endpoint of services like DeepSeek or Ollama here.",
     "prompt": "Prompt",
-    "promptPlaceholder": "Enter custom prompt"
+    "promptPlaceholder": "Enter custom prompt",
+    "promptHint": "The custom prompt only applies to the recent summary; it is not used in chat conversations."
   },
   "webhookSetting": {
     "title": "Webhook",
@@ -1006,18 +1006,26 @@
     "reindexConfirmDesc": "The model or dimension changed, so the old index is no longer valid. Vectors for all past echos need to be regenerated. Rebuild now?"
   },
   "chatPanel": {
-    "intro": "Reflect on and summarize your past echos. It reads the echos most relevant to your question, and tells you honestly when there isn't enough to go on.",
     "suggestionsTitle": "Try asking:",
     "suggestion1": "Summarize what I've been focusing on and thinking about lately",
     "suggestion2": "How has my mood changed over this period",
     "suggestion3": "Pull together the scattered ideas I've jotted down",
-    "inputPlaceholder": "Ask about your past echos… (Enter to send, Shift+Enter for newline)",
+    "inputPlaceholder": "Chat with your echos",
     "send": "Send",
     "clear": "Clear",
     "clearConfirmTitle": "Clear all messages?",
     "clearConfirmDesc": "This will delete all messages in the current session and cannot be undone.",
     "clearSuccess": "Conversation cleared",
     "searching": "Searching: {query}",
-    "errorGeneric": "Something went wrong. Please retry later or check your model and index settings."
+    "errorGeneric": "Something went wrong. Please retry later or check your model and index settings.",
+    "sourcesMore": "Show {count} more source(s)",
+    "sourcesLess": "Show less"
+  },
+  "chatLauncher": {
+    "title": "Chat",
+    "greeting": "What's on your mind?",
+    "placeholder": "Ask anything…",
+    "kbdEnter": "Start chat",
+    "kbdClose": "Close"
   }
 }
