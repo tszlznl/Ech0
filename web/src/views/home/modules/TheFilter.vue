@@ -233,10 +233,11 @@ watch(selectedTagIds, (ids) => {
 
 /* kbd 徽章：扩大可点击触摸区域（≥32×28），同时保证 AA 级对比度 */
 .home-filter__kbd-hint {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 1.75rem;
+  height: 1.75rem;
   min-width: 2.25rem;
   padding: 0.25rem 0.5rem;
   font-family: var(--font-family-mono, monospace);
@@ -267,12 +268,13 @@ watch(selectedTagIds, (ids) => {
 
 /* 对话入口按钮：和搜索 ⌘K 徽章同尺寸同款键帽材质（bg-muted + 2px 底边立体感），成一对 */
 .home-filter__chat-trigger {
+  box-sizing: border-box;
   flex: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 2.25rem;
-  min-height: 1.75rem;
+  height: 1.75rem;
   padding: 0.25rem 0.5rem;
   color: var(--color-text-secondary);
   background: var(--color-bg-muted);

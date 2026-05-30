@@ -675,7 +675,9 @@
     "baseUrlHint": "选「OpenAI 兼容」协议时，在此填入 DeepSeek、Ollama 等服务的接口地址",
     "prompt": "Prompt",
     "promptPlaceholder": "输入自定义 Prompt",
-    "promptHint": "自定义 Prompt 仅作用于「近期总结」，Chat 对话不会使用它"
+    "promptHint": "自定义 Prompt 仅作用于「近期总结」，Chat 对话不会使用它",
+    "multimodal": "多模态支持",
+    "multimodalHint": "开启后，Chat 检索命中带图片的 Echo 时会把配图一并交给模型理解（需所配模型支持图片输入）"
   },
   "webhookSetting": {
     "title": "Webhook",
@@ -1019,7 +1021,8 @@
     "searching": "正在检索：{query}",
     "errorGeneric": "对话出错了，请稍后再试或检查模型与索引设置。",
     "sourcesMore": "展开其余 {count} 条来源",
-    "sourcesLess": "收起来源"
+    "sourcesLess": "收起来源",
+    "sourceNoContent": "无正文"
   },
   "chatLauncher": {
     "title": "对话",

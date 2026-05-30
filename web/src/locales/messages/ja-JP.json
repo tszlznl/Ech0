@@ -675,7 +675,9 @@
     "baseUrlHint": "「OpenAI 互換」プロトコルを選んだ場合、ここに DeepSeek や Ollama などのサービスのエンドポイントを入力します",
     "prompt": "Prompt",
     "promptPlaceholder": "カスタム Prompt を入力",
-    "promptHint": "カスタム Prompt は「最近のまとめ」にのみ適用され、チャットでは使用されません"
+    "promptHint": "カスタム Prompt は「最近のまとめ」にのみ適用され、チャットでは使用されません",
+    "multimodal": "マルチモーダル対応",
+    "multimodalHint": "有効にすると、検索でヒットした画像付き Echo の画像もモデルに渡して理解させます（画像入力対応モデルが必要）"
   },
   "webhookSetting": {
     "title": "Webhook",
@@ -1019,7 +1021,8 @@
     "searching": "検索中：{query}",
     "errorGeneric": "エラーが発生しました。後でもう一度お試しいただくか、モデルとインデックス設定をご確認ください。",
     "sourcesMore": "他 {count} 件を表示",
-    "sourcesLess": "折りたたむ"
+    "sourcesLess": "折りたたむ",
+    "sourceNoContent": "本文なし"
   },
   "chatLauncher": {
     "title": "チャット",

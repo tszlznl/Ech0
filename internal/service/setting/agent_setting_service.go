@@ -120,12 +120,13 @@ func (settingService *SettingService) UpdateAgentSettings(
 	}
 
 	setting := &model.AgentSetting{
-		Enable:   newSetting.Enable,
-		Protocol: newSetting.Protocol,
-		Model:    newSetting.Model,
-		ApiKey:   newSetting.ApiKey,
-		Prompt:   newSetting.Prompt,
-		BaseURL:  httpUtil.TrimURL(newSetting.BaseURL),
+		Enable:     newSetting.Enable,
+		Protocol:   newSetting.Protocol,
+		Model:      newSetting.Model,
+		ApiKey:     newSetting.ApiKey,
+		Prompt:     newSetting.Prompt,
+		BaseURL:    httpUtil.TrimURL(newSetting.BaseURL),
+		Multimodal: newSetting.Multimodal,
 	}
 
 	return settingService.transactor.Run(ctx, func(ctx context.Context) error {

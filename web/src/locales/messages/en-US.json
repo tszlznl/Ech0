@@ -675,7 +675,9 @@
     "baseUrlHint": "For the OpenAI Compatible protocol, enter the API endpoint of services like DeepSeek or Ollama here.",
     "prompt": "Prompt",
     "promptPlaceholder": "Enter custom prompt",
-    "promptHint": "The custom prompt only applies to the recent summary; it is not used in chat conversations."
+    "promptHint": "The custom prompt only applies to the recent summary; it is not used in chat conversations.",
+    "multimodal": "Multimodal support",
+    "multimodalHint": "When enabled, images from retrieved Echos are sent to the model so it can understand them (requires a vision-capable model)."
   },
   "webhookSetting": {
     "title": "Webhook",
@@ -1019,7 +1021,8 @@
     "searching": "Searching: {query}",
     "errorGeneric": "Something went wrong. Please retry later or check your model and index settings.",
     "sourcesMore": "Show {count} more source(s)",
-    "sourcesLess": "Show less"
+    "sourcesLess": "Show less",
+    "sourceNoContent": "No text"
   },
   "chatLauncher": {
     "title": "Chat",

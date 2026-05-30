@@ -67,7 +67,7 @@
     </div>
 
     <!-- Prompt -->
-    <div class="mb-1">
+    <div class="mb-4">
       <h2 class="font-semibold mb-1.5">{{ t('agentSetting.prompt') }}</h2>
       <span v-if="!editMode" class="block truncate opacity-80">
         {{ AgentSetting.prompt.length === 0 ? t('commonUi.none') : AgentSetting.prompt }}
@@ -81,6 +81,15 @@
         />
         <p class="text-xs opacity-70 mt-1">{{ t('agentSetting.promptHint') }}</p>
       </template>
+    </div>
+
+    <!-- 多模态支持 -->
+    <div class="mb-1">
+      <div class="flex items-center justify-between">
+        <h2 class="font-semibold">{{ t('agentSetting.multimodal') }}</h2>
+        <BaseSwitch v-model="AgentSetting.multimodal" :disabled="!editMode" />
+      </div>
+      <p class="text-xs opacity-70 mt-1">{{ t('agentSetting.multimodalHint') }}</p>
     </div>
   </div>
 </template>

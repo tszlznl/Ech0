@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"strings"
 
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	openai "github.com/sashabaranov/go-openai"
@@ -32,8 +33,13 @@ func (p *openaiProvider) buildMessages(in []Message) []openai.ChatCompletionMess
 	for _, m := range in {
 		msg := openai.ChatCompletionMessage{
 			Role:       toOpenAIRole(m.Role),
-			Content:    m.Content,
 			ToolCallID: m.ToolCallID,
+		}
+		// 带图消息走 multi-part（Content 与 MultiContent 互斥）；否则用纯文本 Content。
+		if len(m.Images) > 0 {
+			msg.MultiContent = openAIImageParts(m.Content, m.Images)
+		} else {
+			msg.Content = m.Content
 		}
 		for _, tc := range m.ToolCalls {
 			msg.ToolCalls = append(msg.ToolCalls, openai.ToolCall{
@@ -48,6 +54,29 @@ func (p *openaiProvider) buildMessages(in []Message) []openai.ChatCompletionMess
 		msgs = append(msgs, msg)
 	}
 	return msgs
+}
+
+// openAIImageParts 把文本 + 图片拼成 OpenAI 的多模态 content parts：首块文本（可空则略过），
+// 随后每张图一块 image_url（Base64 转 data URL，否则用直链）。
+func openAIImageParts(text string, images []ImagePart) []openai.ChatMessagePart {
+	parts := make([]openai.ChatMessagePart, 0, len(images)+1)
+	if text != "" {
+		parts = append(parts, openai.ChatMessagePart{Type: openai.ChatMessagePartTypeText, Text: text})
+	}
+	for _, img := range images {
+		url := img.URL
+		if img.Base64 != "" {
+			url = "data:" + img.MediaType + ";base64," + img.Base64
+		}
+		if url == "" {
+			continue
+		}
+		parts = append(parts, openai.ChatMessagePart{
+			Type:     openai.ChatMessagePartTypeImageURL,
+			ImageURL: &openai.ChatMessageImageURL{URL: url},
+		})
+	}
+	return parts
 }
 
 // buildTools 把内部 ToolDef 映射为 OpenAI Tool（function calling）。
@@ -125,6 +154,8 @@ func (p *openaiProvider) stream(ctx context.Context, req Request, ch chan<- Even
 
 	// acc 按 tool_call 的 index 累积分片：id/name 首帧给出，arguments 跨帧拼接。
 	acc := newToolCallAccumulator()
+	// guard 防「模型把工具调用当正文吐出来」泄漏给用户（详见 toolCallLeakGuard）。
+	guard := &toolCallLeakGuard{}
 
 	for {
 		resp, recvErr := stream.Recv()
@@ -141,14 +172,24 @@ func (p *openaiProvider) stream(ctx context.Context, req Request, ch chan<- Even
 		delta := resp.Choices[0].Delta
 
 		if delta.Content != "" {
-			if !send(ctx, ch, Event{Kind: EventTextDelta, Text: delta.Content}) {
+			safe, tripped := guard.feed(delta.Content)
+			if tripped {
+				send(ctx, ch, Event{Kind: EventError, Err: errTextToolCallLeak})
+				return
+			}
+			if safe != "" && !send(ctx, ch, Event{Kind: EventTextDelta, Text: safe}) {
 				return
 			}
 		}
 		acc.add(delta.ToolCalls)
 	}
 
-	// 流结束：把累积完整的工具调用依次上浮
+	// 流结束：放行守卫暂留的尾巴（确认非工具调用语法），再把累积完整的工具调用依次上浮。
+	if rest := guard.flush(); rest != "" {
+		if !send(ctx, ch, Event{Kind: EventTextDelta, Text: rest}) {
+			return
+		}
+	}
 	for _, tc := range acc.finish() {
 		if !send(ctx, ch, Event{Kind: EventToolCall, ToolCall: tc}) {
 			return
@@ -230,4 +271,57 @@ func send(ctx context.Context, ch chan<- Event, ev Event) bool {
 	case <-ctx.Done():
 		return false
 	}
+}
+
+// errTextToolCallLeak 在正文里检测到工具调用语法时返回：这是端点配置问题（未把模型自家
+// 格式归一化成结构化 tool_calls），而非内容本身。响亮失败 + 可定位，胜过泄漏原始语法或静默降级。
+var errTextToolCallLeak = errors.New(
+	"检测到模型以文本形式返回工具调用：端点未归一化为结构化 tool_calls。请在推理服务启用对应的 " +
+		"tool-call parser（如 vLLM 的 --enable-auto-tool-choice --tool-call-parser）后重试")
+
+// textToolCallMarkers 是「模型把工具调用当正文吐出来」的特征串（Hermes/Qwen 等文本格式）。
+// 正常的微博客回顾回答不会出现这些标记，误伤概率可忽略。
+var textToolCallMarkers = []string{"<tool_call>", "<function="}
+
+// toolCallLeakGuard 在流式正文里探测工具调用语法泄漏：安全文本照常放行；末尾「可能是半个标记」
+// 的尾巴暂留到能判定为止（防标记跨 chunk 被拆开漏过）；一旦拼出完整标记即 tripped。
+// 模型无关、不解析各家格式——职责仅是「别泄漏 + 让端点配置问题暴露出来」。
+type toolCallLeakGuard struct {
+	pending string
+}
+
+// feed 吃一段正文增量，返回可安全外放的文本；tripped=true 表示检测到工具调用语法泄漏。
+func (g *toolCallLeakGuard) feed(text string) (safe string, tripped bool) {
+	g.pending += text
+	for _, m := range textToolCallMarkers {
+		if strings.Contains(g.pending, m) {
+			g.pending = ""
+			return "", true
+		}
+	}
+	hold := markerPrefixHold(g.pending)
+	safe, g.pending = g.pending[:len(g.pending)-hold], g.pending[len(g.pending)-hold:]
+	return safe, false
+}
+
+// flush 返回收尾时剩余的暂留文本（确认不是任何标记的前缀，可安全放行）。
+func (g *toolCallLeakGuard) flush() string {
+	s := g.pending
+	g.pending = ""
+	return s
+}
+
+// markerPrefixHold 返回 s 末尾「可能是某个标记前缀」的最长长度——这部分需暂留待后续 chunk 判定。
+func markerPrefixHold(s string) int {
+	hold := 0
+	for _, m := range textToolCallMarkers {
+		n := min(len(m), len(s))
+		for k := n; k > hold; k-- {
+			if strings.HasPrefix(m, s[len(s)-k:]) {
+				hold = k
+				break
+			}
+		}
+	}
+	return hold
 }

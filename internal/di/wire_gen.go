@@ -176,7 +176,7 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 	dashboardHandler := handler14.NewDashboardHandler(dashboardService)
 	embeddingRepository := repository3.NewEmbeddingRepository(dbProvider)
 	embeddingService := service.NewEmbeddingService(embeddingRepository, keyValueRepository, echoRepository)
-	copilotService := service13.NewCopilotService(settingService, echoService, embeddingService, keyValueRepository)
+	copilotService := service13.NewCopilotService(settingService, echoService, embeddingService, keyValueRepository, manager)
 	copilotHandler := handler15.NewCopilotHandler(copilotService, copilotService)
 	embeddingHandler := handler16.NewEmbeddingHandler(embeddingService)
 	mcpHandler := mcp.NewHandler(echoService, userService, commentService, fileService, commonService, connectService, copilotService, settingService)

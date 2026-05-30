@@ -52,6 +52,9 @@ definitions:
       model:
         description: LLM 模型名称
         type: string
+      multimodal:
+        description: 多模态支持：检索命中带图 Echo 时把配图递给模型（需模型支持视觉）
+        type: boolean
       prompt:
         description: Agent 额外使用的提示词
         type: string

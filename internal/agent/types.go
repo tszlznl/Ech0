@@ -28,6 +28,17 @@ type Message struct {
 	ToolCalls []ToolCall
 	// ToolCallID 仅 RoleTool：本条结果对应的 ToolCall.ID。
 	ToolCallID string
+	// Images 仅 RoleUser：随本条消息发给多模态模型的图片（如检索命中 Echo 的配图）。
+	// 普通文本消息为空；Provider 据此走多模态消息体（OpenAI multi-part / Anthropic image block）。
+	Images []ImagePart
+}
+
+// ImagePart 是一张随消息发给多模态模型的图片。优先 Base64（自部署/私有存储下 provider 拉不到
+// 内网 URL）；URL 仅用于可公开访问的 external 直链。二者取其一。
+type ImagePart struct {
+	MediaType string // MIME 类型，如 image/png、image/jpeg
+	Base64    string // 图片字节的 base64（不含 data: 前缀）
+	URL       string // 可公开访问的直链（external 存储用）
 }
 
 // ToolCall 是模型发起的一次工具调用（各家 SDK 的分片在 Provider 内拼装完整后才上浮）。
@@ -51,9 +62,11 @@ type Tool struct {
 }
 
 // ToolOutput 是工具执行结果：Content 回喂模型，Meta 旁路带出领域数据（如命中的检索结果，供 SSE sources）。
+// Images 非空时，Loop 会在本条工具结果之后追加一条带图的 user 消息（多模态场景，如把命中 Echo 的配图递给模型）。
 type ToolOutput struct {
 	Content string
 	Meta    any
+	Images  []ImagePart
 }
 
 // Request 是一次 Provider 调用的协议无关载荷。

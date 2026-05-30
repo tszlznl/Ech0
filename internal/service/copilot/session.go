@@ -56,7 +56,8 @@ func historyForModel(msgs []ChatMessage, locale string, budgetTokens int) []agen
 		if i != lastSourced {
 			return c
 		}
-		note := fmt.Sprintf(recentSourcesNoteFor(locale), formatSearchResults(msgs[i].Sources))
+		// 历史折叠用持久化的 sources 文本快照，不再回查 Extension（旧轮无需精确）。
+		note := fmt.Sprintf(recentSourcesNoteFor(locale), formatSearchResults(msgs[i].Sources, nil))
 		if c == "" {
 			return note
 		}

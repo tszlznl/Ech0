@@ -675,7 +675,9 @@
     "baseUrlHint": "Beim Protokoll „OpenAI-kompatibel“ hier die API-Adresse von Diensten wie DeepSeek oder Ollama eingeben",
     "prompt": "Prompt",
     "promptPlaceholder": "Eigenen Prompt eingeben",
-    "promptHint": "Der eigene Prompt wirkt nur auf die „aktuelle Zusammenfassung“ und wird im Chat nicht verwendet."
+    "promptHint": "Der eigene Prompt wirkt nur auf die „aktuelle Zusammenfassung“ und wird im Chat nicht verwendet.",
+    "multimodal": "Multimodale Unterstützung",
+    "multimodalHint": "Wenn aktiviert, werden Bilder aus gefundenen Echos an das Modell gesendet, damit es sie versteht (erfordert ein bildfähiges Modell)."
   },
   "webhookSetting": {
     "title": "Webhook",
@@ -1019,7 +1021,8 @@
     "searching": "Suche: {query}",
     "errorGeneric": "Etwas ist schiefgelaufen. Bitte versuche es später erneut oder prüfe Modell- und Index-Einstellungen.",
     "sourcesMore": "{count} weitere anzeigen",
-    "sourcesLess": "Weniger anzeigen"
+    "sourcesLess": "Weniger anzeigen",
+    "sourceNoContent": "Kein Text"
   },
   "chatLauncher": {
     "title": "Chat",

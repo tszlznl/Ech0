@@ -183,9 +183,19 @@ func execTools(
 			return false
 		}
 		*messages = append(*messages, Message{Role: RoleTool, ToolCallID: tc.ID, Content: output.Content})
+
+		// 多模态：工具带出了图片（如命中 Echo 的配图）→ 紧跟一条带图 user 消息递给模型。
+		// 走 user 消息而非塞进 tool_result，是因 OpenAI 的 tool 角色消息只能纯文本，
+		// user 带图两家协议都支持，一套逻辑通用。
+		if len(output.Images) > 0 {
+			*messages = append(*messages, Message{Role: RoleUser, Content: toolImageNote, Images: output.Images})
+		}
 	}
 	return true
 }
+
+// toolImageNote 是带图 user 消息的说明文本，告诉模型这些图来自上一步检索命中的 Echo。
+const toolImageNote = "（以下是上一步检索命中的 Echo 的配图，供你结合图片内容作答）"
 
 // emit 向 out 发送事件，ctx 取消时返回 false（调用方应据此停止）。
 func emit(ctx context.Context, out chan<- AgentEvent, ev AgentEvent) bool {

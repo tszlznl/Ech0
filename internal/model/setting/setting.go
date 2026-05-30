@@ -97,12 +97,13 @@ func (a *AccessTokenSetting) BeforeCreate(_ *gorm.DB) error {
 
 // AgentSetting 定义 LLM Agent 设置实体
 type AgentSetting struct {
-	Enable   bool   `json:"enable"`   // 是否启用 Agent 功能
-	Protocol string `json:"protocol"` // LLM 接口协议（OpenAI 兼容/Anthropic，OpenAI 兼容覆盖 DeepSeek、Qwen、Ollama 等）
-	Model    string `json:"model"`    // LLM 模型名称
-	ApiKey   string `json:"api_key"`  // LLM API Key
-	Prompt   string `json:"prompt"`   // Agent 额外使用的提示词
-	BaseURL  string `json:"base_url"` // 自定义 API URL（可选）
+	Enable     bool   `json:"enable"`     // 是否启用 Agent 功能
+	Protocol   string `json:"protocol"`   // LLM 接口协议（OpenAI 兼容/Anthropic，OpenAI 兼容覆盖 DeepSeek、Qwen、Ollama 等）
+	Model      string `json:"model"`      // LLM 模型名称
+	ApiKey     string `json:"api_key"`    // LLM API Key
+	Prompt     string `json:"prompt"`     // Agent 额外使用的提示词
+	BaseURL    string `json:"base_url"`   // 自定义 API URL（可选）
+	Multimodal bool   `json:"multimodal"` // 多模态支持：Chat 检索命中带图 Echo 时，把配图一并递给模型（需所配模型支持视觉）
 }
 
 type BackupSchedule struct {

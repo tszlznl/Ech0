@@ -140,11 +140,32 @@ func (p *anthropicProvider) buildMessages(in []Message) ([]anthropic.TextBlockPa
 			pendingTools = append(pendingTools, anthropic.NewToolResultBlock(m.ToolCallID, m.Content, false))
 		default: // RoleUser
 			flush()
-			msgs = append(msgs, anthropic.NewUserMessage(anthropic.NewTextBlock(m.Content)))
+			msgs = append(msgs, anthropic.NewUserMessage(userBlocks(m)...))
 		}
 	}
 	flush()
 	return systemBlocks, msgs
+}
+
+// userBlocks 把一条 RoleUser 消息拼成 Anthropic content 块：文本块（非空）+ 每张图一块
+// image（Base64 用 base64 source，否则用 URL source）。无任何块时兜底成一个文本块，避免空消息。
+func userBlocks(m Message) []anthropic.ContentBlockParamUnion {
+	var blocks []anthropic.ContentBlockParamUnion
+	if m.Content != "" {
+		blocks = append(blocks, anthropic.NewTextBlock(m.Content))
+	}
+	for _, img := range m.Images {
+		switch {
+		case img.Base64 != "":
+			blocks = append(blocks, anthropic.NewImageBlockBase64(img.MediaType, img.Base64))
+		case img.URL != "":
+			blocks = append(blocks, anthropic.NewImageBlock(anthropic.URLImageSourceParam{URL: img.URL}))
+		}
+	}
+	if len(blocks) == 0 {
+		blocks = append(blocks, anthropic.NewTextBlock(m.Content))
+	}
+	return blocks
 }
 
 // buildTools 把内部 ToolDef 映射为 Anthropic ToolUnionParam。

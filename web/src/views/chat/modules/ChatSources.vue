@@ -2,15 +2,37 @@
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <div class="sources">
+    <div v-for="src in visibleSources" :key="src.echoId" class="sources__item">
+      <button class="sources__link" @click="emit('open', src.echoId)">
+        <span class="sources__mark">↗</span>
+        <span class="sources__day">{{ src.day }}</span>
+        <span class="sources__sep" aria-hidden="true">·</span>
+        <span class="sources__text" :class="{ 'sources__text--empty': src.empty }">{{
+          src.text
+        }}</span>
+        <!-- 扩展分享：仅展示类型图标 + 标签（音乐/网站/位置…） -->
+        <span v-if="src.ext" class="sources__ext">
+          <span aria-hidden="true">{{ src.ext.icon }}</span>
+          {{ src.ext.label }}
+        </span>
+      </button>
+      <!-- 命中 Echo 的配图缩略图：复用 getImageUrl 解析 local/S3/external 直链 -->
+      <div v-if="src.images.length" class="sources__thumbs">
+        <button
+          v-for="(img, i) in src.images"
+          :key="img.id || i"
+          class="sources__thumb"
+          @click="emit('open', src.echoId)"
+        >
+          <img :src="getImageUrl(img)" alt="" loading="lazy" />
+        </button>
+      </div>
+    </div>
     <button
-      v-for="src in visibleSources"
-      :key="src.echo_id"
-      class="sources__link"
-      @click="emit('open', src.echo_id)"
+      v-if="displaySources.length > LIMIT"
+      class="sources__toggle"
+      @click="showAll = !showAll"
     >
-      <span class="sources__mark">↗</span>{{ formatSource(src) }}
-    </button>
-    <button v-if="sources.length > LIMIT" class="sources__toggle" @click="showAll = !showAll">
       {{
         showAll ? t('chatPanel.sourcesLess') : t('chatPanel.sourcesMore', { count: hiddenCount })
       }}
@@ -21,6 +43,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { getImageUrl } from '@/utils/other'
 
 const props = defineProps<{
   sources: App.Api.Chat.ChatSource[]
@@ -33,18 +56,54 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const LIMIT = 3
+// 每条来源最多展示的缩略图数（多余的不显示，避免来源区过高）
+const THUMB_LIMIT = 4
 const showAll = ref<boolean>(false)
 
-const visibleSources = computed(() =>
-  showAll.value ? props.sources : props.sources.slice(0, LIMIT),
-)
-const hiddenCount = computed(() => props.sources.length - LIMIT)
-
-const formatSource = (src: App.Api.Chat.ChatSource): string => {
-  const day = new Date(src.echo_created * 1000).toISOString().slice(0, 10)
-  const text = src.content.length > 40 ? src.content.slice(0, 40) + '…' : src.content
-  return ` ${day} · ${text}`
+type DisplaySource = {
+  echoId: string
+  day: string
+  text: string
+  empty: boolean
+  images: App.Api.Ech0.FileObject[]
+  ext?: { icon: string; label: string }
 }
+
+// Extension 类型 → 图标 emoji + i18n 标签 key（复用编辑器里既有的扩展类型文案）
+const EXT_META: Record<string, { icon: string; labelKey: string }> = {
+  MUSIC: { icon: '🎵', labelKey: 'editor.extMusic' },
+  VIDEO: { icon: '🎬', labelKey: 'editor.extVideo' },
+  GITHUBPROJ: { icon: '💻', labelKey: 'editor.extGithubProject' },
+  WEBSITE: { icon: '🔗', labelKey: 'editor.extWebsiteLink' },
+  LOCATION: { icon: '📍', labelKey: 'editor.extLocation' },
+  TWEET: { icon: '🐦', labelKey: 'editor.extTweet' },
+}
+
+// 预处理每条来源：无正文的 Echo 不留悬空分隔符，改用淡化占位文案；图片附件映射成 FileObject 供 getImageUrl 解析
+const displaySources = computed<DisplaySource[]>(() =>
+  props.sources.map((src) => {
+    const day = new Date(src.echo_created * 1000).toISOString().slice(0, 10)
+    const trimmed = src.content.trim()
+    const empty = trimmed.length === 0
+    const text = empty
+      ? t('chatPanel.sourceNoContent')
+      : trimmed.length > 40
+        ? trimmed.slice(0, 40) + '…'
+        : trimmed
+    const images: App.Api.Ech0.FileObject[] = (src.files ?? [])
+      .filter((f) => f.category === 'image' && f.url)
+      .slice(0, THUMB_LIMIT)
+      .map((f) => ({ ...f, echo_id: src.echo_id }))
+    const meta = src.extension ? EXT_META[src.extension.type] : undefined
+    const ext = meta ? { icon: meta.icon, label: t(meta.labelKey) } : undefined
+    return { echoId: src.echo_id, day, text, empty, images, ext }
+  }),
+)
+
+const visibleSources = computed<DisplaySource[]>(() =>
+  showAll.value ? displaySources.value : displaySources.value.slice(0, LIMIT),
+)
+const hiddenCount = computed(() => displaySources.value.length - LIMIT)
 </script>
 
 <style scoped>
@@ -55,9 +114,50 @@ const formatSource = (src: App.Api.Chat.ChatSource): string => {
   margin-top: 0.35rem;
 }
 
+.sources__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* 缩略图行：紧贴来源文字下方，一排小图 */
+.sources__thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.1rem 0 0.15rem;
+}
+
+.sources__thumb {
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 0.4rem;
+  overflow: hidden;
+  background: var(--color-accent-soft);
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.sources__thumb:hover {
+  transform: translateY(-1px);
+  border-color: var(--color-accent);
+}
+
+.sources__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .sources__link {
   display: inline-flex;
   align-items: baseline;
+  gap: 0.3rem;
   max-width: 32rem;
   border: none;
   background: transparent;
@@ -80,6 +180,42 @@ const formatSource = (src: App.Api.Chat.ChatSource): string => {
 .sources__mark {
   color: var(--color-accent);
   opacity: 0.8;
+}
+
+.sources__day {
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+
+.sources__sep {
+  flex: none;
+  opacity: 0.5;
+}
+
+.sources__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 无正文：斜体淡化，和真实内容区分开 */
+.sources__text--empty {
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* 扩展分享类型标签：紧随来源文字的小 chip */
+.sources__ext {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--color-accent-soft);
+  color: var(--color-text-secondary);
+  font-size: 0.66rem;
+  line-height: 1.6;
 }
 
 .sources__toggle {

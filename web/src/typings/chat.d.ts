@@ -12,6 +12,23 @@ declare namespace App {
         username: string
         echo_created: number
         distance: number
+        // 命中 Echo 的图片附件（后端回查填充，整条 File，供前端展示缩略图）
+        files?: ChatSourceFile[]
+        // 命中 Echo 的扩展分享（音乐/网站/位置…），仅用于在来源里展示一个类型标签
+        extension?: Ech0.EchoExtension
+      }
+
+      // 来源 Echo 的单个文件（对应后端 model/file.File，字段为 FileObject 超集）
+      type ChatSourceFile = {
+        id: string
+        key?: string
+        storage_type: File.StorageType
+        url: string
+        content_type?: string
+        category?: File.Category
+        size?: number
+        width?: number
+        height?: number
       }
 
       // 一条聊天消息（前端会话内）

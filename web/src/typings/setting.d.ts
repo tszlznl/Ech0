@@ -149,6 +149,7 @@ declare namespace App {
         api_key: string
         prompt: string
         base_url: string
+        multimodal: boolean
       }
 
       type AgentSettingDto = {
@@ -158,6 +159,7 @@ declare namespace App {
         api_key: string
         prompt: string
         base_url: string
+        multimodal: boolean
       }
     }
   }
