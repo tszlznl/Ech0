@@ -16,16 +16,15 @@ import (
 	"github.com/lin-snow/ech0/internal/event/registry"
 	"github.com/lin-snow/ech0/internal/event/subscriber"
 	"github.com/lin-snow/ech0/internal/handler"
-	handler15 "github.com/lin-snow/ech0/internal/handler/agent"
 	handler4 "github.com/lin-snow/ech0/internal/handler/auth"
 	handler12 "github.com/lin-snow/ech0/internal/handler/backup"
-	handler16 "github.com/lin-snow/ech0/internal/handler/chat"
 	handler7 "github.com/lin-snow/ech0/internal/handler/comment"
 	handler9 "github.com/lin-snow/ech0/internal/handler/common"
 	handler11 "github.com/lin-snow/ech0/internal/handler/connect"
+	handler15 "github.com/lin-snow/ech0/internal/handler/copilot"
 	handler14 "github.com/lin-snow/ech0/internal/handler/dashboard"
 	handler5 "github.com/lin-snow/ech0/internal/handler/echo"
-	handler17 "github.com/lin-snow/ech0/internal/handler/embedding"
+	handler16 "github.com/lin-snow/ech0/internal/handler/embedding"
 	handler6 "github.com/lin-snow/ech0/internal/handler/file"
 	handler8 "github.com/lin-snow/ech0/internal/handler/init"
 	handler13 "github.com/lin-snow/ech0/internal/handler/migration"
@@ -51,14 +50,13 @@ import (
 	repository13 "github.com/lin-snow/ech0/internal/repository/visitor"
 	"github.com/lin-snow/ech0/internal/repository/webhook"
 	"github.com/lin-snow/ech0/internal/server"
-	service15 "github.com/lin-snow/ech0/internal/service"
-	service13 "github.com/lin-snow/ech0/internal/service/agent"
+	service14 "github.com/lin-snow/ech0/internal/service"
 	"github.com/lin-snow/ech0/internal/service/auth"
 	service10 "github.com/lin-snow/ech0/internal/service/backup"
-	service14 "github.com/lin-snow/ech0/internal/service/chat"
 	service7 "github.com/lin-snow/ech0/internal/service/comment"
 	service2 "github.com/lin-snow/ech0/internal/service/common"
 	service9 "github.com/lin-snow/ech0/internal/service/connect"
+	service13 "github.com/lin-snow/ech0/internal/service/copilot"
 	service12 "github.com/lin-snow/ech0/internal/service/dashboard"
 	service6 "github.com/lin-snow/ech0/internal/service/echo"
 	"github.com/lin-snow/ech0/internal/service/embedding"
@@ -176,15 +174,13 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 	migrationHandler := handler13.NewMigrationHandler(migratorService)
 	dashboardService := service12.NewDashboardService(tracker)
 	dashboardHandler := handler14.NewDashboardHandler(dashboardService)
-	agentService := service13.NewAgentService(settingService, echoService, keyValueRepository)
-	agentHandler := handler15.NewAgentHandler(agentService)
 	embeddingRepository := repository3.NewEmbeddingRepository(dbProvider)
 	embeddingService := service.NewEmbeddingService(embeddingRepository, keyValueRepository, echoRepository)
-	chatService := service14.NewChatService(embeddingService, keyValueRepository)
-	chatHandler := handler16.NewChatHandler(chatService)
-	embeddingHandler := handler17.NewEmbeddingHandler(embeddingService)
-	mcpHandler := mcp.NewHandler(echoService, userService, commentService, fileService, commonService, connectService, agentService, settingService)
-	bundle := handler.NewBundle(webHandler, userHandler, authHandler, echoHandler, fileHandler, commentHandler, initHandler, commonHandler, settingHandler, connectHandler, backupHandler, migrationHandler, dashboardHandler, agentHandler, chatHandler, embeddingHandler, mcpHandler)
+	copilotService := service13.NewCopilotService(settingService, echoService, embeddingService, keyValueRepository)
+	copilotHandler := handler15.NewCopilotHandler(copilotService, copilotService)
+	embeddingHandler := handler16.NewEmbeddingHandler(embeddingService)
+	mcpHandler := mcp.NewHandler(echoService, userService, commentService, fileService, commonService, connectService, copilotService, settingService)
+	bundle := handler.NewBundle(webHandler, userHandler, authHandler, echoHandler, fileHandler, commentHandler, initHandler, commonHandler, settingHandler, connectHandler, backupHandler, migrationHandler, dashboardHandler, copilotHandler, embeddingHandler, mcpHandler)
 	return bundle, nil
 }
 
@@ -263,13 +259,13 @@ var InfraSet = wire.NewSet(database.ProviderSet, bus.ProvideProvider, cache.Prov
 
 var RuntimeSet = server.ProviderSet
 
-var EventSet = wire.NewSet(repository14.EchoSet, repository14.UserSet, repository14.KeyValueSet, repository14.QueueSet, repository14.WebhookSet, repository14.EmbeddingSet, wire.Bind(new(registry.WebhookObserver), new(*webhook.Dispatcher)), wire.Bind(new(subscriber.DeadLetterProcessor), new(*webhook.Dispatcher)), webhook.NewDispatcher, subscriber.NewBackupScheduler, subscriber.NewDeadLetterResolver, subscriber.NewAgentProcessor, subscriber.NewEmbeddingProcessor, service15.EmbeddingSet, ProvideSubscriptionProviders, registry.NewEventRegistry)
+var EventSet = wire.NewSet(repository14.EchoSet, repository14.UserSet, repository14.KeyValueSet, repository14.QueueSet, repository14.WebhookSet, repository14.EmbeddingSet, wire.Bind(new(registry.WebhookObserver), new(*webhook.Dispatcher)), wire.Bind(new(subscriber.DeadLetterProcessor), new(*webhook.Dispatcher)), webhook.NewDispatcher, subscriber.NewBackupScheduler, subscriber.NewDeadLetterResolver, subscriber.NewAgentProcessor, subscriber.NewEmbeddingProcessor, service14.EmbeddingSet, ProvideSubscriptionProviders, registry.NewEventRegistry)
 
-var HandlerSet = wire.NewSet(publisher.New, wire.Bind(new(service7.EventPublisher), new(*publisher.Publisher)), storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository14.FileSet, handler.WebSet, repository14.UserSet, repository14.AuthSet, service15.UserSet, service15.AuthSet, handler.UserSet, handler.AuthSet, repository14.EchoSet, service15.EchoSet, handler.EchoSet, repository14.CommentSet, service15.CommentSet, handler.CommentSet, repository14.CommonSet, service15.FileSet, handler.FileSet, repository14.InitSet, service15.InitSet, handler.InitSet, service15.CommonSet, handler.CommonSet, repository14.WebhookSet, repository14.KeyValueSet, repository14.SettingSet, service15.SettingSet, handler.SettingSet, repository14.ConnectSet, service15.ConnectSet, handler.ConnectSet, service15.DashboardSet, handler.DashboardSet, service15.AgentSet, handler.AgentSet, repository14.EmbeddingSet, service15.EmbeddingSet, handler.EmbeddingSet, service15.ChatSet, handler.ChatSet, service15.BackupSet, handler.BackupSet, repository14.MigrationSet, service15.MigratorSet, handler.MigrationSet, handler.MCPSet, handler.NewBundle)
+var HandlerSet = wire.NewSet(publisher.New, wire.Bind(new(service7.EventPublisher), new(*publisher.Publisher)), storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository14.FileSet, handler.WebSet, repository14.UserSet, repository14.AuthSet, service14.UserSet, service14.AuthSet, handler.UserSet, handler.AuthSet, repository14.EchoSet, service14.EchoSet, handler.EchoSet, repository14.CommentSet, service14.CommentSet, handler.CommentSet, repository14.CommonSet, service14.FileSet, handler.FileSet, repository14.InitSet, service14.InitSet, handler.InitSet, service14.CommonSet, handler.CommonSet, repository14.WebhookSet, repository14.KeyValueSet, repository14.SettingSet, service14.SettingSet, handler.SettingSet, repository14.ConnectSet, service14.ConnectSet, handler.ConnectSet, service14.DashboardSet, handler.DashboardSet, repository14.EmbeddingSet, service14.EmbeddingSet, handler.EmbeddingSet, service14.CopilotSet, handler.CopilotSet, service14.BackupSet, handler.BackupSet, repository14.MigrationSet, service14.MigratorSet, handler.MigrationSet, handler.MCPSet, handler.NewBundle)
 
 var MiddlewareSet = wire.NewSet(repository14.AuthSet, middleware.ProviderSet)
 
-var TaskerSet = wire.NewSet(publisher.New, storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository14.FileSet, repository14.KeyValueSet, repository14.WebhookSet, repository14.AuthSet, repository14.SettingSet, service15.SettingSet, repository14.EchoSet, service15.EchoSet, repository14.CommonSet, service15.FileSet, service15.CommonSet, repository14.QueueSet, repository14.VisitorSet, task.ProviderSet)
+var TaskerSet = wire.NewSet(publisher.New, storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository14.FileSet, repository14.KeyValueSet, repository14.WebhookSet, repository14.AuthSet, repository14.SettingSet, service14.SettingSet, repository14.EchoSet, service14.EchoSet, repository14.CommonSet, service14.FileSet, service14.CommonSet, repository14.QueueSet, repository14.VisitorSet, task.ProviderSet)
 
 var MigratorSet = wire.NewSet(migrator.ProviderSet)
 

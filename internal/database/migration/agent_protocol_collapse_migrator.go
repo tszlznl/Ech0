@@ -77,7 +77,9 @@ func (m *agentProtocolCollapseMigrator) Migrate(db *gorm.DB) error {
 
 func collapseAgentProtocol(old string) string {
 	switch old {
-	case string(commonModel.Anthropic), string(commonModel.Gemini), string(commonModel.OpenAI):
+	// gemini 已整协议下线，但此处保留其历史直通映射，忠实还原迁移当时的行为；
+	// 运行时 gemini 会落到 AGENT_PROTOCOL_NOT_FOUND（见 internal/agent）。
+	case string(commonModel.Anthropic), "gemini", string(commonModel.OpenAI):
 		return old
 	default:
 		// deepseek / qwen / ollama / custom / 空 / 未知 → openai

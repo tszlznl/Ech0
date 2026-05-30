@@ -142,6 +142,9 @@ func explicitLocaleFromRequest(ctx *gin.Context) string {
 	return strings.TrimSpace(ctx.GetHeader("X-Locale"))
 }
 
+// SystemDefaultLocale 返回站点默认 locale（读 system_settings.default_locale）。
+func SystemDefaultLocale() string { return systemDefaultLocale() }
+
 func systemDefaultLocale() string {
 	defaultLocale := string(commonModel.DefaultLocale)
 	db := database.GetDB()

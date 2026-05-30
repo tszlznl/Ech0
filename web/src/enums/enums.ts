@@ -73,5 +73,4 @@ export enum AccessTokenExpiration {
 export enum AgentProtocol {
   OPENAI = 'openai',
   ANTHROPIC = 'anthropic',
-  GEMINI = 'gemini',
 }

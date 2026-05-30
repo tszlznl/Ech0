@@ -2,7 +2,7 @@
 // Copyright (C) 2025-2026 lin-snow
 
 import { ofetch } from 'ofetch'
-import { getInitReadyStatus } from './shared'
+import { getInitReadyStatus, buildCommonHeaders } from './shared'
 import { useAuthStore } from '@/stores/auth'
 import { theToast } from '@/utils/toast'
 import { i18n } from '@/locales'
@@ -24,16 +24,12 @@ const ofetchInstance = ofetch.create({
   ignoreResponseError: true,
 
   onRequest({ options }) {
-    const authStore = useAuthStore()
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
-
     const isDirectUrl = options.headers.get('X-Direct-URL')
-    if (authStore.authHeader && !isDirectUrl) {
-      options.headers.set('Authorization', authStore.authHeader)
-    }
     if (!isDirectUrl) {
-      options.headers.set('X-Timezone', timezone)
-      options.headers.set('X-Locale', i18n.global.locale.value)
+      // 公共头单一真相源（与 SSE 传输共用），见 service/request/shared.ts
+      for (const [key, value] of Object.entries(buildCommonHeaders())) {
+        options.headers.set(key, value)
+      }
     }
 
     options.headers.delete('X-Direct-URL')

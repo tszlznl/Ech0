@@ -143,15 +143,9 @@ func featureRouteModules() []RouteModule {
 			},
 		},
 		routeModule{
-			name: "agent",
+			name: "copilot",
 			register: func(ctx *RouterContext) {
-				setupAgentRoutes(ctx.Groups, ctx.Handlers)
-			},
-		},
-		routeModule{
-			name: "chat",
-			register: func(ctx *RouterContext) {
-				setupChatRoutes(ctx.Groups, ctx.Handlers)
+				setupCopilotRoutes(ctx.Groups, ctx.Handlers)
 			},
 		},
 		routeModule{

@@ -23,7 +23,7 @@
         <!-- Input -->
         <div
           :class="[
-            'flex items-center px-0.5 py-0.5 rounded-[var(--radius-md)] bg-[var(--input-bg-color)] border border-[var(--combobox-border-color)] shadow-[var(--shadow-sm)] transition duration-150 ease-in-out',
+            'flex items-center px-3 py-2 rounded-[var(--radius-md)] bg-[var(--input-bg-color)] border border-[var(--combobox-border-color)] shadow-[var(--shadow-sm)] focus-within:ring-2 focus-within:ring-[var(--input-focus-ring-color)] transition duration-150 ease-in-out',
             wrapperClass,
           ]"
           @focusout="onBlurOutside"
@@ -36,7 +36,10 @@
             @focus="onFocusInput"
             @click="onFocusInput"
             @input="onInputChange"
-            :class="['outline-none text-md', inputClass]"
+            :class="[
+              'flex-1 min-w-0 bg-transparent outline-none sm:text-sm text-[var(--input-text-color)]',
+              inputClass,
+            ]"
           />
 
           <!-- 可选的 suffix slot -->
@@ -68,16 +71,25 @@
           <ComboboxOptions
             static
             v-if="dropdownOpen && (filteredOptions.length > 0 || allowCreate)"
-            class="w-auto! absolute z-10 mt-2 max-h-64 overflow-y-scroll rounded-[var(--radius-md)] bg-[var(--combobox-bg-color)] py-1 text-sm shadow-[var(--shadow-md)] ring-1 ring-[var(--combobox-border-color)] focus:outline-none"
+            class="w-full absolute z-20 mt-1 max-h-44 overflow-y-auto overscroll-contain rounded-[var(--radius-md)] bg-[var(--combobox-bg-color)] py-1 text-sm shadow-[var(--shadow-md)] ring-1 ring-[var(--combobox-border-color)] focus:outline-none"
           >
             <ComboboxOption
               v-for="item in filteredOptions"
               :key="getOptionLabel(item) || String(item)"
               :value="item"
               @mousedown="isUserClicking = true"
-              class="w-full! max-w-32! truncate text-[var(--color-text-secondary)] hover:text-[var(--combobox-hover-text-color)] text-lg cursor-pointer select-none px-4 py-1 whitespace-nowrap text-ellipsis"
+              v-slot="{ active }"
             >
-              <slot name="option" :option="item"> # {{ getOptionLabel(item) }} </slot>
+              <div
+                :class="[
+                  'w-full truncate cursor-pointer select-none px-3 py-1.5 text-sm',
+                  active
+                    ? 'bg-[var(--select-label-hover-bg-color)] text-[var(--combobox-hover-text-color)]'
+                    : 'text-[var(--color-text-secondary)]',
+                ]"
+              >
+                <slot name="option" :option="item">{{ getOptionLabel(item) }}</slot>
+              </div>
             </ComboboxOption>
           </ComboboxOptions>
         </Transition>

@@ -114,9 +114,8 @@ func (settingService *SettingService) UpdateAgentSettings(
 	}
 
 	if newSetting.Protocol != string(commonModel.OpenAI) &&
-		newSetting.Protocol != string(commonModel.Anthropic) &&
-		newSetting.Protocol != string(commonModel.Gemini) {
-		// 未识别的接口协议一律按 OpenAI 兼容协议处理
+		newSetting.Protocol != string(commonModel.Anthropic) {
+		// 未识别的接口协议（含已下线的 gemini）一律按 OpenAI 兼容协议处理
 		newSetting.Protocol = string(commonModel.OpenAI)
 	}
 

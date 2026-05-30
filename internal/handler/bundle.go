@@ -4,13 +4,12 @@
 package handler
 
 import (
-	agentHandler "github.com/lin-snow/ech0/internal/handler/agent"
 	authHandler "github.com/lin-snow/ech0/internal/handler/auth"
 	backupHandler "github.com/lin-snow/ech0/internal/handler/backup"
-	chatHandler "github.com/lin-snow/ech0/internal/handler/chat"
 	commentHandler "github.com/lin-snow/ech0/internal/handler/comment"
 	commonHandler "github.com/lin-snow/ech0/internal/handler/common"
 	connectHandler "github.com/lin-snow/ech0/internal/handler/connect"
+	copilotHandler "github.com/lin-snow/ech0/internal/handler/copilot"
 	dashboardHandler "github.com/lin-snow/ech0/internal/handler/dashboard"
 	echoHandler "github.com/lin-snow/ech0/internal/handler/echo"
 	embeddingHandler "github.com/lin-snow/ech0/internal/handler/embedding"
@@ -38,8 +37,7 @@ type Bundle struct {
 	BackupHandler    *backupHandler.BackupHandler
 	MigrationHandler *migrationHandler.MigrationHandler
 	DashboardHandler *dashboardHandler.DashboardHandler
-	AgentHandler     *agentHandler.AgentHandler
-	ChatHandler      *chatHandler.ChatHandler
+	CopilotHandler   *copilotHandler.CopilotHandler
 	EmbeddingHandler *embeddingHandler.EmbeddingHandler
 	MCPHandler       *mcp.Handler
 }
@@ -59,8 +57,7 @@ func NewBundle(
 	backupHandler *backupHandler.BackupHandler,
 	migrationHandler *migrationHandler.MigrationHandler,
 	dashboardHandler *dashboardHandler.DashboardHandler,
-	agentHandler *agentHandler.AgentHandler,
-	chatHandler *chatHandler.ChatHandler,
+	copilotHandler *copilotHandler.CopilotHandler,
 	embeddingHandler *embeddingHandler.EmbeddingHandler,
 	mcpHandler *mcp.Handler,
 ) *Bundle {
@@ -78,8 +75,7 @@ func NewBundle(
 		BackupHandler:    backupHandler,
 		MigrationHandler: migrationHandler,
 		DashboardHandler: dashboardHandler,
-		AgentHandler:     agentHandler,
-		ChatHandler:      chatHandler,
+		CopilotHandler:   copilotHandler,
 		EmbeddingHandler: embeddingHandler,
 		MCPHandler:       mcpHandler,
 	}

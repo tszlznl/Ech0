@@ -2,6 +2,25 @@
 // Copyright (C) 2025-2026 lin-snow
 
 import { localStg } from '@/utils/storage'
+import { useAuthStore } from '@/stores/auth'
+import { i18n } from '@/locales'
+
+/**
+ * 全站请求公共头的唯一真相源：Authorization + X-Locale + X-Timezone。
+ * ofetch 的 onRequest 拦截器与 SSE 传输（service/request/sse.ts）都调它，
+ * 杜绝公共头逻辑在多处手写漂移。
+ */
+export function buildCommonHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    'X-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    'X-Locale': i18n.global.locale.value,
+  }
+  const authHeader = useAuthStore().authHeader
+  if (authHeader) {
+    headers['Authorization'] = authHeader
+  }
+  return headers
+}
 
 export const getApiUrl = () => {
   const baseUrl = import.meta.env.VITE_SERVICE_BASE_URL

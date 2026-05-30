@@ -45,8 +45,6 @@ const (
 	OpenAI AgentProtocol = "openai"
 	// Anthropic 协议
 	Anthropic AgentProtocol = "anthropic"
-	// Gemini 原生协议
-	Gemini AgentProtocol = "gemini"
 )
 
 const (
@@ -109,6 +107,8 @@ const (
 	AgentProtocolCollapsedKey = "agent_provider_collapsed_v1"
 	// AgentSettingProtocolRenamedKey 是把 agent_setting JSON 里 "provider" 字段重命名为 "protocol" 的幂等标记键
 	AgentSettingProtocolRenamedKey = "agent_setting_protocol_renamed_v1"
+	// ChatSessionKeyPrefix 是 Chat 持久化会话的键前缀（每个 userID 一条，键为前缀 + userID）
+	ChatSessionKeyPrefix = "chat_session:"
 )
 
 // PageQueryResult 用于分页查询的结果数据传输对象

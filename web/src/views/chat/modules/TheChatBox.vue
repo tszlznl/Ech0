@@ -29,6 +29,20 @@
 
           <!-- AI：无气泡的 markdown 正文 -->
           <template v-else>
+            <!-- 检索状态条：Agent 自主检索时逐条显示关键词（设计 §9 searching 事件） -->
+            <div v-if="msg.searches && msg.searches.length > 0" class="searching">
+              <span
+                v-for="(query, qi) in msg.searches"
+                :key="qi"
+                class="searching__chip"
+                :class="{
+                  'searching__chip--live': isStreaming(idx) && qi === msg.searches.length - 1,
+                }"
+              >
+                {{ t('chatPanel.searching', { query }) }}
+              </span>
+            </div>
+
             <div
               v-if="msg.content.length === 0 && isStreaming(idx)"
               class="thinking"
@@ -38,8 +52,17 @@
               <span class="thinking__dot" />
               <span class="thinking__dot" />
             </div>
-            <div v-else class="answer" :class="{ 'answer--streaming': isStreaming(idx) }">
-              <TheMdPreview :content="msg.content" />
+            <div v-else class="answer">
+              <!-- 流式 + 揭示未追平时都用逐 token 动画；等揭示真正播完再切到带复制/折叠的完整渲染器，
+                   避免慢节奏下尾巴整坨弹出 -->
+              <AnimatedMarkdown
+                v-if="showAnimated(idx)"
+                :content="msg.content"
+                :streaming="isStreaming(idx)"
+                animation="blurIn"
+                @update:revealing="assistantRevealing = $event"
+              />
+              <TheMdPreview v-else :content="msg.content" />
             </div>
           </template>
 
@@ -111,14 +134,18 @@
 import Back from '@/components/icons/back.vue'
 import Close from '@/components/icons/close.vue'
 import { TheMdPreview } from '@/components/advanced/md'
-import { ref, computed, nextTick } from 'vue'
+import AnimatedMarkdown from './AnimatedMarkdown.vue'
+import { ref, computed, nextTick, onBeforeUnmount, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { chatStream } from '@/service/api'
+import { getChatSession, clearChatSession } from '@/service/api/chat'
+import { useBaseDialog } from '@/composables/useBaseDialog'
 import { theToast } from '@/utils/toast'
 
 const { t } = useI18n()
 const router = useRouter()
+const { openConfirm } = useBaseDialog()
 
 const input = ref<string>('')
 const loading = ref<boolean>(false)
@@ -129,9 +156,18 @@ let abort: (() => void) | null = null
 
 const canSend = computed<boolean>(() => !loading.value && input.value.trim().length > 0)
 
+// 最后一条 assistant 消息的逐 token 揭示是否尚未追平（由 AnimatedMarkdown 上报）
+const assistantRevealing = ref<boolean>(false)
+
 // 是否正在流式输出最后一条 assistant 消息
-const isStreaming = (idx: number): boolean =>
-  loading.value && idx === messages.value.length - 1
+const isStreaming = (idx: number): boolean => loading.value && idx === messages.value.length - 1
+
+// 是否对该消息使用动画渲染：流式中、或流已结束但揭示还没播完，都继续动画
+const showAnimated = (idx: number): boolean => {
+  const last = messages.value.length - 1
+  if (idx !== last || messages.value[idx]?.role !== 'assistant') return false
+  return loading.value || assistantRevealing.value
+}
 
 const suggestions = computed<string[]>(() => [
   t('chatPanel.suggestion1'),
@@ -145,6 +181,28 @@ const scrollToBottom = () => {
       scrollArea.value.scrollTop = scrollArea.value.scrollHeight
     }
   })
+}
+
+// 流式期间逐帧粘住底部，跟随节流揭示平滑滚动；用户上滑离开底部则停止打扰
+let stickRaf = 0
+const isNearBottom = (): boolean => {
+  const el = scrollArea.value
+  if (!el) return true
+  return el.scrollHeight - el.scrollTop - el.clientHeight < 80
+}
+const stickToBottom = () => {
+  const el = scrollArea.value
+  if (el && isNearBottom()) el.scrollTop = el.scrollHeight
+  // 流式中、以及流结束后揭示仍在播放时，都保持粘底
+  const keepGoing = loading.value || assistantRevealing.value
+  stickRaf =
+    keepGoing && typeof requestAnimationFrame === 'function'
+      ? requestAnimationFrame(stickToBottom)
+      : 0
+}
+const stopStick = () => {
+  if (stickRaf) cancelAnimationFrame(stickRaf)
+  stickRaf = 0
 }
 
 // textarea 向上生长，横线恒定钉在 75vh
@@ -169,21 +227,40 @@ const send = (question: string) => {
   if (q.length === 0 || loading.value) return
 
   messages.value.push({ role: 'user', content: q })
-  const assistant = ref<App.Api.Chat.ChatMessage>({ role: 'assistant', content: '', sources: [] })
+  const assistant = ref<App.Api.Chat.ChatMessage>({
+    role: 'assistant',
+    content: '',
+    sources: [],
+    searches: [],
+  })
   messages.value.push(assistant.value)
   input.value = ''
   loading.value = true
+  assistantRevealing.value = true
   nextTick(autoGrow)
   scrollToBottom()
+  stickToBottom()
 
   abort = chatStream(q, {
+    onSearching: (query) => {
+      if (query && !assistant.value.searches?.includes(query)) {
+        assistant.value.searches?.push(query)
+      }
+    },
     onSources: (sources) => {
-      assistant.value.sources = sources
-      scrollToBottom()
+      // sources 可多次增量到达，按 echo_id 累积去重（设计 §9）
+      const merged = assistant.value.sources ? [...assistant.value.sources] : []
+      const seen = new Set(merged.map((s) => s.echo_id))
+      for (const src of sources) {
+        if (!seen.has(src.echo_id)) {
+          seen.add(src.echo_id)
+          merged.push(src)
+        }
+      }
+      assistant.value.sources = merged
     },
     onDelta: (text) => {
       assistant.value.content += text
-      scrollToBottom()
     },
     onError: (message) => {
       loading.value = false
@@ -205,7 +282,7 @@ const handleKeydown = (e: KeyboardEvent) => {
   }
 }
 
-// 流式进行中点击停止：中断请求但保留已生成的内容
+// 流式进行中点击停止：中断请求但保留已生成的内容（剩余尾巴让揭示从容播完）
 const handleStop = () => {
   if (abort) abort()
   abort = null
@@ -213,11 +290,42 @@ const handleStop = () => {
 }
 
 const handleClear = () => {
-  if (abort) abort()
-  abort = null
-  loading.value = false
-  messages.value = []
+  openConfirm({
+    title: t('chatPanel.clearConfirmTitle'),
+    description: t('chatPanel.clearConfirmDesc'),
+    onConfirm: async () => {
+      if (abort) abort()
+      abort = null
+      loading.value = false
+      assistantRevealing.value = false
+      stopStick()
+      try {
+        await clearChatSession()
+      } catch {
+        // 清除失败不阻断本地清空（best-effort）
+      }
+      messages.value = []
+      theToast.success(String(t('chatPanel.clearSuccess')))
+    },
+  })
 }
+
+// 进入页面恢复上次的持久化会话（仅展示）。恢复的消息走静态渲染：
+// loading 与 assistantRevealing 均为 false，showAnimated 对历史消息返回 false → 走 TheMdPreview。
+onMounted(async () => {
+  try {
+    const res = await getChatSession()
+    const history = res.data
+    if (Array.isArray(history) && history.length > 0) {
+      messages.value = history
+      scrollToBottom()
+    }
+  } catch {
+    // 恢复失败静默忽略，保持空态
+  }
+})
+
+onBeforeUnmount(stopStick)
 </script>
 
 <style scoped>
@@ -277,22 +385,14 @@ const handleClear = () => {
 /* ── 对话区（线之上，贴底向上生长） ─────────── */
 .transcript {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  inset: 0 0 calc(25dvh + 3rem);
+
   /* 在横线上方再留出一段呼吸距离，避免内容黏住输入框 */
-  bottom: calc(25dvh + 3rem);
   display: flex;
   justify-content: center;
   overflow-y: auto;
+
   /* 顶部与底部都做渐隐：内容靠近边界时柔和淡出 */
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    #000 4.5rem,
-    #000 calc(100% - 2.5rem),
-    transparent 100%
-  );
   mask-image: linear-gradient(
     to bottom,
     transparent 0,
@@ -305,7 +405,10 @@ const handleClear = () => {
 .transcript__inner {
   width: 100%;
   max-width: 42rem;
-  margin-top: auto;
+
+  /* 顶对齐、向下生长：内容不足时不再贴底，避免每多一行整块往上跳一格；
+     溢出后由 scrollToBottom 粘住底部 */
+  align-self: flex-start;
   padding: 4.5rem 1.5rem 0.5rem;
   display: flex;
   flex-direction: column;
@@ -332,6 +435,7 @@ const handleClear = () => {
     opacity: 0;
     transform: translateY(6px);
   }
+
   to {
     opacity: 1;
     transform: none;
@@ -342,13 +446,13 @@ const handleClear = () => {
 .bubble {
   max-width: 85%;
   padding: 0.55rem 0.9rem;
-  border-radius: 1.1rem 1.1rem 0.25rem 1.1rem;
+  border-radius: 1.1rem 1.1rem 0.25rem;
   background: var(--color-accent-soft);
   color: var(--color-text-primary);
   font-size: 0.9rem;
   line-height: 1.6;
   white-space: pre-wrap;
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 /* AI 回答：markdown 正文 */
@@ -359,30 +463,6 @@ const handleClear = () => {
 
 .answer :deep(.echo-markdown) {
   line-height: 1.8;
-}
-
-/* flowtoken 式的流式光标：纯 CSS 接在最后一个块级元素末尾，
-   markdown 重渲染也不受影响，无需逐 token 包裹 span */
-.answer--streaming :deep(.echo-markdown > :last-child)::after {
-  content: '';
-  display: inline-block;
-  width: 0.48rem;
-  height: 1.05em;
-  margin-left: 0.18rem;
-  vertical-align: text-bottom;
-  background: var(--color-accent);
-  border-radius: 1px;
-  animation: caret-blink 1.1s steps(1) infinite;
-}
-
-@keyframes caret-blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
 }
 
 /* 首 token 到达前的「思考中」动画 */
@@ -417,8 +497,55 @@ const handleClear = () => {
     transform: translateY(0);
     opacity: 0.35;
   }
+
   40% {
     transform: translateY(-0.28rem);
+    opacity: 1;
+  }
+}
+
+/* ── 检索状态条（Agent 自主检索） ───────────── */
+.searching {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.searching__chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 22rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--color-accent-soft);
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.searching__chip::before {
+  content: '🔍';
+  margin-right: 0.3rem;
+  font-size: 0.7rem;
+  font-variant-emoji: text;
+}
+
+/* 最新一条仍在检索：轻微呼吸 */
+.searching__chip--live {
+  animation: searching-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes searching-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+
+  50% {
     opacity: 1;
   }
 }
@@ -532,6 +659,7 @@ const handleClear = () => {
 .composer__return-glyph {
   font-size: 1.05rem;
   line-height: 1;
+
   /* 强制文本字形，避免被渲染成 emoji 样式 */
   font-variant-emoji: text;
 }
@@ -608,7 +736,7 @@ const handleClear = () => {
   max-width: 34rem;
 }
 
-@media (max-width: 640px) {
+@media (width <= 640px) {
   .transcript__inner {
     padding-left: 1.25rem;
     padding-right: 1.25rem;

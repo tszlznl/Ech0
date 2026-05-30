@@ -2,22 +2,16 @@
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <!-- 模型 -->
-  <div class="w-full">
+  <div class="w-full text-[var(--color-text-secondary)]">
     <!-- 启用 Agent -->
-    <div class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] h-10">
-      <h2 class="font-semibold min-w-24 w-max shrink-0 whitespace-nowrap">
-        {{ t('agentSetting.enableAgent') }}:
-      </h2>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-semibold">{{ t('agentSetting.enableAgent') }}</h2>
       <BaseSwitch v-model="AgentSetting.enable" :disabled="!editMode" />
     </div>
 
     <!-- LLM 接口协议 -->
-    <div
-      class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
-    >
-      <h2 class="font-semibold min-w-24 w-max shrink-0 whitespace-nowrap">
-        {{ t('agentSetting.protocol') }}:
-      </h2>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-semibold">{{ t('agentSetting.protocol') }}</h2>
       <BaseSelect
         v-model="AgentSetting.protocol"
         :options="agentProtocolOptions"
@@ -27,37 +21,24 @@
     </div>
 
     <!-- 模型名称 -->
-    <div
-      class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
-    >
-      <h2 class="font-semibold min-w-24 w-max shrink-0 whitespace-nowrap">
-        {{ t('agentSetting.modelName') }}:
-      </h2>
-      <span
-        v-if="!editMode"
-        class="flex-1 min-w-0 truncate inline-block align-middle"
-        v-tooltip="AgentSetting.model"
-      >
+    <div class="mb-4">
+      <h2 class="font-semibold mb-1.5">{{ t('agentSetting.modelName') }}</h2>
+      <span v-if="!editMode" class="block truncate opacity-80" v-tooltip="AgentSetting.model">
         {{ AgentSetting.model || t('commonUi.none') }}
       </span>
-      <div v-else>
-        <BaseInput
-          v-model="AgentSetting.model"
-          type="text"
-          :placeholder="t('agentSetting.modelPlaceholder')"
-          class="w-full py-1!"
-        />
-      </div>
+      <BaseInput
+        v-else
+        v-model="AgentSetting.model"
+        type="text"
+        :placeholder="t('agentSetting.modelPlaceholder')"
+        class="w-full"
+      />
     </div>
 
     <!-- API Key -->
-    <div
-      class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 h-10"
-    >
-      <h2 class="font-semibold min-w-24 w-max shrink-0 whitespace-nowrap">
-        {{ t('agentSetting.apiKey') }}:
-      </h2>
-      <span v-if="!editMode" class="flex-1 min-w-0 truncate inline-block align-middle">
+    <div class="mb-4">
+      <h2 class="font-semibold mb-1.5">{{ t('agentSetting.apiKey') }}</h2>
+      <span v-if="!editMode" class="block truncate opacity-80">
         {{ AgentSetting.api_key ? '********' : t('commonUi.none') }}
       </span>
       <BaseInput
@@ -65,39 +46,34 @@
         v-model="AgentSetting.api_key"
         type="password"
         :placeholder="t('agentSetting.apiKeyPlaceholder')"
-        class="w-full py-1!"
+        class="w-full"
       />
     </div>
 
     <!-- 自定义 Base URL -->
-    <div class="flex justify-start text-[var(--color-text-secondary)] gap-2 mt-2">
-      <h2 class="font-semibold min-w-24 w-max shrink-0 whitespace-nowrap">
-        {{ t('agentSetting.baseUrl') }}:
-      </h2>
-      <span v-if="!editMode" class="flex-1 min-w-0 truncate inline-block align-middle">
-        {{ AgentSetting.base_url.length == 0 ? t('commonUi.none') : AgentSetting.base_url }}
+    <div class="mb-4">
+      <h2 class="font-semibold mb-1.5">{{ t('agentSetting.baseUrl') }}</h2>
+      <span v-if="!editMode" class="block truncate opacity-80">
+        {{ AgentSetting.base_url.length === 0 ? t('commonUi.none') : AgentSetting.base_url }}
       </span>
-      <BaseInput
-        v-if="editMode"
-        v-model="AgentSetting.base_url"
-        :placeholder="t('agentSetting.baseUrlPlaceholder')"
-        class="w-full py-1!"
-      />
+      <template v-else>
+        <BaseInput
+          v-model="AgentSetting.base_url"
+          :placeholder="t('agentSetting.baseUrlPlaceholder')"
+          class="w-full"
+        />
+        <p class="text-xs opacity-70 mt-1">{{ t('agentSetting.baseUrlHint') }}</p>
+      </template>
     </div>
-    <p v-if="editMode" class="text-xs text-[var(--color-text-secondary)] opacity-70 mt-1 ml-26">
-      {{ t('agentSetting.baseUrlHint') }}
-    </p>
 
     <!-- Prompt -->
-    <div class="flex justify-start text-[var(--color-text-secondary)] gap-2 mt-2">
-      <h2 class="font-semibold min-w-24 w-max shrink-0 whitespace-nowrap">
-        {{ t('agentSetting.prompt') }}:
-      </h2>
-      <span v-if="!editMode" class="flex-1 min-w-0 truncate inline-block align-middle">
-        {{ AgentSetting.prompt.length == 0 ? t('commonUi.none') : '' }}
+    <div class="mb-1">
+      <h2 class="font-semibold mb-1.5">{{ t('agentSetting.prompt') }}</h2>
+      <span v-if="!editMode" class="block truncate opacity-80">
+        {{ AgentSetting.prompt.length === 0 ? t('commonUi.none') : AgentSetting.prompt }}
       </span>
       <BaseTextArea
-        v-if="editMode"
+        v-else
         v-model="AgentSetting.prompt"
         :placeholder="t('agentSetting.promptPlaceholder')"
         class="w-full"
@@ -130,7 +106,6 @@ const { AgentSetting } = storeToRefs(settingStore)
 const agentProtocolOptions = computed<{ label: string; value: AgentProtocol }[]>(() => [
   { label: t('agentSetting.protocolOpenAI'), value: AgentProtocol.OPENAI },
   { label: t('agentSetting.protocolAnthropic'), value: AgentProtocol.ANTHROPIC },
-  { label: t('agentSetting.protocolGemini'), value: AgentProtocol.GEMINI },
 ])
 
 // 由父组件的编辑胶囊触发；保存后回填最新设置

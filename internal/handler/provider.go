@@ -5,13 +5,12 @@ package handler
 
 import (
 	"github.com/google/wire"
-	agentHandler "github.com/lin-snow/ech0/internal/handler/agent"
 	authHandler "github.com/lin-snow/ech0/internal/handler/auth"
 	backupHandler "github.com/lin-snow/ech0/internal/handler/backup"
-	chatHandler "github.com/lin-snow/ech0/internal/handler/chat"
 	commentHandler "github.com/lin-snow/ech0/internal/handler/comment"
 	commonHandler "github.com/lin-snow/ech0/internal/handler/common"
 	connectHandler "github.com/lin-snow/ech0/internal/handler/connect"
+	copilotHandler "github.com/lin-snow/ech0/internal/handler/copilot"
 	dashboardHandler "github.com/lin-snow/ech0/internal/handler/dashboard"
 	echoHandler "github.com/lin-snow/ech0/internal/handler/echo"
 	embeddingHandler "github.com/lin-snow/ech0/internal/handler/embedding"
@@ -37,8 +36,7 @@ var (
 	ConnectSet   = wire.NewSet(connectHandler.NewConnectHandler)
 	BackupSet    = wire.NewSet(backupHandler.NewBackupHandler)
 	DashboardSet = wire.NewSet(dashboardHandler.NewDashboardHandler)
-	AgentSet     = wire.NewSet(agentHandler.NewAgentHandler)
-	ChatSet      = wire.NewSet(chatHandler.NewChatHandler)
+	CopilotSet   = wire.NewSet(copilotHandler.NewCopilotHandler)
 	EmbeddingSet = wire.NewSet(embeddingHandler.NewEmbeddingHandler)
 	MigrationSet = wire.NewSet(migrationHandler.NewMigrationHandler)
 	MCPSet       = wire.NewSet(mcp.NewHandler)

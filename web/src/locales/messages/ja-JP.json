@@ -667,7 +667,6 @@
     "protocol": "API プロトコル",
     "protocolOpenAI": "OpenAI 互換",
     "protocolAnthropic": "Anthropic",
-    "protocolGemini": "Gemini",
     "modelName": "モデル名",
     "modelPlaceholder": "モデル名を入力",
     "apiKey": "API Key",
@@ -990,7 +989,6 @@
   },
   "embeddingSetting": {
     "title": "ベクトルインデックス",
-    "intro": "Echo のベクトルインデックスを作成すると、AI チャットで過去の内容を検索・振り返りできます。Embedding サービスは生成用 LLM とは別に設定します。",
     "enable": "インデックスを有効化",
     "modelName": "Embedding モデル",
     "modelPlaceholder": "例: text-embedding-3-small",
@@ -1000,11 +998,12 @@
     "apiKeyPlaceholder": "API Key を入力（ローカルサービスは空欄可）",
     "baseUrl": "カスタム API URL",
     "baseUrlPlaceholder": "https://api.openai.com/v1",
-    "baseUrlHint": "任意。OpenAI 互換の /v1/embeddings である必要があります。",
     "reindex": "インデックス再構築",
     "reindexHint": "すべての過去の Echo のベクトルを再生成します。モデルや次元の変更後に一度実行してください。",
     "reindexAction": "再構築を開始",
-    "reindexResult": "{indexed}/{total} 件をインデックス化、{failed} 件失敗。"
+    "reindexResult": "{indexed}/{total} 件をインデックス化、{failed} 件失敗。",
+    "reindexConfirmTitle": "ベクトルインデックスを再構築しますか？",
+    "reindexConfirmDesc": "モデルまたは次元が変更されたため、既存のインデックスは無効になりました。すべての過去の Echo のベクトルを再生成する必要があります。今すぐ再構築しますか？"
   },
   "chatPanel": {
     "intro": "過去の Echo を振り返り、まとめます。質問に関連する Echo を読み取って回答し、根拠が足りない場合は正直にそう伝えます。",
@@ -1015,6 +1014,10 @@
     "inputPlaceholder": "過去の Echo について質問…（Enter で送信、Shift+Enter で改行）",
     "send": "送信",
     "clear": "クリア",
+    "clearConfirmTitle": "すべての会話を消去しますか？",
+    "clearConfirmDesc": "現在のセッションのすべての会話履歴が削除され、元に戻すことはできません。",
+    "clearSuccess": "会話を消去しました",
+    "searching": "検索中：{query}",
     "errorGeneric": "エラーが発生しました。後でもう一度お試しいただくか、モデルとインデックス設定をご確認ください。"
   }
 }

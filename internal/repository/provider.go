@@ -21,12 +21,11 @@ import (
 	userRepository "github.com/lin-snow/ech0/internal/repository/user"
 	visitorRepository "github.com/lin-snow/ech0/internal/repository/visitor"
 	webhookRepository "github.com/lin-snow/ech0/internal/repository/webhook"
-	agentService "github.com/lin-snow/ech0/internal/service/agent"
 	authService "github.com/lin-snow/ech0/internal/service/auth"
-	chatService "github.com/lin-snow/ech0/internal/service/chat"
 	commentService "github.com/lin-snow/ech0/internal/service/comment"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
 	connectService "github.com/lin-snow/ech0/internal/service/connect"
+	copilotService "github.com/lin-snow/ech0/internal/service/copilot"
 	echoService "github.com/lin-snow/ech0/internal/service/echo"
 	embeddingService "github.com/lin-snow/ech0/internal/service/embedding"
 	fileService "github.com/lin-snow/ech0/internal/service/file"
@@ -81,10 +80,9 @@ var (
 		keyvalueRepository.NewKeyValueRepository,
 		wire.Bind(new(fileService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
 		wire.Bind(new(settingService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
-		wire.Bind(new(agentService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
+		wire.Bind(new(copilotService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
 		wire.Bind(new(commentService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
 		wire.Bind(new(embeddingService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
-		wire.Bind(new(chatService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
 	)
 	SettingSet = wire.NewSet(
 		settingRepository.NewSettingRepository,

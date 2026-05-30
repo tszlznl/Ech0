@@ -3071,7 +3071,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "protocol": {
-                    "description": "LLM 接口协议（OpenAI 兼容/Anthropic/Gemini，OpenAI 兼容覆盖 DeepSeek、Qwen、Ollama 等）",
+                    "description": "LLM 接口协议（OpenAI 兼容/Anthropic，OpenAI 兼容覆盖 DeepSeek、Qwen、Ollama 等）",
                     "type": "string"
                 }
             }

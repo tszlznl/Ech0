@@ -12,13 +12,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lin-snow/ech0/internal/database"
 	"github.com/lin-snow/ech0/internal/handler"
-	agentHandler "github.com/lin-snow/ech0/internal/handler/agent"
 	authHandler "github.com/lin-snow/ech0/internal/handler/auth"
 	backupHandler "github.com/lin-snow/ech0/internal/handler/backup"
-	chatHandler "github.com/lin-snow/ech0/internal/handler/chat"
 	commentHandler "github.com/lin-snow/ech0/internal/handler/comment"
 	commonHandler "github.com/lin-snow/ech0/internal/handler/common"
 	connectHandler "github.com/lin-snow/ech0/internal/handler/connect"
+	copilotHandler "github.com/lin-snow/ech0/internal/handler/copilot"
 	dashboardHandler "github.com/lin-snow/ech0/internal/handler/dashboard"
 	echoHandler "github.com/lin-snow/ech0/internal/handler/echo"
 	embeddingHandler "github.com/lin-snow/ech0/internal/handler/embedding"
@@ -312,8 +311,7 @@ func buildTestHandlers() *handler.Bundle {
 		backupHandler.NewBackupHandler(nil),
 		migrationHandler.NewMigrationHandler(nil),
 		dashboardHandler.NewDashboardHandler(nil),
-		agentHandler.NewAgentHandler(nil),
-		chatHandler.NewChatHandler(nil),
+		copilotHandler.NewCopilotHandler(nil, nil),
 		embeddingHandler.NewEmbeddingHandler(nil),
 		mcp.NewHandler(nil, nil, nil, nil, nil, nil, nil, nil),
 	)

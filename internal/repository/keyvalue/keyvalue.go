@@ -8,7 +8,7 @@ import (
 
 	"github.com/lin-snow/ech0/internal/cache"
 	model "github.com/lin-snow/ech0/internal/model/common"
-	agentService "github.com/lin-snow/ech0/internal/service/agent"
+	copilotService "github.com/lin-snow/ech0/internal/service/copilot"
 	fileService "github.com/lin-snow/ech0/internal/service/file"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	"github.com/lin-snow/ech0/internal/transaction"
@@ -23,7 +23,7 @@ type KeyValueRepository struct {
 var (
 	_ fileService.KeyValueRepository    = (*KeyValueRepository)(nil)
 	_ settingService.KeyValueRepository = (*KeyValueRepository)(nil)
-	_ agentService.KeyValueRepository   = (*KeyValueRepository)(nil)
+	_ copilotService.KeyValueRepository = (*KeyValueRepository)(nil)
 )
 
 func NewKeyValueRepository(

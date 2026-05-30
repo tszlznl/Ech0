@@ -126,14 +126,12 @@ var HandlerSet = wire.NewSet(
 	service.DashboardSet,
 	handler.DashboardSet,
 
-	service.AgentSet,
-	handler.AgentSet,
-
 	repository.EmbeddingSet,
 	service.EmbeddingSet,
 	handler.EmbeddingSet,
-	service.ChatSet,
-	handler.ChatSet,
+
+	service.CopilotSet,
+	handler.CopilotSet,
 
 	service.BackupSet,
 	handler.BackupSet,

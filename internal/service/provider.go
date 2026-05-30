@@ -5,13 +5,12 @@ package service
 
 import (
 	"github.com/google/wire"
-	agentService "github.com/lin-snow/ech0/internal/service/agent"
 	authService "github.com/lin-snow/ech0/internal/service/auth"
 	backupService "github.com/lin-snow/ech0/internal/service/backup"
-	chatService "github.com/lin-snow/ech0/internal/service/chat"
 	commentService "github.com/lin-snow/ech0/internal/service/comment"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
 	connectService "github.com/lin-snow/ech0/internal/service/connect"
+	copilotService "github.com/lin-snow/ech0/internal/service/copilot"
 	dashboardService "github.com/lin-snow/ech0/internal/service/dashboard"
 	echoService "github.com/lin-snow/ech0/internal/service/echo"
 	embeddingService "github.com/lin-snow/ech0/internal/service/embedding"
@@ -66,18 +65,15 @@ var (
 		dashboardService.NewDashboardService,
 		wire.Bind(new(dashboardService.Service), new(*dashboardService.DashboardService)),
 	)
-	AgentSet = wire.NewSet(
-		agentService.NewAgentService,
-		wire.Bind(new(agentService.Service), new(*agentService.AgentService)),
-	)
 	EmbeddingSet = wire.NewSet(
 		embeddingService.NewEmbeddingService,
 		wire.Bind(new(embeddingService.Service), new(*embeddingService.EmbeddingService)),
 		wire.Bind(new(embeddingService.Indexer), new(*embeddingService.EmbeddingService)),
 	)
-	ChatSet = wire.NewSet(
-		chatService.NewChatService,
-		wire.Bind(new(chatService.Service), new(*chatService.ChatService)),
+	CopilotSet = wire.NewSet(
+		copilotService.NewCopilotService,
+		wire.Bind(new(copilotService.SummaryService), new(*copilotService.CopilotService)),
+		wire.Bind(new(copilotService.ChatService), new(*copilotService.CopilotService)),
 	)
 	MigratorSet = wire.NewSet(
 		migratorService.NewMigratorService,

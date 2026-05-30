@@ -667,7 +667,6 @@
     "protocol": "API Protocol",
     "protocolOpenAI": "OpenAI Compatible",
     "protocolAnthropic": "Anthropic",
-    "protocolGemini": "Gemini",
     "modelName": "Model name",
     "modelPlaceholder": "Enter model name",
     "apiKey": "API Key",
@@ -990,7 +989,6 @@
   },
   "embeddingSetting": {
     "title": "Vector Index",
-    "intro": "Build a vector index of your echos to enable retrieval and reflection in AI Chat. The embedding service is configured independently from the generation LLM.",
     "enable": "Enable index",
     "modelName": "Embedding model",
     "modelPlaceholder": "e.g. text-embedding-3-small",
@@ -1000,11 +998,12 @@
     "apiKeyPlaceholder": "Enter API Key (leave empty for local services)",
     "baseUrl": "Custom API URL",
     "baseUrlPlaceholder": "https://api.openai.com/v1",
-    "baseUrlHint": "Optional. Must be an OpenAI-compatible /v1/embeddings endpoint.",
     "reindex": "Rebuild index",
     "reindexHint": "Regenerate vectors for all past echos. Run once after changing model or dimension.",
     "reindexAction": "Start rebuild",
-    "reindexResult": "Indexed {indexed}/{total}, {failed} failed."
+    "reindexResult": "Indexed {indexed}/{total}, {failed} failed.",
+    "reindexConfirmTitle": "Rebuild vector index?",
+    "reindexConfirmDesc": "The model or dimension changed, so the old index is no longer valid. Vectors for all past echos need to be regenerated. Rebuild now?"
   },
   "chatPanel": {
     "intro": "Reflect on and summarize your past echos. It reads the echos most relevant to your question, and tells you honestly when there isn't enough to go on.",
@@ -1015,6 +1014,10 @@
     "inputPlaceholder": "Ask about your past echos… (Enter to send, Shift+Enter for newline)",
     "send": "Send",
     "clear": "Clear",
+    "clearConfirmTitle": "Clear all messages?",
+    "clearConfirmDesc": "This will delete all messages in the current session and cannot be undone.",
+    "clearSuccess": "Conversation cleared",
+    "searching": "Searching: {query}",
     "errorGeneric": "Something went wrong. Please retry later or check your model and index settings."
   }
 }

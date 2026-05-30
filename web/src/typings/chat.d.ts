@@ -19,10 +19,13 @@ declare namespace App {
         role: 'user' | 'assistant'
         content: string
         sources?: ChatSource[]
+        // Agent 形态下模型本轮发起过的检索关键词（按到达顺序累积，供「正在检索」状态条展示）
+        searches?: string[]
       }
 
       // SSE 事件载荷
       type StreamEvent =
+        | { type: 'searching'; data: { name: string; query: string } }
         | { type: 'sources'; data: ChatSource[] }
         | { type: 'delta'; data: { text: string } }
         | { type: 'error'; data: { message: string } }

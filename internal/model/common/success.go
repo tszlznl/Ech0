@@ -101,3 +101,9 @@ const (
 const (
 	AGENT_GET_RECENT_SUCCESS = "获取近期活动总结成功"
 )
+
+// Chat 成功相关常量
+const (
+	CHAT_SESSION_GET_SUCCESS   = "获取会话成功"
+	CHAT_SESSION_CLEAR_SUCCESS = "清除会话成功"
+)

@@ -12,15 +12,15 @@ import (
 	registry "github.com/lin-snow/ech0/internal/event/registry"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
-	agentService "github.com/lin-snow/ech0/internal/service/agent"
+	copilotService "github.com/lin-snow/ech0/internal/service/copilot"
 )
 
 type AgentProcessor struct {
-	keyvalueRepo agentService.KeyValueRepository
+	keyvalueRepo copilotService.KeyValueRepository
 }
 
 func NewAgentProcessor(
-	keyvalueRepo agentService.KeyValueRepository,
+	keyvalueRepo copilotService.KeyValueRepository,
 ) *AgentProcessor {
 	return &AgentProcessor{
 		keyvalueRepo: keyvalueRepo,
