@@ -50,6 +50,13 @@ export default defineConfig(({ command }) => ({
     emptyOutDir: true,
     reportCompressedSize: false,
     rollupOptions: {
+      // 关闭 Rolldown 两类构建检查警告：
+      //   invalidAnnotation —— 第三方产物（如 @vueuse/core）里位置不当的 #__PURE__ 注释，非本仓代码可控；
+      //   pluginTimings     —— 插件耗时提示（UnoCSS 扫描占比偏高），纯信息性。
+      checks: {
+        invalidAnnotation: false,
+        pluginTimings: false,
+      },
       output: {
         // 代码分割：将重型库打包到单独的 chunk 中，利用浏览器缓存
         manualChunks(id) {
