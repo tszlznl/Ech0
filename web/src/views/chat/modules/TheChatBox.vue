@@ -77,7 +77,13 @@
     </div>
 
     <!-- 输入区：textarea 的下边框就是那条横线（钉在 75vh） -->
-    <div class="composer" :class="{ 'composer--active': input.trim().length > 0 || loading }">
+    <div
+      class="composer"
+      :class="{
+        'composer--active': input.trim().length > 0 || loading,
+        'composer--loading': loading,
+      }"
+    >
       <textarea
         ref="inputEl"
         v-model="input"
@@ -102,7 +108,7 @@
           :title="t('chatPanel.send')"
           @click="send(input)"
         >
-          <span class="composer__return-glyph">↩︎</span>
+          <Send class="composer__send-icon" />
         </button>
       </Transition>
     </div>
@@ -129,6 +135,7 @@
 <script setup lang="ts">
 import Back from '@/components/icons/back.vue'
 import Close from '@/components/icons/close.vue'
+import Send from '@/components/icons/send.vue'
 import { TheMdPreview } from '@/components/advanced/md'
 import AnimatedMarkdown from './AnimatedMarkdown.vue'
 import ChatSources from './ChatSources.vue'
@@ -573,7 +580,7 @@ onBeforeUnmount(stopStick)
   gap: 0.6rem;
 }
 
-/* 发丝线：两端淡出的渐变，避免满宽硬边显得空荡 */
+/* 发丝线（底色）：两端淡出的渐变，避免满宽硬边显得空荡 */
 .composer::after {
   content: '';
   position: absolute;
@@ -588,18 +595,60 @@ onBeforeUnmount(stopStick)
     var(--color-border-strong) 82%,
     transparent
   );
-  transition: background 0.25s ease;
 }
 
-.composer--active::after,
-.composer:focus-within::after {
-  background: linear-gradient(
-    to right,
-    transparent,
-    var(--color-accent) 15%,
-    var(--color-accent) 85%,
-    transparent
+/* accent 线：聚焦/有内容时从中间向两端"画"出来，覆盖在灰线之上。
+   两端淡出交给 mask，颜色/流光交给 background，互不干扰 */
+.composer::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  height: 1px;
+  background: var(--color-accent);
+  mask-image: linear-gradient(to right, transparent, #000 15%, #000 85%, transparent);
+  transform: scaleX(0);
+  transform-origin: 50% 50%;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.composer--active::before,
+.composer:focus-within::before {
+  transform: scaleX(1);
+}
+
+/* AI 回复时让 accent 线轻微流光，把这条贯穿全页的线当作状态指示 */
+.composer--loading::before {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-accent) 0%,
+    color-mix(in srgb, var(--color-accent) 35%, #fff) 50%,
+    var(--color-accent) 100%
   );
+  background-size: 200% 100%;
+  animation: composer-shimmer 1.6s linear infinite;
+}
+
+@keyframes composer-shimmer {
+  from {
+    background-position: 150% 0;
+  }
+
+  to {
+    background-position: -150% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .composer::before {
+    transition: none;
+  }
+
+  .composer--loading::before {
+    animation: none;
+  }
 }
 
 .composer__field {
@@ -652,12 +701,9 @@ onBeforeUnmount(stopStick)
   transform: translateY(0);
 }
 
-.composer__return-glyph {
-  font-size: 1.05rem;
-  line-height: 1;
-
-  /* 强制文本字形，避免被渲染成 emoji 样式 */
-  font-variant-emoji: text;
+.composer__send-icon {
+  width: 1.15rem;
+  height: 1.15rem;
 }
 
 .composer__stop-glyph {
