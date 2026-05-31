@@ -139,6 +139,7 @@ See [Quick Deployment](./DEPLOYMENT.md#quick-deployment) for Docker Compose and 
 - 🧰 **CLI Toolchain**: CLI tools for automation and script integration.
 - 🔗 **Open API & Webhook**: Full API and Webhook support for external integration and automation workflows.
 - 🤖 **MCP (Model Context Protocol)**: Built-in [MCP Server](./docs/usage/mcp-usage.md) exposes **near-complete coverage** of core product features to the AI layer (posts, files, stats, and more)—**Streamable HTTP**, **Tools & Resources**, **scoped JWT**.
+- 🧠 **Ech0 Copilot**: An AI companion that lives inside your timeline—**Recap** distills your recent posts into a crisp digest in one click, and **Chat** lets you talk to your own content and ask anything. Powered by **vector RAG** retrieval with **streaming (SSE)** replies, every answer grounded in *your* data.
 
 ### Experience
 

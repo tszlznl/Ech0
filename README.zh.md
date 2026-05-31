@@ -140,6 +140,7 @@ docker run -d \
 - 🧰 **CLI 工具链**：提供 CLI 工具，支持自动化管理与脚本集成。
 - 🔗 **开放 API 与 Webhook**：提供完整 API 与 Webhook，便于外部系统集成和自动化工作流。
 - 🤖 **MCP（模型上下文协议）**：内建 [MCP Server](./docs/usage/mcp-usage.md)，**近乎完整覆盖**核心功能，帖子、文件与统计等能力通过 **Streamable HTTP** 以 **Tools / Resources** 交给上层 AI 工作流，**Scoped JWT** 鉴权。
+- 🧠 **Ech0 Copilot（AI 副驾）**：内建于时间线的 AI 助手——**近况总结**一键把你最近的内容凝练成精炼摘要，**Chat** 让你直接与自己的内容对话、随问随答。底层基于**向量 RAG** 检索与**流式（SSE）**输出，每个回答都扎根于*你自己的*数据。
 
 ### Experience
 

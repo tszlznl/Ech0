@@ -138,6 +138,7 @@ Weitere Optionen wie Docker Compose und Helm findest du unter [Schnelles Deploym
 - 🧰 **CLI-Toolchain**: CLI-Tools für Automatisierung und Skript-Integration.
 - 🔗 **Open API & Webhook**: Vollständige API- und Webhook-Unterstützung für externe Integrationen und Automation.
 - 🤖 **MCP (Model Context Protocol)**: Eingebauter [MCP Server](./docs/usage/mcp-usage.md) deckt **nahezu vollständig** die Kernfunktionen für die KI-Schicht ab (Beiträge, Dateien, Statistiken usw.) — **Streamable HTTP**, **Tools & Resources**, **scoped JWT**.
+- 🧠 **Ech0 Copilot**: Ein KI-Begleiter direkt in deiner Timeline — **Rückblick** verdichtet deine jüngsten Beiträge per Klick zu einer prägnanten Zusammenfassung, und **Chat** lässt dich direkt mit deinen eigenen Inhalten sprechen und alles fragen. Angetrieben von **Vektor-RAG**-Retrieval mit **Streaming-(SSE)**-Antworten, jede Antwort basiert auf *deinen* Daten.
 
 ### Erlebnis
 

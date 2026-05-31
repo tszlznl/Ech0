@@ -138,6 +138,7 @@ Docker Compose や Helm を使った手順は [かんたんデプロイ](#かん
 - 🧰 **CLI ツールチェーン**：自動化やスクリプト連携用の CLI。
 - 🔗 **オープン API と Webhook**：外部連携・自動化ワークフロー向けの完全な API と Webhook。
 - 🤖 **MCP（Model Context Protocol）**：内蔵 [MCP Server](./docs/usage/mcp-usage.md) が中核機能（投稿、ファイル、統計など）を **ほぼ全カバー**で AI レイヤーに公開。**Streamable HTTP**、**Tools & Resources**、**スコープ付き JWT** を採用。
+- 🧠 **Ech0 Copilot**：タイムラインに組み込まれた AI アシスタント——**近況まとめ**がワンクリックで最近の投稿を簡潔なダイジェストに凝縮し、**Chat** では自分のコンテンツに直接質問できます。**ベクトル RAG** 検索と**ストリーミング（SSE）**応答を採用し、すべての回答が*あなた自身の*データに基づきます。
 
 ### エクスペリエンス
 
