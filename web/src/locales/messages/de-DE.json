@@ -991,6 +991,7 @@
   },
   "embeddingSetting": {
     "title": "Vektorindex",
+    "optionalHint": "(Optional) Der Vektorindex ermöglicht Copilot die semantische Suche in deinen bisherigen Echos. Der Chat funktioniert auch ohne ihn.",
     "enable": "Index aktivieren",
     "modelName": "Embedding-Modell",
     "modelPlaceholder": "z. B. text-embedding-3-small",

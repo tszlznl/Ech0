@@ -991,6 +991,7 @@
   },
   "embeddingSetting": {
     "title": "ベクトルインデックス",
+    "optionalHint": "（任意）ベクトルインデックスは Copilot が過去の Echo を意味的に検索するための機能です。設定しなくても会話は利用できます。",
     "enable": "インデックスを有効化",
     "modelName": "Embedding モデル",
     "modelPlaceholder": "例: text-embedding-3-small",

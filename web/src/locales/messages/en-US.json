@@ -991,6 +991,7 @@
   },
   "embeddingSetting": {
     "title": "Vector Index",
+    "optionalHint": "(Optional) The vector index lets Copilot semantically retrieve your past echos. Chat works fine without it.",
     "enable": "Enable index",
     "modelName": "Embedding model",
     "modelPlaceholder": "e.g. text-embedding-3-small",

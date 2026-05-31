@@ -991,6 +991,7 @@
   },
   "embeddingSetting": {
     "title": "向量索引",
+    "optionalHint": "（可选）向量索引用于让 Copilot 检索历史 Echo 的语义内容，不配置也能正常对话。",
     "enable": "启用索引",
     "modelName": "Embedding 模型",
     "modelPlaceholder": "如 text-embedding-3-small",

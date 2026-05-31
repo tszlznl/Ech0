@@ -112,12 +112,16 @@ const hiddenCount = computed(() => displaySources.value.length - LIMIT)
   flex-direction: column;
   gap: 0.15rem;
   margin-top: 0.35rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .sources__item {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* 缩略图行：紧贴来源文字下方，一排小图 */
@@ -158,7 +162,10 @@ const hiddenCount = computed(() => displaySources.value.length - LIMIT)
   display: inline-flex;
   align-items: baseline;
   gap: 0.3rem;
-  max-width: 32rem;
+
+  /* 用 100% 而非固定 32rem，避免在移动端窄屏下撑破容器导致整页横向滚动 */
+  max-width: 100%;
+  min-width: 0;
   border: none;
   background: transparent;
   padding: 0;

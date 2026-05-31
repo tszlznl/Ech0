@@ -2,6 +2,9 @@
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <div class="w-full text-[var(--color-text-secondary)]">
+    <!-- 可选说明：向量索引非必需，不配置也能正常对话 -->
+    <p class="text-xs opacity-70 mb-4">{{ t('embeddingSetting.optionalHint') }}</p>
+
     <!-- 启用 -->
     <div class="flex items-center justify-between mb-4">
       <h2 class="font-semibold">{{ t('embeddingSetting.enable') }}</h2>
