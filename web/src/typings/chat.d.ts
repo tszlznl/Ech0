@@ -31,6 +31,14 @@ declare namespace App {
         height?: number
       }
 
+      // summarize_echos（区间聚合总结）的覆盖度元数据，供「📚 覆盖 N 条 / M 个月」如实展示
+      type ChatCoverage = {
+        total: number // 区间内命中的 Echo 总数
+        returned: number // 实际纳入聚合的条数（受硬上限约束）
+        buckets: number // map-reduce 分桶数；1=窗口放得下、整段塞入
+        truncated: boolean // 是否因硬上限截断（保留最近）
+      }
+
       // 一条聊天消息（前端会话内）
       type ChatMessage = {
         role: 'user' | 'assistant'
@@ -38,12 +46,15 @@ declare namespace App {
         sources?: ChatSource[]
         // Agent 形态下模型本轮发起过的检索关键词（按到达顺序累积，供「正在检索」状态条展示）
         searches?: string[]
+        // 区间聚合总结的覆盖度（summarize_echos 命中时填充，供覆盖度状态条展示）
+        coverage?: ChatCoverage
       }
 
       // SSE 事件载荷
       type StreamEvent =
         | { type: 'searching'; data: { name: string; query: string } }
         | { type: 'sources'; data: ChatSource[] }
+        | { type: 'coverage'; data: ChatCoverage }
         | { type: 'delta'; data: { text: string } }
         | { type: 'error'; data: { message: string } }
         | { type: 'done'; data: { done: boolean } }

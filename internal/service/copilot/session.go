@@ -25,6 +25,13 @@ const maxStoredChatMessages = 50
 // 微博客问答通常很短，4000 token ≈ 十几轮，留足窗口给 system + 本轮工具结果 + 本轮问题。
 const maxHistoryTokens = 4000
 
+// toolDefTokenEstimate 是注入模型的工具定义（search_echos + summarize_echos 的描述 + JSON Schema）
+// 的粗略 token 估算，计入固定开销以收紧历史预算（整请求护栏，避免 system + 工具定义 + 历史叠加超窗）。
+const toolDefTokenEstimate = 640
+
+// minHistoryTokens 是历史预算下限：即便固定开销很大，也至少给历史留这点空间（保留最近若干轮）。
+const minHistoryTokens = 500
+
 // estimateTokens 是不引 tokenizer 的廉价启发式：按 rune 数估算（CJK≈1 token/字，
 // 拉丁会高估 → 偏早截断，安全无害）。仅用于历史裁剪预算，不要求精确。
 func estimateTokens(s string) int { return utf8.RuneCountInString(s) }

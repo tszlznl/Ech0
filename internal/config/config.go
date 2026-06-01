@@ -32,6 +32,7 @@ type AppConfig struct {
 	Comment   CommentConfig
 	Security  SecurityConfig
 	Web       WebConfig
+	Agent     AgentConfig
 }
 
 type StorageConfig struct {
@@ -171,6 +172,11 @@ type MigrationConfig struct {
 	RateLimitPerSec int  `env:"ECH0_MIGRATION_RATE_LIMIT_PER_SEC"`
 }
 
+type AgentConfig struct {
+	// TimeoutSeconds 是单轮 Agent 运行（含整个工具循环）的整体超时，单位秒；<=0 表示不额外设超时。
+	TimeoutSeconds int `env:"ECH0_AGENT_TIMEOUT_SECONDS"`
+}
+
 // Config 返回全局配置中心
 func Config() *AppConfig {
 	once.Do(func() {
@@ -302,6 +308,9 @@ func defaultConfig() *AppConfig {
 			CORS: CORSConfig{
 				AllowedOrigins: []string{},
 			},
+		},
+		Agent: AgentConfig{
+			TimeoutSeconds: 120,
 		},
 	}
 }

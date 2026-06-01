@@ -3058,6 +3058,10 @@ const docTemplate = `{
                     "description": "自定义 API URL（可选）",
                     "type": "string"
                 },
+                "context_window": {
+                    "description": "ContextWindow 是模型上下文窗口的 token 数（0=未配置，按保守默认处理）；用于区间聚合的取数预算。",
+                    "type": "integer"
+                },
                 "enable": {
                     "description": "是否启用 Agent 功能",
                     "type": "boolean"

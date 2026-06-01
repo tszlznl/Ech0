@@ -677,7 +677,10 @@
     "promptPlaceholder": "Enter custom prompt",
     "promptHint": "The custom prompt only applies to the recent summary; it is not used in chat conversations.",
     "multimodal": "Multimodal support",
-    "multimodalHint": "When enabled, images from retrieved Echos are sent to the model so it can understand them (requires a vision-capable model)."
+    "multimodalHint": "When enabled, images from retrieved Echos are sent to the model so it can understand them (requires a vision-capable model).",
+    "contextWindow": "Context window",
+    "contextWindowPlaceholder": "e.g. 256k, 1m — empty defaults to 256k",
+    "contextWindowHint": "Budget for aggregating Echos by date range in year-end / monthly summaries: a larger window favors reading everything at once, a smaller one switches to month-by-month layered summarization sooner. Accepts k / m units (256k = 256000, 1m = 1000000); empty is treated as 256k."
   },
   "webhookSetting": {
     "title": "Webhook",
@@ -1013,6 +1016,7 @@
     "suggestion1": "Summarize what I've been focusing on and thinking about lately",
     "suggestion2": "How has my mood changed over this period",
     "suggestion3": "Pull together the scattered ideas I've jotted down",
+    "suggestion4": "Write me a year-end summary for this year",
     "inputPlaceholder": "Chat with your echos",
     "send": "Send",
     "clear": "Clear",
@@ -1020,6 +1024,8 @@
     "clearConfirmDesc": "This will delete all messages in the current session and cannot be undone.",
     "clearSuccess": "Conversation cleared",
     "searching": "Searching: {query}",
+    "coverage": "📚 Covered {total} Echos in this range",
+    "coverageTruncated": "📚 Lots of entries — covered the most recent {returned} Echos",
     "errorGeneric": "Something went wrong. Please retry later or check your model and index settings.",
     "sourcesMore": "Show {count} more source(s)",
     "sourcesLess": "Show less",

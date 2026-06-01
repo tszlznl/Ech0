@@ -43,6 +43,17 @@
               </span>
             </div>
 
+            <!-- 覆盖度状态条：summarize_echos 区间聚合（年终/月度总结）时如实展示覆盖范围，杜绝静默截断 -->
+            <div v-if="msg.coverage" class="searching">
+              <span class="searching__chip">
+                {{
+                  msg.coverage.truncated
+                    ? t('chatPanel.coverageTruncated', { returned: msg.coverage.returned })
+                    : t('chatPanel.coverage', { total: msg.coverage.total })
+                }}
+              </span>
+            </div>
+
             <div
               v-if="msg.content.length === 0 && isStreaming(idx)"
               class="thinking"
@@ -178,6 +189,7 @@ const suggestions = computed<string[]>(() => [
   t('chatPanel.suggestion1'),
   t('chatPanel.suggestion2'),
   t('chatPanel.suggestion3'),
+  t('chatPanel.suggestion4'),
 ])
 
 // 输入框为空且非流式时展示预设场景；开始输入或发送后淡出
@@ -260,6 +272,10 @@ const send = (question: string) => {
         }
       }
       assistant.value.sources = merged
+    },
+    onCoverage: (coverage) => {
+      // 区间聚合总结（summarize_echos）的覆盖度，供「📚 已覆盖 N 条」状态条如实展示
+      assistant.value.coverage = coverage
     },
     onDelta: (text) => {
       assistant.value.content += text

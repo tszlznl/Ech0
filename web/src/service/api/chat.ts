@@ -25,6 +25,8 @@ interface ChatStreamHandlers {
   onSearching?: (query: string) => void
   /** 命中来源到达（可多次增量），调用方需累积去重 */
   onSources?: (sources: App.Api.Chat.ChatSource[]) => void
+  /** 区间聚合总结的覆盖度到达（summarize_echos） */
+  onCoverage?: (coverage: App.Api.Chat.ChatCoverage) => void
   onDelta?: (text: string) => void
   onError?: (message: string) => void
   onDone?: () => void
@@ -53,6 +55,9 @@ export function chatStream(question: string, handlers: ChatStreamHandlers): () =
           break
         case 'sources':
           handlers.onSources?.(data as App.Api.Chat.ChatSource[])
+          break
+        case 'coverage':
+          handlers.onCoverage?.(data as App.Api.Chat.ChatCoverage)
           break
         case 'delta':
           handlers.onDelta?.((data as { text: string }).text)

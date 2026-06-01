@@ -127,6 +127,8 @@ func (settingService *SettingService) UpdateAgentSettings(
 		Prompt:     newSetting.Prompt,
 		BaseURL:    httpUtil.TrimURL(newSetting.BaseURL),
 		Multimodal: newSetting.Multimodal,
+		// 负数视为未配置，归零走保守默认。
+		ContextWindow: max(0, newSetting.ContextWindow),
 	}
 
 	return settingService.transactor.Run(ctx, func(ctx context.Context) error {

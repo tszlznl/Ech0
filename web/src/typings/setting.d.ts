@@ -150,6 +150,7 @@ declare namespace App {
         prompt: string
         base_url: string
         multimodal: boolean
+        context_window: number
       }
 
       type AgentSettingDto = {
@@ -160,6 +161,7 @@ declare namespace App {
         prompt: string
         base_url: string
         multimodal: boolean
+        context_window: number
       }
     }
   }

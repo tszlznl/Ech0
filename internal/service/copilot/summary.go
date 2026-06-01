@@ -12,7 +12,6 @@ import (
 	"github.com/lin-snow/ech0/internal/agent"
 	"github.com/lin-snow/ech0/internal/i18n"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
-	model "github.com/lin-snow/ech0/internal/model/setting"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
@@ -22,12 +21,12 @@ import (
 func (s *CopilotService) GetRecent(ctx context.Context) (string, error) {
 	const cacheKey = string(agent.GEN_RECENT)
 
-	if value, ok := s.getRecentFromCache(cacheKey); ok {
+	if value, ok := s.getRecentFromCache(ctx, cacheKey); ok {
 		return value, nil
 	}
 
 	value, err, _ := s.recentGenGroup.Do(cacheKey, func() (any, error) {
-		if cached, ok := s.getRecentFromCache(cacheKey); ok {
+		if cached, ok := s.getRecentFromCache(ctx, cacheKey); ok {
 			return cached, nil
 		}
 
@@ -55,8 +54,8 @@ func (s *CopilotService) GetRecent(ctx context.Context) (string, error) {
 	return recent, nil
 }
 
-func (s *CopilotService) getRecentFromCache(cacheKey string) (string, bool) {
-	cachedValue, err := s.kvRepository.GetKeyValue(context.Background(), cacheKey)
+func (s *CopilotService) getRecentFromCache(ctx context.Context, cacheKey string) (string, bool) {
+	cachedValue, err := s.kvRepository.GetKeyValue(ctx, cacheKey)
 	if err != nil {
 		return "", false
 	}
@@ -107,12 +106,13 @@ func (s *CopilotService) buildRecentSummary(ctx context.Context) (string, error)
 
 	in = append(in, memos...)
 
-	var setting model.AgentSetting
-	if err := s.settingService.GetAgentInfo(&setting); err != nil {
-		return "", errors.New(commonModel.AGENT_SETTING_NOT_FOUND)
+	// 与 Chat 共用同一规范加载器（尊重 ctx、无写副作用；缺配置直接报错，不静默写默认行）。
+	setting, err := s.agentSetting(ctx)
+	if err != nil {
+		return "", err
 	}
 
-	output, err := agent.Generate(ctx, setting, in, true)
+	output, err := agent.Generate(ctx, setting, in, true, nil)
 	if err != nil {
 		return "", err
 	}

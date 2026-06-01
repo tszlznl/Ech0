@@ -11,7 +11,6 @@ import (
 // CopilotService 是 Copilot 域的统一服务，同时实现 SummaryService 与 ChatService。
 // 近期总结逻辑见 summary.go，Chat 流式问答见 chat.go。
 type CopilotService struct {
-	settingService SettingService
 	echoService    EchoService
 	embedding      EmbeddingService
 	kvRepository   KeyValueRepository
@@ -25,17 +24,15 @@ var (
 )
 
 func NewCopilotService(
-	settingService SettingService,
 	echoService EchoService,
 	embedding EmbeddingService,
 	kvRepository KeyValueRepository,
 	storageManager *storage.Manager,
 ) *CopilotService {
 	return &CopilotService{
-		settingService: settingService,
-		echoService:    echoService,
-		embedding:      embedding,
-		kvRepository:   kvRepository,
-		storage:        storageManager,
+		echoService:  echoService,
+		embedding:    embedding,
+		kvRepository: kvRepository,
+		storage:      storageManager,
 	}
 }

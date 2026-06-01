@@ -47,21 +47,13 @@ func applyPrompt(setting model.AgentSetting, in []Message, usePrompt bool) []Mes
 	return in
 }
 
-// temperatureOf 取首个可选 temperature（无则返回 nil）。
-func temperatureOf(temperature []float32) *float32 {
-	if len(temperature) > 0 {
-		return &temperature[0]
-	}
-	return nil
-}
-
-// Generate 调用配置的 LLM 提供商生成回复（非流式）。
+// Generate 调用配置的 LLM 提供商生成回复（非流式）。temperature 为 nil 时不设置。
 func Generate(
 	ctx context.Context,
 	setting model.AgentSetting,
 	in []Message,
 	usePrompt bool,
-	temperature ...float32,
+	temperature *float32,
 ) (string, error) {
 	if err := validate(setting); err != nil {
 		return "", err
@@ -74,7 +66,7 @@ func Generate(
 
 	resp, err := provider.Complete(ctx, Request{
 		Messages:    applyPrompt(setting, in, usePrompt),
-		Temperature: temperatureOf(temperature),
+		Temperature: temperature,
 	})
 	if err != nil {
 		return "", err

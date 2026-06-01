@@ -66,6 +66,25 @@
       </template>
     </div>
 
+    <!-- 上下文窗口 -->
+    <div class="mb-4">
+      <h2 class="font-semibold mb-1.5">{{ t('agentSetting.contextWindow') }}</h2>
+      <span v-if="!editMode" class="block truncate opacity-80">
+        {{ formatTokenSize(AgentSetting.context_window) || t('commonUi.none') }}
+      </span>
+      <template v-else>
+        <BaseInput
+          v-model="contextWindowRaw"
+          type="text"
+          :placeholder="t('agentSetting.contextWindowPlaceholder')"
+          class="w-full"
+          @input="onContextWindowInput"
+          @blur="onContextWindowBlur"
+        />
+        <p class="text-xs opacity-70 mt-1">{{ t('agentSetting.contextWindowHint') }}</p>
+      </template>
+    </div>
+
     <!-- Prompt -->
     <div class="mb-4">
       <h2 class="font-semibold mb-1.5">{{ t('agentSetting.prompt') }}</h2>
@@ -99,13 +118,14 @@ import BaseInput from '@/components/common/BaseInput.vue'
 import BaseSwitch from '@/components/common/BaseSwitch.vue'
 import BaseSelect from '@/components/common/BaseSelect.vue'
 import BaseTextArea from '@/components/common/BaseTextArea.vue'
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { fetchUpdateAgentSettings } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { AgentProtocol } from '@/enums/enums'
+import { parseTokenSize, formatTokenSize } from '@/utils/tokenSize'
 
 defineProps<{ editMode: boolean }>()
 
@@ -113,6 +133,23 @@ const settingStore = useSettingStore()
 const { t } = useI18n()
 const { getAgentSetting } = settingStore
 const { AgentSetting } = storeToRefs(settingStore)
+
+// 上下文窗口以 256k/1m 等友好单位编辑：输入时解析进 store（不回写显示，避免打断输入），
+// 失焦时再规整成紧凑的 k/m 形式；store 加载完成（getAgentSetting）后据数值回种输入框。
+const contextWindowRaw = ref('')
+watch(
+  () => AgentSetting.value.context_window,
+  (tokens) => {
+    contextWindowRaw.value = formatTokenSize(tokens)
+  },
+  { immediate: true },
+)
+const onContextWindowInput = () => {
+  AgentSetting.value.context_window = parseTokenSize(contextWindowRaw.value)
+}
+const onContextWindowBlur = () => {
+  contextWindowRaw.value = formatTokenSize(AgentSetting.value.context_window)
+}
 
 const agentProtocolOptions = computed<{ label: string; value: AgentProtocol }[]>(() => [
   { label: t('agentSetting.protocolOpenAI'), value: AgentProtocol.OPENAI },

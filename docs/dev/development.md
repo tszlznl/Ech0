@@ -38,6 +38,9 @@ Install [Swagger](https://github.com/swaggo/gin-swagger) to generate/use OpenAPI
 - `ECH0_EVENT_AGENT_BUFFER` / `ECH0_EVENT_AGENT_PARALLELISM`
 - `ECH0_EVENT_WEBHOOK_POOL_WORKERS` / `ECH0_EVENT_WEBHOOK_POOL_QUEUE`
 
+📌 **Agent (Copilot) Parameters**
+- `ECH0_AGENT_TIMEOUT_SECONDS` — per-run timeout (seconds) for a single Copilot chat run, covering the whole tool loop; default `120`, `<=0` disables the extra timeout.
+
 ## Frontend Requirements
 
 📌 **NodeJS v25.5.0+, PNPM v10.30.0+**

@@ -677,7 +677,10 @@
     "promptPlaceholder": "カスタム Prompt を入力",
     "promptHint": "カスタム Prompt は「最近のまとめ」にのみ適用され、チャットでは使用されません",
     "multimodal": "マルチモーダル対応",
-    "multimodalHint": "有効にすると、検索でヒットした画像付き Echo の画像もモデルに渡して理解させます（画像入力対応モデルが必要）"
+    "multimodalHint": "有効にすると、検索でヒットした画像付き Echo の画像もモデルに渡して理解させます（画像入力対応モデルが必要）",
+    "contextWindow": "コンテキストウィンドウ",
+    "contextWindowPlaceholder": "例: 256k、1m（空欄なら既定 256k）",
+    "contextWindowHint": "「年末・月次まとめ」で Echo を期間集計する際の取得予算です。ウィンドウが大きいほど一度に全件を読み込み、小さいほど早めに月ごとの階層要約へ切り替えます。k / m 単位対応（256k=256000、1m=1000000）、空欄は 256k として扱います。"
   },
   "webhookSetting": {
     "title": "Webhook",
@@ -1013,6 +1016,7 @@
     "suggestion1": "最近わたしが注目し考えていたことをまとめて",
     "suggestion2": "この期間の気分の変化は？",
     "suggestion3": "書き留めた断片的なアイデアをまとめて",
+    "suggestion4": "今年の年末まとめを書いて",
     "inputPlaceholder": "あなたの Echo と対話",
     "send": "送信",
     "clear": "クリア",
@@ -1020,6 +1024,8 @@
     "clearConfirmDesc": "現在のセッションのすべての会話履歴が削除され、元に戻すことはできません。",
     "clearSuccess": "会話を消去しました",
     "searching": "検索中：{query}",
+    "coverage": "📚 この期間の Echo を {total} 件カバーしました",
+    "coverageTruncated": "📚 件数が多いため、直近 {returned} 件の Echo をカバーしました",
     "errorGeneric": "エラーが発生しました。後でもう一度お試しいただくか、モデルとインデックス設定をご確認ください。",
     "sourcesMore": "他 {count} 件を表示",
     "sourcesLess": "折りたたむ",

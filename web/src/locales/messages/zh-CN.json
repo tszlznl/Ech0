@@ -677,7 +677,10 @@
     "promptPlaceholder": "输入自定义 Prompt",
     "promptHint": "自定义 Prompt 仅作用于「近期总结」，Chat 对话不会使用它",
     "multimodal": "多模态支持",
-    "multimodalHint": "开启后，Chat 检索命中带图片的 Echo 时会把配图一并交给模型理解（需所配模型支持图片输入）"
+    "multimodalHint": "开启后，Chat 检索命中带图片的 Echo 时会把配图一并交给模型理解（需所配模型支持图片输入）",
+    "contextWindow": "上下文窗口",
+    "contextWindowPlaceholder": "如 256k、1m，留空默认 256k",
+    "contextWindowHint": "用于「年终 / 月度总结」按时间区间聚合 Echo 时的取数预算：窗口越大越倾向一次性读入全部内容，越小越早转为按月分层总结。支持 k / m 单位（256k=256000、1m=1000000），留空按 256k 处理。"
   },
   "webhookSetting": {
     "title": "Webhook",
@@ -1013,6 +1016,7 @@
     "suggestion1": "总结我最近一段时间在关注和思考什么",
     "suggestion2": "我这段时间的心情有什么变化",
     "suggestion3": "把我记过的零散想法汇总一下",
+    "suggestion4": "帮我写一篇今年的年终总结",
     "inputPlaceholder": "和你的 Echo 对话",
     "send": "发送",
     "clear": "清空",
@@ -1020,6 +1024,8 @@
     "clearConfirmDesc": "将删除当前会话的全部对话记录，且无法恢复。",
     "clearSuccess": "已清除对话",
     "searching": "正在检索：{query}",
+    "coverage": "📚 已覆盖该区间 {total} 条 Echo",
+    "coverageTruncated": "📚 条数较多，已覆盖最近 {returned} 条 Echo",
     "errorGeneric": "对话出错了，请稍后再试或检查模型与索引设置。",
     "sourcesMore": "展开其余 {count} 条来源",
     "sourcesLess": "收起来源",

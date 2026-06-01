@@ -12,7 +12,6 @@ import (
 
 	echoService "github.com/lin-snow/ech0/internal/service/echo"
 	embeddingService "github.com/lin-snow/ech0/internal/service/embedding"
-	settingService "github.com/lin-snow/ech0/internal/service/setting"
 )
 
 // SummaryService 暴露 AI 近期总结能力（实现见 summary.go）。
@@ -30,7 +29,6 @@ type ChatService interface {
 }
 
 type (
-	SettingService   = settingService.Service
 	EchoService      = echoService.Service
 	EmbeddingService = embeddingService.Service
 )

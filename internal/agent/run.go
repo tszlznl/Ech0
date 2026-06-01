@@ -14,6 +14,31 @@ import (
 // defaultMaxRounds 是工具轮数上限护栏：防模型反复调工具死循环烧 token。
 const defaultMaxRounds = 3
 
+// defaultRunStrings 是 RunStrings 各字段留空时的回退（保持历史中文行为，向后兼容）。
+var defaultRunStrings = RunStrings{
+	DedupNote:   "（已检索过，结果见上）",
+	UnknownTool: "未知工具：",
+	ToolError:   "工具执行失败：",
+	ImageNote:   toolImageNote,
+}
+
+// withDefaults 用 defaultRunStrings 填充留空字段。
+func (s RunStrings) withDefaults() RunStrings {
+	if s.DedupNote == "" {
+		s.DedupNote = defaultRunStrings.DedupNote
+	}
+	if s.UnknownTool == "" {
+		s.UnknownTool = defaultRunStrings.UnknownTool
+	}
+	if s.ToolError == "" {
+		s.ToolError = defaultRunStrings.ToolError
+	}
+	if s.ImageNote == "" {
+		s.ImageNote = defaultRunStrings.ImageNote
+	}
+	return s
+}
+
 // Run 以 ReAct 结构（reason → act → observe）驱动一轮对话：模型在一次问答内
 // 自主决定是否调用工具、调几次。文本增量实时上浮（AgentDelta），工具调用触发
 // AgentSearching/AgentToolResult，收尾 AgentDone，错误 AgentError。
@@ -31,7 +56,17 @@ func Run(ctx context.Context, req RunRequest) (<-chan AgentEvent, error) {
 	}
 
 	out := make(chan AgentEvent)
-	go runLoop(ctx, provider, req, out)
+	go func() {
+		// per-run 超时护栏：Timeout>0 时给整轮（含工具循环）套个上限，防 provider 静默挂死；
+		// <=0 沿用传入 ctx，行为不变。cancel 在 runLoop 收口（关闭 out）后触发。
+		runCtx := ctx
+		if req.Timeout > 0 {
+			var cancel context.CancelFunc
+			runCtx, cancel = context.WithTimeout(ctx, req.Timeout)
+			defer cancel()
+		}
+		runLoop(runCtx, provider, req, out)
+	}()
 	return out, nil
 }
 
@@ -52,6 +87,7 @@ func runLoop(ctx context.Context, provider Provider, req RunRequest, out chan<- 
 
 	messages := req.Messages
 	seen := make(map[string]bool)
+	strs := req.Strings.withDefaults()
 
 	for round := 0; round < maxRounds; round++ {
 		o := streamRound(ctx, provider, out, messages, toolDefs, req.Temp)
@@ -70,7 +106,7 @@ func runLoop(ctx context.Context, provider Provider, req RunRequest, out chan<- 
 
 		// 回灌本轮 assistant 的 tool_calls（连同已产出的文本），供下一轮上下文
 		messages = append(messages, Message{Role: RoleAssistant, Content: o.assistant, ToolCalls: o.calls})
-		if !execTools(ctx, out, o.calls, toolByName, seen, &messages) {
+		if !execTools(ctx, out, o.calls, toolByName, seen, &messages, strs) {
 			return // ctx 取消
 		}
 	}
@@ -150,18 +186,19 @@ func execTools(
 	toolByName map[string]Tool,
 	seen map[string]bool,
 	messages *[]Message,
+	strs RunStrings,
 ) bool {
 	for _, tc := range calls {
 		key := tc.Name + ":" + string(tc.Args)
 		if seen[key] {
-			*messages = append(*messages, Message{Role: RoleTool, ToolCallID: tc.ID, Content: "（已检索过，结果见上）"})
+			*messages = append(*messages, Message{Role: RoleTool, ToolCallID: tc.ID, Content: strs.DedupNote})
 			continue
 		}
 		seen[key] = true
 
 		tool, ok := toolByName[tc.Name]
 		if !ok {
-			*messages = append(*messages, Message{Role: RoleTool, ToolCallID: tc.ID, Content: "未知工具：" + tc.Name})
+			*messages = append(*messages, Message{Role: RoleTool, ToolCallID: tc.ID, Content: strs.UnknownTool + tc.Name})
 			continue
 		}
 
@@ -175,7 +212,7 @@ func execTools(
 				zap.String("module", "agent"),
 				zap.String("tool", tc.Name),
 				zap.Error(execErr))
-			*messages = append(*messages, Message{Role: RoleTool, ToolCallID: tc.ID, Content: "工具执行失败：" + execErr.Error()})
+			*messages = append(*messages, Message{Role: RoleTool, ToolCallID: tc.ID, Content: strs.ToolError + execErr.Error()})
 			continue
 		}
 
@@ -188,7 +225,7 @@ func execTools(
 		// 走 user 消息而非塞进 tool_result，是因 OpenAI 的 tool 角色消息只能纯文本，
 		// user 带图两家协议都支持，一套逻辑通用。
 		if len(output.Images) > 0 {
-			*messages = append(*messages, Message{Role: RoleUser, Content: toolImageNote, Images: output.Images})
+			*messages = append(*messages, Message{Role: RoleUser, Content: strs.ImageNote, Images: output.Images})
 		}
 	}
 	return true
