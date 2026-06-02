@@ -672,7 +672,6 @@
     "apiKeyPlaceholder": "输入 API Key",
     "baseUrl": "Base URL",
     "baseUrlPlaceholder": "输入自定义 Base URL",
-    "baseUrlHint": "选「OpenAI 兼容」协议时，在此填入 DeepSeek、Ollama 等服务的接口地址",
     "prompt": "Prompt",
     "promptPlaceholder": "输入自定义 Prompt",
     "promptHint": "自定义 Prompt 仅作用于「近期总结」，Chat 对话不会使用它",
@@ -680,7 +679,7 @@
     "multimodalHint": "开启后，Chat 检索命中带图片的 Echo 时会把配图一并交给模型理解（需所配模型支持图片输入）",
     "contextWindow": "上下文窗口",
     "contextWindowPlaceholder": "如 256k、1m，留空默认 256k",
-    "contextWindowHint": "用于「年终 / 月度总结」按时间区间聚合 Echo 时的取数预算：窗口越大越倾向一次性读入全部内容，越小越早转为按月分层总结。支持 k / m 单位（256k=256000、1m=1000000），留空按 256k 处理。"
+    "contextWindowHint": "窗口越大越倾向一次性读入全部内容，越小越早转为分层总结。支持 k / m 单位（256k=256000、1m=1000000），留空按 256k 处理。"
   },
   "webhookSetting": {
     "title": "Webhook",
@@ -1004,6 +1003,7 @@
     "apiKeyPlaceholder": "请输入 API Key（本地服务可留空）",
     "baseUrl": "自定义 API 地址",
     "baseUrlPlaceholder": "https://api.openai.com/v1",
+    "baseUrlHint": "填写服务的 API 根地址即可，系统会自动补全 /embeddings，请勿手动添加。",
     "reindex": "重建索引",
     "reindexHint": "为全部历史 Echo 重新生成向量。更换模型或维度后需执行一次。",
     "reindexAction": "开始重建",

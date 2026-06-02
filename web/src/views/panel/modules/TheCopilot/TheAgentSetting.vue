@@ -62,7 +62,6 @@
           :placeholder="t('agentSetting.baseUrlPlaceholder')"
           class="w-full"
         />
-        <p class="text-xs opacity-70 mt-1">{{ t('agentSetting.baseUrlHint') }}</p>
       </template>
     </div>
 

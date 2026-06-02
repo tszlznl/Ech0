@@ -41,6 +41,8 @@ func Embed(
 
 	cfg := openai.DefaultConfig(setting.ApiKey)
 	if setting.BaseURL != "" {
+		// base_url 按字面量透传，由 go-openai 统一拼接 "/embeddings" 后缀
+		// （对齐 OpenAI / go-openai 惯例）。用户应填到 ".../v4"，不要带 /embeddings。
 		cfg.BaseURL = setting.BaseURL
 	}
 	client := openai.NewClientWithConfig(cfg)

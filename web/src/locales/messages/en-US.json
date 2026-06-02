@@ -672,7 +672,6 @@
     "apiKeyPlaceholder": "Enter API Key",
     "baseUrl": "Base URL",
     "baseUrlPlaceholder": "Enter custom Base URL",
-    "baseUrlHint": "For the OpenAI Compatible protocol, enter the API endpoint of services like DeepSeek or Ollama here.",
     "prompt": "Prompt",
     "promptPlaceholder": "Enter custom prompt",
     "promptHint": "The custom prompt only applies to the recent summary; it is not used in chat conversations.",
@@ -680,7 +679,7 @@
     "multimodalHint": "When enabled, images from retrieved Echos are sent to the model so it can understand them (requires a vision-capable model).",
     "contextWindow": "Context window",
     "contextWindowPlaceholder": "e.g. 256k, 1m — empty defaults to 256k",
-    "contextWindowHint": "Budget for aggregating Echos by date range in year-end / monthly summaries: a larger window favors reading everything at once, a smaller one switches to month-by-month layered summarization sooner. Accepts k / m units (256k = 256000, 1m = 1000000); empty is treated as 256k."
+    "contextWindowHint": "A larger window favors reading everything at once; a smaller one switches to layered summarization sooner. Accepts k / m units (256k = 256000, 1m = 1000000); empty is treated as 256k."
   },
   "webhookSetting": {
     "title": "Webhook",
@@ -1004,6 +1003,7 @@
     "apiKeyPlaceholder": "Enter API Key (leave empty for local services)",
     "baseUrl": "Custom API URL",
     "baseUrlPlaceholder": "https://api.openai.com/v1",
+    "baseUrlHint": "Enter the service's API root URL; /embeddings is appended automatically — don't add it yourself.",
     "reindex": "Rebuild index",
     "reindexHint": "Regenerate vectors for all past echos. Run once after changing model or dimension.",
     "reindexAction": "Start rebuild",

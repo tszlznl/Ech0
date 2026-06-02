@@ -70,6 +70,7 @@
         :placeholder="t('embeddingSetting.baseUrlPlaceholder')"
         class="w-full"
       />
+      <p v-if="editMode" class="text-xs opacity-70 mt-1">{{ t('embeddingSetting.baseUrlHint') }}</p>
     </div>
 
     <!-- 重建索引 -->

@@ -183,6 +183,7 @@ func (s *EmbeddingService) Backfill(ctx context.Context) (BackfillResult, error)
 
 	const pageSize = 100
 	page := 1
+	var lastErr error
 	for {
 		items, total := s.echoReader.GetEchosByPage(page, pageSize, "", true)
 		result.Total = int(total)
@@ -207,6 +208,7 @@ func (s *EmbeddingService) Backfill(ctx context.Context) (BackfillResult, error)
 			if embErr != nil {
 				logUtil.GetLogger().Error("backfill embed failed", zap.Error(embErr))
 				result.Failed += len(texts)
+				lastErr = embErr
 			} else {
 				for i, e := range picked {
 					if upErr := s.repo.Upsert(ctx, &model.EchoEmbedding{
@@ -230,6 +232,12 @@ func (s *EmbeddingService) Backfill(ctx context.Context) (BackfillResult, error)
 			break
 		}
 		page++
+	}
+
+	// 全军覆没（一条都没成功，且确有失败）：把底层错误回传，避免前端只看到
+	// "失败 N 条" 却拿不到真正原因（如 404 / 鉴权失败 / Base URL 配错）。
+	if result.Indexed == 0 && result.Failed > 0 && lastErr != nil {
+		return result, lastErr
 	}
 
 	return result, nil
