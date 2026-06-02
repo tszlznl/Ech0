@@ -35,7 +35,14 @@
             "
             @click="tab = 'embedding'"
           >
-            {{ t('embeddingSetting.title') }}
+            <span class="inline-flex items-center gap-1.5">
+              {{ t('embeddingSetting.title') }}
+              <span
+                class="px-1.5 py-0.5 text-[10px] font-medium leading-none rounded-full bg-[var(--color-bg-muted)] text-[var(--color-text-muted)]"
+              >
+                {{ t('commonUi.optional') }}
+              </span>
+            </span>
           </button>
         </div>
 
