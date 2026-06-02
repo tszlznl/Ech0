@@ -7,6 +7,36 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/lin-snow/Ech0/releases) — earlier release notes are not retroactively imported here.
 
 
+## [4.9.2] - 2026-06-02
+
+### Added
+
+- **Copilot "year-in-review" / range summaries** — a dedicated `summarize_echos` tool that exhaustively aggregates echos over a date range instead of sampling top-k. It paginates through the *entire* range (hard cap 5000, truncating to the most recent with an honest notice) and adapts to the model's context window: small ranges are summarized in one pass, large ones via per-month map-reduce. A new optional **context window** setting (entered as a friendly `256k` / `1m`, stored as tokens) drives the aggregation budget. Coverage is reported back live via an SSE `coverage` event and a "📚 covered N echos" status bar, so nothing is silently truncated.
+- **`stats_overview` Copilot tool** — pure in-memory aggregation that gives the model exact quantitative facts (total count, active days, by-month, most active month, top tags).
+- **"Optional" badge on the vector-index tab** in Copilot settings, signalling that the feature is not required (new `commonUi.optional` i18n key across zh/en/de/ja).
+
+### Changed
+
+- **Chat streaming is noticeably faster** with zero visual change: `AnimatedMarkdown` now freezes the already-finalized prefix and only re-parses the unfinished tail (multi-paragraph answers drop from ~O(n²) to ~O(n) parse work, with stable block keys so animations never replay), `TheChatBox` skips a forced reflow on the per-token reveal hot path, and each message turn is layout-isolated via `contain: layout style`.
+- **Copilot Agent tuning ("seven-piece" pass)**: timezone-correct "today" / date parsing via `X-Timezone` (fixes day-boundary off-by-one across UTC), Anthropic prompt-cache breakpoint on the static tools+system prefix, relaxed and context-window-scaled `top_k` (default 6, up to 20), configurable `ECH0_AGENT_MAX_ROUNDS` (default 4), bounded-concurrency tool execution, and a per-round token budget that recycles the oldest tool results when the context limit is hit.
+- **Retrieval is now scoped to the current user.** Embedding search and echo queries filter by author, so Chat and retrieval only ever surface the conversation owner's own echos.
+- **Embedding `base_url` is passed through literally** to the OpenAI-compatible client (no more silent rewriting), with a clearer hint to enter the root address without `/embeddings`.
+
+### Fixed
+
+- **Range/year summaries no longer miss data or over-weight recent echos.** The aggregation path now keeps paging until the range is fully covered (instead of stopping on the first non-full page), clamps oversized page sizes to 100 rather than resetting them to 10, and enriches each line with tags, extension markers (music / website / location), and image counts — image-only echos now count too.
+- **Reindex success toast was blank** — the handler now returns a localized success message instead of empty data.
+- **Embedding backfill failures are now surfaced** — when every item fails (`indexed=0`, `failed>0`) the underlying error (404 / auth) is propagated instead of a silent empty message.
+- **Chat input box no longer covers history** — it has a max height (~5 lines) with internal scrolling, and the transcript yields space in real time; the empty-state composer is vertically centered and settles smoothly once the first message is sent.
+- **Streaming source block no longer jitters or flickers** — replaced the rAF stick-to-bottom polling with intent-driven pinning + `ResizeObserver`, disabled native scroll anchoring, and moved the sources block clear of the bottom mask gradient.
+- **`DeadLetterConsumeTask` scheduling-failure log** was mislabeled as `WebhookRetryTask`; backup setting now correctly documents its default as "disabled".
+
+### Internal
+
+- **Dependency bumps (Go)**: `go-patch-minor` group (6 updates).
+- **Dependency bumps (`web/`)**: `@dicebear/core` 9.4.2 → 10.0.1 (migrated to `@dicebear/styles`), plus the `web-patch-minor` group (4 updates).
+- **README**: each language's feature list now includes Ech0 Copilot (recap summaries & Chat).
+
 ## [4.9.0] - 2026-05-31
 
 ### Added
