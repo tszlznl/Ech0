@@ -17,7 +17,7 @@
 
     <!-- 对话区：从线的上方向上生长，贴底排列 -->
     <div ref="scrollArea" class="transcript">
-      <div class="transcript__inner">
+      <div ref="transcriptInner" class="transcript__inner">
         <div
           v-for="(msg, idx) in messages"
           :key="idx"
@@ -167,6 +167,7 @@ const input = ref<string>('')
 const loading = ref<boolean>(false)
 const messages = ref<App.Api.Chat.ChatMessage[]>([])
 const scrollArea = ref<HTMLElement | null>(null)
+const transcriptInner = ref<HTMLElement | null>(null)
 const inputEl = ref<HTMLTextAreaElement | null>(null)
 let abort: (() => void) | null = null
 
@@ -195,34 +196,32 @@ const suggestions = computed<string[]>(() => [
 // 输入框为空且非流式时展示预设场景；开始输入或发送后淡出
 const showSuggestions = computed<boolean>(() => !loading.value && input.value.trim().length === 0)
 
-const scrollToBottom = () => {
+// 贴底滚动：事件驱动而非帧驱动。`pinned` 是用户「想不想贴底」的意图，只由真实滚动翻转；
+// 内容长高由 ResizeObserver 感知后跟随一次。彻底告别 rAF 每帧强写 scrollTop 带来的亚像素抖动。
+const STICK_THRESHOLD = 80
+const pinned = ref<boolean>(true)
+let resizeObserver: ResizeObserver | null = null
+
+const jumpToBottom = () => {
   nextTick(() => {
-    if (scrollArea.value) {
-      scrollArea.value.scrollTop = scrollArea.value.scrollHeight
-    }
+    const el = scrollArea.value
+    if (el) el.scrollTop = el.scrollHeight
   })
 }
 
-// 流式期间逐帧粘住底部，跟随节流揭示平滑滚动；用户上滑离开底部则停止打扰
-let stickRaf = 0
-const isNearBottom = (): boolean => {
+// 用户滚动时更新贴底意图：离底超过阈值即视为「想自己翻看」，滚回阈值内则恢复跟随。
+// 程序触发的「跳到底」滚完仍在底部 → 读出 pinned=true，不会误翻转，故无需额外守卫。
+const onScroll = () => {
   const el = scrollArea.value
-  if (!el) return true
-  return el.scrollHeight - el.scrollTop - el.clientHeight < 80
+  if (!el) return
+  pinned.value = el.scrollHeight - el.scrollTop - el.clientHeight < STICK_THRESHOLD
 }
-const stickToBottom = () => {
+
+// 内容尺寸变化（逐 token 揭示、流结束揭示尾词、渲染器切换）→ 若意图贴底则跟随一次。
+// 已在底部时把 scrollTop 设成它本来的值是 no-op，不触发 scroll 事件、不抖。
+const onContentResize = () => {
   const el = scrollArea.value
-  if (el && isNearBottom()) el.scrollTop = el.scrollHeight
-  // 流式中、以及流结束后揭示仍在播放时，都保持粘底
-  const keepGoing = loading.value || assistantRevealing.value
-  stickRaf =
-    keepGoing && typeof requestAnimationFrame === 'function'
-      ? requestAnimationFrame(stickToBottom)
-      : 0
-}
-const stopStick = () => {
-  if (stickRaf) cancelAnimationFrame(stickRaf)
-  stickRaf = 0
+  if (el && pinned.value) el.scrollTop = el.scrollHeight
 }
 
 // textarea 向上生长，横线恒定钉在 75vh
@@ -251,9 +250,9 @@ const send = (question: string) => {
   input.value = ''
   loading.value = true
   assistantRevealing.value = true
+  pinned.value = true
   nextTick(autoGrow)
-  scrollToBottom()
-  stickToBottom()
+  jumpToBottom()
 
   abort = chatStream(q, {
     onSearching: (query) => {
@@ -316,7 +315,7 @@ const handleClear = () => {
       abort = null
       loading.value = false
       assistantRevealing.value = false
-      stopStick()
+      pinned.value = true
       try {
         await clearChatSession()
       } catch {
@@ -331,12 +330,21 @@ const handleClear = () => {
 // 进入页面恢复上次的持久化会话（仅展示）。恢复的消息走静态渲染：
 // loading 与 assistantRevealing 均为 false，showAnimated 对历史消息返回 false → 走 TheMdPreview。
 onMounted(async () => {
+  // 贴底引擎接线：scroll 监听更新意图，ResizeObserver 感知内容长高后跟随
+  const area = scrollArea.value
+  if (area) area.addEventListener('scroll', onScroll, { passive: true })
+  if (transcriptInner.value && typeof ResizeObserver === 'function') {
+    resizeObserver = new ResizeObserver(onContentResize)
+    resizeObserver.observe(transcriptInner.value)
+  }
+
   try {
     const res = await getChatSession()
     const history = res.data
     if (Array.isArray(history) && history.length > 0) {
       messages.value = history
-      scrollToBottom()
+      pinned.value = true
+      jumpToBottom()
     }
   } catch {
     // 恢复失败静默忽略，保持空态
@@ -351,7 +359,11 @@ onMounted(async () => {
   }
 })
 
-onBeforeUnmount(stopStick)
+onBeforeUnmount(() => {
+  resizeObserver?.disconnect()
+  resizeObserver = null
+  scrollArea.value?.removeEventListener('scroll', onScroll)
+})
 </script>
 
 <style scoped>
@@ -424,6 +436,9 @@ onBeforeUnmount(stopStick)
   justify-content: center;
   overflow-y: auto;
 
+  /* 贴底滚动由 JS 手动管理：关掉浏览器原生锚定，避免两者抢着调 scrollTop 造成抖动 */
+  overflow-anchor: none;
+
   /* 顶部与底部都做渐隐：内容靠近边界时柔和淡出 */
   mask-image: linear-gradient(
     to bottom,
@@ -439,9 +454,12 @@ onBeforeUnmount(stopStick)
   max-width: 42rem;
 
   /* 顶对齐、向下生长：内容不足时不再贴底，避免每多一行整块往上跳一格；
-     溢出后由 scrollToBottom 粘住底部 */
+     溢出后由 jumpToBottom + ResizeObserver 跟随粘住底部 */
   align-self: flex-start;
-  padding: 4.5rem 1.5rem 0.5rem;
+
+  /* 底部留出 > 1rem 的 gutter：贴底时让最后一条来源避开 .transcript 底部 1rem 的渐隐带，
+     杜绝来源块被 mask 半透明笼罩、随滚动逐帧跳变透明度的闪烁 */
+  padding: 4.5rem 1.5rem 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1.6rem;
