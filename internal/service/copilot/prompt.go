@@ -42,11 +42,12 @@ func runStringsFor(locale string) agent.RunStrings {
 // chatSystemPrompt 是 Chat（Agent 形态）的系统提示词：声明工具用途与作答纪律。
 const chatSystemPrompt = `你是用户自己的 Echo（微博客/碎碎念）回顾助手。
 你有两个工具，按需选用：
-- search_echos：点查。回答具体问题、找某几条相关记录时用它（top-k，只返回最相关的若干条）。
-- summarize_echos：区间聚合。当用户要「某段时间的总结/回顾」（年终、年度、季度、月度等）时用它——它会覆盖该区间内的【全部】Echo，而不是只采样几条。写年终/年度总结请务必用它，并据当前日期换算出 date_from/date_to。
-检索策略（重要）：
-- search_echos 通常 1～2 次就够：拿到结果立刻综合作答，不要为同一问题反复检索、不要凑关键词空搜，只有首次明显偏题才换角度再搜一次；
-- summarize_echos 一般一次就能拿到整段聚合材料，据材料撰写成稿即可，不要再为同一区间反复调用。
+- search_echos：点查。回答具体问题、找某几条相关记录时用它（top-k，只返回最相关的若干条，是采样不是全貌）。
+- summarize_echos：区间聚合。当用户要「某段时间的总结/回顾」（年终、年度、季度、月度，或“上半年发了什么”这类）时用它——它会覆盖该区间内的【全部】Echo。
+关键纪律（务必遵守）：
+- 凡是「某段时间的总结/回顾」，**直接且只调用 summarize_echos**（据当前日期换算 date_from/date_to），**不要先用 search_echos 采样**。summarize_echos 返回的材料才是完整依据。
+- 写这类总结时，**严格依据 summarize_echos 的聚合材料**，覆盖材料里的各个月份/各条主线，不要只挑某几条生动的展开、不要把少量样本当成全貌。材料里的 #标签、[img×N]（配图数）、[音乐/网站/位置…] 等都是线索，可用于归纳主题与活跃度。
+- search_echos 通常 1～2 次就够：拿到结果立刻综合作答，不要为同一问题反复检索或凑关键词空搜，只有首次明显偏题才换角度再搜一次。
 作答要求：
 - 优先依据工具返回的内容作答，做跨条目/跨时间的归纳、总结与回顾；
 - 如果没有足够依据，就如实说明“你的 Echo 里没有相关记录”，不要编造；若材料标注了覆盖范围或截断，请在总结中如实体现；
@@ -57,9 +58,10 @@ const chatSystemPromptEN = `You are the user's personal assistant for reviewing 
 You have two tools; pick the right one:
 - search_echos: pinpoint lookup. Use it to answer specific questions or find a few relevant entries (top-k, returns only the most relevant ones).
 - summarize_echos: range aggregation. Use it when the user wants a "summary/review of a time period" (year-end, yearly, quarterly, monthly, etc.) — it covers ALL Echos in that range, not just a sample. Always use it for year-end/annual summaries, converting the current date into date_from/date_to.
-Retrieval strategy (important):
-- search_echos usually needs only 1-2 calls: synthesize the results and answer right away; do not repeatedly search the same question or pad keywords; search again only if the first results are clearly off-topic;
-- summarize_echos typically returns the whole aggregated material in one call; write the summary from it and do not call it repeatedly for the same range.
+Key discipline (must follow):
+- For ANY "summary/review of a time period" (year-end, yearly, quarterly, monthly, or "what did I post in H1"), call summarize_echos DIRECTLY and ONLY (convert the current date into date_from/date_to); do NOT pre-sample with search_echos. Its returned material is the complete basis.
+- When writing such a summary, ground it STRICTLY in the summarize_echos material, covering the various months / main threads in it; do not just expand a few vivid entries and do not treat a small sample as the whole. The #tags, [img×N] (image counts), and [music/website/location…] markers in the material are cues for themes and activity.
+- search_echos usually needs only 1-2 calls: synthesize and answer right away; do not repeatedly search the same question or pad keywords; search again only if the first results are clearly off-topic.
 Answering requirements:
 - Prefer answering based on the tool's returned content, doing cross-entry / cross-time synthesis, summary and review;
 - If there is not enough evidence, honestly say "there are no relevant records in your Echos"; do not make things up; if the material notes its coverage or that it was truncated, reflect that honestly in your summary;
@@ -176,14 +178,16 @@ const summaryUserPromptEN = "Based on the provided recent activity (which may in
 // 事实性摘要供上层再归纳，强调忠实、保留关键信息、不发挥、随内容语言。
 func aggregateMapPromptFor(locale string) string {
 	if localeIsZH(locale) {
-		return "下面是用户在某一个月内发布的若干 Echo。请把它们浓缩成一段紧凑、忠实的事实性摘要，" +
-			"保留关键事件、反复出现的主题、心情变化、提到的人/地点/作品与标签；只做归纳，不要发挥或编造，" +
-			"不要逐条罗列、不要输出 HTML。用与内容相同的语言。这是给后续年度/区间总结使用的中间材料。"
+		return "下面是用户在一段时间内发布的若干 Echo（按月分组，每条含日期，可能带 #标签、[img×N]（配图数）、" +
+			"[音乐/网站/位置…] 等线索）。请把它们浓缩成一段紧凑、忠实的事实性摘要，保留关键事件、反复出现的主题、" +
+			"心情变化、提到的人/地点/作品、活跃的标签与发图情况；只做归纳，不要发挥或编造，不要逐条罗列、不要输出 HTML。" +
+			"用与内容相同的语言。这是给后续年度/区间总结使用的中间材料。"
 	}
-	return "Below are several Echos the user posted within a single month. Condense them into a compact, " +
-		"faithful factual digest that preserves key events, recurring themes, mood shifts, and mentioned " +
-		"people/places/works/tags. Summarize only — do not embellish or invent, do not enumerate each entry, " +
-		"and do not output HTML. Use the same language as the content. This is intermediate material for a later period summary."
+	return "Below are several Echos the user posted over a period (grouped by month, each with a date and possibly " +
+		"#tags, [img×N] (image count), [music/website/location…] cues). Condense them into a compact, faithful factual digest that " +
+		"preserves key events, recurring themes, mood shifts, mentioned people/places/works, active tags and posting of images. " +
+		"Summarize only — do not embellish or invent, do not enumerate each entry, and do not output HTML. " +
+		"Use the same language as the content. This is intermediate material for a later period summary."
 }
 
 // searchCoverageNoteFor 在 search_echos 命中数多于本次展示（top-k 截断）时，给模型的一行如实告知，

@@ -109,6 +109,18 @@ func (s *CopilotService) queryEchos(ctx context.Context, search string, tagIDs [
 	return results, page.Total, nil
 }
 
+// echoToSearchResult 把一条 Echo 映射成检索结果形状，使 SQL 检索路径与向量检索同构，
+// 复用 formatSearchResults / enrichHits / SSE sources 等下游逻辑。
+func echoToSearchResult(e echoModel.Echo) embeddingModel.SearchResult {
+	return embeddingModel.SearchResult{
+		EchoID:      e.ID,
+		Content:     e.Content,
+		Username:    e.Username,
+		EchoCreated: e.CreatedAt,
+		Distance:    0,
+	}
+}
+
 // resolveTagIDs 把模型给的标签名（大小写不敏感）解析成标签 ID；匹配不上的名静默忽略。
 func resolveTagIDs(allTags []echoModel.Tag, names []string) []string {
 	if len(names) == 0 {

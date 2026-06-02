@@ -474,8 +474,14 @@ func (echoService *EchoService) QueryEchos(
 	if queryDto.Page < 1 {
 		queryDto.Page = 1
 	}
-	if queryDto.PageSize < 1 || queryDto.PageSize > 100 {
+	// PageSize 守卫：缺省（<1）回落到 10；过大则钳到上限 100（DoS 护栏，公开 /echo/query 端点用）。
+	// 注意是「钳到 100」而非「重置为 10」——后者会让请求 200 的调用方莫名只拿到 10 条，
+	// 是个对所有调用方都埋雷的反直觉行为（曾导致区间聚合严重漏数据）。
+	if queryDto.PageSize < 1 {
 		queryDto.PageSize = 10
+	}
+	if queryDto.PageSize > 100 {
+		queryDto.PageSize = 100
 	}
 	queryDto.Search = strings.TrimSpace(queryDto.Search)
 
