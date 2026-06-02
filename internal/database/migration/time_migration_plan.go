@@ -45,10 +45,8 @@ func StorageTimeColumnPlans() []TimeColumnPlan {
 		{Table: "dead_letters", Column: "next_retry"},
 		{Table: "dead_letters", Column: "created_at"},
 		{Table: "dead_letters", Column: "updated_at"},
-		{Table: "migration_jobs", Column: "started_at"},
-		{Table: "migration_jobs", Column: "finished_at"},
-		{Table: "migration_jobs", Column: "created_at"},
-		{Table: "migration_jobs", Column: "updated_at"},
+		// migration_jobs 已退役（死表，历来零行）：不再纳入时间规整计划。
+		// 通用 jobs 表的 started_at/finished_at 自始即为 UTC epoch(int64)，无需规整。
 		{Table: "access_token_settings", Column: "expiry"},
 		{Table: "access_token_settings", Column: "last_used_at"},
 		{Table: "access_token_settings", Column: "created_at"},

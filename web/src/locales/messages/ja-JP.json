@@ -1009,6 +1009,11 @@
     "reindexHint": "すべての過去の Echo のベクトルを再生成します。モデルや次元の変更後に一度実行してください。",
     "reindexAction": "再構築を開始",
     "reindexResult": "{indexed}/{total} 件をインデックス化、{failed} 件失敗。",
+    "reindexCancel": "再構築を中止",
+    "reindexRunning": "再構築中…",
+    "reindexProgress": "再構築中：{indexed}/{total} 件をインデックス化",
+    "reindexFailed": "再構築に失敗しました：{error}",
+    "reindexCancelled": "再構築をキャンセルしました。",
     "reindexConfirmTitle": "ベクトルインデックスを再構築しますか？",
     "reindexConfirmDesc": "モデルまたは次元が変更されたため、既存のインデックスは無効になりました。すべての過去の Echo のベクトルを再生成する必要があります。今すぐ再構築しますか？"
   },

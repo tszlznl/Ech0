@@ -17,14 +17,18 @@ import (
 	eventregistry "github.com/lin-snow/ech0/internal/event/registry"
 	eventsubscriber "github.com/lin-snow/ech0/internal/event/subscriber"
 	"github.com/lin-snow/ech0/internal/handler"
+	"github.com/lin-snow/ech0/internal/job"
+	jobRunner "github.com/lin-snow/ech0/internal/job/runner"
 	"github.com/lin-snow/ech0/internal/middleware"
 	"github.com/lin-snow/ech0/internal/migrator"
+	jobModel "github.com/lin-snow/ech0/internal/model/job"
 	"github.com/lin-snow/ech0/internal/repository"
 	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
 	"github.com/lin-snow/ech0/internal/server"
 	"github.com/lin-snow/ech0/internal/service"
 	commentService "github.com/lin-snow/ech0/internal/service/comment"
 	copilotService "github.com/lin-snow/ech0/internal/service/copilot"
+	migratorService "github.com/lin-snow/ech0/internal/service/migrator"
 	userService "github.com/lin-snow/ech0/internal/service/user"
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/task"
@@ -42,11 +46,37 @@ var AppSet = app.ProviderSet
 // 顶层引入一次,统一下沉给 BuildHandlers 和 BuildTasker。
 var VisitorSet = wire.NewSet(visitor.NewTracker)
 
+// ProvideJobManager 构造已装配好 Runner 的共享单例 *job.Manager（在构造期一次性
+// 完成注册）。Runner 只依赖 EmbeddingService / migrator.Importer（均不含 *job.Manager），
+// 故不会与「MigratorService 需要 Manager」形成构造环。
+func ProvideJobManager(
+	repo job.JobRepository,
+	reindex *jobRunner.ReindexRunner,
+	migration *jobRunner.MigrationRunner,
+) *job.Manager {
+	m := job.NewManager(repo)
+	m.Register(jobModel.TypeReindex, job.Adapt(reindex.Run))
+	m.Register(jobModel.TypeMigration, job.Adapt(migration.Run))
+	return m
+}
+
+// StorageSet 提供进程级共享单例 *storage.Manager。storage.Manager 是有状态基础设施
+// （缓存当前存储后端，ReloadFromConfigAndDB 会改写它），必须全进程一个实例，否则
+// 「设置页 / 迁移改了 S3 → 只 reload 了自己那份 Manager，文件服务仍用旧后端」。同
+// VisitorSet：顶层引入一次，统一下沉给 BuildHandlers/BuildTasker/BuildJobManager。
+// 它自带一份 KeyValueRepository 仅供读取 S3 设置，与各 Build 内的 KeyValueSet 互不冲突。
+var StorageSet = wire.NewSet(
+	keyvalueRepository.NewKeyValueRepository,
+	wire.Bind(new(storage.S3SettingStore), new(*keyvalueRepository.KeyValueRepository)),
+	storage.ProviderSet,
+)
+
 var DomainSet = wire.NewSet(
 	BuildHandlers,
 	BuildMiddlewares,
 	BuildTasker,
 	BuildMigrator,
+	BuildJobManager,
 	ProvideBackupScheduleApplier,
 	BuildEventRegistrar,
 )
@@ -86,8 +116,6 @@ var EventSet = wire.NewSet(
 var HandlerSet = wire.NewSet(
 	eventpublisher.New,
 	wire.Bind(new(commentService.EventPublisher), new(*eventpublisher.Publisher)),
-	storage.ProviderSet,
-	wire.Bind(new(storage.S3SettingStore), new(*keyvalueRepository.KeyValueRepository)),
 	repository.FileSet,
 	handler.WebSet,
 
@@ -139,7 +167,6 @@ var HandlerSet = wire.NewSet(
 
 	service.BackupSet,
 	handler.BackupSet,
-	repository.MigrationSet,
 	service.MigratorSet,
 	handler.MigrationSet,
 
@@ -155,8 +182,6 @@ var MiddlewareSet = wire.NewSet(
 
 var TaskerSet = wire.NewSet(
 	eventpublisher.New,
-	storage.ProviderSet,
-	wire.Bind(new(storage.S3SettingStore), new(*keyvalueRepository.KeyValueRepository)),
 	repository.FileSet,
 	repository.KeyValueSet,
 	repository.WebhookSet,
@@ -188,6 +213,7 @@ func BuildApp() (*app.App, error) {
 	wire.Build(
 		InfraSet,
 		VisitorSet,
+		StorageSet,
 		DomainSet,
 		RuntimeSet,
 		AppSet,
@@ -214,9 +240,35 @@ func BuildHandlers(
 	tx transaction.Transactor,
 	ebProvider func() *busen.Bus,
 	tracker *visitor.Tracker,
+	jobManager *job.Manager,
+	storageManager *storage.Manager,
 ) (*handler.Bundle, error) {
 	wire.Build(HandlerSet)
 	return &handler.Bundle{}, nil
+}
+
+// BuildJobManager 装配共享单例 *job.Manager：repo + 各领域 Runner（含其依赖的领域
+// service），在构造期注册完成。Runner 依赖的 EmbeddingService / migrator.Importer 均不
+// 含 *job.Manager，故无构造环。storageManager 由顶层共享单例注入，确保迁移导入 S3
+// 设置时 reload 的就是文件服务在用的那份 Manager。
+func BuildJobManager(
+	dbProvider func() *gorm.DB,
+	appCache cache.ICache[string, any],
+	storageManager *storage.Manager,
+) (*job.Manager, error) {
+	wire.Build(
+		repository.JobSet,
+		// ReindexRunner ← EmbeddingService
+		repository.EmbeddingSet,
+		repository.EchoSet,
+		repository.KeyValueSet,
+		service.EmbeddingSet,
+		// MigrationRunner ← migrator.Importer（无状态导入，不含 *job.Manager）
+		migratorService.NewImporter,
+		jobRunner.ProviderSet,
+		ProvideJobManager,
+	)
+	return nil, nil
 }
 
 // BuildMiddlewares 构建中间件依赖。
@@ -233,6 +285,8 @@ func BuildServer() (*server.Server, error) {
 	wire.Build(
 		InfraSet,
 		VisitorSet,
+		StorageSet,
+		BuildJobManager,
 		BuildHandlers,
 		BuildMiddlewares,
 		server.ProviderSet,
@@ -246,6 +300,7 @@ func BuildTasker(
 	tx transaction.Transactor,
 	ebProvider func() *busen.Bus,
 	tracker *visitor.Tracker,
+	storageManager *storage.Manager,
 ) (*task.Tasker, error) {
 	wire.Build(TaskerSet)
 	return &task.Tasker{}, nil

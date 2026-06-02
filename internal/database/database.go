@@ -20,7 +20,7 @@ import (
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	embeddingModel "github.com/lin-snow/ech0/internal/model/embedding"
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
-	migrationModel "github.com/lin-snow/ech0/internal/model/migration"
+	jobModel "github.com/lin-snow/ech0/internal/model/job"
 	queueModel "github.com/lin-snow/ech0/internal/model/queue"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
@@ -156,7 +156,7 @@ func MigrateDB() error {
 		&commentModel.Comment{},
 		&webhookModel.Webhook{},
 		&queueModel.DeadLetter{},
-		&migrationModel.MigrationJob{},
+		&jobModel.Job{},
 		&settingModel.AccessTokenSetting{},
 		&authModel.Passkey{},
 		&visitorModel.DailyStat{},

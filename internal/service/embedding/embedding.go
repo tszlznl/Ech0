@@ -167,7 +167,7 @@ func (s *EmbeddingService) Search(ctx context.Context, query string, k int, auth
 	return s.repo.Search(ctx, vec, k, authorUsername)
 }
 
-func (s *EmbeddingService) Backfill(ctx context.Context) (BackfillResult, error) {
+func (s *EmbeddingService) Backfill(ctx context.Context, onProgress func(BackfillResult)) (BackfillResult, error) {
 	var result BackfillResult
 
 	setting, err := s.getSetting(ctx)
@@ -185,6 +185,11 @@ func (s *EmbeddingService) Backfill(ctx context.Context) (BackfillResult, error)
 	page := 1
 	var lastErr error
 	for {
+		// 尊重取消：异步 reindex 作业被取消时中断 page 循环。
+		if err := ctx.Err(); err != nil {
+			return result, err
+		}
+
 		items, total := s.echoReader.GetEchosByPage(page, pageSize, "", true)
 		result.Total = int(total)
 		if len(items) == 0 {
@@ -226,6 +231,11 @@ func (s *EmbeddingService) Backfill(ctx context.Context) (BackfillResult, error)
 					}
 				}
 			}
+		}
+
+		// 每页结束上报累计计数（仅进内存，不落库）。
+		if onProgress != nil {
+			onProgress(result)
 		}
 
 		if page*pageSize >= int(total) {

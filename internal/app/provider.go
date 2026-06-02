@@ -9,6 +9,7 @@ import (
 	"github.com/google/wire"
 	bus "github.com/lin-snow/ech0/internal/event/bus"
 	registry "github.com/lin-snow/ech0/internal/event/registry"
+	"github.com/lin-snow/ech0/internal/job"
 	"github.com/lin-snow/ech0/internal/migrator"
 	"github.com/lin-snow/ech0/internal/server"
 	"github.com/lin-snow/ech0/internal/task"
@@ -17,12 +18,15 @@ import (
 func ProvideOptions(
 	registrar *registry.EventRegistrar,
 	eventBus *bus.EventBus,
+	jobManager *job.Manager,
 	tasker *task.Tasker,
 	migratorWorker *migrator.Worker,
 	httpServer *server.Server,
 ) []Option {
 	return []Option{
-		Components(eventBus, tasker, migratorWorker, httpServer),
+		// jobManager 排在 httpServer 前：其 Start 做启动期孤儿清理，须先于对外服务。
+		// Runner 已在构造期装配进 jobManager，无需额外注册步骤。
+		Components(eventBus, jobManager, tasker, migratorWorker, httpServer),
 		BeforeStart(func(context.Context) error {
 			return registrar.Register()
 		}),

@@ -1009,6 +1009,11 @@
     "reindexHint": "Vektoren für alle bisherigen Echos neu erzeugen. Einmal nach Modell- oder Dimensionswechsel ausführen.",
     "reindexAction": "Neuaufbau starten",
     "reindexResult": "{indexed}/{total} indiziert, {failed} fehlgeschlagen.",
+    "reindexCancel": "Abbrechen",
+    "reindexRunning": "Wird neu aufgebaut…",
+    "reindexProgress": "Neuaufbau: {indexed}/{total} indiziert",
+    "reindexFailed": "Neuaufbau fehlgeschlagen: {error}",
+    "reindexCancelled": "Neuaufbau abgebrochen.",
     "reindexConfirmTitle": "Vektorindex neu aufbauen?",
     "reindexConfirmDesc": "Modell oder Dimension wurde geändert, daher ist der alte Index ungültig. Die Vektoren aller bisherigen Echos müssen neu erzeugt werden. Jetzt neu aufbauen?"
   },

@@ -31,10 +31,13 @@ import (
 	handler10 "github.com/lin-snow/ech0/internal/handler/setting"
 	handler3 "github.com/lin-snow/ech0/internal/handler/user"
 	handler2 "github.com/lin-snow/ech0/internal/handler/web"
+	"github.com/lin-snow/ech0/internal/job"
+	"github.com/lin-snow/ech0/internal/job/runner"
 	"github.com/lin-snow/ech0/internal/mcp"
 	"github.com/lin-snow/ech0/internal/middleware"
 	"github.com/lin-snow/ech0/internal/migrator"
-	repository14 "github.com/lin-snow/ech0/internal/repository"
+	"github.com/lin-snow/ech0/internal/model/job"
+	repository15 "github.com/lin-snow/ech0/internal/repository"
 	repository9 "github.com/lin-snow/ech0/internal/repository/auth"
 	repository10 "github.com/lin-snow/ech0/internal/repository/comment"
 	repository6 "github.com/lin-snow/ech0/internal/repository/common"
@@ -43,11 +46,12 @@ import (
 	repository3 "github.com/lin-snow/ech0/internal/repository/embedding"
 	repository7 "github.com/lin-snow/ech0/internal/repository/file"
 	repository11 "github.com/lin-snow/ech0/internal/repository/init"
+	repository13 "github.com/lin-snow/ech0/internal/repository/job"
 	"github.com/lin-snow/ech0/internal/repository/keyvalue"
 	repository2 "github.com/lin-snow/ech0/internal/repository/queue"
 	repository8 "github.com/lin-snow/ech0/internal/repository/setting"
 	repository5 "github.com/lin-snow/ech0/internal/repository/user"
-	repository13 "github.com/lin-snow/ech0/internal/repository/visitor"
+	repository14 "github.com/lin-snow/ech0/internal/repository/visitor"
 	"github.com/lin-snow/ech0/internal/repository/webhook"
 	"github.com/lin-snow/ech0/internal/server"
 	service14 "github.com/lin-snow/ech0/internal/service"
@@ -86,7 +90,9 @@ func BuildApp() (*app.App, error) {
 	}
 	gormTransactor := transaction.NewGormTransactor(v)
 	tracker := visitor.NewTracker()
-	tasker, err := BuildTasker(v, iCache, gormTransactor, v2, tracker)
+	keyValueRepository := keyvalue.NewKeyValueRepository(v, iCache)
+	manager := storage.ProvideStorageManager(keyValueRepository)
+	tasker, err := BuildTasker(v, iCache, gormTransactor, v2, tracker, manager)
 	if err != nil {
 		return nil, err
 	}
@@ -96,12 +102,16 @@ func BuildApp() (*app.App, error) {
 		return nil, err
 	}
 	eventBus := bus.NewEventBus(v2)
+	jobManager, err := BuildJobManager(v, iCache, manager)
+	if err != nil {
+		return nil, err
+	}
 	worker, err := BuildMigrator(v, iCache, gormTransactor)
 	if err != nil {
 		return nil, err
 	}
 	engine := server.ProvideGinEngine()
-	bundle, err := BuildHandlers(v, iCache, gormTransactor, v2, tracker)
+	bundle, err := BuildHandlers(v, iCache, gormTransactor, v2, tracker, jobManager, manager)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +120,7 @@ func BuildApp() (*app.App, error) {
 		return nil, err
 	}
 	serverServer := server.ProvideHTTPServer(engine, bundle, deps)
-	v3 := app.ProvideOptions(eventRegistrar, eventBus, tasker, worker, serverServer)
+	v3 := app.ProvideOptions(eventRegistrar, eventBus, jobManager, tasker, worker, serverServer)
 	appApp := app.NewApp(v3)
 	return appApp, nil
 }
@@ -134,20 +144,19 @@ func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() *busen.Bu
 
 // BuildHandlers 使用 wire 生成的代码来构建 Handlers 实例。
 // tracker 由顶层 BuildApp/BuildServer 注入,保证整个进程只有一个 visitor.Tracker 实例。
-func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor, ebProvider func() *busen.Bus, tracker *visitor.Tracker) (*handler.Bundle, error) {
+func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor, ebProvider func() *busen.Bus, tracker *visitor.Tracker, jobManager *job.Manager, storageManager *storage.Manager) (*handler.Bundle, error) {
 	webHandler := handler2.NewWebHandler(tracker)
 	userRepository := repository5.NewUserRepository(dbProvider, appCache)
 	commonRepository := repository6.NewCommonRepository(dbProvider)
 	commonService := service2.NewCommonService(commonRepository, appCache)
 	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
 	fileRepository := repository7.NewFileRepository(dbProvider)
-	manager := storage.ProvideStorageManager(keyValueRepository)
 	publisherPublisher := publisher.New(ebProvider)
-	fileService := service3.NewFileService(tx, commonRepository, keyValueRepository, fileRepository, manager, publisherPublisher)
+	fileService := service3.NewFileService(tx, commonRepository, keyValueRepository, fileRepository, storageManager, publisherPublisher)
 	settingRepository := repository8.NewSettingRepository(dbProvider)
 	webhookRepository := repository.NewWebhookRepository(dbProvider)
 	authRepository := repository9.NewAuthRepository(dbProvider, appCache)
-	settingService := service4.NewSettingService(tx, commonService, fileService, manager, keyValueRepository, settingRepository, webhookRepository, authRepository, publisherPublisher)
+	settingService := service4.NewSettingService(tx, commonService, fileService, storageManager, keyValueRepository, settingRepository, webhookRepository, authRepository, publisherPublisher)
 	userService := service5.NewUserService(tx, userRepository, settingService, fileService, publisherPublisher)
 	userHandler := handler3.NewUserHandler(userService)
 	authService := auth.NewAuthService(tx, authRepository, authRepository, settingService)
@@ -168,20 +177,37 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 	connectRepository := repository12.NewConnectRepository(dbProvider)
 	connectService := service9.NewConnectService(tx, connectRepository, echoRepository, commonService, settingService)
 	connectHandler := handler11.NewConnectHandler(connectService)
-	backupService := service10.NewBackupService(commonService, publisherPublisher, manager)
+	backupService := service10.NewBackupService(commonService, publisherPublisher, storageManager)
 	backupHandler := handler12.NewBackupHandler(backupService)
-	migratorService := service11.NewMigratorService(commonService, keyValueRepository, manager, appCache)
+	migratorService := service11.NewMigratorService(commonService, jobManager)
 	migrationHandler := handler13.NewMigrationHandler(migratorService)
 	dashboardService := service12.NewDashboardService(tracker)
 	dashboardHandler := handler14.NewDashboardHandler(dashboardService)
 	embeddingRepository := repository3.NewEmbeddingRepository(dbProvider)
 	embeddingService := service.NewEmbeddingService(embeddingRepository, keyValueRepository, echoRepository)
-	copilotService := service13.NewCopilotService(echoService, embeddingService, userService, keyValueRepository, manager)
+	copilotService := service13.NewCopilotService(echoService, embeddingService, userService, keyValueRepository, storageManager)
 	copilotHandler := handler15.NewCopilotHandler(copilotService, copilotService)
-	embeddingHandler := handler16.NewEmbeddingHandler(embeddingService)
+	embeddingHandler := handler16.NewEmbeddingHandler(jobManager)
 	mcpHandler := mcp.NewHandler(echoService, userService, commentService, fileService, commonService, connectService, copilotService, settingService)
 	bundle := handler.NewBundle(webHandler, userHandler, authHandler, echoHandler, fileHandler, commentHandler, initHandler, commonHandler, settingHandler, connectHandler, backupHandler, migrationHandler, dashboardHandler, copilotHandler, embeddingHandler, mcpHandler)
 	return bundle, nil
+}
+
+// BuildJobManager 装配共享单例 *job.Manager：repo + 各领域 Runner（含其依赖的领域
+// service），在构造期注册完成。Runner 依赖的 EmbeddingService / migrator.Importer 均不
+// 含 *job.Manager，故无构造环。storageManager 由顶层共享单例注入，确保迁移导入 S3
+// 设置时 reload 的就是文件服务在用的那份 Manager。
+func BuildJobManager(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], storageManager *storage.Manager) (*job.Manager, error) {
+	jobRepository := repository13.NewJobRepository(dbProvider)
+	embeddingRepository := repository3.NewEmbeddingRepository(dbProvider)
+	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
+	echoRepository := repository4.NewEchoRepository(dbProvider, appCache)
+	embeddingService := service.NewEmbeddingService(embeddingRepository, keyValueRepository, echoRepository)
+	reindexRunner := runner.NewReindexRunner(embeddingService)
+	importer := service11.NewImporter(keyValueRepository, storageManager, appCache)
+	migrationRunner := runner.NewMigrationRunner(importer)
+	manager := ProvideJobManager(jobRepository, reindexRunner, migrationRunner)
+	return manager, nil
 }
 
 // BuildMiddlewares 构建中间件依赖。
@@ -202,7 +228,13 @@ func BuildServer() (*server.Server, error) {
 	gormTransactor := transaction.NewGormTransactor(v)
 	v2 := bus.ProvideProvider()
 	tracker := visitor.NewTracker()
-	bundle, err := BuildHandlers(v, iCache, gormTransactor, v2, tracker)
+	keyValueRepository := keyvalue.NewKeyValueRepository(v, iCache)
+	manager := storage.ProvideStorageManager(keyValueRepository)
+	jobManager, err := BuildJobManager(v, iCache, manager)
+	if err != nil {
+		return nil, err
+	}
+	bundle, err := BuildHandlers(v, iCache, gormTransactor, v2, tracker, jobManager, manager)
 	if err != nil {
 		return nil, err
 	}
@@ -214,21 +246,20 @@ func BuildServer() (*server.Server, error) {
 	return serverServer, nil
 }
 
-func BuildTasker(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor, ebProvider func() *busen.Bus, tracker *visitor.Tracker) (*task.Tasker, error) {
+func BuildTasker(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor, ebProvider func() *busen.Bus, tracker *visitor.Tracker, storageManager *storage.Manager) (*task.Tasker, error) {
 	commonRepository := repository6.NewCommonRepository(dbProvider)
 	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
 	fileRepository := repository7.NewFileRepository(dbProvider)
-	manager := storage.ProvideStorageManager(keyValueRepository)
 	publisherPublisher := publisher.New(ebProvider)
-	fileService := service3.NewFileService(tx, commonRepository, keyValueRepository, fileRepository, manager, publisherPublisher)
+	fileService := service3.NewFileService(tx, commonRepository, keyValueRepository, fileRepository, storageManager, publisherPublisher)
 	commonService := service2.NewCommonService(commonRepository, appCache)
 	settingRepository := repository8.NewSettingRepository(dbProvider)
 	webhookRepository := repository.NewWebhookRepository(dbProvider)
 	authRepository := repository9.NewAuthRepository(dbProvider, appCache)
-	settingService := service4.NewSettingService(tx, commonService, fileService, manager, keyValueRepository, settingRepository, webhookRepository, authRepository, publisherPublisher)
+	settingService := service4.NewSettingService(tx, commonService, fileService, storageManager, keyValueRepository, settingRepository, webhookRepository, authRepository, publisherPublisher)
 	queueRepository := repository2.NewQueueRepository(dbProvider)
-	visitorRepository := repository13.NewVisitorRepository(dbProvider)
-	tasker := task.NewTasker(fileService, settingService, publisherPublisher, queueRepository, manager, tracker, visitorRepository)
+	visitorRepository := repository14.NewVisitorRepository(dbProvider)
+	tasker := task.NewTasker(fileService, settingService, publisherPublisher, queueRepository, storageManager, tracker, visitorRepository)
 	return tasker, nil
 }
 
@@ -246,11 +277,33 @@ var AppSet = app.ProviderSet
 // 顶层引入一次,统一下沉给 BuildHandlers 和 BuildTasker。
 var VisitorSet = wire.NewSet(visitor.NewTracker)
 
+// ProvideJobManager 构造已装配好 Runner 的共享单例 *job.Manager（在构造期一次性
+// 完成注册）。Runner 只依赖 EmbeddingService / migrator.Importer（均不含 *job.Manager），
+// 故不会与「MigratorService 需要 Manager」形成构造环。
+func ProvideJobManager(
+	repo job.JobRepository,
+	reindex *runner.ReindexRunner,
+	migration *runner.MigrationRunner,
+) *job.Manager {
+	m := job.NewManager(repo)
+	m.Register(model.TypeReindex, job.Adapt(reindex.Run))
+	m.Register(model.TypeMigration, job.Adapt(migration.Run))
+	return m
+}
+
+// StorageSet 提供进程级共享单例 *storage.Manager。storage.Manager 是有状态基础设施
+// （缓存当前存储后端，ReloadFromConfigAndDB 会改写它），必须全进程一个实例，否则
+// 「设置页 / 迁移改了 S3 → 只 reload 了自己那份 Manager，文件服务仍用旧后端」。同
+// VisitorSet：顶层引入一次，统一下沉给 BuildHandlers/BuildTasker/BuildJobManager。
+// 它自带一份 KeyValueRepository 仅供读取 S3 设置，与各 Build 内的 KeyValueSet 互不冲突。
+var StorageSet = wire.NewSet(keyvalue.NewKeyValueRepository, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), storage.ProviderSet)
+
 var DomainSet = wire.NewSet(
 	BuildHandlers,
 	BuildMiddlewares,
 	BuildTasker,
 	BuildMigrator,
+	BuildJobManager,
 	ProvideBackupScheduleApplier,
 	BuildEventRegistrar,
 )
@@ -259,13 +312,13 @@ var InfraSet = wire.NewSet(database.ProviderSet, bus.ProvideProvider, cache.Prov
 
 var RuntimeSet = server.ProviderSet
 
-var EventSet = wire.NewSet(repository14.EchoSet, repository14.UserSet, repository14.KeyValueSet, repository14.QueueSet, repository14.WebhookSet, repository14.EmbeddingSet, wire.Bind(new(registry.WebhookObserver), new(*webhook.Dispatcher)), wire.Bind(new(subscriber.DeadLetterProcessor), new(*webhook.Dispatcher)), webhook.NewDispatcher, subscriber.NewBackupScheduler, subscriber.NewDeadLetterResolver, subscriber.NewAgentProcessor, subscriber.NewEmbeddingProcessor, service14.EmbeddingSet, ProvideSubscriptionProviders, registry.NewEventRegistry)
+var EventSet = wire.NewSet(repository15.EchoSet, repository15.UserSet, repository15.KeyValueSet, repository15.QueueSet, repository15.WebhookSet, repository15.EmbeddingSet, wire.Bind(new(registry.WebhookObserver), new(*webhook.Dispatcher)), wire.Bind(new(subscriber.DeadLetterProcessor), new(*webhook.Dispatcher)), webhook.NewDispatcher, subscriber.NewBackupScheduler, subscriber.NewDeadLetterResolver, subscriber.NewAgentProcessor, subscriber.NewEmbeddingProcessor, service14.EmbeddingSet, ProvideSubscriptionProviders, registry.NewEventRegistry)
 
-var HandlerSet = wire.NewSet(publisher.New, wire.Bind(new(service7.EventPublisher), new(*publisher.Publisher)), storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository14.FileSet, handler.WebSet, repository14.UserSet, repository14.AuthSet, service14.UserSet, service14.AuthSet, handler.UserSet, handler.AuthSet, repository14.EchoSet, service14.EchoSet, handler.EchoSet, repository14.CommentSet, service14.CommentSet, handler.CommentSet, repository14.CommonSet, service14.FileSet, handler.FileSet, repository14.InitSet, service14.InitSet, handler.InitSet, service14.CommonSet, handler.CommonSet, repository14.WebhookSet, repository14.KeyValueSet, repository14.SettingSet, service14.SettingSet, handler.SettingSet, repository14.ConnectSet, service14.ConnectSet, handler.ConnectSet, service14.DashboardSet, handler.DashboardSet, repository14.EmbeddingSet, service14.EmbeddingSet, handler.EmbeddingSet, service14.CopilotSet, wire.Bind(new(service13.UserReader), new(*service5.UserService)), handler.CopilotSet, service14.BackupSet, handler.BackupSet, repository14.MigrationSet, service14.MigratorSet, handler.MigrationSet, handler.MCPSet, handler.NewBundle)
+var HandlerSet = wire.NewSet(publisher.New, wire.Bind(new(service7.EventPublisher), new(*publisher.Publisher)), repository15.FileSet, handler.WebSet, repository15.UserSet, repository15.AuthSet, service14.UserSet, service14.AuthSet, handler.UserSet, handler.AuthSet, repository15.EchoSet, service14.EchoSet, handler.EchoSet, repository15.CommentSet, service14.CommentSet, handler.CommentSet, repository15.CommonSet, service14.FileSet, handler.FileSet, repository15.InitSet, service14.InitSet, handler.InitSet, service14.CommonSet, handler.CommonSet, repository15.WebhookSet, repository15.KeyValueSet, repository15.SettingSet, service14.SettingSet, handler.SettingSet, repository15.ConnectSet, service14.ConnectSet, handler.ConnectSet, service14.DashboardSet, handler.DashboardSet, repository15.EmbeddingSet, service14.EmbeddingSet, handler.EmbeddingSet, service14.CopilotSet, wire.Bind(new(service13.UserReader), new(*service5.UserService)), handler.CopilotSet, service14.BackupSet, handler.BackupSet, service14.MigratorSet, handler.MigrationSet, handler.MCPSet, handler.NewBundle)
 
-var MiddlewareSet = wire.NewSet(repository14.AuthSet, middleware.ProviderSet)
+var MiddlewareSet = wire.NewSet(repository15.AuthSet, middleware.ProviderSet)
 
-var TaskerSet = wire.NewSet(publisher.New, storage.ProviderSet, wire.Bind(new(storage.S3SettingStore), new(*keyvalue.KeyValueRepository)), repository14.FileSet, repository14.KeyValueSet, repository14.WebhookSet, repository14.AuthSet, repository14.SettingSet, service14.SettingSet, repository14.EchoSet, service14.EchoSet, repository14.CommonSet, service14.FileSet, service14.CommonSet, repository14.QueueSet, repository14.VisitorSet, task.ProviderSet)
+var TaskerSet = wire.NewSet(publisher.New, repository15.FileSet, repository15.KeyValueSet, repository15.WebhookSet, repository15.AuthSet, repository15.SettingSet, service14.SettingSet, repository15.EchoSet, service14.EchoSet, repository15.CommonSet, service14.FileSet, service14.CommonSet, repository15.QueueSet, repository15.VisitorSet, task.ProviderSet)
 
 var MigratorSet = wire.NewSet(migrator.ProviderSet)
 

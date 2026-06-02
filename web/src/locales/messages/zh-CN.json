@@ -1009,6 +1009,11 @@
     "reindexHint": "为全部历史 Echo 重新生成向量。更换模型或维度后需执行一次。",
     "reindexAction": "开始重建",
     "reindexResult": "已索引 {indexed}/{total} 条，失败 {failed} 条。",
+    "reindexCancel": "取消重建",
+    "reindexRunning": "正在重建…",
+    "reindexProgress": "正在重建：已索引 {indexed}/{total} 条",
+    "reindexFailed": "重建失败：{error}",
+    "reindexCancelled": "已取消重建。",
     "reindexConfirmTitle": "重建向量索引？",
     "reindexConfirmDesc": "模型或维度已变更，历史索引已失效，需要为全部历史 Echo 重新生成向量。是否立即重建？"
   },

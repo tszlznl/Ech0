@@ -73,7 +73,7 @@
       <p v-if="editMode" class="text-xs opacity-70 mt-1">{{ t('embeddingSetting.baseUrlHint') }}</p>
     </div>
 
-    <!-- 重建索引 -->
+    <!-- 重建索引（异步作业 + 轮询进度，可取消） -->
     <div
       class="flex flex-row items-center justify-between gap-2 mt-5 pt-4 border-t border-[var(--color-border-subtle)]"
     >
@@ -81,23 +81,56 @@
         <h2 class="font-semibold">{{ t('embeddingSetting.reindex') }}</h2>
         <p class="text-xs opacity-70 mt-1">{{ t('embeddingSetting.reindexHint') }}</p>
       </div>
-      <BaseButton
-        :loading="reindexing"
-        :disabled="reindexing"
-        class="shrink-0"
-        @click="handleReindex"
-      >
-        {{ t('embeddingSetting.reindexAction') }}
-      </BaseButton>
+      <div class="flex items-center gap-2 shrink-0">
+        <BaseButton v-if="reindex.isRunning" @click="handleCancelReindex">
+          {{ t('embeddingSetting.reindexCancel') }}
+        </BaseButton>
+        <BaseButton
+          :loading="reindex.isRunning"
+          :disabled="reindex.isRunning"
+          @click="handleReindex"
+        >
+          {{ t('embeddingSetting.reindexAction') }}
+        </BaseButton>
+      </div>
     </div>
-    <p v-if="reindexResult" class="text-xs text-[var(--color-text-secondary)] opacity-80 mt-2">
+    <!-- 进行中：有计数则显示已索引进度，否则显示通用进行中 -->
+    <p v-if="reindex.isRunning" class="text-xs text-[var(--color-text-secondary)] opacity-80 mt-2">
+      {{
+        reindex.result
+          ? t('embeddingSetting.reindexProgress', {
+              indexed: reindex.result.indexed,
+              total: reindex.result.total,
+            })
+          : t('embeddingSetting.reindexRunning')
+      }}
+    </p>
+    <!-- 成功 -->
+    <p
+      v-else-if="reindex.status === 'success' && reindex.result"
+      class="text-xs text-[var(--color-text-secondary)] opacity-80 mt-2"
+    >
       {{
         t('embeddingSetting.reindexResult', {
-          indexed: reindexResult.indexed,
-          total: reindexResult.total,
-          failed: reindexResult.failed,
+          indexed: reindex.result.indexed,
+          total: reindex.result.total,
+          failed: reindex.result.failed,
         })
       }}
+    </p>
+    <!-- 失败 -->
+    <p
+      v-else-if="reindex.status === 'failed'"
+      class="text-xs text-[var(--color-danger,#dc2626)] mt-2"
+    >
+      {{ t('embeddingSetting.reindexFailed', { error: reindex.error }) }}
+    </p>
+    <!-- 已取消 -->
+    <p
+      v-else-if="reindex.status === 'cancelled'"
+      class="text-xs text-[var(--color-text-secondary)] opacity-80 mt-2"
+    >
+      {{ t('embeddingSetting.reindexCancelled') }}
     </p>
   </div>
 </template>
@@ -107,15 +140,12 @@ import BaseInput from '@/components/common/BaseInput.vue'
 import BaseSwitch from '@/components/common/BaseSwitch.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseCombobox from '@/components/common/BaseCombobox.vue'
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  fetchGetEmbeddingSettings,
-  fetchUpdateEmbeddingSettings,
-  fetchReindexEmbeddings,
-} from '@/service/api'
+import { fetchGetEmbeddingSettings, fetchUpdateEmbeddingSettings } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useBaseDialog } from '@/composables/useBaseDialog'
+import { useReindexStore } from '@/stores/reindex'
 
 const props = defineProps<{ editMode: boolean }>()
 
@@ -136,8 +166,8 @@ const MODEL_DIM_PRESETS: Record<string, number> = {
 }
 const modelOptions = Object.keys(MODEL_DIM_PRESETS)
 
-const reindexing = ref<boolean>(false)
-const reindexResult = ref<App.Api.Embedding.ReindexResult | null>(null)
+// 重建索引改为异步作业，状态/进度/取消全交给 reindex store（复用 migration 轮询范式）。
+const reindex = useReindexStore()
 
 const setting = ref<App.Api.Embedding.EmbeddingSetting>({
   enable: false,
@@ -199,21 +229,26 @@ const save = async () => {
 defineExpose({ save })
 
 const handleReindex = async () => {
-  reindexing.value = true
-  reindexResult.value = null
-  try {
-    const res = await fetchReindexEmbeddings()
-    if (res.code === 1 && res.data) {
-      reindexResult.value = res.data
-      theToast.success(res.msg)
-    }
-  } finally {
-    reindexing.value = false
+  const res = await reindex.start()
+  if (res.code === 1) {
+    theToast.success(res.msg)
+  }
+}
+
+const handleCancelReindex = async () => {
+  const res = await reindex.cancel()
+  if (res.code === 1) {
+    theToast.success(res.msg)
   }
 }
 
 onMounted(() => {
   getSetting()
+  reindex.init()
+})
+
+onUnmounted(() => {
+  reindex.stopPolling()
 })
 </script>
 

@@ -18,7 +18,9 @@ import (
 type Service interface {
 	IndexEcho(ctx context.Context, echo echoModel.Echo) error
 	RemoveEcho(ctx context.Context, echoID string) error
-	Backfill(ctx context.Context) (BackfillResult, error)
+	// Backfill 全量回填历史 Echo 的向量。onProgress 非 nil 时每页结束回调累计计数
+	// （供异步 job 上报实时进度）；长循环尊重 ctx 取消（reindex job 可中断）。
+	Backfill(ctx context.Context, onProgress func(BackfillResult)) (BackfillResult, error)
 	// Search 做语义检索。authorUsername 非空时把命中收口到该作者发布的 Echo
 	// （Copilot Chat 用它隔离多用户实例下的他人 Echo）；空串表示不限定作者。
 	Search(ctx context.Context, query string, k int, authorUsername string) ([]model.SearchResult, error)

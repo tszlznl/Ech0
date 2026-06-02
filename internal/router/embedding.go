@@ -17,4 +17,14 @@ func setupEmbeddingRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 		middleware.RequireScopes(authModel.ScopeAdminSettings),
 		h.EmbeddingHandler.Reindex(),
 	)
+	appRouterGroup.AuthRouterGroup.GET(
+		"/embedding/reindex/status",
+		middleware.RequireScopes(authModel.ScopeAdminSettings),
+		h.EmbeddingHandler.ReindexStatus(),
+	)
+	appRouterGroup.AuthRouterGroup.POST(
+		"/embedding/reindex/cancel",
+		middleware.RequireScopes(authModel.ScopeAdminSettings),
+		h.EmbeddingHandler.CancelReindex(),
+	)
 }

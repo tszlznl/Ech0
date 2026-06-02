@@ -23,6 +23,16 @@ declare namespace App {
         skipped: number
         failed: number
       }
+
+      // 重建索引作业状态（异步轮询）。idle 表示从未运行 / 无进行中作业。
+      type ReindexStatus = {
+        status: 'idle' | 'pending' | 'running' | 'success' | 'failed' | 'cancelled'
+        phase?: string
+        error?: string
+        payload?: ReindexResult
+        started_at?: number
+        finished_at?: number
+      }
     }
   }
 }
