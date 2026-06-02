@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2025-2026 lin-snow
 
-package util
+package egress
 
 import (
 	"bytes"
@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-func TestValidatePublicHTTPURL(t *testing.T) {
+func TestValidate(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -119,12 +119,11 @@ func TestValidatePublicHTTPURL(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			err := ValidatePublicHTTPURL(tt.rawURL)
+			err := Validate(tt.rawURL)
 			if (err != nil) != tt.wantErr {
-				t.Fatalf("ValidatePublicHTTPURL(%q) error = %v, wantErr=%v", tt.rawURL, err, tt.wantErr)
+				t.Fatalf("Validate(%q) error = %v, wantErr=%v", tt.rawURL, err, tt.wantErr)
 			}
 		})
 	}
@@ -138,13 +137,13 @@ func TestSecureDialContext_blocks_loopback(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	dial := SecureDialContext(2 * time.Second)
+	dial := secureDialContext(2 * time.Second)
 	conn, err := dial(context.Background(), "tcp", srv.Listener.Addr().String())
 	if conn != nil {
 		_ = conn.Close()
 	}
 	if err == nil {
-		t.Fatal("expected SecureDialContext to block loopback connection, but got nil error")
+		t.Fatal("expected secureDialContext to block loopback connection, but got nil error")
 	}
 }
 
@@ -157,13 +156,13 @@ func TestSecureDialContext_blocks_private_ip(t *testing.T) {
 	}
 	defer func() { _ = ln.Close() }()
 
-	dial := SecureDialContext(2 * time.Second)
+	dial := secureDialContext(2 * time.Second)
 	conn, dialErr := dial(context.Background(), "tcp", ln.Addr().String())
 	if conn != nil {
 		_ = conn.Close()
 	}
 	if dialErr == nil {
-		t.Fatal("expected SecureDialContext to block private IP connection")
+		t.Fatal("expected secureDialContext to block private IP connection")
 	}
 }
 

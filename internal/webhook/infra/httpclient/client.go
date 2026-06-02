@@ -17,6 +17,7 @@ import (
 
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
+	"github.com/lin-snow/ech0/internal/util/egress"
 )
 
 func BuildRequest(wh *webhookModel.Webhook, obs contracts.WebhookObservation) (*http.Request, error) {
@@ -65,7 +66,7 @@ func SendWithRetry(
 	maxRetries int,
 	initialBackoff time.Duration,
 ) error {
-	return retryWithBackoff(maxRetries, initialBackoff, func() error {
+	return egress.Retry(maxRetries, initialBackoff, func() error {
 		req, err := BuildRequest(wh, obs)
 		if err != nil {
 			return err
@@ -81,20 +82,6 @@ func SendWithRetry(
 		}
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	})
-}
-
-func retryWithBackoff(maxRetries int, initialBackoff time.Duration, fn func() error) error {
-	var err error
-	delay := initialBackoff
-	for i := 0; i < maxRetries; i++ {
-		err = fn()
-		if err == nil {
-			return nil
-		}
-		time.Sleep(delay)
-		delay *= 2
-	}
-	return err
 }
 
 func buildWebhookSignature(secret string, payload []byte) string {

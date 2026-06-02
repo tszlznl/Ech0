@@ -16,6 +16,7 @@ import (
 	queueModel "github.com/lin-snow/ech0/internal/model/queue"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 	"github.com/lin-snow/ech0/internal/transaction"
+	"github.com/lin-snow/ech0/internal/util/egress"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	webhookclient "github.com/lin-snow/ech0/internal/webhook/infra/httpclient"
 	"go.uber.org/zap"
@@ -53,7 +54,7 @@ func NewDispatcher(
 	return &Dispatcher{
 		repo:      repo,
 		queueRepo: queueRepo,
-		client:    webhookclient.NewSafeHTTPClient(defaultWebhookTimeout),
+		client:    egress.NewClient(egress.Guard(), egress.Timeout(defaultWebhookTimeout)),
 		pool: async.NewWorkerPool(
 			config.Config().Event.WebhookPoolWorkers,
 			config.Config().Event.WebhookPoolQueue,

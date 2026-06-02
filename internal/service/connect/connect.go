@@ -16,6 +16,7 @@ import (
 	model "github.com/lin-snow/ech0/internal/model/connect"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	"github.com/lin-snow/ech0/internal/transaction"
+	"github.com/lin-snow/ech0/internal/util/egress"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	versionPkg "github.com/lin-snow/ech0/internal/version"
@@ -86,7 +87,7 @@ func (connectService *ConnectService) AddConnect(ctx context.Context, connected 
 
 		// SSRF 防护：拒绝指向私网/回环/云元数据等地址的对端 URL。
 		// 运行时 fetchPeerConnectInfo 也会再次校验，这里在入库前就拦截，避免恶意记录污染存储。
-		if err := httpUtil.ValidatePublicHTTPURL(connected.ConnectURL + "/api/connect"); err != nil {
+		if err := egress.Validate(connected.ConnectURL + "/api/connect"); err != nil {
 			return errors.New(commonModel.INVALID_CONNECTION_URL)
 		}
 
@@ -222,11 +223,11 @@ func (connectService *ConnectService) GetConnectsInfo() ([]model.Connect, error)
 }
 
 // fetchPeerConnectInfo 请求对端 GET /api/connect，成功时返回解析后的 Connect（与 GetConnectsInfo 探测逻辑一致）。
-// 使用 SendSafeRequest 进行 SSRF 防护：拒绝指向私网/回环/云元数据等地址的对端 URL，
-// 并通过 SecureDialContext 防御 DNS rebinding。
+// 使用 egress.Fetch（带 Guard）进行 SSRF 防护：拒绝指向私网/回环/云元数据等地址的对端 URL，
+// 并通过安全拨号器防御 DNS rebinding。
 func fetchPeerConnectInfo(peerConnectURL string, requestTimeout time.Duration) (model.Connect, error) {
 	url := httpUtil.TrimURL(peerConnectURL) + "/api/connect"
-	resp, err := httpUtil.SendSafeRequest(url, "GET", httpUtil.Header{
+	resp, err := egress.Fetch(url, "GET", egress.Header{
 		Header:  "Ech0_URL",
 		Content: peerConnectURL,
 	}, requestTimeout)

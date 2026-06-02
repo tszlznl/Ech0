@@ -12,6 +12,7 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
+	"github.com/lin-snow/ech0/internal/util/egress"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	webhookclient "github.com/lin-snow/ech0/internal/webhook/infra/httpclient"
 	"github.com/lin-snow/ech0/pkg/viewer"
@@ -165,7 +166,7 @@ func (settingService *SettingService) TestWebhook(ctx context.Context, id string
 		return err
 	}
 
-	client := webhookclient.NewSafeHTTPClient(5 * time.Second)
+	client := egress.NewClient(egress.Guard(), egress.Timeout(5*time.Second))
 	triggerAt := time.Now().UTC().Unix()
 	sendErr := webhookclient.SendWithRetry(client, webhook, obs, 2, 300*time.Millisecond)
 	status := "success"
@@ -177,7 +178,7 @@ func (settingService *SettingService) TestWebhook(ctx context.Context, id string
 }
 
 func validateWebhookURL(rawURL string) error {
-	if err := httpUtil.ValidatePublicHTTPURL(rawURL); err != nil {
+	if err := egress.Validate(rawURL); err != nil {
 		return errors.New(commonModel.INVALID_WEBHOOK_URL)
 	}
 	return nil

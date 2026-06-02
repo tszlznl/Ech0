@@ -26,6 +26,7 @@ import (
 	model "github.com/lin-snow/ech0/internal/model/comment"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
+	"github.com/lin-snow/ech0/internal/util/egress"
 	jwtUtil "github.com/lin-snow/ech0/internal/util/jwt"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
@@ -803,7 +804,7 @@ func (s *CommentService) verifyCaptcha(token, _ string) error {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{Timeout: 8 * time.Second}
+	client := egress.NewClient(egress.Timeout(8 * time.Second))
 	resp, err := client.Do(req)
 	if err != nil {
 		return err

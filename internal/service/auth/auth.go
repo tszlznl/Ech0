@@ -27,12 +27,20 @@ import (
 	model "github.com/lin-snow/ech0/internal/model/user"
 	"github.com/lin-snow/ech0/internal/transaction"
 	cryptoUtil "github.com/lin-snow/ech0/internal/util/crypto"
+	"github.com/lin-snow/ech0/internal/util/egress"
 	jwtUtil "github.com/lin-snow/ech0/internal/util/jwt"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 )
+
+// oidcHTTPClient is the shared client for outbound OIDC/OAuth2 requests. It
+// carries a timeout — the previous http.DefaultClient had none, so a hung
+// provider could pin the request goroutine indefinitely. It is intentionally
+// NOT SSRF-guarded: self-hosted identity providers may legitimately live on a
+// private network or loopback.
+var oidcHTTPClient = egress.NewClient(egress.Timeout(10 * time.Second))
 
 type AuthService struct {
 	transactor     transaction.Transactor
@@ -984,7 +992,7 @@ func fetchGitHubUserInfo(
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := oidcHTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -1033,7 +1041,7 @@ func fetchGoogleUserInfo(
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := oidcHTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -1068,7 +1076,7 @@ func exchangeQQCodeForToken(
 	req, _ := http.NewRequest("GET", setting.TokenURL+"?"+data.Encode(), nil)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json")
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := oidcHTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -1112,7 +1120,7 @@ func fetchQQUserInfo(accessToken string) (*authModel.QQOpenIDResponse, error) {
 	req, _ := http.NewRequest("GET", openIDURL, nil)
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := oidcHTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -1203,7 +1211,7 @@ func fetchCustomUserInfo(
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := oidcHTTPClient.Do(req)
 	if err != nil {
 		return "", err
 	}

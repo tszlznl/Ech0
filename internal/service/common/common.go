@@ -16,6 +16,7 @@ import (
 	"github.com/lin-snow/ech0/internal/cache"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
+	"github.com/lin-snow/ech0/internal/util/egress"
 	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	mdUtil "github.com/lin-snow/ech0/internal/util/md"
 	timezoneUtil "github.com/lin-snow/ech0/internal/util/timezone"
@@ -160,7 +161,7 @@ func (s *CommonService) GenerateRSS(ctx *gin.Context) (string, error) {
 func (s *CommonService) GetWebsiteTitle(websiteURL string) (string, error) {
 	websiteURL = httpUtil.TrimURL(websiteURL)
 
-	body, err := httpUtil.SendSafeRequest(websiteURL, "GET", httpUtil.Header{}, 10*time.Second)
+	body, err := egress.Fetch(websiteURL, "GET", egress.Header{}, 10*time.Second)
 	if err != nil {
 		return "", err
 	}
