@@ -97,7 +97,7 @@ func (t *Tasker) Start(context.Context) error {
 	if err := t.settingService.GetBackupScheduleSetting(&backupScheduleSetting); err != nil {
 		logUtil.GetLogger().
 			Error("Failed to get backup schedule setting", zap.Error(err))
-		// 默认启用定时备份任务
+		// 读取失败时默认关闭定时备份任务
 		backupScheduleSetting.Enable = false
 		backupScheduleSetting.CronExpression = "0 2 * * 0" // 每周日2点执行一次
 	}
@@ -187,7 +187,7 @@ func (t *Tasker) DeadLetterConsumeTask() error {
 	)
 	if err != nil {
 		logUtil.GetLogger().
-			Error("Failed to schedule WebhookRetryTask", zap.Error(err))
+			Error("Failed to schedule DeadLetterConsumeTask", zap.Error(err))
 		return err
 	}
 	return nil
