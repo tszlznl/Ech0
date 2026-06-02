@@ -32,6 +32,7 @@ import (
 	userService "github.com/lin-snow/ech0/internal/service/user"
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/task"
+	"github.com/lin-snow/ech0/internal/task/scheduled"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"github.com/lin-snow/ech0/internal/visitor"
 	"github.com/lin-snow/ech0/internal/webhook"
@@ -58,6 +59,17 @@ func ProvideJobManager(
 	m.Register(jobModel.TypeReindex, job.Adapt(reindex.Run))
 	m.Register(jobModel.TypeMigration, job.Adapt(migration.Run))
 	return m
+}
+
+// ProvideTaskManager 把各领域定时 Task 收进共享单例 *task.Manager（对应 ProvideJobManager）。
+// NewManager 是变参，wire 无法直接喂，故在此把具体 Task 收口成一次构造。
+func ProvideTaskManager(
+	cleanup *scheduled.Cleanup,
+	deadletter *scheduled.DeadLetter,
+	backup *scheduled.Backup,
+	visitorSnapshot *scheduled.VisitorSnapshot,
+) (*task.Manager, error) {
+	return task.NewManager(cleanup, deadletter, backup, visitorSnapshot)
 }
 
 // StorageSet 提供进程级共享单例 *storage.Manager。storage.Manager 是有状态基础设施
@@ -201,7 +213,8 @@ var TaskerSet = wire.NewSet(
 
 	repository.QueueSet,
 	repository.VisitorSet,
-	task.ProviderSet,
+	scheduled.ProviderSet,
+	ProvideTaskManager,
 )
 
 var MigratorSet = wire.NewSet(
@@ -301,9 +314,9 @@ func BuildTasker(
 	ebProvider func() *busen.Bus,
 	tracker *visitor.Tracker,
 	storageManager *storage.Manager,
-) (*task.Tasker, error) {
+) (*task.Manager, error) {
 	wire.Build(TaskerSet)
-	return &task.Tasker{}, nil
+	return &task.Manager{}, nil
 }
 
 func BuildMigrator(
@@ -315,8 +328,15 @@ func BuildMigrator(
 	return &migrator.Worker{}, nil
 }
 
-func ProvideBackupScheduleApplier(t *task.Tasker) eventsubscriber.BackupScheduleApplier {
-	return t
+// ProvideBackupScheduleApplier 从 task.Manager 中按能力取出实现了 BackupScheduleApplier
+// 的那个 Task（即 *scheduled.Backup），供 BackupScheduler 订阅者在运行期重配备份计划。
+// 取的是 Manager 持有的同一实例，故 Schedule 时捕获的 scheduler 对 Apply 可见。
+func ProvideBackupScheduleApplier(m *task.Manager) eventsubscriber.BackupScheduleApplier {
+	applier, ok := task.Find[eventsubscriber.BackupScheduleApplier](m)
+	if !ok {
+		panic("no scheduled task implements BackupScheduleApplier")
+	}
+	return applier
 }
 
 func ProvideSubscriptionProviders(

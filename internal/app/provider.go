@@ -19,14 +19,14 @@ func ProvideOptions(
 	registrar *registry.EventRegistrar,
 	eventBus *bus.EventBus,
 	jobManager *job.Manager,
-	tasker *task.Tasker,
+	taskManager *task.Manager,
 	migratorWorker *migrator.Worker,
 	httpServer *server.Server,
 ) []Option {
 	return []Option{
 		// jobManager 排在 httpServer 前：其 Start 做启动期孤儿清理，须先于对外服务。
-		// Runner 已在构造期装配进 jobManager，无需额外注册步骤。
-		Components(eventBus, jobManager, tasker, migratorWorker, httpServer),
+		// Runner 已在构造期装配进 jobManager、Task 已装配进 taskManager，无需额外注册步骤。
+		Components(eventBus, jobManager, taskManager, migratorWorker, httpServer),
 		BeforeStart(func(context.Context) error {
 			return registrar.Register()
 		}),

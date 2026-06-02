@@ -71,6 +71,7 @@ import (
 	service5 "github.com/lin-snow/ech0/internal/service/user"
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/task"
+	"github.com/lin-snow/ech0/internal/task/scheduled"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"github.com/lin-snow/ech0/internal/visitor"
 	"github.com/lin-snow/ech0/internal/webhook"
@@ -92,11 +93,11 @@ func BuildApp() (*app.App, error) {
 	tracker := visitor.NewTracker()
 	keyValueRepository := keyvalue.NewKeyValueRepository(v, iCache)
 	manager := storage.ProvideStorageManager(keyValueRepository)
-	tasker, err := BuildTasker(v, iCache, gormTransactor, v2, tracker, manager)
+	taskManager, err := BuildTasker(v, iCache, gormTransactor, v2, tracker, manager)
 	if err != nil {
 		return nil, err
 	}
-	backupScheduleApplier := ProvideBackupScheduleApplier(tasker)
+	backupScheduleApplier := ProvideBackupScheduleApplier(taskManager)
 	eventRegistrar, err := BuildEventRegistrar(v, v2, iCache, gormTransactor, backupScheduleApplier)
 	if err != nil {
 		return nil, err
@@ -120,7 +121,7 @@ func BuildApp() (*app.App, error) {
 		return nil, err
 	}
 	serverServer := server.ProvideHTTPServer(engine, bundle, deps)
-	v3 := app.ProvideOptions(eventRegistrar, eventBus, jobManager, tasker, worker, serverServer)
+	v3 := app.ProvideOptions(eventRegistrar, eventBus, jobManager, taskManager, worker, serverServer)
 	appApp := app.NewApp(v3)
 	return appApp, nil
 }
@@ -246,21 +247,28 @@ func BuildServer() (*server.Server, error) {
 	return serverServer, nil
 }
 
-func BuildTasker(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor, ebProvider func() *busen.Bus, tracker *visitor.Tracker, storageManager *storage.Manager) (*task.Tasker, error) {
+func BuildTasker(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor, ebProvider func() *busen.Bus, tracker *visitor.Tracker, storageManager *storage.Manager) (*task.Manager, error) {
 	commonRepository := repository6.NewCommonRepository(dbProvider)
 	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
 	fileRepository := repository7.NewFileRepository(dbProvider)
 	publisherPublisher := publisher.New(ebProvider)
 	fileService := service3.NewFileService(tx, commonRepository, keyValueRepository, fileRepository, storageManager, publisherPublisher)
+	cleanup := scheduled.NewCleanup(fileService)
+	queueRepository := repository2.NewQueueRepository(dbProvider)
+	deadLetter := scheduled.NewDeadLetter(queueRepository, publisherPublisher)
 	commonService := service2.NewCommonService(commonRepository, appCache)
 	settingRepository := repository8.NewSettingRepository(dbProvider)
 	webhookRepository := repository.NewWebhookRepository(dbProvider)
 	authRepository := repository9.NewAuthRepository(dbProvider, appCache)
 	settingService := service4.NewSettingService(tx, commonService, fileService, storageManager, keyValueRepository, settingRepository, webhookRepository, authRepository, publisherPublisher)
-	queueRepository := repository2.NewQueueRepository(dbProvider)
+	backup := scheduled.NewBackup(settingService, storageManager, publisherPublisher)
 	visitorRepository := repository14.NewVisitorRepository(dbProvider)
-	tasker := task.NewTasker(fileService, settingService, publisherPublisher, queueRepository, storageManager, tracker, visitorRepository)
-	return tasker, nil
+	visitorSnapshot := scheduled.NewVisitorSnapshot(tracker, visitorRepository)
+	manager, err := ProvideTaskManager(cleanup, deadLetter, backup, visitorSnapshot)
+	if err != nil {
+		return nil, err
+	}
+	return manager, nil
 }
 
 func BuildMigrator(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor) (*migrator.Worker, error) {
@@ -291,6 +299,17 @@ func ProvideJobManager(
 	return m
 }
 
+// ProvideTaskManager 把各领域定时 Task 收进共享单例 *task.Manager（对应 ProvideJobManager）。
+// NewManager 是变参，wire 无法直接喂，故在此把具体 Task 收口成一次构造。
+func ProvideTaskManager(
+	cleanup *scheduled.Cleanup,
+	deadletter *scheduled.DeadLetter,
+	backup *scheduled.Backup,
+	visitorSnapshot *scheduled.VisitorSnapshot,
+) (*task.Manager, error) {
+	return task.NewManager(cleanup, deadletter, backup, visitorSnapshot)
+}
+
 // StorageSet 提供进程级共享单例 *storage.Manager。storage.Manager 是有状态基础设施
 // （缓存当前存储后端，ReloadFromConfigAndDB 会改写它），必须全进程一个实例，否则
 // 「设置页 / 迁移改了 S3 → 只 reload 了自己那份 Manager，文件服务仍用旧后端」。同
@@ -318,12 +337,19 @@ var HandlerSet = wire.NewSet(publisher.New, wire.Bind(new(service7.EventPublishe
 
 var MiddlewareSet = wire.NewSet(repository15.AuthSet, middleware.ProviderSet)
 
-var TaskerSet = wire.NewSet(publisher.New, repository15.FileSet, repository15.KeyValueSet, repository15.WebhookSet, repository15.AuthSet, repository15.SettingSet, service14.SettingSet, repository15.EchoSet, service14.EchoSet, repository15.CommonSet, service14.FileSet, service14.CommonSet, repository15.QueueSet, repository15.VisitorSet, task.ProviderSet)
+var TaskerSet = wire.NewSet(publisher.New, repository15.FileSet, repository15.KeyValueSet, repository15.WebhookSet, repository15.AuthSet, repository15.SettingSet, service14.SettingSet, repository15.EchoSet, service14.EchoSet, repository15.CommonSet, service14.FileSet, service14.CommonSet, repository15.QueueSet, repository15.VisitorSet, scheduled.ProviderSet, ProvideTaskManager)
 
 var MigratorSet = wire.NewSet(migrator.ProviderSet)
 
-func ProvideBackupScheduleApplier(t *task.Tasker) subscriber.BackupScheduleApplier {
-	return t
+// ProvideBackupScheduleApplier 从 task.Manager 中按能力取出实现了 BackupScheduleApplier
+// 的那个 Task（即 *scheduled.Backup），供 BackupScheduler 订阅者在运行期重配备份计划。
+// 取的是 Manager 持有的同一实例，故 Schedule 时捕获的 scheduler 对 Apply 可见。
+func ProvideBackupScheduleApplier(m *task.Manager) subscriber.BackupScheduleApplier {
+	applier, ok := task.Find[subscriber.BackupScheduleApplier](m)
+	if !ok {
+		panic("no scheduled task implements BackupScheduleApplier")
+	}
+	return applier
 }
 
 func ProvideSubscriptionProviders(
