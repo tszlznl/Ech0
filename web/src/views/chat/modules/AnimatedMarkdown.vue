@@ -172,6 +172,70 @@ function renderBlocks(tokens: Token[], ctx: BuildCtx): Child[] {
   return out
 }
 
+// ── 流式增量解析 ──────────────────────────────────────────────
+// 流式只追加：最后一个空行之前的顶层块不会再变。冻结这段「已定稿」前缀的解析结果，
+// 每拍只重解析未完成的尾部，多段落长答案的解析量从 O(n²) 降到 ~O(n)。
+// 关键不变量：仅在「分块解析 ≡ 整文解析」可证明成立时走快路，否则回退整文解析——
+// 既不改变任何渲染结果，也不动 blockKey（块从尾部移入前缀时行号不变 → key 不变 → 不重挂）。
+
+// 围栏代码块可包含空行：前缀里 ``` / ~~~ 数量为奇数说明截断点落在未闭合围栏内，须回退。
+const fenceBalanced = (s: string): boolean => {
+  const m = s.match(/^ {0,3}(`{3,}|~{3,})/gm)
+  return m === null || m.length % 2 === 0
+}
+
+// 尾部首个非空行若是列表项/引用/缩进续行，可能与前缀末块续接（含松散列表判定），
+// 分块解析会与整文不一致 → 回退整文解析。
+const tailMayJoinPrefix = (tail: string): boolean => {
+  for (const line of tail.split('\n')) {
+    if (line.trim().length === 0) continue
+    // 列表标记用 (\s|$)：连流式中途的悬空标记（如刚打出的「-」「1.」）也算续接，
+    // 否则截断点会落在「- a\n\n-」这种松散列表的半成态里，分块解析与整文不一致。
+    return (
+      /^ {0,3}([-*+]|\d{1,9}[.)])(\s|$)/.test(line) ||
+      /^ {0,3}>/.test(line) ||
+      /^(?: {4,}|\t)/.test(line)
+    )
+  }
+  return false
+}
+
+const offsetTokenMap = (t: Token, off: number): void => {
+  if (t.map) t.map = [t.map[0] + off, t.map[1] + off]
+}
+
+// 每个组件实例独立持有前缀缓存（同一时刻只有最后一条 assistant 走动画，隔离仍更稳）。
+function createIncrementalParser(): (text: string) => Token[] {
+  let cachedPrefix = ''
+  let cachedTokens: Token[] = []
+
+  return (text: string): Token[] => {
+    const lines = text.split('\n')
+    // 末个空行即最后一个顶层块边界；其后是未定稿尾部
+    let bi = -1
+    for (let i = lines.length - 1; i >= 0; i -= 1) {
+      if (lines[i].trim().length === 0) {
+        bi = i
+        break
+      }
+    }
+    if (bi <= 0) return md.parse(text, {})
+
+    const prefix = lines.slice(0, bi).join('\n') + '\n' // 全局行 0..bi-1
+    const tail = lines.slice(bi).join('\n') // 以空行开头，全局行 bi 起
+    if (!fenceBalanced(prefix) || tailMayJoinPrefix(tail)) return md.parse(text, {})
+
+    if (prefix !== cachedPrefix) {
+      cachedPrefix = prefix
+      cachedTokens = md.parse(prefix, {})
+    }
+    // 尾部独立解析，行号整体偏移 bi → blockKey 与整文解析全局一致
+    const tailTokens = md.parse(tail, {})
+    for (const t of tailTokens) offsetTokenMap(t, bi)
+    return [...cachedTokens, ...tailTokens]
+  }
+}
+
 export default defineComponent({
   name: 'AnimatedMarkdown',
   props: {
@@ -193,6 +257,9 @@ export default defineComponent({
     const streamingRef = computed(() => props.streaming && !reduceMotion)
     const displayed = useSmoothReveal(source, streamingRef)
 
+    // 增量解析器随实例存活，冻结已定稿前缀的解析结果
+    const parseStream = createIncrementalParser()
+
     // 上报「是否仍在揭示」：调用方据此等揭示追平后再切到完整渲染，避免尾巴整坨弹出
     watch(
       [displayed, () => props.content],
@@ -210,7 +277,7 @@ export default defineComponent({
         animationClass: ANIM_MAP[props.animation] ?? ANIM_MAP.fadeIn,
         duration: props.duration,
       }
-      const tree = renderBlocks(md.parse(text || '', {}), ctx)
+      const tree = renderBlocks(parseStream(text || ''), ctx)
       return h('div', { class: ['echo-markdown', 'am-root'] }, tree)
     }
   },

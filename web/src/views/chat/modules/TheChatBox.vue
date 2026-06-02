@@ -350,9 +350,15 @@ onMounted(async () => {
   const area = scrollArea.value
   if (area) area.addEventListener('scroll', onScroll, { passive: true })
   if (typeof ResizeObserver === 'function') {
-    // 一个实例观两目标：对话内容长高 → 贴底；输入框增高 → 写 --composer-h 并贴底
-    resizeObserver = new ResizeObserver(() => {
-      syncComposerHeight()
+    // 一个实例观两目标，但按 entries 区分来源：对话内容长高只需贴底，唯有输入框自身
+    // 变化才同步 --composer-h。否则流式逐词揭示时每次长高都会白写一次 CSS 变量、再被
+    // 紧接的 scrollHeight 读触发一次强制重排——而这正是热路径，省掉它收益最直接。
+    resizeObserver = new ResizeObserver((entries) => {
+      let composerChanged = false
+      for (const entry of entries) {
+        if (entry.target === composerEl.value) composerChanged = true
+      }
+      if (composerChanged) syncComposerHeight()
       onContentResize()
     })
     if (transcriptInner.value) resizeObserver.observe(transcriptInner.value)
@@ -511,6 +517,10 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 0.45rem;
   animation: turn-in 0.32s ease both;
+
+  /* 隔离各 turn 的布局/样式作用域：流式时最后一条逐词长高，不必反复重排上方已定稿的
+     历史 turn。不含 paint——am-tok 的 blur/translateX 会微溢出，paint 收束会裁掉。 */
+  contain: layout style;
 }
 
 .turn--user {
