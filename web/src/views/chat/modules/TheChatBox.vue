@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
-  <div class="hairline-chat">
+  <div ref="rootEl" class="hairline-chat" :class="{ 'hairline-chat--empty': isEmpty }">
     <!-- 角落控件：无边框幽灵图标 -->
     <button class="ghost-ctrl ghost-ctrl--back" :title="t('commonNav.backHome')" @click="goHome">
       <Back class="ghost-ctrl__icon" />
@@ -89,6 +89,7 @@
 
     <!-- 输入区：textarea 的下边框就是那条横线（钉在 75vh） -->
     <div
+      ref="composerEl"
       class="composer"
       :class="{
         'composer--active': input.trim().length > 0 || loading,
@@ -166,8 +167,10 @@ const { openConfirm } = useBaseDialog()
 const input = ref<string>('')
 const loading = ref<boolean>(false)
 const messages = ref<App.Api.Chat.ChatMessage[]>([])
+const rootEl = ref<HTMLElement | null>(null)
 const scrollArea = ref<HTMLElement | null>(null)
 const transcriptInner = ref<HTMLElement | null>(null)
+const composerEl = ref<HTMLElement | null>(null)
 const inputEl = ref<HTMLTextAreaElement | null>(null)
 let abort: (() => void) | null = null
 
@@ -190,11 +193,14 @@ const suggestions = computed<string[]>(() => [
   t('chatPanel.suggestion1'),
   t('chatPanel.suggestion2'),
   t('chatPanel.suggestion3'),
-  t('chatPanel.suggestion4'),
 ])
 
 // 输入框为空且非流式时展示预设场景；开始输入或发送后淡出
 const showSuggestions = computed<boolean>(() => !loading.value && input.value.trim().length === 0)
+
+// 尚无任何对话：发丝线整组（输入框 + suggestions）居中，告别上半屏大片空白；
+// 发出首条消息后 messages 非空 → 自动下沉到 75vh 钉位（CSS transition 负责平滑过渡）
+const isEmpty = computed<boolean>(() => messages.value.length === 0)
 
 // 贴底滚动：事件驱动而非帧驱动。`pinned` 是用户「想不想贴底」的意图，只由真实滚动翻转；
 // 内容长高由 ResizeObserver 感知后跟随一次。彻底告别 rAF 每帧强写 scrollTop 带来的亚像素抖动。
@@ -224,12 +230,22 @@ const onContentResize = () => {
   if (el && pinned.value) el.scrollTop = el.scrollHeight
 }
 
-// textarea 向上生长，横线恒定钉在 75vh
+// 把输入框当前高度写进 --composer-h，供对话区底边实时让位。
+// CSS max-height(--composer-max) 已封顶，offsetHeight 即真实封顶后的高度。
+const syncComposerHeight = () => {
+  const root = rootEl.value
+  const c = composerEl.value
+  if (root && c) root.style.setProperty('--composer-h', `${c.offsetHeight}px`)
+}
+
+// textarea 向上生长，横线恒定钉在 75vh；封顶由 CSS max-height 负责（超出内部滚动）
 const autoGrow = () => {
   const el = inputEl.value
   if (!el) return
   el.style.height = 'auto'
-  el.style.height = `${Math.min(el.scrollHeight, window.innerHeight * 0.28)}px`
+  el.style.height = `${el.scrollHeight}px`
+  syncComposerHeight()
+  onContentResize() // 同帧贴底，杜绝输入框增高与对话区让位错开一帧的闪现
 }
 
 const goHome = () => router.push('/')
@@ -333,10 +349,16 @@ onMounted(async () => {
   // 贴底引擎接线：scroll 监听更新意图，ResizeObserver 感知内容长高后跟随
   const area = scrollArea.value
   if (area) area.addEventListener('scroll', onScroll, { passive: true })
-  if (transcriptInner.value && typeof ResizeObserver === 'function') {
-    resizeObserver = new ResizeObserver(onContentResize)
-    resizeObserver.observe(transcriptInner.value)
+  if (typeof ResizeObserver === 'function') {
+    // 一个实例观两目标：对话内容长高 → 贴底；输入框增高 → 写 --composer-h 并贴底
+    resizeObserver = new ResizeObserver(() => {
+      syncComposerHeight()
+      onContentResize()
+    })
+    if (transcriptInner.value) resizeObserver.observe(transcriptInner.value)
+    if (composerEl.value) resizeObserver.observe(composerEl.value)
   }
+  syncComposerHeight() // 首帧兜底，避免对话区底边先用默认值再跳一下
 
   try {
     const res = await getChatSession()
@@ -368,6 +390,16 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .hairline-chat {
+  /* 输入框滚动前的最大高度（≈5 行），小屏再按视口收口；单一事实源，对话区让位与 textarea 封顶共用 */
+  --composer-max: min(8.5rem, 30dvh);
+
+  /* 输入框当前高度，autoGrow / ResizeObserver 实时写入；首帧 1 行兜底 */
+  --composer-h: 1.6rem;
+
+  /* 发丝线距视口底的距离：有对话时钉在 25dvh（即 75vh 处），
+     空态时抬到视口中部，让输入框那组元素居中、消灭上半屏留白 */
+  --line-pos: 25dvh;
+
   position: relative;
   width: 100%;
   height: 100vh;
@@ -375,6 +407,12 @@ onBeforeUnmount(() => {
   overflow: hidden;
   background: var(--color-bg-canvas);
   color: var(--color-text-primary);
+}
+
+/* 空态：整组上移居中。composer.bottom / understory.top 各自带 transition，
+   首条消息发出后 --line-pos 切回 25dvh 即平滑下沉 */
+.hairline-chat--empty {
+  --line-pos: 52dvh;
 }
 
 /* ── 角落幽灵控件 ───────────────────────────── */
@@ -429,7 +467,10 @@ onBeforeUnmount(() => {
 /* ── 对话区（线之上，贴底向上生长） ─────────── */
 .transcript {
   position: absolute;
-  inset: 0 0 calc(25dvh + 3rem);
+
+  /* 底边随输入框当前高度实时让位：输入框长多少，对话区底边抬多少，永不重叠。
+     不加 transition——textarea 是瞬时增高，对话区须同帧锁步，过渡反而会脱拍 */
+  inset: 0 0 calc(var(--line-pos) + var(--composer-h, 1.6rem) + 1rem);
 
   /* 在横线上方再留出一段呼吸距离，避免内容黏住输入框 */
   display: flex;
@@ -604,14 +645,16 @@ onBeforeUnmount(() => {
 .composer {
   position: absolute;
   left: 50%;
-  bottom: 25vh;
-  bottom: 25dvh;
+  bottom: var(--line-pos);
   transform: translateX(-50%);
   z-index: 2;
   width: min(42rem, calc(100% - 3rem));
   display: flex;
   align-items: flex-end;
   gap: 0.6rem;
+
+  /* 仅在空态 ↔ 有对话切换时（--line-pos 变化）平滑滑动；日常打字 bottom 不变，不受影响 */
+  transition: bottom 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* 发丝线（底色）：两端淡出的渐变，避免满宽硬边显得空荡 */
@@ -676,6 +719,11 @@ onBeforeUnmount(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .composer,
+  .understory {
+    transition: none;
+  }
+
   .composer::before {
     transition: none;
   }
@@ -692,7 +740,7 @@ onBeforeUnmount(() => {
   outline: none;
   background: transparent;
   padding: 0 0 0.7rem;
-  max-height: 28vh;
+  max-height: var(--composer-max);
   font-size: 1rem;
   line-height: 1.6;
   color: var(--color-text-primary);
@@ -765,11 +813,15 @@ onBeforeUnmount(() => {
 .understory {
   position: absolute;
   left: 50%;
-  top: 75vh;
-  top: 75dvh;
+
+  /* 紧贴发丝线下方：线在距底 --line-pos 处，故距顶 = 100dvh - --line-pos */
+  top: calc(100dvh - var(--line-pos));
   transform: translateX(-50%);
   width: min(42rem, calc(100% - 3rem));
   padding-top: 1.5rem;
+
+  /* 与 composer 同步滑动 */
+  transition: top 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .understory__list {
