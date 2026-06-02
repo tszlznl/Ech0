@@ -6,6 +6,7 @@ package service
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/lin-snow/ech0/internal/agent"
 	embeddingModel "github.com/lin-snow/ech0/internal/model/embedding"
@@ -16,7 +17,7 @@ func src(content string) embeddingModel.SearchResult {
 }
 
 func TestHistoryForModel_Empty(t *testing.T) {
-	if got := historyForModel(nil, "zh-CN", maxHistoryTokens); len(got) != 0 {
+	if got := historyForModel(nil, "zh-CN", maxHistoryTokens, time.UTC); len(got) != 0 {
 		t.Fatalf("expected empty history, got %d messages", len(got))
 	}
 }
@@ -30,7 +31,7 @@ func TestHistoryForModel_DropsOldSourcesFoldsRecent(t *testing.T) {
 		{Role: "assistant", Content: "a2", Sources: []embeddingModel.SearchResult{src("RECENT_ECHO")}},
 	}
 
-	got := historyForModel(msgs, "zh-CN", maxHistoryTokens)
+	got := historyForModel(msgs, "zh-CN", maxHistoryTokens, time.UTC)
 	if len(got) != 4 {
 		t.Fatalf("expected 4 messages, got %d", len(got))
 	}
@@ -70,7 +71,7 @@ func TestHistoryForModel_SkipsEmpty(t *testing.T) {
 		{Role: "assistant", Content: "a2"},
 	}
 
-	got := historyForModel(msgs, "en-US", maxHistoryTokens)
+	got := historyForModel(msgs, "en-US", maxHistoryTokens, time.UTC)
 	if len(got) != 3 {
 		t.Fatalf("expected 3 messages (empty skipped), got %d", len(got))
 	}
@@ -91,7 +92,7 @@ func TestHistoryForModel_TokenBudgetKeepsRecentInOrder(t *testing.T) {
 		{Role: "assistant", Content: strings.Repeat("d", 10)},
 	}
 
-	got := historyForModel(msgs, "zh-CN", 25)
+	got := historyForModel(msgs, "zh-CN", 25, time.UTC)
 	if len(got) != 2 {
 		t.Fatalf("expected 2 messages within budget, got %d", len(got))
 	}
@@ -108,7 +109,7 @@ func TestHistoryForModel_TinyBudgetKeepsAtLeastOne(t *testing.T) {
 		{Role: "assistant", Content: strings.Repeat("z", 100)},
 	}
 
-	got := historyForModel(msgs, "zh-CN", 1)
+	got := historyForModel(msgs, "zh-CN", 1, time.UTC)
 	if len(got) != 1 {
 		t.Fatalf("expected exactly 1 message under tiny budget, got %d", len(got))
 	}

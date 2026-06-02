@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/lin-snow/ech0/internal/agent"
@@ -43,7 +44,7 @@ func estimateTokens(s string) int { return utf8.RuneCountInString(s) }
 //   - 跳过 Content 为空且无折入内容的消息（如模型未产文本的空 assistant 轮）；
 //   - 从最近往回按 budgetTokens 累加截断（计入折入的 sources 文本），始终至少保留最近一条；
 //   - 返回时恢复时间正序。
-func historyForModel(msgs []ChatMessage, locale string, budgetTokens int) []agent.Message {
+func historyForModel(msgs []ChatMessage, locale string, budgetTokens int, loc *time.Location) []agent.Message {
 	if len(msgs) == 0 {
 		return nil
 	}
@@ -64,7 +65,7 @@ func historyForModel(msgs []ChatMessage, locale string, budgetTokens int) []agen
 			return c
 		}
 		// 历史折叠用持久化的 sources 文本快照，不再回查 Extension（旧轮无需精确）。
-		note := fmt.Sprintf(recentSourcesNoteFor(locale), formatSearchResults(msgs[i].Sources, nil))
+		note := fmt.Sprintf(recentSourcesNoteFor(locale), formatSearchResults(msgs[i].Sources, nil, loc))
 		if c == "" {
 			return note
 		}

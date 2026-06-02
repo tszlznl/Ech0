@@ -104,10 +104,11 @@ type Event struct {
 // RunStrings 是 Loop 在工具循环中回喂给模型 / 注入消息的少量提示文案。由领域层（知道 locale）
 // 注入，使 agent 包保持 i18n 零依赖；任一字段留空则回退到 defaultRunStrings（中文，保持历史行为）。
 type RunStrings struct {
-	DedupNote   string // 同一查询重复调用时整条 tool 结果的内容
-	UnknownTool string // 未知工具名提示的前缀（后接工具名）
-	ToolError   string // 工具执行失败提示的前缀（后接错误信息）
-	ImageNote   string // 带图 user 消息的说明文本
+	DedupNote       string // 同一查询重复调用时整条 tool 结果的内容
+	UnknownTool     string // 未知工具名提示的前缀（后接工具名）
+	ToolError       string // 工具执行失败提示的前缀（后接错误信息）
+	ImageNote       string // 带图 user 消息的说明文本
+	ContextTrimNote string // 轮内 token 预算回收时，替换最旧工具结果内容的占位文案
 }
 
 // RunRequest 是 Loop 层对领域层（Copilot Service）暴露的请求。
@@ -119,6 +120,9 @@ type RunRequest struct {
 	Temp      *float32      // nil → 不设置
 	Strings   RunStrings    // 回喂/注入文案；零值字段回退到 defaultRunStrings
 	Timeout   time.Duration // 单轮运行（含工具循环）整体超时；<=0 → 不额外设超时（沿用传入 ctx）
+	// MaxContextTokens 是工具循环里整轮消息上下文的软上限（估算 token）；>0 时超限即回收
+	// 最旧的工具结果（替换为 Strings.ContextTrimNote），防多轮工具结果累积撑爆窗口。0 → 不回收。
+	MaxContextTokens int
 }
 
 // AgentEventKind 区分 Loop 上浮给领域层的语义事件类型。

@@ -393,6 +393,9 @@ func (echoRepository *EchoRepository) QueryEchos(
 		if !showPrivate {
 			db = db.Where("echos.private = ?", false)
 		}
+		if queryDto.UserID != "" {
+			db = db.Where("echos.user_id = ?", queryDto.UserID)
+		}
 		if queryDto.Search != "" {
 			db = db.Where("echos.content LIKE ?", "%"+queryDto.Search+"%")
 		}

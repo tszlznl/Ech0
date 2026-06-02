@@ -17,6 +17,7 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	embeddingModel "github.com/lin-snow/ech0/internal/model/embedding"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
+	timezoneUtil "github.com/lin-snow/ech0/internal/util/timezone"
 	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
@@ -41,7 +42,7 @@ func (s *CopilotService) agentSetting(ctx context.Context) (settingModel.AgentSe
 // 设计上：尽早写出 SSE 头，之后所有错误都以 SSE "error" 事件回传，而非 HTTP 状态码。
 // SSE 事件：searching（模型决定检索）/ sources（命中来源，可多次）/ delta（文本增量）/
 // done（收尾）/ error（中止）。
-func (s *CopilotService) AskStream(ctx context.Context, question string, locale string, w http.ResponseWriter) error {
+func (s *CopilotService) AskStream(ctx context.Context, question string, locale string, timezone string, w http.ResponseWriter) error {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		return errors.New("streaming unsupported")
@@ -59,8 +60,16 @@ func (s *CopilotService) AskStream(ctx context.Context, question string, locale 
 		return nil
 	}
 
-	// 登录用户 ID：用于本轮问答正常收尾后把对话追加进该用户的持久化会话（仅展示恢复，模型不读历史）。
+	// 登录用户：ID 用于持久化会话 + 把检索按作者收口（SQL 走 user_id），Username 用于
+	// 向量检索按作者收口 + 注入 system prompt。多用户实例下据此隔离他人 Echo（含私密）。
+	// 解析失败直接以 SSE error 中止——绝不退化成不收口检索（防泄露）。
 	userID := viewer.MustFromContext(ctx).UserID()
+	currentUser, err := s.userReader.GetUserByID(userID)
+	if err != nil {
+		writeSSE(w, flusher, "error", map[string]string{"message": err.Error()})
+		return nil
+	}
+	user := chatUser{ID: currentUser.ID, Username: currentUser.Username}
 	// 收集本轮 assistant 文本与命中来源，正常收尾时一并持久化。
 	var assistantBuf strings.Builder
 	var collectedSources []embeddingModel.SearchResult
@@ -73,28 +82,34 @@ func (s *CopilotService) AskStream(ctx context.Context, question string, locale 
 
 	// 一次性取标签：既注入 system prompt 供模型挑选，又供工具把标签名解析成 ID。
 	allTags, _ := s.echoService.GetAllTags()
-	today := time.Now().UTC().Format("2006-01-02")
+	// Chat 是带 X-Timezone 的用户上下文接口：按用户时区算「今天」、解析模型给的日期、渲染日期，
+	// 否则跨日边界的「今天/去年/上个月」换算与区间归属会偏一天（见 docs/dev/timezone-design.md）。
+	loc := timezoneUtil.LoadLocationOrUTC(timezone)
+	today := time.Now().UTC().In(loc).Format("2006-01-02")
 	tagNames := tagNamesForPrompt(allTags)
 
 	// 整请求 token 护栏：从历史预算里扣掉固定开销（system prompt + 工具定义），让历史让路，
 	// 避免 system + 工具定义 + 多轮历史叠加撑爆上下文窗口（不足下限时至少保留最近若干轮）。
-	historyBudget := max(maxHistoryTokens-estimateTokens(buildSystemPrompt(locale, today, tagNames))-toolDefTokenEstimate, minHistoryTokens)
+	historyBudget := max(maxHistoryTokens-estimateTokens(buildSystemPrompt(locale, today, tagNames, currentUser.Username))-toolDefTokenEstimate, minHistoryTokens)
 
 	// 多轮记忆：加载已持久化的会话并投影成模型历史（在 persistTurn 之前加载，本轮 question
 	// 不在其中，由 buildChatMessages 单独追加，不重复计入）。
-	history := historyForModel(s.loadSession(ctx, userID), locale, historyBudget)
+	history := historyForModel(s.loadSession(ctx, userID), locale, historyBudget, loc)
 
 	temp := chatTemperature // 取地址需可寻址的局部变量（chatTemperature 是 const）
 	stream, err := agent.Run(ctx, agent.RunRequest{
 		Setting:  agentSetting,
-		Messages: buildChatMessages(history, question, locale, today, tagNames),
+		Messages: buildChatMessages(history, question, locale, today, tagNames, currentUser.Username),
 		Tools: []agent.Tool{
-			s.searchEchosTool(allTags, agentSetting.Multimodal, locale), // 点查：top-k 检索
-			s.summarizeEchosTool(allTags, agentSetting, locale),         // 聚合：区间穷举 + 窗口自适应总结
+			s.searchEchosTool(allTags, agentSetting.Multimodal, locale, loc, agentSetting.ContextWindow, user), // 点查：top-k 检索
+			s.summarizeEchosTool(allTags, agentSetting, locale, loc, user),                                     // 聚合：区间穷举 + 窗口自适应总结
+			s.statsOverviewTool(allTags, locale, loc, user),                                                    // 量化：区间精确统计（纯 SQL）
 		},
-		Temp:    &temp,
-		Strings: runStringsFor(locale),
-		Timeout: time.Duration(config.Config().Agent.TimeoutSeconds) * time.Second,
+		MaxRounds:        config.Config().Agent.MaxRounds,
+		Temp:             &temp,
+		Strings:          runStringsFor(locale),
+		Timeout:          time.Duration(config.Config().Agent.TimeoutSeconds) * time.Second,
+		MaxContextTokens: chatContextBudgetTokens(agentSetting),
 	})
 	if err != nil {
 		writeSSE(w, flusher, "error", map[string]string{"message": err.Error()})

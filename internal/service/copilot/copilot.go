@@ -13,6 +13,7 @@ import (
 type CopilotService struct {
 	echoService    EchoService
 	embedding      EmbeddingService
+	userReader     UserReader // 取当前对话用户：展示名 + 检索按作者收口
 	kvRepository   KeyValueRepository
 	storage        *storage.Manager // 多模态：读取命中 Echo 配图字节用于注入模型
 	recentGenGroup singleflight.Group
@@ -23,15 +24,24 @@ var (
 	_ ChatService    = (*CopilotService)(nil)
 )
 
+// chatUser 是本轮 Chat 的当前对话用户，用于把检索收口到本人：ID 走 SQL（echos.user_id），
+// Username 走向量（embedding 元数据的 username 快照）。展示名同样取自 Username。
+type chatUser struct {
+	ID       string
+	Username string
+}
+
 func NewCopilotService(
 	echoService EchoService,
 	embedding EmbeddingService,
+	userReader UserReader,
 	kvRepository KeyValueRepository,
 	storageManager *storage.Manager,
 ) *CopilotService {
 	return &CopilotService{
 		echoService:  echoService,
 		embedding:    embedding,
+		userReader:   userReader,
 		kvRepository: kvRepository,
 		storage:      storageManager,
 	}

@@ -10,6 +10,7 @@ import (
 	i18n "github.com/lin-snow/ech0/internal/i18n"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	copilotService "github.com/lin-snow/ech0/internal/service/copilot"
+	timezoneUtil "github.com/lin-snow/ech0/internal/util/timezone"
 )
 
 type CopilotHandler struct {
@@ -89,6 +90,8 @@ func (h *CopilotHandler) Ask() gin.HandlerFunc {
 		var req askRequest
 		_ = ctx.ShouldBindJSON(&req)
 		locale := i18n.LocaleFromGin(ctx)
-		_ = h.chatService.AskStream(ctx.Request.Context(), req.Question, locale, ctx.Writer)
+		// 按用户上报时区算「今天/去年/上个月」与区间日界（与 today/heatmap 一致）。
+		timezone := timezoneUtil.NormalizeTimezone(ctx.GetHeader(timezoneUtil.DefaultTimezoneHeader))
+		_ = h.chatService.AskStream(ctx.Request.Context(), req.Question, locale, timezone, ctx.Writer)
 	}
 }

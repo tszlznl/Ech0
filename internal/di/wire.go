@@ -24,6 +24,8 @@ import (
 	"github.com/lin-snow/ech0/internal/server"
 	"github.com/lin-snow/ech0/internal/service"
 	commentService "github.com/lin-snow/ech0/internal/service/comment"
+	copilotService "github.com/lin-snow/ech0/internal/service/copilot"
+	userService "github.com/lin-snow/ech0/internal/service/user"
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/task"
 	"github.com/lin-snow/ech0/internal/transaction"
@@ -131,6 +133,8 @@ var HandlerSet = wire.NewSet(
 	handler.EmbeddingSet,
 
 	service.CopilotSet,
+	// Copilot 的 UserReader 跨域绑定到 user 服务（取当前对话用户：展示名 + 检索按作者收口）。
+	wire.Bind(new(copilotService.UserReader), new(*userService.UserService)),
 	handler.CopilotSet,
 
 	service.BackupSet,

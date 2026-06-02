@@ -25,25 +25,28 @@ func localeIsZH(locale string) bool {
 func runStringsFor(locale string) agent.RunStrings {
 	if localeIsZH(locale) {
 		return agent.RunStrings{
-			DedupNote:   "（已检索过，结果见上）",
-			UnknownTool: "未知工具：",
-			ToolError:   "工具执行失败：",
-			ImageNote:   "（以下是上一步检索命中的 Echo 的配图，供你结合图片内容作答）",
+			DedupNote:       "（已检索过，结果见上）",
+			UnknownTool:     "未知工具：",
+			ToolError:       "工具执行失败：",
+			ImageNote:       "（以下是上一步检索命中的 Echo 的配图，供你结合图片内容作答）",
+			ContextTrimNote: "（早前检索结果已省略以控制长度）",
 		}
 	}
 	return agent.RunStrings{
-		DedupNote:   "(Already searched; see the results above.)",
-		UnknownTool: "Unknown tool: ",
-		ToolError:   "Tool execution failed: ",
-		ImageNote:   "(Below are images from the Echo matched in the previous step; use them to inform your answer.)",
+		DedupNote:       "(Already searched; see the results above.)",
+		UnknownTool:     "Unknown tool: ",
+		ToolError:       "Tool execution failed: ",
+		ImageNote:       "(Below are images from the Echo matched in the previous step; use them to inform your answer.)",
+		ContextTrimNote: "(Earlier search results omitted to control length.)",
 	}
 }
 
 // chatSystemPrompt 是 Chat（Agent 形态）的系统提示词：声明工具用途与作答纪律。
-const chatSystemPrompt = `你是用户自己的 Echo（微博客/碎碎念）回顾助手。
-你有两个工具，按需选用：
+const chatSystemPrompt = `你是用户的私人助手。你可以检索 ta 过往发布的 Echo（微博客/碎碎念）来作答——回顾总结、查找某条、延伸思考、找灵感都行。
+你有三个工具，按需选用：
 - search_echos：点查。回答具体问题、找某几条相关记录时用它（top-k，只返回最相关的若干条，是采样不是全貌）。
-- summarize_echos：区间聚合。当用户要「某段时间的总结/回顾」（年终、年度、季度、月度，或“上半年发了什么”这类）时用它——它会覆盖该区间内的【全部】Echo。
+- summarize_echos：区间聚合（叙事）。当用户要「某段时间的总结/回顾」（年终、年度、季度、月度，或“上半年发了什么”这类）时用它——它会覆盖该区间内的【全部】Echo，返回供你写成稿的材料。
+- stats_overview：区间统计（数字）。当用户问「（某段时间）发了多少条 / 最活跃的月份 / 最常用的标签」这类需要**确切数字**时用它——返回数据库精确统计的总条数、活跃天数、按月分布、配图数、标签 Top N。需要确切数字就用它，不要据采样估算。
 关键纪律（务必遵守）：
 - 凡是「某段时间的总结/回顾」，**直接且只调用 summarize_echos**（据当前日期换算 date_from/date_to），**不要先用 search_echos 采样**。summarize_echos 返回的材料才是完整依据。
 - 写这类总结时，**严格依据 summarize_echos 的聚合材料**，覆盖材料里的各个月份/各条主线，不要只挑某几条生动的展开、不要把少量样本当成全貌。材料里的 #标签、[img×N]（配图数）、[音乐/网站/位置…] 等都是线索，可用于归纳主题与活跃度。
@@ -54,10 +57,11 @@ const chatSystemPrompt = `你是用户自己的 Echo（微博客/碎碎念）回
 - 用简洁自然的中文，可用 Emoji 和换行，不要输出 HTML 标签。`
 
 // chatSystemPromptEN 是 chatSystemPrompt 的英文版本（locale 非 zh-* 时使用）。
-const chatSystemPromptEN = `You are the user's personal assistant for reviewing their Echos (microblog notes).
-You have two tools; pick the right one:
+const chatSystemPromptEN = `You are the user's personal assistant. You can search their past Echos (microblog notes) to help — reviewing, summarizing, finding a specific one, reflecting further, or sparking ideas.
+You have three tools; pick the right one:
 - search_echos: pinpoint lookup. Use it to answer specific questions or find a few relevant entries (top-k, returns only the most relevant ones).
-- summarize_echos: range aggregation. Use it when the user wants a "summary/review of a time period" (year-end, yearly, quarterly, monthly, etc.) — it covers ALL Echos in that range, not just a sample. Always use it for year-end/annual summaries, converting the current date into date_from/date_to.
+- summarize_echos: range aggregation (narrative). Use it when the user wants a "summary/review of a time period" (year-end, yearly, quarterly, monthly, etc.) — it covers ALL Echos in that range and returns material for you to write the final summary. Always use it for year-end/annual summaries, converting the current date into date_from/date_to.
+- stats_overview: range statistics (numbers). Use it when the user asks for EXACT figures like "how many did I post (in some period) / most active month / most used tags" — it returns database-computed totals, active days, monthly distribution, image counts and top tags. When exact numbers are needed, use it instead of estimating from a sample.
 Key discipline (must follow):
 - For ANY "summary/review of a time period" (year-end, yearly, quarterly, monthly, or "what did I post in H1"), call summarize_echos DIRECTLY and ONLY (convert the current date into date_from/date_to); do NOT pre-sample with search_echos. Its returned material is the complete basis.
 - When writing such a summary, ground it STRICTLY in the summarize_echos material, covering the various months / main threads in it; do not just expand a few vivid entries and do not treat a small sample as the whole. The #tags, [img×N] (image counts), and [music/website/location…] markers in the material are cues for themes and activity.
@@ -72,9 +76,9 @@ Always answer in the same language as the user's question.`
 // today（YYYY-MM-DD）与 tagNames 作为检索上下文拼进 system，让模型能把相对时间换算成
 // date_from/date_to、并从已知标签里挑 tags。
 // history 是经 historyForModel 裁剪好的过往多轮（已剥旧工具结果、按 token 预算截断）。
-func buildChatMessages(history []agent.Message, question, locale, today string, tagNames []string) []agent.Message {
+func buildChatMessages(history []agent.Message, question, locale, today string, tagNames []string, displayName string) []agent.Message {
 	msgs := make([]agent.Message, 0, len(history)+2)
-	msgs = append(msgs, agent.Message{Role: agent.RoleSystem, Content: buildSystemPrompt(locale, today, tagNames)})
+	msgs = append(msgs, agent.Message{Role: agent.RoleSystem, Content: buildSystemPrompt(locale, today, tagNames, displayName)})
 	msgs = append(msgs, history...)
 	msgs = append(msgs, agent.Message{Role: agent.RoleUser, Content: question})
 	return msgs
@@ -82,19 +86,27 @@ func buildChatMessages(history []agent.Message, question, locale, today string, 
 
 // buildSystemPrompt 拼出 Chat 的完整 system 提示词（系统纪律 + 检索上下文块）。
 // 抽成独立函数，供 AskStream 在裁剪历史前估算固定开销 token。
-func buildSystemPrompt(locale, today string, tagNames []string) string {
-	return chatSystemPromptFor(locale) + buildContextBlock(locale, today, tagNames)
+func buildSystemPrompt(locale, today string, tagNames []string, displayName string) string {
+	return chatSystemPromptFor(locale) + buildContextBlock(locale, today, tagNames, displayName)
 }
 
-// buildContextBlock 生成注入 system prompt 的检索上下文块（当前日期 + 可用标签）。
-func buildContextBlock(locale, today string, tagNames []string) string {
+// buildContextBlock 生成注入 system prompt 的检索上下文块（身份 + 当前日期 + 可用标签）。
+// displayName 是当前对话用户的展示名：注入一行**任务中性**的身份信息，让模型知道在跟谁对话、
+// 能检索到的是谁的 Echo（不暗示「只能回顾」等具体任务）；为空则省略该行。
+func buildContextBlock(locale, today string, tagNames []string, displayName string) string {
 	var b strings.Builder
 	if localeIsZH(locale) {
+		if displayName != "" {
+			fmt.Fprintf(&b, "\n\n当前与你对话的是 %s；你检索到的都是 ta 本人发布的 Echo。", displayName)
+		}
 		fmt.Fprintf(&b, "\n\n当前日期：%s（涉及“去年/上个月/最近”等相对时间时，据此换算成 date_from/date_to 传给 search_echos）。", today)
 		if len(tagNames) > 0 {
 			fmt.Fprintf(&b, "\n用户可用标签：%s。需按标签筛选时，从中选取标签名传给 tags 参数。", strings.Join(tagNames, "、"))
 		}
 	} else {
+		if displayName != "" {
+			fmt.Fprintf(&b, "\n\nYou are talking with %s; everything you can retrieve are Echos they posted themselves.", displayName)
+		}
 		fmt.Fprintf(&b, "\n\nCurrent date: %s (use it to convert relative times like \"last year/last month/recently\" into date_from/date_to for search_echos).", today)
 		if len(tagNames) > 0 {
 			fmt.Fprintf(&b, "\nAvailable tags: %s. When filtering by tag, pick names from these for the tags argument.", strings.Join(tagNames, ", "))

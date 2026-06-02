@@ -45,13 +45,13 @@ func TestResolveTagIDs(t *testing.T) {
 }
 
 func TestParseDay(t *testing.T) {
-	start := parseDay("2026-01-15", false)
+	start := parseDay("2026-01-15", false, time.UTC)
 	wantStart := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC).Unix()
 	if start != wantStart {
 		t.Fatalf("start = %d, want %d", start, wantStart)
 	}
 
-	end := parseDay("2026-01-15", true)
+	end := parseDay("2026-01-15", true, time.UTC)
 	wantEnd := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC).Add(24*time.Hour - time.Second).Unix()
 	if end != wantEnd {
 		t.Fatalf("end = %d, want %d", end, wantEnd)
@@ -60,11 +60,26 @@ func TestParseDay(t *testing.T) {
 		t.Fatalf("end-of-day span = %d, want %d", end-start, 24*3600-1)
 	}
 
-	if got := parseDay("", false); got != 0 {
+	if got := parseDay("", false, time.UTC); got != 0 {
 		t.Fatalf("empty → %d, want 0", got)
 	}
-	if got := parseDay("not-a-date", false); got != 0 {
+	if got := parseDay("not-a-date", false, time.UTC); got != 0 {
 		t.Fatalf("invalid → %d, want 0", got)
+	}
+
+	// 时区：同一日历日在不同时区切出的日界不同（用户视角的「这一天」按其时区算）。
+	// Asia/Shanghai (UTC+8) 的 2026-01-15 00:00 = UTC 2026-01-14 16:00。
+	sh, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		t.Fatalf("load location: %v", err)
+	}
+	gotSH := parseDay("2026-01-15", false, sh)
+	wantSH := time.Date(2026, 1, 15, 0, 0, 0, 0, sh).Unix()
+	if gotSH != wantSH {
+		t.Fatalf("Shanghai start = %d, want %d", gotSH, wantSH)
+	}
+	if gotSH != wantStart-8*3600 {
+		t.Fatalf("Shanghai start should be 8h earlier than UTC: got %d, utc %d", gotSH, wantStart)
 	}
 }
 
@@ -93,7 +108,7 @@ func TestSearchHintOf(t *testing.T) {
 }
 
 func TestFormatSearchResults(t *testing.T) {
-	if got := formatSearchResults(nil, nil); got != "（没有检索到相关的 Echo）" {
+	if got := formatSearchResults(nil, nil, time.UTC); got != "（没有检索到相关的 Echo）" {
 		t.Fatalf("empty results = %q", got)
 	}
 
@@ -103,7 +118,7 @@ func TestFormatSearchResults(t *testing.T) {
 	}
 	exts := map[string]string{"e1": "[音乐分享] https://example.com/song"}
 
-	got := formatSearchResults(results, exts)
+	got := formatSearchResults(results, exts, time.UTC)
 	if !strings.Contains(got, "【1】(2026-03-01)") {
 		t.Fatalf("missing index/date frame: %q", got)
 	}

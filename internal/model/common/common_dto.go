@@ -26,6 +26,10 @@ type EchoQueryDto struct {
 	// 0 或负数视为未设置。
 	DateFrom int64 `json:"dateFrom"`
 	DateTo   int64 `json:"dateTo"`
+	// UserID：按作者（echos.user_id）精确过滤。opt-in——空串表示不限定作者
+	// （公开 /echo/query 等调用方留空即保持原行为）；Copilot Chat 用它把检索
+	// 收口到当前对话用户本人发布的 Echo。不暴露给前端 JSON 契约，仅服务内部设置。
+	UserID string `json:"-"`
 }
 
 // FileDto is the unified response for file operations.

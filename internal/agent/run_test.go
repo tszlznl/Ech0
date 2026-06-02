@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -340,6 +341,78 @@ func TestRunLoop_CustomImageNote(t *testing.T) {
 	}
 	if !found {
 		t.Fatalf("custom ImageNote %q should appear in next round messages", enNote)
+	}
+}
+
+// 单轮多工具：模型一轮内发起两个不同工具调用，二者都执行（并发），且下一轮上下文里两条
+// tool 结果按调用原序回灌；Searching/ToolResult 各 2 次。-race 下应无竞态。
+func TestRunLoop_ParallelToolsSingleRound(t *testing.T) {
+	toolA := Tool{
+		Def:     ToolDef{Name: "tool_a", Description: "a", Parameters: json.RawMessage(`{"type":"object"}`)},
+		Execute: func(_ context.Context, _ json.RawMessage) (ToolOutput, error) { return ToolOutput{Content: "AAA"}, nil },
+	}
+	toolB := Tool{
+		Def:     ToolDef{Name: "tool_b", Description: "b", Parameters: json.RawMessage(`{"type":"object"}`)},
+		Execute: func(_ context.Context, _ json.RawMessage) (ToolOutput, error) { return ToolOutput{Content: "BBB"}, nil },
+	}
+	fp := &fakeProvider{scripts: [][]Event{
+		{toolCallEvent("c1", "tool_a", `{}`), toolCallEvent("c2", "tool_b", `{}`), doneEvent()},
+		{textEvent("answer"), doneEvent()},
+	}}
+
+	evs := runLoopSync(context.Background(), fp, RunRequest{Setting: enabledSetting(), Tools: []Tool{toolA, toolB}})
+
+	if n := countKind(evs, AgentSearching); n != 2 {
+		t.Fatalf("AgentSearching count = %d, want 2", n)
+	}
+	if n := countKind(evs, AgentToolResult); n != 2 {
+		t.Fatalf("AgentToolResult count = %d, want 2", n)
+	}
+
+	// 下一轮 Messages 里两条 RoleTool 必须按调用原序：c1(AAA) 在 c2(BBB) 之前。
+	var toolMsgs []Message
+	for _, m := range fp.gotReqs[1].Messages {
+		if m.Role == RoleTool {
+			toolMsgs = append(toolMsgs, m)
+		}
+	}
+	if len(toolMsgs) != 2 {
+		t.Fatalf("next round should carry 2 tool results, got %d", len(toolMsgs))
+	}
+	if toolMsgs[0].ToolCallID != "c1" || toolMsgs[0].Content != "AAA" {
+		t.Fatalf("first tool result = %+v, want c1/AAA", toolMsgs[0])
+	}
+	if toolMsgs[1].ToolCallID != "c2" || toolMsgs[1].Content != "BBB" {
+		t.Fatalf("second tool result = %+v, want c2/BBB", toolMsgs[1])
+	}
+}
+
+// 轮内 token 预算回收：超 MaxContextTokens 时，最旧的 RoleTool 结果被替换为占位，较新的保留。
+func TestRunLoop_TrimsOldestToolResultOverBudget(t *testing.T) {
+	note := defaultRunStrings.ContextTrimNote
+	msgs := []Message{
+		{Role: RoleSystem, Content: "S"},
+		{Role: RoleUser, Content: "Q"},
+		{Role: RoleAssistant, ToolCalls: []ToolCall{{ID: "t1", Name: "search_echos"}}},
+		{Role: RoleTool, ToolCallID: "t1", Content: strings.Repeat("a", 100)}, // 最旧、最大
+		{Role: RoleAssistant, ToolCalls: []ToolCall{{ID: "t2", Name: "search_echos"}}},
+		{Role: RoleTool, ToolCallID: "t2", Content: strings.Repeat("b", 20)}, // 较新
+	}
+	// 预算 50：替换最旧的 t1(100→note 长度) 后 1+1+len(note)+20 应 ≤ 50。
+	fp := &fakeProvider{scripts: [][]Event{{textEvent("ok"), doneEvent()}}}
+
+	runLoopSync(context.Background(), fp, RunRequest{
+		Setting:          enabledSetting(),
+		Messages:         msgs,
+		MaxContextTokens: 50,
+	})
+
+	got := fp.gotReqs[0].Messages
+	if got[3].Content != note {
+		t.Fatalf("oldest tool result should be trimmed to note, got %q", got[3].Content)
+	}
+	if got[5].Content != strings.Repeat("b", 20) {
+		t.Fatalf("recent tool result should be preserved, got %q", got[5].Content)
 	}
 }
 

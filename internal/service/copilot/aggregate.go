@@ -51,6 +51,8 @@ func (s *CopilotService) summarizeEchosTool(
 	allTags []echoModel.Tag,
 	setting settingModel.AgentSetting,
 	locale string,
+	loc *time.Location,
+	user chatUser,
 ) agent.Tool {
 	return agent.Tool{
 		Def: agent.ToolDef{
@@ -61,20 +63,20 @@ func (s *CopilotService) summarizeEchosTool(
 		Execute: func(ctx context.Context, args json.RawMessage) (agent.ToolOutput, error) {
 			var a summarizeArgs
 			_ = json.Unmarshal(args, &a)
-			from := parseDay(a.DateFrom, false)
-			to := parseDay(a.DateTo, true)
+			from := parseDay(a.DateFrom, false, loc)
+			to := parseDay(a.DateTo, true, loc)
 			if from == 0 && to == 0 {
 				return agent.ToolOutput{}, errors.New("summarize_echos 需要 date_from 与 date_to 指定时间区间")
 			}
 			tagIDs := resolveTagIDs(allTags, a.Tags)
 
-			echos, total, truncated, err := s.collectRange(ctx, tagIDs, from, to)
+			echos, total, truncated, err := s.collectRange(ctx, user.ID, tagIDs, from, to)
 			if err != nil {
 				return agent.ToolOutput{}, err
 			}
 			reverseEchos(echos) // 倒序拉取后翻成时间正序，便于按月归纳与顺读成稿
 
-			material, buckets, err := s.mapReduceSummary(ctx, setting, locale, echos, aggregateBudgetTokens(setting))
+			material, buckets, err := s.mapReduceSummary(ctx, setting, locale, echos, aggregateBudgetTokens(setting), loc)
 			if err != nil {
 				return agent.ToolOutput{}, err
 			}
@@ -107,6 +109,7 @@ func (s *CopilotService) summarizeEchosTool(
 // 分页累加，触顶 maxAggregateEchos 即停并标记 truncated（因倒序，保留的是最近的）。
 func (s *CopilotService) collectRange(
 	ctx context.Context,
+	userID string,
 	tagIDs []string,
 	from, to int64,
 ) (echos []echoModel.Echo, total int64, truncated bool, err error) {
@@ -117,6 +120,7 @@ func (s *CopilotService) collectRange(
 			TagIDs:   tagIDs,
 			DateFrom: from,
 			DateTo:   to,
+			UserID:   userID,
 		})
 		if qErr != nil {
 			return nil, 0, false, qErr
@@ -156,24 +160,25 @@ func (s *CopilotService) mapReduceSummary(
 	locale string,
 	echos []echoModel.Echo,
 	budget int,
+	loc *time.Location,
 ) (content string, buckets int, err error) {
-	full := formatEchosByMonth(echos)
+	full := formatEchosByMonth(echos, loc)
 	if estimateTokens(full) <= budget {
 		return full, 1, nil
 	}
 
 	// 超预算：按体量贪心分块（重月份自动切多块、轻月份自动并块），每块一次 map。
-	chunks := chunkEchosByBudget(echos, budget)
+	chunks := chunkEchosByBudget(echos, budget, loc)
 	var b strings.Builder
 	for _, ch := range chunks {
 		digest, mErr := agent.Generate(ctx, setting, []agent.Message{
 			{Role: agent.RoleSystem, Content: aggregateMapPromptFor(locale)},
-			{Role: agent.RoleUser, Content: formatEchosByMonth(ch)},
+			{Role: agent.RoleUser, Content: formatEchosByMonth(ch, loc)},
 		}, false, nil)
 		if mErr != nil {
 			return "", 0, mErr
 		}
-		fmt.Fprintf(&b, "【%s】\n%s\n\n", dateSpanOf(ch), strings.TrimSpace(digest))
+		fmt.Fprintf(&b, "【%s】\n%s\n\n", dateSpanOf(ch, loc), strings.TrimSpace(digest))
 	}
 	joined := strings.TrimSpace(b.String())
 
@@ -195,12 +200,12 @@ func (s *CopilotService) mapReduceSummary(
 // chunkEchosByBudget 把时间正序的 Echo 按格式化后的 token 体量贪心切块，每块 ≤ budget。
 // 这样「某月发得多、某月发得少」被天然抹平：密集时段切成多块、稀疏时段并入相邻块，
 // 既不会让单块撑爆一次 map 调用，也不会为寥寥几条单独浪费一次调用。单条超 budget 时自成一块。
-func chunkEchosByBudget(echos []echoModel.Echo, budget int) [][]echoModel.Echo {
+func chunkEchosByBudget(echos []echoModel.Echo, budget int, loc *time.Location) [][]echoModel.Echo {
 	var chunks [][]echoModel.Echo
 	var cur []echoModel.Echo
 	curTokens := 0
 	for _, e := range echos {
-		t := estimateTokens(formatEchoLine(e))
+		t := estimateTokens(formatEchoLine(e, loc))
 		if len(cur) > 0 && curTokens+t > budget {
 			chunks = append(chunks, cur)
 			cur = nil
@@ -217,18 +222,18 @@ func chunkEchosByBudget(echos []echoModel.Echo, budget int) [][]echoModel.Echo {
 
 // formatEchosByMonth 把时间正序的 Echo 按月分组成带小标题与计数的结构化材料，
 // 比扁平流水更利于模型做均衡覆盖（不漏发得少的月份）。纯代码，无 LLM。
-func formatEchosByMonth(echos []echoModel.Echo) string {
+func formatEchosByMonth(echos []echoModel.Echo, loc *time.Location) string {
 	if len(echos) == 0 {
 		return "（该区间内没有 Echo）"
 	}
 	counts := make(map[string]int, 12)
 	for i := range echos {
-		counts[monthOf(echos[i])]++
+		counts[monthOf(echos[i], loc)]++
 	}
 	var b strings.Builder
 	curMonth := ""
 	for i := range echos {
-		m := monthOf(echos[i])
+		m := monthOf(echos[i], loc)
 		if m != curMonth {
 			if curMonth != "" {
 				b.WriteString("\n")
@@ -236,7 +241,7 @@ func formatEchosByMonth(echos []echoModel.Echo) string {
 			fmt.Fprintf(&b, "## %s (%d)\n", m, counts[m])
 			curMonth = m
 		}
-		b.WriteString(formatEchoLine(echos[i]))
+		b.WriteString(formatEchoLine(echos[i], loc))
 		b.WriteString("\n")
 	}
 	return strings.TrimSpace(b.String())
@@ -245,8 +250,8 @@ func formatEchosByMonth(echos []echoModel.Echo) string {
 // formatEchoLine 把单条 Echo 渲染成一行富化材料：日期 + 正文 + 标签 + 扩展分享 + 配图计数。
 // 标签/扩展/配图都来自 QueryEchos 的 preload，零额外查询；纯图（无正文）条目也据此计入活跃度，
 // 不再像裸文本那样贡献为零。
-func formatEchoLine(e echoModel.Echo) string {
-	day := time.Unix(e.CreatedAt, 0).UTC().Format("2006-01-02")
+func formatEchoLine(e echoModel.Echo, loc *time.Location) string {
+	day := time.Unix(e.CreatedAt, 0).In(loc).Format("2006-01-02")
 	parts := []string{"(" + day + ")"}
 	content := strings.TrimSpace(e.Content)
 	if content != "" {
@@ -293,18 +298,18 @@ func imageCountOf(e echoModel.Echo) int {
 	return n
 }
 
-// monthOf 取 Echo 创建时间的 YYYY-MM（UTC）。
-func monthOf(e echoModel.Echo) string {
-	return time.Unix(e.CreatedAt, 0).UTC().Format("2006-01")
+// monthOf 取 Echo 创建时间的 YYYY-MM（按用户时区 loc）。
+func monthOf(e echoModel.Echo, loc *time.Location) string {
+	return time.Unix(e.CreatedAt, 0).In(loc).Format("2006-01")
 }
 
-// dateSpanOf 取一块 Echo 的日期跨度标签（首日 ~ 末日；同日则只显一日）。
-func dateSpanOf(echos []echoModel.Echo) string {
+// dateSpanOf 取一块 Echo 的日期跨度标签（首日 ~ 末日；同日则只显一日，按用户时区 loc）。
+func dateSpanOf(echos []echoModel.Echo, loc *time.Location) string {
 	if len(echos) == 0 {
 		return ""
 	}
-	first := time.Unix(echos[0].CreatedAt, 0).UTC().Format("2006-01-02")
-	last := time.Unix(echos[len(echos)-1].CreatedAt, 0).UTC().Format("2006-01-02")
+	first := time.Unix(echos[0].CreatedAt, 0).In(loc).Format("2006-01-02")
+	last := time.Unix(echos[len(echos)-1].CreatedAt, 0).In(loc).Format("2006-01-02")
 	if first == last {
 		return first
 	}

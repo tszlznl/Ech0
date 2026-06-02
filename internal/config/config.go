@@ -175,6 +175,9 @@ type MigrationConfig struct {
 type AgentConfig struct {
 	// TimeoutSeconds 是单轮 Agent 运行（含整个工具循环）的整体超时，单位秒；<=0 表示不额外设超时。
 	TimeoutSeconds int `env:"ECH0_AGENT_TIMEOUT_SECONDS"`
+	// MaxRounds 是 Chat 单轮问答内的工具调用轮数上限（ReAct 护栏），防模型反复调工具烧 token；
+	// <=0 时 agent 包回退内置默认。
+	MaxRounds int `env:"ECH0_AGENT_MAX_ROUNDS"`
 }
 
 // Config 返回全局配置中心
@@ -311,6 +314,7 @@ func defaultConfig() *AppConfig {
 		},
 		Agent: AgentConfig{
 			TimeoutSeconds: 120,
+			MaxRounds:      4,
 		},
 	}
 }

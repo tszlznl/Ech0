@@ -15,6 +15,10 @@ import (
 )
 
 // openaiProvider 适配 OpenAI 兼容协议（OpenAI / DeepSeek / Qwen / Moonshot / Ollama 等）。
+//
+// Prompt cache：OpenAI 兼容端是服务端自动缓存（前缀 >1024 token 自动命中），无客户端字段可设，
+// 故无需像 Anthropic 那样显式打 cache_control 断点——工具循环里重复的 system+工具定义前缀会被
+// 服务端自动复用。
 type openaiProvider struct {
 	setting model.AgentSetting
 }

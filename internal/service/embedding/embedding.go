@@ -149,7 +149,7 @@ func (s *EmbeddingService) RemoveEcho(ctx context.Context, echoID string) error 
 	return s.repo.Delete(ctx, echoID)
 }
 
-func (s *EmbeddingService) Search(ctx context.Context, query string, k int) ([]model.SearchResult, error) {
+func (s *EmbeddingService) Search(ctx context.Context, query string, k int, authorUsername string) ([]model.SearchResult, error) {
 	setting, err := s.getSetting(ctx)
 	if err != nil {
 		return nil, err
@@ -164,7 +164,7 @@ func (s *EmbeddingService) Search(ctx context.Context, query string, k int) ([]m
 	if err != nil {
 		return nil, err
 	}
-	return s.repo.Search(ctx, vec, k)
+	return s.repo.Search(ctx, vec, k, authorUsername)
 }
 
 func (s *EmbeddingService) Backfill(ctx context.Context) (BackfillResult, error) {

@@ -20,6 +20,7 @@ import (
 type pagingEchoSvc struct {
 	EchoService                  // 嵌入接口（nil）：满足类型，未覆写的方法被调用才 panic
 	all         []echoModel.Echo // 已按 CreatedAt 倒序（最新在前），模拟真实查询返回序
+	gotUserID   string           // 记录最近一次 QueryEchos 收到的 DTO.UserID（验证检索按作者收口）
 }
 
 // serverMaxPageSize 是替身的「服务端实际页上限」，刻意小于 aggregatePageSize，
@@ -30,6 +31,7 @@ func (f *pagingEchoSvc) QueryEchos(
 	_ context.Context,
 	dto commonModel.EchoQueryDto,
 ) (commonModel.PageQueryResult[[]echoModel.Echo], error) {
+	f.gotUserID = dto.UserID
 	ps := dto.PageSize
 	if ps < 1 || ps > serverMaxPageSize { // 压到服务端实际上限（小于请求值）
 		ps = serverMaxPageSize
@@ -74,7 +76,7 @@ func TestCollectRange_PaginatesAll(t *testing.T) {
 	svc := &pagingEchoSvc{all: makeEchos(n)}
 	s := &CopilotService{echoService: svc}
 
-	echos, total, truncated, err := s.collectRange(context.Background(), nil, 0, 0)
+	echos, total, truncated, err := s.collectRange(context.Background(), "", nil, 0, 0)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -89,12 +91,39 @@ func TestCollectRange_PaginatesAll(t *testing.T) {
 	}
 }
 
+// collectRange 必须把当前用户 ID 透传进 QueryEchos 的 DTO，使区间聚合（年终/区间总结、
+// stats_overview）只覆盖本人发布的 Echo——多用户实例下不混入他人内容。
+func TestCollectRange_ScopesByUser(t *testing.T) {
+	svc := &pagingEchoSvc{all: makeEchos(3)}
+	s := &CopilotService{echoService: svc}
+
+	if _, _, _, err := s.collectRange(context.Background(), "user-42", nil, 0, 0); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if svc.gotUserID != "user-42" {
+		t.Fatalf("QueryEchos saw UserID = %q, want %q（区间聚合未按作者收口）", svc.gotUserID, "user-42")
+	}
+}
+
+// queryEchos（search_echos 的 SQL 路径）同样必须按当前用户收口。
+func TestQueryEchos_ScopesByUser(t *testing.T) {
+	svc := &pagingEchoSvc{all: makeEchos(3)}
+	s := &CopilotService{echoService: svc}
+
+	if _, _, err := s.queryEchos(context.Background(), "user-7", "三体", nil, 0, 0, 5); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if svc.gotUserID != "user-7" {
+		t.Fatalf("QueryEchos saw UserID = %q, want %q（点查未按作者收口）", svc.gotUserID, "user-7")
+	}
+}
+
 // 触顶 maxAggregateEchos 时应停在上限并标记 truncated。
 func TestCollectRange_TruncatesAtCap(t *testing.T) {
 	svc := &pagingEchoSvc{all: makeEchos(maxAggregateEchos + 50)}
 	s := &CopilotService{echoService: svc}
 
-	echos, total, truncated, err := s.collectRange(context.Background(), nil, 0, 0)
+	echos, total, truncated, err := s.collectRange(context.Background(), "", nil, 0, 0)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -112,8 +141,8 @@ func TestCollectRange_TruncatesAtCap(t *testing.T) {
 // chunkEchosByBudget：每块体量 ≤ budget（单条超额自成一块除外），且全部 Echo 按序无丢无重。
 func TestChunkEchosByBudget(t *testing.T) {
 	echos := makeEchos(50)
-	budget := estimateTokens(formatEchoLine(echos[0])) * 7 // 约 7 条一块
-	chunks := chunkEchosByBudget(echos, budget)
+	budget := estimateTokens(formatEchoLine(echos[0], time.UTC)) * 7 // 约 7 条一块
+	chunks := chunkEchosByBudget(echos, budget, time.UTC)
 	if len(chunks) < 2 {
 		t.Fatalf("got %d chunk(s), expected multiple", len(chunks))
 	}
@@ -125,7 +154,7 @@ func TestChunkEchosByBudget(t *testing.T) {
 		}
 		tok := 0
 		for _, e := range ch {
-			tok += estimateTokens(formatEchoLine(e))
+			tok += estimateTokens(formatEchoLine(e, time.UTC))
 		}
 		if len(ch) > 1 && tok > budget {
 			t.Fatalf("multi-echo chunk exceeds budget: %d > %d", tok, budget)
@@ -140,7 +169,7 @@ func TestChunkEchosByBudget(t *testing.T) {
 // formatEchosByMonth：按月分组、带计数小标题，且月份齐全。
 func TestFormatEchosByMonth(t *testing.T) {
 	echos := makeEchos(102)
-	out := formatEchosByMonth(echos)
+	out := formatEchosByMonth(echos, time.UTC)
 	for _, m := range []string{"## 2025-07", "## 2025-08", "## 2025-09", "## 2025-10", "## 2025-11", "## 2025-12"} {
 		if !strings.Contains(out, m) {
 			t.Fatalf("月份小标题缺失：%q\n%s", m, out)
@@ -155,7 +184,7 @@ func TestFormatEchoLine_Enrichment(t *testing.T) {
 		CreatedAt: time.Date(2025, 3, 4, 0, 0, 0, 0, time.UTC).Unix(),
 		Tags:      []echoModel.Tag{{Name: "读书"}},
 	}
-	line := formatEchoLine(withText)
+	line := formatEchoLine(withText, time.UTC)
 	if !strings.Contains(line, "#读书") || !strings.Contains(line, "今天读完一本书") {
 		t.Fatalf("缺标签或正文：%q", line)
 	}

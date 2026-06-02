@@ -110,9 +110,22 @@ func (r *EmbeddingRepository) GetMeta(ctx context.Context, echoID string) (*mode
 	return &m, true, nil
 }
 
-func (r *EmbeddingRepository) Search(ctx context.Context, vector []float32, k int) ([]model.SearchResult, error) {
+// searchOverfetchFactor：按作者过滤时 KNN 的超额取数倍数。vec0 虚表无法在 MATCH 里
+// 带元数据过滤，只能先按距离取一批再按 username 筛，故多取几倍以尽量凑满 k 条本人命中。
+const searchOverfetchFactor = 8
+
+// searchOverfetchCap：超额取数的硬上限，防止 k 较大时 KNN 拉太多（本地 sqlite-vec 便宜，但仍封顶）。
+const searchOverfetchCap = 200
+
+func (r *EmbeddingRepository) Search(ctx context.Context, vector []float32, k int, authorUsername string) ([]model.SearchResult, error) {
 	if k <= 0 {
 		k = 6
+	}
+
+	// 限定作者时按距离超额取数，过滤后再裁到 k；不限定作者时按原 k 取。
+	fetch := k
+	if authorUsername != "" {
+		fetch = min(k*searchOverfetchFactor, searchOverfetchCap)
 	}
 
 	type knnRow struct {
@@ -122,7 +135,7 @@ func (r *EmbeddingRepository) Search(ctx context.Context, vector []float32, k in
 	var rows []knnRow
 	if err := r.getDB(ctx).Raw(
 		"SELECT echo_id, distance FROM "+vecTable+" WHERE embedding MATCH ? ORDER BY distance LIMIT ?",
-		vecToJSON(vector), k,
+		vecToJSON(vector), fetch,
 	).Scan(&rows).Error; err != nil {
 		return nil, err
 	}
@@ -135,8 +148,12 @@ func (r *EmbeddingRepository) Search(ctx context.Context, vector []float32, k in
 		ids[i] = row.EchoID
 	}
 
+	metaQuery := r.getDB(ctx).Where("echo_id IN ?", ids)
+	if authorUsername != "" {
+		metaQuery = metaQuery.Where("username = ?", authorUsername)
+	}
 	var metas []model.EchoEmbedding
-	if err := r.getDB(ctx).Where("echo_id IN ?", ids).Find(&metas).Error; err != nil {
+	if err := metaQuery.Find(&metas).Error; err != nil {
 		return nil, err
 	}
 	metaByID := make(map[string]model.EchoEmbedding, len(metas))
@@ -144,8 +161,8 @@ func (r *EmbeddingRepository) Search(ctx context.Context, vector []float32, k in
 		metaByID[m.EchoID] = m
 	}
 
-	// 保持 KNN 的距离顺序
-	results := make([]model.SearchResult, 0, len(rows))
+	// 保持 KNN 的距离顺序，裁到 k 条（限定作者时过滤掉非本人命中后取前 k）。
+	results := make([]model.SearchResult, 0, min(k, len(rows)))
 	for _, row := range rows {
 		m, ok := metaByID[row.EchoID]
 		if !ok {
@@ -158,6 +175,9 @@ func (r *EmbeddingRepository) Search(ctx context.Context, vector []float32, k in
 			EchoCreated: m.EchoCreated,
 			Distance:    row.Distance,
 		})
+		if len(results) >= k {
+			break
+		}
 	}
 	return results, nil
 }

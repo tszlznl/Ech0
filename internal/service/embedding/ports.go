@@ -19,7 +19,9 @@ type Service interface {
 	IndexEcho(ctx context.Context, echo echoModel.Echo) error
 	RemoveEcho(ctx context.Context, echoID string) error
 	Backfill(ctx context.Context) (BackfillResult, error)
-	Search(ctx context.Context, query string, k int) ([]model.SearchResult, error)
+	// Search 做语义检索。authorUsername 非空时把命中收口到该作者发布的 Echo
+	// （Copilot Chat 用它隔离多用户实例下的他人 Echo）；空串表示不限定作者。
+	Search(ctx context.Context, query string, k int, authorUsername string) ([]model.SearchResult, error)
 	Enabled(ctx context.Context) bool
 }
 
@@ -36,7 +38,9 @@ type Repository interface {
 	Upsert(ctx context.Context, meta *model.EchoEmbedding, vector []float32) error
 	Delete(ctx context.Context, echoID string) error
 	GetMeta(ctx context.Context, echoID string) (*model.EchoEmbedding, bool, error)
-	Search(ctx context.Context, vector []float32, k int) ([]model.SearchResult, error)
+	// Search 做向量 KNN 检索。authorUsername 非空时把命中收口到该作者
+	// （over-fetch 后按 username 过滤，仍返回最多 k 条）；空串表示不限定作者。
+	Search(ctx context.Context, vector []float32, k int, authorUsername string) ([]model.SearchResult, error)
 	ClearAll(ctx context.Context) error
 	Count(ctx context.Context) (int64, error)
 }

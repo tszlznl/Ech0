@@ -53,6 +53,10 @@ func (p *anthropicProvider) buildParams(req Request) anthropic.MessageNewParams 
 		Messages:  msgs,
 	}
 	if len(systemBlocks) > 0 {
+		// Prompt cache：在最后一个 system 块打 ephemeral 断点。Anthropic 缓存顺序为
+		// tools → system → messages，故此断点会把 tool 定义 + system 整段静态前缀一并缓存，
+		// 工具循环里 round 2/3 与短时连续请求即命中缓存，抵消 ReAct 多轮的 token 成本。
+		systemBlocks[len(systemBlocks)-1].CacheControl = anthropic.NewCacheControlEphemeralParam()
 		params.System = systemBlocks
 	}
 	if tools := p.buildTools(req.Tools); len(tools) > 0 {

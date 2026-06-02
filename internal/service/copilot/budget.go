@@ -32,3 +32,9 @@ func aggregateBudgetTokens(setting settingModel.AgentSetting) int {
 	}
 	return budget
 }
+
+// chatContextBudgetTokens 是 Chat 工具循环里「整轮消息上下文」的软上限：超过即由 agent loop
+// 回收最旧的工具结果（占位替换），防多轮工具结果累积撑爆窗口。复用与区间聚合相同的窗口预算口径。
+func chatContextBudgetTokens(setting settingModel.AgentSetting) int {
+	return aggregateBudgetTokens(setting)
+}
