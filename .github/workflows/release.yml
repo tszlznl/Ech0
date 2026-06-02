@@ -130,7 +130,16 @@ jobs:
             # 取 mattn 自带的头（版本与实际链接进二进制的 sqlite 完全一致）复制为 sqlite3.h。
             SQLITE_INC="${RUNNER_TEMP}/sqlite-include"
             mkdir -p "${SQLITE_INC}"
+            # go list -m -f '{{.Dir}}' only resolves a path once the module is
+            # extracted into the module cache; the build below would fetch it, but
+            # that runs *after* this step, so download it explicitly first or .Dir
+            # comes back empty and the cp targets '/sqlite3-binding.h'.
+            go mod download github.com/mattn/go-sqlite3
             MATTN_DIR="$(go list -m -f '{{.Dir}}' github.com/mattn/go-sqlite3)"
+            if [ -z "${MATTN_DIR}" ] || [ ! -f "${MATTN_DIR}/sqlite3-binding.h" ]; then
+              echo "::error::could not locate go-sqlite3 header (MATTN_DIR='${MATTN_DIR}')" >&2
+              exit 1
+            fi
             cp "${MATTN_DIR}/sqlite3-binding.h" "${SQLITE_INC}/sqlite3.h"
             # musl 无 BSD 的 u_int*_t（sqlite-vec.c 在非 Win/wasm 分支硬 typedef 它们），映射到标准
             # 类型；-Wno-typedef-redefinition 消除随之的重复 typedef 警告；-fno-sanitize=undefined
