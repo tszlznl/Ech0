@@ -162,8 +162,12 @@
     "noContentAdded": "Noch keine Inhalte hinzugefügt"
   },
   "commentManager": {
+    "tabSetting": "Kommentar-Einstellungen",
+    "tabManage": "Kommentarverwaltung",
     "title": "Kommentarsystem-Einstellungen",
     "subtitle": "Kommentarfunktion, Moderationsregeln und Captcha zentral verwalten.",
+    "listTitle": "Kommentarverwaltung",
+    "listSubtitle": "Alle Kommentare anzeigen, moderieren und verwalten.",
     "enableCommentTitle": "Kommentare aktivieren",
     "enableCommentDesc": "Wenn deaktiviert, wird der Kommentarbereich nicht angezeigt.",
     "requireApprovalTitle": "Gastkommentare müssen freigegeben werden",
@@ -185,8 +189,6 @@
     "hotAll": "Alle",
     "hotOnly": "Nur Hot",
     "hotOnlyNot": "Nur Nicht-Hot",
-    "yes": "Ja",
-    "no": "Nein",
     "nickname": "Nickname",
     "email": "E-Mail",
     "time": "Zeit",
@@ -653,6 +655,7 @@
     "bindFailed": "OAuth2-Kontoverknüpfung fehlgeschlagen, bitte erneut versuchen"
   },
   "exportSetting": {
+    "title": "Datenexport",
     "description": "Systemsnapshot zur Archivierung und Migration exportieren.",
     "exportSnapshot": "Snapshot exportieren",
     "loginRequired": "Bitte zuerst anmelden",
@@ -797,7 +800,28 @@
     "tabExport": "Export",
     "tabSnapshot": "Snapshot"
   },
+  "storageManagement": {
+    "tabObjectStorage": "Objektspeicher",
+    "tabFiles": "Dateiverwaltung"
+  },
+  "ssoManagement": {
+    "tabOAuth2": "OAuth2",
+    "tabPasskey": "Passkey"
+  },
+  "extensionManagement": {
+    "tabConnect": "Connect",
+    "tabCopilot": "Copilot"
+  },
+  "userManagement": {
+    "tabAccount": "Kontoeinstellungen",
+    "tabManage": "Benutzerverwaltung"
+  },
+  "settingManagement": {
+    "tabSystem": "Systemeinstellungen",
+    "tabAccessToken": "Zugangstoken"
+  },
   "migrationSetting": {
+    "title": "Datenimport",
     "description": "Import aus Ech0 v4 sowie Memos wird unterstützt.",
     "inDevelopment": "In Entwicklung",
     "sourceZip": "Quell-ZIP-Datei",
@@ -893,6 +917,7 @@
     "humanCustom": "Läuft nach benutzerdefiniertem Zeitplan"
   },
   "snapshotScheduleSetting": {
+    "title": "Geplanter Snapshot",
     "description": "Automatische Snapshot-Erstellung konfigurieren und Snapshots manuell auslösen.",
     "enableAutoSnapshot": "Snapshots automatisch erstellen",
     "crontab": "Snapshot-Zeitplan"

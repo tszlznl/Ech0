@@ -162,8 +162,12 @@
     "noContentAdded": "まだコンテンツが追加されていません"
   },
   "commentManager": {
+    "tabSetting": "コメント設定",
+    "tabManage": "コメント管理",
     "title": "コメントシステム設定",
     "subtitle": "コメントの有効化、審査ポリシー、キャプチャを一括管理します。",
+    "listTitle": "コメント管理",
+    "listSubtitle": "すべてのコメントを表示・審査・管理します。",
     "enableCommentTitle": "コメントを有効化",
     "enableCommentDesc": "無効にするとフロントにコメント欄が表示されません。",
     "requireApprovalTitle": "ゲストコメントは審査必須",
@@ -185,8 +189,6 @@
     "hotAll": "すべてのHot",
     "hotOnly": "Hotのみ",
     "hotOnlyNot": "Hot以外のみ",
-    "yes": "はい",
-    "no": "いいえ",
     "nickname": "ニックネーム",
     "email": "メール",
     "time": "時刻",
@@ -653,6 +655,7 @@
     "bindFailed": "OAuth2 アカウントの連携に失敗しました。再試行してください"
   },
   "exportSetting": {
+    "title": "データエクスポート",
     "description": "現在のシステムスナップショットをエクスポートします。オフラインアーカイブや移行に便利です。",
     "exportSnapshot": "スナップショットをエクスポート",
     "loginRequired": "ログインしてから利用してください",
@@ -797,7 +800,28 @@
     "tabExport": "エクスポート",
     "tabSnapshot": "スナップショット"
   },
+  "storageManagement": {
+    "tabObjectStorage": "オブジェクトストレージ",
+    "tabFiles": "ファイル管理"
+  },
+  "ssoManagement": {
+    "tabOAuth2": "OAuth2",
+    "tabPasskey": "Passkey"
+  },
+  "extensionManagement": {
+    "tabConnect": "Connect",
+    "tabCopilot": "Copilot"
+  },
+  "userManagement": {
+    "tabAccount": "アカウント設定",
+    "tabManage": "ユーザー管理"
+  },
+  "settingManagement": {
+    "tabSystem": "システム設定",
+    "tabAccessToken": "アクセストークン"
+  },
   "migrationSetting": {
+    "title": "データインポート",
     "description": "Ech0 v4、Memos からのインポートに対応します。",
     "inDevelopment": "開発中",
     "sourceZip": "ソース zip",
@@ -893,6 +917,7 @@
     "humanCustom": "カスタムスケジュールで実行"
   },
   "snapshotScheduleSetting": {
+    "title": "定期スナップショット",
     "description": "スナップショットの自動作成スケジュールを設定できます。手動作成にも対応します。",
     "enableAutoSnapshot": "スナップショットを自動作成",
     "crontab": "スナップショット予定"

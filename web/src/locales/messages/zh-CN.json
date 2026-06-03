@@ -162,8 +162,12 @@
     "noContentAdded": "尚未添加内容"
   },
   "commentManager": {
+    "tabSetting": "评论设置",
+    "tabManage": "评论管理",
     "title": "评论系统设置",
     "subtitle": "统一管理评论开关、审核策略与验证码配置。",
+    "listTitle": "评论管理",
+    "listSubtitle": "查看、审核和管理所有评论。",
     "enableCommentTitle": "启用评论系统",
     "enableCommentDesc": "关闭后前台将不展示评论区。",
     "requireApprovalTitle": "游客评论需审核",
@@ -185,8 +189,6 @@
     "hotAll": "全部 Hot",
     "hotOnly": "仅 Hot",
     "hotOnlyNot": "仅非 Hot",
-    "yes": "是",
-    "no": "否",
     "nickname": "昵称",
     "email": "邮箱",
     "time": "时间",
@@ -653,6 +655,7 @@
     "bindFailed": "OAuth2账号绑定失败，请重试"
   },
   "exportSetting": {
+    "title": "数据导出",
     "description": "导出当前系统快照，便于离线归档与迁移。",
     "exportSnapshot": "导出快照",
     "loginRequired": "请登录后使用",
@@ -797,7 +800,28 @@
     "tabExport": "导出",
     "tabSnapshot": "快照"
   },
+  "storageManagement": {
+    "tabObjectStorage": "对象存储",
+    "tabFiles": "文件管理"
+  },
+  "ssoManagement": {
+    "tabOAuth2": "OAuth2",
+    "tabPasskey": "Passkey"
+  },
+  "extensionManagement": {
+    "tabConnect": "Connect",
+    "tabCopilot": "Copilot"
+  },
+  "userManagement": {
+    "tabAccount": "账户设置",
+    "tabManage": "用户管理"
+  },
+  "settingManagement": {
+    "tabSystem": "系统设置",
+    "tabAccessToken": "访问令牌"
+  },
   "migrationSetting": {
+    "title": "数据导入",
     "description": "支持从 Ech0 v4、Memos 导入数据。",
     "inDevelopment": "开发中",
     "sourceZip": "来源压缩包",
@@ -865,6 +889,7 @@
     "disconnectConfirmTitle": "确定要断开连接吗？"
   },
   "snapshotScheduleSetting": {
+    "title": "定时快照",
     "description": "配置自动创建快照计划，也可手动触发创建。",
     "enableAutoSnapshot": "自动创建快照",
     "crontab": "快照计划"

@@ -417,7 +417,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <PanelCard class="mt-3">
+  <PanelCard>
     <div class="storage-file-list">
       <div class="header">
         <h1 class="title">{{ t('storageFileList.title') }}</h1>

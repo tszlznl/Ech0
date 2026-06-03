@@ -3,6 +3,9 @@
 <template>
   <div class="migration-wrap">
     <div class="migration-header">
+      <h1 class="text-[var(--color-text-primary)] font-bold text-lg">
+        {{ t('migrationSetting.title') }}
+      </h1>
       <p class="migration-desc">{{ t('migrationSetting.description') }}</p>
     </div>
 
@@ -353,12 +356,6 @@ void migrationStore.init()
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-}
-
-.migration-title {
-  color: var(--color-text-primary);
-  font-size: 1.05rem;
-  font-weight: 700;
 }
 
 .migration-desc {

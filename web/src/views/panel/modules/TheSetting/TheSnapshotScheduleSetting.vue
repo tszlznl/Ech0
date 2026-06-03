@@ -3,9 +3,14 @@
 <template>
   <div class="w-full space-y-3">
     <div class="flex flex-wrap items-start justify-between gap-3">
-      <p class="text-[var(--color-text-secondary)] text-sm">
-        {{ t('snapshotScheduleSetting.description') }}
-      </p>
+      <div class="space-y-1">
+        <h1 class="text-[var(--color-text-primary)] font-bold text-lg">
+          {{ t('snapshotScheduleSetting.title') }}
+        </h1>
+        <p class="text-[var(--color-text-secondary)] text-sm">
+          {{ t('snapshotScheduleSetting.description') }}
+        </p>
+      </div>
       <BaseEditCapsule
         :editing="scheduleEditMode"
         :apply-title="t('commonUi.apply')"

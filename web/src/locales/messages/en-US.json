@@ -162,8 +162,12 @@
     "noContentAdded": "No content added yet"
   },
   "commentManager": {
+    "tabSetting": "Comment Settings",
+    "tabManage": "Comment Management",
     "title": "Comment System Settings",
     "subtitle": "Manage comment toggles, moderation policy, and captcha settings in one place.",
+    "listTitle": "Comment Management",
+    "listSubtitle": "View, moderate, and manage all comments.",
     "enableCommentTitle": "Enable comments",
     "enableCommentDesc": "When disabled, the public comment area is hidden.",
     "requireApprovalTitle": "Guest comments require approval",
@@ -185,8 +189,6 @@
     "hotAll": "All hot",
     "hotOnly": "Hot only",
     "hotOnlyNot": "Non-hot only",
-    "yes": "Yes",
-    "no": "No",
     "nickname": "Nickname",
     "email": "Email",
     "time": "Time",
@@ -653,6 +655,7 @@
     "bindFailed": "OAuth2 account linking failed, please retry"
   },
   "exportSetting": {
+    "title": "Data Export",
     "description": "Export a system snapshot for offline archive and migration.",
     "exportSnapshot": "Export Snapshot",
     "loginRequired": "Please sign in first",
@@ -797,7 +800,28 @@
     "tabExport": "Export",
     "tabSnapshot": "Snapshot"
   },
+  "storageManagement": {
+    "tabObjectStorage": "Object Storage",
+    "tabFiles": "File Manager"
+  },
+  "ssoManagement": {
+    "tabOAuth2": "OAuth2",
+    "tabPasskey": "Passkey"
+  },
+  "extensionManagement": {
+    "tabConnect": "Connect",
+    "tabCopilot": "Copilot"
+  },
+  "userManagement": {
+    "tabAccount": "Account Settings",
+    "tabManage": "User Manager"
+  },
+  "settingManagement": {
+    "tabSystem": "System Settings",
+    "tabAccessToken": "Access Tokens"
+  },
   "migrationSetting": {
+    "title": "Data Import",
     "description": "Supports importing data from Ech0 v4 and Memos.",
     "inDevelopment": "In development",
     "sourceZip": "Source zip package",
@@ -893,6 +917,7 @@
     "humanCustom": "Runs on a custom schedule"
   },
   "snapshotScheduleSetting": {
+    "title": "Scheduled Snapshot",
     "description": "Configure automatic snapshot creation and trigger snapshots manually.",
     "enableAutoSnapshot": "Auto create snapshots",
     "crontab": "Snapshot schedule"

@@ -3,6 +3,9 @@
 <template>
   <div class="export-wrap">
     <div class="export-header">
+      <h1 class="text-[var(--color-text-primary)] font-bold text-lg">
+        {{ t('exportSetting.title') }}
+      </h1>
       <p class="export-desc">{{ t('exportSetting.description') }}</p>
     </div>
 
