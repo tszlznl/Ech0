@@ -20,7 +20,7 @@ import (
 func (settingService *SettingService) GetS3Setting(ctx context.Context, setting *model.S3Setting) error {
 	userid := viewer.MustFromContext(ctx).UserID()
 	return settingService.transactor.Run(ctx, func(ctx context.Context) error {
-		s3Setting, err := settingService.keyvalueRepository.GetKeyValue(ctx, commonModel.S3SettingKey)
+		s3Setting, err := settingService.durableKV.Get(ctx, commonModel.S3SettingKey)
 		if err != nil {
 			// 数据库缺失时回退到 config 默认值
 			cfg := config.Config().Storage
@@ -41,7 +41,7 @@ func (settingService *SettingService) GetS3Setting(ctx context.Context, setting 
 			if err != nil {
 				return err
 			}
-			if err := settingService.keyvalueRepository.AddKeyValue(ctx, commonModel.S3SettingKey, string(settingToJSON)); err != nil {
+			if err := settingService.durableKV.Set(ctx, commonModel.S3SettingKey, string(settingToJSON)); err != nil {
 				return err
 			}
 
@@ -89,7 +89,7 @@ func (settingService *SettingService) UpdateS3Setting(
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	oldRaw, _ := settingService.keyvalueRepository.GetKeyValue(ctx, commonModel.S3SettingKey)
+	oldRaw, _ := settingService.durableKV.Get(ctx, commonModel.S3SettingKey)
 	var appliedSetting *model.S3Setting
 
 	err = settingService.transactor.Run(ctx, func(ctx context.Context) error {
@@ -154,7 +154,7 @@ func (settingService *SettingService) UpdateS3Setting(
 			return err
 		}
 
-		if err := settingService.keyvalueRepository.AddOrUpdateKeyValue(ctx, commonModel.S3SettingKey, string(settingToJSON)); err != nil {
+		if err := settingService.durableKV.Set(ctx, commonModel.S3SettingKey, string(settingToJSON)); err != nil {
 			return err
 		}
 
@@ -169,9 +169,9 @@ func (settingService *SettingService) UpdateS3Setting(
 		if err := settingService.storageManager.ApplyS3Setting(*appliedSetting); err != nil {
 			_ = settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
 				if strings.TrimSpace(oldRaw) == "" {
-					return settingService.keyvalueRepository.DeleteKeyValue(ctx, commonModel.S3SettingKey)
+					return settingService.durableKV.Delete(ctx, commonModel.S3SettingKey)
 				}
-				return settingService.keyvalueRepository.AddOrUpdateKeyValue(ctx, commonModel.S3SettingKey, oldRaw)
+				return settingService.durableKV.Set(ctx, commonModel.S3SettingKey, oldRaw)
 			})
 			_ = settingService.storageManager.ReloadFromConfigAndDB(context.Background())
 			return err

@@ -22,7 +22,7 @@ import (
 // GetSetting 获取设置
 func (settingService *SettingService) GetSetting(setting *model.SystemSetting) error {
 	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
-		systemSetting, err := settingService.keyvalueRepository.GetKeyValue(
+		systemSetting, err := settingService.durableKV.Get(
 			ctx,
 			commonModel.SystemSettingsKey,
 		)
@@ -51,12 +51,12 @@ func (settingService *SettingService) GetSetting(setting *model.SystemSetting) e
 			if err != nil {
 				return err
 			}
-			if err := settingService.keyvalueRepository.AddKeyValue(ctx, commonModel.SystemSettingsKey, string(settingToJSON)); err != nil {
+			if err := settingService.durableKV.Set(ctx, commonModel.SystemSettingsKey, string(settingToJSON)); err != nil {
 				return err
 			}
 
 			// 处理 ServerURL
-			if err := settingService.keyvalueRepository.AddKeyValue(ctx, commonModel.ServerURLKey, setting.ServerURL); err != nil {
+			if err := settingService.durableKV.Set(ctx, commonModel.ServerURLKey, setting.ServerURL); err != nil {
 				return err
 			}
 
@@ -89,7 +89,7 @@ func (settingService *SettingService) BootstrapDefaultLocale(
 	}
 
 	return settingService.transactor.Run(ctx, func(ctx context.Context) error {
-		if _, err := settingService.keyvalueRepository.GetKeyValue(ctx, commonModel.SystemSettingsKey); err == nil {
+		if _, err := settingService.durableKV.Get(ctx, commonModel.SystemSettingsKey); err == nil {
 			return nil
 		}
 
@@ -111,10 +111,10 @@ func (settingService *SettingService) BootstrapDefaultLocale(
 		if err != nil {
 			return err
 		}
-		if err := settingService.keyvalueRepository.AddKeyValue(ctx, commonModel.SystemSettingsKey, string(settingToJSON)); err != nil {
+		if err := settingService.durableKV.Set(ctx, commonModel.SystemSettingsKey, string(settingToJSON)); err != nil {
 			return err
 		}
-		return settingService.keyvalueRepository.AddKeyValue(ctx, commonModel.ServerURLKey, setting.ServerURL)
+		return settingService.durableKV.Set(ctx, commonModel.ServerURLKey, setting.ServerURL)
 	})
 }
 
@@ -162,12 +162,12 @@ func (settingService *SettingService) UpdateSetting(
 
 		// 将字节切片转换为字符串
 		settingToJSONString := string(settingToJSON)
-		if err := settingService.keyvalueRepository.UpdateKeyValue(ctx, commonModel.SystemSettingsKey, settingToJSONString); err != nil {
+		if err := settingService.durableKV.Set(ctx, commonModel.SystemSettingsKey, settingToJSONString); err != nil {
 			return err
 		}
 
 		// 更新 ServerURL
-		if err := settingService.keyvalueRepository.UpdateKeyValue(ctx, commonModel.ServerURLKey, setting.ServerURL); err != nil {
+		if err := settingService.durableKV.Set(ctx, commonModel.ServerURLKey, setting.ServerURL); err != nil {
 			return err
 		}
 

@@ -46,31 +46,28 @@ const (
 )
 
 type FileService struct {
-	transactor         transaction.Transactor
-	commonRepository   CommonRepository
-	storageManager     *storage.Manager
-	keyvalueRepository KeyValueRepository
-	fileRepository     FileRepository
-	publisher          *publisher.Publisher
-	keyGen             storage.KeyGenerator
+	transactor       transaction.Transactor
+	commonRepository CommonRepository
+	storageManager   *storage.Manager
+	fileRepository   FileRepository
+	publisher        *publisher.Publisher
+	keyGen           storage.KeyGenerator
 }
 
 func NewFileService(
 	tx transaction.Transactor,
 	commonRepository CommonRepository,
-	kvRepo KeyValueRepository,
 	fileRepo FileRepository,
 	storageManager *storage.Manager,
 	publisher *publisher.Publisher,
 ) *FileService {
 	return &FileService{
-		transactor:         tx,
-		commonRepository:   commonRepository,
-		keyvalueRepository: kvRepo,
-		fileRepository:     fileRepo,
-		storageManager:     storageManager,
-		publisher:          publisher,
-		keyGen:             storage.NewRandomKeyGenerator(),
+		transactor:       tx,
+		commonRepository: commonRepository,
+		fileRepository:   fileRepo,
+		storageManager:   storageManager,
+		publisher:        publisher,
+		keyGen:           storage.NewRandomKeyGenerator(),
 	}
 }
 

@@ -120,7 +120,7 @@ func (s *CopilotService) loadSession(ctx context.Context, userID string) []ChatM
 	if userID == "" {
 		return nil
 	}
-	raw, err := s.kvRepository.GetKeyValue(ctx, chatSessionKey(userID))
+	raw, err := s.durableKV.Get(ctx, chatSessionKey(userID))
 	if err != nil {
 		return nil
 	}
@@ -147,7 +147,7 @@ func (s *CopilotService) appendTurn(ctx context.Context, userID string, turn ...
 			zap.String("module", "copilot"), zap.Error(err))
 		return
 	}
-	if err := s.kvRepository.AddOrUpdateKeyValue(ctx, chatSessionKey(userID), string(payload)); err != nil {
+	if err := s.durableKV.Set(ctx, chatSessionKey(userID), string(payload)); err != nil {
 		logUtil.GetLogger().Warn("failed to persist chat session",
 			zap.String("module", "copilot"), zap.Error(err))
 	}
@@ -178,5 +178,5 @@ func (s *CopilotService) ClearSession(ctx context.Context) error {
 	if userID == "" {
 		return nil
 	}
-	return s.kvRepository.DeleteKeyValue(ctx, chatSessionKey(userID))
+	return s.durableKV.Delete(ctx, chatSessionKey(userID))
 }

@@ -47,14 +47,6 @@ type (
 	FileService   = fileService.Service
 )
 
-type KeyValueRepository interface {
-	GetKeyValue(ctx context.Context, key string) (string, error)
-	AddKeyValue(ctx context.Context, key, value string) error
-	UpdateKeyValue(ctx context.Context, key, value string) error
-	AddOrUpdateKeyValue(ctx context.Context, key, value string) error
-	DeleteKeyValue(ctx context.Context, key string) error
-}
-
 type SettingRepository interface {
 	ListAccessTokens(ctx context.Context, userID string) ([]model.AccessTokenSetting, error)
 	CreateAccessToken(ctx context.Context, token *model.AccessTokenSetting) error

@@ -8,23 +8,16 @@ import (
 
 	"github.com/lin-snow/ech0/internal/cache"
 	model "github.com/lin-snow/ech0/internal/model/common"
-	copilotService "github.com/lin-snow/ech0/internal/service/copilot"
-	fileService "github.com/lin-snow/ech0/internal/service/file"
-	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"gorm.io/gorm"
 )
 
+// KeyValueRepository 是 KeyValue 表的持久化仓储（带读穿透缓存）。它不感知上层
+// 业务接口；统一的 KV 抽象见 internal/kvstore（kvstore.Persistent 经 Backend 委托本仓储）。
 type KeyValueRepository struct {
 	db    func() *gorm.DB
 	cache cache.ICache[string, any]
 }
-
-var (
-	_ fileService.KeyValueRepository    = (*KeyValueRepository)(nil)
-	_ settingService.KeyValueRepository = (*KeyValueRepository)(nil)
-	_ copilotService.KeyValueRepository = (*KeyValueRepository)(nil)
-)
 
 func NewKeyValueRepository(
 	dbProvider func() *gorm.DB,

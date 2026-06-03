@@ -24,20 +24,20 @@ import (
 // 拆开，是为了打破「MigratorService → job.Manager → MigrationRunner → MigratorService」
 // 的构造环：MigrationRunner 只依赖 Importer，于是 Manager 可在构造期一次装配完成。
 type Importer struct {
-	keyValueRepository KeyValueRepository
-	storageManager     StorageManager
-	appCache           AppCache
+	durableKV      KVStore
+	storageManager StorageManager
+	appCache       AppCache
 }
 
 func NewImporter(
-	keyValueRepository KeyValueRepository,
+	durableKV KVStore,
 	storageManager StorageManager,
 	appCache AppCache,
 ) *Importer {
 	return &Importer{
-		keyValueRepository: keyValueRepository,
-		storageManager:     storageManager,
-		appCache:           appCache,
+		durableKV:      durableKV,
+		storageManager: storageManager,
+		appCache:       appCache,
 	}
 }
 
@@ -117,17 +117,17 @@ func (im *Importer) applyMigratedSettings(ctx context.Context, report map[string
 		return nil
 	}
 
-	if _, err := applyMigratedSettingValue(ctx, im.keyValueRepository, report, "source_system_setting", commonModel.SystemSettingsKey, parseMigratedSystemSetting); err != nil {
+	if _, err := applyMigratedSettingValue(ctx, im.durableKV, report, "source_system_setting", commonModel.SystemSettingsKey, parseMigratedSystemSetting); err != nil {
 		return err
 	}
-	if _, err := applyMigratedSettingValue(ctx, im.keyValueRepository, report, "source_comment_setting", commentModel.CommentSystemSettingKey, parseMigratedCommentSetting); err != nil {
+	if _, err := applyMigratedSettingValue(ctx, im.durableKV, report, "source_comment_setting", commentModel.CommentSystemSettingKey, parseMigratedCommentSetting); err != nil {
 		return err
 	}
-	updatedS3, err := applyMigratedSettingValue(ctx, im.keyValueRepository, report, "source_s3_setting", commonModel.S3SettingKey, parseMigratedS3Setting)
+	updatedS3, err := applyMigratedSettingValue(ctx, im.durableKV, report, "source_s3_setting", commonModel.S3SettingKey, parseMigratedS3Setting)
 	if err != nil {
 		return err
 	}
-	if _, err := applyMigratedSettingValue(ctx, im.keyValueRepository, report, "source_oauth2_setting", commonModel.OAuth2SettingKey, parseMigratedOAuth2Setting); err != nil {
+	if _, err := applyMigratedSettingValue(ctx, im.durableKV, report, "source_oauth2_setting", commonModel.OAuth2SettingKey, parseMigratedOAuth2Setting); err != nil {
 		return err
 	}
 
@@ -172,7 +172,7 @@ func parseMigratedOAuth2Setting(report map[string]any) (*settingModel.OAuth2Sett
 
 func applyMigratedSettingValue[T any](
 	ctx context.Context,
-	repo KeyValueRepository,
+	repo KVStore,
 	report map[string]any,
 	reportKey string,
 	storeKey string,
@@ -190,7 +190,7 @@ func applyMigratedSettingValue[T any](
 	if err != nil {
 		return false, nil
 	}
-	if err := repo.AddOrUpdateKeyValue(ctx, storeKey, string(raw)); err != nil {
+	if err := repo.Set(ctx, storeKey, string(raw)); err != nil {
 		return false, err
 	}
 	return reportKey == "source_s3_setting", nil

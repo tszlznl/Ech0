@@ -62,12 +62,6 @@ type Repository interface {
 
 type CommonService = commonService.Service
 
-type KeyValueRepository interface {
-	GetKeyValue(ctx context.Context, key string) (string, error)
-	AddKeyValue(ctx context.Context, key, value string) error
-	AddOrUpdateKeyValue(ctx context.Context, key, value string) error
-}
-
 type UserContext struct {
 	User  userModel.User
 	Valid bool

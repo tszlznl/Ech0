@@ -17,7 +17,7 @@ import (
 // GetAgentInfo 获取 Agent 信息
 func (settingService *SettingService) GetAgentInfo(setting *model.AgentSetting) error {
 	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
-		agentSetting, err := settingService.keyvalueRepository.GetKeyValue(
+		agentSetting, err := settingService.durableKV.Get(
 			ctx,
 			commonModel.AgentSettingKey,
 		)
@@ -35,7 +35,7 @@ func (settingService *SettingService) GetAgentInfo(setting *model.AgentSetting) 
 			if err != nil {
 				return err
 			}
-			if err := settingService.keyvalueRepository.AddKeyValue(ctx, commonModel.AgentSettingKey, string(settingToJSON)); err != nil {
+			if err := settingService.durableKV.Set(ctx, commonModel.AgentSettingKey, string(settingToJSON)); err != nil {
 				return err
 			}
 			return nil
@@ -65,7 +65,7 @@ func (settingService *SettingService) GetAgentSettings(
 	}
 
 	return settingService.transactor.Run(ctx, func(ctx context.Context) error {
-		agentSetting, err := settingService.keyvalueRepository.GetKeyValue(
+		agentSetting, err := settingService.durableKV.Get(
 			ctx,
 			commonModel.AgentSettingKey,
 		)
@@ -83,7 +83,7 @@ func (settingService *SettingService) GetAgentSettings(
 			if err != nil {
 				return err
 			}
-			if err := settingService.keyvalueRepository.AddKeyValue(ctx, commonModel.AgentSettingKey, string(settingToJSON)); err != nil {
+			if err := settingService.durableKV.Set(ctx, commonModel.AgentSettingKey, string(settingToJSON)); err != nil {
 				return err
 			}
 
@@ -139,7 +139,7 @@ func (settingService *SettingService) UpdateAgentSettings(
 		}
 		settingToJSONString := string(settingToJSON)
 
-		if err := settingService.keyvalueRepository.UpdateKeyValue(ctx, commonModel.AgentSettingKey, settingToJSONString); err != nil {
+		if err := settingService.durableKV.Set(ctx, commonModel.AgentSettingKey, settingToJSONString); err != nil {
 			return err
 		}
 

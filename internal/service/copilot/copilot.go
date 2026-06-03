@@ -4,6 +4,7 @@
 package service
 
 import (
+	"github.com/lin-snow/ech0/internal/kvstore"
 	"github.com/lin-snow/ech0/internal/storage"
 	"golang.org/x/sync/singleflight"
 )
@@ -14,7 +15,7 @@ type CopilotService struct {
 	echoService    EchoService
 	embedding      EmbeddingService
 	userReader     UserReader // 取当前对话用户：展示名 + 检索按作者收口
-	kvRepository   KeyValueRepository
+	durableKV      kvstore.Store
 	storage        *storage.Manager // 多模态：读取命中 Echo 配图字节用于注入模型
 	recentGenGroup singleflight.Group
 }
@@ -35,14 +36,14 @@ func NewCopilotService(
 	echoService EchoService,
 	embedding EmbeddingService,
 	userReader UserReader,
-	kvRepository KeyValueRepository,
+	durableKV kvstore.Store,
 	storageManager *storage.Manager,
 ) *CopilotService {
 	return &CopilotService{
-		echoService:  echoService,
-		embedding:    embedding,
-		userReader:   userReader,
-		kvRepository: kvRepository,
-		storage:      storageManager,
+		echoService: echoService,
+		embedding:   embedding,
+		userReader:  userReader,
+		durableKV:   durableKV,
+		storage:     storageManager,
 	}
 }

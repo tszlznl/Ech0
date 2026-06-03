@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/lin-snow/ech0/internal/embedding"
+	"github.com/lin-snow/ech0/internal/kvstore"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	model "github.com/lin-snow/ech0/internal/model/embedding"
@@ -24,7 +25,7 @@ const defaultTopK = 6
 
 type EmbeddingService struct {
 	repo       Repository
-	kv         KeyValueRepository
+	durableKV  kvstore.Store
 	echoReader EchoReader
 }
 
@@ -33,13 +34,13 @@ var (
 	_ Indexer = (*EmbeddingService)(nil)
 )
 
-func NewEmbeddingService(repo Repository, kv KeyValueRepository, echoReader EchoReader) *EmbeddingService {
-	return &EmbeddingService{repo: repo, kv: kv, echoReader: echoReader}
+func NewEmbeddingService(repo Repository, durableKV kvstore.Store, echoReader EchoReader) *EmbeddingService {
+	return &EmbeddingService{repo: repo, durableKV: durableKV, echoReader: echoReader}
 }
 
 func (s *EmbeddingService) getSetting(ctx context.Context) (settingModel.EmbeddingSetting, error) {
 	var setting settingModel.EmbeddingSetting
-	raw, err := s.kv.GetKeyValue(ctx, commonModel.EmbeddingSettingKey)
+	raw, err := s.durableKV.Get(ctx, commonModel.EmbeddingSettingKey)
 	if err != nil {
 		// 未配置 → 返回零值（Enable=false）
 		return setting, nil
@@ -61,7 +62,7 @@ func (s *EmbeddingService) Enabled(ctx context.Context) bool {
 // ensureReady 确保 vec0 表存在且维度与当前配置一致；维度/模型变化则清库重建（随后由回填重填）。
 func (s *EmbeddingService) ensureReady(ctx context.Context, setting settingModel.EmbeddingSetting) error {
 	var state model.IndexState
-	if stateRaw, err := s.kv.GetKeyValue(ctx, commonModel.EmbeddingIndexStateKey); err == nil {
+	if stateRaw, err := s.durableKV.Get(ctx, commonModel.EmbeddingIndexStateKey); err == nil {
 		_ = json.Unmarshal([]byte(stateRaw), &state)
 	}
 
@@ -81,7 +82,7 @@ func (s *EmbeddingService) ensureReady(ctx context.Context, setting settingModel
 		return err
 	}
 	newState, _ := json.Marshal(model.IndexState{Model: setting.Model, Dim: setting.Dim})
-	return s.kv.AddOrUpdateKeyValue(ctx, commonModel.EmbeddingIndexStateKey, string(newState))
+	return s.durableKV.Set(ctx, commonModel.EmbeddingIndexStateKey, string(newState))
 }
 
 func buildText(echo echoModel.Echo) string {

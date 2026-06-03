@@ -40,12 +40,6 @@ type CommonRepository interface {
 	GetUserByUserId(ctx context.Context, id string) (userModel.User, error)
 }
 
-type KeyValueRepository interface {
-	GetKeyValue(ctx context.Context, key string) (string, error)
-	AddOrUpdateKeyValue(ctx context.Context, key, value string) error
-	DeleteKeyValue(ctx context.Context, key string) error
-}
-
 type FileRepository interface {
 	Create(ctx context.Context, file *fileModel.File) error
 	GetByID(ctx context.Context, id string) (*fileModel.File, error)

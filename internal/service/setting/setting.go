@@ -5,20 +5,21 @@ package service
 
 import (
 	publisher "github.com/lin-snow/ech0/internal/event/publisher"
+	"github.com/lin-snow/ech0/internal/kvstore"
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/transaction"
 )
 
 type SettingService struct {
-	transactor         transaction.Transactor
-	commonService      CommonService
-	fileService        FileService
-	storageManager     *storage.Manager
-	keyvalueRepository KeyValueRepository
-	settingRepository  SettingRepository
-	webhookRepository  WebhookRepository
-	tokenRevoker       TokenRevoker
-	publisher          *publisher.Publisher
+	transactor        transaction.Transactor
+	commonService     CommonService
+	fileService       FileService
+	storageManager    *storage.Manager
+	durableKV         kvstore.Store
+	settingRepository SettingRepository
+	webhookRepository WebhookRepository
+	tokenRevoker      TokenRevoker
+	publisher         *publisher.Publisher
 }
 
 func NewSettingService(
@@ -26,21 +27,21 @@ func NewSettingService(
 	commonService CommonService,
 	fileService FileService,
 	storageManager *storage.Manager,
-	keyvalueRepository KeyValueRepository,
+	durableKV kvstore.Store,
 	settingRepository SettingRepository,
 	webhookRepository WebhookRepository,
 	tokenRevoker TokenRevoker,
 	publisher *publisher.Publisher,
 ) *SettingService {
 	return &SettingService{
-		transactor:         tx,
-		commonService:      commonService,
-		fileService:        fileService,
-		storageManager:     storageManager,
-		keyvalueRepository: keyvalueRepository,
-		webhookRepository:  webhookRepository,
-		settingRepository:  settingRepository,
-		tokenRevoker:       tokenRevoker,
-		publisher:          publisher,
+		transactor:        tx,
+		commonService:     commonService,
+		fileService:       fileService,
+		storageManager:    storageManager,
+		durableKV:         durableKV,
+		webhookRepository: webhookRepository,
+		settingRepository: settingRepository,
+		tokenRevoker:      tokenRevoker,
+		publisher:         publisher,
 	}
 }

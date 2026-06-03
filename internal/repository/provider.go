@@ -7,6 +7,7 @@ import (
 	"github.com/google/wire"
 	eventsubscriber "github.com/lin-snow/ech0/internal/event/subscriber"
 	"github.com/lin-snow/ech0/internal/job"
+	"github.com/lin-snow/ech0/internal/kvstore"
 	authRepository "github.com/lin-snow/ech0/internal/repository/auth"
 	commentRepository "github.com/lin-snow/ech0/internal/repository/comment"
 	commonRepository "github.com/lin-snow/ech0/internal/repository/common"
@@ -26,7 +27,6 @@ import (
 	commentService "github.com/lin-snow/ech0/internal/service/comment"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
 	connectService "github.com/lin-snow/ech0/internal/service/connect"
-	copilotService "github.com/lin-snow/ech0/internal/service/copilot"
 	echoService "github.com/lin-snow/ech0/internal/service/echo"
 	embeddingService "github.com/lin-snow/ech0/internal/service/embedding"
 	fileService "github.com/lin-snow/ech0/internal/service/file"
@@ -77,13 +77,13 @@ var (
 		initRepository.NewInitRepository,
 		wire.Bind(new(initService.Repository), new(*initRepository.InitRepository)),
 	)
+	// KeyValueSet 装配统一的键值存储：底层仓储 → kvstore.Persistent → kvstore.Store。
+	// 各业务包统一依赖 kvstore.Store，单点绑定即可覆盖全部消费者。
 	KeyValueSet = wire.NewSet(
 		keyvalueRepository.NewKeyValueRepository,
-		wire.Bind(new(fileService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
-		wire.Bind(new(settingService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
-		wire.Bind(new(copilotService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
-		wire.Bind(new(commentService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
-		wire.Bind(new(embeddingService.KeyValueRepository), new(*keyvalueRepository.KeyValueRepository)),
+		wire.Bind(new(kvstore.Backend), new(*keyvalueRepository.KeyValueRepository)),
+		kvstore.NewPersistent,
+		wire.Bind(new(kvstore.Store), new(*kvstore.Persistent)),
 	)
 	SettingSet = wire.NewSet(
 		settingRepository.NewSettingRepository,

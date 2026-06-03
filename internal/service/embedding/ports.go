@@ -47,12 +47,6 @@ type Repository interface {
 	Count(ctx context.Context) (int64, error)
 }
 
-// KeyValueRepository 用于读写 Embedding 设置与索引状态（KeyValue 表）。
-type KeyValueRepository interface {
-	GetKeyValue(ctx context.Context, key string) (string, error)
-	AddOrUpdateKeyValue(ctx context.Context, key string, value string) error
-}
-
 // EchoReader 用于回填时分页读取全部 Echo。
 type EchoReader interface {
 	GetEchosByPage(page, pageSize int, search string, showPrivate bool) ([]echoModel.Echo, int64)

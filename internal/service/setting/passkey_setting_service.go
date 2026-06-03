@@ -33,7 +33,7 @@ func (settingService *SettingService) GetPasskeySetting(
 			}
 		}
 
-		passkeySetting, err := settingService.keyvalueRepository.GetKeyValue(
+		passkeySetting, err := settingService.durableKV.Get(
 			ctx,
 			commonModel.PasskeySettingKey,
 		)
@@ -50,7 +50,7 @@ func (settingService *SettingService) GetPasskeySetting(
 			if marshalErr != nil {
 				return marshalErr
 			}
-			if addErr := settingService.keyvalueRepository.AddKeyValue(ctx, commonModel.PasskeySettingKey, string(settingToJSON)); addErr != nil {
+			if addErr := settingService.durableKV.Set(ctx, commonModel.PasskeySettingKey, string(settingToJSON)); addErr != nil {
 				return addErr
 			}
 			syncRuntimePasskeyBoundary(setting)
@@ -91,7 +91,7 @@ func (settingService *SettingService) UpdatePasskeySetting(
 		if err != nil {
 			return err
 		}
-		if err := settingService.keyvalueRepository.AddOrUpdateKeyValue(
+		if err := settingService.durableKV.Set(
 			ctx,
 			commonModel.PasskeySettingKey,
 			string(settingToJSON),
@@ -136,7 +136,7 @@ func (settingService *SettingService) readLegacyPasskeySetting(ctx context.Conte
 		WebAuthnAllowedOrigins []string `json:"webauthn_allowed_origins"`
 	}
 	var result model.PasskeySetting
-	raw, err := settingService.keyvalueRepository.GetKeyValue(ctx, commonModel.OAuth2SettingKey)
+	raw, err := settingService.durableKV.Get(ctx, commonModel.OAuth2SettingKey)
 	if err != nil || strings.TrimSpace(raw) == "" {
 		return result, false
 	}

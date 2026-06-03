@@ -33,7 +33,7 @@ func (settingService *SettingService) GetOAuth2Setting(
 			}
 		}
 
-		oauthSetting, err := settingService.keyvalueRepository.GetKeyValue(
+		oauthSetting, err := settingService.durableKV.Get(
 			ctx,
 			commonModel.OAuth2SettingKey,
 		)
@@ -61,7 +61,7 @@ func (settingService *SettingService) GetOAuth2Setting(
 			if err != nil {
 				return err
 			}
-			if err := settingService.keyvalueRepository.AddKeyValue(ctx, commonModel.OAuth2SettingKey, string(settingToJSON)); err != nil {
+			if err := settingService.durableKV.Set(ctx, commonModel.OAuth2SettingKey, string(settingToJSON)); err != nil {
 				return err
 			}
 
@@ -117,7 +117,7 @@ func (settingService *SettingService) UpdateOAuth2Setting(
 			return err
 		}
 
-		if err := settingService.keyvalueRepository.UpdateKeyValue(ctx, commonModel.OAuth2SettingKey, string(settingToJSON)); err != nil {
+		if err := settingService.durableKV.Set(ctx, commonModel.OAuth2SettingKey, string(settingToJSON)); err != nil {
 			return err
 		}
 		// 同步运行时配置，确保中间件/服务按 Panel 最新配置生效。

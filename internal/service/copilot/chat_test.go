@@ -6,28 +6,17 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"testing"
 
+	"github.com/lin-snow/ech0/internal/kvstore"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 )
 
-// fakeKV 是 KeyValueRepository 的测试替身：get 返回固定 value/err，写操作记录最后一次。
-type fakeKV struct {
-	value string
-	err   error
-}
-
-func (f *fakeKV) GetKeyValue(_ context.Context, _ string) (string, error) {
-	return f.value, f.err
-}
-func (f *fakeKV) AddOrUpdateKeyValue(_ context.Context, _, _ string) error { return nil }
-func (f *fakeKV) DeleteKeyValue(_ context.Context, _ string) error         { return nil }
-
 // KV miss 时统一加载器报 AGENT_SETTING_NOT_FOUND，且不写默认行（best-effort 只读）。
+// 用 kvstore.Memory（空）即可制造 miss，无需手搓替身。
 func TestAgentSetting_MissReturnsNotFound(t *testing.T) {
-	s := &CopilotService{kvRepository: &fakeKV{err: errors.New("not found")}}
+	s := &CopilotService{durableKV: kvstore.NewMemory()}
 	_, err := s.agentSetting(context.Background())
 	if err == nil || err.Error() != commonModel.AGENT_SETTING_NOT_FOUND {
 		t.Fatalf("expected AGENT_SETTING_NOT_FOUND, got %v", err)
@@ -38,7 +27,11 @@ func TestAgentSetting_MissReturnsNotFound(t *testing.T) {
 func TestAgentSetting_HappyPath(t *testing.T) {
 	want := settingModel.AgentSetting{Enable: true, Protocol: "openai", Model: "gpt-x", ApiKey: "k"}
 	raw, _ := json.Marshal(want)
-	s := &CopilotService{kvRepository: &fakeKV{value: string(raw)}}
+	kv := kvstore.NewMemory()
+	if err := kv.Set(context.Background(), commonModel.AgentSettingKey, string(raw)); err != nil {
+		t.Fatalf("seed kv: %v", err)
+	}
+	s := &CopilotService{durableKV: kv}
 
 	got, err := s.agentSetting(context.Background())
 	if err != nil {

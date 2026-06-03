@@ -35,7 +35,7 @@ func (s *CopilotService) GetRecent(ctx context.Context) (string, error) {
 			return "", err
 		}
 
-		if err := s.kvRepository.AddOrUpdateKeyValue(ctx, cacheKey, output); err != nil {
+		if err := s.durableKV.Set(ctx, cacheKey, output); err != nil {
 			logUtil.GetLogger().
 				Error("Failed to add or update key value", zap.Error(err))
 		}
@@ -55,7 +55,7 @@ func (s *CopilotService) GetRecent(ctx context.Context) (string, error) {
 }
 
 func (s *CopilotService) getRecentFromCache(ctx context.Context, cacheKey string) (string, bool) {
-	cachedValue, err := s.kvRepository.GetKeyValue(ctx, cacheKey)
+	cachedValue, err := s.durableKV.Get(ctx, cacheKey)
 	if err != nil {
 		return "", false
 	}

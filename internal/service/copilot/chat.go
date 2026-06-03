@@ -26,7 +26,7 @@ const chatTemperature float32 = 0.4
 
 func (s *CopilotService) agentSetting(ctx context.Context) (settingModel.AgentSetting, error) {
 	var setting settingModel.AgentSetting
-	raw, err := s.kvRepository.GetKeyValue(ctx, commonModel.AgentSettingKey)
+	raw, err := s.durableKV.Get(ctx, commonModel.AgentSettingKey)
 	if err != nil {
 		return setting, errors.New(commonModel.AGENT_SETTING_NOT_FOUND)
 	}

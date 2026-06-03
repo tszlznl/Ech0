@@ -39,10 +39,3 @@ type (
 type UserReader interface {
 	GetUserByID(userID string) (userModel.User, error)
 }
-
-// KeyValueRepository 用于读取 Agent 配置与读写近期总结缓存。
-type KeyValueRepository interface {
-	GetKeyValue(ctx context.Context, key string) (string, error)
-	AddOrUpdateKeyValue(ctx context.Context, key, value string) error
-	DeleteKeyValue(ctx context.Context, key string) error
-}

@@ -21,7 +21,7 @@ func (settingService *SettingService) GetEmbeddingSetting(
 ) (model.EmbeddingSetting, error) {
 	var setting model.EmbeddingSetting
 
-	raw, err := settingService.keyvalueRepository.GetKeyValue(ctx, commonModel.EmbeddingSettingKey)
+	raw, err := settingService.durableKV.Get(ctx, commonModel.EmbeddingSettingKey)
 	if err != nil {
 		// 未配置 → 返回零值（Enable=false）
 		return setting, nil
@@ -49,7 +49,7 @@ func (settingService *SettingService) UpdateEmbeddingSetting(
 	if err != nil {
 		return err
 	}
-	return settingService.keyvalueRepository.AddOrUpdateKeyValue(
+	return settingService.durableKV.Set(
 		ctx,
 		commonModel.EmbeddingSettingKey,
 		string(encoded),

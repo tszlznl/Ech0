@@ -23,6 +23,7 @@ import (
 	captchaCfg "github.com/lin-snow/ech0/internal/captcha"
 	"github.com/lin-snow/ech0/internal/config"
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
+	"github.com/lin-snow/ech0/internal/kvstore"
 	model "github.com/lin-snow/ech0/internal/model/comment"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
@@ -45,26 +46,26 @@ const (
 )
 
 type CommentService struct {
-	commonService      CommonService
-	repo               Repository
-	keyvalueRepository KeyValueRepository
-	publisher          EventPublisher
-	mailer             Mailer
+	commonService CommonService
+	repo          Repository
+	durableKV     kvstore.Store
+	publisher     EventPublisher
+	mailer        Mailer
 }
 
 func NewCommentService(
 	commonService CommonService,
 	repo Repository,
-	keyvalueRepository KeyValueRepository,
+	durableKV kvstore.Store,
 	publisher EventPublisher,
 	mailer Mailer,
 ) *CommentService {
 	return &CommentService{
-		commonService:      commonService,
-		repo:               repo,
-		keyvalueRepository: keyvalueRepository,
-		publisher:          publisher,
-		mailer:             mailer,
+		commonService: commonService,
+		repo:          repo,
+		durableKV:     durableKV,
+		publisher:     publisher,
+		mailer:        mailer,
 	}
 }
 
@@ -514,7 +515,7 @@ func (s *CommentService) GetSystemSetting(ctx context.Context) (model.SystemSett
 }
 
 func (s *CommentService) getSystemSettingRaw(ctx context.Context) (model.SystemSetting, error) {
-	raw, err := s.keyvalueRepository.GetKeyValue(ctx, model.CommentSystemSettingKey)
+	raw, err := s.durableKV.Get(ctx, model.CommentSystemSettingKey)
 	if err != nil {
 		defaultSetting := model.SystemSetting{
 			EnableComment:   true,
@@ -523,7 +524,7 @@ func (s *CommentService) getSystemSettingRaw(ctx context.Context) (model.SystemS
 		}
 		applySettingDefaults(&defaultSetting)
 		buf, _ := json.Marshal(defaultSetting)
-		_ = s.keyvalueRepository.AddKeyValue(ctx, model.CommentSystemSettingKey, string(buf))
+		_ = s.durableKV.Set(ctx, model.CommentSystemSettingKey, string(buf))
 		return defaultSetting, nil
 	}
 	var setting model.SystemSetting
@@ -547,7 +548,7 @@ func (s *CommentService) UpdateSystemSetting(ctx context.Context, setting model.
 	if err != nil {
 		return err
 	}
-	return s.keyvalueRepository.AddOrUpdateKeyValue(ctx, model.CommentSystemSettingKey, string(buf))
+	return s.durableKV.Set(ctx, model.CommentSystemSettingKey, string(buf))
 }
 
 func (s *CommentService) SendTestEmail(ctx context.Context, setting model.SystemSetting) error {
@@ -733,8 +734,8 @@ func (s *CommentService) resolveOwnerEmail() (string, error) {
 }
 
 func (s *CommentService) resolveServerURL(ctx context.Context) string {
-	if s.keyvalueRepository != nil {
-		serverURL, err := s.keyvalueRepository.GetKeyValue(ctx, commonModel.ServerURLKey)
+	if s.durableKV != nil {
+		serverURL, err := s.durableKV.Get(ctx, commonModel.ServerURLKey)
 		if err == nil {
 			value := strings.TrimSuffix(strings.TrimSpace(serverURL), "/")
 			if value != "" {

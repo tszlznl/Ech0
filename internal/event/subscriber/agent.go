@@ -10,26 +10,26 @@ import (
 	"github.com/lin-snow/ech0/internal/agent"
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	registry "github.com/lin-snow/ech0/internal/event/registry"
+	"github.com/lin-snow/ech0/internal/kvstore"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
-	copilotService "github.com/lin-snow/ech0/internal/service/copilot"
 )
 
 type AgentProcessor struct {
-	keyvalueRepo copilotService.KeyValueRepository
+	durableKV kvstore.Store
 }
 
 func NewAgentProcessor(
-	keyvalueRepo copilotService.KeyValueRepository,
+	durableKV kvstore.Store,
 ) *AgentProcessor {
 	return &AgentProcessor{
-		keyvalueRepo: keyvalueRepo,
+		durableKV: durableKV,
 	}
 }
 
 func (ap *AgentProcessor) handle(ctx context.Context) error {
 	var agentSetting settingModel.AgentSetting
-	if agentSettingStr, err := ap.keyvalueRepo.GetKeyValue(ctx, commonModel.AgentSettingKey); err == nil {
+	if agentSettingStr, err := ap.durableKV.Get(ctx, commonModel.AgentSettingKey); err == nil {
 		if err := json.Unmarshal([]byte(agentSettingStr), &agentSetting); err != nil {
 			return err
 		}
@@ -54,7 +54,7 @@ func (ap *AgentProcessor) HandleUserDeleted(ctx context.Context, e contracts.Use
 }
 
 func (ap *AgentProcessor) clearCache() error {
-	return ap.keyvalueRepo.DeleteKeyValue(context.Background(), string(agent.GEN_RECENT))
+	return ap.durableKV.Delete(context.Background(), string(agent.GEN_RECENT))
 }
 
 func (ap *AgentProcessor) Subscriptions() []registry.Subscription {

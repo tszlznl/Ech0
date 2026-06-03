@@ -31,7 +31,7 @@ func (settingService *SettingService) GetBackupScheduleSetting(
 	// }
 
 	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
-		backupSchedule, err := settingService.keyvalueRepository.GetKeyValue(
+		backupSchedule, err := settingService.durableKV.Get(
 			ctx,
 			commonModel.BackupScheduleKey,
 		)
@@ -46,7 +46,7 @@ func (settingService *SettingService) GetBackupScheduleSetting(
 			if err != nil {
 				return err
 			}
-			if err := settingService.keyvalueRepository.AddKeyValue(ctx, commonModel.BackupScheduleKey, string(settingToJSON)); err != nil {
+			if err := settingService.durableKV.Set(ctx, commonModel.BackupScheduleKey, string(settingToJSON)); err != nil {
 				return err
 			}
 
@@ -93,7 +93,7 @@ func (settingService *SettingService) UpdateBackupScheduleSetting(
 
 		// 将字节切片转换为字符串
 		settingToJSONString := string(settingToJSON)
-		if err := settingService.keyvalueRepository.UpdateKeyValue(ctx, commonModel.BackupScheduleKey, settingToJSONString); err != nil {
+		if err := settingService.durableKV.Set(ctx, commonModel.BackupScheduleKey, settingToJSONString); err != nil {
 			return err
 		}
 
