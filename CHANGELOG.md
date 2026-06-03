@@ -7,6 +7,62 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/lin-snow/Ech0/releases) — earlier release notes are not retroactively imported here.
 
 
+## [5.0.0] - 2026-06-04
+
+A major **architecture-consolidation** release. Most of Ech0's cross-cutting subsystems — events, settings, tasks, key-value storage, data portability, outbound HTTP, and long-running jobs — were rewritten around one shared shape: a *thin manager + typed/self-describing registry*, with dependencies pointing inward to pure-data vocabulary. The result is the same product with a much smaller, more uniform internal surface. The version is bumped to 5.0 because of the breaking changes below: the **backup → snapshot** rename (on disk, in S3, in routes, events, and settings), the webhook `event_name` derivation, and the removal of the dead-letter retry queue. Self-hosters upgrading from 4.x should read the **Breaking Changes** section before deploying.
+
+### Breaking Changes
+
+- **"Backup" is gone — it is all **Snapshot** now.** Data import/export was consolidated into a single bidirectional **Migrator** domain built around one **Snapshot** resource (a zip of `data/`). The rename is end-to-end and is not auto-migrated:
+  - On-disk layout: `data/files/backups/` → `data/files/snapshots/`; archive names `ech0_backup_*.zip` → `ech0_snapshot_*.zip`.
+  - S3 object prefix: `backups/` → `snapshots/`.
+  - Settings key: `backup_schedule` → `snapshot_schedule` — **the old scheduled-backup config is reset**; re-enable the schedule after upgrading.
+  - HTTP routes: `/backup/*` → `/migration/export*` and `/migration/snapshot/schedule`. Manual export is now a job-driven async flow (see Added).
+  - Event topics: `system.backup` → `system.snapshot`; `system.backup_schedule.updated` → `system.snapshot_schedule.updated`.
+- **Removed the `ech0 backup` CLI command.** Import/export is now **web-only** (admin panel → "数据管理"). There is no snapshot CLI verb.
+- **Snapshot download no longer carries the token in the URL.** Downloads are fetched as an authenticated blob with an `Authorization` header instead of a query-string token — safer (tokens stop leaking into logs/history), but any tooling that scripted the old token-in-URL download must be updated.
+- **Webhook `event_name` lost its `Event` suffix.** Payload `event_name` is now derived from the event struct name with the suffix stripped — e.g. `EchoCreatedEvent` → `EchoCreated`. The `topic` field is **unchanged** (`echo.created` stays `echo.created`), so consumers keyed on `topic` are unaffected; consumers keyed on `event_name` must update.
+- **Dead-letter retry queue removed → webhook delivery is now best-effort.** A failed webhook is retried inline (immediate retries) and then dropped; it is no longer parked in a dead-letter queue for later redelivery. The `ECH0_EVENT_DEADLETTER_BUFFER` config and the dead-letter DB table/column are gone. If you relied on guaranteed eventual delivery, treat webhooks as at-most-once after inline retries.
+
+### Added
+
+- **Generic long-running job subsystem (`internal/job`).** A reusable Manager with a real status machine, cancellation, persistence, status polling, and startup orphan-cleanup, with a generic `Adapt` boundary. Both **reindex** and **export** now run on it.
+  - **Vector reindex is now asynchronous** — it kicks off a cancellable job with live progress and front-end polling instead of blocking the request.
+  - **Snapshot export is now an async job** — trigger → poll phases → auto-download on completion, with cancel support.
+- **Unified `JobProgressCard` for data management.** A reusable progress card (status pill + phase stepper + progress bar + metrics/meta grid + footer slot) shared by import and export, themed via design tokens and respecting `reduced-motion`.
+  - **Export now surfaces progress the backend was already sending** but the UI had been discarding: `准备 → 打包 → 完成` phase stepping, plus the produced **file name / size** and a **re-download** action.
+  - **Import** switched to the same card with real phase stepping (`解析 → 写入 → 汇总 → 完成`).
+- **Configurable embedding batch size.** `/v1/embeddings` requests are now auto-split into batches (default **64** items/request, configurable via a new `batch_size` setting) to stay within provider input-array limits. Swagger, typings, and i18n updated to match.
+
+### Changed
+
+- **Settings are now organized into top tabs.** Six pages (storage / data / SSO / extensions / user center / preferences) moved to a top-tab layout via a new reusable `BaseSegmented` segmented control; the data-management page uses a three-tab segmented (导入 / 导出 / 快照) with the tabs lifted out of the card to match storage management.
+- **Comment management split into two tabs** ("评论设置" / "评论管理"), and the comment list dropped its time column with page size reduced 20 → 10.
+- **Redesigned comment-detail modal** — header bar + commenter row (Micah avatar + status / hot-comment pills) + quoted body block + info grid, centered on mobile.
+- **Data import/export UI polish** across the board (new locale keys `jobProgress.*` and `exportSetting.*` in zh/en/de/ja).
+
+### Removed
+
+- **Dead-letter subsystem** in full: `model/queue`, `repository/queue`, the dead-letter subscriber and scheduled task, the `DeadLetterBuffer` config, the `AutoMigrate` registration, and the `dead_letters` migration column.
+- **Legacy `internal/backup` package**, the never-invoked Extract→Transform→Validate→Load import pipeline, the event **publisher facade** (`contracts` / `publisher` / `registry` packages), the explicit EventBus drain component, and the empty `migrator.Worker` shell.
+- **Redundant Docker `apk add tzdata`** — the timezone database is already embedded via `_ "time/tzdata"`.
+
+### Security
+
+- **All outbound HTTP unified behind `internal/util/egress`** with a single SSRF `Guard`: request validation, private/reserved-address blocking, a safe `DialContext`, and a response-body size limit. The previously duplicated safe-client logic (in `util/http` and the webhook HTTP client) was consolidated here and adopted by auth / comment / common / connect / setting / webhook.
+- **Snapshot download tokens no longer appear in URLs** (moved to the `Authorization` header — see Breaking Changes).
+
+### Internal
+
+- **Event system rewrite** — one rule: dependencies point inward to a **pure vocabulary** package. `internal/event` holds event structs with self-describing `EventName()` / `OrderingKey()` and only imports models; `internal/event/bus` carries the infrastructure (`Emit` fire / `Notify` best-effort-with-warn / `On` type-routed subscribe, option presets, `EventRegistrar`). Routing is **by Go type** (no topic dimension); producers publish with a single `eventbus.Notify(...)` line. Fixed comment events silently swallowing publish errors along the way.
+- **Webhook consolidated into a single subsystem** and demoted to a **plain Subscriber**: one outbound `webhook.Sender` (dedicated egress client + signing + retry) shared by the dispatcher and the settings-page TestWebhook; the bespoke bus bridge and registrar special-case were removed in favor of `eventbus.OnWithMeta` + the generic `Draining` capability for graceful worker-pool drain. The external webhook contract (topic / signing headers) is unchanged.
+- **Settings engine (`internal/setting`)** — each KV config is a self-describing `Spec[T]` (key + default + normalize + migrate) behind a generic `Get`/`Set` engine plus a startup **seeder** (missing config is written on `BeforeStart`; `Get` no longer seeds as a read side-effect). `SettingService` slimmed down; auth / connect / snapshot / embedding / agent / comment now read through the engine instead of ad-hoc direct reads.
+- **Unified key-value store (`internal/kvstore`)** — a single `Store` (`Get`/`Set`/`Delete`) with `Memory` (test double) and `Persistent` (delegates to the keyvalue repository) implementations, Wire-bound so the repository layer is no longer imported by services. Replaced five duplicated narrow interfaces; `Set` merges the old add/update/upsert variants.
+- **Tasker → `task.Manager` + `scheduled` registry** — the old god-object + manual `Start` registration became a thin Manager holding `[]Task` with an optional `StopHook`, and each cron task (cleanup / visitor-snapshot / export) moved to its own self-describing `internal/task/scheduled` sub-package, eliminating the 7-arg constructor.
+- **`storage.Manager` promoted to a process-wide shared singleton.**
+- **Toolkit layering flattened** — `async` / `tui` sank to `util/{async,tui}`; `util/http` was dissolved (`TrimURL` → `util/url`, MIME mapping folded back into the file domain as one `canonicalMIMEForExt` table); the webhook `infra/httpclient` was flattened into the webhook root package.
+- **DI graph regenerated** (`make wire`) across all of the above; CLAUDE.md and the dev docs (`snapshot-design.md` added; webhook-usage / job-runner-design / timezone-design updated) kept in sync.
+
 ## [4.9.2] - 2026-06-02
 
 ### Added
