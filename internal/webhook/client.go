@@ -20,7 +20,7 @@ import (
 	"github.com/lin-snow/ech0/internal/util/egress"
 )
 
-func BuildRequest(wh *webhookModel.Webhook, obs event.WebhookObservation) (*http.Request, error) {
+func buildRequest(wh *webhookModel.Webhook, obs event.WebhookObservation) (*http.Request, error) {
 	eventID := fmt.Sprintf("%d", time.Now().UTC().UnixNano())
 	timestamp := strconv.FormatInt(time.Now().UTC().Unix(), 10)
 	headers := make(http.Header)
@@ -59,7 +59,7 @@ func BuildRequest(wh *webhookModel.Webhook, obs event.WebhookObservation) (*http
 	return req, nil
 }
 
-func SendWithRetry(
+func sendWithRetry(
 	client *http.Client,
 	wh *webhookModel.Webhook,
 	obs event.WebhookObservation,
@@ -67,7 +67,7 @@ func SendWithRetry(
 	initialBackoff time.Duration,
 ) error {
 	return egress.Retry(maxRetries, initialBackoff, func() error {
-		req, err := BuildRequest(wh, obs)
+		req, err := buildRequest(wh, obs)
 		if err != nil {
 			return err
 		}

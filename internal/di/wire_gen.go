@@ -40,8 +40,8 @@ import (
 	repository9 "github.com/lin-snow/ech0/internal/repository/comment"
 	repository5 "github.com/lin-snow/ech0/internal/repository/common"
 	repository11 "github.com/lin-snow/ech0/internal/repository/connect"
-	repository3 "github.com/lin-snow/ech0/internal/repository/echo"
-	repository2 "github.com/lin-snow/ech0/internal/repository/embedding"
+	repository2 "github.com/lin-snow/ech0/internal/repository/echo"
+	"github.com/lin-snow/ech0/internal/repository/embedding"
 	repository6 "github.com/lin-snow/ech0/internal/repository/file"
 	repository10 "github.com/lin-snow/ech0/internal/repository/init"
 	repository12 "github.com/lin-snow/ech0/internal/repository/job"
@@ -49,7 +49,7 @@ import (
 	repository7 "github.com/lin-snow/ech0/internal/repository/setting"
 	repository4 "github.com/lin-snow/ech0/internal/repository/user"
 	repository13 "github.com/lin-snow/ech0/internal/repository/visitor"
-	"github.com/lin-snow/ech0/internal/repository/webhook"
+	repository3 "github.com/lin-snow/ech0/internal/repository/webhook"
 	"github.com/lin-snow/ech0/internal/server"
 	service13 "github.com/lin-snow/ech0/internal/service"
 	"github.com/lin-snow/ech0/internal/service/auth"
@@ -118,18 +118,18 @@ func BuildApp() (*app.App, error) {
 }
 
 func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() *busen.Bus, appCache cache.ICache[string, any], tx transaction.Transactor, snapshotScheduleApplier subscriber.SnapshotScheduleApplier) (*bus.EventRegistrar, error) {
-	webhookRepository := repository.NewWebhookRepository(dbProvider)
-	dispatcher := webhook.NewDispatcher(webhookRepository)
 	snapshotScheduler := subscriber.NewSnapshotScheduler(snapshotScheduleApplier)
 	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
 	persistent := kvstore.NewPersistent(keyValueRepository)
 	agentProcessor := subscriber.NewAgentProcessor(persistent)
-	embeddingRepository := repository2.NewEmbeddingRepository(dbProvider)
-	echoRepository := repository3.NewEchoRepository(dbProvider, appCache)
+	embeddingRepository := repository.NewEmbeddingRepository(dbProvider)
+	echoRepository := repository2.NewEchoRepository(dbProvider, appCache)
 	embeddingService := service.NewEmbeddingService(embeddingRepository, persistent, echoRepository)
 	embeddingProcessor := subscriber.NewEmbeddingProcessor(embeddingService)
-	v := ProvideSubscriptionProviders(snapshotScheduler, agentProcessor, embeddingProcessor)
-	eventRegistrar := bus.NewEventRegistry(ebProvider, dispatcher, v)
+	webhookRepository := repository3.NewWebhookRepository(dbProvider)
+	dispatcher := webhook.NewDispatcher(webhookRepository)
+	v := ProvideSubscriptionProviders(snapshotScheduler, agentProcessor, embeddingProcessor, dispatcher)
+	eventRegistrar := bus.NewEventRegistry(ebProvider, v)
 	return eventRegistrar, nil
 }
 
@@ -145,14 +145,15 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
 	persistent := kvstore.NewPersistent(keyValueRepository)
 	settingRepository := repository7.NewSettingRepository(dbProvider)
-	webhookRepository := repository.NewWebhookRepository(dbProvider)
+	webhookRepository := repository3.NewWebhookRepository(dbProvider)
+	sender := webhook.NewSender()
 	authRepository := repository8.NewAuthRepository(dbProvider, appCache)
-	settingService := service4.NewSettingService(tx, commonService, fileService, storageManager, persistent, settingRepository, webhookRepository, authRepository, ebProvider)
+	settingService := service4.NewSettingService(tx, commonService, fileService, storageManager, persistent, settingRepository, webhookRepository, sender, authRepository, ebProvider)
 	userService := service5.NewUserService(tx, userRepository, settingService, fileService, ebProvider)
 	userHandler := handler3.NewUserHandler(userService)
 	authService := auth.NewAuthService(tx, authRepository, authRepository, settingService)
 	authHandler := handler4.NewAuthHandler(authService, userService)
-	echoRepository := repository3.NewEchoRepository(dbProvider, appCache)
+	echoRepository := repository2.NewEchoRepository(dbProvider, appCache)
 	echoService := service6.NewEchoService(tx, commonService, fileService, echoRepository, ebProvider)
 	echoHandler := handler5.NewEchoHandler(echoService)
 	fileHandler := handler6.NewFileHandler(fileService)
@@ -172,7 +173,7 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 	migrationHandler := handler12.NewMigrationHandler(migratorService)
 	dashboardService := service11.NewDashboardService(tracker)
 	dashboardHandler := handler13.NewDashboardHandler(dashboardService)
-	embeddingRepository := repository2.NewEmbeddingRepository(dbProvider)
+	embeddingRepository := repository.NewEmbeddingRepository(dbProvider)
 	embeddingService := service.NewEmbeddingService(embeddingRepository, persistent, echoRepository)
 	copilotService := service12.NewCopilotService(echoService, embeddingService, userService, persistent, storageManager)
 	copilotHandler := handler14.NewCopilotHandler(copilotService, copilotService)
@@ -188,10 +189,10 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 // 设置时 reload 的就是文件服务在用的那份 Manager。
 func BuildJobManager(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], storageManager *storage.Manager, ebProvider func() *busen.Bus) (*job.Manager, error) {
 	jobRepository := repository12.NewJobRepository(dbProvider)
-	embeddingRepository := repository2.NewEmbeddingRepository(dbProvider)
+	embeddingRepository := repository.NewEmbeddingRepository(dbProvider)
 	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
 	persistent := kvstore.NewPersistent(keyValueRepository)
-	echoRepository := repository3.NewEchoRepository(dbProvider, appCache)
+	echoRepository := repository2.NewEchoRepository(dbProvider, appCache)
 	embeddingService := service.NewEmbeddingService(embeddingRepository, persistent, echoRepository)
 	reindexRunner := runner.NewReindexRunner(embeddingService)
 	importEngine := migrator.NewImportEngine(persistent, storageManager, appCache)
@@ -243,15 +244,10 @@ func BuildTasker(dbProvider func() *gorm.DB, appCache cache.ICache[string, any],
 	fileRepository := repository6.NewFileRepository(dbProvider)
 	fileService := service3.NewFileService(tx, commonRepository, fileRepository, storageManager, ebProvider)
 	cleanup := scheduled.NewCleanup(fileService)
-	commonService := service2.NewCommonService(commonRepository, appCache)
 	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
 	persistent := kvstore.NewPersistent(keyValueRepository)
-	settingRepository := repository7.NewSettingRepository(dbProvider)
-	webhookRepository := repository.NewWebhookRepository(dbProvider)
-	authRepository := repository8.NewAuthRepository(dbProvider, appCache)
-	settingService := service4.NewSettingService(tx, commonService, fileService, storageManager, persistent, settingRepository, webhookRepository, authRepository, ebProvider)
 	exportEngine := migrator.NewExportEngine(storageManager)
-	snapshot := scheduled.NewSnapshot(settingService, exportEngine, ebProvider)
+	snapshot := scheduled.NewSnapshot(persistent, exportEngine, ebProvider)
 	visitorRepository := repository13.NewVisitorRepository(dbProvider)
 	visitorSnapshot := scheduled.NewVisitorSnapshot(tracker, visitorRepository)
 	manager, err := ProvideTaskManager(cleanup, snapshot, visitorSnapshot)
@@ -316,9 +312,9 @@ var InfraSet = wire.NewSet(database.ProviderSet, bus.ProvideProvider, cache.Prov
 
 var RuntimeSet = server.ProviderSet
 
-var EventSet = wire.NewSet(repository14.EchoSet, repository14.UserSet, repository14.KeyValueSet, repository14.WebhookSet, repository14.EmbeddingSet, wire.Bind(new(bus.WebhookObserver), new(*webhook.Dispatcher)), webhook.NewDispatcher, subscriber.NewSnapshotScheduler, subscriber.NewAgentProcessor, subscriber.NewEmbeddingProcessor, service13.EmbeddingSet, ProvideSubscriptionProviders, bus.NewEventRegistry)
+var EventSet = wire.NewSet(repository14.EchoSet, repository14.UserSet, repository14.KeyValueSet, repository14.WebhookSet, repository14.EmbeddingSet, webhook.NewDispatcher, subscriber.NewSnapshotScheduler, subscriber.NewAgentProcessor, subscriber.NewEmbeddingProcessor, service13.EmbeddingSet, ProvideSubscriptionProviders, bus.NewEventRegistry)
 
-var HandlerSet = wire.NewSet(repository14.FileSet, handler.WebSet, repository14.UserSet, repository14.AuthSet, service13.UserSet, service13.AuthSet, handler.UserSet, handler.AuthSet, repository14.EchoSet, service13.EchoSet, handler.EchoSet, repository14.CommentSet, service13.CommentSet, handler.CommentSet, repository14.CommonSet, service13.FileSet, handler.FileSet, repository14.InitSet, service13.InitSet, handler.InitSet, service13.CommonSet, handler.CommonSet, repository14.WebhookSet, repository14.KeyValueSet, repository14.SettingSet, service13.SettingSet, handler.SettingSet, repository14.ConnectSet, service13.ConnectSet, handler.ConnectSet, service13.DashboardSet, handler.DashboardSet, repository14.EmbeddingSet, service13.EmbeddingSet, handler.EmbeddingSet, service13.CopilotSet, wire.Bind(new(service12.UserReader), new(*service5.UserService)), handler.CopilotSet, service13.MigratorSet, handler.MigrationSet, handler.MCPSet, handler.NewBundle)
+var HandlerSet = wire.NewSet(repository14.FileSet, handler.WebSet, repository14.UserSet, repository14.AuthSet, service13.UserSet, service13.AuthSet, handler.UserSet, handler.AuthSet, repository14.EchoSet, service13.EchoSet, handler.EchoSet, repository14.CommentSet, service13.CommentSet, handler.CommentSet, repository14.CommonSet, service13.FileSet, handler.FileSet, repository14.InitSet, service13.InitSet, handler.InitSet, service13.CommonSet, handler.CommonSet, repository14.WebhookSet, webhook.NewSender, repository14.KeyValueSet, repository14.SettingSet, service13.SettingSet, handler.SettingSet, repository14.ConnectSet, service13.ConnectSet, handler.ConnectSet, service13.DashboardSet, handler.DashboardSet, repository14.EmbeddingSet, service13.EmbeddingSet, handler.EmbeddingSet, service13.CopilotSet, wire.Bind(new(service12.UserReader), new(*service5.UserService)), handler.CopilotSet, service13.MigratorSet, handler.MigrationSet, handler.MCPSet, handler.NewBundle)
 
 var MiddlewareSet = wire.NewSet(repository14.AuthSet, middleware.ProviderSet)
 
@@ -339,6 +335,7 @@ func ProvideSubscriptionProviders(
 	bs *subscriber.SnapshotScheduler,
 	ap *subscriber.AgentProcessor,
 	ep *subscriber.EmbeddingProcessor,
+	disp *webhook.Dispatcher,
 ) []bus.Subscriber {
-	return []bus.Subscriber{bs, ap, ep}
+	return []bus.Subscriber{bs, ap, ep, disp}
 }

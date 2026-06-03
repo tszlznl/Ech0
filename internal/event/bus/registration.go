@@ -25,3 +25,16 @@ func On[T any](handler func(context.Context, T) error, opts ...busen.SubscribeOp
 		}, opts...)
 	}
 }
+
+// OnWithMeta 同 On，但把 busen 信封的 Meta（source 等元数据）一并交给 handler。
+// webhook 桥接需要 Meta 来填充中立观察，故走它而非 On —— On 只透传 Value。
+func OnWithMeta[T any](
+	handler func(context.Context, T, map[string]string) error,
+	opts ...busen.SubscribeOption,
+) Registration {
+	return func(b *busen.Bus) (func(), error) {
+		return busen.Subscribe(b, func(ctx context.Context, e busen.Event[T]) error {
+			return handler(ctx, e.Value, e.Meta)
+		}, opts...)
+	}
+}

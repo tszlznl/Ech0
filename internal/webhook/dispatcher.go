@@ -5,19 +5,15 @@ package webhook
 
 import (
 	"context"
-	"net/http"
 	"time"
 
 	"github.com/lin-snow/ech0/internal/config"
 	"github.com/lin-snow/ech0/internal/event"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 	asyncUtil "github.com/lin-snow/ech0/internal/util/async"
-	"github.com/lin-snow/ech0/internal/util/egress"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"go.uber.org/zap"
 )
-
-const defaultWebhookTimeout = 5 * time.Second
 
 type WebhookStore interface {
 	ListActiveWebhooks(ctx context.Context) ([]webhookModel.Webhook, error)
@@ -30,7 +26,7 @@ type WebhookStore interface {
 }
 
 type Dispatcher struct {
-	client *http.Client
+	sender *Sender
 	repo   WebhookStore
 	pool   *asyncUtil.WorkerPool
 }
@@ -38,7 +34,7 @@ type Dispatcher struct {
 func NewDispatcher(repo WebhookStore) *Dispatcher {
 	return &Dispatcher{
 		repo:   repo,
-		client: egress.NewClient(egress.Guard(), egress.Timeout(defaultWebhookTimeout)),
+		sender: NewSender(),
 		pool: asyncUtil.NewWorkerPool(
 			config.Config().Event.WebhookPoolWorkers,
 			config.Config().Event.WebhookPoolQueue,
@@ -64,7 +60,7 @@ func (wd *Dispatcher) HandleObservation(ctx context.Context, obs event.WebhookOb
 
 func (wd *Dispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webhook, obs event.WebhookObservation) {
 	triggerAt := time.Now().UTC().Unix()
-	if err := SendWithRetry(wd.client, wh, obs, 3, 500*time.Millisecond); err != nil {
+	if err := wd.sender.Deliver(wh, obs); err != nil {
 		wd.updateWebhookStatus(ctx, wh.ID, "failed", triggerAt)
 		logUtil.GetLogger().Error("Webhook Handle Failed", zap.String("name", wh.Name), zap.String("url", wh.URL), zap.Error(err))
 		return

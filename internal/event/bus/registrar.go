@@ -4,24 +4,22 @@
 package bus
 
 import (
-	"context"
 	"sync/atomic"
 
-	"github.com/lin-snow/ech0/internal/event"
 	"github.com/lin-snow/ech0/pkg/busen"
 )
 
-// WebhookObserver 接收已发生事件的中立观察并分发给 webhook（由 internal/webhook.Dispatcher 实现）。
-type WebhookObserver interface {
-	HandleObservation(ctx context.Context, obs event.WebhookObservation) error
+// Draining 是订阅者的可选能力：停机时排空其内部异步资源（如 webhook Dispatcher 的 worker pool）。
+// 注册器在拆除订阅后按能力调用它，无需为某个订阅者单独开生命周期特例。
+type Draining interface {
 	Stop()
 	Wait()
 }
 
-// EventRegistrar 在启动时把所有领域订阅者与 webhook 桥接注册到总线，并在停机时统一拆除。
+// EventRegistrar 在启动时把所有领域订阅者注册到总线，并在停机时统一拆除订阅、
+// 再排空实现了 Draining 的订阅者。
 type EventRegistrar struct {
 	bus         *busen.Bus
-	observer    WebhookObserver
 	subscribers []Subscriber
 	unsub       []func()
 	registered  atomic.Bool
@@ -29,12 +27,10 @@ type EventRegistrar struct {
 
 func NewEventRegistry(
 	busProvider func() *busen.Bus,
-	observer WebhookObserver,
 	subscribers []Subscriber,
 ) *EventRegistrar {
 	return &EventRegistrar{
 		bus:         busProvider(),
-		observer:    observer,
 		subscribers: subscribers,
 	}
 }
@@ -58,13 +54,6 @@ func (er *EventRegistrar) Register() error {
 		}
 	}
 
-	webhookUnsubs, err := registerWebhookObservers(er.bus, er.observer.HandleObservation)
-	if err != nil {
-		er.stopSubscriptions()
-		return err
-	}
-	er.unsub = append(er.unsub, webhookUnsubs...)
-
 	er.registered.Store(true)
 	return nil
 }
@@ -74,8 +63,12 @@ func (er *EventRegistrar) Stop() error {
 		return nil
 	}
 	er.stopSubscriptions()
-	er.observer.Stop()
-	er.observer.Wait()
+	for _, sub := range er.subscribers {
+		if d, ok := sub.(Draining); ok {
+			d.Stop()
+			d.Wait()
+		}
+	}
 	return nil
 }
 

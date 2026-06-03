@@ -8,13 +8,11 @@ import (
 	"errors"
 	"time"
 
-	"github.com/lin-snow/ech0/internal/event"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 	"github.com/lin-snow/ech0/internal/util/egress"
 	urlUtil "github.com/lin-snow/ech0/internal/util/url"
-	webhookclient "github.com/lin-snow/ech0/internal/webhook"
 	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
@@ -154,21 +152,8 @@ func (settingService *SettingService) TestWebhook(ctx context.Context, id string
 		return err
 	}
 
-	payload := map[string]any{
-		"message": "webhook connectivity test from ech0",
-		"webhook": webhook.Name,
-		"time":    time.Now().UTC().Format(time.RFC3339),
-	}
-	obs, err := event.NewWebhookObservation("webhook.test", payload, map[string]string{
-		"source": "setting.test",
-	})
-	if err != nil {
-		return err
-	}
-
-	client := egress.NewClient(egress.Guard(), egress.Timeout(5*time.Second))
 	triggerAt := time.Now().UTC().Unix()
-	sendErr := webhookclient.SendWithRetry(client, webhook, obs, 2, 300*time.Millisecond)
+	sendErr := settingService.webhookSender.SendTest(webhook)
 	status := "success"
 	if sendErr != nil {
 		status = "failed"

@@ -107,8 +107,6 @@ var EventSet = wire.NewSet(
 	repository.WebhookSet,
 	repository.EmbeddingSet,
 
-	wire.Bind(new(eventbus.WebhookObserver), new(*webhook.Dispatcher)),
-
 	webhook.NewDispatcher,
 	eventsubscriber.NewSnapshotScheduler,
 	eventsubscriber.NewAgentProcessor,
@@ -146,6 +144,7 @@ var HandlerSet = wire.NewSet(
 	handler.CommonSet,
 
 	repository.WebhookSet,
+	webhook.NewSender,
 	repository.KeyValueSet,
 
 	repository.SettingSet,
@@ -322,6 +321,7 @@ func ProvideSubscriptionProviders(
 	bs *eventsubscriber.SnapshotScheduler,
 	ap *eventsubscriber.AgentProcessor,
 	ep *eventsubscriber.EmbeddingProcessor,
+	disp *webhook.Dispatcher,
 ) []eventbus.Subscriber {
-	return []eventbus.Subscriber{bs, ap, ep}
+	return []eventbus.Subscriber{bs, ap, ep, disp}
 }
