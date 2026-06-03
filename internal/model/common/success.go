@@ -65,7 +65,7 @@ const (
 	LIST_ACCESS_TOKENS_SUCCESS      = "列出访问令牌成功"
 	CREATE_ACCESS_TOKEN_SUCCESS     = "创建访问令牌成功"
 	DELETE_ACCESS_TOKEN_SUCCESS     = "删除访问令牌成功"
-	SCHEDULE_BACKUP_SUCCESS         = "设置备份计划成功"
+	SCHEDULE_SNAPSHOT_SUCCESS       = "设置定时快照计划成功"
 )
 
 // User 成功相关常量
@@ -89,12 +89,10 @@ const (
 	GET_CONNECT_HEALTH_SUCCESS = "获取实例健康状态成功"
 )
 
-// Backup 成功相关常量
+// Snapshot / 导出成功相关常量
 const (
-	BACKUP_SUCCESS          = "备份成功"
-	EXPORT_BACKUP_SUCCESS   = "导出备份成功"
-	CREATE_SNAPSHOT_SUCCESS = "创建快照成功"
-	IMPORT_BACKUP_SUCCESS   = "导入备份成功"
+	EXPORT_SNAPSHOT_SUCCESS = "导出快照成功"
+	IMPORT_SNAPSHOT_SUCCESS = "导入快照成功"
 )
 
 // Agent 成功相关常量

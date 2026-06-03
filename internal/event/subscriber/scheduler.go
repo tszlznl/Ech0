@@ -11,31 +11,31 @@ import (
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 )
 
-type BackupScheduleApplier interface {
-	ApplyBackupSchedule(schedule settingModel.BackupSchedule) error
+type SnapshotScheduleApplier interface {
+	ApplySnapshotSchedule(schedule settingModel.SnapshotSchedule) error
 }
 
-type BackupScheduler struct {
-	applier BackupScheduleApplier
+type SnapshotScheduler struct {
+	applier SnapshotScheduleApplier
 }
 
-func NewBackupScheduler(applier BackupScheduleApplier) *BackupScheduler {
-	return &BackupScheduler{applier: applier}
+func NewSnapshotScheduler(applier SnapshotScheduleApplier) *SnapshotScheduler {
+	return &SnapshotScheduler{applier: applier}
 }
 
-func (bs *BackupScheduler) HandleBackupScheduleUpdated(
+func (bs *SnapshotScheduler) HandleSnapshotScheduleUpdated(
 	ctx context.Context,
-	e contracts.UpdateBackupScheduleEvent,
+	e contracts.UpdateSnapshotScheduleEvent,
 ) error {
 	_ = ctx
-	return bs.applier.ApplyBackupSchedule(e.Schedule)
+	return bs.applier.ApplySnapshotSchedule(e.Schedule)
 }
 
-func (bs *BackupScheduler) Subscriptions() []registry.Subscription {
+func (bs *SnapshotScheduler) Subscriptions() []registry.Subscription {
 	return []registry.Subscription{
 		registry.TopicSubscription(
-			contracts.TopicBackupScheduleUpdate,
-			bs.HandleBackupScheduleUpdated,
+			contracts.TopicSnapshotScheduleUpdate,
+			bs.HandleSnapshotScheduleUpdated,
 			registry.SystemSubscribeOptions()...,
 		),
 	}

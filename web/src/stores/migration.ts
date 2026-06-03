@@ -17,7 +17,7 @@ const POLL_INTERVAL_MS = 2000
 export const useMigrationStore = defineStore('migrationStore', () => {
   const state = ref<MigrationStatusPayload>({
     version: 1,
-    source_type: 'ech0_v4',
+    source_type: 'ech0',
     source_payload: {},
     status: 'idle',
     error_message: '',
@@ -110,7 +110,7 @@ export const useMigrationStore = defineStore('migrationStore', () => {
     if (res.code === 1) {
       state.value = {
         version: 1,
-        source_type: 'ech0_v4',
+        source_type: 'ech0',
         source_payload: {},
         status: 'idle',
         error_message: '',

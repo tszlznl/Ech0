@@ -110,7 +110,7 @@ type AgentSetting struct {
 	ContextWindow int `json:"context_window"`
 }
 
-type BackupSchedule struct {
-	Enable         bool   `json:"enable"`          // 是否启用备份计划
-	CronExpression string `json:"cron_expression"` // 备份计划的 Cron 表达式
+type SnapshotSchedule struct {
+	Enable         bool   `json:"enable"`          // 是否启用定时快照
+	CronExpression string `json:"cron_expression"` // 定时快照的 Cron 表达式
 }

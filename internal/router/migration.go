@@ -35,4 +35,25 @@ func setupMigrationRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 		middleware.RequireScopes(authModel.ScopeAdminSettings),
 		h.MigrationHandler.CleanupMigration(),
 	)
+	// 导出（手动快照异步出口）：与导入对称，统一收敛到 Migrator 域。
+	appRouterGroup.AuthRouterGroup.POST(
+		"/migration/export",
+		middleware.RequireScopes(authModel.ScopeAdminSettings),
+		h.MigrationHandler.StartExport(),
+	)
+	appRouterGroup.AuthRouterGroup.GET(
+		"/migration/export/status",
+		middleware.RequireScopes(authModel.ScopeAdminSettings),
+		h.MigrationHandler.GetExportStatus(),
+	)
+	appRouterGroup.AuthRouterGroup.POST(
+		"/migration/export/cancel",
+		middleware.RequireScopes(authModel.ScopeAdminSettings),
+		h.MigrationHandler.CancelExport(),
+	)
+	appRouterGroup.AuthRouterGroup.GET(
+		"/migration/export/download",
+		middleware.RequireScopes(authModel.ScopeAdminSettings),
+		h.MigrationHandler.DownloadExport(),
+	)
 }

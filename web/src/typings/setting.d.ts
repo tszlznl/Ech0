@@ -117,29 +117,14 @@ declare namespace App {
         audience: 'public-client' | 'cli' | 'integration' | 'mcp-remote'
       }
 
-      type BackupSchedule = {
+      type SnapshotSchedule = {
         enable: boolean
         cron_expression: string
       }
 
-      type BackupScheduleDto = {
+      type SnapshotScheduleDto = {
         enable: boolean
         cron_expression: string
-      }
-
-      type SnapshotTaskStatus = 'pending' | 'running' | 'success' | 'failed'
-
-      type SnapshotTaskCreateResult = {
-        task_id: string
-        status: SnapshotTaskStatus
-      }
-
-      type SnapshotTaskStatusResult = {
-        task_id: string
-        status: SnapshotTaskStatus
-        started_at: number
-        updated_at: number
-        error?: string
       }
 
       type AgentSetting = {

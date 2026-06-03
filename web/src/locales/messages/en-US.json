@@ -652,13 +652,12 @@
     "bindSuccess": "OAuth2 account linked successfully",
     "bindFailed": "OAuth2 account linking failed, please retry"
   },
-  "backupSetting": {
-    "title": "Data Export",
+  "exportSetting": {
     "description": "Export a system snapshot for offline archive and migration.",
     "exportSnapshot": "Export Snapshot",
     "loginRequired": "Please sign in first",
     "exporting": "Exporting... please wait",
-    "exportStarted": "Backup export started!",
+    "exportStarted": "Export started!",
     "exportFailed": "Export failed"
   },
   "agentSetting": {
@@ -793,8 +792,12 @@
     "deleteConfirmTitle": "Delete this access token?",
     "deleteSuccess": "Access token deleted successfully"
   },
+  "dataManagement": {
+    "tabImport": "Import",
+    "tabExport": "Export",
+    "tabSnapshot": "Snapshot"
+  },
   "migrationSetting": {
-    "title": "Data Import",
     "description": "Supports importing data from Ech0 v4 and Memos.",
     "inDevelopment": "In development",
     "sourceZip": "Source zip package",
@@ -834,7 +837,7 @@
     "cancelled": "Migration cancelled",
     "cleanupFailed": "Failed to cleanup migration",
     "cleaned": "Migration records cleaned",
-    "sourceEch0v4": "Supports latest Ech0 v4 and above",
+    "sourceEch0": "Supports importing from Ech0",
     "sourceMemos": "Supports Memos (in development)",
     "statusIdle": "Idle",
     "statusPending": "Pending",
@@ -889,14 +892,9 @@
     "humanHourly": "Runs every {n} hour(s)",
     "humanCustom": "Runs on a custom schedule"
   },
-  "backupScheduleSetting": {
-    "title": "Snapshot Settings",
+  "snapshotScheduleSetting": {
     "description": "Configure automatic snapshot creation and trigger snapshots manually.",
-    "createSnapshot": "Create Snapshot",
-    "creatingSnapshot": "Creating...",
-    "createSnapshotSuccess": "Snapshot created successfully",
-    "createSnapshotFailed": "Failed to create snapshot",
-    "enableAutoBackup": "Auto create snapshots",
+    "enableAutoSnapshot": "Auto create snapshots",
     "crontab": "Snapshot schedule"
   },
   "uploader": {

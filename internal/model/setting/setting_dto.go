@@ -82,9 +82,9 @@ type AccessTokenSettingDto struct {
 	Audience string   `json:"audience"` // 访问令牌受众（public-client/cli/integration）
 }
 
-type BackupScheduleDto struct {
-	Enable         bool   `json:"enable"`          // 是否启用备份计划
-	CronExpression string `json:"cron_expression"` // 备份计划的 Cron 表达式
+type SnapshotScheduleDto struct {
+	Enable         bool   `json:"enable"`          // 是否启用定时快照
+	CronExpression string `json:"cron_expression"` // 定时快照的 Cron 表达式
 }
 
 type AgentSettingDto struct {

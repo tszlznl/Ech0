@@ -75,8 +75,8 @@ const (
 	PasskeySettingKey = "passkey_setting"
 	// ServerURLKey 是服务器URL设置的键
 	ServerURLKey = "server_url"
-	// BackupScheduleKey 是备份计划设置的键
-	BackupScheduleKey = "backup_schedule"
+	// SnapshotScheduleKey 是定时快照计划设置的键
+	SnapshotScheduleKey = "snapshot_schedule"
 	// AgentSettingKey 是 Agent 设置的键
 	AgentSettingKey = "agent_setting"
 	// EmbeddingSettingKey 是 Embedding 向量设置的键

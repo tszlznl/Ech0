@@ -27,6 +27,7 @@ func (s Status) IsTerminal() bool {
 const (
 	TypeReindex   = "reindex"
 	TypeMigration = "migration"
+	TypeExport    = "export"
 )
 
 // Job 是通用作业的持久化行。主键即 Type，结构性保证「每类型单行」：新一次 Submit

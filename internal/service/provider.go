@@ -6,7 +6,6 @@ package service
 import (
 	"github.com/google/wire"
 	authService "github.com/lin-snow/ech0/internal/service/auth"
-	backupService "github.com/lin-snow/ech0/internal/service/backup"
 	commentService "github.com/lin-snow/ech0/internal/service/comment"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
 	connectService "github.com/lin-snow/ech0/internal/service/connect"
@@ -56,10 +55,6 @@ var (
 	ConnectSet = wire.NewSet(
 		connectService.NewConnectService,
 		wire.Bind(new(connectService.Service), new(*connectService.ConnectService)),
-	)
-	BackupSet = wire.NewSet(
-		backupService.NewBackupService,
-		wire.Bind(new(backupService.Service), new(*backupService.BackupService)),
 	)
 	DashboardSet = wire.NewSet(
 		dashboardService.NewDashboardService,

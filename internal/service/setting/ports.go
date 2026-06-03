@@ -33,8 +33,8 @@ type Service interface {
 	ListAccessTokens(ctx context.Context) ([]model.AccessTokenSetting, error)
 	CreateAccessToken(ctx context.Context, newToken *model.AccessTokenSettingDto) (string, error)
 	DeleteAccessToken(ctx context.Context, id string) error
-	GetBackupScheduleSetting(setting *model.BackupSchedule) error
-	UpdateBackupScheduleSetting(ctx context.Context, newSetting *model.BackupScheduleDto) error
+	GetSnapshotScheduleSetting(setting *model.SnapshotSchedule) error
+	UpdateSnapshotScheduleSetting(ctx context.Context, newSetting *model.SnapshotScheduleDto) error
 	GetAgentInfo(setting *model.AgentSetting) error
 	GetAgentSettings(ctx context.Context, setting *model.AgentSetting) error
 	UpdateAgentSettings(ctx context.Context, newSetting *model.AgentSettingDto) error

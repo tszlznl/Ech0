@@ -652,13 +652,12 @@
     "bindSuccess": "OAuth2 アカウントの連携に成功しました",
     "bindFailed": "OAuth2 アカウントの連携に失敗しました。再試行してください"
   },
-  "backupSetting": {
-    "title": "データエクスポート",
+  "exportSetting": {
     "description": "現在のシステムスナップショットをエクスポートします。オフラインアーカイブや移行に便利です。",
     "exportSnapshot": "スナップショットをエクスポート",
     "loginRequired": "ログインしてから利用してください",
     "exporting": "エクスポート中...少々お待ちください",
-    "exportStarted": "バックアップエクスポートを開始しました！",
+    "exportStarted": "エクスポートを開始しました！",
     "exportFailed": "エクスポートに失敗しました"
   },
   "agentSetting": {
@@ -793,8 +792,12 @@
     "deleteConfirmTitle": "この Access Token を削除しますか？",
     "deleteSuccess": "Access Token を削除しました"
   },
+  "dataManagement": {
+    "tabImport": "インポート",
+    "tabExport": "エクスポート",
+    "tabSnapshot": "スナップショット"
+  },
   "migrationSetting": {
-    "title": "データインポート",
     "description": "Ech0 v4、Memos からのインポートに対応します。",
     "inDevelopment": "開発中",
     "sourceZip": "ソース zip",
@@ -834,7 +837,7 @@
     "cancelled": "移行をキャンセルしました",
     "cleanupFailed": "移行のクリーンアップに失敗しました",
     "cleaned": "移行レコードをクリーンアップしました",
-    "sourceEch0v4": "最新の Ech0 v4 以降に対応",
+    "sourceEch0": "Ech0 からのインポートに対応",
     "sourceMemos": "Memos 対応（開発中）",
     "statusIdle": "アイドル",
     "statusPending": "待機中",
@@ -889,14 +892,9 @@
     "humanHourly": "{n} 時間ごとに実行",
     "humanCustom": "カスタムスケジュールで実行"
   },
-  "backupScheduleSetting": {
-    "title": "スナップショット設定",
+  "snapshotScheduleSetting": {
     "description": "スナップショットの自動作成スケジュールを設定できます。手動作成にも対応します。",
-    "createSnapshot": "スナップショットを作成",
-    "creatingSnapshot": "作成中...",
-    "createSnapshotSuccess": "スナップショットを作成しました",
-    "createSnapshotFailed": "スナップショットの作成に失敗しました",
-    "enableAutoBackup": "スナップショットを自動作成",
+    "enableAutoSnapshot": "スナップショットを自動作成",
     "crontab": "スナップショット予定"
   },
   "uploader": {

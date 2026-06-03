@@ -140,9 +140,8 @@ const (
 	INVALID_CRON_EXPRESSION             = "无效的 Cron 表达式"
 )
 
-// Backup 错误相关常量
+// Snapshot 错误相关常量
 const (
-	SNAPSHOT_UPLOAD_FAILED  = "快照上传失败"
 	SNAPSHOT_RESTORE_FAILED = "快照恢复失败"
 	DATABASE_CLOSE_FAILED   = "数据库关闭失败"
 )

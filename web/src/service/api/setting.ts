@@ -162,42 +162,27 @@ export function fetchDeleteAccessToken(tokenId: string) {
   })
 }
 
-// 获取备份计划
-export function fetchGetBackupScheduleSetting() {
-  return request<App.Api.Setting.BackupSchedule>({
-    url: '/backup/schedule',
+// 获取定时快照计划
+export function fetchGetSnapshotScheduleSetting() {
+  return request<App.Api.Setting.SnapshotSchedule>({
+    url: '/snapshot/schedule',
     method: 'GET',
   })
 }
 
-// 更新备份计划
-export function fetchUpdateBackupScheduleSetting(
-  backupSchedule: App.Api.Setting.BackupScheduleDto,
+// 更新定时快照计划
+export function fetchUpdateSnapshotScheduleSetting(
+  snapshotSchedule: App.Api.Setting.SnapshotScheduleDto,
 ) {
   return request({
-    url: '/backup/schedule',
+    url: '/snapshot/schedule',
     method: 'POST',
-    data: backupSchedule,
+    data: snapshotSchedule,
   })
 }
 
-// 手动创建快照
-export function fetchCreateSnapshot() {
-  return request<App.Api.Setting.SnapshotTaskCreateResult>({
-    url: '/backup/snapshot',
-    method: 'POST',
-    // 快照创建可能耗时较长，避免默认 20s 超时导致请求中断
-    timeout: 60 * 60 * 1000,
-  })
-}
-
-// 获取快照任务状态
-export function fetchGetSnapshotStatus(taskId: string) {
-  return request<App.Api.Setting.SnapshotTaskStatusResult>({
-    url: `/backup/snapshot/${taskId}`,
-    method: 'GET',
-  })
-}
+// 手动快照（导出）已统一收敛到 Migrator 域，见 service/api/other.ts 的 fetchStartExport /
+// fetchGetExportStatus / fetchCancelExport（走 /migration/export*，job.Manager 驱动）。
 
 // 获取LLM Agent信息(无需鉴权)
 export function fetchGetAgentInfo() {

@@ -652,13 +652,12 @@
     "bindSuccess": "OAuth2账号绑定成功",
     "bindFailed": "OAuth2账号绑定失败，请重试"
   },
-  "backupSetting": {
-    "title": "数据导出",
+  "exportSetting": {
     "description": "导出当前系统快照，便于离线归档与迁移。",
     "exportSnapshot": "导出快照",
     "loginRequired": "请登录后使用",
     "exporting": "导出中...请稍等",
-    "exportStarted": "备份导出开始！",
+    "exportStarted": "导出已开始！",
     "exportFailed": "导出失败"
   },
   "agentSetting": {
@@ -793,8 +792,12 @@
     "deleteConfirmTitle": "确认删除此 Access Token 吗？",
     "deleteSuccess": "Access Token 删除成功"
   },
+  "dataManagement": {
+    "tabImport": "导入",
+    "tabExport": "导出",
+    "tabSnapshot": "快照"
+  },
   "migrationSetting": {
-    "title": "数据导入",
     "description": "支持从 Ech0 v4、Memos 导入数据。",
     "inDevelopment": "开发中",
     "sourceZip": "来源压缩包",
@@ -834,7 +837,7 @@
     "cancelled": "迁移已取消",
     "cleanupFailed": "清理迁移失败",
     "cleaned": "迁移记录已清理",
-    "sourceEch0v4": "支持最新版 Ech0 v4 及以后",
+    "sourceEch0": "支持从 Ech0 导入",
     "sourceMemos": "支持 Memos（开发中）",
     "statusIdle": "空闲",
     "statusPending": "等待中",
@@ -861,14 +864,9 @@
     "invalidUrl": "Connect 地址格式无效，仅支持 http/https",
     "disconnectConfirmTitle": "确定要断开连接吗？"
   },
-  "backupScheduleSetting": {
-    "title": "快照设置",
+  "snapshotScheduleSetting": {
     "description": "配置自动创建快照计划，也可手动触发创建。",
-    "createSnapshot": "创建快照",
-    "creatingSnapshot": "创建中...",
-    "createSnapshotSuccess": "快照创建成功",
-    "createSnapshotFailed": "快照创建失败",
-    "enableAutoBackup": "自动创建快照",
+    "enableAutoSnapshot": "自动创建快照",
     "crontab": "快照计划"
   },
   "cronEditor": {

@@ -66,15 +66,6 @@ definitions:
           等）
         type: string
     type: object
-  model.BackupScheduleDto:
-    properties:
-      cron_expression:
-        description: 备份计划的 Cron 表达式
-        type: string
-      enable:
-        description: 是否启用备份计划
-        type: boolean
-    type: object
   model.Connected:
     properties:
       connect_url:
@@ -314,6 +305,15 @@ definitions:
         type: string
       use_ssl:
         description: 是否使用 SSL
+        type: boolean
+    type: object
+  model.SnapshotScheduleDto:
+    properties:
+      cron_expression:
+        description: 定时快照的 Cron 表达式
+        type: string
+      enable:
+        description: 是否启用定时快照
         type: boolean
     type: object
   model.SystemSettingDto:
@@ -650,87 +650,6 @@ paths:
       summary: 刷新访问令牌
       tags:
       - 认证
-  /backup/export:
-    get:
-      consumes:
-      - application/json
-      description: 用户导出备份文件，成功后触发文件下载
-      produces:
-      - application/octet-stream
-      responses:
-        "200":
-          description: 导出备份失败
-          schema:
-            type: string
-      summary: 导出数据备份
-      tags:
-      - 系统备份
-  /backup/schedule:
-    get:
-      consumes:
-      - application/json
-      description: 获取系统的定期备份计划设置
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 获取备份计划失败
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 获取备份计划
-      tags:
-      - 系统设置
-    post:
-      consumes:
-      - application/json
-      description: 为系统设置定期备份计划
-      parameters:
-      - description: 备份计划设置
-        in: body
-        name: backupSchedule
-        required: true
-        schema:
-          $ref: '#/definitions/model.BackupScheduleDto'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 设置备份计划失败
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 更新备份计划
-      tags:
-      - 系统设置
-  /backup/snapshot:
-    post:
-      consumes:
-      - application/json
-      description: 仅在服务端创建本地快照；若配置了 S3 则尝试上传（失败静默）
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 创建快照失败
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 手动创建快照
-      tags:
-      - 系统备份
-  /backup/snapshot/{taskId}:
-    get:
-      consumes:
-      - application/json
-      description: 根据 taskId 查询创建快照任务的执行状态
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 查询快照状态失败
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: 查询快照任务状态
-      tags:
-      - 系统备份
   /comments:
     get:
       description: 按动态 ID 获取评论列表
@@ -1511,6 +1430,21 @@ paths:
       summary: 清理迁移
       tags:
       - 迁移
+  /migration/export/download:
+    get:
+      consumes:
+      - application/json
+      description: 同步产出快照并以附件形式下载
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: 导出快照失败
+          schema:
+            type: string
+      summary: 导出快照（下载）
+      tags:
+      - 数据迁移
   /migration/start:
     post:
       consumes:
@@ -2132,6 +2066,42 @@ paths:
           schema:
             $ref: '#/definitions/handler.Response'
       summary: 更新设置
+      tags:
+      - 系统设置
+  /snapshot/schedule:
+    get:
+      consumes:
+      - application/json
+      description: 获取系统的定时快照计划设置
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取定时快照计划失败
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: 获取定时快照计划
+      tags:
+      - 系统设置
+    post:
+      consumes:
+      - application/json
+      description: 为系统设置定时快照计划
+      parameters:
+      - description: 定时快照计划设置
+        in: body
+        name: snapshotSchedule
+        required: true
+        schema:
+          $ref: '#/definitions/model.SnapshotScheduleDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 设置定时快照计划失败
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: 更新定时快照计划
       tags:
       - 系统设置
   /system/logs:

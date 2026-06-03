@@ -99,24 +99,14 @@ func setupSettingRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	)
 
 	appRouterGroup.AuthRouterGroup.GET(
-		"/backup/schedule",
+		"/snapshot/schedule",
 		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.GetBackupScheduleSetting(),
+		h.SettingHandler.GetSnapshotScheduleSetting(),
 	)
 	appRouterGroup.AuthRouterGroup.POST(
-		"/backup/schedule",
+		"/snapshot/schedule",
 		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.UpdateBackupScheduleSetting(),
-	)
-	appRouterGroup.AuthRouterGroup.POST(
-		"/backup/snapshot",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.BackupHandler.CreateSnapshot(),
-	)
-	appRouterGroup.AuthRouterGroup.GET(
-		"/backup/snapshot/:taskId",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.BackupHandler.GetSnapshotStatus(),
+		h.SettingHandler.UpdateSnapshotScheduleSetting(),
 	)
 
 	appRouterGroup.AuthRouterGroup.GET(

@@ -6,11 +6,8 @@ package cli
 import (
 	"fmt"
 	"net"
-	"os"
-	"path/filepath"
 
 	"github.com/charmbracelet/huh"
-	"github.com/lin-snow/ech0/internal/backup"
 	"github.com/lin-snow/ech0/internal/config"
 	"github.com/lin-snow/ech0/internal/di"
 	"github.com/lin-snow/ech0/internal/tui"
@@ -54,18 +51,6 @@ func DoServeWithBlock() {
 		return
 	}
 	tui.PrintCLIInfo("🎉 Service stopped", "Ech0 server has stopped")
-}
-
-func DoBackup() {
-	_, backupFileName, err := backup.ExecuteBackup()
-	if err != nil {
-		tui.PrintCLIInfo("😭 Result", "Backup failed: "+err.Error())
-		return
-	}
-
-	pwd, _ := os.Getwd()
-	fullPath := filepath.Join(pwd, "data", "files", "backups", backupFileName)
-	tui.PrintCLIInfo("🎉 Backup succeeded", fullPath)
 }
 
 func DoVersion() {
@@ -119,7 +104,6 @@ func DoTui() {
 		}
 
 		options = append(options,
-			huh.NewOption("📦 Run backup", "backup"),
 			huh.NewOption("📌 About Ech0", "version"),
 			huh.NewOption("❌ Exit", "exit"),
 		)
@@ -141,8 +125,6 @@ func DoTui() {
 			DoServe()
 		case "servebusy":
 			tui.PrintCLIInfo("ℹ️ Service status", "The web service is running in another process and cannot be stopped from here")
-		case "backup":
-			DoBackup()
 		case "version":
 			tui.ClearScreen()
 			DoVersion()

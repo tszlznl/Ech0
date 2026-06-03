@@ -598,20 +598,20 @@ func (settingHandler *SettingHandler) DeleteAccessToken() gin.HandlerFunc {
 	})
 }
 
-// GetBackupScheduleSetting 获取备份计划
+// GetSnapshotScheduleSetting 获取定时快照计划
 //
-//	@Summary		获取备份计划
-//	@Description	获取系统的定期备份计划设置
+//	@Summary		获取定时快照计划
+//	@Description	获取系统的定时快照计划设置
 //	@Tags			系统设置
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	handler.Response	"获取备份计划成功"
-//	@Failure		200	{object}	handler.Response	"获取备份计划失败"
-//	@Router			/backup/schedule [get]
-func (settingHandler *SettingHandler) GetBackupScheduleSetting() gin.HandlerFunc {
+//	@Success		200	{object}	handler.Response	"获取定时快照计划成功"
+//	@Failure		200	{object}	handler.Response	"获取定时快照计划失败"
+//	@Router			/snapshot/schedule [get]
+func (settingHandler *SettingHandler) GetSnapshotScheduleSetting() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		var backupSchedule model.BackupSchedule
-		if err := settingHandler.settingService.GetBackupScheduleSetting(&backupSchedule); err != nil {
+		var snapshotSchedule model.SnapshotSchedule
+		if err := settingHandler.settingService.GetSnapshotScheduleSetting(&snapshotSchedule); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -619,35 +619,35 @@ func (settingHandler *SettingHandler) GetBackupScheduleSetting() gin.HandlerFunc
 		}
 
 		return res.Response{
-			Data: backupSchedule,
+			Data: snapshotSchedule,
 			Msg:  commonModel.GET_SETTINGS_SUCCESS,
 		}
 	})
 }
 
-// UpdateScheduleBackupSettings 更新备份计划
+// UpdateSnapshotScheduleSetting 更新定时快照计划
 //
-//	@Summary		更新备份计划
-//	@Description	为系统设置定期备份计划
+//	@Summary		更新定时快照计划
+//	@Description	为系统设置定时快照计划
 //	@Tags			系统设置
 //	@Accept			json
 //	@Produce		json
-//	@Param			backupSchedule	body		model.BackupScheduleDto	true	"备份计划设置"
-//	@Success		200				{object}	handler.Response		"设置备份计划成功"
-//	@Failure		200				{object}	handler.Response		"设置备份计划失败"
-//	@Router			/backup/schedule [post]
-func (settingHandler *SettingHandler) UpdateBackupScheduleSetting() gin.HandlerFunc {
+//	@Param			snapshotSchedule	body		model.SnapshotScheduleDto	true	"定时快照计划设置"
+//	@Success		200					{object}	handler.Response			"设置定时快照计划成功"
+//	@Failure		200					{object}	handler.Response			"设置定时快照计划失败"
+//	@Router			/snapshot/schedule [post]
+func (settingHandler *SettingHandler) UpdateSnapshotScheduleSetting() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// 解析请求体中的参数
-		var backupSchedule model.BackupScheduleDto
-		if err := ctx.ShouldBindJSON(&backupSchedule); err != nil {
+		var snapshotSchedule model.SnapshotScheduleDto
+		if err := ctx.ShouldBindJSON(&snapshotSchedule); err != nil {
 			return res.Response{
 				Msg: commonModel.INVALID_REQUEST_BODY,
 				Err: err,
 			}
 		}
 
-		if err := settingHandler.settingService.UpdateBackupScheduleSetting(ctx.Request.Context(), &backupSchedule); err != nil {
+		if err := settingHandler.settingService.UpdateSnapshotScheduleSetting(ctx.Request.Context(), &snapshotSchedule); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -655,7 +655,7 @@ func (settingHandler *SettingHandler) UpdateBackupScheduleSetting() gin.HandlerF
 		}
 
 		return res.Response{
-			Msg: commonModel.SCHEDULE_BACKUP_SUCCESS,
+			Msg: commonModel.SCHEDULE_SNAPSHOT_SUCCESS,
 		}
 	})
 }

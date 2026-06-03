@@ -5,22 +5,16 @@ package migrator
 
 import "github.com/lin-snow/ech0/internal/migrator/spec"
 
+// 引擎对外复用的契约别名(import / export 对称)。
 type (
-	ExtractRequest  = spec.ExtractRequest
-	ExtractResult   = spec.ExtractResult
-	RawRecord       = spec.RawRecord
-	CanonicalRecord = spec.CanonicalRecord
-	FailedItem      = spec.FailedItem
-	LoadResult      = spec.LoadResult
-	MigrateRequest  = spec.MigrateRequest
-	MigrateProgress = spec.MigrateProgress
-	MigrateResult   = spec.MigrateResult
-)
+	ImportRequest  = spec.ImportRequest
+	ImportProgress = spec.ImportProgress
+	ImportResult   = spec.ImportResult
+	FailedItem     = spec.FailedItem
+	Importer       = spec.Importer
 
-type (
-	Extractor      = spec.Extractor
-	SourceMigrator = spec.SourceMigrator
-	Transformer    = spec.Transformer
-	Validator      = spec.Validator
-	Loader         = spec.Loader
+	ExportRequest  = spec.ExportRequest
+	ExportProgress = spec.ExportProgress
+	ExportResult   = spec.ExportResult
+	Exporter       = spec.Exporter
 )

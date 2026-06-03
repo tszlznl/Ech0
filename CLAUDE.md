@@ -41,13 +41,13 @@ go test -run TestName ./path/to/pkg             # by name
 
 Run a single frontend test: `pnpm -C web exec vitest run path/to/file.spec.ts` (or `-t "test name"`).
 
-Binary entrypoint is `cmd/ech0/main.go`. CLI verbs (Cobra): `ech0 serve` (HTTP), bare `ech0`/`ech0 tui` (TUI), `ech0 version`, `ech0 hello`. The `backup.go` CLI command provides snapshot export outside the web UI.
+Binary entrypoint is `cmd/ech0/main.go`. CLI verbs (Cobra): `ech0 serve` (HTTP), bare `ech0`/`ech0 tui` (TUI), `ech0 version`, `ech0 hello`. Snapshot import/export is web-only (admin panel "数据管理"); there is no snapshot CLI verb.
 
 ## Architecture
 
 ### Layered backend with Wire DI
 
-Backend follows a strict layered architecture — **handler → service → repository → database** — with Google Wire generating the dependency graph. Each domain (echo, user, auth, comment, connect, file, setting, dashboard, agent, backup, migration, init, common) has parallel packages under `internal/handler/<x>`, `internal/service/<x>`, `internal/repository/<x>`, and `internal/model/<x>`.
+Backend follows a strict layered architecture — **handler → service → repository → database** — with Google Wire generating the dependency graph. Each domain (echo, user, auth, comment, connect, file, setting, dashboard, agent, migration, init, common) has parallel packages under `internal/handler/<x>`, `internal/service/<x>`, `internal/repository/<x>`, and `internal/model/<x>`.
 
 - `internal/di/wire.go` declares provider sets (`HandlerSet`, `EventSet`, `TaskerSet`, `MigratorSet`, `MiddlewareSet`, `InfraSet`, `RuntimeSet`) and the `BuildApp` injector that composes the full runtime. **If you add/remove a constructor or change a binding, run `make wire`** before committing.
 - Cross-domain aliases are required when importing layers: `xxxHandler`, `xxxService`, `xxxRepository`, `xxxModel`, `xxxUtil` (enforced by existing code; see README "Start Backend & Frontend" note).
@@ -57,7 +57,7 @@ Backend follows a strict layered architecture — **handler → service → repo
 
 ### Event bus (Busen)
 
-Ech0 uses the in-repo **Busen** library (vendored at `pkg/busen`, imported as `github.com/lin-snow/ech0/pkg/busen`) as an async in-process event bus. Publishers live at `internal/event/publisher`, subscribers at `internal/event/subscriber` (agent processor, backup scheduler, dead-letter resolver), contracts at `internal/event/contracts`, wiring at `internal/event/registry`. The bus decouples comment/echo/user events from side effects like webhooks, agent runs, and backups. Runtime tuning is via `ECH0_EVENT_*` env vars (buffers, parallelism, webhook worker pool) — see README "Event Runtime Parameters".
+Ech0 uses the in-repo **Busen** library (vendored at `pkg/busen`, imported as `github.com/lin-snow/ech0/pkg/busen`) as an async in-process event bus. Publishers live at `internal/event/publisher`, subscribers at `internal/event/subscriber` (agent processor, snapshot scheduler, dead-letter resolver), contracts at `internal/event/contracts`, wiring at `internal/event/registry`. The bus decouples comment/echo/user events from side effects like webhooks, agent runs, and snapshots. Runtime tuning is via `ECH0_EVENT_*` env vars (buffers, parallelism, webhook worker pool) — see README "Event Runtime Parameters".
 
 Webhook dispatch (`internal/webhook`) and agent processing (`internal/agent`) are implemented as event subscribers, not as inline handler calls. When adding cross-cutting side effects, prefer publishing an event over invoking services directly from handlers.
 
@@ -79,7 +79,7 @@ Webhook dispatch (`internal/webhook`) and agent processing (`internal/agent`) ar
 
 - **Before a PR**: `make check` is mandatory (enforces backend lint, frontend lint, i18n checks). `go build ./...` and `pnpm build` must pass. Regenerate Swagger (`make swagger`) whenever routes or request/response shapes change and commit `internal/swagger/`.
 - **DI changes**: regenerate with `make wire`; CI runs `make wire-check`.
-- **Data import**: the admin panel offers a "Data Import" (migration) workflow that currently supports Ech0 v4 → v4 snapshot import and Memos → Ech0. Code lives in `internal/migrator` and `internal/service/migrator`.
+- **Migrator (data portability)**: the admin panel's "数据管理" page wraps a bidirectional Migrator domain. **Import** supports Ech0 snapshot → Ech0 and Memos → Ech0; **Export** produces a unified **Snapshot** (a zip of `data/`, see `internal/migrator/snapshot`) that round-trips back through the `ech0` import. Core engine (importer/exporter execution, ETL, snapshot resource) lives in `internal/migrator`; `internal/service/migrator` is a thin layer doing auth + job lifecycle + DTO + upload orchestration. Export triggers: manual snapshot (`POST /migration/export`, async via `job.Manager`, `TypeExport`), scheduled snapshot (`internal/task/scheduled` cron, syncs through the exporter), and synchronous download (`GET /migration/export/download`). There is no separate "backup" concept — it is all snapshot export.
 - **Integration comment endpoint**: `POST /api/comments/integration` intentionally bypasses captcha/form-token — it requires an access token with `comment:write` scope and `integration` audience. Preserve this behavior.
 - **Access tokens**: scope/audience/`typ` design is documented at `docs/dev/access-token-scope-design.md`; implementation is authoritative.
 - **Layered import aliases** (required): `xxxHandler`, `xxxService`, `xxxRepository`, `xxxModel`, `xxxUtil`.

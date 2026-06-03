@@ -1,0 +1,82 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
+// Package s3 是「导出到对象存储」的 Exporter 适配器:产出 Snapshot 后上传到 S3,同时保留本地
+// 产物(故下载仍可取回)。S3 上传为尽力而为,失败仅记日志、不影响本地导出成功。
+package s3
+
+import (
+	"context"
+	"errors"
+	"os"
+	"time"
+
+	"github.com/lin-snow/ech0/internal/migrator/snapshot"
+	"github.com/lin-snow/ech0/internal/migrator/spec"
+	migratorModel "github.com/lin-snow/ech0/internal/model/migrator"
+	"github.com/lin-snow/ech0/internal/storage"
+	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	"go.uber.org/zap"
+)
+
+const uploadTimeout = 60 * time.Minute
+
+type Exporter struct {
+	storageManager *storage.Manager
+}
+
+func New(storageManager *storage.Manager) *Exporter {
+	return &Exporter{storageManager: storageManager}
+}
+
+func (e *Exporter) Export(_ context.Context, req spec.ExportRequest) (spec.ExportResult, error) {
+	emit(req, migratorModel.ExportPhasePacking)
+	path, fileName, err := snapshot.Create()
+	if err != nil {
+		return spec.ExportResult{}, err
+	}
+
+	emit(req, migratorModel.ExportPhaseUploading)
+	e.uploadToS3(path, fileName)
+
+	var size int64
+	if info, statErr := os.Stat(path); statErr == nil {
+		size = info.Size()
+	}
+
+	emit(req, migratorModel.ExportPhaseCompleted)
+	return spec.ExportResult{ArtifactPath: path, FileName: fileName, Size: size}, nil
+}
+
+// uploadToS3 把产物上传到 S3;未启用对象存储或上传失败均不影响本地导出成功,仅记日志。
+func (e *Exporter) uploadToS3(artifactPath, fileName string) {
+	if e.storageManager == nil {
+		return
+	}
+	selector := e.storageManager.GetSelector()
+	if selector == nil || !selector.ObjectEnabled() {
+		return
+	}
+
+	uploadCtx, cancel := context.WithTimeout(context.Background(), uploadTimeout)
+	defer cancel()
+
+	cfg := e.storageManager.GetStorageConfig(uploadCtx)
+	if err := snapshot.UploadToS3(uploadCtx, artifactPath, fileName, cfg); err != nil {
+		switch {
+		case errors.Is(err, context.DeadlineExceeded):
+			logUtil.GetLogger().Warn("Failed to upload snapshot to S3: upload timeout reached",
+				zap.Duration("timeout", uploadTimeout), zap.Error(err))
+		case errors.Is(err, context.Canceled):
+			logUtil.GetLogger().Warn("Failed to upload snapshot to S3: upload context canceled", zap.Error(err))
+		default:
+			logUtil.GetLogger().Warn("Failed to upload snapshot to S3", zap.Error(err))
+		}
+	}
+}
+
+func emit(req spec.ExportRequest, phase string) {
+	if req.UpdateProgress != nil {
+		req.UpdateProgress(spec.ExportProgress{CurrentPhase: phase})
+	}
+}

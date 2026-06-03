@@ -79,16 +79,16 @@ func (p *Publisher) ResourceUploaded(ctx context.Context, evt contracts.Resource
 		busen.WithKey(key))
 }
 
-func (p *Publisher) SystemBackup(ctx context.Context, evt contracts.SystemBackupEvent) error {
-	return busen.Publish(ctx, p.bus, evt, busen.WithTopic(contracts.TopicSystemBackup))
+func (p *Publisher) SystemSnapshot(ctx context.Context, evt contracts.SystemSnapshotEvent) error {
+	return busen.Publish(ctx, p.bus, evt, busen.WithTopic(contracts.TopicSystemSnapshot))
 }
 
 func (p *Publisher) SystemExport(ctx context.Context, evt contracts.SystemExportEvent) error {
 	return busen.Publish(ctx, p.bus, evt, busen.WithTopic(contracts.TopicSystemExport))
 }
 
-func (p *Publisher) BackupScheduleUpdated(ctx context.Context, evt contracts.UpdateBackupScheduleEvent) error {
-	return busen.Publish(ctx, p.bus, evt, busen.WithTopic(contracts.TopicBackupScheduleUpdate))
+func (p *Publisher) SnapshotScheduleUpdated(ctx context.Context, evt contracts.UpdateSnapshotScheduleEvent) error {
+	return busen.Publish(ctx, p.bus, evt, busen.WithTopic(contracts.TopicSnapshotScheduleUpdate))
 }
 
 func (p *Publisher) DeadLetterRetried(ctx context.Context, evt contracts.DeadLetterRetriedEvent) error {

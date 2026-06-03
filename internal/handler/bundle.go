@@ -5,7 +5,6 @@ package handler
 
 import (
 	authHandler "github.com/lin-snow/ech0/internal/handler/auth"
-	backupHandler "github.com/lin-snow/ech0/internal/handler/backup"
 	commentHandler "github.com/lin-snow/ech0/internal/handler/comment"
 	commonHandler "github.com/lin-snow/ech0/internal/handler/common"
 	connectHandler "github.com/lin-snow/ech0/internal/handler/connect"
@@ -15,7 +14,7 @@ import (
 	embeddingHandler "github.com/lin-snow/ech0/internal/handler/embedding"
 	fileHandler "github.com/lin-snow/ech0/internal/handler/file"
 	initHandler "github.com/lin-snow/ech0/internal/handler/init"
-	migrationHandler "github.com/lin-snow/ech0/internal/handler/migration"
+	migratorHandler "github.com/lin-snow/ech0/internal/handler/migrator"
 	settingHandler "github.com/lin-snow/ech0/internal/handler/setting"
 	userHandler "github.com/lin-snow/ech0/internal/handler/user"
 	webHandler "github.com/lin-snow/ech0/internal/handler/web"
@@ -34,8 +33,7 @@ type Bundle struct {
 	CommonHandler    *commonHandler.CommonHandler
 	SettingHandler   *settingHandler.SettingHandler
 	ConnectHandler   *connectHandler.ConnectHandler
-	BackupHandler    *backupHandler.BackupHandler
-	MigrationHandler *migrationHandler.MigrationHandler
+	MigrationHandler *migratorHandler.MigrationHandler
 	DashboardHandler *dashboardHandler.DashboardHandler
 	CopilotHandler   *copilotHandler.CopilotHandler
 	EmbeddingHandler *embeddingHandler.EmbeddingHandler
@@ -54,8 +52,7 @@ func NewBundle(
 	commonHandler *commonHandler.CommonHandler,
 	settingHandler *settingHandler.SettingHandler,
 	connectHandler *connectHandler.ConnectHandler,
-	backupHandler *backupHandler.BackupHandler,
-	migrationHandler *migrationHandler.MigrationHandler,
+	migratorHandler *migratorHandler.MigrationHandler,
 	dashboardHandler *dashboardHandler.DashboardHandler,
 	copilotHandler *copilotHandler.CopilotHandler,
 	embeddingHandler *embeddingHandler.EmbeddingHandler,
@@ -72,8 +69,7 @@ func NewBundle(
 		CommonHandler:    commonHandler,
 		SettingHandler:   settingHandler,
 		ConnectHandler:   connectHandler,
-		BackupHandler:    backupHandler,
-		MigrationHandler: migrationHandler,
+		MigrationHandler: migratorHandler,
 		DashboardHandler: dashboardHandler,
 		CopilotHandler:   copilotHandler,
 		EmbeddingHandler: embeddingHandler,

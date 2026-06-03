@@ -17,36 +17,36 @@ import (
 )
 
 const (
-	TopicUserCreated          = "user.created"
-	TopicUserUpdated          = "user.updated"
-	TopicUserDeleted          = "user.deleted"
-	TopicEchoCreated          = "echo.created"
-	TopicEchoUpdated          = "echo.updated"
-	TopicEchoDeleted          = "echo.deleted"
-	TopicCommentCreated       = "comment.created"
-	TopicCommentStatusUpdated = "comment.status.updated"
-	TopicCommentDeleted       = "comment.deleted"
-	TopicResourceUploaded     = "resource.uploaded"
-	TopicSystemBackup         = "system.backup"
-	TopicSystemExport         = "system.export"
-	TopicBackupScheduleUpdate = "system.backup_schedule.updated"
-	TopicDeadLetterRetried    = "deadletter.retried"
+	TopicUserCreated            = "user.created"
+	TopicUserUpdated            = "user.updated"
+	TopicUserDeleted            = "user.deleted"
+	TopicEchoCreated            = "echo.created"
+	TopicEchoUpdated            = "echo.updated"
+	TopicEchoDeleted            = "echo.deleted"
+	TopicCommentCreated         = "comment.created"
+	TopicCommentStatusUpdated   = "comment.status.updated"
+	TopicCommentDeleted         = "comment.deleted"
+	TopicResourceUploaded       = "resource.uploaded"
+	TopicSystemSnapshot         = "system.snapshot"
+	TopicSystemExport           = "system.export"
+	TopicSnapshotScheduleUpdate = "system.snapshot_schedule.updated"
+	TopicDeadLetterRetried      = "deadletter.retried"
 )
 
 var webhookTopicWhitelist = map[string]struct{}{
-	TopicUserCreated:          {},
-	TopicUserUpdated:          {},
-	TopicUserDeleted:          {},
-	TopicEchoCreated:          {},
-	TopicEchoUpdated:          {},
-	TopicEchoDeleted:          {},
-	TopicCommentCreated:       {},
-	TopicCommentStatusUpdated: {},
-	TopicCommentDeleted:       {},
-	TopicResourceUploaded:     {},
-	TopicSystemBackup:         {},
-	TopicSystemExport:         {},
-	TopicBackupScheduleUpdate: {},
+	TopicUserCreated:            {},
+	TopicUserUpdated:            {},
+	TopicUserDeleted:            {},
+	TopicEchoCreated:            {},
+	TopicEchoUpdated:            {},
+	TopicEchoDeleted:            {},
+	TopicCommentCreated:         {},
+	TopicCommentStatusUpdated:   {},
+	TopicCommentDeleted:         {},
+	TopicResourceUploaded:       {},
+	TopicSystemSnapshot:         {},
+	TopicSystemExport:           {},
+	TopicSnapshotScheduleUpdate: {},
 }
 
 type (
@@ -84,7 +84,7 @@ type (
 		Type     string
 	}
 
-	SystemBackupEvent struct {
+	SystemSnapshotEvent struct {
 		Info string
 		Size int64
 	}
@@ -93,8 +93,8 @@ type (
 		Size int64
 	}
 
-	UpdateBackupScheduleEvent struct {
-		Schedule settingModel.BackupSchedule
+	UpdateSnapshotScheduleEvent struct {
+		Schedule settingModel.SnapshotSchedule
 	}
 
 	DeadLetterRetriedEvent struct {

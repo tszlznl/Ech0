@@ -28,7 +28,6 @@ import (
 	"github.com/lin-snow/ech0/internal/service"
 	commentService "github.com/lin-snow/ech0/internal/service/comment"
 	copilotService "github.com/lin-snow/ech0/internal/service/copilot"
-	migratorService "github.com/lin-snow/ech0/internal/service/migrator"
 	userService "github.com/lin-snow/ech0/internal/service/user"
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/task"
@@ -48,16 +47,18 @@ var AppSet = app.ProviderSet
 var VisitorSet = wire.NewSet(visitor.NewTracker)
 
 // ProvideJobManager 构造已装配好 Runner 的共享单例 *job.Manager（在构造期一次性
-// 完成注册）。Runner 只依赖 EmbeddingService / migrator.Importer（均不含 *job.Manager），
+// 完成注册）。Runner 只依赖 EmbeddingService / migrator.ImportEngine（均不含 *job.Manager），
 // 故不会与「MigratorService 需要 Manager」形成构造环。
 func ProvideJobManager(
 	repo job.JobRepository,
 	reindex *jobRunner.ReindexRunner,
 	migration *jobRunner.MigrationRunner,
+	export *jobRunner.ExportRunner,
 ) *job.Manager {
 	m := job.NewManager(repo)
 	m.Register(jobModel.TypeReindex, job.Adapt(reindex.Run))
 	m.Register(jobModel.TypeMigration, job.Adapt(migration.Run))
+	m.Register(jobModel.TypeExport, job.Adapt(export.Run))
 	return m
 }
 
@@ -66,10 +67,10 @@ func ProvideJobManager(
 func ProvideTaskManager(
 	cleanup *scheduled.Cleanup,
 	deadletter *scheduled.DeadLetter,
-	backup *scheduled.Backup,
+	snapshot *scheduled.Snapshot,
 	visitorSnapshot *scheduled.VisitorSnapshot,
 ) (*task.Manager, error) {
-	return task.NewManager(cleanup, deadletter, backup, visitorSnapshot)
+	return task.NewManager(cleanup, deadletter, snapshot, visitorSnapshot)
 }
 
 // StorageSet 提供进程级共享单例 *storage.Manager。storage.Manager 是有状态基础设施
@@ -89,7 +90,7 @@ var DomainSet = wire.NewSet(
 	BuildTasker,
 	BuildMigrator,
 	BuildJobManager,
-	ProvideBackupScheduleApplier,
+	ProvideSnapshotScheduleApplier,
 	BuildEventRegistrar,
 )
 
@@ -116,7 +117,7 @@ var EventSet = wire.NewSet(
 	wire.Bind(new(eventsubscriber.DeadLetterProcessor), new(*webhook.Dispatcher)),
 
 	webhook.NewDispatcher,
-	eventsubscriber.NewBackupScheduler,
+	eventsubscriber.NewSnapshotScheduler,
 	eventsubscriber.NewDeadLetterResolver,
 	eventsubscriber.NewAgentProcessor,
 	eventsubscriber.NewEmbeddingProcessor,
@@ -177,8 +178,6 @@ var HandlerSet = wire.NewSet(
 	wire.Bind(new(copilotService.UserReader), new(*userService.UserService)),
 	handler.CopilotSet,
 
-	service.BackupSet,
-	handler.BackupSet,
 	service.MigratorSet,
 	handler.MigrationSet,
 
@@ -213,6 +212,8 @@ var TaskerSet = wire.NewSet(
 
 	repository.QueueSet,
 	repository.VisitorSet,
+	// scheduled.Snapshot 依赖 migrator.ExportEngine（打包 + 尽力 S3），定时快照不走 job.Manager。
+	migrator.NewExportEngine,
 	scheduled.ProviderSet,
 	ProvideTaskManager,
 )
@@ -239,7 +240,7 @@ func BuildEventRegistrar(
 	ebProvider func() *busen.Bus,
 	appCache cache.ICache[string, any],
 	tx transaction.Transactor,
-	backupScheduleApplier eventsubscriber.BackupScheduleApplier,
+	snapshotScheduleApplier eventsubscriber.SnapshotScheduleApplier,
 ) (*eventregistry.EventRegistrar, error) {
 	wire.Build(EventSet)
 	return &eventregistry.EventRegistrar{}, nil
@@ -261,13 +262,14 @@ func BuildHandlers(
 }
 
 // BuildJobManager 装配共享单例 *job.Manager：repo + 各领域 Runner（含其依赖的领域
-// service），在构造期注册完成。Runner 依赖的 EmbeddingService / migrator.Importer 均不
+// service），在构造期注册完成。Runner 依赖的 EmbeddingService / migrator.ImportEngine 均不
 // 含 *job.Manager，故无构造环。storageManager 由顶层共享单例注入，确保迁移导入 S3
 // 设置时 reload 的就是文件服务在用的那份 Manager。
 func BuildJobManager(
 	dbProvider func() *gorm.DB,
 	appCache cache.ICache[string, any],
 	storageManager *storage.Manager,
+	ebProvider func() *busen.Bus,
 ) (*job.Manager, error) {
 	wire.Build(
 		repository.JobSet,
@@ -276,8 +278,11 @@ func BuildJobManager(
 		repository.EchoSet,
 		repository.KeyValueSet,
 		service.EmbeddingSet,
-		// MigrationRunner ← migrator.Importer（无状态导入，不含 *job.Manager）
-		migratorService.NewImporter,
+		// MigrationRunner ← migrator.ImportEngine（无状态导入，不含 *job.Manager）
+		migrator.NewImportEngine,
+		// ExportRunner ← migrator.ExportEngine（无状态导出，不含 *job.Manager）+ Publisher（发 SystemSnapshot）
+		migrator.NewExportEngine,
+		eventpublisher.New,
 		jobRunner.ProviderSet,
 		ProvideJobManager,
 	)
@@ -328,20 +333,20 @@ func BuildMigrator(
 	return &migrator.Worker{}, nil
 }
 
-// ProvideBackupScheduleApplier 从 task.Manager 中按能力取出实现了 BackupScheduleApplier
-// 的那个 Task（即 *scheduled.Backup），供 BackupScheduler 订阅者在运行期重配备份计划。
+// ProvideSnapshotScheduleApplier 从 task.Manager 中按能力取出实现了 SnapshotScheduleApplier
+// 的那个 Task（即 *scheduled.Snapshot），供 SnapshotScheduler 订阅者在运行期重配定时快照计划。
 // 取的是 Manager 持有的同一实例，故 Schedule 时捕获的 scheduler 对 Apply 可见。
-func ProvideBackupScheduleApplier(m *task.Manager) eventsubscriber.BackupScheduleApplier {
-	applier, ok := task.Find[eventsubscriber.BackupScheduleApplier](m)
+func ProvideSnapshotScheduleApplier(m *task.Manager) eventsubscriber.SnapshotScheduleApplier {
+	applier, ok := task.Find[eventsubscriber.SnapshotScheduleApplier](m)
 	if !ok {
-		panic("no scheduled task implements BackupScheduleApplier")
+		panic("no scheduled task implements SnapshotScheduleApplier")
 	}
 	return applier
 }
 
 func ProvideSubscriptionProviders(
 	dlr *eventsubscriber.DeadLetterResolver,
-	bs *eventsubscriber.BackupScheduler,
+	bs *eventsubscriber.SnapshotScheduler,
 	ap *eventsubscriber.AgentProcessor,
 	ep *eventsubscriber.EmbeddingProcessor,
 ) []eventregistry.SubscriptionProvider {

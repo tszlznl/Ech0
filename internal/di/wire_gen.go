@@ -17,17 +17,16 @@ import (
 	"github.com/lin-snow/ech0/internal/event/subscriber"
 	"github.com/lin-snow/ech0/internal/handler"
 	handler4 "github.com/lin-snow/ech0/internal/handler/auth"
-	handler12 "github.com/lin-snow/ech0/internal/handler/backup"
 	handler7 "github.com/lin-snow/ech0/internal/handler/comment"
 	handler9 "github.com/lin-snow/ech0/internal/handler/common"
 	handler11 "github.com/lin-snow/ech0/internal/handler/connect"
-	handler15 "github.com/lin-snow/ech0/internal/handler/copilot"
-	handler14 "github.com/lin-snow/ech0/internal/handler/dashboard"
+	handler14 "github.com/lin-snow/ech0/internal/handler/copilot"
+	handler13 "github.com/lin-snow/ech0/internal/handler/dashboard"
 	handler5 "github.com/lin-snow/ech0/internal/handler/echo"
-	handler16 "github.com/lin-snow/ech0/internal/handler/embedding"
+	handler15 "github.com/lin-snow/ech0/internal/handler/embedding"
 	handler6 "github.com/lin-snow/ech0/internal/handler/file"
 	handler8 "github.com/lin-snow/ech0/internal/handler/init"
-	handler13 "github.com/lin-snow/ech0/internal/handler/migration"
+	handler12 "github.com/lin-snow/ech0/internal/handler/migrator"
 	handler10 "github.com/lin-snow/ech0/internal/handler/setting"
 	handler3 "github.com/lin-snow/ech0/internal/handler/user"
 	handler2 "github.com/lin-snow/ech0/internal/handler/web"
@@ -55,19 +54,18 @@ import (
 	repository14 "github.com/lin-snow/ech0/internal/repository/visitor"
 	"github.com/lin-snow/ech0/internal/repository/webhook"
 	"github.com/lin-snow/ech0/internal/server"
-	service14 "github.com/lin-snow/ech0/internal/service"
+	service13 "github.com/lin-snow/ech0/internal/service"
 	"github.com/lin-snow/ech0/internal/service/auth"
-	service10 "github.com/lin-snow/ech0/internal/service/backup"
 	service7 "github.com/lin-snow/ech0/internal/service/comment"
 	service2 "github.com/lin-snow/ech0/internal/service/common"
 	service9 "github.com/lin-snow/ech0/internal/service/connect"
-	service13 "github.com/lin-snow/ech0/internal/service/copilot"
-	service12 "github.com/lin-snow/ech0/internal/service/dashboard"
+	service12 "github.com/lin-snow/ech0/internal/service/copilot"
+	service11 "github.com/lin-snow/ech0/internal/service/dashboard"
 	service6 "github.com/lin-snow/ech0/internal/service/echo"
 	"github.com/lin-snow/ech0/internal/service/embedding"
 	service3 "github.com/lin-snow/ech0/internal/service/file"
 	service8 "github.com/lin-snow/ech0/internal/service/init"
-	service11 "github.com/lin-snow/ech0/internal/service/migrator"
+	service10 "github.com/lin-snow/ech0/internal/service/migrator"
 	service4 "github.com/lin-snow/ech0/internal/service/setting"
 	service5 "github.com/lin-snow/ech0/internal/service/user"
 	"github.com/lin-snow/ech0/internal/storage"
@@ -98,13 +96,13 @@ func BuildApp() (*app.App, error) {
 	if err != nil {
 		return nil, err
 	}
-	backupScheduleApplier := ProvideBackupScheduleApplier(taskManager)
-	eventRegistrar, err := BuildEventRegistrar(v, v2, iCache, gormTransactor, backupScheduleApplier)
+	snapshotScheduleApplier := ProvideSnapshotScheduleApplier(taskManager)
+	eventRegistrar, err := BuildEventRegistrar(v, v2, iCache, gormTransactor, snapshotScheduleApplier)
 	if err != nil {
 		return nil, err
 	}
 	eventBus := bus.NewEventBus(v2)
-	jobManager, err := BuildJobManager(v, iCache, manager)
+	jobManager, err := BuildJobManager(v, iCache, manager, v2)
 	if err != nil {
 		return nil, err
 	}
@@ -127,12 +125,12 @@ func BuildApp() (*app.App, error) {
 	return appApp, nil
 }
 
-func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() *busen.Bus, appCache cache.ICache[string, any], tx transaction.Transactor, backupScheduleApplier subscriber.BackupScheduleApplier) (*registry.EventRegistrar, error) {
+func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() *busen.Bus, appCache cache.ICache[string, any], tx transaction.Transactor, snapshotScheduleApplier subscriber.SnapshotScheduleApplier) (*registry.EventRegistrar, error) {
 	webhookRepository := repository.NewWebhookRepository(dbProvider)
 	queueRepository := repository2.NewQueueRepository(dbProvider)
 	dispatcher := webhook.NewDispatcher(webhookRepository, queueRepository, tx)
 	deadLetterResolver := subscriber.NewDeadLetterResolver(queueRepository, dispatcher)
-	backupScheduler := subscriber.NewBackupScheduler(backupScheduleApplier)
+	snapshotScheduler := subscriber.NewSnapshotScheduler(snapshotScheduleApplier)
 	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
 	persistent := kvstore.NewPersistent(keyValueRepository)
 	agentProcessor := subscriber.NewAgentProcessor(persistent)
@@ -140,7 +138,7 @@ func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() *busen.Bu
 	echoRepository := repository4.NewEchoRepository(dbProvider, appCache)
 	embeddingService := service.NewEmbeddingService(embeddingRepository, persistent, echoRepository)
 	embeddingProcessor := subscriber.NewEmbeddingProcessor(embeddingService)
-	v := ProvideSubscriptionProviders(deadLetterResolver, backupScheduler, agentProcessor, embeddingProcessor)
+	v := ProvideSubscriptionProviders(deadLetterResolver, snapshotScheduler, agentProcessor, embeddingProcessor)
 	eventRegistrar := registry.NewEventRegistry(ebProvider, dispatcher, v)
 	return eventRegistrar, nil
 }
@@ -181,27 +179,25 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 	connectRepository := repository12.NewConnectRepository(dbProvider)
 	connectService := service9.NewConnectService(tx, connectRepository, echoRepository, commonService, settingService)
 	connectHandler := handler11.NewConnectHandler(connectService)
-	backupService := service10.NewBackupService(commonService, publisherPublisher, storageManager)
-	backupHandler := handler12.NewBackupHandler(backupService)
-	migratorService := service11.NewMigratorService(commonService, jobManager)
-	migrationHandler := handler13.NewMigrationHandler(migratorService)
-	dashboardService := service12.NewDashboardService(tracker)
-	dashboardHandler := handler14.NewDashboardHandler(dashboardService)
+	migratorService := service10.NewMigratorService(commonService, jobManager, publisherPublisher)
+	migrationHandler := handler12.NewMigrationHandler(migratorService)
+	dashboardService := service11.NewDashboardService(tracker)
+	dashboardHandler := handler13.NewDashboardHandler(dashboardService)
 	embeddingRepository := repository3.NewEmbeddingRepository(dbProvider)
 	embeddingService := service.NewEmbeddingService(embeddingRepository, persistent, echoRepository)
-	copilotService := service13.NewCopilotService(echoService, embeddingService, userService, persistent, storageManager)
-	copilotHandler := handler15.NewCopilotHandler(copilotService, copilotService)
-	embeddingHandler := handler16.NewEmbeddingHandler(jobManager)
+	copilotService := service12.NewCopilotService(echoService, embeddingService, userService, persistent, storageManager)
+	copilotHandler := handler14.NewCopilotHandler(copilotService, copilotService)
+	embeddingHandler := handler15.NewEmbeddingHandler(jobManager)
 	mcpHandler := mcp.NewHandler(echoService, userService, commentService, fileService, commonService, connectService, copilotService, settingService)
-	bundle := handler.NewBundle(webHandler, userHandler, authHandler, echoHandler, fileHandler, commentHandler, initHandler, commonHandler, settingHandler, connectHandler, backupHandler, migrationHandler, dashboardHandler, copilotHandler, embeddingHandler, mcpHandler)
+	bundle := handler.NewBundle(webHandler, userHandler, authHandler, echoHandler, fileHandler, commentHandler, initHandler, commonHandler, settingHandler, connectHandler, migrationHandler, dashboardHandler, copilotHandler, embeddingHandler, mcpHandler)
 	return bundle, nil
 }
 
 // BuildJobManager 装配共享单例 *job.Manager：repo + 各领域 Runner（含其依赖的领域
-// service），在构造期注册完成。Runner 依赖的 EmbeddingService / migrator.Importer 均不
+// service），在构造期注册完成。Runner 依赖的 EmbeddingService / migrator.ImportEngine 均不
 // 含 *job.Manager，故无构造环。storageManager 由顶层共享单例注入，确保迁移导入 S3
 // 设置时 reload 的就是文件服务在用的那份 Manager。
-func BuildJobManager(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], storageManager *storage.Manager) (*job.Manager, error) {
+func BuildJobManager(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], storageManager *storage.Manager, ebProvider func() *busen.Bus) (*job.Manager, error) {
 	jobRepository := repository13.NewJobRepository(dbProvider)
 	embeddingRepository := repository3.NewEmbeddingRepository(dbProvider)
 	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
@@ -209,9 +205,12 @@ func BuildJobManager(dbProvider func() *gorm.DB, appCache cache.ICache[string, a
 	echoRepository := repository4.NewEchoRepository(dbProvider, appCache)
 	embeddingService := service.NewEmbeddingService(embeddingRepository, persistent, echoRepository)
 	reindexRunner := runner.NewReindexRunner(embeddingService)
-	importer := service11.NewImporter(persistent, storageManager, appCache)
-	migrationRunner := runner.NewMigrationRunner(importer)
-	manager := ProvideJobManager(jobRepository, reindexRunner, migrationRunner)
+	importEngine := migrator.NewImportEngine(persistent, storageManager, appCache)
+	migrationRunner := runner.NewMigrationRunner(importEngine)
+	exportEngine := migrator.NewExportEngine(storageManager)
+	publisherPublisher := publisher.New(ebProvider)
+	exportRunner := runner.NewExportRunner(exportEngine, publisherPublisher)
+	manager := ProvideJobManager(jobRepository, reindexRunner, migrationRunner, exportRunner)
 	return manager, nil
 }
 
@@ -235,7 +234,7 @@ func BuildServer() (*server.Server, error) {
 	tracker := visitor.NewTracker()
 	keyValueRepository := keyvalue.NewKeyValueRepository(v, iCache)
 	manager := storage.ProvideStorageManager(keyValueRepository)
-	jobManager, err := BuildJobManager(v, iCache, manager)
+	jobManager, err := BuildJobManager(v, iCache, manager, v2)
 	if err != nil {
 		return nil, err
 	}
@@ -266,10 +265,11 @@ func BuildTasker(dbProvider func() *gorm.DB, appCache cache.ICache[string, any],
 	webhookRepository := repository.NewWebhookRepository(dbProvider)
 	authRepository := repository9.NewAuthRepository(dbProvider, appCache)
 	settingService := service4.NewSettingService(tx, commonService, fileService, storageManager, persistent, settingRepository, webhookRepository, authRepository, publisherPublisher)
-	backup := scheduled.NewBackup(settingService, storageManager, publisherPublisher)
+	exportEngine := migrator.NewExportEngine(storageManager)
+	snapshot := scheduled.NewSnapshot(settingService, exportEngine, publisherPublisher)
 	visitorRepository := repository14.NewVisitorRepository(dbProvider)
 	visitorSnapshot := scheduled.NewVisitorSnapshot(tracker, visitorRepository)
-	manager, err := ProvideTaskManager(cleanup, deadLetter, backup, visitorSnapshot)
+	manager, err := ProvideTaskManager(cleanup, deadLetter, snapshot, visitorSnapshot)
 	if err != nil {
 		return nil, err
 	}
@@ -291,16 +291,18 @@ var AppSet = app.ProviderSet
 var VisitorSet = wire.NewSet(visitor.NewTracker)
 
 // ProvideJobManager 构造已装配好 Runner 的共享单例 *job.Manager（在构造期一次性
-// 完成注册）。Runner 只依赖 EmbeddingService / migrator.Importer（均不含 *job.Manager），
+// 完成注册）。Runner 只依赖 EmbeddingService / migrator.ImportEngine（均不含 *job.Manager），
 // 故不会与「MigratorService 需要 Manager」形成构造环。
 func ProvideJobManager(
 	repo job.JobRepository,
 	reindex *runner.ReindexRunner,
 	migration *runner.MigrationRunner,
+	export *runner.ExportRunner,
 ) *job.Manager {
 	m := job.NewManager(repo)
 	m.Register(model.TypeReindex, job.Adapt(reindex.Run))
 	m.Register(model.TypeMigration, job.Adapt(migration.Run))
+	m.Register(model.TypeExport, job.Adapt(export.Run))
 	return m
 }
 
@@ -309,10 +311,10 @@ func ProvideJobManager(
 func ProvideTaskManager(
 	cleanup *scheduled.Cleanup,
 	deadletter *scheduled.DeadLetter,
-	backup *scheduled.Backup,
+	snapshot *scheduled.Snapshot,
 	visitorSnapshot *scheduled.VisitorSnapshot,
 ) (*task.Manager, error) {
-	return task.NewManager(cleanup, deadletter, backup, visitorSnapshot)
+	return task.NewManager(cleanup, deadletter, snapshot, visitorSnapshot)
 }
 
 // StorageSet 提供进程级共享单例 *storage.Manager。storage.Manager 是有状态基础设施
@@ -328,7 +330,7 @@ var DomainSet = wire.NewSet(
 	BuildTasker,
 	BuildMigrator,
 	BuildJobManager,
-	ProvideBackupScheduleApplier,
+	ProvideSnapshotScheduleApplier,
 	BuildEventRegistrar,
 )
 
@@ -336,30 +338,30 @@ var InfraSet = wire.NewSet(database.ProviderSet, bus.ProvideProvider, cache.Prov
 
 var RuntimeSet = server.ProviderSet
 
-var EventSet = wire.NewSet(repository15.EchoSet, repository15.UserSet, repository15.KeyValueSet, repository15.QueueSet, repository15.WebhookSet, repository15.EmbeddingSet, wire.Bind(new(registry.WebhookObserver), new(*webhook.Dispatcher)), wire.Bind(new(subscriber.DeadLetterProcessor), new(*webhook.Dispatcher)), webhook.NewDispatcher, subscriber.NewBackupScheduler, subscriber.NewDeadLetterResolver, subscriber.NewAgentProcessor, subscriber.NewEmbeddingProcessor, service14.EmbeddingSet, ProvideSubscriptionProviders, registry.NewEventRegistry)
+var EventSet = wire.NewSet(repository15.EchoSet, repository15.UserSet, repository15.KeyValueSet, repository15.QueueSet, repository15.WebhookSet, repository15.EmbeddingSet, wire.Bind(new(registry.WebhookObserver), new(*webhook.Dispatcher)), wire.Bind(new(subscriber.DeadLetterProcessor), new(*webhook.Dispatcher)), webhook.NewDispatcher, subscriber.NewSnapshotScheduler, subscriber.NewDeadLetterResolver, subscriber.NewAgentProcessor, subscriber.NewEmbeddingProcessor, service13.EmbeddingSet, ProvideSubscriptionProviders, registry.NewEventRegistry)
 
-var HandlerSet = wire.NewSet(publisher.New, wire.Bind(new(service7.EventPublisher), new(*publisher.Publisher)), repository15.FileSet, handler.WebSet, repository15.UserSet, repository15.AuthSet, service14.UserSet, service14.AuthSet, handler.UserSet, handler.AuthSet, repository15.EchoSet, service14.EchoSet, handler.EchoSet, repository15.CommentSet, service14.CommentSet, handler.CommentSet, repository15.CommonSet, service14.FileSet, handler.FileSet, repository15.InitSet, service14.InitSet, handler.InitSet, service14.CommonSet, handler.CommonSet, repository15.WebhookSet, repository15.KeyValueSet, repository15.SettingSet, service14.SettingSet, handler.SettingSet, repository15.ConnectSet, service14.ConnectSet, handler.ConnectSet, service14.DashboardSet, handler.DashboardSet, repository15.EmbeddingSet, service14.EmbeddingSet, handler.EmbeddingSet, service14.CopilotSet, wire.Bind(new(service13.UserReader), new(*service5.UserService)), handler.CopilotSet, service14.BackupSet, handler.BackupSet, service14.MigratorSet, handler.MigrationSet, handler.MCPSet, handler.NewBundle)
+var HandlerSet = wire.NewSet(publisher.New, wire.Bind(new(service7.EventPublisher), new(*publisher.Publisher)), repository15.FileSet, handler.WebSet, repository15.UserSet, repository15.AuthSet, service13.UserSet, service13.AuthSet, handler.UserSet, handler.AuthSet, repository15.EchoSet, service13.EchoSet, handler.EchoSet, repository15.CommentSet, service13.CommentSet, handler.CommentSet, repository15.CommonSet, service13.FileSet, handler.FileSet, repository15.InitSet, service13.InitSet, handler.InitSet, service13.CommonSet, handler.CommonSet, repository15.WebhookSet, repository15.KeyValueSet, repository15.SettingSet, service13.SettingSet, handler.SettingSet, repository15.ConnectSet, service13.ConnectSet, handler.ConnectSet, service13.DashboardSet, handler.DashboardSet, repository15.EmbeddingSet, service13.EmbeddingSet, handler.EmbeddingSet, service13.CopilotSet, wire.Bind(new(service12.UserReader), new(*service5.UserService)), handler.CopilotSet, service13.MigratorSet, handler.MigrationSet, handler.MCPSet, handler.NewBundle)
 
 var MiddlewareSet = wire.NewSet(repository15.AuthSet, middleware.ProviderSet)
 
-var TaskerSet = wire.NewSet(publisher.New, repository15.FileSet, repository15.KeyValueSet, repository15.WebhookSet, repository15.AuthSet, repository15.SettingSet, service14.SettingSet, repository15.EchoSet, service14.EchoSet, repository15.CommonSet, service14.FileSet, service14.CommonSet, repository15.QueueSet, repository15.VisitorSet, scheduled.ProviderSet, ProvideTaskManager)
+var TaskerSet = wire.NewSet(publisher.New, repository15.FileSet, repository15.KeyValueSet, repository15.WebhookSet, repository15.AuthSet, repository15.SettingSet, service13.SettingSet, repository15.EchoSet, service13.EchoSet, repository15.CommonSet, service13.FileSet, service13.CommonSet, repository15.QueueSet, repository15.VisitorSet, migrator.NewExportEngine, scheduled.ProviderSet, ProvideTaskManager)
 
 var MigratorSet = wire.NewSet(migrator.ProviderSet)
 
-// ProvideBackupScheduleApplier 从 task.Manager 中按能力取出实现了 BackupScheduleApplier
-// 的那个 Task（即 *scheduled.Backup），供 BackupScheduler 订阅者在运行期重配备份计划。
+// ProvideSnapshotScheduleApplier 从 task.Manager 中按能力取出实现了 SnapshotScheduleApplier
+// 的那个 Task（即 *scheduled.Snapshot），供 SnapshotScheduler 订阅者在运行期重配定时快照计划。
 // 取的是 Manager 持有的同一实例，故 Schedule 时捕获的 scheduler 对 Apply 可见。
-func ProvideBackupScheduleApplier(m *task.Manager) subscriber.BackupScheduleApplier {
-	applier, ok := task.Find[subscriber.BackupScheduleApplier](m)
+func ProvideSnapshotScheduleApplier(m *task.Manager) subscriber.SnapshotScheduleApplier {
+	applier, ok := task.Find[subscriber.SnapshotScheduleApplier](m)
 	if !ok {
-		panic("no scheduled task implements BackupScheduleApplier")
+		panic("no scheduled task implements SnapshotScheduleApplier")
 	}
 	return applier
 }
 
 func ProvideSubscriptionProviders(
 	dlr *subscriber.DeadLetterResolver,
-	bs *subscriber.BackupScheduler,
+	bs *subscriber.SnapshotScheduler,
 	ap *subscriber.AgentProcessor,
 	ep *subscriber.EmbeddingProcessor,
 ) []registry.SubscriptionProvider {

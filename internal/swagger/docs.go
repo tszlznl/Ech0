@@ -288,130 +288,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/backup/export": {
-            "get": {
-                "description": "用户导出备份文件，成功后触发文件下载",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/octet-stream"
-                ],
-                "tags": [
-                    "系统备份"
-                ],
-                "summary": "导出数据备份",
-                "responses": {
-                    "200": {
-                        "description": "导出备份失败",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/backup/schedule": {
-            "get": {
-                "description": "获取系统的定期备份计划设置",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "系统设置"
-                ],
-                "summary": "获取备份计划",
-                "responses": {
-                    "200": {
-                        "description": "获取备份计划失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "为系统设置定期备份计划",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "系统设置"
-                ],
-                "summary": "更新备份计划",
-                "parameters": [
-                    {
-                        "description": "备份计划设置",
-                        "name": "backupSchedule",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.BackupScheduleDto"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "设置备份计划失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/backup/snapshot": {
-            "post": {
-                "description": "仅在服务端创建本地快照；若配置了 S3 则尝试上传（失败静默）",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "系统备份"
-                ],
-                "summary": "手动创建快照",
-                "responses": {
-                    "200": {
-                        "description": "创建快照失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/backup/snapshot/{taskId}": {
-            "get": {
-                "description": "根据 taskId 查询创建快照任务的执行状态",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "系统备份"
-                ],
-                "summary": "查询快照任务状态",
-                "responses": {
-                    "200": {
-                        "description": "查询快照状态失败",
-                        "schema": {
-                            "$ref": "#/definitions/handler.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/comments": {
             "get": {
                 "description": "按动态 ID 获取评论列表",
@@ -1587,6 +1463,29 @@ const docTemplate = `{
                 }
             }
         },
+        "/migration/export/download": {
+            "get": {
+                "description": "同步产出快照并以附件形式下载",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "数据迁移"
+                ],
+                "summary": "导出快照（下载）",
+                "responses": {
+                    "200": {
+                        "description": "导出快照失败",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/migration/start": {
             "post": {
                 "description": "启动迁移任务",
@@ -2532,6 +2431,61 @@ const docTemplate = `{
                 }
             }
         },
+        "/snapshot/schedule": {
+            "get": {
+                "description": "获取系统的定时快照计划设置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "系统设置"
+                ],
+                "summary": "获取定时快照计划",
+                "responses": {
+                    "200": {
+                        "description": "获取定时快照计划失败",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "为系统设置定时快照计划",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "系统设置"
+                ],
+                "summary": "更新定时快照计划",
+                "parameters": [
+                    {
+                        "description": "定时快照计划设置",
+                        "name": "snapshotSchedule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.SnapshotScheduleDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "设置定时快照计划失败",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/system/logs": {
             "get": {
                 "description": "获取系统日志列表",
@@ -3084,19 +3038,6 @@ const docTemplate = `{
                 }
             }
         },
-        "model.BackupScheduleDto": {
-            "type": "object",
-            "properties": {
-                "cron_expression": {
-                    "description": "备份计划的 Cron 表达式",
-                    "type": "string"
-                },
-                "enable": {
-                    "description": "是否启用备份计划",
-                    "type": "boolean"
-                }
-            }
-        },
         "model.Connected": {
             "type": "object",
             "properties": {
@@ -3446,6 +3387,19 @@ const docTemplate = `{
                 },
                 "use_ssl": {
                     "description": "是否使用 SSL",
+                    "type": "boolean"
+                }
+            }
+        },
+        "model.SnapshotScheduleDto": {
+            "type": "object",
+            "properties": {
+                "cron_expression": {
+                    "description": "定时快照的 Cron 表达式",
+                    "type": "string"
+                },
+                "enable": {
+                    "description": "是否启用定时快照",
                     "type": "boolean"
                 }
             }

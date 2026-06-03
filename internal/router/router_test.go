@@ -13,7 +13,6 @@ import (
 	"github.com/lin-snow/ech0/internal/database"
 	"github.com/lin-snow/ech0/internal/handler"
 	authHandler "github.com/lin-snow/ech0/internal/handler/auth"
-	backupHandler "github.com/lin-snow/ech0/internal/handler/backup"
 	commentHandler "github.com/lin-snow/ech0/internal/handler/comment"
 	commonHandler "github.com/lin-snow/ech0/internal/handler/common"
 	connectHandler "github.com/lin-snow/ech0/internal/handler/connect"
@@ -23,7 +22,7 @@ import (
 	embeddingHandler "github.com/lin-snow/ech0/internal/handler/embedding"
 	fileHandler "github.com/lin-snow/ech0/internal/handler/file"
 	initHandler "github.com/lin-snow/ech0/internal/handler/init"
-	migrationHandler "github.com/lin-snow/ech0/internal/handler/migration"
+	migratorHandler "github.com/lin-snow/ech0/internal/handler/migrator"
 	settingHandler "github.com/lin-snow/ech0/internal/handler/setting"
 	userHandler "github.com/lin-snow/ech0/internal/handler/user"
 	webHandler "github.com/lin-snow/ech0/internal/handler/web"
@@ -308,8 +307,7 @@ func buildTestHandlers() *handler.Bundle {
 		commonHandler.NewCommonHandler(nil),
 		settingHandler.NewSettingHandler(nil),
 		connectHandler.NewConnectHandler(nil),
-		backupHandler.NewBackupHandler(nil),
-		migrationHandler.NewMigrationHandler(nil),
+		migratorHandler.NewMigrationHandler(nil),
 		dashboardHandler.NewDashboardHandler(nil),
 		copilotHandler.NewCopilotHandler(nil, nil),
 		embeddingHandler.NewEmbeddingHandler(nil),

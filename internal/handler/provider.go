@@ -6,7 +6,6 @@ package handler
 import (
 	"github.com/google/wire"
 	authHandler "github.com/lin-snow/ech0/internal/handler/auth"
-	backupHandler "github.com/lin-snow/ech0/internal/handler/backup"
 	commentHandler "github.com/lin-snow/ech0/internal/handler/comment"
 	commonHandler "github.com/lin-snow/ech0/internal/handler/common"
 	connectHandler "github.com/lin-snow/ech0/internal/handler/connect"
@@ -16,7 +15,7 @@ import (
 	embeddingHandler "github.com/lin-snow/ech0/internal/handler/embedding"
 	fileHandler "github.com/lin-snow/ech0/internal/handler/file"
 	initHandler "github.com/lin-snow/ech0/internal/handler/init"
-	migrationHandler "github.com/lin-snow/ech0/internal/handler/migration"
+	migratorHandler "github.com/lin-snow/ech0/internal/handler/migrator"
 	settingHandler "github.com/lin-snow/ech0/internal/handler/setting"
 	userHandler "github.com/lin-snow/ech0/internal/handler/user"
 	webHandler "github.com/lin-snow/ech0/internal/handler/web"
@@ -34,10 +33,9 @@ var (
 	CommonSet    = wire.NewSet(commonHandler.NewCommonHandler)
 	SettingSet   = wire.NewSet(settingHandler.NewSettingHandler)
 	ConnectSet   = wire.NewSet(connectHandler.NewConnectHandler)
-	BackupSet    = wire.NewSet(backupHandler.NewBackupHandler)
 	DashboardSet = wire.NewSet(dashboardHandler.NewDashboardHandler)
 	CopilotSet   = wire.NewSet(copilotHandler.NewCopilotHandler)
 	EmbeddingSet = wire.NewSet(embeddingHandler.NewEmbeddingHandler)
-	MigrationSet = wire.NewSet(migrationHandler.NewMigrationHandler)
+	MigrationSet = wire.NewSet(migratorHandler.NewMigrationHandler)
 	MCPSet       = wire.NewSet(mcp.NewHandler)
 )

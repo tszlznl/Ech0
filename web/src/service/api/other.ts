@@ -11,10 +11,10 @@ export function fetchHelloEch0() {
   })
 }
 
-// 导出备份 - 使用专门的下载函数
-export function fetchExportBackup() {
+// 导出快照（下载）- 使用专门的下载函数
+export function fetchDownloadExport() {
   return downloadFile({
-    url: '/backup/export',
+    url: '/migration/export/download',
     method: 'GET',
   })
 }
@@ -43,7 +43,7 @@ export function fetchGetWebsiteTitle(websiteURL: string) {
 }
 
 export interface StartMigrationPayload {
-  source_type: 'ech0_v4' | 'memos'
+  source_type: 'ech0' | 'memos'
   source_payload: Record<string, unknown>
 }
 
@@ -85,8 +85,42 @@ export function fetchCleanupMigration() {
   })
 }
 
+// 导出（手动快照异步出口）：与导入对称，统一收敛到 Migrator 域，走 export 作业（job.Manager）。
+export interface ExportStatusPayload {
+  version: number
+  status: 'idle' | 'pending' | 'running' | 'success' | 'failed' | 'cancelled'
+  phase?: string
+  error_message: string
+  file_name?: string
+  size?: number
+  started_at?: number
+  updated_at?: number
+  finished_at?: number
+}
+
+export function fetchStartExport() {
+  return request<ExportStatusPayload>({
+    url: '/migration/export',
+    method: 'POST',
+  })
+}
+
+export function fetchGetExportStatus() {
+  return request<ExportStatusPayload>({
+    url: '/migration/export/status',
+    method: 'GET',
+  })
+}
+
+export function fetchCancelExport() {
+  return request<ExportStatusPayload>({
+    url: '/migration/export/cancel',
+    method: 'POST',
+  })
+}
+
 export interface UploadMigrationSourceZipResponse {
-  source_type: 'ech0_v4' | 'memos'
+  source_type: 'ech0' | 'memos'
   tmp_dir: string
   source_payload: Record<string, unknown>
 }

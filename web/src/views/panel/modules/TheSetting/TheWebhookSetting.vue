@@ -323,9 +323,9 @@ const webhookGuideTopics = [
   'comment.status.updated',
   'comment.deleted',
   'resource.uploaded',
-  'system.backup',
+  'system.snapshot',
   'system.export',
-  'system.backup_schedule.updated',
+  'system.snapshot_schedule.updated',
 ]
 const webhookGuideHeaders = computed(() => [
   { key: 'X-Ech0-Event', desc: String(t('webhookSetting.guideHeaderEvent')) },

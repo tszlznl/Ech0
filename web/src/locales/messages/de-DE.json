@@ -652,13 +652,12 @@
     "bindSuccess": "OAuth2-Konto erfolgreich verknüpft",
     "bindFailed": "OAuth2-Kontoverknüpfung fehlgeschlagen, bitte erneut versuchen"
   },
-  "backupSetting": {
-    "title": "Datenexport",
+  "exportSetting": {
     "description": "Systemsnapshot zur Archivierung und Migration exportieren.",
     "exportSnapshot": "Snapshot exportieren",
     "loginRequired": "Bitte zuerst anmelden",
     "exporting": "Wird exportiert… bitte warten",
-    "exportStarted": "Backup-Export gestartet!",
+    "exportStarted": "Export gestartet!",
     "exportFailed": "Export fehlgeschlagen"
   },
   "agentSetting": {
@@ -793,8 +792,12 @@
     "deleteConfirmTitle": "Dieses Zugangstoken löschen?",
     "deleteSuccess": "Zugangstoken gelöscht"
   },
+  "dataManagement": {
+    "tabImport": "Import",
+    "tabExport": "Export",
+    "tabSnapshot": "Snapshot"
+  },
   "migrationSetting": {
-    "title": "Datenimport",
     "description": "Import aus Ech0 v4 sowie Memos wird unterstützt.",
     "inDevelopment": "In Entwicklung",
     "sourceZip": "Quell-ZIP-Datei",
@@ -834,7 +837,7 @@
     "cancelled": "Migration abgebrochen",
     "cleanupFailed": "Aufräumen fehlgeschlagen",
     "cleaned": "Migrationseinträge aufgeräumt",
-    "sourceEch0v4": "Unterstützt Ech0 v4 und neuer",
+    "sourceEch0": "Unterstützt Import aus Ech0",
     "sourceMemos": "Unterstützt Memos (in Entwicklung)",
     "statusIdle": "Bereit",
     "statusPending": "Wartend",
@@ -889,14 +892,9 @@
     "humanHourly": "Läuft alle {n} Stunde(n)",
     "humanCustom": "Läuft nach benutzerdefiniertem Zeitplan"
   },
-  "backupScheduleSetting": {
-    "title": "Snapshot-Einstellungen",
+  "snapshotScheduleSetting": {
     "description": "Automatische Snapshot-Erstellung konfigurieren und Snapshots manuell auslösen.",
-    "createSnapshot": "Snapshot erstellen",
-    "creatingSnapshot": "Wird erstellt...",
-    "createSnapshotSuccess": "Snapshot erfolgreich erstellt",
-    "createSnapshotFailed": "Snapshot konnte nicht erstellt werden",
-    "enableAutoBackup": "Snapshots automatisch erstellen",
+    "enableAutoSnapshot": "Snapshots automatisch erstellen",
     "crontab": "Snapshot-Zeitplan"
   },
   "uploader": {
