@@ -17,6 +17,7 @@ import (
 	"github.com/lin-snow/ech0/internal/handler"
 	"github.com/lin-snow/ech0/internal/job"
 	jobRunner "github.com/lin-snow/ech0/internal/job/runner"
+	"github.com/lin-snow/ech0/internal/kvstore"
 	"github.com/lin-snow/ech0/internal/middleware"
 	"github.com/lin-snow/ech0/internal/migrator"
 	jobModel "github.com/lin-snow/ech0/internal/model/job"
@@ -80,12 +81,18 @@ var StorageSet = wire.NewSet(
 	storage.ProviderSet,
 )
 
+// ProvideSeederKV 把 StorageSet 已构造的 *KeyValueRepository 适配成 kvstore.Store，供
+// BuildApp 顶层 app.ProvideOptions 的启动 seeder 使用。它消费（而非再 provide）该具体类型，
+// 故不与 StorageSet 的 NewKeyValueRepository 冲突；签名不含泛型，wire 可正常复制。
+func ProvideSeederKV(repo *keyvalueRepository.KeyValueRepository) kvstore.Store {
+	return kvstore.NewPersistent(repo)
+}
+
 var DomainSet = wire.NewSet(
 	BuildHandlers,
 	BuildMiddlewares,
 	BuildTasker,
 	BuildJobManager,
-	ProvideSnapshotScheduleApplier,
 	BuildEventRegistrar,
 )
 
@@ -108,7 +115,6 @@ var EventSet = wire.NewSet(
 	repository.EmbeddingSet,
 
 	webhook.NewDispatcher,
-	eventsubscriber.NewSnapshotScheduler,
 	eventsubscriber.NewAgentProcessor,
 	eventsubscriber.NewEmbeddingProcessor,
 	service.EmbeddingSet,
@@ -211,6 +217,8 @@ func BuildApp() (*app.App, error) {
 		InfraSet,
 		VisitorSet,
 		StorageSet,
+		// 顶层提供 kvstore.Store 供 app.ProvideOptions 的启动 seeder 使用。
+		ProvideSeederKV,
 		DomainSet,
 		RuntimeSet,
 		AppSet,
@@ -223,7 +231,6 @@ func BuildEventRegistrar(
 	ebProvider func() *busen.Bus,
 	appCache cache.ICache[string, any],
 	tx transaction.Transactor,
-	snapshotScheduleApplier eventsubscriber.SnapshotScheduleApplier,
 ) (*eventbus.EventRegistrar, error) {
 	wire.Build(EventSet)
 	return &eventbus.EventRegistrar{}, nil
@@ -306,22 +313,10 @@ func BuildTasker(
 	return &task.Manager{}, nil
 }
 
-// ProvideSnapshotScheduleApplier 从 task.Manager 中按能力取出实现了 SnapshotScheduleApplier
-// 的那个 Task（即 *scheduled.Snapshot），供 SnapshotScheduler 订阅者在运行期重配定时快照计划。
-// 取的是 Manager 持有的同一实例，故 Schedule 时捕获的 scheduler 对 Apply 可见。
-func ProvideSnapshotScheduleApplier(m *task.Manager) eventsubscriber.SnapshotScheduleApplier {
-	applier, ok := task.Find[eventsubscriber.SnapshotScheduleApplier](m)
-	if !ok {
-		panic("no scheduled task implements SnapshotScheduleApplier")
-	}
-	return applier
-}
-
 func ProvideSubscriptionProviders(
-	bs *eventsubscriber.SnapshotScheduler,
 	ap *eventsubscriber.AgentProcessor,
 	ep *eventsubscriber.EmbeddingProcessor,
 	disp *webhook.Dispatcher,
 ) []eventbus.Subscriber {
-	return []eventbus.Subscriber{bs, ap, ep, disp}
+	return []eventbus.Subscriber{ap, ep, disp}
 }

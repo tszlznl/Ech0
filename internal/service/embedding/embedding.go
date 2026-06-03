@@ -16,6 +16,7 @@ import (
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	model "github.com/lin-snow/ech0/internal/model/embedding"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
+	coreSetting "github.com/lin-snow/ech0/internal/setting"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"go.uber.org/zap"
 )
@@ -39,16 +40,7 @@ func NewEmbeddingService(repo Repository, durableKV kvstore.Store, echoReader Ec
 }
 
 func (s *EmbeddingService) getSetting(ctx context.Context) (settingModel.EmbeddingSetting, error) {
-	var setting settingModel.EmbeddingSetting
-	raw, err := s.durableKV.Get(ctx, commonModel.EmbeddingSettingKey)
-	if err != nil {
-		// 未配置 → 返回零值（Enable=false）
-		return setting, nil
-	}
-	if err := json.Unmarshal([]byte(raw), &setting); err != nil {
-		return setting, err
-	}
-	return setting, nil
+	return coreSetting.Get(ctx, s.durableKV, coreSetting.Embedding)
 }
 
 func (s *EmbeddingService) Enabled(ctx context.Context) bool {

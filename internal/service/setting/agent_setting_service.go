@@ -5,51 +5,26 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
+	coreSetting "github.com/lin-snow/ech0/internal/setting"
 	urlUtil "github.com/lin-snow/ech0/internal/util/url"
 	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
-// GetAgentInfo 获取 Agent 信息
+// GetAgentInfo 获取 Agent 信息（公开读，缺省值由 setting 引擎处理）。
 func (settingService *SettingService) GetAgentInfo(setting *model.AgentSetting) error {
-	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
-		agentSetting, err := settingService.durableKV.Get(
-			ctx,
-			commonModel.AgentSettingKey,
-		)
-		if err != nil {
-			// 数据库中不存在数据，返回默认值
-			setting.Enable = false
-			setting.Protocol = string(commonModel.OpenAI)
-			setting.Model = ""
-			setting.ApiKey = ""
-			setting.Prompt = ""
-			setting.BaseURL = ""
-
-			// 序列化为 JSON
-			settingToJSON, err := json.Marshal(setting)
-			if err != nil {
-				return err
-			}
-			if err := settingService.durableKV.Set(ctx, commonModel.AgentSettingKey, string(settingToJSON)); err != nil {
-				return err
-			}
-			return nil
-		}
-
-		if err := json.Unmarshal([]byte(agentSetting), setting); err != nil {
-			return err
-		}
-
-		return nil
-	})
+	v, err := coreSetting.Get(context.Background(), settingService.durableKV, coreSetting.Agent)
+	if err != nil {
+		return err
+	}
+	*setting = v
+	return nil
 }
 
-// GetAgentSettings 获取 Agent 设置
+// GetAgentSettings 获取 Agent 设置（管理员可见全量）。
 func (settingService *SettingService) GetAgentSettings(
 	ctx context.Context,
 	setting *model.AgentSetting,
@@ -64,38 +39,12 @@ func (settingService *SettingService) GetAgentSettings(
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	return settingService.transactor.Run(ctx, func(ctx context.Context) error {
-		agentSetting, err := settingService.durableKV.Get(
-			ctx,
-			commonModel.AgentSettingKey,
-		)
-		if err != nil {
-			// 数据库中不存在数据，返回默认值
-			setting.Enable = false
-			setting.Protocol = string(commonModel.OpenAI)
-			setting.Model = ""
-			setting.ApiKey = ""
-			setting.Prompt = ""
-			setting.BaseURL = ""
-
-			// 序列化为 JSON
-			settingToJSON, err := json.Marshal(setting)
-			if err != nil {
-				return err
-			}
-			if err := settingService.durableKV.Set(ctx, commonModel.AgentSettingKey, string(settingToJSON)); err != nil {
-				return err
-			}
-
-			return nil
-		}
-
-		if err := json.Unmarshal([]byte(agentSetting), setting); err != nil {
-			return err
-		}
-
-		return nil
-	})
+	v, err := coreSetting.Get(ctx, settingService.durableKV, coreSetting.Agent)
+	if err != nil {
+		return err
+	}
+	*setting = v
+	return nil
 }
 
 // UpdateAgentSettings 更新 Agent 设置
@@ -119,7 +68,7 @@ func (settingService *SettingService) UpdateAgentSettings(
 		newSetting.Protocol = string(commonModel.OpenAI)
 	}
 
-	setting := &model.AgentSetting{
+	setting := model.AgentSetting{
 		Enable:     newSetting.Enable,
 		Protocol:   newSetting.Protocol,
 		Model:      newSetting.Model,
@@ -130,19 +79,5 @@ func (settingService *SettingService) UpdateAgentSettings(
 		// 负数视为未配置，归零走保守默认。
 		ContextWindow: max(0, newSetting.ContextWindow),
 	}
-
-	return settingService.transactor.Run(ctx, func(ctx context.Context) error {
-		// 序列化为 JSON
-		settingToJSON, err := json.Marshal(setting)
-		if err != nil {
-			return err
-		}
-		settingToJSONString := string(settingToJSON)
-
-		if err := settingService.durableKV.Set(ctx, commonModel.AgentSettingKey, settingToJSONString); err != nil {
-			return err
-		}
-
-		return nil
-	})
+	return coreSetting.Set(ctx, settingService.durableKV, coreSetting.Agent, setting)
 }

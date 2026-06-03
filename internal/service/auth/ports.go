@@ -10,7 +10,6 @@ import (
 
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	model "github.com/lin-snow/ech0/internal/model/user"
-	settingService "github.com/lin-snow/ech0/internal/service/setting"
 )
 
 type Service interface {
@@ -27,6 +26,7 @@ type Service interface {
 	ListPasskeys(ctx context.Context) ([]authModel.PasskeyDeviceDto, error)
 	DeletePasskey(ctx context.Context, passkeyID string) error
 	UpdatePasskeyDeviceName(ctx context.Context, passkeyID string, deviceName string) error
+	PasskeyBoundary(ctx context.Context) (rpID string, origins []string)
 	TokenRevoker
 }
 
@@ -79,5 +79,3 @@ type AuthRepo interface {
 	OAuthCodeStore
 	TokenRevoker
 }
-
-type SettingService = settingService.Service

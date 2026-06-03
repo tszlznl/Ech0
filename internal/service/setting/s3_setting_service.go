@@ -5,74 +5,46 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"strings"
 
-	"github.com/lin-snow/ech0/internal/config"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
+	coreSetting "github.com/lin-snow/ech0/internal/setting"
 	urlUtil "github.com/lin-snow/ech0/internal/util/url"
 	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
-// GetS3Setting 获取 S3 存储设置
+// GetS3Setting 获取 S3 存储设置。缺省值由 setting 引擎处理；脱敏（非管理员屏蔽敏感字段）
+// 属请求态逻辑，留在此处。
 func (settingService *SettingService) GetS3Setting(ctx context.Context, setting *model.S3Setting) error {
 	userid := viewer.MustFromContext(ctx).UserID()
-	return settingService.transactor.Run(ctx, func(ctx context.Context) error {
-		s3Setting, err := settingService.durableKV.Get(ctx, commonModel.S3SettingKey)
-		if err != nil {
-			// 数据库缺失时回退到 config 默认值
-			cfg := config.Config().Storage
-			setting.Enable = cfg.ObjectEnabled
-			setting.Provider = strings.TrimSpace(cfg.Provider)
-			setting.Endpoint = strings.TrimPrefix(strings.TrimPrefix(strings.TrimSpace(cfg.Endpoint), "http://"), "https://")
-			setting.AccessKey = cfg.AccessKey
-			setting.SecretKey = cfg.SecretKey
-			setting.BucketName = cfg.BucketName
-			setting.Region = strings.TrimSpace(cfg.Region)
-			setting.UseSSL = cfg.UseSSL
-			setting.CDNURL = strings.TrimRight(strings.TrimSpace(cfg.CDNURL), "/")
-			setting.PathPrefix = strings.Trim(strings.TrimSpace(cfg.PathPrefix), "/")
-			setting.PublicRead = true
+	v, err := coreSetting.Get(ctx, settingService.durableKV, coreSetting.S3)
+	if err != nil {
+		return err
+	}
+	*setting = v
 
-			// 序列化为 JSON
-			settingToJSON, err := json.Marshal(setting)
-			if err != nil {
-				return err
-			}
-			if err := settingService.durableKV.Set(ctx, commonModel.S3SettingKey, string(settingToJSON)); err != nil {
-				return err
-			}
-
-			return nil
-		}
-
-		if err := json.Unmarshal([]byte(s3Setting), setting); err != nil {
-			return err
-		}
-
-		// 如果用户未登录且不为管理员,则屏蔽 S3 设置的敏感信息
-		if userid == "" {
-			setting.AccessKey = "******"
-			setting.SecretKey = "******"
-			setting.BucketName = "******"
-			setting.Endpoint = "******"
-		} else {
-			user, err := settingService.commonService.CommonGetUserByUserId(ctx, userid)
-			if err != nil {
-				return err
-			}
-			if !user.IsAdmin {
-				setting.AccessKey = "******"
-				setting.SecretKey = "******"
-				setting.BucketName = "******"
-				setting.Endpoint = "******"
-			}
-		}
-
+	// 未登录直接脱敏。
+	if userid == "" {
+		maskS3Secrets(setting)
 		return nil
-	})
+	}
+	user, err := settingService.commonService.CommonGetUserByUserId(ctx, userid)
+	if err != nil {
+		return err
+	}
+	if !user.IsAdmin {
+		maskS3Secrets(setting)
+	}
+	return nil
+}
+
+func maskS3Secrets(setting *model.S3Setting) {
+	setting.AccessKey = "******"
+	setting.SecretKey = "******"
+	setting.BucketName = "******"
+	setting.Endpoint = "******"
 }
 
 // UpdateS3Setting 更新 S3 存储设置
@@ -148,13 +120,7 @@ func (settingService *SettingService) UpdateS3Setting(
 		default:
 		}
 
-		// 序列化为 JSON
-		settingToJSON, err := json.Marshal(s3Setting)
-		if err != nil {
-			return err
-		}
-
-		if err := settingService.durableKV.Set(ctx, commonModel.S3SettingKey, string(settingToJSON)); err != nil {
+		if err := coreSetting.Set(ctx, settingService.durableKV, coreSetting.S3, *s3Setting); err != nil {
 			return err
 		}
 

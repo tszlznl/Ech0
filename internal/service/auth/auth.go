@@ -21,10 +21,12 @@ import (
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/lin-snow/ech0/internal/config"
+	"github.com/lin-snow/ech0/internal/kvstore"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	model "github.com/lin-snow/ech0/internal/model/user"
+	coreSetting "github.com/lin-snow/ech0/internal/setting"
 	"github.com/lin-snow/ech0/internal/transaction"
 	cryptoUtil "github.com/lin-snow/ech0/internal/util/crypto"
 	"github.com/lin-snow/ech0/internal/util/egress"
@@ -43,23 +45,23 @@ import (
 var oidcHTTPClient = egress.NewClient(egress.Timeout(10 * time.Second))
 
 type AuthService struct {
-	transactor     transaction.Transactor
-	repository     Repository
-	authRepo       AuthRepo
-	settingService SettingService
+	transactor transaction.Transactor
+	repository Repository
+	authRepo   AuthRepo
+	durableKV  kvstore.Store
 }
 
 func NewAuthService(
 	tx transaction.Transactor,
 	repository Repository,
 	authRepo AuthRepo,
-	settingService SettingService,
+	durableKV kvstore.Store,
 ) *AuthService {
 	return &AuthService{
-		transactor:     tx,
-		repository:     repository,
-		authRepo:       authRepo,
-		settingService: settingService,
+		transactor: tx,
+		repository: repository,
+		authRepo:   authRepo,
+		durableKV:  durableKV,
 	}
 }
 
@@ -69,6 +71,16 @@ func (authService *AuthService) RevokeToken(jti string, remainTTL time.Duration)
 
 func (authService *AuthService) IsTokenRevoked(jti string) bool {
 	return authService.authRepo.IsTokenRevoked(jti)
+}
+
+// PasskeyBoundary 返回管理员配置的 WebAuthn RP ID 与允许来源（取自 passkey_setting，
+// 经 setting 引擎归一化）。读取失败或未配置时返回空值，由 handler 回退到请求来源。
+func (authService *AuthService) PasskeyBoundary(ctx context.Context) (rpID string, origins []string) {
+	setting, err := coreSetting.Get(ctx, authService.durableKV, coreSetting.Passkey)
+	if err != nil {
+		return "", nil
+	}
+	return strings.TrimSpace(setting.WebAuthnRPID), setting.WebAuthnAllowedOrigins
 }
 
 func (authService *AuthService) ExchangeOAuthCode(code string) (*authModel.TokenPair, error) {
@@ -228,9 +240,8 @@ func (authService *AuthService) HandleOAuthCallback(
 }
 
 func (authService *AuthService) getOAuthSetting(provider string) (*settingModel.OAuth2Setting, error) {
-	var setting settingModel.OAuth2Setting
-	systemCtx := viewer.WithContext(context.Background(), viewer.NewSystemViewer())
-	if err := authService.settingService.GetOAuth2Setting(systemCtx, &setting, true); err != nil {
+	setting, err := coreSetting.Get(context.Background(), authService.durableKV, coreSetting.OAuth2)
+	if err != nil {
 		return nil, err
 	}
 
@@ -485,10 +496,8 @@ func (authService *AuthService) parseAndValidateClientRedirect(redirect string) 
 	}
 
 	allowed := config.Config().Auth.Redirect.AllowedReturnURLs
-	if authService.settingService != nil {
-		systemCtx := viewer.WithContext(context.Background(), viewer.NewSystemViewer())
-		var oauthSetting settingModel.OAuth2Setting
-		if err := authService.settingService.GetOAuth2Setting(systemCtx, &oauthSetting, true); err == nil &&
+	if authService.durableKV != nil {
+		if oauthSetting, err := coreSetting.Get(context.Background(), authService.durableKV, coreSetting.OAuth2); err == nil &&
 			len(oauthSetting.AuthRedirectAllowedReturnURLs) > 0 {
 			allowed = oauthSetting.AuthRedirectAllowedReturnURLs
 		}
@@ -930,8 +939,8 @@ func (authService *AuthService) GetOAuthInfo(
 		return oauthInfo, bindingPermissionError(provider)
 	}
 
-	var oauth2Setting settingModel.OAuth2Setting
-	if err := authService.settingService.GetOAuth2Setting(viewer.WithContext(ctx, viewer.NewUserViewer(user.ID)), &oauth2Setting, true); err != nil {
+	oauth2Setting, err := coreSetting.Get(ctx, authService.durableKV, coreSetting.OAuth2)
+	if err != nil {
 		return oauthInfo, err
 	}
 	isOIDC := oauth2Setting.IsOIDC

@@ -5,14 +5,12 @@ package subscriber
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/lin-snow/ech0/internal/agent"
 	"github.com/lin-snow/ech0/internal/event"
 	eventbus "github.com/lin-snow/ech0/internal/event/bus"
 	"github.com/lin-snow/ech0/internal/kvstore"
-	commonModel "github.com/lin-snow/ech0/internal/model/common"
-	settingModel "github.com/lin-snow/ech0/internal/model/setting"
+	coreSetting "github.com/lin-snow/ech0/internal/setting"
 )
 
 type AgentProcessor struct {
@@ -28,13 +26,10 @@ func NewAgentProcessor(
 }
 
 func (ap *AgentProcessor) handle(ctx context.Context) error {
-	var agentSetting settingModel.AgentSetting
-	if agentSettingStr, err := ap.durableKV.Get(ctx, commonModel.AgentSettingKey); err == nil {
-		if err := json.Unmarshal([]byte(agentSettingStr), &agentSetting); err != nil {
-			return err
-		}
+	// 读取 agent 配置以校验其可解析（后端故障则上抛）；Echo 变更时清理生成缓存。
+	if _, err := coreSetting.Get(ctx, ap.durableKV, coreSetting.Agent); err != nil {
+		return err
 	}
-
 	return ap.clearCache()
 }
 

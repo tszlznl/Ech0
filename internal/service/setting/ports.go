@@ -19,10 +19,10 @@ type Service interface {
 	BootstrapDefaultLocale(ctx context.Context, locale string) error
 	GetS3Setting(ctx context.Context, setting *model.S3Setting) error
 	UpdateS3Setting(ctx context.Context, newSetting *model.S3SettingDto) error
-	GetOAuth2Setting(ctx context.Context, setting *model.OAuth2Setting, forInternal bool) error
+	GetOAuth2Setting(ctx context.Context, setting *model.OAuth2Setting) error
 	UpdateOAuth2Setting(ctx context.Context, newSetting *model.OAuth2SettingDto) error
 	GetOAuth2Status(status *model.OAuth2Status) error
-	GetPasskeySetting(ctx context.Context, setting *model.PasskeySetting, forInternal bool) error
+	GetPasskeySetting(ctx context.Context, setting *model.PasskeySetting) error
 	UpdatePasskeySetting(ctx context.Context, newSetting *model.PasskeySettingDto) error
 	GetPasskeyStatus(status *model.PasskeyStatus) error
 	GetAllWebhooks(ctx context.Context) ([]webhookModel.Webhook, error)

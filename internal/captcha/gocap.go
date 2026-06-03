@@ -6,10 +6,10 @@ package captcha
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
+	"errors"
 	"net/http"
-	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/lin-snow/ech0/internal/config"
@@ -47,9 +47,34 @@ func APIEndpointWithBase(baseURL string) string {
 	return strings.TrimRight(base, "/") + APIEndpoint()
 }
 
-func SiteVerifyURL() string {
-	siteKey := url.PathEscape(SiteKey())
-	return fmt.Sprintf("http://127.0.0.1:%s/api/cap/%s/siteverify", config.Config().Server.Port, siteKey)
+// sharedEngine builds the captcha engine once and reuses it for the whole
+// process. The HTTP handler (mounted via NewHTTPHandler) and the in-process
+// SiteVerify must share one instance: redeem tokens live in the engine's
+// in-memory store, so verification has to hit the engine that issued them.
+var sharedEngine = sync.OnceValues(NewEngine)
+
+// SiteVerify validates and consumes a captcha redeem token in-process against
+// the shared engine — the same instance that served the challenge/redeem flow.
+// It returns nil only when the token is valid and freshly consumed; any
+// rejection or backing-store failure yields a non-nil error so callers fail
+// closed.
+func SiteVerify(token string) error {
+	token = strings.TrimSpace(token)
+	if token == "" {
+		return errors.New("captcha token missing")
+	}
+	engine, err := sharedEngine()
+	if err != nil {
+		return err
+	}
+	ok, err := engine.SiteVerify(SiteKey(), Secret(), token)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return errors.New("captcha verify failed")
+	}
+	return nil
 }
 
 func NewEngine() (*cap.Engine, error) {
@@ -101,7 +126,7 @@ func NewEngine() (*cap.Engine, error) {
 }
 
 func NewHTTPHandler(stripPrefix string) (http.Handler, error) {
-	engine, err := NewEngine()
+	engine, err := sharedEngine()
 	if err != nil {
 		return nil, err
 	}

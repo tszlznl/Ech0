@@ -97,6 +97,9 @@ func (f *fakeAuthService) UpdatePasskeyDeviceName(context.Context, string, strin
 	panic("not called")
 }
 
+// PasskeyBoundary 在测试中返回空配置，使 handler 回退到请求来源（与未配置 RP 时一致）。
+func (f *fakeAuthService) PasskeyBoundary(context.Context) (string, []string) { return "", nil }
+
 type fakeUserService struct {
 	getUserByIDFn func(id string) (userModel.User, error)
 }

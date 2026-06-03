@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"net/mail"
 	"net/url"
 	"strconv"
@@ -28,7 +27,7 @@ import (
 	model "github.com/lin-snow/ech0/internal/model/comment"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
-	"github.com/lin-snow/ech0/internal/util/egress"
+	coreSetting "github.com/lin-snow/ech0/internal/setting"
 	jwtUtil "github.com/lin-snow/ech0/internal/util/jwt"
 	"github.com/lin-snow/ech0/pkg/busen"
 	"github.com/lin-snow/ech0/pkg/viewer"
@@ -116,7 +115,7 @@ func (s *CommentService) CreateComment(
 	}
 
 	if setting.CaptchaEnabled {
-		if err := s.verifyCaptcha(dto.CaptchaToken, clientIP); err != nil {
+		if err := captchaCfg.SiteVerify(dto.CaptchaToken); err != nil {
 			return model.CreateCommentResult{},
 				commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "验证码验证失败")
 		}
@@ -514,24 +513,8 @@ func (s *CommentService) GetSystemSetting(ctx context.Context) (model.SystemSett
 }
 
 func (s *CommentService) getSystemSettingRaw(ctx context.Context) (model.SystemSetting, error) {
-	raw, err := s.durableKV.Get(ctx, model.CommentSystemSettingKey)
-	if err != nil {
-		defaultSetting := model.SystemSetting{
-			EnableComment:   true,
-			RequireApproval: true,
-			CaptchaEnabled:  false,
-		}
-		applySettingDefaults(&defaultSetting)
-		buf, _ := json.Marshal(defaultSetting)
-		_ = s.durableKV.Set(ctx, model.CommentSystemSettingKey, string(buf))
-		return defaultSetting, nil
-	}
-	var setting model.SystemSetting
-	if err := json.Unmarshal([]byte(raw), &setting); err != nil {
-		return model.SystemSetting{}, err
-	}
-	applySettingDefaults(&setting)
-	return setting, nil
+	// 缺省值（EnableComment 等 + SMTPPort）与归一化统一由 setting 引擎处理，启动 seeder 已落库。
+	return coreSetting.Get(ctx, s.durableKV, coreSetting.Comment)
 }
 
 func (s *CommentService) UpdateSystemSetting(ctx context.Context, setting model.SystemSetting) error {
@@ -780,50 +763,6 @@ func (s *CommentService) checkRateLimit(ctx context.Context, ipHash, email, user
 	}
 
 	return nil
-}
-
-func (s *CommentService) verifyCaptcha(token, _ string) error {
-	if strings.TrimSpace(token) == "" {
-		return errors.New("captcha token missing")
-	}
-	payload := map[string]string{
-		"response": strings.TrimSpace(token),
-		"secret":   captchaCfg.Secret(),
-	}
-	body, err := json.Marshal(payload)
-	if err != nil {
-		return err
-	}
-	req, err := http.NewRequestWithContext(
-		context.Background(),
-		http.MethodPost,
-		captchaCfg.SiteVerifyURL(),
-		strings.NewReader(string(body)),
-	)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-Type", "application/json")
-	client := egress.NewClient(egress.Timeout(8 * time.Second))
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = resp.Body.Close() }()
-	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-		return fmt.Errorf("captcha verify status: %d", resp.StatusCode)
-	}
-
-	var out struct {
-		Success bool `json:"success"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
-		return err
-	}
-	if out.Success {
-		return nil
-	}
-	return errors.New("captcha verify failed")
 }
 
 func (s *CommentService) verifyFormToken(clientIP, token string) error {

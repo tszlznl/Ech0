@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2025-2026 lin-snow
 
-// Package s3 是「导出到对象存储」的 Exporter 适配器:产出 Snapshot 后上传到 S3,同时保留本地
-// 产物(故下载仍可取回)。S3 上传为尽力而为,失败仅记日志、不影响本地导出成功。
+// Package s3 是「导出到对象存储」的 Exporter 适配器:产出 Snapshot 后在后台上传到 S3,同时保留
+// 本地产物(故下载仍可取回)。S3 上传为尽力而为,移出作业关键路径放到后台跑:本地产物一落盘作业即
+// 判完成、下载立即可用,上传失败仅记日志、不影响本地导出成功,也不阻塞下载。
 package s3
 
 import (
@@ -36,13 +37,14 @@ func (e *Exporter) Export(_ context.Context, req spec.ExportRequest) (spec.Expor
 		return spec.ExportResult{}, err
 	}
 
-	emit(req, migratorModel.ExportPhaseUploading)
-	e.uploadToS3(path, fileName)
-
 	var size int64
 	if info, statErr := os.Stat(path); statErr == nil {
 		size = info.Size()
 	}
+
+	// 本地产物已落盘:作业即刻判完成、下载立即可用。S3 上传是尽力而为的副作用,移出关键路径
+	// 放到后台跑(uploadToS3 自带 background context + 超时,与作业生命周期解耦),失败仅记日志。
+	go e.uploadToS3(path, fileName)
 
 	emit(req, migratorModel.ExportPhaseCompleted)
 	return spec.ExportResult{ArtifactPath: path, FileName: fileName, Size: size}, nil

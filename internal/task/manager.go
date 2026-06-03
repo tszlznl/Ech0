@@ -87,15 +87,3 @@ func (m *Manager) Stop(ctx context.Context) error {
 	m.started = false
 	return nil
 }
-
-// Find 返回首个满足类型 T 的已注册 Task（按能力查找）。用于把某个 Task 的运行期能力
-// （如 snapshot 的动态重配）暴露给外部消费者，而不让 Manager 耦合具体 Task 类型。
-func Find[T any](m *Manager) (T, bool) {
-	for _, t := range m.tasks {
-		if v, ok := t.(T); ok {
-			return v, true
-		}
-	}
-	var zero T
-	return zero, false
-}

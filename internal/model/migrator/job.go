@@ -15,10 +15,10 @@ const (
 	ExportDestS3 = "s3"
 )
 
-// 导出阶段(异步导出作业用,与 MigrationPhase* 对称)。
+// 导出阶段(异步导出作业用,与 MigrationPhase* 对称)。S3 上传移出关键路径后台跑,不再是作业阶段,
+// 故只有 packing/completed 两段:本地产物一落盘即 completed,下载立即可用。
 const (
 	ExportPhasePacking   = "packing"
-	ExportPhaseUploading = "uploading"
 	ExportPhaseCompleted = "completed"
 )
 

@@ -16,10 +16,11 @@ import (
 	cookieUtil "github.com/lin-snow/ech0/internal/util/cookie"
 )
 
-func getPasskeyOriginAndRPID(ctx *gin.Context) (origin string, rpID string) {
-	cfg := config.Config().Auth.WebAuthn
-	if strings.TrimSpace(cfg.RPID) != "" && len(cfg.Origins) > 0 {
-		return strings.TrimSpace(cfg.Origins[0]), strings.TrimSpace(cfg.RPID)
+func (h *AuthHandler) getPasskeyOriginAndRPID(ctx *gin.Context) (origin string, rpID string) {
+	// 管理员在面板配置的固定 RP（passkey_setting）优先；未配置则回退到请求来源。
+	rpID, origins := h.authService.PasskeyBoundary(ctx.Request.Context())
+	if rpID != "" && len(origins) > 0 {
+		return strings.TrimSpace(origins[0]), rpID
 	}
 	origin = strings.TrimSpace(ctx.GetHeader("Origin"))
 	if origin == "" {
@@ -81,7 +82,7 @@ func getOriginAndRPID(ctx *gin.Context) (origin string, rpID string) {
 //	@Router			/passkey/login/begin [post]
 func (h *AuthHandler) PasskeyLoginBeginV2() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
-		origin, rpID := getPasskeyOriginAndRPID(ctx)
+		origin, rpID := h.getPasskeyOriginAndRPID(ctx)
 		if origin == "" || rpID == "" {
 			return res.Response{Msg: commonModel.INVALID_PARAMS}
 		}
@@ -110,7 +111,7 @@ func (h *AuthHandler) PasskeyLoginFinishV2() gin.HandlerFunc {
 		if err := ctx.ShouldBindJSON(&req); err != nil {
 			return res.Response{Msg: commonModel.INVALID_REQUEST_BODY, Err: err}
 		}
-		origin, rpID := getPasskeyOriginAndRPID(ctx)
+		origin, rpID := h.getPasskeyOriginAndRPID(ctx)
 		if origin == "" || rpID == "" {
 			return res.Response{Msg: commonModel.INVALID_PARAMS}
 		}
@@ -138,7 +139,7 @@ func (h *AuthHandler) PasskeyRegisterBeginV2() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		var req authModel.PasskeyRegisterBeginReq
 		_ = ctx.ShouldBindJSON(&req)
-		origin, rpID := getPasskeyOriginAndRPID(ctx)
+		origin, rpID := h.getPasskeyOriginAndRPID(ctx)
 		if origin == "" || rpID == "" {
 			return res.Response{Msg: commonModel.INVALID_PARAMS}
 		}
@@ -167,7 +168,7 @@ func (h *AuthHandler) PasskeyRegisterFinishV2() gin.HandlerFunc {
 		if err := ctx.ShouldBindJSON(&req); err != nil {
 			return res.Response{Msg: commonModel.INVALID_REQUEST_BODY, Err: err}
 		}
-		origin, rpID := getPasskeyOriginAndRPID(ctx)
+		origin, rpID := h.getPasskeyOriginAndRPID(ctx)
 		if origin == "" || rpID == "" {
 			return res.Response{Msg: commonModel.INVALID_PARAMS}
 		}

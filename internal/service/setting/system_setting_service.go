@@ -5,76 +5,33 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"strings"
 
-	"github.com/lin-snow/ech0/internal/config"
 	i18nUtil "github.com/lin-snow/ech0/internal/i18n"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
+	coreSetting "github.com/lin-snow/ech0/internal/setting"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	urlUtil "github.com/lin-snow/ech0/internal/util/url"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
 )
 
-// GetSetting 获取设置
+// GetSetting 获取系统设置。缺省值/归一化统一由 setting 引擎处理，启动 seeder 已落库，
+// 故这里只是一次读取。
 func (settingService *SettingService) GetSetting(setting *model.SystemSetting) error {
-	return settingService.transactor.Run(context.Background(), func(ctx context.Context) error {
-		systemSetting, err := settingService.durableKV.Get(
-			ctx,
-			commonModel.SystemSettingsKey,
-		)
-		if err != nil {
-			// 数据库中不存在数据，手动添加初始数据
-			setting.SiteTitle = config.Config().Setting.SiteTitle
-			setting.ServerLogo = config.Config().Setting.ServerLogo
-			setting.ServerName = config.Config().Setting.Servername
-			setting.ServerURL = config.Config().Setting.Serverurl
-			setting.AllowRegister = config.Config().Setting.AllowRegister
-			setting.DefaultLocale = string(commonModel.DefaultLocale)
-			setting.ICPNumber = config.Config().Setting.Icpnumber
-			setting.FooterContent = config.Config().Setting.FooterContent
-			setting.FooterLink = config.Config().Setting.FooterLink
-			setting.MetingAPI = config.Config().Setting.MetingAPI
-			setting.CustomCSS = config.Config().Setting.CustomCSS
-			setting.CustomJS = config.Config().Setting.CustomJS
-
-			// 处理 URL
-			setting.ServerURL = urlUtil.TrimURL(setting.ServerURL)
-			setting.FooterLink = urlUtil.TrimURL(setting.FooterLink)
-			setting.MetingAPI = urlUtil.TrimURL(setting.MetingAPI)
-
-			// 序列化为 JSON
-			settingToJSON, err := json.Marshal(setting)
-			if err != nil {
-				return err
-			}
-			if err := settingService.durableKV.Set(ctx, commonModel.SystemSettingsKey, string(settingToJSON)); err != nil {
-				return err
-			}
-
-			// 处理 ServerURL
-			if err := settingService.durableKV.Set(ctx, commonModel.ServerURLKey, setting.ServerURL); err != nil {
-				return err
-			}
-
-			return nil
-		}
-
-		if err := json.Unmarshal([]byte(systemSetting), setting); err != nil {
-			return err
-		}
-		setting.DefaultLocale = i18nUtil.ResolveLocale(setting.DefaultLocale)
-
-		return nil
-	})
+	v, err := coreSetting.Get(context.Background(), settingService.durableKV, coreSetting.System)
+	if err != nil {
+		return err
+	}
+	*setting = v
+	return nil
 }
 
-// BootstrapDefaultLocale 在首次部署时把部署者的语言写入站点默认。
-// 仅当 system_settings KV 还不存在时落库，避免覆盖站长后续在面板里手动选过的值；
-// 入参为空或解析失败时不做任何事，让原有的 zh-CN 兜底逻辑接管。
+// BootstrapDefaultLocale 在首次部署（站长初始化）时把部署者语言写入站点默认。
+// 启动 seeder 已落库 system_settings，故此处改为「就地更新」：仅当 DefaultLocale 仍为内置
+// 默认（未被站长改过）时才覆盖，避免踩掉后续手动选择。入参为空/解析失败/等于默认时跳过。
 func (settingService *SettingService) BootstrapDefaultLocale(
 	ctx context.Context,
 	locale string,
@@ -89,32 +46,16 @@ func (settingService *SettingService) BootstrapDefaultLocale(
 	}
 
 	return settingService.transactor.Run(ctx, func(ctx context.Context) error {
-		if _, err := settingService.durableKV.Get(ctx, commonModel.SystemSettingsKey); err == nil {
-			return nil
-		}
-
-		setting := model.SystemSetting{
-			SiteTitle:     config.Config().Setting.SiteTitle,
-			ServerLogo:    config.Config().Setting.ServerLogo,
-			ServerName:    config.Config().Setting.Servername,
-			ServerURL:     urlUtil.TrimURL(config.Config().Setting.Serverurl),
-			AllowRegister: config.Config().Setting.AllowRegister,
-			DefaultLocale: resolved,
-			ICPNumber:     config.Config().Setting.Icpnumber,
-			FooterContent: config.Config().Setting.FooterContent,
-			FooterLink:    urlUtil.TrimURL(config.Config().Setting.FooterLink),
-			MetingAPI:     urlUtil.TrimURL(config.Config().Setting.MetingAPI),
-			CustomCSS:     config.Config().Setting.CustomCSS,
-			CustomJS:      config.Config().Setting.CustomJS,
-		}
-		settingToJSON, err := json.Marshal(setting)
+		current, err := coreSetting.Get(ctx, settingService.durableKV, coreSetting.System)
 		if err != nil {
 			return err
 		}
-		if err := settingService.durableKV.Set(ctx, commonModel.SystemSettingsKey, string(settingToJSON)); err != nil {
-			return err
+		// 站长已手动设过非默认 locale 时不覆盖。
+		if i18nUtil.ResolveLocale(current.DefaultLocale) != string(commonModel.DefaultLocale) {
+			return nil
 		}
-		return settingService.durableKV.Set(ctx, commonModel.ServerURLKey, setting.ServerURL)
+		current.DefaultLocale = resolved
+		return coreSetting.Set(ctx, settingService.durableKV, coreSetting.System, current)
 	})
 }
 
@@ -154,19 +95,11 @@ func (settingService *SettingService) UpdateSetting(
 		setting.CustomCSS = newSetting.CustomCSS
 		setting.CustomJS = newSetting.CustomJS
 
-		// 序列化为 JSON
-		settingToJSON, err := json.Marshal(setting)
-		if err != nil {
+		if err := coreSetting.Set(ctx, settingService.durableKV, coreSetting.System, setting); err != nil {
 			return err
 		}
 
-		// 将字节切片转换为字符串
-		settingToJSONString := string(settingToJSON)
-		if err := settingService.durableKV.Set(ctx, commonModel.SystemSettingsKey, settingToJSONString); err != nil {
-			return err
-		}
-
-		// 更新 ServerURL
+		// 同步派生的 ServerURL 便捷键。
 		if err := settingService.durableKV.Set(ctx, commonModel.ServerURLKey, setting.ServerURL); err != nil {
 			return err
 		}

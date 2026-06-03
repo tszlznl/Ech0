@@ -12,9 +12,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/lin-snow/ech0/internal/kvstore"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/connect"
-	settingModel "github.com/lin-snow/ech0/internal/model/setting"
+	coreSetting "github.com/lin-snow/ech0/internal/setting"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"github.com/lin-snow/ech0/internal/util/egress"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
@@ -39,7 +40,7 @@ type ConnectService struct {
 	connectRepository Repository
 	echoRepository    EchoRepository
 	commonService     CommonService
-	settingService    SettingService
+	durableKV         kvstore.Store
 
 	connectsInfoCacheMu      sync.RWMutex
 	connectsInfoCache        []model.Connect
@@ -53,14 +54,14 @@ func NewConnectService(
 	connectRepository Repository,
 	echoRepository EchoRepository,
 	commonService CommonService,
-	settingService SettingService,
+	durableKV kvstore.Store,
 ) *ConnectService {
 	return &ConnectService{
 		transactor:        tx,
 		connectRepository: connectRepository,
 		echoRepository:    echoRepository,
 		commonService:     commonService,
-		settingService:    settingService,
+		durableKV:         durableKV,
 	}
 }
 
@@ -150,8 +151,8 @@ func (connectService *ConnectService) GetConnect() (model.Connect, error) {
 	var connect model.Connect
 
 	// 获取系统设置
-	var setting settingModel.SystemSetting
-	if err := connectService.settingService.GetSetting(&setting); err != nil {
+	setting, err := coreSetting.Get(context.Background(), connectService.durableKV, coreSetting.System)
+	if err != nil {
 		return connect, err
 	}
 

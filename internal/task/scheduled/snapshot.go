@@ -11,9 +11,9 @@ import (
 	"github.com/go-co-op/gocron/v2"
 	"github.com/lin-snow/ech0/internal/event"
 	eventbus "github.com/lin-snow/ech0/internal/event/bus"
+	"github.com/lin-snow/ech0/internal/kvstore"
 	coreMigrator "github.com/lin-snow/ech0/internal/migrator"
-	settingModel "github.com/lin-snow/ech0/internal/model/setting"
-	settingService "github.com/lin-snow/ech0/internal/service/setting"
+	coreSetting "github.com/lin-snow/ech0/internal/setting"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"github.com/lin-snow/ech0/pkg/busen"
 	"go.uber.org/zap"
@@ -21,52 +21,78 @@ import (
 
 const snapshotScheduleTag = "SnapshotSchedule"
 
-// Snapshot 定时创建系统快照（产出统一 Snapshot，含尽力 S3 上传）。支持运行期通过
-// ApplySnapshotSchedule 动态重配，实现 eventsubscriber.SnapshotScheduleApplier（由 task.Find 取出
-// 供 SnapshotScheduler 订阅者使用）。打包 + S3 的执行逻辑统一收敛到 migrator.ExportEngine，定时
-// 快照不走 job.Manager（无需 UI 状态/取消，且避免与手动导出抢占同一作业行）。
+// Snapshot 定时创建系统快照（产出统一 Snapshot，含尽力 S3 上传）。它自管「调度 + 订阅」整个
+// 生命周期：Schedule 时捕获 scheduler 并订阅 UpdateSnapshotSchedule，收到即 reload；OnStop 退订。
+// 计划配置统一经 setting 引擎读 durableKV（而非依赖整个 SettingService），从根上断开
+// 「SettingService → Snapshot → SettingService」的构造环，也无需跨注入器的订阅者壳 / 反射查找。
+// 打包 + S3 的执行收敛到 migrator.ExportEngine，定时快照不走 job.Manager（无需 UI 状态/取消，
+// 且避免与手动导出抢占同一作业行）。
 type Snapshot struct {
-	settingService settingService.Service
-	exporter       *coreMigrator.ExportEngine
-	bus            *busen.Bus
+	durableKV kvstore.Store
+	exporter  *coreMigrator.ExportEngine
+	bus       *busen.Bus
 
-	// mu 同时保护 scheduler 字段与「移除旧作业 + 挂新作业」的重配过程。
+	// mu 同时保护 scheduler/unsub 字段与「移除旧作业 + 挂新作业」的重配过程。
 	mu        sync.Mutex
-	scheduler gocron.Scheduler // Schedule 时捕获，供运行期 ApplySnapshotSchedule 使用
+	scheduler gocron.Scheduler // Schedule 时捕获，供 reload 使用
+	unsub     func()           // 总线订阅的退订句柄，OnStop 时调用
 }
 
 func NewSnapshot(
-	settingSvc settingService.Service,
+	durableKV kvstore.Store,
 	exporter *coreMigrator.ExportEngine,
 	busProvider func() *busen.Bus,
 ) *Snapshot {
-	return &Snapshot{settingService: settingSvc, exporter: exporter, bus: busProvider()}
+	return &Snapshot{durableKV: durableKV, exporter: exporter, bus: busProvider()}
 }
 
 func (b *Snapshot) Name() string { return "snapshot" }
 
-// Schedule 捕获 scheduler，读取计划设置；启用时按 cron 挂上定时快照作业。
-func (b *Snapshot) Schedule(_ context.Context, s gocron.Scheduler) error {
+// Schedule 捕获 scheduler，订阅运行期计划变更，并按当前计划挂上定时快照作业。
+func (b *Snapshot) Schedule(ctx context.Context, s gocron.Scheduler) error {
 	b.mu.Lock()
-	defer b.mu.Unlock()
 	b.scheduler = s
+	b.mu.Unlock()
 
-	var setting settingModel.SnapshotSchedule
-	if err := b.settingService.GetSnapshotScheduleSetting(&setting); err != nil {
-		logUtil.GetLogger().Error("Failed to get snapshot schedule setting",
-			zap.String("module", logModule), zap.Error(err))
-		// 读取失败时默认关闭定时快照任务
-		setting.Enable = false
-		setting.CronExpression = "0 2 * * 0" // 每周日2点执行一次
+	if err := b.subscribe(); err != nil {
+		return err
 	}
-	if !setting.Enable {
-		return nil
-	}
-	return b.scheduleJob(setting.CronExpression)
+	return b.reload(ctx)
 }
 
-// ApplySnapshotSchedule 在运行期动态更新定时快照任务（实现 eventsubscriber.SnapshotScheduleApplier）。
-func (b *Snapshot) ApplySnapshotSchedule(schedule settingModel.SnapshotSchedule) error {
+// OnStop 退订总线，避免停机后残留订阅。实现 task.StopHook。
+func (b *Snapshot) OnStop(_ context.Context) {
+	b.mu.Lock()
+	unsub := b.unsub
+	b.unsub = nil
+	b.mu.Unlock()
+	if unsub != nil {
+		unsub()
+	}
+}
+
+// subscribe 把自己挂上总线：收到 UpdateSnapshotSchedule 即按持久化的最新计划重配（保序消费）。
+func (b *Snapshot) subscribe() error {
+	unsub, err := eventbus.On(b.handleScheduleChanged, eventbus.AsyncSequential()...)(b.bus)
+	if err != nil {
+		return err
+	}
+	b.mu.Lock()
+	b.unsub = unsub
+	b.mu.Unlock()
+	return nil
+}
+
+// handleScheduleChanged 忽略事件载荷，直接重读持久化计划——以「存了什么」为唯一真相源，天然幂等、
+// 对并发更新收敛。事件载荷仅供 webhook 桥接使用。
+func (b *Snapshot) handleScheduleChanged(ctx context.Context, _ event.UpdateSnapshotSchedule) error {
+	return b.reload(ctx)
+}
+
+// reload 是唯一的「应用计划」路径：读当前计划 → 移除旧作业 → 启用则按 cron 重新挂上。
+// 启动（Schedule）与运行期（事件）都走它，故 withSeconds 解析、enable 判断、tag 只有一份。
+// 读取失败时保留现有作业（不贸然移除），仅记录并上抛错误，避免一次瞬时读故障误关定时快照。
+func (b *Snapshot) reload(ctx context.Context) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -75,13 +101,14 @@ func (b *Snapshot) ApplySnapshotSchedule(schedule settingModel.SnapshotSchedule)
 		return nil
 	}
 
-	logUtil.GetLogger().Info("Applying snapshot schedule",
-		zap.String("module", logModule),
-		zap.Bool("enable", schedule.Enable),
-		zap.String("cron", schedule.CronExpression),
-	)
+	schedule, err := coreSetting.Get(ctx, b.durableKV, coreSetting.Snapshot)
+	if err != nil {
+		logUtil.GetLogger().Error("Failed to read snapshot schedule, keeping current jobs",
+			zap.String("module", logModule), zap.Error(err))
+		return err
+	}
 
-	// 先移除旧任务，避免重复触发。
+	// 先移除旧作业，避免重复触发（启动时无旧作业，是无害 no-op）。
 	b.scheduler.RemoveByTags(snapshotScheduleTag)
 	if !schedule.Enable {
 		logUtil.GetLogger().Info("Snapshot schedule disabled, jobs removed", zap.String("module", logModule))
@@ -93,7 +120,8 @@ func (b *Snapshot) ApplySnapshotSchedule(schedule settingModel.SnapshotSchedule)
 			zap.String("module", logModule), zap.Error(err))
 		return err
 	}
-	logUtil.GetLogger().Info("Snapshot schedule applied successfully", zap.String("module", logModule))
+	logUtil.GetLogger().Info("Snapshot schedule applied",
+		zap.String("module", logModule), zap.String("cron", schedule.CronExpression))
 	return nil
 }
 
@@ -118,6 +146,9 @@ func (b *Snapshot) scheduleJob(cronExpression string) error {
 			eventbus.Notify(ctx, b.bus, event.SystemSnapshot{Info: "System scheduled snapshot completed"})
 		}),
 		gocron.WithTags(snapshotScheduleTag),
+		// 单例防重叠：上一次快照还在跑时，本次触发直接跳过而非排队，避免大数据/慢 S3 下
+		// 快照叠跑或堆积成 backlog（Reschedule = 丢弃本 tick，等下一个 cron 点）。
+		gocron.WithSingletonMode(gocron.LimitModeReschedule),
 	)
 	if err != nil {
 		logUtil.GetLogger().Error("Failed to schedule snapshot task",

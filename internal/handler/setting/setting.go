@@ -160,7 +160,7 @@ func (settingHandler *SettingHandler) UpdateS3Settings() gin.HandlerFunc {
 func (settingHandler *SettingHandler) GetOAuth2Settings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		var oauthSetting model.OAuth2Setting
-		if err := settingHandler.settingService.GetOAuth2Setting(ctx.Request.Context(), &oauthSetting, false); err != nil {
+		if err := settingHandler.settingService.GetOAuth2Setting(ctx.Request.Context(), &oauthSetting); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
@@ -249,7 +249,7 @@ func (settingHandler *SettingHandler) GetOAuth2Status() gin.HandlerFunc {
 func (settingHandler *SettingHandler) GetPasskeySettings() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		var passkeySetting model.PasskeySetting
-		if err := settingHandler.settingService.GetPasskeySetting(ctx.Request.Context(), &passkeySetting, false); err != nil {
+		if err := settingHandler.settingService.GetPasskeySetting(ctx.Request.Context(), &passkeySetting); err != nil {
 			return res.Response{
 				Msg: "",
 				Err: err,
