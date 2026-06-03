@@ -661,7 +661,10 @@
     "loginRequired": "请登录后使用",
     "exporting": "导出中...请稍等",
     "exportStarted": "导出已开始！",
-    "exportFailed": "导出失败"
+    "exportFailed": "导出失败",
+    "jobTitle": "快照导出",
+    "artifactLabel": "产物",
+    "redownload": "重新下载"
   },
   "agentSetting": {
     "title": "模型",
@@ -1028,6 +1031,10 @@
     "baseUrl": "自定义 API 地址",
     "baseUrlPlaceholder": "https://api.openai.com/v1",
     "baseUrlHint": "填写服务的 API 根地址即可，系统会自动补全 /embeddings，请勿手动添加。",
+    "batchSize": "单批条数",
+    "batchSizePlaceholder": "默认 64（部分提供商限制 64 或 25）",
+    "batchSizeHint": "重建索引时每次请求向量化的文本条数。部分提供商限制单次最多 64 或 25 条，超限会报错；填 0 使用默认值 64。",
+    "batchSizeDefault": "默认（64）",
     "reindex": "重建索引",
     "reindexHint": "为全部历史 Echo 重新生成向量。更换模型或维度后需执行一次。",
     "reindexAction": "开始重建",
@@ -1065,5 +1072,20 @@
     "placeholder": "问点什么…",
     "kbdEnter": "进入对话",
     "kbdClose": "关闭"
+  },
+  "jobProgress": {
+    "statusIdle": "空闲",
+    "statusPending": "排队中",
+    "statusRunning": "进行中",
+    "statusSuccess": "已完成",
+    "statusFailed": "失败",
+    "statusCancelled": "已取消",
+    "importPhaseExtracting": "解析",
+    "importPhaseLoading": "写入",
+    "importPhaseReporting": "汇总",
+    "importPhaseCompleted": "完成",
+    "exportPhasePending": "准备",
+    "exportPhasePacking": "打包",
+    "exportPhaseCompleted": "完成"
   }
 }

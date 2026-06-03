@@ -98,6 +98,10 @@ export const useSettingStore = defineStore('settingStore', () => {
   // 状态直接来自 GET /migration/export/status（与导入状态机一致）。
   const snapshotStatus = ref<SnapshotUIStatus>('idle')
   const snapshotError = ref<string>('')
+  // 后端导出状态回传的 phase(packing/completed)与产物信息(成功时填充),用于 job 进度展示。
+  const snapshotPhase = ref<string>('')
+  const snapshotFileName = ref<string>('')
+  const snapshotSize = ref<number>(0)
   const snapshotPolling = ref<boolean>(false)
   const snapshotPollTimer = ref<ReturnType<typeof setTimeout> | null>(null)
   const snapshotPollInFlight = ref<boolean>(false)
@@ -176,6 +180,10 @@ export const useSettingStore = defineStore('settingStore', () => {
   const applyExportState = (data: ExportStatusPayload) => {
     snapshotStatus.value = data.status
     snapshotError.value = data.error_message || ''
+    snapshotPhase.value = data.phase || ''
+    // 产物文件名/大小仅在终态成功时由后端补出;非成功态后端回空,这里如实清零。
+    snapshotFileName.value = data.file_name || ''
+    snapshotSize.value = data.size || 0
   }
 
   const isExportTerminal = (status: SnapshotUIStatus) =>
@@ -291,6 +299,9 @@ export const useSettingStore = defineStore('settingStore', () => {
     init,
     snapshotStatus,
     snapshotError,
+    snapshotPhase,
+    snapshotFileName,
+    snapshotSize,
     snapshotPolling,
   }
 })

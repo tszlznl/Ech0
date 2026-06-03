@@ -661,7 +661,10 @@
     "loginRequired": "Please sign in first",
     "exporting": "Exporting... please wait",
     "exportStarted": "Export started!",
-    "exportFailed": "Export failed"
+    "exportFailed": "Export failed",
+    "jobTitle": "Snapshot export",
+    "artifactLabel": "Artifact",
+    "redownload": "Download again"
   },
   "agentSetting": {
     "title": "Model",
@@ -1028,6 +1031,10 @@
     "baseUrl": "Custom API URL",
     "baseUrlPlaceholder": "https://api.openai.com/v1",
     "baseUrlHint": "Enter the service's API root URL; /embeddings is appended automatically — don't add it yourself.",
+    "batchSize": "Batch size",
+    "batchSizePlaceholder": "Default 64 (some providers cap at 64 or 25)",
+    "batchSizeHint": "Number of texts vectorized per request during reindex. Some providers cap each request at 64 or 25 and reject larger ones; set 0 to use the default of 64.",
+    "batchSizeDefault": "Default (64)",
     "reindex": "Rebuild index",
     "reindexHint": "Regenerate vectors for all past echos. Run once after changing model or dimension.",
     "reindexAction": "Start rebuild",
@@ -1065,5 +1072,20 @@
     "placeholder": "Ask anything…",
     "kbdEnter": "Start chat",
     "kbdClose": "Close"
+  },
+  "jobProgress": {
+    "statusIdle": "Idle",
+    "statusPending": "Queued",
+    "statusRunning": "Running",
+    "statusSuccess": "Completed",
+    "statusFailed": "Failed",
+    "statusCancelled": "Cancelled",
+    "importPhaseExtracting": "Extract",
+    "importPhaseLoading": "Load",
+    "importPhaseReporting": "Summarize",
+    "importPhaseCompleted": "Done",
+    "exportPhasePending": "Prepare",
+    "exportPhasePacking": "Pack",
+    "exportPhaseCompleted": "Done"
   }
 }

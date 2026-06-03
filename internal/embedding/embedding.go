@@ -22,8 +22,14 @@ var (
 	ErrEmptyResponse = errors.New("embedding: empty response")
 )
 
+// defaultBatchSize 是未配置批次大小时，单次 /v1/embeddings 请求的文本条数上限。
+// 取 64 是因为不少国产提供商（如 Qwen/DashScope）限制 input 数组最多 64 条；
+// OpenAI 等可承受更多，但 64 作为保守默认对所有人都安全，用户可在设置里调大/调小。
+const defaultBatchSize = 64
+
 // Embed 批量生成文本向量（OpenAI 兼容 /v1/embeddings）。
-// 返回的切片顺序与 inputs 一一对应。
+// 返回的切片顺序与 inputs 一一对应；inputs 超过批次上限时自动分多次请求，
+// 避免触发提供商对单次 input 数组条数的限制（如 "input数组最大不得超过64条"）。
 func Embed(
 	ctx context.Context,
 	setting settingModel.EmbeddingSetting,
@@ -39,6 +45,11 @@ func Embed(
 		return nil, nil
 	}
 
+	batchSize := setting.BatchSize
+	if batchSize <= 0 {
+		batchSize = defaultBatchSize
+	}
+
 	cfg := openai.DefaultConfig(setting.ApiKey)
 	if setting.BaseURL != "" {
 		// base_url 按字面量透传，由 go-openai 统一拼接 "/embeddings" 后缀
@@ -47,20 +58,24 @@ func Embed(
 	}
 	client := openai.NewClientWithConfig(cfg)
 
-	resp, err := client.CreateEmbeddings(ctx, openai.EmbeddingRequest{
-		Model: openai.EmbeddingModel(setting.Model),
-		Input: inputs,
-	})
-	if err != nil {
-		return nil, err
-	}
-	if len(resp.Data) != len(inputs) {
-		return nil, ErrEmptyResponse
-	}
+	out := make([][]float32, 0, len(inputs))
+	for start := 0; start < len(inputs); start += batchSize {
+		end := min(start+batchSize, len(inputs))
+		batch := inputs[start:end]
 
-	out := make([][]float32, len(resp.Data))
-	for i := range resp.Data {
-		out[i] = resp.Data[i].Embedding
+		resp, err := client.CreateEmbeddings(ctx, openai.EmbeddingRequest{
+			Model: openai.EmbeddingModel(setting.Model),
+			Input: batch,
+		})
+		if err != nil {
+			return nil, err
+		}
+		if len(resp.Data) != len(batch) {
+			return nil, ErrEmptyResponse
+		}
+		for i := range resp.Data {
+			out = append(out, resp.Data[i].Embedding)
+		}
 	}
 	return out, nil
 }

@@ -661,7 +661,10 @@
     "loginRequired": "Bitte zuerst anmelden",
     "exporting": "Wird exportiert… bitte warten",
     "exportStarted": "Export gestartet!",
-    "exportFailed": "Export fehlgeschlagen"
+    "exportFailed": "Export fehlgeschlagen",
+    "jobTitle": "Snapshot-Export",
+    "artifactLabel": "Artefakt",
+    "redownload": "Erneut herunterladen"
   },
   "agentSetting": {
     "title": "Modell",
@@ -1028,6 +1031,10 @@
     "baseUrl": "Eigene API-URL",
     "baseUrlPlaceholder": "https://api.openai.com/v1",
     "baseUrlHint": "Die API-Basis-URL des Dienstes eingeben; /embeddings wird automatisch angehängt – nicht selbst hinzufügen.",
+    "batchSize": "Stapelgröße",
+    "batchSizePlaceholder": "Standard 64 (manche Anbieter begrenzen auf 64 oder 25)",
+    "batchSizeHint": "Anzahl der pro Anfrage vektorisierten Texte beim Neuaufbau. Manche Anbieter begrenzen jede Anfrage auf 64 oder 25 und lehnen größere ab; 0 verwendet den Standardwert 64.",
+    "batchSizeDefault": "Standard (64)",
     "reindex": "Index neu aufbauen",
     "reindexHint": "Vektoren für alle bisherigen Echos neu erzeugen. Einmal nach Modell- oder Dimensionswechsel ausführen.",
     "reindexAction": "Neuaufbau starten",
@@ -1065,5 +1072,20 @@
     "placeholder": "Frag etwas…",
     "kbdEnter": "Starten",
     "kbdClose": "Schließen"
+  },
+  "jobProgress": {
+    "statusIdle": "Bereit",
+    "statusPending": "Warteschlange",
+    "statusRunning": "Läuft",
+    "statusSuccess": "Fertig",
+    "statusFailed": "Fehler",
+    "statusCancelled": "Abgebrochen",
+    "importPhaseExtracting": "Lesen",
+    "importPhaseLoading": "Laden",
+    "importPhaseReporting": "Bericht",
+    "importPhaseCompleted": "Fertig",
+    "exportPhasePending": "Vorber.",
+    "exportPhasePacking": "Packen",
+    "exportPhaseCompleted": "Fertig"
   }
 }

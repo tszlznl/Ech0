@@ -12,6 +12,7 @@ declare namespace App {
         api_key: string
         base_url: string
         dim: number
+        batch_size: number
       }
 
       type EmbeddingSettingDto = EmbeddingSetting

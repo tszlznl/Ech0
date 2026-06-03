@@ -84,51 +84,18 @@
       {{ t('migrationSetting.creatingTip') }}
     </p>
 
-    <div class="migration-job" v-if="migrationStore.hasJob">
-      <div class="migration-job-header">
-        <div class="migration-job-title-wrap">
-          <h3 class="migration-job-title">{{ t('migrationSetting.jobTitle') }}</h3>
-          <p class="migration-job-subtitle">
-            {{ t('migrationSetting.source') }}
-            {{
-              sourceLabelMap[migrationStore.state.source_type] || migrationStore.state.source_type
-            }}
-          </p>
-        </div>
-        <span class="migration-status-pill" :class="`status-${migrationStore.state.status}`">
-          {{ statusLabelMap[migrationStore.state.status] || migrationStore.state.status }}
-        </span>
-      </div>
-
-      <p class="migration-job-error" v-if="migrationStore.state.error_message">
-        {{ migrationStore.state.error_message }}
-      </p>
-
-      <div class="migration-job-metrics" v-if="hasMetrics">
-        <div class="metric-item">
-          <span class="metric-label">{{ t('migrationSetting.totalProcessed') }}</span>
-          <span class="metric-value">{{ migrationProcessed }}</span>
-        </div>
-        <div class="metric-item">
-          <span class="metric-label">{{ t('migrationSetting.success') }}</span>
-          <span class="metric-value">{{ migrationSuccess }}</span>
-        </div>
-        <div class="metric-item">
-          <span class="metric-label">{{ t('migrationSetting.failed') }}</span>
-          <span class="metric-value">{{ migrationFail }}</span>
-        </div>
-      </div>
-
-      <div class="migration-job-meta">
-        <p v-if="migrationJobId">{{ t('migrationSetting.jobId') }}: {{ migrationJobId }}</p>
-        <p v-if="formattedStartedAt">
-          {{ t('migrationSetting.startedAt') }}: {{ formattedStartedAt }}
-        </p>
-        <p v-if="formattedFinishedAt">
-          {{ t('migrationSetting.finishedAt') }}: {{ formattedFinishedAt }}
-        </p>
-      </div>
-    </div>
+    <JobProgressCard
+      v-if="migrationStore.hasJob"
+      :title="t('migrationSetting.jobTitle')"
+      :subtitle="jobSubtitle"
+      :status="migrationStore.state.status"
+      :status-label="statusLabelMap[migrationStore.state.status] || migrationStore.state.status"
+      :steps="importSteps"
+      :current-key="migrationStore.state.phase"
+      :metrics="jobMetrics"
+      :meta="jobMeta"
+      :error-message="migrationStore.state.error_message"
+    />
   </div>
 </template>
 
@@ -136,6 +103,7 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseButton from '@/components/common/BaseButton.vue'
+import JobProgressCard from './components/JobProgressCard.vue'
 import { fetchUploadMigrationSourceZip } from '@/service/api'
 import { useMigrationStore } from '@/stores'
 import { theToast } from '@/utils/toast'
@@ -202,6 +170,63 @@ const startActionText = computed(() => {
   if (isUploadingZip.value) return String(t('migrationSetting.uploading'))
   if (isCreatingMigration.value) return String(t('migrationSetting.creating'))
   return String(t('migrationSetting.startMigration'))
+})
+
+// ---- job 进度卡 ----
+const jobSubtitle = computed(
+  () =>
+    `${t('migrationSetting.source')} ${sourceLabelMap.value[migrationStore.state.source_type] || migrationStore.state.source_type}`,
+)
+
+// 步进器对齐 ech0 importer 实际发出的阶段:解析 → 写入 → 汇总 → 完成。
+const importSteps = computed(() => [
+  { key: 'extracting', label: String(t('jobProgress.importPhaseExtracting')) },
+  { key: 'loading', label: String(t('jobProgress.importPhaseLoading')) },
+  { key: 'reporting', label: String(t('jobProgress.importPhaseReporting')) },
+  { key: 'completed', label: String(t('jobProgress.importPhaseCompleted')) },
+])
+
+const metricText = (v: unknown) => (v === undefined || v === null ? '—' : String(v))
+const failIsPositive = computed(() => {
+  const n = Number(migrationFail.value)
+  return Number.isFinite(n) && n > 0
+})
+
+const jobMetrics = computed(() => {
+  if (!hasMetrics.value) return []
+  return [
+    {
+      label: String(t('migrationSetting.totalProcessed')),
+      value: metricText(migrationProcessed.value),
+    },
+    {
+      label: String(t('migrationSetting.success')),
+      value: metricText(migrationSuccess.value),
+      tone: 'success' as const,
+    },
+    {
+      label: String(t('migrationSetting.failed')),
+      value: metricText(migrationFail.value),
+      tone: failIsPositive.value ? ('danger' as const) : undefined,
+    },
+  ]
+})
+
+const jobMeta = computed(() => {
+  const lines: { label: string; value: string }[] = []
+  if (migrationJobId.value) {
+    lines.push({ label: String(t('migrationSetting.jobId')), value: String(migrationJobId.value) })
+  }
+  if (formattedStartedAt.value) {
+    lines.push({ label: String(t('migrationSetting.startedAt')), value: formattedStartedAt.value })
+  }
+  if (formattedFinishedAt.value) {
+    lines.push({
+      label: String(t('migrationSetting.finishedAt')),
+      value: formattedFinishedAt.value,
+    })
+  }
+  return lines
 })
 
 const resetSelectedZip = () => {
@@ -463,111 +488,8 @@ void migrationStore.init()
   font-size: 0.83rem;
 }
 
-.migration-job {
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  padding: 0.9rem;
-  background: var(--color-bg-surface);
-}
-
-.migration-job-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 0.6rem;
-}
-
-.migration-job-title-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.migration-job-title {
-  color: var(--color-text-primary);
-  font-size: 0.95rem;
-  font-weight: 700;
-}
-
-.migration-job-subtitle {
-  color: var(--color-text-secondary);
-  font-size: 0.8rem;
-}
-
-.migration-status-pill {
-  padding: 0.15rem 0.5rem;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  border: 1px solid var(--color-border-subtle);
-  color: var(--color-text-secondary);
-}
-
-.status-running,
-.status-pending {
-  color: var(--color-nav-active-bg);
-  border-color: var(--color-nav-active-bg);
-}
-
-.status-success {
-  color: #1f9d55;
-  border-color: #1f9d55;
-}
-
-.status-failed,
-.status-cancelled {
-  color: #d64545;
-  border-color: #d64545;
-}
-
-.migration-job-error {
-  margin-top: 0.65rem;
-  color: #d64545;
-  font-size: 0.83rem;
-}
-
-.migration-job-metrics {
-  margin-top: 0.75rem;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.55rem;
-}
-
-.metric-item {
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
-  padding: 0.5rem 0.6rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.metric-label {
-  color: var(--color-text-secondary);
-  font-size: 0.78rem;
-}
-
-.metric-value {
-  color: var(--color-text-primary);
-  font-size: 0.95rem;
-  font-weight: 700;
-}
-
-.migration-job-meta {
-  margin-top: 0.7rem;
-  color: var(--color-text-secondary);
-  font-size: 0.8rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
 @media (width <= 768px) {
   .migration-source-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .migration-job-metrics {
     grid-template-columns: 1fr;
   }
 }

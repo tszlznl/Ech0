@@ -3165,6 +3165,9 @@ const docTemplate = `{
                 "base_url": {
                     "type": "string"
                 },
+                "batch_size": {
+                    "type": "integer"
+                },
                 "dim": {
                     "type": "integer"
                 },

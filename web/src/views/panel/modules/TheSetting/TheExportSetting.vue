@@ -19,29 +19,77 @@
         {{ isExporting ? t('exportSetting.exporting') : t('exportSetting.exportSnapshot') }}
       </BaseButton>
     </div>
+
+    <JobProgressCard
+      v-if="snapshotStatus !== 'idle'"
+      :title="t('exportSetting.jobTitle')"
+      :status="snapshotStatus"
+      :status-label="statusLabelMap[snapshotStatus] || snapshotStatus"
+      :steps="exportSteps"
+      :current-key="exportCurrentKey"
+      :error-message="snapshotStatus === 'failed' ? snapshotError : ''"
+    >
+      <template v-if="snapshotStatus === 'success'" #footer>
+        <div class="export-artifact">
+          <span class="export-artifact__label">{{ t('exportSetting.artifactLabel') }}</span>
+          <span class="export-artifact__name" v-tooltip="snapshotFileName">
+            {{ snapshotFileName || '—' }}
+          </span>
+          <span class="export-artifact__size">{{ formatBytes(snapshotSize) }}</span>
+          <BaseButton :tooltip="t('exportSetting.redownload')" @click="downloadSnapshot">
+            {{ t('exportSetting.redownload') }}
+          </BaseButton>
+        </div>
+      </template>
+    </JobProgressCard>
   </div>
 </template>
 
 <script setup lang="ts">
 import BaseButton from '@/components/common/BaseButton.vue'
+import JobProgressCard from './components/JobProgressCard.vue'
 import { computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { theToast } from '@/utils/toast'
 import { useSettingStore, useUserStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { fetchDownloadExport } from '@/service/api'
+import { formatBytes } from '@/utils/file'
 
 const { t } = useI18n()
 const settingStore = useSettingStore()
 const userStore = useUserStore()
 const { startSnapshotTask, restoreSnapshotTask } = settingStore
-const { snapshotStatus, snapshotError } = storeToRefs(settingStore)
+const { snapshotStatus, snapshotError, snapshotPhase, snapshotFileName, snapshotSize } =
+  storeToRefs(settingStore)
 const { isLogin } = storeToRefs(userStore)
 
 // 导出 = 异步 export 作业产出快照（与导入对称：重活在 job 里，有进度/可取消），完成后取回产物。
 const isExporting = computed(
   () => snapshotStatus.value === 'pending' || snapshotStatus.value === 'running',
 )
+
+// 步进器对齐后端真实阶段：排队(pending) → 打包(packing) → 完成(completed)。
+const exportSteps = computed(() => [
+  { key: 'pending', label: String(t('jobProgress.exportPhasePending')) },
+  { key: 'packing', label: String(t('jobProgress.exportPhasePacking')) },
+  { key: 'completed', label: String(t('jobProgress.exportPhaseCompleted')) },
+])
+
+const exportCurrentKey = computed(() => {
+  if (snapshotStatus.value === 'pending') return 'pending'
+  if (snapshotStatus.value === 'success') return 'completed'
+  return snapshotPhase.value || 'packing'
+})
+
+const statusLabelMap = computed<Record<string, string>>(() => ({
+  idle: String(t('jobProgress.statusIdle')),
+  pending: String(t('jobProgress.statusPending')),
+  running: String(t('jobProgress.statusRunning')),
+  success: String(t('jobProgress.statusSuccess')),
+  failed: String(t('jobProgress.statusFailed')),
+  cancelled: String(t('jobProgress.statusCancelled')),
+}))
 
 // 鉴权下载：经 fetchDownloadExport（credentials + Authorization header）取回 blob 触发下载，
 // token 不进 URL（避免出现在浏览器历史/日志/Referer）。
@@ -130,5 +178,34 @@ onMounted(() => {
 .export-download-btn {
   border-radius: var(--radius-md);
   color: var(--color-text-primary) !important;
+}
+
+.export-artifact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+}
+
+.export-artifact__label {
+  color: var(--color-text-muted);
+}
+
+.export-artifact__name {
+  max-width: 16rem;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.export-artifact__size {
+  padding: 0.05rem 0.4rem;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-muted);
+  border-radius: var(--radius-sm);
+  font-variant-numeric: tabular-nums;
 }
 </style>

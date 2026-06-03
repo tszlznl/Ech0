@@ -73,6 +73,24 @@
       <p v-if="editMode" class="text-xs opacity-70 mt-1">{{ t('embeddingSetting.baseUrlHint') }}</p>
     </div>
 
+    <!-- 单批条数：单次请求向量化的文本上限，规避提供商对 input 数组条数的限制 -->
+    <div class="mb-4">
+      <h2 class="font-semibold mb-1.5">{{ t('embeddingSetting.batchSize') }}</h2>
+      <span v-if="!editMode" class="block truncate opacity-80">
+        {{ setting.batch_size || t('embeddingSetting.batchSizeDefault') }}
+      </span>
+      <BaseInput
+        v-else
+        v-model.number="setting.batch_size"
+        type="number"
+        :placeholder="t('embeddingSetting.batchSizePlaceholder')"
+        class="w-full"
+      />
+      <p v-if="editMode" class="text-xs opacity-70 mt-1">
+        {{ t('embeddingSetting.batchSizeHint') }}
+      </p>
+    </div>
+
     <!-- 重建索引（异步作业 + 轮询进度，可取消） -->
     <div
       class="flex flex-row items-center justify-between gap-2 mt-5 pt-4 border-t border-[var(--color-border-subtle)]"
@@ -175,6 +193,7 @@ const setting = ref<App.Api.Embedding.EmbeddingSetting>({
   api_key: '',
   base_url: '',
   dim: 0,
+  batch_size: 0,
 })
 
 // 已保存的基线，用于判断 model/dim 是否变化（变化则需重建索引）

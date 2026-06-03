@@ -50,6 +50,9 @@ export interface StartMigrationPayload {
 export interface MigrationStatusPayload extends StartMigrationPayload {
   version: number
   status: 'idle' | 'pending' | 'running' | 'success' | 'failed' | 'cancelled'
+  // 后端 GlobalMigrationStateDTO 一直回传细粒度阶段(extracting/loading/reporting/completed),
+  // 之前前端契约漏了它,补上以驱动 job 进度步进器。
+  phase?: string
   error_message: string
   started_at?: number
   updated_at?: number

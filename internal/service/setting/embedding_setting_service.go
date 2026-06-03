@@ -40,11 +40,12 @@ func (settingService *SettingService) UpdateEmbeddingSetting(
 	}
 
 	setting := model.EmbeddingSetting{
-		Enable:  dto.Enable,
-		Model:   strings.TrimSpace(dto.Model),
-		ApiKey:  strings.TrimSpace(dto.ApiKey),
-		BaseURL: strings.TrimSpace(dto.BaseURL),
-		Dim:     dto.Dim,
+		Enable:    dto.Enable,
+		Model:     strings.TrimSpace(dto.Model),
+		ApiKey:    strings.TrimSpace(dto.ApiKey),
+		BaseURL:   strings.TrimSpace(dto.BaseURL),
+		Dim:       dto.Dim,
+		BatchSize: dto.BatchSize,
 	}
 
 	return coreSetting.Set(ctx, settingService.durableKV, coreSetting.Embedding, setting)

@@ -661,7 +661,10 @@
     "loginRequired": "ログインしてから利用してください",
     "exporting": "エクスポート中...少々お待ちください",
     "exportStarted": "エクスポートを開始しました！",
-    "exportFailed": "エクスポートに失敗しました"
+    "exportFailed": "エクスポートに失敗しました",
+    "jobTitle": "スナップショットの出力",
+    "artifactLabel": "成果物",
+    "redownload": "再ダウンロード"
   },
   "agentSetting": {
     "title": "モデル",
@@ -1028,6 +1031,10 @@
     "baseUrl": "カスタム API URL",
     "baseUrlPlaceholder": "https://api.openai.com/v1",
     "baseUrlHint": "サービスの API ルート URL を入力してください。/embeddings は自動的に付加されるため、手動で追加しないでください。",
+    "batchSize": "バッチサイズ",
+    "batchSizePlaceholder": "デフォルト 64（一部のプロバイダーは 64 または 25 に制限）",
+    "batchSizeHint": "再構築時に 1 リクエストでベクトル化するテキスト件数。一部のプロバイダーは 1 回あたり 64 または 25 件に制限し、超過するとエラーになります。0 を指定するとデフォルトの 64 を使用します。",
+    "batchSizeDefault": "デフォルト（64）",
     "reindex": "インデックス再構築",
     "reindexHint": "すべての過去の Echo のベクトルを再生成します。モデルや次元の変更後に一度実行してください。",
     "reindexAction": "再構築を開始",
@@ -1065,5 +1072,20 @@
     "placeholder": "何でも聞いてください…",
     "kbdEnter": "開始",
     "kbdClose": "閉じる"
+  },
+  "jobProgress": {
+    "statusIdle": "アイドル",
+    "statusPending": "待機中",
+    "statusRunning": "実行中",
+    "statusSuccess": "完了",
+    "statusFailed": "失敗",
+    "statusCancelled": "キャンセル",
+    "importPhaseExtracting": "解析",
+    "importPhaseLoading": "書込",
+    "importPhaseReporting": "集計",
+    "importPhaseCompleted": "完了",
+    "exportPhasePending": "準備",
+    "exportPhasePacking": "圧縮",
+    "exportPhaseCompleted": "完了"
   }
 }
