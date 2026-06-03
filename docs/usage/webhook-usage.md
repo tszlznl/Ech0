@@ -86,7 +86,7 @@ Webhook 是 Ech0 的事件推送能力。当系统内发生关键事件（如用
 ```json
 {
   "topic": "echo.created",
-  "event_name": "EchoCreatedEvent",
+  "event_name": "EchoCreated",
   "payload_raw": {
     "...": "具体事件载荷"
   },

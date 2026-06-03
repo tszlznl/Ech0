@@ -6,7 +6,6 @@ package service
 import (
 	"context"
 
-	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	model "github.com/lin-snow/ech0/internal/model/comment"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
@@ -65,12 +64,6 @@ type CommonService = commonService.Service
 type UserContext struct {
 	User  userModel.User
 	Valid bool
-}
-
-type EventPublisher interface {
-	CommentCreated(ctx context.Context, evt contracts.CommentCreatedEvent) error
-	CommentStatusUpdated(ctx context.Context, evt contracts.CommentStatusUpdatedEvent) error
-	CommentDeleted(ctx context.Context, evt contracts.CommentDeletedEvent) error
 }
 
 type MailMessage struct {

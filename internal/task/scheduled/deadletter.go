@@ -8,21 +8,22 @@ import (
 	"time"
 
 	"github.com/go-co-op/gocron/v2"
-	contracts "github.com/lin-snow/ech0/internal/event/contracts"
-	publisher "github.com/lin-snow/ech0/internal/event/publisher"
+	"github.com/lin-snow/ech0/internal/event"
+	eventbus "github.com/lin-snow/ech0/internal/event/bus"
 	queueRepository "github.com/lin-snow/ech0/internal/repository/queue"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	"github.com/lin-snow/ech0/pkg/busen"
 	"go.uber.org/zap"
 )
 
 // DeadLetter 周期消费死信队列，重新发布事件以触发重试。
 type DeadLetter struct {
 	queueRepo *queueRepository.QueueRepository
-	publisher *publisher.Publisher
+	bus       *busen.Bus
 }
 
-func NewDeadLetter(queueRepo *queueRepository.QueueRepository, publisher *publisher.Publisher) *DeadLetter {
-	return &DeadLetter{queueRepo: queueRepo, publisher: publisher}
+func NewDeadLetter(queueRepo *queueRepository.QueueRepository, busProvider func() *busen.Bus) *DeadLetter {
+	return &DeadLetter{queueRepo: queueRepo, bus: busProvider()}
 }
 
 func (d *DeadLetter) Name() string { return "dead-letter-consume" }
@@ -41,13 +42,7 @@ func (d *DeadLetter) Schedule(_ context.Context, s gocron.Scheduler) error {
 
 			// 遍历死信任务，重新发布事件触发重试
 			for _, dl := range deadLetters {
-				if err := d.publisher.DeadLetterRetried(
-					context.Background(),
-					contracts.DeadLetterRetriedEvent{DeadLetter: dl},
-				); err != nil {
-					logUtil.GetLogger().Error("Failed to publish dead letter retried event",
-						zap.String("module", logModule), zap.Error(err))
-				}
+				eventbus.Notify(context.Background(), d.bus, event.DeadLetterRetried{DeadLetter: dl})
 			}
 		}),
 	)

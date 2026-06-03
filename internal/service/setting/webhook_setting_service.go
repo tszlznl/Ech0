@@ -8,7 +8,7 @@ import (
 	"errors"
 	"time"
 
-	contracts "github.com/lin-snow/ech0/internal/event/contracts"
+	"github.com/lin-snow/ech0/internal/event"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
@@ -159,7 +159,7 @@ func (settingService *SettingService) TestWebhook(ctx context.Context, id string
 		"webhook": webhook.Name,
 		"time":    time.Now().UTC().Format(time.RFC3339),
 	}
-	obs, err := contracts.NewWebhookObservation("webhook.test", payload, map[string]string{
+	obs, err := event.NewWebhookObservation("webhook.test", payload, map[string]string{
 		"source": "setting.test",
 	})
 	if err != nil {

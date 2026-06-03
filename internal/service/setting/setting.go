@@ -4,10 +4,10 @@
 package service
 
 import (
-	publisher "github.com/lin-snow/ech0/internal/event/publisher"
 	"github.com/lin-snow/ech0/internal/kvstore"
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/transaction"
+	"github.com/lin-snow/ech0/pkg/busen"
 )
 
 type SettingService struct {
@@ -19,7 +19,7 @@ type SettingService struct {
 	settingRepository SettingRepository
 	webhookRepository WebhookRepository
 	tokenRevoker      TokenRevoker
-	publisher         *publisher.Publisher
+	bus               *busen.Bus
 }
 
 func NewSettingService(
@@ -31,7 +31,7 @@ func NewSettingService(
 	settingRepository SettingRepository,
 	webhookRepository WebhookRepository,
 	tokenRevoker TokenRevoker,
-	publisher *publisher.Publisher,
+	busProvider func() *busen.Bus,
 ) *SettingService {
 	return &SettingService{
 		transactor:        tx,
@@ -42,6 +42,6 @@ func NewSettingService(
 		webhookRepository: webhookRepository,
 		settingRepository: settingRepository,
 		tokenRevoker:      tokenRevoker,
-		publisher:         publisher,
+		bus:               busProvider(),
 	}
 }

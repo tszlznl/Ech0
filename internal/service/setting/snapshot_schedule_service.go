@@ -8,13 +8,12 @@ import (
 	"encoding/json"
 	"errors"
 
-	contracts "github.com/lin-snow/ech0/internal/event/contracts"
+	"github.com/lin-snow/ech0/internal/event"
+	eventbus "github.com/lin-snow/ech0/internal/event/bus"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	fmtUtil "github.com/lin-snow/ech0/internal/util/format"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
-	"go.uber.org/zap"
 )
 
 // GetSnapshotScheduleSetting 获取定时快照计划
@@ -95,12 +94,6 @@ func (settingService *SettingService) UpdateSnapshotScheduleSetting(
 	}
 
 	// 在事务提交后再发布事件，避免回滚时出现幽灵事件。
-	if err := settingService.publisher.SnapshotScheduleUpdated(
-		context.Background(),
-		contracts.UpdateSnapshotScheduleEvent{Schedule: updated},
-	); err != nil {
-		logUtil.GetLogger().
-			Error("Failed to publish update snapshot schedule event", zap.Error(err))
-	}
+	eventbus.Notify(context.Background(), settingService.bus, event.UpdateSnapshotSchedule{Schedule: updated})
 	return nil
 }

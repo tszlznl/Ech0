@@ -22,13 +22,15 @@ import (
 
 	captchaCfg "github.com/lin-snow/ech0/internal/captcha"
 	"github.com/lin-snow/ech0/internal/config"
-	contracts "github.com/lin-snow/ech0/internal/event/contracts"
+	"github.com/lin-snow/ech0/internal/event"
+	eventbus "github.com/lin-snow/ech0/internal/event/bus"
 	"github.com/lin-snow/ech0/internal/kvstore"
 	model "github.com/lin-snow/ech0/internal/model/comment"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
 	"github.com/lin-snow/ech0/internal/util/egress"
 	jwtUtil "github.com/lin-snow/ech0/internal/util/jwt"
+	"github.com/lin-snow/ech0/pkg/busen"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
 )
@@ -49,7 +51,7 @@ type CommentService struct {
 	commonService CommonService
 	repo          Repository
 	durableKV     kvstore.Store
-	publisher     EventPublisher
+	bus           *busen.Bus
 	mailer        Mailer
 }
 
@@ -57,14 +59,14 @@ func NewCommentService(
 	commonService CommonService,
 	repo Repository,
 	durableKV kvstore.Store,
-	publisher EventPublisher,
+	busProvider func() *busen.Bus,
 	mailer Mailer,
 ) *CommentService {
 	return &CommentService{
 		commonService: commonService,
 		repo:          repo,
 		durableKV:     durableKV,
-		publisher:     publisher,
+		bus:           busProvider(),
 		mailer:        mailer,
 	}
 }
@@ -486,24 +488,21 @@ func (s *CommentService) BatchAction(ctx context.Context, action string, ids []s
 }
 
 func (s *CommentService) emitCommentCreated(ctx context.Context, comment model.Comment) {
-	if s.publisher == nil || comment.ID == "" {
-		return
+	if comment.ID != "" {
+		eventbus.Notify(ctx, s.bus, event.CommentCreated{Comment: comment})
 	}
-	_ = s.publisher.CommentCreated(ctx, contracts.CommentCreatedEvent{Comment: comment})
 }
 
 func (s *CommentService) emitCommentStatusUpdated(ctx context.Context, comment model.Comment) {
-	if s.publisher == nil || comment.ID == "" {
-		return
+	if comment.ID != "" {
+		eventbus.Notify(ctx, s.bus, event.CommentStatusUpdated{Comment: comment})
 	}
-	_ = s.publisher.CommentStatusUpdated(ctx, contracts.CommentStatusUpdatedEvent{Comment: comment})
 }
 
 func (s *CommentService) emitCommentDeleted(ctx context.Context, comment model.Comment) {
-	if s.publisher == nil || comment.ID == "" {
-		return
+	if comment.ID != "" {
+		eventbus.Notify(ctx, s.bus, event.CommentDeleted{Comment: comment})
 	}
-	_ = s.publisher.CommentDeleted(ctx, contracts.CommentDeletedEvent{Comment: comment})
 }
 
 func (s *CommentService) GetSystemSetting(ctx context.Context) (model.SystemSetting, error) {

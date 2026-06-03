@@ -15,12 +15,12 @@ import (
 	"strconv"
 	"time"
 
-	contracts "github.com/lin-snow/ech0/internal/event/contracts"
+	"github.com/lin-snow/ech0/internal/event"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 	"github.com/lin-snow/ech0/internal/util/egress"
 )
 
-func BuildRequest(wh *webhookModel.Webhook, obs contracts.WebhookObservation) (*http.Request, error) {
+func BuildRequest(wh *webhookModel.Webhook, obs event.WebhookObservation) (*http.Request, error) {
 	eventID := fmt.Sprintf("%d", time.Now().UTC().UnixNano())
 	timestamp := strconv.FormatInt(time.Now().UTC().Unix(), 10)
 	headers := make(http.Header)
@@ -62,7 +62,7 @@ func BuildRequest(wh *webhookModel.Webhook, obs contracts.WebhookObservation) (*
 func SendWithRetry(
 	client *http.Client,
 	wh *webhookModel.Webhook,
-	obs contracts.WebhookObservation,
+	obs event.WebhookObservation,
 	maxRetries int,
 	initialBackoff time.Duration,
 ) error {

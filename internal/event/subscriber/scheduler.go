@@ -6,8 +6,8 @@ package subscriber
 import (
 	"context"
 
-	contracts "github.com/lin-snow/ech0/internal/event/contracts"
-	registry "github.com/lin-snow/ech0/internal/event/registry"
+	"github.com/lin-snow/ech0/internal/event"
+	eventbus "github.com/lin-snow/ech0/internal/event/bus"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 )
 
@@ -23,20 +23,16 @@ func NewSnapshotScheduler(applier SnapshotScheduleApplier) *SnapshotScheduler {
 	return &SnapshotScheduler{applier: applier}
 }
 
-func (bs *SnapshotScheduler) HandleSnapshotScheduleUpdated(
+func (ss *SnapshotScheduler) HandleSnapshotScheduleUpdated(
 	ctx context.Context,
-	e contracts.UpdateSnapshotScheduleEvent,
+	e event.UpdateSnapshotSchedule,
 ) error {
 	_ = ctx
-	return bs.applier.ApplySnapshotSchedule(e.Schedule)
+	return ss.applier.ApplySnapshotSchedule(e.Schedule)
 }
 
-func (bs *SnapshotScheduler) Subscriptions() []registry.Subscription {
-	return []registry.Subscription{
-		registry.TopicSubscription(
-			contracts.TopicSnapshotScheduleUpdate,
-			bs.HandleSnapshotScheduleUpdated,
-			registry.SystemSubscribeOptions()...,
-		),
+func (ss *SnapshotScheduler) Registrations() []eventbus.Registration {
+	return []eventbus.Registration{
+		eventbus.On(ss.HandleSnapshotScheduleUpdated, eventbus.AsyncSequential()...),
 	}
 }

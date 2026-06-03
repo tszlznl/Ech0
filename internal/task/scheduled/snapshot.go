@@ -9,12 +9,13 @@ import (
 	"sync"
 
 	"github.com/go-co-op/gocron/v2"
-	contracts "github.com/lin-snow/ech0/internal/event/contracts"
-	publisher "github.com/lin-snow/ech0/internal/event/publisher"
+	"github.com/lin-snow/ech0/internal/event"
+	eventbus "github.com/lin-snow/ech0/internal/event/bus"
 	coreMigrator "github.com/lin-snow/ech0/internal/migrator"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	"github.com/lin-snow/ech0/pkg/busen"
 	"go.uber.org/zap"
 )
 
@@ -27,7 +28,7 @@ const snapshotScheduleTag = "SnapshotSchedule"
 type Snapshot struct {
 	settingService settingService.Service
 	exporter       *coreMigrator.ExportEngine
-	publisher      *publisher.Publisher
+	bus            *busen.Bus
 
 	// mu 同时保护 scheduler 字段与「移除旧作业 + 挂新作业」的重配过程。
 	mu        sync.Mutex
@@ -37,9 +38,9 @@ type Snapshot struct {
 func NewSnapshot(
 	settingSvc settingService.Service,
 	exporter *coreMigrator.ExportEngine,
-	publisher *publisher.Publisher,
+	busProvider func() *busen.Bus,
 ) *Snapshot {
-	return &Snapshot{settingService: settingSvc, exporter: exporter, publisher: publisher}
+	return &Snapshot{settingService: settingSvc, exporter: exporter, bus: busProvider()}
 }
 
 func (b *Snapshot) Name() string { return "snapshot" }
@@ -114,13 +115,7 @@ func (b *Snapshot) scheduleJob(cronExpression string) error {
 				return
 			}
 
-			if err := b.publisher.SystemSnapshot(
-				ctx,
-				contracts.SystemSnapshotEvent{Info: "System scheduled snapshot completed"},
-			); err != nil {
-				logUtil.GetLogger().Error("Failed to publish snapshot completed event",
-					zap.String("module", logModule), zap.Error(err))
-			}
+			eventbus.Notify(ctx, b.bus, event.SystemSnapshot{Info: "System scheduled snapshot completed"})
 		}),
 		gocron.WithTags(snapshotScheduleTag),
 	)

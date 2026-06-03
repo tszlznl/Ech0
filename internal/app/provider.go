@@ -8,25 +8,21 @@ import (
 
 	"github.com/google/wire"
 	bus "github.com/lin-snow/ech0/internal/event/bus"
-	registry "github.com/lin-snow/ech0/internal/event/registry"
 	"github.com/lin-snow/ech0/internal/job"
-	"github.com/lin-snow/ech0/internal/migrator"
 	"github.com/lin-snow/ech0/internal/server"
 	"github.com/lin-snow/ech0/internal/task"
 )
 
 func ProvideOptions(
-	registrar *registry.EventRegistrar,
-	eventBus *bus.EventBus,
+	registrar *bus.EventRegistrar,
 	jobManager *job.Manager,
 	taskManager *task.Manager,
-	migratorWorker *migrator.Worker,
 	httpServer *server.Server,
 ) []Option {
 	return []Option{
 		// jobManager 排在 httpServer 前：其 Start 做启动期孤儿清理，须先于对外服务。
 		// Runner 已在构造期装配进 jobManager、Task 已装配进 taskManager，无需额外注册步骤。
-		Components(eventBus, jobManager, taskManager, migratorWorker, httpServer),
+		Components(jobManager, taskManager, httpServer),
 		BeforeStart(func(context.Context) error {
 			return registrar.Register()
 		}),
@@ -40,4 +36,4 @@ func NewApp(opts []Option) *App {
 	return New(opts...)
 }
 
-var ProviderSet = wire.NewSet(ProvideOptions, bus.NewEventBus, NewApp)
+var ProviderSet = wire.NewSet(ProvideOptions, NewApp)

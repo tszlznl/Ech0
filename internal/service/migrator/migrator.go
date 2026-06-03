@@ -16,18 +16,17 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	contracts "github.com/lin-snow/ech0/internal/event/contracts"
-	publisher "github.com/lin-snow/ech0/internal/event/publisher"
+	"github.com/lin-snow/ech0/internal/event"
+	eventbus "github.com/lin-snow/ech0/internal/event/bus"
 	"github.com/lin-snow/ech0/internal/job"
 	coreMigrator "github.com/lin-snow/ech0/internal/migrator"
 	snapshot "github.com/lin-snow/ech0/internal/migrator/snapshot"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	jobModel "github.com/lin-snow/ech0/internal/model/job"
 	migratorModel "github.com/lin-snow/ech0/internal/model/migrator"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
+	"github.com/lin-snow/ech0/pkg/busen"
 	"github.com/lin-snow/ech0/pkg/viewer"
-	"go.uber.org/zap"
 )
 
 // MigratorService 是迁移领域服务的 HTTP 生命周期编排：导入(start/status/cancel/cleanup)、
@@ -36,18 +35,18 @@ import (
 type MigratorService struct {
 	commonService CommonService
 	jobManager    *job.Manager
-	publisher     *publisher.Publisher
+	bus           *busen.Bus
 }
 
 func NewMigratorService(
 	commonService CommonService,
 	jobManager *job.Manager,
-	publisher *publisher.Publisher,
+	busProvider func() *busen.Bus,
 ) *MigratorService {
 	return &MigratorService{
 		commonService: commonService,
 		jobManager:    jobManager,
-		publisher:     publisher,
+		bus:           busProvider(),
 	}
 }
 
@@ -82,12 +81,7 @@ func (s *MigratorService) DownloadExport(ctx *gin.Context, reqCtx context.Contex
 	ctx.Writer.WriteHeader(200)
 	ctx.File(artifactPath)
 
-	if err := s.publisher.SystemExport(
-		context.Background(),
-		contracts.SystemExportEvent{Info: "System export completed", Size: info.Size()},
-	); err != nil {
-		logUtil.GetLogger().Error("Failed to publish system export completed event", zap.Error(err))
-	}
+	eventbus.Notify(context.Background(), s.bus, event.SystemExport{Info: "System export completed", Size: info.Size()})
 
 	return nil
 }

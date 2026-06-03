@@ -8,8 +8,8 @@ import (
 	"encoding/json"
 
 	"github.com/lin-snow/ech0/internal/agent"
-	contracts "github.com/lin-snow/ech0/internal/event/contracts"
-	registry "github.com/lin-snow/ech0/internal/event/registry"
+	"github.com/lin-snow/ech0/internal/event"
+	eventbus "github.com/lin-snow/ech0/internal/event/bus"
 	"github.com/lin-snow/ech0/internal/kvstore"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
@@ -38,17 +38,17 @@ func (ap *AgentProcessor) handle(ctx context.Context) error {
 	return ap.clearCache()
 }
 
-func (ap *AgentProcessor) HandleEchoCreated(ctx context.Context, e contracts.EchoCreatedEvent) error {
+func (ap *AgentProcessor) HandleEchoCreated(ctx context.Context, e event.EchoCreated) error {
 	_ = e
 	return ap.handle(ctx)
 }
 
-func (ap *AgentProcessor) HandleEchoUpdated(ctx context.Context, e contracts.EchoUpdatedEvent) error {
+func (ap *AgentProcessor) HandleEchoUpdated(ctx context.Context, e event.EchoUpdated) error {
 	_ = e
 	return ap.handle(ctx)
 }
 
-func (ap *AgentProcessor) HandleUserDeleted(ctx context.Context, e contracts.UserDeletedEvent) error {
+func (ap *AgentProcessor) HandleUserDeleted(ctx context.Context, e event.UserDeleted) error {
 	_ = e
 	return ap.handle(ctx)
 }
@@ -57,22 +57,10 @@ func (ap *AgentProcessor) clearCache() error {
 	return ap.durableKV.Delete(context.Background(), string(agent.GEN_RECENT))
 }
 
-func (ap *AgentProcessor) Subscriptions() []registry.Subscription {
-	return []registry.Subscription{
-		registry.TopicSubscription(
-			contracts.TopicEchoCreated,
-			ap.HandleEchoCreated,
-			registry.AgentSubscribeOptions()...,
-		),
-		registry.TopicSubscription(
-			contracts.TopicEchoUpdated,
-			ap.HandleEchoUpdated,
-			registry.AgentSubscribeOptions()...,
-		),
-		registry.TopicSubscription(
-			contracts.TopicUserDeleted,
-			ap.HandleUserDeleted,
-			registry.AgentSubscribeOptions()...,
-		),
+func (ap *AgentProcessor) Registrations() []eventbus.Registration {
+	return []eventbus.Registration{
+		eventbus.On(ap.HandleEchoCreated, eventbus.AsyncParallel()...),
+		eventbus.On(ap.HandleEchoUpdated, eventbus.AsyncParallel()...),
+		eventbus.On(ap.HandleUserDeleted, eventbus.AsyncParallel()...),
 	}
 }

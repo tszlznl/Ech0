@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	contracts "github.com/lin-snow/ech0/internal/event/contracts"
-	registry "github.com/lin-snow/ech0/internal/event/registry"
+	"github.com/lin-snow/ech0/internal/event"
+	eventbus "github.com/lin-snow/ech0/internal/event/bus"
 	queueModel "github.com/lin-snow/ech0/internal/model/queue"
 )
 
@@ -37,8 +37,8 @@ func NewDeadLetterResolver(
 	}
 }
 
-func (dlr *DeadLetterResolver) Handle(ctx context.Context, event contracts.DeadLetterRetriedEvent) error {
-	deadLetter := event.DeadLetter
+func (dlr *DeadLetterResolver) Handle(ctx context.Context, evt event.DeadLetterRetried) error {
+	deadLetter := evt.DeadLetter
 
 	switch deadLetter.Status {
 	case queueModel.DeadLetterStatusPending:
@@ -116,12 +116,8 @@ func (dlr *DeadLetterResolver) processDeadLetter(
 	}
 }
 
-func (dlr *DeadLetterResolver) Subscriptions() []registry.Subscription {
-	return []registry.Subscription{
-		registry.TopicSubscription(
-			contracts.TopicDeadLetterRetried,
-			dlr.Handle,
-			registry.DeadLetterSubscribeOptions()...,
-		),
+func (dlr *DeadLetterResolver) Registrations() []eventbus.Registration {
+	return []eventbus.Registration{
+		eventbus.On(dlr.Handle, eventbus.DeadLetter()...),
 	}
 }

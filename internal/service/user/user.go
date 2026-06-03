@@ -9,8 +9,8 @@ import (
 	"net/mail"
 	"strings"
 
-	contracts "github.com/lin-snow/ech0/internal/event/contracts"
-	publisher "github.com/lin-snow/ech0/internal/event/publisher"
+	"github.com/lin-snow/ech0/internal/event"
+	eventbus "github.com/lin-snow/ech0/internal/event/bus"
 	i18nUtil "github.com/lin-snow/ech0/internal/i18n"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
@@ -19,6 +19,7 @@ import (
 	"github.com/lin-snow/ech0/internal/transaction"
 	cryptoUtil "github.com/lin-snow/ech0/internal/util/crypto"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	"github.com/lin-snow/ech0/pkg/busen"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
 )
@@ -29,7 +30,7 @@ type UserService struct {
 	userRepository Repository
 	settingService SettingService
 	fileService    FileService
-	publisher      *publisher.Publisher
+	bus            *busen.Bus
 }
 
 // NewUserService 创建并返回新的用户服务实例
@@ -45,14 +46,14 @@ func NewUserService(
 	userRepository Repository,
 	settingService SettingService,
 	fileService FileService,
-	publisher *publisher.Publisher,
+	busProvider func() *busen.Bus,
 ) *UserService {
 	return &UserService{
 		transactor:     tx,
 		userRepository: userRepository,
 		settingService: settingService,
 		fileService:    fileService,
-		publisher:      publisher,
+		bus:            busProvider(),
 	}
 }
 
@@ -132,13 +133,7 @@ func (userService *UserService) InitOwner(registerDto *authModel.RegisterDto) er
 
 	// 发布用户注册事件
 	owner.Password = "" // 不包含密码信息
-	if err := userService.publisher.UserCreated(
-		context.Background(),
-		contracts.UserCreatedEvent{User: owner},
-	); err != nil {
-		logUtil.GetLogger().
-			Error("Failed to publish owner created event", zap.Error(err))
-	}
+	eventbus.Notify(context.Background(), userService.bus, event.UserCreated{User: owner})
 
 	return nil
 }
@@ -213,13 +208,7 @@ func (userService *UserService) Register(registerDto *authModel.RegisterDto) err
 
 	// 发布用户注册事件
 	newUser.Password = "" // 不包含密码信息
-	if err := userService.publisher.UserCreated(
-		context.Background(),
-		contracts.UserCreatedEvent{User: newUser},
-	); err != nil {
-		logUtil.GetLogger().
-			Error("Failed to publish user created event", zap.Error(err))
-	}
+	eventbus.Notify(context.Background(), userService.bus, event.UserCreated{User: newUser})
 
 	return nil
 }
@@ -294,13 +283,7 @@ func (userService *UserService) UpdateUser(ctx context.Context, userdto model.Us
 
 	// 发布用户更新事件
 	user.Password = "" // 不包含密码信息
-	if err := userService.publisher.UserUpdated(
-		context.Background(),
-		contracts.UserUpdatedEvent{User: user},
-	); err != nil {
-		logUtil.GetLogger().
-			Error("Failed to publish user updated event", zap.Error(err))
-	}
+	eventbus.Notify(context.Background(), userService.bus, event.UserUpdated{User: user})
 
 	return nil
 }
@@ -347,13 +330,7 @@ func (userService *UserService) UpdateUserAdmin(ctx context.Context, id string) 
 
 	// 发布用户更新事件
 	user.Password = "" // 不包含密码信息
-	if err := userService.publisher.UserUpdated(
-		context.Background(),
-		contracts.UserUpdatedEvent{User: user},
-	); err != nil {
-		logUtil.GetLogger().
-			Error("Failed to publish user updated event", zap.Error(err))
-	}
+	eventbus.Notify(context.Background(), userService.bus, event.UserUpdated{User: user})
 
 	return nil
 }
@@ -459,13 +436,7 @@ func (userService *UserService) DeleteUser(ctx context.Context, id string) error
 	}
 
 	deletedUser.Password = ""
-	if err := userService.publisher.UserDeleted(
-		context.Background(),
-		contracts.UserDeletedEvent{User: deletedUser},
-	); err != nil {
-		logUtil.GetLogger().
-			Error("Failed to publish user deleted event", zap.Error(err))
-	}
+	eventbus.Notify(context.Background(), userService.bus, event.UserDeleted{User: deletedUser})
 	return nil
 }
 

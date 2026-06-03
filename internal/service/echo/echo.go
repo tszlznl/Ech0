@@ -11,14 +11,15 @@ import (
 	"strconv"
 	"strings"
 
-	contracts "github.com/lin-snow/ech0/internal/event/contracts"
-	publisher "github.com/lin-snow/ech0/internal/event/publisher"
+	"github.com/lin-snow/ech0/internal/event"
+	eventbus "github.com/lin-snow/ech0/internal/event/bus"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/echo"
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/transaction"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	urlUtil "github.com/lin-snow/ech0/internal/util/url"
+	"github.com/lin-snow/ech0/pkg/busen"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
 )
@@ -28,7 +29,7 @@ type EchoService struct {
 	commonService  CommonService
 	fileService    FileService
 	echoRepository Repository
-	publisher      *publisher.Publisher
+	bus            *busen.Bus
 }
 
 func NewEchoService(
@@ -36,14 +37,14 @@ func NewEchoService(
 	commonService CommonService,
 	fileService FileService,
 	echoRepository Repository,
-	publisher *publisher.Publisher,
+	busProvider func() *busen.Bus,
 ) *EchoService {
 	return &EchoService{
 		transactor:     tx,
 		commonService:  commonService,
 		fileService:    fileService,
 		echoRepository: echoRepository,
-		publisher:      publisher,
+		bus:            busProvider(),
 	}
 }
 
@@ -97,12 +98,7 @@ func (echoService *EchoService) PostEcho(ctx context.Context, newEcho *model.Ech
 		return fetchErr
 	}
 	if savedEcho != nil {
-		if pubErr := echoService.publisher.EchoCreated(
-			context.Background(),
-			contracts.EchoCreatedEvent{Echo: *savedEcho, User: user},
-		); pubErr != nil {
-			logUtil.GetLogger().Error("publish echo created event failed", zap.Error(pubErr))
-		}
+		eventbus.Notify(context.Background(), echoService.bus, event.EchoCreated{Echo: *savedEcho, User: user})
 	}
 	if err := echoService.fileService.ConfirmTempFiles(ctx, collectEchoFileIDs(newEcho)); err != nil {
 		logUtil.GetLogger().Warn("confirm temp files after post echo failed", zap.Error(err))
@@ -168,12 +164,7 @@ func (echoService *EchoService) DeleteEchoById(ctx context.Context, id string) e
 
 	echoService.echoRepository.InvalidateEchoCaches(id)
 
-	if pubErr := echoService.publisher.EchoDeleted(
-		context.Background(),
-		contracts.EchoDeletedEvent{Echo: model.Echo{ID: id}, User: user},
-	); pubErr != nil {
-		logUtil.GetLogger().Error("publish echo deleted event failed", zap.Error(pubErr))
-	}
+	eventbus.Notify(context.Background(), echoService.bus, event.EchoDeleted{Echo: model.Echo{ID: id}, User: user})
 
 	for _, file := range deletableFiles {
 		_ = echoService.fileService.DeleteStoredFile(file.storageType, file.key)
@@ -280,12 +271,7 @@ func (echoService *EchoService) UpdateEcho(ctx context.Context, echo *model.Echo
 
 	echoService.echoRepository.InvalidateEchoCaches(echo.ID)
 
-	if pubErr := echoService.publisher.EchoUpdated(
-		context.Background(),
-		contracts.EchoUpdatedEvent{Echo: *echo, User: user},
-	); pubErr != nil {
-		logUtil.GetLogger().Error("publish echo updated event failed", zap.Error(pubErr))
-	}
+	eventbus.Notify(context.Background(), echoService.bus, event.EchoUpdated{Echo: *echo, User: user})
 	if err := echoService.fileService.ConfirmTempFiles(ctx, collectEchoFileIDs(echo)); err != nil {
 		logUtil.GetLogger().Warn("confirm temp files after update echo failed", zap.Error(err))
 	}

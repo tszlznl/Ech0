@@ -13,8 +13,6 @@ import (
 	"github.com/lin-snow/ech0/internal/cache"
 	"github.com/lin-snow/ech0/internal/database"
 	eventbus "github.com/lin-snow/ech0/internal/event/bus"
-	eventpublisher "github.com/lin-snow/ech0/internal/event/publisher"
-	eventregistry "github.com/lin-snow/ech0/internal/event/registry"
 	eventsubscriber "github.com/lin-snow/ech0/internal/event/subscriber"
 	"github.com/lin-snow/ech0/internal/handler"
 	"github.com/lin-snow/ech0/internal/job"
@@ -26,7 +24,6 @@ import (
 	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
 	"github.com/lin-snow/ech0/internal/server"
 	"github.com/lin-snow/ech0/internal/service"
-	commentService "github.com/lin-snow/ech0/internal/service/comment"
 	copilotService "github.com/lin-snow/ech0/internal/service/copilot"
 	userService "github.com/lin-snow/ech0/internal/service/user"
 	"github.com/lin-snow/ech0/internal/storage"
@@ -88,7 +85,6 @@ var DomainSet = wire.NewSet(
 	BuildHandlers,
 	BuildMiddlewares,
 	BuildTasker,
-	BuildMigrator,
 	BuildJobManager,
 	ProvideSnapshotScheduleApplier,
 	BuildEventRegistrar,
@@ -113,7 +109,7 @@ var EventSet = wire.NewSet(
 	repository.WebhookSet,
 	repository.EmbeddingSet,
 
-	wire.Bind(new(eventregistry.WebhookObserver), new(*webhook.Dispatcher)),
+	wire.Bind(new(eventbus.WebhookObserver), new(*webhook.Dispatcher)),
 	wire.Bind(new(eventsubscriber.DeadLetterProcessor), new(*webhook.Dispatcher)),
 
 	webhook.NewDispatcher,
@@ -123,12 +119,10 @@ var EventSet = wire.NewSet(
 	eventsubscriber.NewEmbeddingProcessor,
 	service.EmbeddingSet,
 	ProvideSubscriptionProviders,
-	eventregistry.NewEventRegistry,
+	eventbus.NewEventRegistry,
 )
 
 var HandlerSet = wire.NewSet(
-	eventpublisher.New,
-	wire.Bind(new(commentService.EventPublisher), new(*eventpublisher.Publisher)),
 	repository.FileSet,
 	handler.WebSet,
 
@@ -192,7 +186,6 @@ var MiddlewareSet = wire.NewSet(
 )
 
 var TaskerSet = wire.NewSet(
-	eventpublisher.New,
 	repository.FileSet,
 	repository.KeyValueSet,
 	repository.WebhookSet,
@@ -218,10 +211,6 @@ var TaskerSet = wire.NewSet(
 	ProvideTaskManager,
 )
 
-var MigratorSet = wire.NewSet(
-	migrator.ProviderSet,
-)
-
 // BuildApp 构建 Web 生命周期应用。
 func BuildApp() (*app.App, error) {
 	wire.Build(
@@ -241,9 +230,9 @@ func BuildEventRegistrar(
 	appCache cache.ICache[string, any],
 	tx transaction.Transactor,
 	snapshotScheduleApplier eventsubscriber.SnapshotScheduleApplier,
-) (*eventregistry.EventRegistrar, error) {
+) (*eventbus.EventRegistrar, error) {
 	wire.Build(EventSet)
-	return &eventregistry.EventRegistrar{}, nil
+	return &eventbus.EventRegistrar{}, nil
 }
 
 // BuildHandlers 使用 wire 生成的代码来构建 Handlers 实例。
@@ -280,9 +269,8 @@ func BuildJobManager(
 		service.EmbeddingSet,
 		// MigrationRunner ← migrator.ImportEngine（无状态导入，不含 *job.Manager）
 		migrator.NewImportEngine,
-		// ExportRunner ← migrator.ExportEngine（无状态导出，不含 *job.Manager）+ Publisher（发 SystemSnapshot）
+		// ExportRunner ← migrator.ExportEngine（无状态导出，不含 *job.Manager）+ bus（发 SystemSnapshot）
 		migrator.NewExportEngine,
-		eventpublisher.New,
 		jobRunner.ProviderSet,
 		ProvideJobManager,
 	)
@@ -324,15 +312,6 @@ func BuildTasker(
 	return &task.Manager{}, nil
 }
 
-func BuildMigrator(
-	dbProvider func() *gorm.DB,
-	appCache cache.ICache[string, any],
-	tx transaction.Transactor,
-) (*migrator.Worker, error) {
-	wire.Build(MigratorSet)
-	return &migrator.Worker{}, nil
-}
-
 // ProvideSnapshotScheduleApplier 从 task.Manager 中按能力取出实现了 SnapshotScheduleApplier
 // 的那个 Task（即 *scheduled.Snapshot），供 SnapshotScheduler 订阅者在运行期重配定时快照计划。
 // 取的是 Manager 持有的同一实例，故 Schedule 时捕获的 scheduler 对 Apply 可见。
@@ -349,6 +328,6 @@ func ProvideSubscriptionProviders(
 	bs *eventsubscriber.SnapshotScheduler,
 	ap *eventsubscriber.AgentProcessor,
 	ep *eventsubscriber.EmbeddingProcessor,
-) []eventregistry.SubscriptionProvider {
-	return []eventregistry.SubscriptionProvider{dlr, bs, ap, ep}
+) []eventbus.Subscriber {
+	return []eventbus.Subscriber{dlr, bs, ap, ep}
 }

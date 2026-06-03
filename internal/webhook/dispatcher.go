@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/lin-snow/ech0/internal/config"
-	contracts "github.com/lin-snow/ech0/internal/event/contracts"
+	"github.com/lin-snow/ech0/internal/event"
 	queueModel "github.com/lin-snow/ech0/internal/model/queue"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 	"github.com/lin-snow/ech0/internal/transaction"
@@ -62,7 +62,7 @@ func NewDispatcher(
 	}
 }
 
-func (wd *Dispatcher) HandleObservation(ctx context.Context, obs contracts.WebhookObservation) error {
+func (wd *Dispatcher) HandleObservation(ctx context.Context, obs event.WebhookObservation) error {
 	webhooks, err := wd.repo.ListActiveWebhooks(ctx)
 	if err != nil {
 		return err
@@ -78,14 +78,14 @@ func (wd *Dispatcher) HandleObservation(ctx context.Context, obs contracts.Webho
 	return nil
 }
 
-func (wd *Dispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webhook, obs contracts.WebhookObservation) {
+func (wd *Dispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webhook, obs event.WebhookObservation) {
 	triggerAt := time.Now().UTC().Unix()
 	err := SendWithRetry(wd.client, wh, obs, 3, 500*time.Millisecond)
 	if err != nil {
 		wd.updateWebhookStatus(ctx, wh.ID, "failed", triggerAt)
 		logUtil.GetLogger().Error("Webhook Handle Failed", zap.String("name", wh.Name), zap.String("url", wh.URL), zap.Error(err))
 
-		payloadData := contracts.WebhookReplayPayload{
+		payloadData := event.WebhookReplayPayload{
 			Webhook: *wh,
 			Event:   obs,
 		}
@@ -123,7 +123,7 @@ func (wd *Dispatcher) HandleDeadLetter(
 	ctx context.Context,
 	deadLetter *queueModel.DeadLetter,
 ) error {
-	var payload contracts.WebhookReplayPayload
+	var payload event.WebhookReplayPayload
 	if err := json.Unmarshal(deadLetter.Payload, &payload); err != nil {
 		return fmt.Errorf("failed to unmarshal dead letter payload: %w", err)
 	}

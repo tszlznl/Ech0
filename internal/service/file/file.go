@@ -21,8 +21,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/lin-snow/ech0/internal/config"
-	contracts "github.com/lin-snow/ech0/internal/event/contracts"
-	publisher "github.com/lin-snow/ech0/internal/event/publisher"
+	"github.com/lin-snow/ech0/internal/event"
+	eventbus "github.com/lin-snow/ech0/internal/event/bus"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
 	"github.com/lin-snow/ech0/internal/storage"
@@ -30,6 +30,7 @@ import (
 	imgUtil "github.com/lin-snow/ech0/internal/util/img"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	urlUtil "github.com/lin-snow/ech0/internal/util/url"
+	"github.com/lin-snow/ech0/pkg/busen"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"github.com/lin-snow/ech0/pkg/virefs"
 	"go.uber.org/zap"
@@ -50,7 +51,7 @@ type FileService struct {
 	commonRepository CommonRepository
 	storageManager   *storage.Manager
 	fileRepository   FileRepository
-	publisher        *publisher.Publisher
+	bus              *busen.Bus
 	keyGen           storage.KeyGenerator
 }
 
@@ -59,14 +60,14 @@ func NewFileService(
 	commonRepository CommonRepository,
 	fileRepo FileRepository,
 	storageManager *storage.Manager,
-	publisher *publisher.Publisher,
+	busProvider func() *busen.Bus,
 ) *FileService {
 	return &FileService{
 		transactor:       tx,
 		commonRepository: commonRepository,
 		fileRepository:   fileRepo,
 		storageManager:   storageManager,
-		publisher:        publisher,
+		bus:              busProvider(),
 		keyGen:           storage.NewRandomKeyGenerator(),
 	}
 }
@@ -184,16 +185,17 @@ func (s *FileService) UploadFile(
 	}
 
 	user.Password = ""
-	if err := s.publisher.ResourceUploaded(
+	if err := eventbus.Emit(
 		context.Background(),
-		contracts.ResourceUploadedEvent{
+		s.bus,
+		event.ResourceUploaded{
 			User:     user,
 			FileName: file.Filename,
 			URL:      fileURL,
 			Size:     file.Size,
 			Type:     string(uploadType),
+			Key:      key,
 		},
-		key,
 	); err != nil {
 		logUtil.GetLogger().Error("Failed to publish resource uploaded event", zap.Error(err))
 	}
