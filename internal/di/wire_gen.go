@@ -35,21 +35,20 @@ import (
 	"github.com/lin-snow/ech0/internal/middleware"
 	"github.com/lin-snow/ech0/internal/migrator"
 	"github.com/lin-snow/ech0/internal/model/job"
-	repository15 "github.com/lin-snow/ech0/internal/repository"
-	repository9 "github.com/lin-snow/ech0/internal/repository/auth"
-	repository10 "github.com/lin-snow/ech0/internal/repository/comment"
-	repository6 "github.com/lin-snow/ech0/internal/repository/common"
-	repository12 "github.com/lin-snow/ech0/internal/repository/connect"
-	repository4 "github.com/lin-snow/ech0/internal/repository/echo"
-	repository3 "github.com/lin-snow/ech0/internal/repository/embedding"
-	repository7 "github.com/lin-snow/ech0/internal/repository/file"
-	repository11 "github.com/lin-snow/ech0/internal/repository/init"
-	repository13 "github.com/lin-snow/ech0/internal/repository/job"
+	repository14 "github.com/lin-snow/ech0/internal/repository"
+	repository8 "github.com/lin-snow/ech0/internal/repository/auth"
+	repository9 "github.com/lin-snow/ech0/internal/repository/comment"
+	repository5 "github.com/lin-snow/ech0/internal/repository/common"
+	repository11 "github.com/lin-snow/ech0/internal/repository/connect"
+	repository3 "github.com/lin-snow/ech0/internal/repository/echo"
+	repository2 "github.com/lin-snow/ech0/internal/repository/embedding"
+	repository6 "github.com/lin-snow/ech0/internal/repository/file"
+	repository10 "github.com/lin-snow/ech0/internal/repository/init"
+	repository12 "github.com/lin-snow/ech0/internal/repository/job"
 	"github.com/lin-snow/ech0/internal/repository/keyvalue"
-	repository2 "github.com/lin-snow/ech0/internal/repository/queue"
-	repository8 "github.com/lin-snow/ech0/internal/repository/setting"
-	repository5 "github.com/lin-snow/ech0/internal/repository/user"
-	repository14 "github.com/lin-snow/ech0/internal/repository/visitor"
+	repository7 "github.com/lin-snow/ech0/internal/repository/setting"
+	repository4 "github.com/lin-snow/ech0/internal/repository/user"
+	repository13 "github.com/lin-snow/ech0/internal/repository/visitor"
 	"github.com/lin-snow/ech0/internal/repository/webhook"
 	"github.com/lin-snow/ech0/internal/server"
 	service13 "github.com/lin-snow/ech0/internal/service"
@@ -120,18 +119,16 @@ func BuildApp() (*app.App, error) {
 
 func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() *busen.Bus, appCache cache.ICache[string, any], tx transaction.Transactor, snapshotScheduleApplier subscriber.SnapshotScheduleApplier) (*bus.EventRegistrar, error) {
 	webhookRepository := repository.NewWebhookRepository(dbProvider)
-	queueRepository := repository2.NewQueueRepository(dbProvider)
-	dispatcher := webhook.NewDispatcher(webhookRepository, queueRepository, tx)
-	deadLetterResolver := subscriber.NewDeadLetterResolver(queueRepository, dispatcher)
+	dispatcher := webhook.NewDispatcher(webhookRepository)
 	snapshotScheduler := subscriber.NewSnapshotScheduler(snapshotScheduleApplier)
 	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
 	persistent := kvstore.NewPersistent(keyValueRepository)
 	agentProcessor := subscriber.NewAgentProcessor(persistent)
-	embeddingRepository := repository3.NewEmbeddingRepository(dbProvider)
-	echoRepository := repository4.NewEchoRepository(dbProvider, appCache)
+	embeddingRepository := repository2.NewEmbeddingRepository(dbProvider)
+	echoRepository := repository3.NewEchoRepository(dbProvider, appCache)
 	embeddingService := service.NewEmbeddingService(embeddingRepository, persistent, echoRepository)
 	embeddingProcessor := subscriber.NewEmbeddingProcessor(embeddingService)
-	v := ProvideSubscriptionProviders(deadLetterResolver, snapshotScheduler, agentProcessor, embeddingProcessor)
+	v := ProvideSubscriptionProviders(snapshotScheduler, agentProcessor, embeddingProcessor)
 	eventRegistrar := bus.NewEventRegistry(ebProvider, dispatcher, v)
 	return eventRegistrar, nil
 }
@@ -140,42 +137,42 @@ func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() *busen.Bu
 // tracker 由顶层 BuildApp/BuildServer 注入,保证整个进程只有一个 visitor.Tracker 实例。
 func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor, ebProvider func() *busen.Bus, tracker *visitor.Tracker, jobManager *job.Manager, storageManager *storage.Manager) (*handler.Bundle, error) {
 	webHandler := handler2.NewWebHandler(tracker)
-	userRepository := repository5.NewUserRepository(dbProvider, appCache)
-	commonRepository := repository6.NewCommonRepository(dbProvider)
+	userRepository := repository4.NewUserRepository(dbProvider, appCache)
+	commonRepository := repository5.NewCommonRepository(dbProvider)
 	commonService := service2.NewCommonService(commonRepository, appCache)
-	fileRepository := repository7.NewFileRepository(dbProvider)
+	fileRepository := repository6.NewFileRepository(dbProvider)
 	fileService := service3.NewFileService(tx, commonRepository, fileRepository, storageManager, ebProvider)
 	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
 	persistent := kvstore.NewPersistent(keyValueRepository)
-	settingRepository := repository8.NewSettingRepository(dbProvider)
+	settingRepository := repository7.NewSettingRepository(dbProvider)
 	webhookRepository := repository.NewWebhookRepository(dbProvider)
-	authRepository := repository9.NewAuthRepository(dbProvider, appCache)
+	authRepository := repository8.NewAuthRepository(dbProvider, appCache)
 	settingService := service4.NewSettingService(tx, commonService, fileService, storageManager, persistent, settingRepository, webhookRepository, authRepository, ebProvider)
 	userService := service5.NewUserService(tx, userRepository, settingService, fileService, ebProvider)
 	userHandler := handler3.NewUserHandler(userService)
 	authService := auth.NewAuthService(tx, authRepository, authRepository, settingService)
 	authHandler := handler4.NewAuthHandler(authService, userService)
-	echoRepository := repository4.NewEchoRepository(dbProvider, appCache)
+	echoRepository := repository3.NewEchoRepository(dbProvider, appCache)
 	echoService := service6.NewEchoService(tx, commonService, fileService, echoRepository, ebProvider)
 	echoHandler := handler5.NewEchoHandler(echoService)
 	fileHandler := handler6.NewFileHandler(fileService)
-	commentRepository := repository10.NewCommentRepository(dbProvider)
+	commentRepository := repository9.NewCommentRepository(dbProvider)
 	goMailSender := service7.NewGoMailSender()
 	commentService := service7.NewCommentService(commonService, commentRepository, persistent, ebProvider, goMailSender)
 	commentHandler := handler7.NewCommentHandler(commentService)
-	initRepository := repository11.NewInitRepository(dbProvider)
+	initRepository := repository10.NewInitRepository(dbProvider)
 	initService := service8.NewInitService(initRepository, userService)
 	initHandler := handler8.NewInitHandler(initService)
 	commonHandler := handler9.NewCommonHandler(commonService)
 	settingHandler := handler10.NewSettingHandler(settingService)
-	connectRepository := repository12.NewConnectRepository(dbProvider)
+	connectRepository := repository11.NewConnectRepository(dbProvider)
 	connectService := service9.NewConnectService(tx, connectRepository, echoRepository, commonService, settingService)
 	connectHandler := handler11.NewConnectHandler(connectService)
 	migratorService := service10.NewMigratorService(commonService, jobManager, ebProvider)
 	migrationHandler := handler12.NewMigrationHandler(migratorService)
 	dashboardService := service11.NewDashboardService(tracker)
 	dashboardHandler := handler13.NewDashboardHandler(dashboardService)
-	embeddingRepository := repository3.NewEmbeddingRepository(dbProvider)
+	embeddingRepository := repository2.NewEmbeddingRepository(dbProvider)
 	embeddingService := service.NewEmbeddingService(embeddingRepository, persistent, echoRepository)
 	copilotService := service12.NewCopilotService(echoService, embeddingService, userService, persistent, storageManager)
 	copilotHandler := handler14.NewCopilotHandler(copilotService, copilotService)
@@ -190,11 +187,11 @@ func BuildHandlers(dbProvider func() *gorm.DB, appCache cache.ICache[string, any
 // 含 *job.Manager，故无构造环。storageManager 由顶层共享单例注入，确保迁移导入 S3
 // 设置时 reload 的就是文件服务在用的那份 Manager。
 func BuildJobManager(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], storageManager *storage.Manager, ebProvider func() *busen.Bus) (*job.Manager, error) {
-	jobRepository := repository13.NewJobRepository(dbProvider)
-	embeddingRepository := repository3.NewEmbeddingRepository(dbProvider)
+	jobRepository := repository12.NewJobRepository(dbProvider)
+	embeddingRepository := repository2.NewEmbeddingRepository(dbProvider)
 	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
 	persistent := kvstore.NewPersistent(keyValueRepository)
-	echoRepository := repository4.NewEchoRepository(dbProvider, appCache)
+	echoRepository := repository3.NewEchoRepository(dbProvider, appCache)
 	embeddingService := service.NewEmbeddingService(embeddingRepository, persistent, echoRepository)
 	reindexRunner := runner.NewReindexRunner(embeddingService)
 	importEngine := migrator.NewImportEngine(persistent, storageManager, appCache)
@@ -207,7 +204,7 @@ func BuildJobManager(dbProvider func() *gorm.DB, appCache cache.ICache[string, a
 
 // BuildMiddlewares 构建中间件依赖。
 func BuildMiddlewares(dbProvider func() *gorm.DB, appCache cache.ICache[string, any]) (*middleware.Deps, error) {
-	authRepository := repository9.NewAuthRepository(dbProvider, appCache)
+	authRepository := repository8.NewAuthRepository(dbProvider, appCache)
 	deps := middleware.NewDeps(authRepository)
 	return deps, nil
 }
@@ -242,24 +239,22 @@ func BuildServer() (*server.Server, error) {
 }
 
 func BuildTasker(dbProvider func() *gorm.DB, appCache cache.ICache[string, any], tx transaction.Transactor, ebProvider func() *busen.Bus, tracker *visitor.Tracker, storageManager *storage.Manager) (*task.Manager, error) {
-	commonRepository := repository6.NewCommonRepository(dbProvider)
-	fileRepository := repository7.NewFileRepository(dbProvider)
+	commonRepository := repository5.NewCommonRepository(dbProvider)
+	fileRepository := repository6.NewFileRepository(dbProvider)
 	fileService := service3.NewFileService(tx, commonRepository, fileRepository, storageManager, ebProvider)
 	cleanup := scheduled.NewCleanup(fileService)
-	queueRepository := repository2.NewQueueRepository(dbProvider)
-	deadLetter := scheduled.NewDeadLetter(queueRepository, ebProvider)
 	commonService := service2.NewCommonService(commonRepository, appCache)
 	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
 	persistent := kvstore.NewPersistent(keyValueRepository)
-	settingRepository := repository8.NewSettingRepository(dbProvider)
+	settingRepository := repository7.NewSettingRepository(dbProvider)
 	webhookRepository := repository.NewWebhookRepository(dbProvider)
-	authRepository := repository9.NewAuthRepository(dbProvider, appCache)
+	authRepository := repository8.NewAuthRepository(dbProvider, appCache)
 	settingService := service4.NewSettingService(tx, commonService, fileService, storageManager, persistent, settingRepository, webhookRepository, authRepository, ebProvider)
 	exportEngine := migrator.NewExportEngine(storageManager)
 	snapshot := scheduled.NewSnapshot(settingService, exportEngine, ebProvider)
-	visitorRepository := repository14.NewVisitorRepository(dbProvider)
+	visitorRepository := repository13.NewVisitorRepository(dbProvider)
 	visitorSnapshot := scheduled.NewVisitorSnapshot(tracker, visitorRepository)
-	manager, err := ProvideTaskManager(cleanup, deadLetter, snapshot, visitorSnapshot)
+	manager, err := ProvideTaskManager(cleanup, snapshot, visitorSnapshot)
 	if err != nil {
 		return nil, err
 	}
@@ -295,11 +290,10 @@ func ProvideJobManager(
 // NewManager 是变参，wire 无法直接喂，故在此把具体 Task 收口成一次构造。
 func ProvideTaskManager(
 	cleanup *scheduled.Cleanup,
-	deadletter *scheduled.DeadLetter,
 	snapshot *scheduled.Snapshot,
 	visitorSnapshot *scheduled.VisitorSnapshot,
 ) (*task.Manager, error) {
-	return task.NewManager(cleanup, deadletter, snapshot, visitorSnapshot)
+	return task.NewManager(cleanup, snapshot, visitorSnapshot)
 }
 
 // StorageSet 提供进程级共享单例 *storage.Manager。storage.Manager 是有状态基础设施
@@ -322,13 +316,13 @@ var InfraSet = wire.NewSet(database.ProviderSet, bus.ProvideProvider, cache.Prov
 
 var RuntimeSet = server.ProviderSet
 
-var EventSet = wire.NewSet(repository15.EchoSet, repository15.UserSet, repository15.KeyValueSet, repository15.QueueSet, repository15.WebhookSet, repository15.EmbeddingSet, wire.Bind(new(bus.WebhookObserver), new(*webhook.Dispatcher)), wire.Bind(new(subscriber.DeadLetterProcessor), new(*webhook.Dispatcher)), webhook.NewDispatcher, subscriber.NewSnapshotScheduler, subscriber.NewDeadLetterResolver, subscriber.NewAgentProcessor, subscriber.NewEmbeddingProcessor, service13.EmbeddingSet, ProvideSubscriptionProviders, bus.NewEventRegistry)
+var EventSet = wire.NewSet(repository14.EchoSet, repository14.UserSet, repository14.KeyValueSet, repository14.WebhookSet, repository14.EmbeddingSet, wire.Bind(new(bus.WebhookObserver), new(*webhook.Dispatcher)), webhook.NewDispatcher, subscriber.NewSnapshotScheduler, subscriber.NewAgentProcessor, subscriber.NewEmbeddingProcessor, service13.EmbeddingSet, ProvideSubscriptionProviders, bus.NewEventRegistry)
 
-var HandlerSet = wire.NewSet(repository15.FileSet, handler.WebSet, repository15.UserSet, repository15.AuthSet, service13.UserSet, service13.AuthSet, handler.UserSet, handler.AuthSet, repository15.EchoSet, service13.EchoSet, handler.EchoSet, repository15.CommentSet, service13.CommentSet, handler.CommentSet, repository15.CommonSet, service13.FileSet, handler.FileSet, repository15.InitSet, service13.InitSet, handler.InitSet, service13.CommonSet, handler.CommonSet, repository15.WebhookSet, repository15.KeyValueSet, repository15.SettingSet, service13.SettingSet, handler.SettingSet, repository15.ConnectSet, service13.ConnectSet, handler.ConnectSet, service13.DashboardSet, handler.DashboardSet, repository15.EmbeddingSet, service13.EmbeddingSet, handler.EmbeddingSet, service13.CopilotSet, wire.Bind(new(service12.UserReader), new(*service5.UserService)), handler.CopilotSet, service13.MigratorSet, handler.MigrationSet, handler.MCPSet, handler.NewBundle)
+var HandlerSet = wire.NewSet(repository14.FileSet, handler.WebSet, repository14.UserSet, repository14.AuthSet, service13.UserSet, service13.AuthSet, handler.UserSet, handler.AuthSet, repository14.EchoSet, service13.EchoSet, handler.EchoSet, repository14.CommentSet, service13.CommentSet, handler.CommentSet, repository14.CommonSet, service13.FileSet, handler.FileSet, repository14.InitSet, service13.InitSet, handler.InitSet, service13.CommonSet, handler.CommonSet, repository14.WebhookSet, repository14.KeyValueSet, repository14.SettingSet, service13.SettingSet, handler.SettingSet, repository14.ConnectSet, service13.ConnectSet, handler.ConnectSet, service13.DashboardSet, handler.DashboardSet, repository14.EmbeddingSet, service13.EmbeddingSet, handler.EmbeddingSet, service13.CopilotSet, wire.Bind(new(service12.UserReader), new(*service5.UserService)), handler.CopilotSet, service13.MigratorSet, handler.MigrationSet, handler.MCPSet, handler.NewBundle)
 
-var MiddlewareSet = wire.NewSet(repository15.AuthSet, middleware.ProviderSet)
+var MiddlewareSet = wire.NewSet(repository14.AuthSet, middleware.ProviderSet)
 
-var TaskerSet = wire.NewSet(repository15.FileSet, repository15.KeyValueSet, repository15.WebhookSet, repository15.AuthSet, repository15.SettingSet, service13.SettingSet, repository15.EchoSet, service13.EchoSet, repository15.CommonSet, service13.FileSet, service13.CommonSet, repository15.QueueSet, repository15.VisitorSet, migrator.NewExportEngine, scheduled.ProviderSet, ProvideTaskManager)
+var TaskerSet = wire.NewSet(repository14.FileSet, repository14.KeyValueSet, repository14.WebhookSet, repository14.AuthSet, repository14.SettingSet, service13.SettingSet, repository14.EchoSet, service13.EchoSet, repository14.CommonSet, service13.FileSet, service13.CommonSet, repository14.VisitorSet, migrator.NewExportEngine, scheduled.ProviderSet, ProvideTaskManager)
 
 // ProvideSnapshotScheduleApplier 从 task.Manager 中按能力取出实现了 SnapshotScheduleApplier
 // 的那个 Task（即 *scheduled.Snapshot），供 SnapshotScheduler 订阅者在运行期重配定时快照计划。
@@ -342,10 +336,9 @@ func ProvideSnapshotScheduleApplier(m *task.Manager) subscriber.SnapshotSchedule
 }
 
 func ProvideSubscriptionProviders(
-	dlr *subscriber.DeadLetterResolver,
 	bs *subscriber.SnapshotScheduler,
 	ap *subscriber.AgentProcessor,
 	ep *subscriber.EmbeddingProcessor,
 ) []bus.Subscriber {
-	return []bus.Subscriber{dlr, bs, ap, ep}
+	return []bus.Subscriber{bs, ap, ep}
 }

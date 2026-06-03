@@ -5,7 +5,6 @@ package repository
 
 import (
 	"github.com/google/wire"
-	eventsubscriber "github.com/lin-snow/ech0/internal/event/subscriber"
 	"github.com/lin-snow/ech0/internal/job"
 	"github.com/lin-snow/ech0/internal/kvstore"
 	authRepository "github.com/lin-snow/ech0/internal/repository/auth"
@@ -18,7 +17,6 @@ import (
 	initRepository "github.com/lin-snow/ech0/internal/repository/init"
 	jobRepository "github.com/lin-snow/ech0/internal/repository/job"
 	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
-	queueRepository "github.com/lin-snow/ech0/internal/repository/queue"
 	settingRepository "github.com/lin-snow/ech0/internal/repository/setting"
 	userRepository "github.com/lin-snow/ech0/internal/repository/user"
 	visitorRepository "github.com/lin-snow/ech0/internal/repository/visitor"
@@ -97,11 +95,6 @@ var (
 		webhookRepository.NewWebhookRepository,
 		wire.Bind(new(settingService.WebhookRepository), new(*webhookRepository.WebhookRepository)),
 		wire.Bind(new(webhookmodule.WebhookStore), new(*webhookRepository.WebhookRepository)),
-	)
-	QueueSet = wire.NewSet(
-		queueRepository.NewQueueRepository,
-		wire.Bind(new(webhookmodule.DeadLetterStore), new(*queueRepository.QueueRepository)),
-		wire.Bind(new(eventsubscriber.DeadLetterRepo), new(*queueRepository.QueueRepository)),
 	)
 	JobSet = wire.NewSet(
 		jobRepository.NewJobRepository,

@@ -42,9 +42,6 @@ func StorageTimeColumnPlans() []TimeColumnPlan {
 		{Table: "webhooks", Column: "last_trigger"},
 		{Table: "webhooks", Column: "created_at"},
 		{Table: "webhooks", Column: "updated_at"},
-		{Table: "dead_letters", Column: "next_retry"},
-		{Table: "dead_letters", Column: "created_at"},
-		{Table: "dead_letters", Column: "updated_at"},
 		// migration_jobs 已退役（死表，历来零行）：不再纳入时间规整计划。
 		// 通用 jobs 表的 started_at/finished_at 自始即为 UTC epoch(int64)，无需规整。
 		{Table: "access_token_settings", Column: "expiry"},

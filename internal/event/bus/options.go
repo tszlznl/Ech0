@@ -31,14 +31,3 @@ func AsyncSequential() []busen.SubscribeOption {
 		busen.WithOverflow(MapOverflow(ec.DefaultOverflow)),
 	}
 }
-
-// DeadLetter 是死信重试订阅者的策略：异步、单 worker FIFO、独立 buffer（ECH0_EVENT_DEADLETTER_*）。
-func DeadLetter() []busen.SubscribeOption {
-	ec := config.Config().Event
-	return []busen.SubscribeOption{
-		busen.Async(),
-		busen.Sequential(),
-		busen.WithBuffer(ec.DeadLetterBuffer),
-		busen.WithOverflow(MapOverflow(ec.DefaultOverflow)),
-	}
-}

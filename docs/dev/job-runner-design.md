@@ -12,7 +12,7 @@
 |---|------|------|----------|
 | 1 | 定时任务 (Scheduled Task) | timer/cron 触发、周期、每次无持久状态、fire-and-forget | `internal/task.Tasker` + gocron |
 | 2 | **作业 (Job)** | 一次性、按需触发、长时运行、生命周期可观察（pending→running→success/failed/cancelled）、可取消、状态可查 | migration 用 `GlobalMigrationStateDTO` 存 KeyValue；另有一张**废弃的 `MigrationJob` 表** |
-| 3 | 事件驱动异步 | publish/subscribe + 失败重试 | Busen + queue/deadletter |
+| 3 | 事件驱动异步 | publish/subscribe（尽力投递，无持久重试） | Busen |
 
 第 2 类原本**只有 migration 一个真实客户**，实现是「单全局状态塞 KeyValue + 一次性 goroutine + 前端轮询」。现在出现**第二个真实客户**：
 

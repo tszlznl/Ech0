@@ -63,11 +63,10 @@ func ProvideJobManager(
 // NewManager 是变参，wire 无法直接喂，故在此把具体 Task 收口成一次构造。
 func ProvideTaskManager(
 	cleanup *scheduled.Cleanup,
-	deadletter *scheduled.DeadLetter,
 	snapshot *scheduled.Snapshot,
 	visitorSnapshot *scheduled.VisitorSnapshot,
 ) (*task.Manager, error) {
-	return task.NewManager(cleanup, deadletter, snapshot, visitorSnapshot)
+	return task.NewManager(cleanup, snapshot, visitorSnapshot)
 }
 
 // StorageSet 提供进程级共享单例 *storage.Manager。storage.Manager 是有状态基础设施
@@ -105,16 +104,13 @@ var EventSet = wire.NewSet(
 	repository.UserSet,
 
 	repository.KeyValueSet,
-	repository.QueueSet,
 	repository.WebhookSet,
 	repository.EmbeddingSet,
 
 	wire.Bind(new(eventbus.WebhookObserver), new(*webhook.Dispatcher)),
-	wire.Bind(new(eventsubscriber.DeadLetterProcessor), new(*webhook.Dispatcher)),
 
 	webhook.NewDispatcher,
 	eventsubscriber.NewSnapshotScheduler,
-	eventsubscriber.NewDeadLetterResolver,
 	eventsubscriber.NewAgentProcessor,
 	eventsubscriber.NewEmbeddingProcessor,
 	service.EmbeddingSet,
@@ -203,7 +199,6 @@ var TaskerSet = wire.NewSet(
 	service.FileSet,
 	service.CommonSet,
 
-	repository.QueueSet,
 	repository.VisitorSet,
 	// scheduled.Snapshot 依赖 migrator.ExportEngine（打包 + 尽力 S3），定时快照不走 job.Manager。
 	migrator.NewExportEngine,
@@ -324,10 +319,9 @@ func ProvideSnapshotScheduleApplier(m *task.Manager) eventsubscriber.SnapshotSch
 }
 
 func ProvideSubscriptionProviders(
-	dlr *eventsubscriber.DeadLetterResolver,
 	bs *eventsubscriber.SnapshotScheduler,
 	ap *eventsubscriber.AgentProcessor,
 	ep *eventsubscriber.EmbeddingProcessor,
 ) []eventbus.Subscriber {
-	return []eventbus.Subscriber{dlr, bs, ap, ep}
+	return []eventbus.Subscriber{bs, ap, ep}
 }

@@ -7,11 +7,8 @@
 package event
 
 import (
-	"fmt"
-
 	commentModel "github.com/lin-snow/ech0/internal/model/comment"
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
-	queueModel "github.com/lin-snow/ech0/internal/model/queue"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
 )
@@ -67,10 +64,6 @@ type (
 	UpdateSnapshotSchedule struct {
 		Schedule settingModel.SnapshotSchedule
 	}
-
-	DeadLetterRetried struct {
-		DeadLetter queueModel.DeadLetter
-	}
 )
 
 // EventName —— 稳定外部名，必须与历史 topic 字符串逐字一致（webhook 的 topic 字段兼容）。
@@ -87,7 +80,6 @@ func (ResourceUploaded) EventName() string       { return "resource.uploaded" }
 func (SystemSnapshot) EventName() string         { return "system.snapshot" }
 func (SystemExport) EventName() string           { return "system.export" }
 func (UpdateSnapshotSchedule) EventName() string { return "system.snapshot_schedule.updated" }
-func (DeadLetterRetried) EventName() string      { return "deadletter.retried" }
 
 // OrderingKey —— 局部有序键，仅实现于历史上带 WithKey 的事件。
 func (e UserCreated) OrderingKey() string          { return e.User.ID }
@@ -100,4 +92,3 @@ func (e CommentCreated) OrderingKey() string       { return e.Comment.ID }
 func (e CommentStatusUpdated) OrderingKey() string { return e.Comment.ID }
 func (e CommentDeleted) OrderingKey() string       { return e.Comment.ID }
 func (e ResourceUploaded) OrderingKey() string     { return e.Key }
-func (e DeadLetterRetried) OrderingKey() string    { return fmt.Sprint(e.DeadLetter.ID) }

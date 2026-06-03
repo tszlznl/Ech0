@@ -7,8 +7,6 @@ import (
 	"encoding/json"
 	"reflect"
 	"time"
-
-	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 )
 
 // WebhookObservation 是一次“已发生事件”的中立快照，供 webhook 分发与重放使用。
@@ -18,12 +16,6 @@ type WebhookObservation struct {
 	Payload    json.RawMessage   `json:"payload"`
 	Metadata   map[string]string `json:"metadata,omitempty"`
 	OccurredAt int64             `json:"occurred_at"`
-}
-
-// WebhookReplayPayload 是 webhook 投递 / 重放时落库的报文体。
-type WebhookReplayPayload struct {
-	Webhook webhookModel.Webhook `json:"webhook"`
-	Event   WebhookObservation   `json:"event"`
 }
 
 // NewWebhookObservation 把一个事件序列化为中立观察。topic 取事件的稳定名（EventName）。

@@ -14,7 +14,6 @@ import (
 
 // registerWebhookObservers 为所有可观测事件注册同步订阅：把强类型事件转为中立 WebhookObservation
 // 并投递给 observer。并发 / 重试由 webhook Dispatcher 的 worker pool 承担，故此处同步即可。
-// DeadLetterRetried 是死信子系统内部事件，不对外 webhook，故不在此列。
 func registerWebhookObservers(
 	b *busen.Bus,
 	deliver func(ctx context.Context, obs event.WebhookObservation) error,

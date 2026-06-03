@@ -157,7 +157,6 @@ type CORSConfig struct {
 type EventConfig struct {
 	DefaultBuffer      int    `env:"ECH0_EVENT_DEFAULT_BUFFER"`
 	DefaultOverflow    string `env:"ECH0_EVENT_DEFAULT_OVERFLOW"`
-	DeadLetterBuffer   int    `env:"ECH0_EVENT_DEADLETTER_BUFFER"`
 	SystemBuffer       int    `env:"ECH0_EVENT_SYSTEM_BUFFER"`
 	AgentBuffer        int    `env:"ECH0_EVENT_AGENT_BUFFER"`
 	AgentParallelism   int    `env:"ECH0_EVENT_AGENT_PARALLELISM"`
@@ -262,7 +261,6 @@ func defaultConfig() *AppConfig {
 		Event: EventConfig{
 			DefaultBuffer:      512,
 			DefaultOverflow:    "block",
-			DeadLetterBuffer:   64,
 			SystemBuffer:       64,
 			AgentBuffer:        128,
 			AgentParallelism:   2,

@@ -5,16 +5,12 @@ package webhook
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/lin-snow/ech0/internal/config"
 	"github.com/lin-snow/ech0/internal/event"
-	queueModel "github.com/lin-snow/ech0/internal/model/queue"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
-	"github.com/lin-snow/ech0/internal/transaction"
 	asyncUtil "github.com/lin-snow/ech0/internal/util/async"
 	"github.com/lin-snow/ech0/internal/util/egress"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
@@ -33,32 +29,20 @@ type WebhookStore interface {
 	) error
 }
 
-type DeadLetterStore interface {
-	SaveDeadLetter(ctx context.Context, deadLetter *queueModel.DeadLetter) error
-}
-
 type Dispatcher struct {
-	client     *http.Client
-	repo       WebhookStore
-	pool       *asyncUtil.WorkerPool
-	queueRepo  DeadLetterStore
-	transactor transaction.Transactor
+	client *http.Client
+	repo   WebhookStore
+	pool   *asyncUtil.WorkerPool
 }
 
-func NewDispatcher(
-	repo WebhookStore,
-	queueRepo DeadLetterStore,
-	tx transaction.Transactor,
-) *Dispatcher {
+func NewDispatcher(repo WebhookStore) *Dispatcher {
 	return &Dispatcher{
-		repo:      repo,
-		queueRepo: queueRepo,
-		client:    egress.NewClient(egress.Guard(), egress.Timeout(defaultWebhookTimeout)),
+		repo:   repo,
+		client: egress.NewClient(egress.Guard(), egress.Timeout(defaultWebhookTimeout)),
 		pool: asyncUtil.NewWorkerPool(
 			config.Config().Event.WebhookPoolWorkers,
 			config.Config().Event.WebhookPoolQueue,
 		),
-		transactor: tx,
 	}
 }
 
@@ -80,32 +64,9 @@ func (wd *Dispatcher) HandleObservation(ctx context.Context, obs event.WebhookOb
 
 func (wd *Dispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webhook, obs event.WebhookObservation) {
 	triggerAt := time.Now().UTC().Unix()
-	err := SendWithRetry(wd.client, wh, obs, 3, 500*time.Millisecond)
-	if err != nil {
+	if err := SendWithRetry(wd.client, wh, obs, 3, 500*time.Millisecond); err != nil {
 		wd.updateWebhookStatus(ctx, wh.ID, "failed", triggerAt)
 		logUtil.GetLogger().Error("Webhook Handle Failed", zap.String("name", wh.Name), zap.String("url", wh.URL), zap.Error(err))
-
-		payloadData := event.WebhookReplayPayload{
-			Webhook: *wh,
-			Event:   obs,
-		}
-		payload, _ := json.Marshal(payloadData)
-
-		var deadLetter queueModel.DeadLetter
-		deadLetter.SetType(queueModel.DeadLetterTypeWebhook)
-		deadLetter.Payload = payload
-		deadLetter.ErrorMsg = err.Error()
-		deadLetter.RetryCount = 0
-		deadLetter.NextRetry = time.Now().UTC().Add(6 * time.Hour).Unix()
-		deadLetter.CreatedAt = time.Now().UTC().Unix()
-		deadLetter.UpdatedAt = time.Now().UTC().Unix()
-		deadLetter.Status = queueModel.DeadLetterStatusPending
-
-		if err := wd.transactor.Run(ctx, func(ctx context.Context) error {
-			return wd.queueRepo.SaveDeadLetter(ctx, &deadLetter)
-		}); err != nil {
-			logUtil.GetLogger().Error("Failed to save dead letter", zap.Error(err))
-		}
 		return
 	}
 	wd.updateWebhookStatus(ctx, wh.ID, "success", triggerAt)
@@ -117,27 +78,6 @@ func (wd *Dispatcher) Wait() {
 
 func (wd *Dispatcher) Stop() {
 	wd.pool.Stop()
-}
-
-func (wd *Dispatcher) HandleDeadLetter(
-	ctx context.Context,
-	deadLetter *queueModel.DeadLetter,
-) error {
-	var payload event.WebhookReplayPayload
-	if err := json.Unmarshal(deadLetter.Payload, &payload); err != nil {
-		return fmt.Errorf("failed to unmarshal dead letter payload: %w", err)
-	}
-	webhook := payload.Webhook
-	obs := payload.Event
-	triggerAt := time.Now().UTC().Unix()
-
-	err := SendWithRetry(wd.client, &webhook, obs, 3, 500*time.Millisecond)
-	if err != nil {
-		wd.updateWebhookStatus(ctx, webhook.ID, "failed", triggerAt)
-		return err
-	}
-	wd.updateWebhookStatus(ctx, webhook.ID, "success", triggerAt)
-	return nil
 }
 
 func (wd *Dispatcher) updateWebhookStatus(

@@ -21,7 +21,6 @@ import (
 	embeddingModel "github.com/lin-snow/ech0/internal/model/embedding"
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
 	jobModel "github.com/lin-snow/ech0/internal/model/job"
-	queueModel "github.com/lin-snow/ech0/internal/model/queue"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
 	visitorModel "github.com/lin-snow/ech0/internal/model/visitor"
@@ -155,7 +154,6 @@ func MigrateDB() error {
 		&echoModel.EchoTag{},
 		&commentModel.Comment{},
 		&webhookModel.Webhook{},
-		&queueModel.DeadLetter{},
 		&jobModel.Job{},
 		&settingModel.AccessTokenSetting{},
 		&authModel.Passkey{},
