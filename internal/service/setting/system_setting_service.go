@@ -13,8 +13,8 @@ import (
 	i18nUtil "github.com/lin-snow/ech0/internal/i18n"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
-	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	urlUtil "github.com/lin-snow/ech0/internal/util/url"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
 )
@@ -42,9 +42,9 @@ func (settingService *SettingService) GetSetting(setting *model.SystemSetting) e
 			setting.CustomJS = config.Config().Setting.CustomJS
 
 			// 处理 URL
-			setting.ServerURL = httpUtil.TrimURL(setting.ServerURL)
-			setting.FooterLink = httpUtil.TrimURL(setting.FooterLink)
-			setting.MetingAPI = httpUtil.TrimURL(setting.MetingAPI)
+			setting.ServerURL = urlUtil.TrimURL(setting.ServerURL)
+			setting.FooterLink = urlUtil.TrimURL(setting.FooterLink)
+			setting.MetingAPI = urlUtil.TrimURL(setting.MetingAPI)
 
 			// 序列化为 JSON
 			settingToJSON, err := json.Marshal(setting)
@@ -97,13 +97,13 @@ func (settingService *SettingService) BootstrapDefaultLocale(
 			SiteTitle:     config.Config().Setting.SiteTitle,
 			ServerLogo:    config.Config().Setting.ServerLogo,
 			ServerName:    config.Config().Setting.Servername,
-			ServerURL:     httpUtil.TrimURL(config.Config().Setting.Serverurl),
+			ServerURL:     urlUtil.TrimURL(config.Config().Setting.Serverurl),
 			AllowRegister: config.Config().Setting.AllowRegister,
 			DefaultLocale: resolved,
 			ICPNumber:     config.Config().Setting.Icpnumber,
 			FooterContent: config.Config().Setting.FooterContent,
-			FooterLink:    httpUtil.TrimURL(config.Config().Setting.FooterLink),
-			MetingAPI:     httpUtil.TrimURL(config.Config().Setting.MetingAPI),
+			FooterLink:    urlUtil.TrimURL(config.Config().Setting.FooterLink),
+			MetingAPI:     urlUtil.TrimURL(config.Config().Setting.MetingAPI),
 			CustomCSS:     config.Config().Setting.CustomCSS,
 			CustomJS:      config.Config().Setting.CustomJS,
 		}
@@ -144,13 +144,13 @@ func (settingService *SettingService) UpdateSetting(
 		setting.SiteTitle = newSetting.SiteTitle
 		setting.ServerLogo = newSetting.ServerLogo
 		setting.ServerName = newSetting.ServerName
-		setting.ServerURL = httpUtil.TrimURL(newSetting.ServerURL)
+		setting.ServerURL = urlUtil.TrimURL(newSetting.ServerURL)
 		setting.AllowRegister = newSetting.AllowRegister
 		setting.DefaultLocale = i18nUtil.ResolveLocale(newSetting.DefaultLocale)
 		setting.ICPNumber = newSetting.ICPNumber
 		setting.FooterContent = newSetting.FooterContent
-		setting.FooterLink = httpUtil.TrimURL(newSetting.FooterLink)
-		setting.MetingAPI = httpUtil.TrimURL(newSetting.MetingAPI)
+		setting.FooterLink = urlUtil.TrimURL(newSetting.FooterLink)
+		setting.MetingAPI = urlUtil.TrimURL(newSetting.MetingAPI)
 		setting.CustomCSS = newSetting.CustomCSS
 		setting.CustomJS = newSetting.CustomJS
 

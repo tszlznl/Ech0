@@ -11,7 +11,7 @@ import (
 	"github.com/lin-snow/ech0/internal/config"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
-	httpUtil "github.com/lin-snow/ech0/internal/util/http"
+	urlUtil "github.com/lin-snow/ech0/internal/util/url"
 	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
@@ -98,14 +98,14 @@ func (settingService *SettingService) UpdateOAuth2Setting(
 			Provider:                      newSetting.Provider,
 			ClientID:                      newSetting.ClientID,
 			ClientSecret:                  newSetting.ClientSecret,
-			AuthURL:                       httpUtil.TrimURL(newSetting.AuthURL),
-			TokenURL:                      httpUtil.TrimURL(newSetting.TokenURL),
-			UserInfoURL:                   httpUtil.TrimURL(newSetting.UserInfoURL),
-			RedirectURI:                   httpUtil.TrimURL(newSetting.RedirectURI),
+			AuthURL:                       urlUtil.TrimURL(newSetting.AuthURL),
+			TokenURL:                      urlUtil.TrimURL(newSetting.TokenURL),
+			UserInfoURL:                   urlUtil.TrimURL(newSetting.UserInfoURL),
+			RedirectURI:                   urlUtil.TrimURL(newSetting.RedirectURI),
 			Scopes:                        newSetting.Scopes,
 			IsOIDC:                        newSetting.IsOIDC,
 			Issuer:                        newSetting.Issuer,
-			JWKSURL:                       httpUtil.TrimURL(newSetting.JWKSURL),
+			JWKSURL:                       urlUtil.TrimURL(newSetting.JWKSURL),
 			AuthRedirectAllowedReturnURLs: sanitizeURLList(newSetting.AuthRedirectAllowedReturnURLs),
 			CORSAllowedOrigins:            sanitizeURLList(newSetting.CORSAllowedOrigins),
 		}
@@ -145,7 +145,7 @@ func (settingService *SettingService) GetOAuth2Status(status *model.OAuth2Status
 func sanitizeURLList(values []string) []string {
 	result := make([]string, 0, len(values))
 	for _, v := range values {
-		if trimmed := httpUtil.TrimURL(v); trimmed != "" {
+		if trimmed := urlUtil.TrimURL(v); trimmed != "" {
 			result = append(result, trimmed)
 		}
 	}

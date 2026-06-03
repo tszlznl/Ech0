@@ -13,8 +13,8 @@ import (
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 	"github.com/lin-snow/ech0/internal/util/egress"
-	httpUtil "github.com/lin-snow/ech0/internal/util/http"
-	webhookclient "github.com/lin-snow/ech0/internal/webhook/infra/httpclient"
+	urlUtil "github.com/lin-snow/ech0/internal/util/url"
+	webhookclient "github.com/lin-snow/ech0/internal/webhook"
 	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
@@ -72,7 +72,7 @@ func (settingService *SettingService) UpdateWebhook(
 	}
 
 	// 数据处理
-	newWebhook.URL = httpUtil.TrimURL(newWebhook.URL)
+	newWebhook.URL = urlUtil.TrimURL(newWebhook.URL)
 
 	// 检查名称或URL是否为空
 	if newWebhook.Name == "" || newWebhook.URL == "" {
@@ -111,7 +111,7 @@ func (settingService *SettingService) CreateWebhook(
 	}
 
 	// 数据处理
-	newWebhook.URL = httpUtil.TrimURL(newWebhook.URL)
+	newWebhook.URL = urlUtil.TrimURL(newWebhook.URL)
 
 	// 检查名称或URL是否为空
 	if newWebhook.Name == "" || newWebhook.URL == "" {

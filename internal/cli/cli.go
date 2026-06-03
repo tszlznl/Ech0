@@ -10,7 +10,7 @@ import (
 	"github.com/charmbracelet/huh"
 	"github.com/lin-snow/ech0/internal/config"
 	"github.com/lin-snow/ech0/internal/di"
-	"github.com/lin-snow/ech0/internal/tui"
+	tuiUtil "github.com/lin-snow/ech0/internal/util/tui"
 	versionPkg "github.com/lin-snow/ech0/internal/version"
 )
 
@@ -27,7 +27,7 @@ func isWebPortInUse() bool {
 func canStartWebServer() bool {
 	if isWebPortInUse() {
 		port := config.Config().Server.Port
-		tui.PrintCLIInfo("⚠️ Start service", "Web port "+port+" is already in use; another instance may be running")
+		tuiUtil.PrintCLIInfo("⚠️ Start service", "Web port "+port+" is already in use; another instance may be running")
 		return false
 	}
 	return true
@@ -43,14 +43,14 @@ func DoServeWithBlock() {
 	}
 	runtimeApp, err := di.BuildApp()
 	if err != nil {
-		tui.PrintCLIInfo("😭 Failed to start service", err.Error())
+		tuiUtil.PrintCLIInfo("😭 Failed to start service", err.Error())
 		return
 	}
 	if err := runtimeApp.Run(); err != nil {
-		tui.PrintCLIInfo("😭 Failed to start service", err.Error())
+		tuiUtil.PrintCLIInfo("😭 Failed to start service", err.Error())
 		return
 	}
-	tui.PrintCLIInfo("🎉 Service stopped", "Ech0 server has stopped")
+	tuiUtil.PrintCLIInfo("🎉 Service stopped", "Ech0 server has stopped")
 }
 
 func DoVersion() {
@@ -79,17 +79,17 @@ func DoVersion() {
 		Title: "📦 Ech0",
 		Msg:   msg,
 	}
-	tui.PrintCLIWithBox(item)
+	tuiUtil.PrintCLIWithBox(item)
 }
 
 func DoHello() {
-	tui.ClearScreen()
-	tui.PrintCLIBanner()
+	tuiUtil.ClearScreen()
+	tuiUtil.PrintCLIBanner()
 }
 
 func DoTui() {
-	tui.ClearScreen()
-	tui.PrintCLIBanner()
+	tuiUtil.ClearScreen()
+	tuiUtil.PrintCLIBanner()
 
 	for {
 		fmt.Println()
@@ -115,18 +115,18 @@ func DoTui() {
 			WithTheme(huh.ThemeCatppuccin()).
 			Run()
 		if err != nil {
-			tui.PrintCLIInfo("😭 Operation failed", err.Error())
+			tuiUtil.PrintCLIInfo("😭 Operation failed", err.Error())
 			return
 		}
 
 		switch action {
 		case "serve":
-			tui.ClearScreen()
+			tuiUtil.ClearScreen()
 			DoServe()
 		case "servebusy":
-			tui.PrintCLIInfo("ℹ️ Service status", "The web service is running in another process and cannot be stopped from here")
+			tuiUtil.PrintCLIInfo("ℹ️ Service status", "The web service is running in another process and cannot be stopped from here")
 		case "version":
-			tui.ClearScreen()
+			tuiUtil.ClearScreen()
 			DoVersion()
 		case "exit":
 			fmt.Println("👋 Thanks for using the Ech0 TUI. See you next time!")

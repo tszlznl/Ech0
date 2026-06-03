@@ -10,15 +10,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lin-snow/ech0/internal/async"
 	"github.com/lin-snow/ech0/internal/config"
 	contracts "github.com/lin-snow/ech0/internal/event/contracts"
 	queueModel "github.com/lin-snow/ech0/internal/model/queue"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 	"github.com/lin-snow/ech0/internal/transaction"
+	asyncUtil "github.com/lin-snow/ech0/internal/util/async"
 	"github.com/lin-snow/ech0/internal/util/egress"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
-	webhookclient "github.com/lin-snow/ech0/internal/webhook/infra/httpclient"
 	"go.uber.org/zap"
 )
 
@@ -41,7 +40,7 @@ type DeadLetterStore interface {
 type Dispatcher struct {
 	client     *http.Client
 	repo       WebhookStore
-	pool       *async.WorkerPool
+	pool       *asyncUtil.WorkerPool
 	queueRepo  DeadLetterStore
 	transactor transaction.Transactor
 }
@@ -55,7 +54,7 @@ func NewDispatcher(
 		repo:      repo,
 		queueRepo: queueRepo,
 		client:    egress.NewClient(egress.Guard(), egress.Timeout(defaultWebhookTimeout)),
-		pool: async.NewWorkerPool(
+		pool: asyncUtil.NewWorkerPool(
 			config.Config().Event.WebhookPoolWorkers,
 			config.Config().Event.WebhookPoolQueue,
 		),
@@ -81,7 +80,7 @@ func (wd *Dispatcher) HandleObservation(ctx context.Context, obs contracts.Webho
 
 func (wd *Dispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webhook, obs contracts.WebhookObservation) {
 	triggerAt := time.Now().UTC().Unix()
-	err := webhookclient.SendWithRetry(wd.client, wh, obs, 3, 500*time.Millisecond)
+	err := SendWithRetry(wd.client, wh, obs, 3, 500*time.Millisecond)
 	if err != nil {
 		wd.updateWebhookStatus(ctx, wh.ID, "failed", triggerAt)
 		logUtil.GetLogger().Error("Webhook Handle Failed", zap.String("name", wh.Name), zap.String("url", wh.URL), zap.Error(err))
@@ -132,7 +131,7 @@ func (wd *Dispatcher) HandleDeadLetter(
 	obs := payload.Event
 	triggerAt := time.Now().UTC().Unix()
 
-	err := webhookclient.SendWithRetry(wd.client, &webhook, obs, 3, 500*time.Millisecond)
+	err := SendWithRetry(wd.client, &webhook, obs, 3, 500*time.Millisecond)
 	if err != nil {
 		wd.updateWebhookStatus(ctx, webhook.ID, "failed", triggerAt)
 		return err

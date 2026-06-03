@@ -27,9 +27,9 @@ import (
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/transaction"
-	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	imgUtil "github.com/lin-snow/ech0/internal/util/img"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	urlUtil "github.com/lin-snow/ech0/internal/util/url"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"github.com/lin-snow/ech0/pkg/virefs"
 	"go.uber.org/zap"
@@ -225,7 +225,7 @@ func (s *FileService) CreateExternalFile(
 		return commonModel.FileDto{}, errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	rawURL := httpUtil.TrimURL(dto.URL)
+	rawURL := urlUtil.TrimURL(dto.URL)
 	if rawURL == "" {
 		return commonModel.FileDto{}, errors.New(commonModel.INVALID_PARAMS)
 	}
@@ -240,7 +240,10 @@ func (s *FileService) CreateExternalFile(
 
 	contentType := strings.TrimSpace(dto.ContentType)
 	if contentType == "" {
-		contentType = httpUtil.GetMIMETypeFromFilenameOrURL(rawURL)
+		contentType = canonicalMIMEForExt(rawURL)
+		if contentType == "" {
+			contentType = "application/octet-stream"
+		}
 	}
 
 	category := storage.NormalizeCategory(dto.Category)
@@ -1111,6 +1114,18 @@ func validateFileUploadByName(filename string, declaredMIME string, allowedTypes
 	return nil
 }
 
+// canonicalMIMEForExt returns the canonical (first-listed) MIME registered for
+// name's extension in safeExtMIME, or "" if the extension is not a supported
+// type. It is the single ext→MIME source of truth shared by uploads
+// (resolveContentType) and external references (CreateExternalFile).
+func canonicalMIMEForExt(name string) string {
+	ext := strings.ToLower(filepath.Ext(strings.TrimSpace(name)))
+	if mimes, ok := safeExtMIME[ext]; ok && len(mimes) > 0 {
+		return mimes[0]
+	}
+	return ""
+}
+
 // resolveContentType returns the canonical MIME for the file extension. If the
 // detected MIME is specific (not application/octet-stream), it is returned
 // directly; otherwise the first expected MIME for the extension is used.
@@ -1118,9 +1133,8 @@ func resolveContentType(filename string, detected string) string {
 	if detected != "" && detected != "application/octet-stream" {
 		return detected
 	}
-	ext := strings.ToLower(filepath.Ext(strings.TrimSpace(filename)))
-	if mimes, ok := safeExtMIME[ext]; ok && len(mimes) > 0 {
-		return mimes[0]
+	if mime := canonicalMIMEForExt(filename); mime != "" {
+		return mime
 	}
 	return detected
 }

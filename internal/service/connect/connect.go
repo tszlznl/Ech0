@@ -17,8 +17,8 @@ import (
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"github.com/lin-snow/ech0/internal/util/egress"
-	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	urlUtil "github.com/lin-snow/ech0/internal/util/url"
 	versionPkg "github.com/lin-snow/ech0/internal/version"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
@@ -83,7 +83,7 @@ func (connectService *ConnectService) AddConnect(ctx context.Context, connected 
 		}
 
 		// 去除连接地址前后的空格和斜杠
-		connected.ConnectURL = httpUtil.TrimURL(connected.ConnectURL)
+		connected.ConnectURL = urlUtil.TrimURL(connected.ConnectURL)
 
 		// SSRF 防护：拒绝指向私网/回环/云元数据等地址的对端 URL。
 		// 运行时 fetchPeerConnectInfo 也会再次校验，这里在入库前就拦截，避免恶意记录污染存储。
@@ -226,7 +226,7 @@ func (connectService *ConnectService) GetConnectsInfo() ([]model.Connect, error)
 // 使用 egress.Fetch（带 Guard）进行 SSRF 防护：拒绝指向私网/回环/云元数据等地址的对端 URL，
 // 并通过安全拨号器防御 DNS rebinding。
 func fetchPeerConnectInfo(peerConnectURL string, requestTimeout time.Duration) (model.Connect, error) {
-	url := httpUtil.TrimURL(peerConnectURL) + "/api/connect"
+	url := urlUtil.TrimURL(peerConnectURL) + "/api/connect"
 	resp, err := egress.Fetch(url, "GET", egress.Header{
 		Header:  "Ech0_URL",
 		Content: peerConnectURL,

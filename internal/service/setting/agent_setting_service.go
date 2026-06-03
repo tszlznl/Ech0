@@ -10,7 +10,7 @@ import (
 
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
-	httpUtil "github.com/lin-snow/ech0/internal/util/http"
+	urlUtil "github.com/lin-snow/ech0/internal/util/url"
 	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
@@ -125,7 +125,7 @@ func (settingService *SettingService) UpdateAgentSettings(
 		Model:      newSetting.Model,
 		ApiKey:     newSetting.ApiKey,
 		Prompt:     newSetting.Prompt,
-		BaseURL:    httpUtil.TrimURL(newSetting.BaseURL),
+		BaseURL:    urlUtil.TrimURL(newSetting.BaseURL),
 		Multimodal: newSetting.Multimodal,
 		// 负数视为未配置，归零走保守默认。
 		ContextWindow: max(0, newSetting.ContextWindow),

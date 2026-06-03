@@ -17,8 +17,8 @@ import (
 	model "github.com/lin-snow/ech0/internal/model/echo"
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/transaction"
-	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	urlUtil "github.com/lin-snow/ech0/internal/util/url"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"go.uber.org/zap"
 )
@@ -539,7 +539,7 @@ func normalizeEchoExtension(ext *model.EchoExtension) (*model.EchoExtension, err
 		if url == "" {
 			return nil, fmt.Errorf("extension payload.url is required for MUSIC")
 		}
-		ext.Payload = map[string]interface{}{"url": httpUtil.TrimURL(url)}
+		ext.Payload = map[string]interface{}{"url": urlUtil.TrimURL(url)}
 	case model.Extension_VIDEO:
 		videoID := strings.TrimSpace(getPayloadString(ext.Payload, "videoId"))
 		if videoID == "" {
@@ -551,7 +551,7 @@ func normalizeEchoExtension(ext *model.EchoExtension) (*model.EchoExtension, err
 		if repoURL == "" {
 			return nil, fmt.Errorf("extension payload.repoUrl is required for GITHUBPROJ")
 		}
-		ext.Payload = map[string]interface{}{"repoUrl": httpUtil.TrimURL(repoURL)}
+		ext.Payload = map[string]interface{}{"repoUrl": urlUtil.TrimURL(repoURL)}
 	case model.Extension_WEBSITE:
 		title := strings.TrimSpace(getPayloadString(ext.Payload, "title"))
 		site := strings.TrimSpace(getPayloadString(ext.Payload, "site"))
@@ -560,7 +560,7 @@ func normalizeEchoExtension(ext *model.EchoExtension) (*model.EchoExtension, err
 		}
 		ext.Payload = map[string]interface{}{
 			"title": title,
-			"site":  httpUtil.TrimURL(site),
+			"site":  urlUtil.TrimURL(site),
 		}
 	case model.Extension_LOCATION:
 		lat, okLat := getPayloadFloat(ext.Payload, "latitude")
@@ -588,7 +588,7 @@ func normalizeEchoExtension(ext *model.EchoExtension) (*model.EchoExtension, err
 			return nil, fmt.Errorf("extension payload.url, payload.username and payload.statusId are required for TWEET")
 		}
 		ext.Payload = map[string]interface{}{
-			"url":      httpUtil.TrimURL(url),
+			"url":      urlUtil.TrimURL(url),
 			"username": username,
 			"statusId": statusID,
 		}

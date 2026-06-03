@@ -17,9 +17,9 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
 	"github.com/lin-snow/ech0/internal/util/egress"
-	httpUtil "github.com/lin-snow/ech0/internal/util/http"
 	mdUtil "github.com/lin-snow/ech0/internal/util/md"
 	timezoneUtil "github.com/lin-snow/ech0/internal/util/timezone"
+	urlUtil "github.com/lin-snow/ech0/internal/util/url"
 	"golang.org/x/net/html"
 )
 
@@ -159,7 +159,7 @@ func (s *CommonService) GenerateRSS(ctx *gin.Context) (string, error) {
 }
 
 func (s *CommonService) GetWebsiteTitle(websiteURL string) (string, error) {
-	websiteURL = httpUtil.TrimURL(websiteURL)
+	websiteURL = urlUtil.TrimURL(websiteURL)
 
 	body, err := egress.Fetch(websiteURL, "GET", egress.Header{}, 10*time.Second)
 	if err != nil {

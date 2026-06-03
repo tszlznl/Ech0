@@ -12,7 +12,7 @@ import (
 	"github.com/lin-snow/ech0/internal/config"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
-	httpUtil "github.com/lin-snow/ech0/internal/util/http"
+	urlUtil "github.com/lin-snow/ech0/internal/util/url"
 	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
@@ -114,14 +114,14 @@ func (settingService *SettingService) UpdateS3Setting(
 		s3Setting := &model.S3Setting{
 			Enable:     newSetting.Enable,
 			Provider:   newSetting.Provider,
-			Endpoint:   httpUtil.TrimURL(newSetting.Endpoint),
+			Endpoint:   urlUtil.TrimURL(newSetting.Endpoint),
 			AccessKey:  newSetting.AccessKey,
 			SecretKey:  newSetting.SecretKey,
 			BucketName: newSetting.BucketName,
 			Region:     strings.TrimSpace(newSetting.Region),
 			UseSSL:     newSetting.UseSSL,
 			CDNURL:     cdnURL,
-			PathPrefix: httpUtil.TrimURL(newSetting.PathPrefix),
+			PathPrefix: urlUtil.TrimURL(newSetting.PathPrefix),
 			PublicRead: newSetting.PublicRead,
 		}
 

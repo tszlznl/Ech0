@@ -14,8 +14,9 @@ COPY --chmod=0755 backend-artifacts/ech0-${TARGETOS}-${TARGETARCH} /app/ech0
 FROM alpine:latest
 
 WORKDIR /app
-RUN apk add --no-cache tzdata
 
+# 时区数据已通过 `_ "time/tzdata"`(见 cmd/ech0/main.go) 内嵌进二进制,
+# 无需再从系统安装 tzdata。
 COPY --from=builder /app /app
 
 EXPOSE 6277
