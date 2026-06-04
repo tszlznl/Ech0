@@ -18,6 +18,7 @@
 
 | 文档 | 说明 |
 |------|------|
+| [dev/architecture-overview.md](dev/architecture-overview.md) | **架构全景图**：进程启动、分层后端、业务领域、事件子系统、基础设施与 `pkg/` 自研库的关系总览（新手入口） |
 | [dev/table-design-standard.md](dev/table-design-standard.md) | Panel 表格组件（含管理端列表）的布局与交互规范 |
 | [dev/i18n-contract.md](dev/i18n-contract.md) | 前后端国际化约定（locale、API 错误字段、key 命名） |
 | [dev/logging.md](dev/logging.md) | 日志库使用与字段约定 |

@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project overview
 
-Ech0 is a self-hosted personal microblog (timeline) platform. It is shipped as a single Go binary that serves both the REST API and the built SPA. Backend is Go 1.26+ (Gin + Wire DI + GORM + SQLite via CGO), frontend is Vue 3 + Vite + TypeScript + UnoCSS under `web/`.
+Ech0 is a self-hosted personal microblog (timeline) platform. It is shipped as a single Go binary that serves both the REST API and the built SPA. Backend is Go 1.26+ (Gin + Wire DI + GORM + SQLite via CGO), frontend is Vue 3 + Vite + TypeScript + UnoCSS under `web/`. Two satellite web projects also live in-repo: `hub/` (Vue 3 public-directory site) and `site/` (React Router marketing/docs site) — they are independent of the Go binary.
+
+**For a full architecture walkthrough, read `docs/dev/architecture-overview.md` first** — it covers the layered backend, business domains, Agent/MCP capability layers, event subsystem, infra modules, and `pkg/` libraries end-to-end.
 
 ## Common commands
 
@@ -47,11 +49,12 @@ Binary entrypoint is `cmd/ech0/main.go`. CLI verbs (Cobra): `ech0 serve` (HTTP),
 
 ### Layered backend with Wire DI
 
-Backend follows a strict layered architecture — **handler → service → repository → database** — with Google Wire generating the dependency graph. Each domain (echo, user, auth, comment, connect, file, setting, dashboard, agent, migration, init, common) has parallel packages under `internal/handler/<x>`, `internal/service/<x>`, `internal/repository/<x>`, and `internal/model/<x>`.
+Backend follows a strict layered architecture — **handler → service → repository → database** — with Google Wire generating the dependency graph. Each business domain (echo, comment, file, connect, user, auth, init, setting, embedding, copilot, dashboard, migrator, common) has parallel packages under `internal/handler/<x>`, `internal/service/<x>`, `internal/repository/<x>`, and `internal/model/<x>` (plus handler-only `web` and `mcp`). Note: `internal/agent` is **not** a layered domain — it is the LLM core package consumed by the copilot service.
 
-- `internal/di/wire.go` declares provider sets (`HandlerSet`, `EventSet`, `TaskerSet`, `MigratorSet`, `MiddlewareSet`, `InfraSet`, `RuntimeSet`) and the `BuildApp` injector that composes the full runtime. **If you add/remove a constructor or change a binding, run `make wire`** before committing.
+- `internal/di/wire.go` declares provider sets (`InfraSet`, `DomainSet`, `HandlerSet`, `EventSet`, `TaskerSet`, `MiddlewareSet`, `StorageSet`, `VisitorSet`, `RuntimeSet`, `AppSet`) and the `BuildApp` injector that composes the full runtime. **If you add/remove a constructor or change a binding, run `make wire`** before committing.
+- **Three stateful singletons must be injected once at the top level** (`BuildApp`/`BuildServer`) and shared down, or Wire silently builds a second copy and breaks things: `visitor.Tracker` (VisitorSet), `storage.Manager` (StorageSet), `job.Manager` (BuildJobManager). The `wire.go` comments explain each failure mode.
 - Cross-domain aliases are required when importing layers: `xxxHandler`, `xxxService`, `xxxRepository`, `xxxModel`, `xxxUtil` (enforced by existing code; see README "Start Backend & Frontend" note).
-- `internal/app` is a generic component lifecycle orchestrator. `internal/server` is the thin Gin/HTTP `Component` it manages. Other `Component`s (Tasker, migrator, event registrar) are started/stopped alongside the HTTP server.
+- `internal/app` is a generic component lifecycle orchestrator. `internal/server` is the thin Gin/HTTP `Component` it manages. The other managed components are `job.Manager` and `task.Manager` (started in order job → task → server); the `EventRegistrar` registers/drains subscriptions and `setting.Seed` runs via `BeforeStart`/`AfterStop` hooks.
 - `internal/bootstrap/bootstrap.go` runs before Cobra dispatches: loads config, initializes the zap-based logger, sets host env defaults. Config is accessed via `config.Config()` (singleton).
 - HTTP routes live in `internal/router/*.go`, registered per domain and wired up in `internal/server/provider.go`. Swagger annotations on handlers drive `internal/swagger/` output.
 
@@ -59,7 +62,14 @@ Backend follows a strict layered architecture — **handler → service → repo
 
 Ech0 uses the in-repo **Busen** library (vendored at `pkg/busen`, imported as `github.com/lin-snow/ech0/pkg/busen`) as an async in-process event bus. The event system follows one rule: dependencies point inward to a **pure vocabulary** package. `internal/event` (package `event`) holds the event structs + their self-describing methods (`EventName()`, `OrderingKey()`) + `WebhookObservation` — it imports only domain models, never busen/services. `internal/event/bus` (alias `eventbus`) is the infrastructure: the `*busen.Bus` singleton, the generic `Emit[T]` (fire) / `Notify[T]` (best-effort fire + warn-log) / `On[T]` (type-routed subscribe) helpers, subscribe-option presets, and the `EventRegistrar`. The registrar wires all subscriptions on `BeforeStart` and tears them down on `AfterStop`, then drains any subscriber implementing `Draining` (e.g. the webhook dispatcher's worker pool) — there is no separate bus-drain component, and the bus's async queues are best-effort (dropped on shutdown). Subscribers live at `internal/event/subscriber` (agent processor, embedding processor, snapshot scheduler) and self-register via `bus.On`; the webhook dispatcher (`internal/webhook`) is itself a subscriber too — it bridges each observable event to a neutral `WebhookObservation` via `bus.OnWithMeta` (the metadata-aware variant of `On`). **Routing is by Go type** (no topic dimension); events self-describe their stable webhook name via `EventName()`. Producers publish with `eventbus.Notify(ctx, bus, event.EchoCreated{...})` (best-effort; `Emit` when the caller wants the error) — there is no publisher facade. The bus decouples comment/echo/user events from side effects like webhooks, agent runs, and snapshots. Runtime tuning is via `ECH0_EVENT_*` env vars (buffers, parallelism, webhook worker pool) — see README "Event Runtime Parameters".
 
-Webhook dispatch (`internal/webhook`) and agent processing (`internal/agent`) are implemented as event subscribers, not as inline handler calls. When adding cross-cutting side effects, prefer publishing an event over invoking services directly from handlers.
+Webhook dispatch (`internal/webhook`) and the cache/index/snapshot processors (`internal/event/subscriber`) are implemented as event subscribers, not inline handler calls. When adding cross-cutting side effects, prefer publishing an event over invoking services directly from handlers. (Caution: `internal/agent` is **not** a subscriber — it is the synchronous LLM core; the bus-facing `AgentProcessor` subscriber only invalidates the AI-summary cache.)
+
+### Agent & MCP capability layers (LLM, mirror-image directions)
+
+Two function-calling integrations that point opposite ways:
+
+- **`internal/agent` (outbound)** — Ech0's LLM core. Collapses OpenAI-compatible + Anthropic protocols behind one `Provider` abstraction (`Complete`/`Stream`) plus a ReAct tool loop (`agent.Run`). **Zero domain deps**: tools are injected by the caller as `Tool{Def, Execute}` closures, and i18n strings are passed in (`RunStrings`). The copilot service (`internal/service/copilot`) injects `search_echos`/`summarize_echos`/`stats_overview`, then translates the loop's `AgentEvent` stream into Chat SSE (`searching|sources|delta|done|error`). `Generate` is the non-streaming entry used for summaries. SDK quirks (streaming tool-call fragment reassembly) are sealed inside each Provider; the loop only sees clean semantic events.
+- **`internal/mcp` (inbound)** — a JSON-RPC 2.0 MCP server mounted at `/mcp` (RequireAuth) that exposes domain APIs to *external* LLMs as tools/resources. Each tool/resource declares a required scope at registration; `Server.dispatch` enforces it against the caller's access-token scopes **before** invoking the domain service via `Adapter`. Keep authorization centralized in dispatch, not scattered into business code.
 
 ### Storage (VireFS)
 
@@ -69,7 +79,7 @@ Webhook dispatch (`internal/webhook`) and agent processing (`internal/agent`) ar
 
 - Vue 3 SFCs in `web/src`, Pinia stores, Vue Router, i18n via `vue-i18n`, UnoCSS (Wind4 preset), markdown via `markdown-it` + Vditor editor.
 - i18n guardrails in `web/scripts/` (key completeness, unused keys, hardcoded strings, pseudo-locale smoke) are part of `make check` — **do not introduce hardcoded UI strings**; use translation keys.
-- Vite serves `:5173` during dev and proxies `/api` to the backend on `:6277`. For production, the backend embeds the built SPA (see `template/` and `internal/handler/web`).
+- Vite serves `:5173` during dev and proxies `/api` to the backend on `:6277`. `pnpm build` outputs to `template/dist/`, which the Go binary embeds via `//go:embed all:dist` (`template/template.go`) and serves through `internal/handler/web` in production.
 
 ### Configuration
 
@@ -79,6 +89,7 @@ Webhook dispatch (`internal/webhook`) and agent processing (`internal/agent`) ar
 
 - **Before a PR**: `make check` is mandatory (enforces backend lint, frontend lint, i18n checks). `go build ./...` and `pnpm build` must pass. Regenerate Swagger (`make swagger`) whenever routes or request/response shapes change and commit `internal/swagger/`.
 - **DI changes**: regenerate with `make wire`; CI runs `make wire-check`.
+- **SPDX headers**: every `.go` / `.ts` / `.vue` file needs an SPDX license header. `make spdx` adds missing ones; CI enforces via `make spdx-check`.
 - **Migrator (data portability)**: the admin panel's "数据管理" page wraps a bidirectional Migrator domain. **Import** supports Ech0 snapshot → Ech0 and Memos → Ech0; **Export** produces a unified **Snapshot** (a zip of `data/`, see `internal/migrator/snapshot`) that round-trips back through the `ech0` import. Core engine (importer/exporter execution, ETL, snapshot resource) lives in `internal/migrator`; `internal/service/migrator` is a thin layer doing auth + job lifecycle + DTO + upload orchestration. Export triggers: manual snapshot (`POST /migration/export`, async via `job.Manager`, `TypeExport`), scheduled snapshot (`internal/task/scheduled` cron, syncs through the exporter), and synchronous download (`GET /migration/export/download`). There is no separate "backup" concept — it is all snapshot export.
 - **Integration comment endpoint**: `POST /api/comments/integration` intentionally bypasses captcha/form-token — it requires an access token with `comment:write` scope and `integration` audience. Preserve this behavior.
 - **Access tokens**: scope/audience/`typ` design is documented at `docs/dev/access-token-scope-design.md`; implementation is authoritative.
@@ -87,9 +98,11 @@ Webhook dispatch (`internal/webhook`) and agent processing (`internal/agent`) ar
 
 ## Useful reference docs in-repo
 
+- `docs/dev/architecture-overview.md` — **start here**: full architecture panorama (layers, domains, Agent/MCP, events, infra, `pkg/`)
+- `docs/dev/llm-chat-design.md`, `docs/dev/agent-toolcall-design.md` — Chat RAG + Agent Provider/ReAct design
+- `docs/dev/job-runner-design.md`, `docs/dev/snapshot-design.md` — async job framework & snapshot export
 - `docs/dev/auth-design.md`, `docs/dev/access-token-scope-design.md` — auth model & token scopes
 - `docs/dev/i18n-contract.md` — frontend/backend i18n contract (locale header, error field shapes, key naming)
-- `docs/dev/table-design-standard.md` — admin panel table component conventions
-- `docs/dev/logging.md`, `docs/dev/timezone-design.md`, `docs/dev/table-design-standard.md`
-- `docs/usage/storage-migration.md`, `docs/usage/mcp-usage.md`, `docs/usage/webhook-usage.md`
-- `CONTRIBUTING.md` — PR workflow and pre-submission checks
+- `docs/dev/logging.md`, `docs/dev/timezone-design.md`, `docs/dev/table-design-standard.md` — logging fields, TZ handling, admin table conventions
+- `docs/usage/storage-migration.md`, `docs/usage/mcp-usage.md`, `docs/usage/webhook-usage.md` — operator/integration guides
+- `CONTRIBUTING.md` — PR workflow and pre-submission checks; `docs/README.md` — doc index
