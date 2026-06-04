@@ -46,62 +46,62 @@ func NewSnapshot(
 	return &Snapshot{durableKV: durableKV, exporter: exporter, bus: busProvider()}
 }
 
-func (b *Snapshot) Name() string { return "snapshot" }
+func (s *Snapshot) Name() string { return "snapshot" }
 
 // Schedule 捕获 scheduler，订阅运行期计划变更，并按当前计划挂上定时快照作业。
-func (b *Snapshot) Schedule(ctx context.Context, s gocron.Scheduler) error {
-	b.mu.Lock()
-	b.scheduler = s
-	b.mu.Unlock()
+func (s *Snapshot) Schedule(ctx context.Context, scheduler gocron.Scheduler) error {
+	s.mu.Lock()
+	s.scheduler = scheduler
+	s.mu.Unlock()
 
-	if err := b.subscribe(); err != nil {
+	if err := s.subscribe(); err != nil {
 		return err
 	}
-	return b.reload(ctx)
+	return s.reload(ctx)
 }
 
 // OnStop 退订总线，避免停机后残留订阅。实现 task.StopHook。
-func (b *Snapshot) OnStop(_ context.Context) {
-	b.mu.Lock()
-	unsub := b.unsub
-	b.unsub = nil
-	b.mu.Unlock()
+func (s *Snapshot) OnStop(_ context.Context) {
+	s.mu.Lock()
+	unsub := s.unsub
+	s.unsub = nil
+	s.mu.Unlock()
 	if unsub != nil {
 		unsub()
 	}
 }
 
 // subscribe 把自己挂上总线：收到 UpdateSnapshotSchedule 即按持久化的最新计划重配（保序消费）。
-func (b *Snapshot) subscribe() error {
-	unsub, err := eventbus.On(b.handleScheduleChanged, eventbus.AsyncSequential()...)(b.bus)
+func (s *Snapshot) subscribe() error {
+	unsub, err := eventbus.On(s.handleScheduleChanged, eventbus.AsyncSequential()...)(s.bus)
 	if err != nil {
 		return err
 	}
-	b.mu.Lock()
-	b.unsub = unsub
-	b.mu.Unlock()
+	s.mu.Lock()
+	s.unsub = unsub
+	s.mu.Unlock()
 	return nil
 }
 
 // handleScheduleChanged 忽略事件载荷，直接重读持久化计划——以「存了什么」为唯一真相源，天然幂等、
 // 对并发更新收敛。事件载荷仅供 webhook 桥接使用。
-func (b *Snapshot) handleScheduleChanged(ctx context.Context, _ event.UpdateSnapshotSchedule) error {
-	return b.reload(ctx)
+func (s *Snapshot) handleScheduleChanged(ctx context.Context, _ event.UpdateSnapshotSchedule) error {
+	return s.reload(ctx)
 }
 
 // reload 是唯一的「应用计划」路径：读当前计划 → 移除旧作业 → 启用则按 cron 重新挂上。
 // 启动（Schedule）与运行期（事件）都走它，故 withSeconds 解析、enable 判断、tag 只有一份。
 // 读取失败时保留现有作业（不贸然移除），仅记录并上抛错误，避免一次瞬时读故障误关定时快照。
-func (b *Snapshot) reload(ctx context.Context) error {
-	b.mu.Lock()
-	defer b.mu.Unlock()
+func (s *Snapshot) reload(ctx context.Context) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	if b.scheduler == nil {
+	if s.scheduler == nil {
 		// 尚未 Schedule（Manager 未 Start），无需处理。
 		return nil
 	}
 
-	schedule, err := coreSetting.Get(ctx, b.durableKV, coreSetting.Snapshot)
+	schedule, err := coreSetting.Get(ctx, s.durableKV, coreSetting.Snapshot)
 	if err != nil {
 		logUtil.GetLogger().Error("Failed to read snapshot schedule, keeping current jobs",
 			zap.String("module", logModule), zap.Error(err))
@@ -109,13 +109,13 @@ func (b *Snapshot) reload(ctx context.Context) error {
 	}
 
 	// 先移除旧作业，避免重复触发（启动时无旧作业，是无害 no-op）。
-	b.scheduler.RemoveByTags(snapshotScheduleTag)
+	s.scheduler.RemoveByTags(snapshotScheduleTag)
 	if !schedule.Enable {
 		logUtil.GetLogger().Info("Snapshot schedule disabled, jobs removed", zap.String("module", logModule))
 		return nil
 	}
 
-	if err := b.scheduleJob(schedule.CronExpression); err != nil {
+	if err := s.scheduleJob(schedule.CronExpression); err != nil {
 		logUtil.GetLogger().Error("Failed to apply snapshot schedule",
 			zap.String("module", logModule), zap.Error(err))
 		return err
@@ -125,25 +125,25 @@ func (b *Snapshot) reload(ctx context.Context) error {
 	return nil
 }
 
-// scheduleJob 按 cron 表达式挂上一个带 tag 的定时快照作业。调用方须持有 b.mu。
-func (b *Snapshot) scheduleJob(cronExpression string) error {
+// scheduleJob 按 cron 表达式挂上一个带 tag 的定时快照作业。调用方须持有 s.mu。
+func (s *Snapshot) scheduleJob(cronExpression string) error {
 	// 判断 cron 表达式的字段数量来确定是否包含秒字段：
 	// 5 位（分 时 日 月 周）withSeconds=false；6 位（秒 分 时 日 月 周）withSeconds=true。
 	withSeconds := len(strings.Fields(cronExpression)) == 6
 
-	_, err := b.scheduler.NewJob(
+	_, err := s.scheduler.NewJob(
 		gocron.CronJob(cronExpression, withSeconds),
 		gocron.NewTask(func() {
 			ctx := context.Background()
 
-			if _, err := b.exporter.Export(ctx, func(string, any) {}); err != nil {
+			if _, err := s.exporter.Export(ctx, func(string, any) {}); err != nil {
 				logUtil.GetLogger().Error("Failed to execute scheduled snapshot",
 					zap.String("module", logModule),
 					zap.Error(err))
 				return
 			}
 
-			eventbus.Notify(ctx, b.bus, event.SystemSnapshot{Info: "System scheduled snapshot completed"})
+			eventbus.Notify(ctx, s.bus, event.SystemSnapshot{Info: "System scheduled snapshot completed"})
 		}),
 		gocron.WithTags(snapshotScheduleTag),
 		// 单例防重叠：上一次快照还在跑时，本次触发直接跳过而非排队，避免大数据/慢 S3 下
