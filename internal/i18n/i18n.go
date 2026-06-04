@@ -49,10 +49,29 @@ func newBundle() *goi18n.Bundle {
 	return b
 }
 
+// maxAcceptLanguageSeparators caps the number of `-` plus `_` characters in any
+// single locale value before it reaches language.ParseAcceptLanguage. That
+// parser is quadratic on long lists of malformed subtags; the CVE-2022-32149
+// guard caps `-` at 1000 but ignores `_`, even though the parser aliases `_`
+// to `-` internally. A real browser sends fewer than 10 separators, so 32
+// leaves ample headroom while making the O(N^2) blow-up impossible.
+const maxAcceptLanguageSeparators = 32
+
+// sanitizeAcceptLanguage drops an absurdly separator-heavy value, so neither the
+// Accept-Language / X-Locale headers nor the `lang` query (all funneled through
+// ResolveLocale / NewLocalizer below) can drive the BCP 47 parser into its
+// O(N^2) gobble path.
+func sanitizeAcceptLanguage(v string) string {
+	if strings.Count(v, "-")+strings.Count(v, "_") > maxAcceptLanguageSeparators {
+		return ""
+	}
+	return v
+}
+
 func ResolveLocale(raw ...string) string {
 	parts := make([]string, 0, len(raw))
 	for _, v := range raw {
-		v = strings.TrimSpace(v)
+		v = sanitizeAcceptLanguage(strings.TrimSpace(v))
 		if v != "" {
 			parts = append(parts, v)
 		}
@@ -76,7 +95,7 @@ func ResolveLocale(raw ...string) string {
 }
 
 func NewLocalizer(locale, acceptLanguage string) *goi18n.Localizer {
-	return goi18n.NewLocalizer(bundle, locale, acceptLanguage)
+	return goi18n.NewLocalizer(bundle, locale, sanitizeAcceptLanguage(acceptLanguage))
 }
 
 func Localize(localizer *goi18n.Localizer, messageID string, defaultText string, templateData map[string]any) string {
