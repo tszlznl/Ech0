@@ -128,6 +128,8 @@ const DOC_ORDER: readonly string[] = [
   "guide/sso",
   "guide/comment",
   "guide/agent",
+  "guide/chat",
+  "guide/embedding",
   "guide/webhook",
   "guide/accesstoken",
   "guide/mcp",

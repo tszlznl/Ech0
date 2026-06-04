@@ -120,9 +120,9 @@ Webhook 是 Ech0 的事件推送能力。当系统内发生关键事件（如用
 - `comment.status.updated`
 - `comment.deleted`
 - `resource.uploaded`
-- `system.backup`
+- `system.snapshot`
 - `system.export`
-- `system.backup_schedule.updated`
+- `system.snapshot_schedule.updated`
 
 ---
 
