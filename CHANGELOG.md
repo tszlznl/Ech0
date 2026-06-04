@@ -7,6 +7,24 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/lin-snow/Ech0/releases) — earlier release notes are not retroactively imported here.
 
 
+## [5.0.2] - 2026-06-04
+
+A small patch release on top of 5.0.0: an unauthenticated denial-of-service fix in locale negotiation, and a vector-embedding dimension fix.
+
+### Security
+
+- **Fixed an unauthenticated DoS in locale parsing (GHSA-mqxv-9rm6-w8qc).** `language.ParseAcceptLanguage` runs in quadratic time on long lists of malformed subtags. The upstream CVE-2022-32149 guard caps `-` separators at 1000 but ignores `_` — which the parser aliases to `-` — so a ~1 MiB all-underscore `Accept-Language` (or `X-Locale`) value could burn seconds of CPU per request, **unauthenticated, on every route** through the global i18n middleware. Both real sinks (`ResolveLocale` and `NewLocalizer`) now sanitize their input, closing the `Accept-Language` header, the `X-Locale` header, the `?lang` query, and the authenticated user/settings locale writes in one place. Any single locale value with more than 32 `-`/`_` separators falls back to the default locale; normal short locales are unaffected.
+
+### Fixed
+
+- **Vector reindex/search no longer aborts with "Dimension mismatch" when the model's native output dimension differs from the configured `Dim`.** Embedding requests now send the configured dimension (the `dimensions` parameter), so the provider returns vectors that match the `vec0` index built from your `Dim` setting. Previously a model returning, e.g., 2048-d vectors against a 1024-d index failed every index/reindex upsert. Requires a model that supports custom output dimensions (e.g. OpenAI `text-embedding-3` family, Qwen `text-embedding-v4`); otherwise set `Dim` to the model's native dimension.
+
+### Docs
+
+- Added user guides for the AI features: **AI 问答 (Chat)** and **向量检索 (vector search / embedding)**, and rewrote the **AI 模型与近期摘要 (Agent)** guide to drop the removed Gemini protocol and inbox references.
+- Corrected the **Webhook** docs' event names to match the 5.0.0 `backup → snapshot` rename (`system.snapshot`, `system.snapshot_schedule.updated`) and the `event_name` example (`EchoCreated`).
+
+
 ## [5.0.0] - 2026-06-04
 
 A major **architecture-consolidation** release. Most of Ech0's cross-cutting subsystems — events, settings, tasks, key-value storage, data portability, outbound HTTP, and long-running jobs — were rewritten around one shared shape: a *thin manager + typed/self-describing registry*, with dependencies pointing inward to pure-data vocabulary. The result is the same product with a much smaller, more uniform internal surface. The version is bumped to 5.0 because of the breaking changes below: the **backup → snapshot** rename (on disk, in S3, in routes, events, and settings), the webhook `event_name` derivation, and the removal of the dead-letter retry queue. Self-hosters upgrading from 4.x should read the **Breaking Changes** section before deploying.

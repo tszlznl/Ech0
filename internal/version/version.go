@@ -17,7 +17,7 @@ import (
 
 const (
 	// Version is the current semantic version. Bump on release.
-	Version = "5.0.0"
+	Version = "5.0.2"
 
 	// License is the SPDX identifier of the project license.
 	License = "AGPL-3.0-or-later"
