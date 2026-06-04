@@ -66,6 +66,11 @@ func Embed(
 		resp, err := client.CreateEmbeddings(ctx, openai.EmbeddingRequest{
 			Model: openai.EmbeddingModel(setting.Model),
 			Input: batch,
+			// 显式请求输出维度，与 vec0 建表维度（setting.Dim）对齐。不传时提供商按模型
+			// 原生维度返回（如 Qwen text-embedding-v4 原生 2048），会与按 setting.Dim
+			// （如 1024）建的 vec_echo 表冲突，落库报 "Dimension mismatch"。字段带
+			// omitempty：Dim 为 0 时自动省略（dimensions 仅 text-embedding-3+ / 兼容模型支持）。
+			Dimensions: setting.Dim,
 		})
 		if err != nil {
 			return nil, err
