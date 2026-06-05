@@ -179,7 +179,7 @@
             <span v-if="item.hot" class="comment-hot-badge">Hot</span>
             <div class="mb-2 flex items-center gap-2">
               <BaseAvatar
-                :seed="getCommentAvatarSeed(item, index)"
+                :seed="getCommentAvatarSeed(item)"
                 :size="32"
                 alt="avatar"
                 class="h-8 w-8 rounded-full object-cover"
@@ -313,8 +313,8 @@ const previewAvatarSeed = computed(() => {
   return `${form.nickname || 'guest'}-${form.email || 'preview'}`
 })
 
-const getCommentAvatarSeed = (item: App.Api.Comment.CommentItem, index: number) => {
-  return `${item.id}-${item.nickname}-${item.source}-${index}`
+const getCommentAvatarSeed = (item: App.Api.Comment.CommentItem) => {
+  return `${item.id}-${item.nickname}-${item.source}`
 }
 
 const getStickyCardStyle = (index: number) => {
