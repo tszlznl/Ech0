@@ -1,6 +1,6 @@
 module github.com/lin-snow/ech0
 
-go 1.26.2
+go 1.26.4
 
 require (
 	github.com/anthropics/anthropic-sdk-go v1.46.0
