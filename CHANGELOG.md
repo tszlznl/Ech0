@@ -7,6 +7,32 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/lin-snow/Ech0/releases) — earlier release notes are not retroactively imported here.
 
 
+## [5.1.0] - 2026-06-06
+
+### Added
+
+- **Comment replies (two-level threading).** Comments now carry a `parent_id` field, enabling replies to existing comments in a two-level nested structure. The backend validates that the reply target exists and is approved; the frontend `TheComment` component has been rebuilt with a nested reply UI featuring "replying to @nickname" attribution, an inline reply composer, and a cancel action. New i18n keys (`reply` / `replyingTo` / `cancelReply` / `inReplyTo`) across zh-CN / en-US / ja-JP / de-DE.
+- **Reply email notifications.** When a reply is created, the author of the parent comment is notified asynchronously (respecting the existing comment email-notification toggle). Self-replies, invalid recipient emails, and replies where the recipient is the site owner (already covered by the "new comment" notification) are silently skipped. A new `reply` mail template type is added (blue "Reply" badge).
+- **Chat question navigator (right-side ToC).** A pill-shaped navigation rail on the right edge of the chat panel. Hover to reveal the full question text; click to scroll-jump to that question with active highlighting. Shows the most recent 7 questions; auto-highlights the latest one during live streaming.
+- **Chat retry on failure / empty response.** When a streaming turn is interrupted or the model produces no text, the last turn shows a "No response this time" hint with a retry button for in-place resend — no need to retype the question.
+- **`X-Powered-By: Ech0/<version>` response header.** A new global `PoweredBy` middleware stamps every HTTP response with the project identifier.
+- **Build-output fingerprint banner.** Vite entry JS files are prefixed with a `/*! Powered by Ech0 — ... | AGPL-3.0-or-later */` copyright banner at build time.
+- **`<meta name="generator" content="Ech0">`** added to `index.html` to identify the site generator.
+
+### Changed
+
+- **Copilot no longer persists empty turns.** When the model produces no text and there are no retrieval sources, the turn is skipped during persistence, preventing permanent blank bubbles in conversation history. Successfully retried turns are persisted normally.
+
+### Fixed
+
+- **Comment avatar seed no longer includes the array index**, keeping it consistent with the comment detail view (`e2a27ebb`).
+- **Go version bumped to 1.26.4** (`ae5c5a1b`).
+
+### Internal
+
+- **Dependency bumps (`web/`)**: `@cap.js/widget` 0.1.53 → 0.1.54, `@dicebear/core` 10.0.1 → 10.0.2, `@dicebear/styles` 10.0.0 → 10.1.0, `eslint-plugin-vue` 10.9.1 → 10.9.2, `vite` 8.0.15 → 8.0.16, `vitest` 4.1.7 → 4.1.8, `pnpm` 11.5.0 → 11.5.2.
+
+
 ## [5.0.2] - 2026-06-04
 
 A small patch release on top of 5.0.0: an unauthenticated denial-of-service fix in locale negotiation, and a vector-embedding dimension fix.
@@ -320,7 +346,14 @@ This is primarily a security release: six advisories disclosed since v4.7.2 are 
 
   Practical risk in this repo was negligible (the vulnerable code only runs at PWA build time on developer-controlled input), but the alerts are now resolved at the supply-chain level.
 
-[Unreleased]: https://github.com/lin-snow/Ech0/compare/v4.8.0...HEAD
+[Unreleased]: https://github.com/lin-snow/Ech0/compare/v5.1.0...HEAD
+[5.1.0]: https://github.com/lin-snow/Ech0/compare/v5.0.2...v5.1.0
+[5.0.2]: https://github.com/lin-snow/Ech0/compare/v5.0.0...v5.0.2
+[5.0.0]: https://github.com/lin-snow/Ech0/compare/v4.9.2...v5.0.0
+[4.9.2]: https://github.com/lin-snow/Ech0/compare/v4.9.0...v4.9.2
+[4.9.0]: https://github.com/lin-snow/Ech0/compare/v4.8.2...v4.9.0
+[4.8.2]: https://github.com/lin-snow/Ech0/compare/v4.8.1...v4.8.2
+[4.8.1]: https://github.com/lin-snow/Ech0/compare/v4.8.0...v4.8.1
 [4.8.0]: https://github.com/lin-snow/Ech0/compare/v4.7.5...v4.8.0
 [4.7.5]: https://github.com/lin-snow/Ech0/compare/v4.7.4...v4.7.5
 [4.7.4]: https://github.com/lin-snow/Ech0/compare/v4.7.3...v4.7.4
