@@ -11,6 +11,7 @@ declare namespace App {
       type CommentItem = {
         id: string
         echo_id: string
+        parent_id?: string | null
         user_id?: string
         nickname: string
         email: string
@@ -33,6 +34,7 @@ declare namespace App {
 
       type CreateCommentDto = {
         echo_id: string
+        parent_id?: string
         nickname: string
         email: string
         website: string

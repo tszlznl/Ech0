@@ -13,6 +13,8 @@ import (
 func setupMiddleware(r *gin.Engine) {
 	// Recovery middleware to recover from any panics and write a 500 if there was one.
 	r.Use(gin.Recovery())
+	// Powered-by header
+	r.Use(middleware.PoweredBy())
 	// Cors middleware
 	r.Use(middleware.Cors())
 	// Locale and request localizer middleware

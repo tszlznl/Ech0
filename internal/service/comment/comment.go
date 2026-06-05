@@ -143,6 +143,12 @@ func (s *CommentService) CreateComment(
 			commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "评论内容不能超过200字")
 	}
 
+	parentID, err := s.resolveParentID(ctx, comment.EchoID, dto.ParentID)
+	if err != nil {
+		return model.CreateCommentResult{}, err
+	}
+	comment.ParentID = parentID
+
 	if validUser && (user.IsAdmin || user.IsOwner) {
 		comment.Source = model.SourceSystem
 		comment.Nickname = user.Username
@@ -204,10 +210,29 @@ func (s *CommentService) CreateComment(
 	}
 	s.emitCommentCreated(ctx, comment)
 	s.notifyOwnerAsync(ctx, "created", comment)
+	s.notifyReplyTargetAsync(ctx, comment)
 	return model.CreateCommentResult{
 		ID:     comment.ID,
 		Status: comment.Status,
 	}, nil
+}
+
+// resolveParentID 校验回复目标并返回其真实父评论 ID。
+// 不做压平——前端按祖先链把回复归到「楼」下渲染，并据此展示「回复 @某人」。
+// rawParentID 为空表示顶层评论，返回 nil。
+func (s *CommentService) resolveParentID(ctx context.Context, echoID, rawParentID string) (*string, error) {
+	parentID := strings.TrimSpace(rawParentID)
+	if parentID == "" {
+		return nil, nil
+	}
+	parent, err := s.repo.GetCommentByID(ctx, parentID)
+	if err != nil || parent.ID == "" || parent.EchoID != echoID {
+		return nil, commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "回复的评论不存在")
+	}
+	if parent.Status != model.StatusApproved {
+		return nil, commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, "该评论暂不可回复")
+	}
+	return &parent.ID, nil
 }
 
 func (s *CommentService) CreateIntegrationComment(
@@ -601,6 +626,48 @@ func (s *CommentService) notifyOwnerAsync(ctx context.Context, kind string, comm
 		}
 	}(setting.EmailNotify, MailMessage{
 		To:       recipient,
+		Subject:  content.Subject,
+		TextBody: content.TextBody,
+		HTMLBody: content.HTMLBody,
+	})
+}
+
+// notifyReplyTargetAsync 在「回复」创建后提醒被回复评论的作者，复用评论邮件通知总开关。
+// 去重：自己回复自己、被回复者邮箱无效、被回复者即 owner（已由「有新评论」覆盖）时跳过。
+func (s *CommentService) notifyReplyTargetAsync(ctx context.Context, comment model.Comment) {
+	if comment.ParentID == nil || strings.TrimSpace(*comment.ParentID) == "" {
+		return
+	}
+	setting, err := s.getSystemSettingRaw(ctx)
+	if err != nil || !setting.EmailNotify.Enabled {
+		return
+	}
+	parent, err := s.repo.GetCommentByID(ctx, strings.TrimSpace(*comment.ParentID))
+	if err != nil || parent.ID == "" {
+		return
+	}
+	targetEmail, ok := parseValidEmail(parent.Email)
+	if !ok {
+		return
+	}
+	if strings.EqualFold(targetEmail, strings.TrimSpace(comment.Email)) {
+		return
+	}
+	if ownerEmail, ownerErr := s.resolveOwnerEmail(); ownerErr == nil &&
+		strings.EqualFold(targetEmail, strings.TrimSpace(ownerEmail)) {
+		return
+	}
+	serverURL := s.resolveServerURL(ctx)
+	content := buildNotifyContent("reply", comment, serverURL)
+	go func(cfg model.EmailNotifySetting, msg MailMessage) {
+		notifyCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := s.sendOwnerMail(notifyCtx, cfg, msg); err != nil {
+			zap.L().Warn("comment reply notify mail failed",
+				zap.Error(err), zap.String("comment_id", comment.ID))
+		}
+	}(setting.EmailNotify, MailMessage{
+		To:       targetEmail,
 		Subject:  content.Subject,
 		TextBody: content.TextBody,
 		HTMLBody: content.HTMLBody,

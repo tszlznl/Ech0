@@ -10,6 +10,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 import UnoCSS from 'unocss/vite'
 import viteCompression from 'vite-plugin-compression'
 
+import { fingerprintPlugin } from './src/plugins/fingerprint-plugin'
 import { welcomePlugin } from './src/plugins/welcome-plugin'
 
 // https://vite.dev/config/
@@ -29,6 +30,7 @@ export default defineConfig(({ command }) => ({
       threshold: 10240,
       filter: (file) => /\.(js|mjs|css|html|svg)$/i.test(file),
     }),
+    fingerprintPlugin(),
     welcomePlugin(), // 欢迎横幅插件
   ],
   resolve: {

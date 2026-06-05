@@ -31,6 +31,7 @@ const (
 type Comment struct {
 	ID        string     `gorm:"type:char(36);primaryKey" json:"id"`
 	EchoID    string     `gorm:"type:char(36);not null;index" json:"echo_id"`
+	ParentID  *string    `gorm:"type:char(36);index" json:"parent_id,omitempty"` // NULL=顶层楼，非空=该楼的回复（两级盖楼）
 	UserID    *string    `gorm:"type:char(36);index" json:"user_id,omitempty"`
 	Nickname  string     `gorm:"size:100;not null;index" json:"nickname"`
 	Email     string     `gorm:"size:255;not null;index" json:"email"`
@@ -51,6 +52,7 @@ type Comment struct {
 type PublicComment struct {
 	ID        string     `json:"id"`
 	EchoID    string     `json:"echo_id"`
+	ParentID  *string    `json:"parent_id,omitempty"`
 	Nickname  string     `json:"nickname"`
 	Website   string     `json:"website,omitempty"`
 	Content   string     `json:"content"`
@@ -65,6 +67,7 @@ func ToPublicComment(c Comment) PublicComment {
 	return PublicComment{
 		ID:        c.ID,
 		EchoID:    c.EchoID,
+		ParentID:  c.ParentID,
 		Nickname:  c.Nickname,
 		Website:   c.Website,
 		Content:   c.Content,
@@ -93,6 +96,7 @@ func (c *Comment) BeforeCreate(_ *gorm.DB) error {
 
 type CreateCommentDto struct {
 	EchoID        string `json:"echo_id" binding:"required"`
+	ParentID      string `json:"parent_id"` // 可选：回复的目标评论 ID（空=顶层评论）
 	Nickname      string `json:"nickname"`
 	Email         string `json:"email"`
 	Website       string `json:"website"`

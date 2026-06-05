@@ -154,8 +154,13 @@ func (s *CopilotService) appendTurn(ctx context.Context, userID string, turn ...
 }
 
 // persistTurn 在一轮问答正常收尾时把 user/assistant 两条消息追加进持久化会话。
-// assistant 内容为空（如模型未产出文本）也照常落盘，与前端展示保持一致。
+// 「答案为空且无来源」视为失败/空轮次（模型一个 token 都没产出）：直接跳过落盘，
+// 既不在持久化会话里留下永久空白气泡，也让前端可就地重发后历史仍保持干净
+// （重发会以同一问题重新跑一轮并在成功时落盘）。
 func (s *CopilotService) persistTurn(ctx context.Context, userID, question, answer string, sources []embeddingModel.SearchResult) {
+	if strings.TrimSpace(answer) == "" && len(sources) == 0 {
+		return
+	}
 	s.appendTurn(ctx, userID,
 		ChatMessage{Role: "user", Content: question},
 		ChatMessage{Role: "assistant", Content: answer, Sources: sources},

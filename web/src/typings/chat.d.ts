@@ -48,6 +48,9 @@ declare namespace App {
         searches?: string[]
         // 区间聚合总结的覆盖度（summarize_echos 命中时填充，供覆盖度状态条展示）
         coverage?: ChatCoverage
+        // 仅前端瞬态：本轮流式因传输/服务端 error 中断（区别于「正常 done 但空回复」），
+        // 供失败态渲染「重发」入口。不参与持久化（后端只存 role/content/sources）。
+        failed?: boolean
       }
 
       // SSE 事件载荷

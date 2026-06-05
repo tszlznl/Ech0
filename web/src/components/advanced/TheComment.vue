@@ -28,19 +28,14 @@
 
         <form
           v-if="commentFormExpanded"
-          class="comment-form-panel rounded-lg border border-[var(--color-border-subtle)] p-3 mb-4"
+          class="comment-form-panel mb-3"
           @submit.prevent="submitComment"
         >
-          <div class="mb-2 flex items-center justify-between">
+          <div class="comment-form-head">
             <div class="flex items-center gap-1.5">
-              <h3 class="font-semibold text-[var(--color-text-primary)]">
-                {{ t('commentSection.publishComment') }}
-              </h3>
-              <span
-                class="inline-flex items-center gap-1 rounded-full px-2 py-[2px] text-[11px] text-[var(--color-text-muted)]"
-                v-tooltip="t('commentSection.markdownSupported')"
-              >
-                <MarkdownIcon class="h-3.5 w-3.5" />
+              <h3 class="comment-form-title">{{ t('commentSection.publishComment') }}</h3>
+              <span class="comment-md-hint" v-tooltip="t('commentSection.markdownSupported')">
+                <MarkdownIcon class="h-3 w-3" />
               </span>
             </div>
             <span class="comment-ready-indicator">
@@ -52,64 +47,62 @@
             </span>
           </div>
 
-          <article
-            class="comment-sticky comment-preview relative mb-2 rounded-[4px] border p-3"
-            :style="getStickyCardStyle(0)"
-          >
-            <div class="mb-2 flex items-center gap-2">
-              <BaseAvatar
-                :seed="previewAvatarSeed"
-                :size="32"
-                alt="avatar"
-                class="h-8 w-8 rounded-full object-cover"
-              />
-              <div class="min-w-0">
-                <div class="truncate text-sm font-medium text-[var(--color-text-primary)]">
-                  {{ previewNickname }}
-                </div>
-                <div class="text-xs text-[var(--color-text-muted)]">
-                  {{ t('commentSection.livePreview') }}
-                </div>
-              </div>
-            </div>
-            <TheMdPreview
-              class="comment-md-content"
-              :content="form.content || t('commentSection.previewPlaceholder')"
-            />
-          </article>
+          <div v-if="replyTarget" class="comment-reply-banner">
+            <span class="truncate">
+              {{ t('commentSection.replyingTo', { nickname: replyTarget.nickname }) }}
+            </span>
+            <button
+              type="button"
+              class="comment-reply-cancel"
+              :aria-label="t('commentSection.cancelReply')"
+              @click="cancelReply"
+            >
+              ✕
+            </button>
+          </div>
 
-          <div v-if="!isPrivilegedUser" class="space-y-2">
+          <div v-if="!isPrivilegedUser" class="comment-id-grid">
             <input
               v-model.trim="form.nickname"
               type="text"
-              class="comment-input-field w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+              class="comment-input-field comment-input-sm"
               :placeholder="t('commentSection.nicknameRequired')"
             />
             <input
               v-model.trim="form.email"
               type="email"
-              class="comment-input-field w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+              class="comment-input-field comment-input-sm"
               :placeholder="t('commentSection.emailRequired')"
             />
             <input
               v-model.trim="form.website"
               type="url"
-              class="comment-input-field w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+              class="comment-input-field comment-input-sm comment-id-grid__full"
               :placeholder="t('commentSection.websiteOptional')"
             />
           </div>
 
           <textarea
             v-model.trim="form.content"
-            class="comment-input-field comment-textarea mt-2 min-h-24 w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent px-3 py-2 text-sm"
+            class="comment-input-field comment-textarea"
             :placeholder="t('commentSection.commentPlaceholder')"
             maxlength="200"
           />
-          <div
-            class="mt-1 text-right text-xs"
-            :class="contentTooLong ? 'text-red-500' : 'text-[var(--color-text-muted)]'"
-          >
-            {{ contentLength }}/200
+
+          <div v-if="form.content" class="comment-preview-strip">
+            <div class="comment-preview-strip__head">
+              <BaseAvatar
+                :seed="previewAvatarSeed"
+                :size="18"
+                alt="avatar"
+                class="h-[18px] w-[18px] shrink-0 rounded-full object-cover"
+              />
+              <span class="comment-preview-strip__name">{{ previewNickname }}</span>
+              <span class="comment-preview-strip__label">{{
+                t('commentSection.livePreview')
+              }}</span>
+            </div>
+            <TheMdPreview class="comment-md-content" :content="form.content" />
           </div>
 
           <input
@@ -120,41 +113,35 @@
             class="hidden"
           />
 
-          <div class="comment-submit-row mt-3">
-            <div v-if="needCaptcha" class="comment-captcha-wrap">
-              <div ref="captchaMountRef" class="comment-captcha-mount"></div>
-              <p v-if="captchaError" class="comment-captcha-error text-xs text-red-500">
-                {{ captchaError }}
-              </p>
-            </div>
+          <div v-if="needCaptcha" class="comment-captcha-wrap">
+            <div ref="captchaMountRef" class="comment-captcha-mount"></div>
+            <p v-if="captchaError" class="comment-captcha-error">{{ captchaError }}</p>
+          </div>
+
+          <div class="comment-form-foot">
+            <span class="comment-char-count" :class="{ 'is-over': contentTooLong }">
+              {{ contentLength }}/200
+            </span>
             <button
               v-if="showSubmitButton"
               type="submit"
-              class="comment-submit-btn rounded-md bg-[var(--color-text-primary)] px-4 py-1 text-sm text-[var(--color-bg-canvas)]"
+              class="comment-submit-btn"
               :disabled="submitting || !canSubmit"
             >
               {{ submitting ? t('commentSection.submitting') : t('commentSection.submitComment') }}
             </button>
           </div>
 
-          <div
-            v-if="submitNotice"
-            class="mt-3 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-canvas)] p-3 text-sm"
-          >
-            <div class="font-medium text-[var(--color-text-primary)]">
+          <div v-if="submitNotice" class="comment-notice">
+            <div class="comment-notice__title">
               {{
                 submitNotice.status === 'approved'
                   ? t('commentSection.commentPublished')
                   : t('commentSection.commentSubmittedPending')
               }}
             </div>
-            <div class="mt-1 text-xs text-[var(--color-text-muted)]">
-              {{ submitNoticeText }}
-            </div>
-            <div
-              v-if="submitNotice.contentPreview"
-              class="mt-2 rounded border border-[var(--color-border-subtle)] px-2 py-1 text-xs text-[var(--color-text-muted)]"
-            >
+            <div class="comment-notice__time">{{ submitNoticeText }}</div>
+            <div v-if="submitNotice.contentPreview" class="comment-notice__preview">
               {{ submitNotice.contentPreview }}
             </div>
           </div>
@@ -169,46 +156,84 @@
         >
           {{ t('commentSection.empty') }}
         </div>
-        <div v-else class="space-y-4 pt-1">
-          <article
-            v-for="(item, index) in comments"
-            :key="item.id"
-            class="comment-sticky relative rounded-[4px] border p-3"
-            :style="getStickyCardStyle(index)"
-          >
+        <div v-else class="comment-thread">
+          <article v-for="item in topLevelComments" :key="item.id" class="comment-card">
             <span v-if="item.hot" class="comment-hot-badge">Hot</span>
-            <div class="mb-2 flex items-center gap-2">
+            <div class="comment-row">
               <BaseAvatar
                 :seed="getCommentAvatarSeed(item)"
-                :size="32"
+                :size="28"
                 alt="avatar"
-                class="h-8 w-8 rounded-full object-cover"
+                class="h-7 w-7 shrink-0 rounded-full object-cover"
               />
-              <div class="min-w-0">
-                <div class="flex items-center gap-1 min-w-0">
+              <div class="min-w-0 flex-1">
+                <div class="comment-meta">
                   <a
                     v-if="item.website"
                     :href="item.website"
                     target="_blank"
                     rel="noreferrer"
-                    class="comment-author-link truncate text-sm font-medium text-[var(--color-text-primary)]"
+                    class="comment-author-link"
                   >
                     {{ item.nickname }}
                   </a>
-                  <div v-else class="truncate text-sm font-medium text-[var(--color-text-primary)]">
-                    {{ item.nickname }}
-                  </div>
+                  <span v-else class="comment-author">{{ item.nickname }}</span>
                   <Verified
                     v-if="item.source === 'system'"
-                    class="verified-badge-icon h-3.5! w-3.5! shrink-0 text-sky-500"
+                    class="verified-badge-icon h-3! w-3! shrink-0 text-sky-500"
                   />
+                  <span class="comment-dot">·</span>
+                  <span class="comment-time">{{ formatDate(item.created_at) }}</span>
                 </div>
-                <div class="text-xs text-[var(--color-text-muted)]">
-                  {{ formatDate(item.created_at) }}
+                <TheMdPreview class="comment-md-content" :content="item.content" />
+                <button type="button" class="comment-reply-btn" @click="startReply(item)">
+                  {{ t('commentSection.reply') }}
+                </button>
+              </div>
+            </div>
+
+            <div v-if="repliesOf(item.id).length" class="comment-replies">
+              <div
+                v-for="reply in repliesOf(item.id)"
+                :key="reply.id"
+                class="comment-row comment-reply-row"
+              >
+                <BaseAvatar
+                  :seed="getCommentAvatarSeed(reply)"
+                  :size="22"
+                  alt="avatar"
+                  class="h-[22px] w-[22px] shrink-0 rounded-full object-cover"
+                />
+                <div class="min-w-0 flex-1">
+                  <div class="comment-meta">
+                    <a
+                      v-if="reply.website"
+                      :href="reply.website"
+                      target="_blank"
+                      rel="noreferrer"
+                      class="comment-author-link"
+                    >
+                      {{ reply.nickname }}
+                    </a>
+                    <span v-else class="comment-author">{{ reply.nickname }}</span>
+                    <Verified
+                      v-if="reply.source === 'system'"
+                      class="verified-badge-icon h-3! w-3! shrink-0 text-sky-500"
+                    />
+                    <span class="comment-dot">·</span>
+                    <span class="comment-time">{{ formatDate(reply.created_at) }}</span>
+                    <span v-if="reply.hot" class="comment-hot-inline">Hot</span>
+                  </div>
+                  <span v-if="replyToNicknameOf(reply)" class="comment-reply-to">
+                    {{ t('commentSection.inReplyTo', { nickname: replyToNicknameOf(reply) }) }}
+                  </span>
+                  <TheMdPreview class="comment-md-content" :content="reply.content" />
+                  <button type="button" class="comment-reply-btn" @click="startReply(reply)">
+                    {{ t('commentSection.reply') }}
+                  </button>
                 </div>
               </div>
             </div>
-            <TheMdPreview class="comment-md-content" :content="item.content" />
           </article>
         </div>
       </div>
@@ -266,6 +291,7 @@ let capWidgetLoadPromise: Promise<unknown> | null = null
 
 const form = reactive<App.Api.Comment.CreateCommentDto>({
   echo_id: '',
+  parent_id: '',
   nickname: '',
   email: '',
   website: '',
@@ -274,6 +300,62 @@ const form = reactive<App.Api.Comment.CreateCommentDto>({
   form_token: '',
   captcha_token: '',
 })
+
+// 当前正在回复的目标评论（null=发表顶层评论）
+const replyTarget = ref<App.Api.Comment.CommentItem | null>(null)
+
+// 盖楼渲染：保留每条回复的真实父级，按祖先链归到「楼」（顶层评论）之下。
+const commentMap = computed(() => {
+  const map = new Map<string, App.Api.Comment.CommentItem>()
+  for (const c of comments.value) map.set(c.id, c)
+  return map
+})
+
+// 沿 parent_id 上溯到顶层评论（父级缺失则就地视作楼顶，避免孤儿丢失）。
+const rootIdOf = (item: App.Api.Comment.CommentItem) => {
+  const map = commentMap.value
+  let cur = item
+  const seen = new Set<string>()
+  while (cur.parent_id && map.has(cur.parent_id) && !seen.has(cur.id)) {
+    seen.add(cur.id)
+    cur = map.get(cur.parent_id)!
+  }
+  return cur.id
+}
+
+// 顶层评论：没有父级，或父级已不存在（被删/未过审）的孤儿也提升为楼顶。
+const topLevelComments = computed(() =>
+  comments.value.filter((c) => !c.parent_id || !commentMap.value.has(c.parent_id)),
+)
+
+// 某楼下的全部回复（任意层级压成一层），按时间顺序。
+const repliesOf = (rootId: string) =>
+  comments.value.filter(
+    (c) => c.parent_id && commentMap.value.has(c.parent_id) && rootIdOf(c) === rootId,
+  )
+
+// 回复指向的对象昵称：仅当回复的是「另一条回复」时返回，避免对楼顶的冗余指向。
+const replyToNicknameOf = (reply: App.Api.Comment.CommentItem) => {
+  if (!reply.parent_id) return ''
+  const parent = commentMap.value.get(reply.parent_id)
+  if (!parent || !parent.parent_id || !commentMap.value.has(parent.parent_id)) return ''
+  return parent.nickname
+}
+
+const startReply = (item: App.Api.Comment.CommentItem) => {
+  replyTarget.value = item
+  // 存真实回复目标；前端再按祖先链归并到「楼」展示
+  form.parent_id = item.id
+  commentFormExpanded.value = true
+  nextTick(() => {
+    document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
+}
+
+const cancelReply = () => {
+  replyTarget.value = null
+  form.parent_id = ''
+}
 
 const isPrivilegedUser = computed(() => {
   const user = userStore.user
@@ -315,15 +397,6 @@ const previewAvatarSeed = computed(() => {
 
 const getCommentAvatarSeed = (item: App.Api.Comment.CommentItem) => {
   return `${item.id}-${item.nickname}-${item.source}`
-}
-
-const getStickyCardStyle = (index: number) => {
-  const rotateOptions = ['-0.25deg', '0deg', '0.2deg', '-0.15deg']
-  const shiftOptions = ['-1px', '0px', '1px', '0px']
-  return {
-    '--sticky-rotate': rotateOptions[index % rotateOptions.length],
-    '--sticky-shift': shiftOptions[index % shiftOptions.length],
-  } as Record<string, string>
 }
 
 const submitNoticeText = computed(() => {
@@ -423,10 +496,46 @@ const ensureCaptchaToken = async () => {
   }
 }
 
+// 游客资料默认记住到本地，下次自动回填，免重复输入（特权用户用账号，无需记忆）。
+const GUEST_PROFILE_KEY = 'ech0:comment-guest-profile'
+
+const loadGuestProfile = () => {
+  if (isPrivilegedUser.value) return
+  try {
+    const raw = localStorage.getItem(GUEST_PROFILE_KEY)
+    if (!raw) return
+    const saved = JSON.parse(raw) as Partial<
+      Pick<App.Api.Comment.CreateCommentDto, 'nickname' | 'email' | 'website'>
+    >
+    if (saved.nickname) form.nickname = saved.nickname
+    if (saved.email) form.email = saved.email
+    if (saved.website) form.website = saved.website
+  } catch {
+    // 忽略损坏或不可用的本地存储
+  }
+}
+
+const saveGuestProfile = () => {
+  if (isPrivilegedUser.value) return
+  try {
+    localStorage.setItem(
+      GUEST_PROFILE_KEY,
+      JSON.stringify({
+        nickname: form.nickname,
+        email: form.email,
+        website: form.website,
+      }),
+    )
+  } catch {
+    // 忽略不可用的本地存储
+  }
+}
+
 const loadData = async () => {
   const echoId = String(route.params.echoId || '')
   if (!echoId) return
   form.echo_id = echoId
+  loadGuestProfile()
   loading.value = true
   try {
     const [metaRes, commentsRes] = await Promise.all([
@@ -449,6 +558,8 @@ const resetForm = () => {
   form.content = ''
   form.hp_field = ''
   form.captcha_token = ''
+  form.parent_id = ''
+  replyTarget.value = null
   captchaError.value = ''
   void mountCaptchaWidget()
 }
@@ -466,6 +577,7 @@ const submitComment = async () => {
     const res = await fetchCreateComment(form)
     if (res.code === 1) {
       const status = res.data?.status || 'pending'
+      saveGuestProfile()
       submitNotice.value = {
         status,
         contentPreview: submittedContent.slice(0, 80),
@@ -515,26 +627,20 @@ onBeforeUnmount(() => {
 <style scoped>
 :global(:root) {
   --comment-grid-bg-color: var(--comment-grid-bg);
-  --comment-grid-line-color: rgb(120 120 120 / 8%);
-  --comment-sticky-bg: #f8f6ee;
-  --comment-sticky-border: var(--comment-sticky-border-color);
-  --comment-sticky-shadow-1: rgb(20 20 20 / 5%);
-  --comment-sticky-shadow-2: rgb(20 20 20 / 6%);
+  --comment-grid-line-color: rgb(120 120 120 / 7%);
+  --comment-card-bg: #faf8f2;
+  --comment-card-border: var(--comment-sticky-border-color);
 }
 
 :global(:root.dark) {
   --comment-grid-bg-color: var(--comment-grid-bg);
-  --comment-grid-line-color: rgb(240 240 240 / 5.5%);
-  --comment-sticky-bg: #3a3731;
-  --comment-sticky-border: var(--comment-sticky-border-color);
-  --comment-sticky-shadow-1: rgb(0 0 0 / 36%);
-  --comment-sticky-shadow-2: rgb(0 0 0 / 32%);
+  --comment-grid-line-color: rgb(240 240 240 / 5%);
+  --comment-card-bg: #33312c;
+  --comment-card-border: var(--comment-sticky-border-color);
 }
 
 .comment-list-board {
   position: relative;
-  padding: 0.75rem 0;
-  border-radius: 10px;
 }
 
 :global(html.echo-detail-grid-bg),
@@ -559,42 +665,67 @@ onBeforeUnmount(() => {
   min-height: 100vh;
 }
 
-.comment-sticky {
-  position: relative;
-  border-color: var(--comment-sticky-border);
-  background: var(--comment-sticky-bg);
-  box-shadow:
-    0 1px 0 var(--comment-sticky-shadow-1),
-    0 8px 14px var(--comment-sticky-shadow-2);
-  transform: translateX(var(--sticky-shift, 0)) rotate(var(--sticky-rotate, 0deg));
-  transform-origin: 42% 8%;
-  border-radius: 4px;
+/* ---------- comment list ---------- */
+.comment-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
 }
 
-.comment-sticky::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: -7px;
-  transform: translateX(-50%) rotate(-1.5deg);
-  width: 42px;
-  height: 12px;
-  border-radius: 2px;
-  background: var(--comment-sticky-before-bg);
-  box-shadow:
-    0 1px 0 rgb(255 255 255 / 30%) inset,
-    0 1px 2px rgb(0 0 0 / 8%);
-  opacity: 0.95;
+.comment-card {
+  position: relative;
+  border: 1px solid var(--comment-card-border);
+  background: var(--comment-card-bg);
+  border-radius: 7px;
+  padding: 0.6rem 0.7rem;
+}
+
+.comment-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.comment-reply-row {
+  align-items: flex-start;
+}
+
+.comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.comment-author,
+.comment-author-link {
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
 }
 
 .comment-author-link {
-  display: inline-block;
-  max-width: 100%;
-  transition: color 0.2s ease;
+  transition: color 0.18s ease;
 }
 
 .comment-author-link:hover {
   color: #0ea5e9;
+}
+
+.comment-dot {
+  color: var(--color-text-muted);
+}
+
+.comment-time {
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  font-size: 0.72rem;
 }
 
 .verified-badge-icon {
@@ -603,64 +734,92 @@ onBeforeUnmount(() => {
 
 .comment-hot-badge {
   position: absolute;
-  top: 0.4rem;
-  right: 0.45rem;
+  top: 0.45rem;
+  right: 0.5rem;
   z-index: 1;
-  padding: 0;
-  font-size: 0.67rem;
-  line-height: 1.2;
+  font-size: 0.62rem;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
   color: #ef4444;
 }
 
-.comment-ready-indicator {
-  display: inline-flex;
-  align-items: center;
+.comment-hot-inline {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #ef4444;
 }
 
-.comment-ready-dot {
-  width: 0.55rem;
-  height: 0.55rem;
-  border-radius: 9999px;
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 72%);
+.comment-reply-to {
+  display: inline-block;
+  margin-top: 0.25rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 4px;
+  background: var(--color-bg-muted);
+  font-size: 0.68rem;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
 }
 
-.comment-ready-dot.is-ready {
-  background: #10b981;
+/* ---------- replies thread ---------- */
+.comment-replies {
+  margin-top: 0.55rem;
+  margin-left: 0.35rem;
+  padding-left: 0.7rem;
+  border-left: 1px solid var(--comment-card-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
 }
 
-.comment-ready-dot.is-not-ready {
-  background: #ef4444;
+.comment-reply-btn {
+  margin-top: 0.2rem;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease;
 }
 
-.comment-form-panel {
-  background: var(--comment-form-panel-bg);
-  box-shadow:
-    0 1px 0 rgb(20 20 20 / 4%),
-    0 10px 18px rgb(20 20 20 / 8%);
-  border-color: var(--comment-form-panel-border);
+.comment-reply-btn:hover {
+  color: #0ea5e9;
 }
 
+/* ---------- content ---------- */
+.comment-md-content {
+  margin-top: 0.2rem;
+  color: var(--color-text-primary);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.comment-md-content :deep(p) {
+  margin: 0.1rem 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- toggle / count ---------- */
 .comment-pill-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.25rem 0.7rem 0.25rem 0.4rem;
+  gap: 0.35rem;
+  padding: 0.2rem 0.65rem 0.2rem 0.4rem;
   border-radius: 9999px;
   border: 1px solid var(--color-border-subtle);
   color: var(--color-text-secondary);
   background: transparent;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
   line-height: 1.2;
   cursor: pointer;
-  outline: 0 solid transparent;
   transition:
     color 0.15s ease,
     border-color 0.15s ease,
-    background-color 0.15s ease,
-    box-shadow 0.15s ease;
+    background-color 0.15s ease;
 }
 
 .comment-pill-btn:hover {
@@ -670,88 +829,134 @@ onBeforeUnmount(() => {
 
 .comment-pill-btn:focus,
 .comment-pill-btn:focus-visible {
-  outline: 0 solid transparent;
+  outline: none;
   border-color: var(--color-border-subtle);
   box-shadow: 0 0 0 3px var(--color-bg-muted);
 }
 
+/* 统一焦点：去掉浏览器默认的黑色 outline，仅键盘聚焦时显示细灰描边 */
+.comment-reply-btn:focus,
+.comment-reply-cancel:focus,
+.comment-submit-btn:focus,
+.comment-author-link:focus {
+  outline: none;
+}
+
+.comment-reply-btn:focus-visible,
+.comment-reply-cancel:focus-visible,
+.comment-submit-btn:focus-visible,
+.comment-author-link:focus-visible {
+  outline: 1px solid var(--color-text-muted);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 .comment-pill-btn__icon {
-  width: 1.05rem;
-  height: 1.05rem;
+  width: 0.95rem;
+  height: 0.95rem;
   flex-shrink: 0;
 }
 
 .comment-count-text {
   color: var(--color-text-muted);
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   white-space: nowrap;
 }
 
-.comment-md-content {
-  color: var(--color-text-primary);
-  font-size: 0.9rem;
-  line-height: 1.65;
-}
-
-.comment-md-content :deep(p) {
-  margin: 0.15rem 0;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-.comment-preview {
-  opacity: 0.98;
-}
-
-.comment-submit-row {
+/* ---------- form ---------- */
+.comment-form-panel {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: 0.75rem;
+  gap: 0.5rem;
+  border: 1px solid var(--comment-card-border);
+  border-radius: 8px;
+  background: var(--comment-card-bg);
+  padding: 0.7rem;
 }
 
-.comment-captcha-wrap {
-  width: 100%;
-  box-sizing: border-box;
+.comment-form-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.comment-captcha-mount {
-  min-height: 48px;
+.comment-form-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
 }
 
-.comment-captcha-mount :deep(cap-widget) {
-  box-sizing: border-box;
-  display: block;
-  width: 100% !important;
-  max-width: 100% !important;
-  min-width: 0;
-
-  --cap-widget-width: 100%;
-}
-
-.comment-captcha-error {
-  margin-top: 0.25rem;
-}
-
-.comment-submit-btn {
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 48px;
+.comment-md-hint {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding-inline: 1rem;
-  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+
+.comment-ready-indicator {
+  display: inline-flex;
+  align-items: center;
+}
+
+.comment-ready-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+}
+
+.comment-ready-dot.is-ready {
+  background: #10b981;
+}
+
+.comment-ready-dot.is-not-ready {
+  background: #d1d5db;
+}
+
+.comment-reply-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.28rem 0.5rem;
+  border-radius: 6px;
+  background: var(--color-bg-muted);
+  font-size: 0.74rem;
+  color: var(--color-text-secondary);
+}
+
+.comment-reply-cancel {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  line-height: 1;
+  font-size: 0.8rem;
+}
+
+.comment-reply-cancel:hover {
+  color: var(--color-text-primary);
+}
+
+.comment-id-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+
+.comment-id-grid__full {
+  grid-column: 1 / -1;
 }
 
 .comment-input-field {
-  color: var(--color-text-primary);
-  border-color: var(--comment-input-border);
+  width: 100%;
+  border: 1px solid var(--comment-input-border);
+  border-radius: 6px;
   background: var(--comment-input-bg);
+  color: var(--color-text-primary);
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.22s ease,
-    background-color 0.2s ease;
+    border-color 0.18s ease,
+    box-shadow 0.2s ease,
+    background-color 0.18s ease;
 }
 
 .comment-input-field::placeholder {
@@ -767,53 +972,140 @@ onBeforeUnmount(() => {
   outline: none;
   border-color: var(--comment-input-focus-border);
   background: var(--comment-input-focus-bg);
-  box-shadow:
-    0 0 0 1px var(--comment-input-focus-ring-inner),
-    0 0 0 4px var(--comment-input-focus-ring-outer);
+  box-shadow: 0 0 0 3px var(--comment-input-focus-ring-outer);
+}
+
+.comment-input-sm {
+  padding: 0.32rem 0.55rem;
+  font-size: 0.8rem;
 }
 
 .comment-textarea {
-  line-height: 1.6;
+  min-height: 3.25rem;
+  padding: 0.4rem 0.55rem;
+  font-size: 0.84rem;
+  line-height: 1.55;
   resize: vertical;
 }
 
+.comment-preview-strip {
+  border: 1px dashed var(--comment-card-border);
+  border-radius: 6px;
+  padding: 0.4rem 0.5rem;
+}
+
+.comment-preview-strip__head {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.2rem;
+}
+
+.comment-preview-strip__name {
+  max-width: 7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.comment-preview-strip__label {
+  font-size: 0.66rem;
+  color: var(--color-text-muted);
+}
+
+.comment-captcha-wrap {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.comment-captcha-mount {
+  min-height: 40px;
+}
+
+.comment-captcha-mount :deep(cap-widget) {
+  box-sizing: border-box;
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0;
+
+  --cap-widget-width: 100%;
+  --cap-widget-height: 40px;
+}
+
+.comment-captcha-error {
+  font-size: 0.72rem;
+  color: #ef4444;
+}
+
+.comment-form-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.comment-char-count {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.comment-char-count.is-over {
+  color: #ef4444;
+}
+
+.comment-submit-btn {
+  border: none;
+  border-radius: 6px;
+  background: var(--color-text-primary);
+  color: var(--color-bg-canvas);
+  padding: 0.34rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+
+.comment-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.comment-notice {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  background: var(--color-bg-canvas);
+  padding: 0.5rem 0.6rem;
+}
+
+.comment-notice__title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.comment-notice__time {
+  margin-top: 0.15rem;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.comment-notice__preview {
+  margin-top: 0.35rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 5px;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
 @media (width <= 640px) {
-  .comment-sticky {
-    transform: translateX(calc(var(--sticky-shift, 0px) * 0.35))
-      rotate(calc(var(--sticky-rotate, 0deg) * 0.35));
-    box-shadow:
-      0 1px 0 rgb(20 20 20 / 6%),
-      0 8px 14px rgb(20 20 20 / 8%);
-  }
-
-  .comment-submit-row {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.5rem;
-  }
-
-  .comment-captcha-wrap {
-    flex: 1 1 auto;
-    width: 100%;
-    margin-right: 0;
-  }
-
-  .comment-captcha-mount {
-    min-height: 40px;
-  }
-
-  .comment-captcha-mount :deep(cap-widget) {
-    width: 100% !important;
-    max-width: 100% !important;
-
-    --cap-widget-height: 40px;
-  }
-
   .comment-submit-btn {
-    width: 100%;
-    margin-left: 0;
-    min-height: 40px;
+    min-height: 34px;
   }
 }
 </style>
