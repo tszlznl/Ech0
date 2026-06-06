@@ -7,6 +7,26 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/lin-snow/Ech0/releases) — earlier release notes are not retroactively imported here.
 
 
+## [5.2.0] - 2026-06-06
+
+### Added
+
+- **Comment floor numbers & jump-to-parent.** Every comment now shows a floor number (`#N`) assigned in chronological order. A reply displays a clickable "Reply to #N" reference that smooth-scrolls to its parent comment and briefly flashes it for orientation. New i18n key `inReplyToFloor` across zh-CN / en-US / ja-JP / de-DE.
+- **Editable publish time when editing an Echo.** `EchoUpsertDto` gained an optional `created_at` field; updating an Echo with a non-zero value rewrites its `created_at` column, so an entry can be backdated or corrected after the fact. Swagger regenerated.
+- **Zen-mode monochrome toggle feedback.** Switching the Zen reading view between black-and-white and color now raises a confirmation toast. New i18n keys `bwToastOn` / `bwToastOff`.
+
+### Fixed
+
+- **Object file URLs are now resolved at read time.** A stored `File.url` used to be a snapshot taken at write time, so changing the CDN domain or S3 configuration left old `local`/`object` records pointing at dead links. URLs for these types are now recomputed from the current storage configuration on every read — via the `File` GORM `AfterFind` hook, which covers both direct loads and nested `Preload(EchoFiles.File)` — while `external` URLs keep their stored snapshot. (`a3bdeffa`)
+- **Embedding providers that reject the `dimensions` parameter now degrade gracefully.** If the first batch is rejected because `dimensions` is unsupported, the request is retried without it and the conclusion is reused for later batches. Returned vectors whose dimension disagrees with the configured value now raise an error instead of being written, preventing `vec0` dimension conflicts. (`99f8056c`)
+
+### Internal
+
+- **Storage and user config now read through the setting engine.** S3 configuration is read via `setting.Get(setting.S3)` and the user domain reads its settings directly through the setting engine, removing the per-field env merge and decoupling `SettingService`. `setting.Get` now falls back to a normalized default when a stored value cannot be parsed. Wire graph regenerated.
+- **New config/settings architecture doc** at `docs/dev/config-and-settings-architecture.md`.
+- **UI polish.** `BaseButton` gained a `loading` state (shows a spinner and blocks clicks while busy); the share control is now a native `<button>` for correct semantics/accessibility; removed redundant `v-tooltip`s from the tag/publish buttons and reformatted `ChatBox`.
+
+
 ## [5.1.0] - 2026-06-06
 
 ### Added
@@ -346,7 +366,8 @@ This is primarily a security release: six advisories disclosed since v4.7.2 are 
 
   Practical risk in this repo was negligible (the vulnerable code only runs at PWA build time on developer-controlled input), but the alerts are now resolved at the supply-chain level.
 
-[Unreleased]: https://github.com/lin-snow/Ech0/compare/v5.1.0...HEAD
+[Unreleased]: https://github.com/lin-snow/Ech0/compare/v5.2.0...HEAD
+[5.2.0]: https://github.com/lin-snow/Ech0/compare/v5.1.0...v5.2.0
 [5.1.0]: https://github.com/lin-snow/Ech0/compare/v5.0.2...v5.1.0
 [5.0.2]: https://github.com/lin-snow/Ech0/compare/v5.0.0...v5.0.2
 [5.0.0]: https://github.com/lin-snow/Ech0/compare/v4.9.2...v5.0.0
