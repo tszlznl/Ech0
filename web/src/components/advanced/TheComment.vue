@@ -397,13 +397,17 @@ const commentAnchorId = (id: string) => `comment-anchor-${id}`
 const highlightedId = ref<string | null>(null)
 let highlightTimer: ReturnType<typeof setTimeout> | null = null
 
-const jumpToComment = (id?: string | null) => {
+const jumpToComment = async (id?: string | null) => {
   if (!id) return
   const el = document.getElementById(commentAnchorId(id))
   if (!el) return
   el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  highlightedId.value = id
   if (highlightTimer) clearTimeout(highlightTimer)
+  // 先清空并等 DOM 落地，再赋值，强制 CSS 高亮动画重播——
+  // 否则连续点同一目标时 highlightedId 值未变，Vue 不重渲染，动画不会重新触发。
+  highlightedId.value = null
+  await nextTick()
+  highlightedId.value = id
   highlightTimer = setTimeout(() => {
     highlightedId.value = null
     highlightTimer = null
