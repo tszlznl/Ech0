@@ -8,6 +8,24 @@ import (
 	"gorm.io/gorm"
 )
 
+// storageTypeExternal marks files that live outside Ech0's managed storage
+// (a user-supplied external URL). Their URL is authoritative and is never
+// recomputed — there is no key to rebuild it from.
+const storageTypeExternal = "external"
+
+// resolveURL recomputes a managed file's public URL from its StorageType + Key
+// using the *current* storage config. It is injected once at startup via
+// RegisterURLResolver (by the storage layer). When nil — e.g. tests or the CLI
+// without storage wiring — the stored URL snapshot is kept as-is.
+var resolveURL func(storageType, key string) string
+
+// RegisterURLResolver wires the storage URL resolver into the File model so
+// AfterFind can refresh URLs on read. Called once from the composition root;
+// safe to call again to replace (or with nil to disable, e.g. in tests).
+func RegisterURLResolver(fn func(storageType, key string) string) {
+	resolveURL = fn
+}
+
 type File struct {
 	ID string `gorm:"type:char(36);primaryKey" json:"id"`
 
@@ -52,6 +70,21 @@ type TempFile struct {
 func (f *File) BeforeCreate(_ *gorm.DB) error {
 	if f.ID == "" {
 		f.ID = uuidUtil.MustNewV7()
+	}
+	return nil
+}
+
+// AfterFind refreshes URL for managed (local/object) files from the current
+// storage config, so rotating the CDN domain or switching S3 settings never
+// strands existing rows behind the write-time snapshot. External files keep
+// their stored URL (the source of truth). Fires for both direct loads and
+// preloaded associations, making it the single read-path choke point.
+func (f *File) AfterFind(_ *gorm.DB) error {
+	if resolveURL == nil || f.Key == "" || f.StorageType == storageTypeExternal {
+		return nil
+	}
+	if url := resolveURL(f.StorageType, f.Key); url != "" {
+		f.URL = url
 	}
 	return nil
 }
