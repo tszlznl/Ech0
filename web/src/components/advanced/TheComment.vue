@@ -238,7 +238,9 @@
                       <button
                         type="button"
                         class="comment-reply-ref"
-                        v-tooltip="t('commentSection.inReplyTo', { nickname: parentNicknameOf(reply) })"
+                        v-tooltip="
+                          t('commentSection.inReplyTo', { nickname: parentNicknameOf(reply) })
+                        "
                         @click="jumpToComment(reply.parent_id)"
                       >
                         {{ t('commentSection.inReplyToFloor', { floor: parentNumberOf(reply) }) }}
