@@ -104,8 +104,6 @@ const monthday = ref<number>(1)
 const hourlyInterval = ref<number>(6)
 const customExpression = ref<string>('')
 
-let suppressNextEmit = false
-
 const frequencyOptions = computed(() => [
   { label: t('cronEditor.freqDaily'), value: 'daily' as Frequency },
   { label: t('cronEditor.freqWeekly'), value: 'weekly' as Frequency },
@@ -186,17 +184,12 @@ watch(
   () => props.modelValue,
   (v) => {
     if (buildCron() === (v || '').trim()) return
-    suppressNextEmit = true
     parseCron(v || '')
   },
   { immediate: true },
 )
 
 watch([frequency, hour, minute, weekday, monthday, hourlyInterval, customExpression], () => {
-  if (suppressNextEmit) {
-    suppressNextEmit = false
-    return
-  }
   const next = buildCron()
   if (next !== props.modelValue) {
     emit('update:modelValue', next)
