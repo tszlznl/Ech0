@@ -2,7 +2,7 @@
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <div
-    class="zen-echo-card relative w-full bg-[var(--color-bg-surface)] h-auto p-3 sm:p-3.5 shadow rounded-lg"
+    class="zen-echo-card relative w-full bg-[var(--color-bg-surface)] h-auto p-3 sm:p-3.5 shadow rounded-md"
   >
     <div class="flex flex-row items-center justify-between gap-2 mt-1 mb-3">
       <div class="flex flex-row items-center gap-2 min-w-0">

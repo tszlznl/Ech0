@@ -373,6 +373,8 @@
     "openDetail": "打开详情",
     "bwOn": "切换为黑白模式（hover 卡片恢复彩色）",
     "bwOff": "恢复彩色",
+    "bwToastOn": "已切换到黑白模式",
+    "bwToastOff": "已切换到彩色模式",
     "empty": "暂无内容",
     "noMore": "已经到底了"
   },
@@ -475,6 +477,7 @@
     "replyingTo": "正在回复 {'@'}{nickname}",
     "cancelReply": "取消回复",
     "inReplyTo": "回复 {'@'}{nickname}",
+    "inReplyToFloor": "回复 #{floor}",
     "commentPublished": "评论已发布",
     "commentSubmittedPending": "评论已提交，等待审核",
     "you": "你",

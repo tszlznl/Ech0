@@ -157,7 +157,13 @@
           {{ t('commentSection.empty') }}
         </div>
         <div v-else class="comment-thread">
-          <article v-for="item in topLevelComments" :key="item.id" class="comment-card">
+          <article
+            v-for="item in topLevelComments"
+            :id="commentAnchorId(item.id)"
+            :key="item.id"
+            class="comment-card"
+            :class="{ 'comment-anchor-flash': highlightedId === item.id }"
+          >
             <span v-if="item.hot" class="comment-hot-badge">Hot</span>
             <div class="comment-row">
               <BaseAvatar
@@ -168,6 +174,7 @@
               />
               <div class="min-w-0 flex-1">
                 <div class="comment-meta">
+                  <span class="comment-floor-no">#{{ numberOf(item) }}</span>
                   <a
                     v-if="item.website"
                     :href="item.website"
@@ -195,8 +202,10 @@
             <div v-if="repliesOf(item.id).length" class="comment-replies">
               <div
                 v-for="reply in repliesOf(item.id)"
+                :id="commentAnchorId(reply.id)"
                 :key="reply.id"
                 class="comment-row comment-reply-row"
+                :class="{ 'comment-anchor-flash': highlightedId === reply.id }"
               >
                 <BaseAvatar
                   :seed="getCommentAvatarSeed(reply)"
@@ -206,6 +215,7 @@
                 />
                 <div class="min-w-0 flex-1">
                   <div class="comment-meta">
+                    <span class="comment-floor-no">#{{ numberOf(reply) }}</span>
                     <a
                       v-if="reply.website"
                       :href="reply.website"
@@ -223,10 +233,18 @@
                     <span class="comment-dot">·</span>
                     <span class="comment-time">{{ formatDate(reply.created_at) }}</span>
                     <span v-if="reply.hot" class="comment-hot-inline">Hot</span>
+                    <template v-if="parentNumberOf(reply)">
+                      <span class="comment-dot">·</span>
+                      <button
+                        type="button"
+                        class="comment-reply-ref"
+                        v-tooltip="t('commentSection.inReplyTo', { nickname: parentNicknameOf(reply) })"
+                        @click="jumpToComment(reply.parent_id)"
+                      >
+                        {{ t('commentSection.inReplyToFloor', { floor: parentNumberOf(reply) }) }}
+                      </button>
+                    </template>
                   </div>
-                  <span v-if="replyToNicknameOf(reply)" class="comment-reply-to">
-                    {{ t('commentSection.inReplyTo', { nickname: replyToNicknameOf(reply) }) }}
-                  </span>
                   <TheMdPreview class="comment-md-content" :content="reply.content" />
                   <button type="button" class="comment-reply-btn" @click="startReply(reply)">
                     {{ t('commentSection.reply') }}
@@ -240,6 +258,26 @@
     </template>
   </div>
 </template>
+
+<script lang="ts">
+// @cap.js/widget 在用户交互后会在后台「投机求解」验证码（Web Worker 池）。当 widget 在
+// 求解途中被移除（离开详情页、收起评论框、切换语言重建）时，其 disconnectedCallback 会把
+// 内部 worker 池置空，已在途的求解循环恢复后访问空引用，抛出 TypeError 并冒泡成
+// unhandledrejection（Chrome 文案为 "reading '_ensureSize'"）。这是该库自身的析构竞态、
+// 对功能无影响。此处装一次全局守卫，只静默这一类 rejection，其它异常照常抛出。
+// TODO: cap.js 修复析构竞态后可移除（issue: #speculativePool 未在 cleanup 后守空）。
+let capRejectionGuardInstalled = false
+const installCapRejectionGuard = () => {
+  if (capRejectionGuardInstalled || typeof window === 'undefined') return
+  capRejectionGuardInstalled = true
+  window.addEventListener('unhandledrejection', (event) => {
+    const reason = event.reason
+    if (reason instanceof Error && reason.message.includes('_ensureSize')) {
+      event.preventDefault()
+    }
+  })
+}
+</script>
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
@@ -334,12 +372,42 @@ const repliesOf = (rootId: string) =>
     (c) => c.parent_id && commentMap.value.has(c.parent_id) && rootIdOf(c) === rootId,
   )
 
-// 回复指向的对象昵称：仅当回复的是「另一条回复」时返回，避免对楼顶的冗余指向。
-const replyToNicknameOf = (reply: App.Api.Comment.CommentItem) => {
-  if (!reply.parent_id) return ''
-  const parent = commentMap.value.get(reply.parent_id)
-  if (!parent || !parent.parent_id || !commentMap.value.has(parent.parent_id)) return ''
-  return parent.nickname
+// 楼层编号：按发表时间（created_at）全局升序，给每条评论一个稳定的 #N 锚点。
+const commentNumbers = computed(() => {
+  const ordered = [...comments.value].sort((a, b) => {
+    if (a.created_at !== b.created_at) return a.created_at - b.created_at
+    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0
+  })
+  const map = new Map<string, number>()
+  ordered.forEach((c, index) => map.set(c.id, index + 1))
+  return map
+})
+
+const numberOf = (item: App.Api.Comment.CommentItem) => commentNumbers.value.get(item.id) ?? 0
+
+// 回复所指向父级的楼层编号与昵称（repliesOf 已保证父级存在于 commentMap）。
+const parentNumberOf = (reply: App.Api.Comment.CommentItem) =>
+  reply.parent_id ? (commentNumbers.value.get(reply.parent_id) ?? 0) : 0
+
+const parentNicknameOf = (reply: App.Api.Comment.CommentItem) =>
+  reply.parent_id ? (commentMap.value.get(reply.parent_id)?.nickname ?? '') : ''
+
+// 点击「回复 #M」滚动到目标评论并短暂高亮。
+const commentAnchorId = (id: string) => `comment-anchor-${id}`
+const highlightedId = ref<string | null>(null)
+let highlightTimer: ReturnType<typeof setTimeout> | null = null
+
+const jumpToComment = (id?: string | null) => {
+  if (!id) return
+  const el = document.getElementById(commentAnchorId(id))
+  if (!el) return
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  highlightedId.value = id
+  if (highlightTimer) clearTimeout(highlightTimer)
+  highlightTimer = setTimeout(() => {
+    highlightedId.value = null
+    highlightTimer = null
+  }, 1600)
 }
 
 const startReply = (item: App.Api.Comment.CommentItem) => {
@@ -417,6 +485,7 @@ const clearCaptchaWidget = () => {
 
 const ensureCapWidgetScript = async () => {
   if (typeof window === 'undefined') return
+  installCapRejectionGuard()
   if (customElements.get('cap-widget')) return
   capWidgetLoadPromise ??= import('@cap.js/widget')
   await capWidgetLoadPromise
@@ -621,6 +690,7 @@ watch(
 
 onBeforeUnmount(() => {
   clearCaptchaWidget()
+  if (highlightTimer) clearTimeout(highlightTimer)
 })
 </script>
 
@@ -693,10 +763,36 @@ onBeforeUnmount(() => {
 
 .comment-meta {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.15rem 0.3rem;
   min-width: 0;
   line-height: 1.3;
+}
+
+.comment-floor-no {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.comment-reply-ref {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.comment-reply-ref:hover {
+  color: #0ea5e9;
 }
 
 .comment-author,
@@ -750,15 +846,21 @@ onBeforeUnmount(() => {
   color: #ef4444;
 }
 
-.comment-reply-to {
-  display: inline-block;
-  margin-top: 0.25rem;
-  padding: 0.05rem 0.4rem;
-  border-radius: 4px;
-  background: var(--color-bg-muted);
-  font-size: 0.68rem;
-  line-height: 1.4;
-  color: var(--color-text-secondary);
+/* 点击「回复 #M」后，目标评论短暂高亮（环形描边，与背景无关，明暗主题通用）。 */
+.comment-anchor-flash {
+  border-radius: 7px;
+  animation: comment-anchor-flash 1.6s ease-out;
+}
+
+@keyframes comment-anchor-flash {
+  0%,
+  55% {
+    box-shadow: 0 0 0 2px rgb(14 165 233 / 50%);
+  }
+
+  100% {
+    box-shadow: 0 0 0 2px rgb(14 165 233 / 0%);
+  }
 }
 
 /* ---------- replies thread ---------- */
@@ -824,7 +926,7 @@ onBeforeUnmount(() => {
 
 .comment-pill-btn:hover {
   color: var(--color-text-primary);
-  border-color: var(--color-text-secondary);
+  border-color: var(--color-border-strong);
 }
 
 .comment-pill-btn:focus,
@@ -836,6 +938,7 @@ onBeforeUnmount(() => {
 
 /* 统一焦点：去掉浏览器默认的黑色 outline，仅键盘聚焦时显示细灰描边 */
 .comment-reply-btn:focus,
+.comment-reply-ref:focus,
 .comment-reply-cancel:focus,
 .comment-submit-btn:focus,
 .comment-author-link:focus {
@@ -843,6 +946,7 @@ onBeforeUnmount(() => {
 }
 
 .comment-reply-btn:focus-visible,
+.comment-reply-ref:focus-visible,
 .comment-reply-cancel:focus-visible,
 .comment-submit-btn:focus-visible,
 .comment-author-link:focus-visible {

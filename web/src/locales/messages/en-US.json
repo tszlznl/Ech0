@@ -373,6 +373,8 @@
     "openDetail": "Open detail",
     "bwOn": "Switch to monochrome (hover a card to restore color)",
     "bwOff": "Restore color",
+    "bwToastOn": "Switched to black & white",
+    "bwToastOff": "Switched to color",
     "empty": "No content yet",
     "noMore": "You've reached the end"
   },
@@ -475,6 +477,7 @@
     "replyingTo": "Replying to {'@'}{nickname}",
     "cancelReply": "Cancel reply",
     "inReplyTo": "Reply to {'@'}{nickname}",
+    "inReplyToFloor": "Reply to #{floor}",
     "commentPublished": "Comment published",
     "commentSubmittedPending": "Comment submitted, pending approval",
     "you": "You",

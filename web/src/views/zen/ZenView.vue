@@ -77,6 +77,7 @@ import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useSettingStore, useZenStore } from '@/stores'
 import { resolveAvatarUrl } from '@/service/request/shared'
+import { theToast } from '@/utils/toast'
 import TheZenEchoCard from '@/components/advanced/echo/cards/TheZenEchoCard.vue'
 import TheLoadingIndicator from '@/components/common/TheLoadingIndicator.vue'
 import Close from '@/components/icons/close.vue'
@@ -97,6 +98,7 @@ let sentinelObserver: IntersectionObserver | null = null
 const bwMode = ref<boolean>(false)
 const toggleBW = () => {
   bwMode.value = !bwMode.value
+  theToast.success(String(bwMode.value ? t('zenMode.bwToastOn') : t('zenMode.bwToastOff')))
 }
 // 用两个静态 t() 调用，让 i18n unused-check 能识别 key 被引用。
 const bwOnLabel = computed(() => t('zenMode.bwOn'))

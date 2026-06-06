@@ -373,6 +373,8 @@
     "openDetail": "Detail öffnen",
     "bwOn": "Monochrom anzeigen (Karte hovern, um Farbe wiederherzustellen)",
     "bwOff": "Farbe wiederherstellen",
+    "bwToastOn": "Zu Schwarz-Weiß gewechselt",
+    "bwToastOff": "Zu Farbe gewechselt",
     "empty": "Noch keine Inhalte",
     "noMore": "Du bist am Ende angekommen"
   },
@@ -475,6 +477,7 @@
     "replyingTo": "Antwort an {'@'}{nickname}",
     "cancelReply": "Antwort abbrechen",
     "inReplyTo": "Antwort an {'@'}{nickname}",
+    "inReplyToFloor": "Antwort an #{floor}",
     "commentPublished": "Kommentar veröffentlicht",
     "commentSubmittedPending": "Kommentar eingereicht – wird noch geprüft",
     "you": "Du",

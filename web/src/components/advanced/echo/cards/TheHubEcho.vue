@@ -2,7 +2,7 @@
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <div
-    class="hub-echo-card relative w-full max-w-sm bg-[var(--color-bg-surface)] h-auto p-3 sm:p-3.5 shadow rounded-lg mx-auto"
+    class="hub-echo-card relative w-full max-w-sm bg-[var(--color-bg-surface)] h-auto p-3 sm:p-3.5 shadow rounded-md mx-auto"
   >
     <div class="flex flex-row items-center justify-between gap-2 mt-1 mb-3">
       <div class="flex flex-row items-center gap-2 min-w-0">

@@ -373,6 +373,8 @@
     "openDetail": "詳細を開く",
     "bwOn": "モノクロ表示に切り替え（カードをホバーで色が戻ります）",
     "bwOff": "カラー表示に戻す",
+    "bwToastOn": "モノクロモードに切り替えました",
+    "bwToastOff": "カラーモードに切り替えました",
     "empty": "コンテンツはまだありません",
     "noMore": "これで全部です"
   },
@@ -475,6 +477,7 @@
     "replyingTo": "{'@'}{nickname} に返信中",
     "cancelReply": "返信をキャンセル",
     "inReplyTo": "{'@'}{nickname} への返信",
+    "inReplyToFloor": "#{floor} への返信",
     "commentPublished": "コメントを公開しました",
     "commentSubmittedPending": "コメントを送信しました。審査をお待ちください",
     "you": "あなた",
