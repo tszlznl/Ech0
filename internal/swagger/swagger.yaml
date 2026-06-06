@@ -129,6 +129,8 @@ definitions:
     properties:
       content:
         type: string
+      created_at:
+        type: integer
       echo_files:
         items:
           type: object

@@ -20,6 +20,7 @@ type EchoUpsertDto struct {
 	Private   bool              `json:"private"`
 	Extension *EchoExtensionDto `json:"extension,omitempty"`
 	Tags      []Tag             `json:"tags,omitempty"`
+	CreatedAt *int64            `json:"created_at,omitempty"`
 }
 
 func (dto *EchoUpsertDto) ToModel() *Echo {
@@ -30,6 +31,9 @@ func (dto *EchoUpsertDto) ToModel() *Echo {
 		Layout:    dto.Layout,
 		Private:   dto.Private,
 		Tags:      dto.Tags,
+	}
+	if dto.CreatedAt != nil {
+		echo.CreatedAt = *dto.CreatedAt
 	}
 	if dto.Extension != nil {
 		echo.Extension = &EchoExtension{

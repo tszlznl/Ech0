@@ -232,13 +232,17 @@ func (echoRepository *EchoRepository) UpdateEcho(ctx context.Context, echo *mode
 		return err
 	}
 
+	updates := map[string]interface{}{
+		"content": echo.Content,
+		"private": echo.Private,
+		"layout":  echo.Layout,
+	}
+	if echo.CreatedAt != 0 {
+		updates["created_at"] = echo.CreatedAt
+	}
 	if err := echoRepository.getDB(ctx).Model(&model.Echo{}).
 		Where("id = ?", echo.ID).
-		Updates(map[string]interface{}{
-			"content": echo.Content,
-			"private": echo.Private,
-			"layout":  echo.Layout,
-		}).Error; err != nil {
+		Updates(updates).Error; err != nil {
 		return err
 	}
 

@@ -3130,6 +3130,9 @@ const docTemplate = `{
                 "content": {
                     "type": "string"
                 },
+                "created_at": {
+                    "type": "integer"
+                },
                 "echo_files": {
                     "type": "array",
                     "items": {
