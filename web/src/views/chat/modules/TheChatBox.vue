@@ -17,7 +17,11 @@
 
     <!-- 对话区：从线的上方向上生长，贴底排列 -->
     <div ref="scrollArea" class="transcript">
-      <div ref="transcriptInner" class="transcript__inner" :style="{ '--tail-space': tailSpace + 'px' }">
+      <div
+        ref="transcriptInner"
+        class="transcript__inner"
+        :style="{ '--tail-space': tailSpace + 'px' }"
+      >
         <div
           v-for="(msg, idx) in messages"
           :key="idx"

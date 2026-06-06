@@ -22,7 +22,6 @@
       <div v-if="currentMode === Mode.ECH0" class="editor-actions__tag">
         <Popover>
           <PopoverButton
-            v-tooltip="tagTriggerTooltip"
             :aria-label="tagTriggerTooltip"
             class="cursor-pointer p-1.5 w-8 h-8 sm:w-9 sm:h-9 rounded-xs ring-inset ring-1 ring-[var(--btn-ring-color)] text-[var(--btn-text-color)] outline-none shadow-[var(--btn-shadow)] bg-[var(--btn-bg-color)] hover:bg-[var(--btn-hover-bg-color)] hover:ring-[var(--btn-hover-border-color)] focus-visible:ring-2 focus-visible:ring-[var(--btn-focus-ring-color)] transition-colors duration-200 relative inline-flex items-center justify-center"
           >
@@ -106,7 +105,6 @@
         class="editor-actions__publish"
       >
         <PopoverButton
-          v-tooltip="publishTriggerTooltip"
           :aria-label="publishTriggerTooltip"
           :disabled="isSubmitting"
           :class="[
