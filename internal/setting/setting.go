@@ -43,8 +43,9 @@ type Spec[T any] struct {
 // Get 读取并反序列化某配置；KV 缺失（ErrNotFound）时回退到 Default()，并对结果
 // 跑一次 Normalize，使「已落库的旧值」与「config 默认」走同一归一化路径。
 //
-// 后端真实故障（非 ErrNotFound）时仍返回一份可用的归一化默认值，同时上抛该错误：
-// 忽略 err 的调用方因此永远拿到 sane value，检查 err 的调用方可据此记录/降级。
+// 后端真实故障（非 ErrNotFound）或已落库值无法解析时，仍返回一份可用的归一化默认值，
+// 同时上抛该错误：忽略 err 的调用方因此永远拿到 sane value，检查 err 的调用方可据此
+// 记录/降级。
 func Get[T any](ctx context.Context, kv kvstore.Store, spec Spec[T]) (T, error) {
 	raw, err := kv.Get(ctx, spec.Key)
 	if err != nil {
@@ -60,6 +61,12 @@ func Get[T any](ctx context.Context, kv kvstore.Store, spec Spec[T]) (T, error) 
 
 	var v T
 	if err := json.Unmarshal([]byte(raw), &v); err != nil {
+		// 已落库值无法解析：与「后端故障」分支一致，回退到归一化默认值并上抛 err，
+		// 让忽略 err 的调用方始终拿到 sane value（而非半解析/零值）。
+		v = spec.Default()
+		if spec.Normalize != nil {
+			spec.Normalize(&v)
+		}
 		return v, err
 	}
 	if spec.Normalize != nil {

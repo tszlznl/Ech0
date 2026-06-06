@@ -81,6 +81,18 @@ func TestGet_BackendErrorReturnsDefaultAndError(t *testing.T) {
 	}
 }
 
+func TestGet_UnparseableValueReturnsDefaultAndError(t *testing.T) {
+	kv := kvstore.NewMemory()
+	_ = kv.Set(context.Background(), demoSpec.Key, `{not valid json`)
+	got, err := Get(context.Background(), kv, demoSpec)
+	if err == nil {
+		t.Fatal("want unmarshal error to propagate")
+	}
+	if got.Name != "default" || got.Tag != "t" {
+		t.Fatalf("want usable default on parse failure, got %+v", got)
+	}
+}
+
 func TestSet_RoundTrip(t *testing.T) {
 	kv := kvstore.NewMemory()
 	if err := Set(context.Background(), kv, demoSpec, demo{Name: "x", Tag: "y"}); err != nil {
