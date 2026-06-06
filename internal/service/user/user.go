@@ -12,10 +12,11 @@ import (
 	"github.com/lin-snow/ech0/internal/event"
 	eventbus "github.com/lin-snow/ech0/internal/event/bus"
 	i18nUtil "github.com/lin-snow/ech0/internal/i18n"
+	"github.com/lin-snow/ech0/internal/kvstore"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
-	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	model "github.com/lin-snow/ech0/internal/model/user"
+	coreSetting "github.com/lin-snow/ech0/internal/setting"
 	"github.com/lin-snow/ech0/internal/transaction"
 	cryptoUtil "github.com/lin-snow/ech0/internal/util/crypto"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
@@ -28,7 +29,7 @@ import (
 type UserService struct {
 	transactor     transaction.Transactor
 	userRepository Repository
-	settingService SettingService
+	durableKV      kvstore.Store
 	fileService    FileService
 	bus            *busen.Bus
 }
@@ -37,21 +38,21 @@ type UserService struct {
 //
 // 参数:
 //   - userRepository: 用户数据层接口实现
-//   - settingService: 系统设置数据层接口实现
+//   - durableKV: 持久化键值存储，用于经 setting 引擎直读系统设置（不依赖 SettingService）
 //
 // 返回:
 //   - *UserService: 用户服务实现
 func NewUserService(
 	tx transaction.Transactor,
 	userRepository Repository,
-	settingService SettingService,
+	durableKV kvstore.Store,
 	fileService FileService,
 	busProvider func() *busen.Bus,
 ) *UserService {
 	return &UserService{
 		transactor:     tx,
 		userRepository: userRepository,
-		settingService: settingService,
+		durableKV:      durableKV,
 		fileService:    fileService,
 		bus:            busProvider(),
 	}
@@ -125,13 +126,7 @@ func (userService *UserService) InitOwner(registerDto *authModel.RegisterDto) er
 		return err
 	}
 
-	// 把部署者的语言作为站点默认语言落库（仅当 system_settings 还不存在时生效）。
-	if err := userService.settingService.BootstrapDefaultLocale(context.Background(), ownerLocale); err != nil {
-		logUtil.GetLogger().
-			Warn("Failed to bootstrap default locale on init owner", zap.Error(err))
-	}
-
-	// 发布用户注册事件
+	// 发布用户注册事件（站点默认语言由 InitService 在编排层经 SettingService 落库，不在此处）。
 	owner.Password = "" // 不包含密码信息
 	eventbus.Notify(context.Background(), userService.bus, event.UserCreated{User: owner})
 
@@ -188,12 +183,12 @@ func (userService *UserService) Register(registerDto *authModel.RegisterDto) err
 		return errors.New(commonModel.USERNAME_HAS_EXISTS)
 	}
 
-	// 检查是否开放注册
-	var setting settingModel.SystemSetting
-	if err := userService.settingService.GetSetting(&setting); err != nil {
+	// 检查是否开放注册（纯读，直连 setting 引擎读 durableKV，不依赖 SettingService）
+	sysSetting, err := coreSetting.Get(context.Background(), userService.durableKV, coreSetting.System)
+	if err != nil {
 		return err
 	}
-	if !setting.AllowRegister {
+	if !sysSetting.AllowRegister {
 		return errors.New(commonModel.USER_REGISTER_NOT_ALLOW)
 	}
 	if err := userService.transactor.Run(context.Background(), func(ctx context.Context) error {
