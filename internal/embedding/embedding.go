@@ -8,6 +8,8 @@ package embedding
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	openai "github.com/sashabaranov/go-openai"
@@ -58,20 +60,28 @@ func Embed(
 	}
 	client := openai.NewClientWithConfig(cfg)
 
+	// sendDim 跟踪是否向 API 传 dimensions 参数。初始值为用户配置的维度；
+	// 若 provider 不支持该参数（首批请求报错），自动降级为 0（omitempty 省略），
+	// 后续批次复用该结论，不再重试。
+	sendDim := setting.Dim
+
 	out := make([][]float32, 0, len(inputs))
 	for start := 0; start < len(inputs); start += batchSize {
 		end := min(start+batchSize, len(inputs))
 		batch := inputs[start:end]
 
 		resp, err := client.CreateEmbeddings(ctx, openai.EmbeddingRequest{
-			Model: openai.EmbeddingModel(setting.Model),
-			Input: batch,
-			// 显式请求输出维度，与 vec0 建表维度（setting.Dim）对齐。不传时提供商按模型
-			// 原生维度返回（如 Qwen text-embedding-v4 原生 2048），会与按 setting.Dim
-			// （如 1024）建的 vec_echo 表冲突，落库报 "Dimension mismatch"。字段带
-			// omitempty：Dim 为 0 时自动省略（dimensions 仅 text-embedding-3+ / 兼容模型支持）。
-			Dimensions: setting.Dim,
+			Model:      openai.EmbeddingModel(setting.Model),
+			Input:      batch,
+			Dimensions: sendDim,
 		})
+		if err != nil && sendDim != 0 && isDimensionsRejected(err) {
+			sendDim = 0
+			resp, err = client.CreateEmbeddings(ctx, openai.EmbeddingRequest{
+				Model: openai.EmbeddingModel(setting.Model),
+				Input: batch,
+			})
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -79,10 +89,23 @@ func Embed(
 			return nil, ErrEmptyResponse
 		}
 		for i := range resp.Data {
-			out = append(out, resp.Data[i].Embedding)
+			vec := resp.Data[i].Embedding
+			if setting.Dim > 0 && len(vec) != setting.Dim {
+				return nil, fmt.Errorf(
+					"embedding: 模型 %s 返回维度 %d，与配置维度 %d 不一致，"+
+						"请调整 dim 或换用支持 dimensions 参数的模型",
+					setting.Model, len(vec), setting.Dim,
+				)
+			}
+			out = append(out, vec)
 		}
 	}
 	return out, nil
+}
+
+// isDimensionsRejected 判断 API 错误是否因 provider 不接受 dimensions 参数导致。
+func isDimensionsRejected(err error) bool {
+	return strings.Contains(strings.ToLower(err.Error()), "dimension")
 }
 
 // EmbedOne 生成单条文本向量。
