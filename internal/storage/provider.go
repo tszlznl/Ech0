@@ -9,12 +9,13 @@ import (
 
 	"github.com/google/wire"
 	"github.com/lin-snow/ech0/internal/config"
+	"github.com/lin-snow/ech0/internal/kvstore"
 	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"github.com/lin-snow/ech0/pkg/virefs"
 	"go.uber.org/zap"
 )
 
-func ProvideStorageManager(store S3SettingStore) *Manager { return NewStorageManager(store) }
+func ProvideStorageManager(durableKV kvstore.Store) *Manager { return NewStorageManager(durableKV) }
 
 var (
 	ManagerSet  = wire.NewSet(ProvideStorageManager)

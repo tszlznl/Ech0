@@ -74,17 +74,18 @@ func ProvideTaskManager(
 // （缓存当前存储后端，ReloadFromConfigAndDB 会改写它），必须全进程一个实例，否则
 // 「设置页 / 迁移改了 S3 → 只 reload 了自己那份 Manager，文件服务仍用旧后端」。同
 // VisitorSet：顶层引入一次，统一下沉给 BuildHandlers/BuildTasker/BuildJobManager。
-// 它自带一份 KeyValueRepository 仅供读取 S3 设置，与各 Build 内的 KeyValueSet 互不冲突。
+// 它自带一份 KeyValueRepository，经 ProvideStorageKV 适配成 kvstore.Store：Manager 借此
+// 走 setting.Get(setting.S3) 读 S3 设置，与各 Build 内的 KeyValueSet 互不冲突。
 var StorageSet = wire.NewSet(
 	keyvalueRepository.NewKeyValueRepository,
-	wire.Bind(new(storage.S3SettingStore), new(*keyvalueRepository.KeyValueRepository)),
+	ProvideStorageKV,
 	storage.ProviderSet,
 )
 
-// ProvideSeederKV 把 StorageSet 已构造的 *KeyValueRepository 适配成 kvstore.Store，供
-// BuildApp 顶层 app.ProvideOptions 的启动 seeder 使用。它消费（而非再 provide）该具体类型，
-// 故不与 StorageSet 的 NewKeyValueRepository 冲突；签名不含泛型，wire 可正常复制。
-func ProvideSeederKV(repo *keyvalueRepository.KeyValueRepository) kvstore.Store {
+// ProvideStorageKV 把 StorageSet 的 *KeyValueRepository 适配成 kvstore.Store，单实例同时
+// 供 storage.Manager（读 S3 设置）与 BuildApp 顶层 app.ProvideOptions 的启动 seeder 使用。
+// 它消费（而非再 provide）该具体类型，故不与各 Build 内的 KeyValueSet 冲突。
+func ProvideStorageKV(repo *keyvalueRepository.KeyValueRepository) kvstore.Store {
 	return kvstore.NewPersistent(repo)
 }
 
@@ -216,9 +217,9 @@ func BuildApp() (*app.App, error) {
 	wire.Build(
 		InfraSet,
 		VisitorSet,
+		// StorageSet 内含 ProvideStorageKV：同一份 kvstore.Store 既给 storage.Manager
+		// 读 S3 设置，也供 AppSet 的启动 seeder 使用。
 		StorageSet,
-		// 顶层提供 kvstore.Store 供 app.ProvideOptions 的启动 seeder 使用。
-		ProvideSeederKV,
 		DomainSet,
 		RuntimeSet,
 		AppSet,
