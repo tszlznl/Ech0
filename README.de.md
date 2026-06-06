@@ -263,6 +263,8 @@ Das lokale Setup, Umgebungsanforderungen und das Front-/Backend-Zusammenspiel si
 
 Ein großes Dankeschön an alle Sponsoren, Beitragenden und Nutzer — die vollständige Sponsorenliste findest du in [SPONSOR.md](./SPONSOR.md).
 
+Besonderen Dank an die [LinuxDO](https://linux.do/) Community für ihre Anerkennung und Unterstützung.
+
 [![Contributors](https://contrib.rocks/image?repo=lin-snow/Ech0)](https://contrib.rocks/image?repo=lin-snow/Ech0)
 
 ![Repobeats analytics image](https://repobeats.axiom.co/api/embed/d69b9177e4a121e31aaed95354ff862c928ca22d.svg "Repobeats analytics image")

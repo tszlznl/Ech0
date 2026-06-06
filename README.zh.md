@@ -266,6 +266,8 @@ docker run -d \
 
 衷心感谢每一位赞助者、贡献者与用户 — 完整赞助名单见 [SPONSOR.md](./SPONSOR.md)。
 
+特别感谢 [LinuxDO](https://linux.do/) 社区的认可与支持。
+
 [![Contributors](https://contrib.rocks/image?repo=lin-snow/Ech0)](https://contrib.rocks/image?repo=lin-snow/Ech0)
 
 ![Repobeats analytics image](https://repobeats.axiom.co/api/embed/d69b9177e4a121e31aaed95354ff862c928ca22d.svg "Repobeats analytics image")

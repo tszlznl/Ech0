@@ -263,6 +263,8 @@ Docker Compose や Helm を使った手順は [かんたんデプロイ](#かん
 
 スポンサー、コントリビューター、ユーザーの皆さんに心より感謝します — 完全なスポンサーリストは [SPONSOR.md](./SPONSOR.md) を参照してください。
 
+[LinuxDO](https://linux.do/) コミュニティのご支持と評価に特別な感謝を申し上げます。
+
 [![Contributors](https://contrib.rocks/image?repo=lin-snow/Ech0)](https://contrib.rocks/image?repo=lin-snow/Ech0)
 
 ![Repobeats analytics image](https://repobeats.axiom.co/api/embed/d69b9177e4a121e31aaed95354ff862c928ca22d.svg "Repobeats analytics image")

@@ -283,6 +283,8 @@ Local setup, environment requirements, and front-/back-end integration are docum
 
 A huge thanks to all sponsors, contributors, and users — see [SPONSOR.md](./SPONSOR.md) for the full sponsor wall.
 
+Special thanks to the [LinuxDO](https://linux.do/) community for their recognition and support.
+
 [![Contributors](https://contrib.rocks/image?repo=lin-snow/Ech0)](https://contrib.rocks/image?repo=lin-snow/Ech0)
 
 ![Repobeats analytics image](https://repobeats.axiom.co/api/embed/d69b9177e4a121e31aaed95354ff862c928ca22d.svg "Repobeats analytics image")
