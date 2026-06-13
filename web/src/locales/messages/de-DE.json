@@ -578,7 +578,10 @@
     "region": "S3-Region",
     "regionPlaceholder": "S3-Region",
     "cdnDomain": "CDN-Domain",
-    "cdnPlaceholder": "S3-CDN-Domain (optional)"
+    "cdnPlaceholder": "S3-CDN-Domain (optional)",
+    "testConnection": "Verbindung testen",
+    "testSuccess": "S3-Verbindung OK",
+    "testFailed": "S3-Verbindung fehlgeschlagen: {detail}"
   },
   "passkeySetting": {
     "description": "Mit Passkey (WebAuthn) geräteübergreifend ohne Passwort anmelden.",
@@ -685,7 +688,10 @@
     "multimodalHint": "Wenn aktiviert, werden Bilder aus gefundenen Echos an das Modell gesendet, damit es sie versteht (erfordert ein bildfähiges Modell).",
     "contextWindow": "Kontextfenster",
     "contextWindowPlaceholder": "z. B. 256k, 1m – leer = Standard 256k",
-    "contextWindowHint": "Budget für die Aggregation von Echos nach Zeitraum bei Jahres- / Monatszusammenfassungen: Ein größeres Fenster liest eher alles auf einmal, ein kleineres wechselt früher zur monatsweisen, mehrstufigen Zusammenfassung. Akzeptiert k / m-Einheiten (256k = 256000, 1m = 1000000); leer wird als 256k behandelt."
+    "contextWindowHint": "Budget für die Aggregation von Echos nach Zeitraum bei Jahres- / Monatszusammenfassungen: Ein größeres Fenster liest eher alles auf einmal, ein kleineres wechselt früher zur monatsweisen, mehrstufigen Zusammenfassung. Akzeptiert k / m-Einheiten (256k = 256000, 1m = 1000000); leer wird als 256k behandelt.",
+    "testConnection": "Verbindung testen",
+    "testSuccess": "Verbindung OK",
+    "testFailed": "Verbindung fehlgeschlagen: {detail}"
   },
   "webhookSetting": {
     "title": "Webhook",
@@ -777,6 +783,7 @@
     "detail": "Details",
     "viewDetail": "Token-Details anzeigen",
     "detailTitle": "Zugangstoken-Details",
+    "detailOverview": "Übersicht",
     "closeDetail": "Schließen",
     "neverExpire": "Läuft nie ab",
     "expiryOption8Hours": "8 Stunden",
@@ -923,7 +930,13 @@
     "title": "Geplanter Snapshot",
     "description": "Automatische Snapshot-Erstellung konfigurieren und Snapshots manuell auslösen.",
     "enableAutoSnapshot": "Snapshots automatisch erstellen",
-    "crontab": "Snapshot-Zeitplan"
+    "crontab": "Snapshot-Zeitplan",
+    "manualLabel": "Manuell",
+    "createNow": "Snapshot jetzt erstellen",
+    "creating": "Wird erstellt...",
+    "jobTitle": "Snapshot-Erstellung",
+    "createSuccess": "Snapshot erstellt",
+    "createFailed": "Snapshot-Erstellung fehlgeschlagen"
   },
   "uploader": {
     "dropHere": "Ziehen, Einfügen oder Klicken zum Auswählen",

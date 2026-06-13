@@ -578,7 +578,10 @@
     "region": "S3 region",
     "regionPlaceholder": "S3 region",
     "cdnDomain": "CDN domain",
-    "cdnPlaceholder": "S3 CDN domain (optional)"
+    "cdnPlaceholder": "S3 CDN domain (optional)",
+    "testConnection": "Test connection",
+    "testSuccess": "S3 connection OK",
+    "testFailed": "S3 connection failed: {detail}"
   },
   "passkeySetting": {
     "description": "Use Passkey (WebAuthn) for passwordless sign-in across devices.",
@@ -685,7 +688,10 @@
     "multimodalHint": "When enabled, images from retrieved Echos are sent to the model so it can understand them (requires a vision-capable model).",
     "contextWindow": "Context window",
     "contextWindowPlaceholder": "e.g. 256k, 1m — empty defaults to 256k",
-    "contextWindowHint": "A larger window favors reading everything at once; a smaller one switches to layered summarization sooner. Accepts k / m units (256k = 256000, 1m = 1000000); empty is treated as 256k."
+    "contextWindowHint": "A larger window favors reading everything at once; a smaller one switches to layered summarization sooner. Accepts k / m units (256k = 256000, 1m = 1000000); empty is treated as 256k.",
+    "testConnection": "Test connection",
+    "testSuccess": "Connection OK",
+    "testFailed": "Connection failed: {detail}"
   },
   "webhookSetting": {
     "title": "Webhook",
@@ -777,6 +783,7 @@
     "detail": "Detail",
     "viewDetail": "View token detail",
     "detailTitle": "Access Token Detail",
+    "detailOverview": "Overview",
     "closeDetail": "Close",
     "neverExpire": "Never expires",
     "expiryOption8Hours": "8 Hours",
@@ -923,7 +930,13 @@
     "title": "Scheduled Snapshot",
     "description": "Configure automatic snapshot creation and trigger snapshots manually.",
     "enableAutoSnapshot": "Auto create snapshots",
-    "crontab": "Snapshot schedule"
+    "crontab": "Snapshot schedule",
+    "manualLabel": "Manual",
+    "createNow": "Create snapshot now",
+    "creating": "Creating...",
+    "jobTitle": "Snapshot creation",
+    "createSuccess": "Snapshot created",
+    "createFailed": "Snapshot creation failed"
   },
   "uploader": {
     "dropHere": "Drag, paste or click to select images",

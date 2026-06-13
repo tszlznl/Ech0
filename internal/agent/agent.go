@@ -73,3 +73,33 @@ func Generate(
 	}
 	return resp.Text, nil
 }
+
+// Ping 用给定配置发起一次最小的非流式请求，验证协议 / BaseURL / ApiKey / Model 是否真正可用
+// （连通性测试）。与 Generate 不同：不要求 Enable（允许保存前先测），其余必填项仍校验。
+//
+// MaxTokens 取 16 而非 1：Anthropic 在 max_tokens=1 时可能未吐出任何文本即触顶，触发
+// Complete 的「empty text」判定，造成「其实连通却报错」的假阴性；16 token 足够拿到回包，
+// 成本仍可忽略。返回 nil 即视为连通。
+func Ping(ctx context.Context, setting model.AgentSetting) error {
+	if setting.Model == "" {
+		return errors.New(commonModel.AGENT_MODEL_MISSING)
+	}
+	if setting.Protocol == "" {
+		return errors.New(commonModel.AGENT_PROTOCOL_NOT_FOUND)
+	}
+	if setting.ApiKey == "" && setting.Protocol != string(commonModel.OpenAI) {
+		// OpenAI 兼容场景下 Ollama 等本地服务允许空 ApiKey（与 validate 保持一致）
+		return errors.New(commonModel.AGENT_API_KEY_MISSING)
+	}
+
+	provider, err := providerFor(setting)
+	if err != nil {
+		return err
+	}
+
+	_, err = provider.Complete(ctx, Request{
+		Messages:  []Message{{Role: RoleUser, Content: "ping"}},
+		MaxTokens: 16,
+	})
+	return err
+}

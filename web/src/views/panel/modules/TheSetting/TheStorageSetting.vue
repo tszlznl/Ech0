@@ -219,6 +219,21 @@
           class="w-full py-1!"
         />
       </div>
+
+      <!-- 测试连接：卡片底部操作行，右对齐 ghost 按钮 -->
+      <div
+        class="flex justify-end mt-4 pt-3 border-t"
+        :style="{ borderColor: 'var(--color-border-subtle)' }"
+      >
+        <BaseButton
+          class="px-3 text-sm bg-transparent"
+          :loading="s3Testing"
+          :title="t('storageSetting.testConnection')"
+          @click="handleTestS3Connection"
+        >
+          {{ t('storageSetting.testConnection') }}
+        </BaseButton>
+      </div>
     </div>
   </PanelCard>
 </template>
@@ -229,10 +244,11 @@ import BaseInput from '@/components/common/BaseInput.vue'
 import BaseSwitch from '@/components/common/BaseSwitch.vue'
 import BaseSelect from '@/components/common/BaseSelect.vue'
 import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
+import BaseButton from '@/components/common/BaseButton.vue'
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { S3Provider } from '@/enums/enums'
-import { fetchUpdateS3Settings } from '@/service/api'
+import { fetchUpdateS3Settings, fetchTestS3Connection } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
@@ -265,6 +281,22 @@ const handleUpdateS3Setting = async () => {
       // 重新获取S3设置
       getS3Setting()
     })
+}
+
+// 测试连接：拿当前表单（编辑态为正在填的，浏览态为已保存的）做一次探活，不落库
+const s3Testing = ref<boolean>(false)
+const handleTestS3Connection = async () => {
+  s3Testing.value = true
+  try {
+    const res = await fetchTestS3Connection(settingStore.S3Setting)
+    if (res.code === 1) {
+      theToast.success(t('storageSetting.testSuccess'))
+    } else {
+      theToast.error(t('storageSetting.testFailed', { detail: res.msg }))
+    }
+  } finally {
+    s3Testing.value = false
+  }
 }
 
 onMounted(() => {

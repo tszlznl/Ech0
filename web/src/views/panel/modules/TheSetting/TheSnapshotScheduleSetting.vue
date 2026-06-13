@@ -50,14 +50,47 @@
         <CronScheduleEditor v-else v-model="SnapshotSchedule.cron_expression" />
       </div>
     </div>
+
+    <!-- 手动创建一次：与定时快照同一产出（落本地产物，配了 S3 会额外上传），不下载到浏览器 -->
+    <div class="schedule-row">
+      <h2 class="schedule-row__label">
+        {{ t('snapshotScheduleSetting.manualLabel') }}
+      </h2>
+      <div class="schedule-row__control">
+        <BaseButton
+          class="snapshot-create-btn"
+          :disabled="isCreating"
+          :tooltip="t('snapshotScheduleSetting.createNow')"
+          @click="handleCreateNow"
+        >
+          {{
+            isCreating
+              ? t('snapshotScheduleSetting.creating')
+              : t('snapshotScheduleSetting.createNow')
+          }}
+        </BaseButton>
+      </div>
+    </div>
+
+    <JobProgressCard
+      v-if="snapshotStatus !== 'idle'"
+      :title="t('snapshotScheduleSetting.jobTitle')"
+      :status="snapshotStatus"
+      :status-label="statusLabelMap[snapshotStatus] || snapshotStatus"
+      :steps="exportSteps"
+      :current-key="exportCurrentKey"
+      :error-message="snapshotStatus === 'failed' ? snapshotError : ''"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import BaseSwitch from '@/components/common/BaseSwitch.vue'
+import BaseButton from '@/components/common/BaseButton.vue'
 import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
 import CronScheduleEditor from './components/CronScheduleEditor.vue'
-import { computed, ref, onMounted } from 'vue'
+import JobProgressCard from './components/JobProgressCard.vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { humanizeCron } from '@/utils/cron'
 import { fetchUpdateSnapshotScheduleSetting } from '@/service/api'
@@ -67,11 +100,67 @@ import { storeToRefs } from 'pinia'
 
 const settingStore = useSettingStore()
 const { t } = useI18n()
-const { getSnapshotSchedule } = settingStore
-const { SnapshotSchedule } = storeToRefs(settingStore)
+const { getSnapshotSchedule, startSnapshotTask, restoreSnapshotTask } = settingStore
+const { SnapshotSchedule, snapshotStatus, snapshotError, snapshotPhase } =
+  storeToRefs(settingStore)
 
 const scheduleEditMode = ref<boolean>(false)
 const humanizedCron = computed(() => humanizeCron(SnapshotSchedule.value.cron_expression, t))
+
+// 手动创建 = 复用导出作业（POST /migration/export，job.Manager 驱动），与定时快照同一产出；
+// 但定位是「服务器侧补一次备份」，故成功后只提示、不像导出页那样自动下载。
+const isCreating = computed(
+  () => snapshotStatus.value === 'pending' || snapshotStatus.value === 'running',
+)
+
+// 步进器对齐后端真实阶段：排队(pending) → 打包(packing) → 完成(completed)。
+const exportSteps = computed(() => [
+  { key: 'pending', label: String(t('jobProgress.exportPhasePending')) },
+  { key: 'packing', label: String(t('jobProgress.exportPhasePacking')) },
+  { key: 'completed', label: String(t('jobProgress.exportPhaseCompleted')) },
+])
+
+const exportCurrentKey = computed(() => {
+  if (snapshotStatus.value === 'pending') return 'pending'
+  if (snapshotStatus.value === 'success') return 'completed'
+  return snapshotPhase.value || 'packing'
+})
+
+const statusLabelMap = computed<Record<string, string>>(() => ({
+  idle: String(t('jobProgress.statusIdle')),
+  pending: String(t('jobProgress.statusPending')),
+  running: String(t('jobProgress.statusRunning')),
+  success: String(t('jobProgress.statusSuccess')),
+  failed: String(t('jobProgress.statusFailed')),
+  cancelled: String(t('jobProgress.statusCancelled')),
+}))
+
+const handleCreateNow = async () => {
+  if (isCreating.value) return
+  try {
+    const res = await startSnapshotTask()
+    if (!res) return
+    if (res.code !== 1) {
+      theToast.error(res.msg || String(t('snapshotScheduleSetting.createFailed')))
+    }
+    // 终态提示交给下方 watch(snapshotStatus) 统一处理。
+  } catch (error) {
+    console.error(String(t('snapshotScheduleSetting.createFailed')), error)
+    theToast.error(String(t('snapshotScheduleSetting.createFailed')))
+  }
+}
+
+watch(
+  () => snapshotStatus.value,
+  (status, prevStatus) => {
+    if (status === prevStatus) return
+    if (status === 'success') {
+      theToast.success(String(t('snapshotScheduleSetting.createSuccess')))
+    } else if (status === 'failed') {
+      theToast.error(snapshotError.value || String(t('snapshotScheduleSetting.createFailed')))
+    }
+  },
+)
 
 const handleUpdateSnapshotSchedule = async () => {
   const res = await fetchUpdateSnapshotScheduleSetting(SnapshotSchedule.value)
@@ -85,6 +174,8 @@ const handleUpdateSnapshotSchedule = async () => {
 
 onMounted(async () => {
   await getSnapshotSchedule()
+  // 若已有进行中的快照作业（如从导出页触发后切到此页），接管轮询以展示进度。
+  void restoreSnapshotTask()
 })
 </script>
 

@@ -598,6 +598,28 @@ paths:
       summary: 更新 Agent 设置
       tags:
       - 系统设置
+  /agent/settings/test:
+    post:
+      consumes:
+      - application/json
+      description: 使用提交的 Agent 配置做一次最小探活（不保存）
+      parameters:
+      - description: 待测试的 Agent 设置
+        in: body
+        name: settings
+        required: true
+        schema:
+          $ref: '#/definitions/model.AgentSettingDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 测试 Ech0 Copilot 连接失败
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: 测试 Ech0 Copilot 连接
+      tags:
+      - 系统设置
   /auth/exchange:
     post:
       consumes:
@@ -2034,6 +2056,28 @@ paths:
           schema:
             $ref: '#/definitions/handler.Response'
       summary: 更新 S3 存储设置
+      tags:
+      - 系统设置
+  /s3/settings/test:
+    post:
+      consumes:
+      - application/json
+      description: 使用提交的 S3 配置做一次连通性探测（不保存）
+      parameters:
+      - description: 待测试的 S3 存储设置
+        in: body
+        name: s3Settings
+        required: true
+        schema:
+          $ref: '#/definitions/model.S3SettingDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 测试 S3 存储连接失败
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: 测试 S3 存储连接
       tags:
       - 系统设置
   /settings:

@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
@@ -14,6 +15,9 @@ import (
 	urlUtil "github.com/lin-snow/ech0/internal/util/url"
 	"github.com/lin-snow/ech0/pkg/viewer"
 )
+
+// s3TestTimeout 是连通性探测的整体超时，避免坏 endpoint 把请求挂死。
+const s3TestTimeout = 15 * time.Second
 
 // GetS3Setting 获取 S3 存储设置。缺省值由 setting 引擎处理；脱敏（非管理员屏蔽敏感字段）
 // 属请求态逻辑，留在此处。
@@ -65,66 +69,12 @@ func (settingService *SettingService) UpdateS3Setting(
 	var appliedSetting *model.S3Setting
 
 	err = settingService.transactor.Run(ctx, func(ctx context.Context) error {
-		// 检查endpoint是否为http(s)动态改变USE SSL
-		if strings.HasPrefix(strings.ToLower(strings.TrimSpace(newSetting.Endpoint)), "https://") {
-			newSetting.UseSSL = true
-		} else if strings.HasPrefix(strings.ToLower(strings.TrimSpace(newSetting.Endpoint)), "http://") {
-			newSetting.UseSSL = false
-		}
-
-		// 去除Endpoint的协议头（http://或https://）
-		endpoint := strings.TrimSpace(newSetting.Endpoint)
-		endpoint = strings.TrimPrefix(endpoint, "http://")
-		endpoint = strings.TrimPrefix(endpoint, "https://")
-		newSetting.Endpoint = endpoint
-
-		cdnURL := strings.TrimSpace(newSetting.CDNURL)
-		if cdnURL != "" {
-			cdnURL = strings.TrimRight(cdnURL, "/")
-		}
-
-		s3Setting := &model.S3Setting{
-			Enable:     newSetting.Enable,
-			Provider:   newSetting.Provider,
-			Endpoint:   urlUtil.TrimURL(newSetting.Endpoint),
-			AccessKey:  newSetting.AccessKey,
-			SecretKey:  newSetting.SecretKey,
-			BucketName: newSetting.BucketName,
-			Region:     strings.TrimSpace(newSetting.Region),
-			UseSSL:     newSetting.UseSSL,
-			CDNURL:     cdnURL,
-			PathPrefix: urlUtil.TrimURL(newSetting.PathPrefix),
-			PublicRead: newSetting.PublicRead,
-		}
-
-		// 配置检查
-		switch s3Setting.Provider {
-		case string(commonModel.R2):
-			if s3Setting.Region == "" {
-				s3Setting.Region = "auto"
-			}
-			s3Setting.UseSSL = true
-		case string(commonModel.AWS):
-			if s3Setting.Region == "" {
-				s3Setting.Region = "us-east-1"
-			}
-		case string(commonModel.MINIO):
-			if s3Setting.Region == "" {
-				s3Setting.Region = "us-east-1"
-			}
-		case string(commonModel.OTHER):
-			// 其他 S3 兼容厂商（Backblaze、Wasabi、Ceph 等）
-			if s3Setting.Region == "" {
-				s3Setting.Region = "auto"
-			}
-		default:
-		}
-
-		if err := coreSetting.Set(ctx, settingService.durableKV, coreSetting.S3, *s3Setting); err != nil {
+		s3Setting := normalizeS3SettingDto(newSetting)
+		if err := coreSetting.Set(ctx, settingService.durableKV, coreSetting.S3, s3Setting); err != nil {
 			return err
 		}
 
-		appliedSetting = s3Setting
+		appliedSetting = &s3Setting
 		return nil
 	})
 	if err != nil {
@@ -145,4 +95,89 @@ func (settingService *SettingService) UpdateS3Setting(
 	}
 
 	return nil
+}
+
+// TestS3Connection 用提交的 S3 配置做一次连通性探测（不落库）。配置归一化与保存共用
+// normalizeS3SettingDto，确保「测的就是会存的」；真正的 HeadBucket 探活在 storage 层完成。
+func (settingService *SettingService) TestS3Connection(
+	ctx context.Context,
+	newSetting *model.S3SettingDto,
+) error {
+	userid := viewer.MustFromContext(ctx).UserID()
+	user, err := settingService.commonService.CommonGetUserByUserId(ctx, userid)
+	if err != nil {
+		return err
+	}
+	if !user.IsAdmin {
+		return errors.New(commonModel.NO_PERMISSION_DENIED)
+	}
+	if settingService.storageManager == nil {
+		return errors.New("存储管理器不可用")
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, s3TestTimeout)
+	defer cancel()
+	return settingService.storageManager.TestS3Connection(ctx, normalizeS3SettingDto(newSetting))
+}
+
+// normalizeS3SettingDto 把前端 DTO 规整为持久化用的 S3Setting：依据 endpoint 协议头推导 UseSSL、
+// 去除 endpoint 协议头与 CDN 末尾斜杠、按 provider 补齐 region 默认值。UpdateS3Setting（保存）与
+// TestS3Connection（连通性测试）共用，保证两条路径对同一份输入做完全一致的归一化。
+func normalizeS3SettingDto(newSetting *model.S3SettingDto) model.S3Setting {
+	// 检查endpoint是否为http(s)动态改变USE SSL
+	useSSL := newSetting.UseSSL
+	if strings.HasPrefix(strings.ToLower(strings.TrimSpace(newSetting.Endpoint)), "https://") {
+		useSSL = true
+	} else if strings.HasPrefix(strings.ToLower(strings.TrimSpace(newSetting.Endpoint)), "http://") {
+		useSSL = false
+	}
+
+	// 去除Endpoint的协议头（http://或https://）
+	endpoint := strings.TrimSpace(newSetting.Endpoint)
+	endpoint = strings.TrimPrefix(endpoint, "http://")
+	endpoint = strings.TrimPrefix(endpoint, "https://")
+
+	cdnURL := strings.TrimSpace(newSetting.CDNURL)
+	if cdnURL != "" {
+		cdnURL = strings.TrimRight(cdnURL, "/")
+	}
+
+	s3Setting := model.S3Setting{
+		Enable:     newSetting.Enable,
+		Provider:   newSetting.Provider,
+		Endpoint:   urlUtil.TrimURL(endpoint),
+		AccessKey:  newSetting.AccessKey,
+		SecretKey:  newSetting.SecretKey,
+		BucketName: newSetting.BucketName,
+		Region:     strings.TrimSpace(newSetting.Region),
+		UseSSL:     useSSL,
+		CDNURL:     cdnURL,
+		PathPrefix: urlUtil.TrimURL(newSetting.PathPrefix),
+		PublicRead: newSetting.PublicRead,
+	}
+
+	// 配置检查：按 provider 补齐 region 默认值
+	switch s3Setting.Provider {
+	case string(commonModel.R2):
+		if s3Setting.Region == "" {
+			s3Setting.Region = "auto"
+		}
+		s3Setting.UseSSL = true
+	case string(commonModel.AWS):
+		if s3Setting.Region == "" {
+			s3Setting.Region = "us-east-1"
+		}
+	case string(commonModel.MINIO):
+		if s3Setting.Region == "" {
+			s3Setting.Region = "us-east-1"
+		}
+	case string(commonModel.OTHER):
+		// 其他 S3 兼容厂商（Backblaze、Wasabi、Ceph 等）
+		if s3Setting.Region == "" {
+			s3Setting.Region = "auto"
+		}
+	default:
+	}
+
+	return s3Setting
 }

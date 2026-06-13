@@ -19,6 +19,7 @@ type Service interface {
 	BootstrapDefaultLocale(ctx context.Context, locale string) error
 	GetS3Setting(ctx context.Context, setting *model.S3Setting) error
 	UpdateS3Setting(ctx context.Context, newSetting *model.S3SettingDto) error
+	TestS3Connection(ctx context.Context, newSetting *model.S3SettingDto) error
 	GetOAuth2Setting(ctx context.Context, setting *model.OAuth2Setting) error
 	UpdateOAuth2Setting(ctx context.Context, newSetting *model.OAuth2SettingDto) error
 	GetOAuth2Status(status *model.OAuth2Status) error
@@ -38,6 +39,7 @@ type Service interface {
 	GetAgentInfo(setting *model.AgentSetting) error
 	GetAgentSettings(ctx context.Context, setting *model.AgentSetting) error
 	UpdateAgentSettings(ctx context.Context, newSetting *model.AgentSettingDto) error
+	TestAgentConnection(ctx context.Context, newSetting *model.AgentSettingDto) error
 	GetEmbeddingSetting(ctx context.Context) (model.EmbeddingSetting, error)
 	UpdateEmbeddingSetting(ctx context.Context, dto model.EmbeddingSettingDto) error
 }

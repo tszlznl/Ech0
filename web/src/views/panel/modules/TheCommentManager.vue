@@ -37,9 +37,7 @@
         </div>
       </div>
 
-      <div
-        class="space-y-2 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/50 p-3"
-      >
+      <div class="space-y-2">
         <div class="setting-row">
           <div>
             <h3 class="setting-title">{{ t('commentManager.enableCommentTitle') }}</h3>

@@ -37,6 +37,16 @@ export function fetchUpdateS3Settings(s3Setting: App.Api.Setting.S3Setting) {
   })
 }
 
+// 测试 S3 存储连接（不保存，仅探测连通性）。silentError 关闭通用错误 toast，由调用方自行提示。
+export function fetchTestS3Connection(s3Setting: App.Api.Setting.S3Setting) {
+  return request({
+    url: '/s3/settings/test',
+    method: 'POST',
+    data: s3Setting,
+    silentError: true,
+  })
+}
+
 // 获取 OAuth2 设置
 export function fetchGetOAuth2Settings() {
   return request<App.Api.Setting.OAuth2Setting>({
@@ -206,5 +216,15 @@ export function fetchUpdateAgentSettings(agentSetting: App.Api.Setting.AgentSett
     url: '/agent/settings',
     method: 'PUT',
     data: agentSetting,
+  })
+}
+
+// 测试 Ech0 Copilot（LLM）连接（不保存，仅探测连通性）。silentError 关闭通用错误 toast，由调用方自行提示。
+export function fetchTestAgentConnection(agentSetting: App.Api.Setting.AgentSettingDto) {
+  return request({
+    url: '/agent/settings/test',
+    method: 'POST',
+    data: agentSetting,
+    silentError: true,
   })
 }

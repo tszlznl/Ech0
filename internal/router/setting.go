@@ -34,6 +34,11 @@ func setupSettingRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 		middleware.RequireScopes(authModel.ScopeAdminSettings),
 		h.SettingHandler.UpdateS3Settings(),
 	)
+	appRouterGroup.AuthRouterGroup.POST(
+		"/s3/settings/test",
+		middleware.RequireScopes(authModel.ScopeAdminSettings),
+		h.SettingHandler.TestS3Connection(),
+	)
 
 	appRouterGroup.AuthRouterGroup.GET(
 		"/oauth2/settings",
@@ -118,6 +123,11 @@ func setupSettingRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 		"/agent/settings",
 		middleware.RequireScopes(authModel.ScopeAdminSettings),
 		h.SettingHandler.UpdateAgentSettings(),
+	)
+	appRouterGroup.AuthRouterGroup.POST(
+		"/agent/settings/test",
+		middleware.RequireScopes(authModel.ScopeAdminSettings),
+		h.SettingHandler.TestAgentConnection(),
 	)
 
 	appRouterGroup.AuthRouterGroup.GET(

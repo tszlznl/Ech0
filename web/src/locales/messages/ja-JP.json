@@ -578,7 +578,10 @@
     "region": "S3 Region",
     "regionPlaceholder": "S3 Region",
     "cdnDomain": "CDN ドメイン",
-    "cdnPlaceholder": "S3 CDN ドメイン（任意）"
+    "cdnPlaceholder": "S3 CDN ドメイン（任意）",
+    "testConnection": "接続テスト",
+    "testSuccess": "S3 接続は正常です",
+    "testFailed": "S3 接続に失敗しました：{detail}"
   },
   "passkeySetting": {
     "description": "Passkey（WebAuthn）を使うと、異なる端末からパスワードなしでログインできます",
@@ -685,7 +688,10 @@
     "multimodalHint": "有効にすると、検索でヒットした画像付き Echo の画像もモデルに渡して理解させます（画像入力対応モデルが必要）",
     "contextWindow": "コンテキストウィンドウ",
     "contextWindowPlaceholder": "例: 256k、1m（空欄なら既定 256k）",
-    "contextWindowHint": "「年末・月次まとめ」で Echo を期間集計する際の取得予算です。ウィンドウが大きいほど一度に全件を読み込み、小さいほど早めに月ごとの階層要約へ切り替えます。k / m 単位対応（256k=256000、1m=1000000）、空欄は 256k として扱います。"
+    "contextWindowHint": "「年末・月次まとめ」で Echo を期間集計する際の取得予算です。ウィンドウが大きいほど一度に全件を読み込み、小さいほど早めに月ごとの階層要約へ切り替えます。k / m 単位対応（256k=256000、1m=1000000）、空欄は 256k として扱います。",
+    "testConnection": "接続テスト",
+    "testSuccess": "接続は正常です",
+    "testFailed": "接続に失敗しました：{detail}"
   },
   "webhookSetting": {
     "title": "Webhook",
@@ -777,6 +783,7 @@
     "detail": "詳細",
     "viewDetail": "Token の詳細を表示",
     "detailTitle": "Access Token 詳細",
+    "detailOverview": "概要",
     "closeDetail": "閉じる",
     "neverExpire": "無期限",
     "expiryOption8Hours": "8 時間",
@@ -923,7 +930,13 @@
     "title": "定期スナップショット",
     "description": "スナップショットの自動作成スケジュールを設定できます。手動作成にも対応します。",
     "enableAutoSnapshot": "スナップショットを自動作成",
-    "crontab": "スナップショット予定"
+    "crontab": "スナップショット予定",
+    "manualLabel": "手動作成",
+    "createNow": "今すぐスナップショットを作成",
+    "creating": "作成中...",
+    "jobTitle": "スナップショット作成",
+    "createSuccess": "スナップショットを作成しました",
+    "createFailed": "スナップショットの作成に失敗しました"
   },
   "uploader": {
     "dropHere": "ドラッグ / 貼り付け / クリックで画像選択",

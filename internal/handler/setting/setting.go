@@ -147,6 +147,40 @@ func (settingHandler *SettingHandler) UpdateS3Settings() gin.HandlerFunc {
 	})
 }
 
+// TestS3Connection 测试 S3 存储连接
+//
+//	@Summary		测试 S3 存储连接
+//	@Description	使用提交的 S3 配置做一次连通性探测（不保存）
+//	@Tags			系统设置
+//	@Accept			json
+//	@Produce		json
+//	@Param			s3Settings	body		model.S3SettingDto	true	"待测试的 S3 存储设置"
+//	@Success		200			{object}	handler.Response	"测试 S3 存储连接成功"
+//	@Failure		200			{object}	handler.Response	"测试 S3 存储连接失败"
+//	@Router			/s3/settings/test [post]
+func (settingHandler *SettingHandler) TestS3Connection() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		var newS3Settings model.S3SettingDto
+		if err := ctx.ShouldBindJSON(&newS3Settings); err != nil {
+			return res.Response{
+				Msg: commonModel.INVALID_REQUEST_BODY,
+				Err: err,
+			}
+		}
+
+		if err := settingHandler.settingService.TestS3Connection(ctx.Request.Context(), &newS3Settings); err != nil {
+			return res.Response{
+				Msg: "",
+				Err: err,
+			}
+		}
+
+		return res.Response{
+			Msg: commonModel.TEST_S3_CONNECTION_SUCCESS,
+		}
+	})
+}
+
 // GetOAuth2Settings 获取 OAuth2 设置
 //
 //	@Summary		获取 OAuth2 设置
@@ -801,6 +835,40 @@ func (settingHandler *SettingHandler) UpdateAgentSettings() gin.HandlerFunc {
 
 		return res.Response{
 			Msg: commonModel.UPDATE_SETTINGS_SUCCESS,
+		}
+	})
+}
+
+// TestAgentConnection 测试 Ech0 Copilot（LLM）连接
+//
+//	@Summary		测试 Ech0 Copilot 连接
+//	@Description	使用提交的 Agent 配置做一次最小探活（不保存）
+//	@Tags			系统设置
+//	@Accept			json
+//	@Produce		json
+//	@Param			settings	body		model.AgentSettingDto	true	"待测试的 Agent 设置"
+//	@Success		200			{object}	handler.Response		"测试 Ech0 Copilot 连接成功"
+//	@Failure		200			{object}	handler.Response		"测试 Ech0 Copilot 连接失败"
+//	@Router			/agent/settings/test [post]
+func (settingHandler *SettingHandler) TestAgentConnection() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		var newSettings model.AgentSettingDto
+		if err := ctx.ShouldBindJSON(&newSettings); err != nil {
+			return res.Response{
+				Msg: commonModel.INVALID_REQUEST_BODY,
+				Err: err,
+			}
+		}
+
+		if err := settingHandler.settingService.TestAgentConnection(ctx.Request.Context(), &newSettings); err != nil {
+			return res.Response{
+				Msg: "",
+				Err: err,
+			}
+		}
+
+		return res.Response{
+			Msg: commonModel.AGENT_TEST_CONNECTION_SUCCESS,
 		}
 	})
 }

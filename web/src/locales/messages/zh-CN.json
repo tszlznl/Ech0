@@ -578,7 +578,10 @@
     "region": "S3 Region",
     "regionPlaceholder": "S3 Region",
     "cdnDomain": "CDN 域名",
-    "cdnPlaceholder": "S3 CDN 域名（可选）"
+    "cdnPlaceholder": "S3 CDN 域名（可选）",
+    "testConnection": "测试连接",
+    "testSuccess": "S3 连接正常",
+    "testFailed": "S3 连接失败：{detail}"
   },
   "passkeySetting": {
     "description": "使用 Passkey（WebAuthn）可在不同设备上无密码登录",
@@ -685,7 +688,10 @@
     "multimodalHint": "开启后，Chat 检索命中带图片的 Echo 时会把配图一并交给模型理解（需所配模型支持图片输入）",
     "contextWindow": "上下文窗口",
     "contextWindowPlaceholder": "如 256k、1m，留空默认 256k",
-    "contextWindowHint": "窗口越大越倾向一次性读入全部内容，越小越早转为分层总结。支持 k / m 单位（256k=256000、1m=1000000），留空按 256k 处理。"
+    "contextWindowHint": "窗口越大越倾向一次性读入全部内容，越小越早转为分层总结。支持 k / m 单位（256k=256000、1m=1000000），留空按 256k 处理。",
+    "testConnection": "测试连接",
+    "testSuccess": "连接正常",
+    "testFailed": "连接失败：{detail}"
   },
   "webhookSetting": {
     "title": "Webhook",
@@ -777,6 +783,7 @@
     "detail": "详情",
     "viewDetail": "查看 Token 详情",
     "detailTitle": "Access Token 详情",
+    "detailOverview": "概览",
     "closeDetail": "关闭",
     "neverExpire": "永不过期",
     "expiryOption8Hours": "8 小时",
@@ -895,7 +902,13 @@
     "title": "定时快照",
     "description": "配置自动创建快照计划，也可手动触发创建。",
     "enableAutoSnapshot": "自动创建快照",
-    "crontab": "快照计划"
+    "crontab": "快照计划",
+    "manualLabel": "手动创建",
+    "createNow": "立即创建快照",
+    "creating": "创建中...",
+    "jobTitle": "快照创建",
+    "createSuccess": "快照创建成功",
+    "createFailed": "快照创建失败"
   },
   "cronEditor": {
     "frequency": "频率",

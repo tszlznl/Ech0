@@ -62,6 +62,7 @@ const (
 	UPDATE_WEBHOOK_SUCCESS          = "更新 Webhook 成功"
 	CREATE_WEBHOOK_SUCCESS          = "创建 Webhook 成功"
 	TEST_WEBHOOK_SUCCESS            = "测试 Webhook 成功"
+	TEST_S3_CONNECTION_SUCCESS      = "S3 存储连接测试成功"
 	LIST_ACCESS_TOKENS_SUCCESS      = "列出访问令牌成功"
 	CREATE_ACCESS_TOKEN_SUCCESS     = "创建访问令牌成功"
 	DELETE_ACCESS_TOKEN_SUCCESS     = "删除访问令牌成功"
@@ -97,7 +98,8 @@ const (
 
 // Agent 成功相关常量
 const (
-	AGENT_GET_RECENT_SUCCESS = "获取近期活动总结成功"
+	AGENT_GET_RECENT_SUCCESS      = "获取近期活动总结成功"
+	AGENT_TEST_CONNECTION_SUCCESS = "Ech0 Copilot 连接测试成功"
 )
 
 // Chat 成功相关常量

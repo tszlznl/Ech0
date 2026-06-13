@@ -195,6 +195,40 @@
                 }
             }
         },
+        "/agent/settings/test": {
+            "post": {
+                "description": "使用提交的 Agent 配置做一次最小探活（不保存）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "系统设置"
+                ],
+                "summary": "测试 Ech0 Copilot 连接",
+                "parameters": [
+                    {
+                        "description": "待测试的 Agent 设置",
+                        "name": "settings",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.AgentSettingDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "测试 Ech0 Copilot 连接失败",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/exchange": {
             "post": {
                 "description": "用 OAuth 回调生成的一次性 code 换取 access_token，同时通过 Set-Cookie 下发 refresh_token。请求体：{\"code\":\"\u003c一次性code\u003e\"}",
@@ -2363,6 +2397,40 @@
                 "responses": {
                     "200": {
                         "description": "更新 S3 存储设置失败",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/s3/settings/test": {
+            "post": {
+                "description": "使用提交的 S3 配置做一次连通性探测（不保存）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "系统设置"
+                ],
+                "summary": "测试 S3 存储连接",
+                "parameters": [
+                    {
+                        "description": "待测试的 S3 存储设置",
+                        "name": "s3Settings",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.S3SettingDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "测试 S3 存储连接失败",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }

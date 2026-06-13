@@ -6,13 +6,27 @@ package service
 import (
 	"context"
 	"errors"
+	"time"
 
+	"github.com/lin-snow/ech0/internal/agent"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	coreSetting "github.com/lin-snow/ech0/internal/setting"
 	urlUtil "github.com/lin-snow/ech0/internal/util/url"
 	"github.com/lin-snow/ech0/pkg/viewer"
 )
+
+// agentTestTimeout 是 LLM 连通性探测的整体超时，避免坏 endpoint 把请求挂死。
+const agentTestTimeout = 15 * time.Second
+
+// normalizeAgentProtocol 把协议字段归一到受支持的取值：未识别的接口协议（含已下线的 gemini）
+// 一律按 OpenAI 兼容协议处理。UpdateAgentSettings 与 TestAgentConnection 共用。
+func normalizeAgentProtocol(protocol string) string {
+	if protocol != string(commonModel.OpenAI) && protocol != string(commonModel.Anthropic) {
+		return string(commonModel.OpenAI)
+	}
+	return protocol
+}
 
 // GetAgentInfo 获取 Agent 信息（公开读，缺省值由 setting 引擎处理）。
 func (settingService *SettingService) GetAgentInfo(setting *model.AgentSetting) error {
@@ -62,15 +76,9 @@ func (settingService *SettingService) UpdateAgentSettings(
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	if newSetting.Protocol != string(commonModel.OpenAI) &&
-		newSetting.Protocol != string(commonModel.Anthropic) {
-		// 未识别的接口协议（含已下线的 gemini）一律按 OpenAI 兼容协议处理
-		newSetting.Protocol = string(commonModel.OpenAI)
-	}
-
 	setting := model.AgentSetting{
 		Enable:     newSetting.Enable,
-		Protocol:   newSetting.Protocol,
+		Protocol:   normalizeAgentProtocol(newSetting.Protocol),
 		Model:      newSetting.Model,
 		ApiKey:     newSetting.ApiKey,
 		Prompt:     newSetting.Prompt,
@@ -80,4 +88,32 @@ func (settingService *SettingService) UpdateAgentSettings(
 		ContextWindow: max(0, newSetting.ContextWindow),
 	}
 	return coreSetting.Set(ctx, settingService.durableKV, coreSetting.Agent, setting)
+}
+
+// TestAgentConnection 用提交的 Agent 配置发起一次最小探活（不落库），验证 LLM 是否真正可用。
+// 不依赖 Enable（允许保存前先测）；真正的探活在 agent.Ping 内完成。
+func (settingService *SettingService) TestAgentConnection(
+	ctx context.Context,
+	newSetting *model.AgentSettingDto,
+) error {
+	userid := viewer.MustFromContext(ctx).UserID()
+	user, err := settingService.commonService.CommonGetUserByUserId(ctx, userid)
+	if err != nil {
+		return err
+	}
+	if !user.IsAdmin {
+		return errors.New(commonModel.NO_PERMISSION_DENIED)
+	}
+
+	setting := model.AgentSetting{
+		Enable:   true, // 连通性测试不依赖启用开关
+		Protocol: normalizeAgentProtocol(newSetting.Protocol),
+		Model:    newSetting.Model,
+		ApiKey:   newSetting.ApiKey,
+		BaseURL:  urlUtil.TrimURL(newSetting.BaseURL),
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, agentTestTimeout)
+	defer cancel()
+	return agent.Ping(ctx, setting)
 }

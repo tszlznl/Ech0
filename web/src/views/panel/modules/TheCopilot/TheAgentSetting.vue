@@ -109,6 +109,21 @@
       </div>
       <p class="text-xs opacity-70 mt-1">{{ t('agentSetting.multimodalHint') }}</p>
     </div>
+
+    <!-- 测试连接：卡片底部操作行，右对齐 ghost 按钮 -->
+    <div
+      class="flex justify-end mt-4 pt-3 border-t"
+      :style="{ borderColor: 'var(--color-border-subtle)' }"
+    >
+      <BaseButton
+        class="px-3 text-sm bg-transparent"
+        :loading="agentTesting"
+        :title="t('agentSetting.testConnection')"
+        @click="handleTestAgentConnection"
+      >
+        {{ t('agentSetting.testConnection') }}
+      </BaseButton>
+    </div>
   </div>
 </template>
 
@@ -117,9 +132,10 @@ import BaseInput from '@/components/common/BaseInput.vue'
 import BaseSwitch from '@/components/common/BaseSwitch.vue'
 import BaseSelect from '@/components/common/BaseSelect.vue'
 import BaseTextArea from '@/components/common/BaseTextArea.vue'
+import BaseButton from '@/components/common/BaseButton.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { fetchUpdateAgentSettings } from '@/service/api'
+import { fetchUpdateAgentSettings, fetchTestAgentConnection } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
@@ -169,6 +185,22 @@ const save = async () => {
 }
 
 defineExpose({ save })
+
+// 测试连接：拿当前表单做一次最小探活（不依赖启用开关、不落库）
+const agentTesting = ref<boolean>(false)
+const handleTestAgentConnection = async () => {
+  agentTesting.value = true
+  try {
+    const res = await fetchTestAgentConnection(settingStore.AgentSetting)
+    if (res.code === 1) {
+      theToast.success(t('agentSetting.testSuccess'))
+    } else {
+      theToast.error(t('agentSetting.testFailed', { detail: res.msg }))
+    }
+  } finally {
+    agentTesting.value = false
+  }
+}
 
 onMounted(() => {
   getAgentSetting()
