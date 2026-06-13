@@ -110,11 +110,8 @@
       <p class="text-xs opacity-70 mt-1">{{ t('agentSetting.multimodalHint') }}</p>
     </div>
 
-    <!-- 测试连接：卡片底部操作行，右对齐 ghost 按钮 -->
-    <div
-      class="flex justify-end mt-4 pt-3 border-t"
-      :style="{ borderColor: 'var(--color-border-subtle)' }"
-    >
+    <!-- 测试连接：卡片底部操作行，右对齐 ghost 按钮（留白分隔，不加分隔线） -->
+    <div class="flex justify-end mt-6">
       <BaseButton
         class="px-3 text-sm bg-transparent"
         :loading="agentTesting"

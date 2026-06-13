@@ -101,8 +101,7 @@ import { storeToRefs } from 'pinia'
 const settingStore = useSettingStore()
 const { t } = useI18n()
 const { getSnapshotSchedule, startSnapshotTask, restoreSnapshotTask } = settingStore
-const { SnapshotSchedule, snapshotStatus, snapshotError, snapshotPhase } =
-  storeToRefs(settingStore)
+const { SnapshotSchedule, snapshotStatus, snapshotError, snapshotPhase } = storeToRefs(settingStore)
 
 const scheduleEditMode = ref<boolean>(false)
 const humanizedCron = computed(() => humanizeCron(SnapshotSchedule.value.cron_expression, t))

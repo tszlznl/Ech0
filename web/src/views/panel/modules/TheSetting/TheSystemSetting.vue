@@ -293,7 +293,8 @@ const systemLogoSrc = computed(() => resolveAvatarUrl(SystemSetting.value?.serve
 // 站点默认语言统一用 endonym 选项（与头部切换器、用户界面语言一致）。
 const localeOptions = LOCALE_OPTIONS
 const defaultLocaleLabel = computed(
-  () => LOCALE_ENDONYMS[SystemSetting.value?.default_locale as AppLocale] || LOCALE_ENDONYMS['zh-CN'],
+  () =>
+    LOCALE_ENDONYMS[SystemSetting.value?.default_locale as AppLocale] || LOCALE_ENDONYMS['zh-CN'],
 )
 const { enqueueUpload, waitForTask, clearFinishedUploads } = useFileQueue()
 
