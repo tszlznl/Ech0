@@ -357,6 +357,8 @@
   },
   "homeNav": {
     "themeToggleTitle": "Toggle theme (next: {mode})",
+    "localeToggleTitle": "Switch language",
+    "localeSyncFailed": "Failed to sync language preference",
     "themeLight": "Light",
     "themeDark": "Dark",
     "themeSunny": "Sunny",

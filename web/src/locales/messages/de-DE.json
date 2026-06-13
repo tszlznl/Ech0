@@ -357,6 +357,8 @@
   },
   "homeNav": {
     "themeToggleTitle": "Theme wechseln (nächstes: {mode})",
+    "localeToggleTitle": "Sprache wechseln",
+    "localeSyncFailed": "Spracheinstellung konnte nicht synchronisiert werden",
     "themeLight": "Hell",
     "themeDark": "Dunkel",
     "themeSunny": "Sonnig",

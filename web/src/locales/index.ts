@@ -15,9 +15,12 @@ export type AppLocale = (typeof SUPPORTED_LOCALES)[number]
 
 const loadedLocales = new Set<string>()
 
-const normalizeLocale = (raw?: string | null): AppLocale => {
+// toSupported 把任意输入映射到受支持的 locale；命中不了就返回 null，
+// 让上层的优先级阶梯把判断交给下一个候选（关键：不要提前兜底成 FALLBACK，
+// 否则一个不被支持但非空的浏览器语言会短路掉「站点默认」这一层）。
+const toSupported = (raw?: string | null): AppLocale | null => {
   const value = String(raw || '').trim()
-  if (!value) return FALLBACK_LOCALE
+  if (!value) return null
 
   const exact = SUPPORTED_LOCALES.find((locale) => locale.toLowerCase() === value.toLowerCase())
   if (exact) return exact
@@ -28,21 +31,22 @@ const normalizeLocale = (raw?: string | null): AppLocale => {
   if (langPrefix === 'de') return 'de-DE'
   if (langPrefix === 'ja') return 'ja-JP'
 
-  return FALLBACK_LOCALE
+  return null // 不支持 → 交给下一个候选
 }
 
-const resolveInitialLocale = (): AppLocale => {
-  const fromStorage = localStg.getItem<string>(LOCALE_STORAGE_KEY)
-  if (fromStorage) return normalizeLocale(fromStorage)
+const normalizeLocale = (raw?: string | null): AppLocale => toSupported(raw) ?? FALLBACK_LOCALE
 
-  const fromNavigator = navigator.languages?.[0] || navigator.language || DEFAULT_LOCALE
-  return normalizeLocale(fromNavigator)
-}
+// 模块加载时的初值：本设备记忆 > 浏览器语言 > 回退（站点默认此刻还拿不到，
+// 由随后 await 的 setupI18n 用完整阶梯精修，挂载前就会落定）。
+const initialLocale =
+  toSupported(localStg.getItem<string>(LOCALE_STORAGE_KEY)) ||
+  toSupported(navigator.languages?.[0] || navigator.language) ||
+  FALLBACK_LOCALE
 
 export const i18n = createI18n({
   legacy: false,
   globalInjection: true,
-  locale: resolveInitialLocale(),
+  locale: initialLocale,
   fallbackLocale: DEFAULT_LOCALE,
   messages: {},
 })
@@ -65,7 +69,15 @@ export async function setI18nLocale(locale: string): Promise<AppLocale> {
 
 export async function setupI18n(defaultLocale?: string) {
   const fromStorage = localStg.getItem<string>(LOCALE_STORAGE_KEY)
-  const locale = normalizeLocale(fromStorage || defaultLocale || i18n.global.locale.value)
+  const fromNavigator = navigator.languages?.[0] || navigator.language
+  // 阶梯：本设备显式选择 > 浏览器语言 > 站点默认 > 回退。
+  // 登录用户的 user.locale 由登录流程（stores/user.ts）先行写入 localStorage，
+  // 故在此作为最高层经由 fromStorage 命中，无需在这里单独处理。
+  const locale =
+    toSupported(fromStorage) ||
+    toSupported(fromNavigator) ||
+    toSupported(defaultLocale) ||
+    FALLBACK_LOCALE
   await setI18nLocale(locale)
   return i18n
 }

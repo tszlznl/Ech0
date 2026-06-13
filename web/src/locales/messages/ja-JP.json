@@ -357,6 +357,8 @@
   },
   "homeNav": {
     "themeToggleTitle": "テーマを切替（次：{mode}）",
+    "localeToggleTitle": "表示言語を切り替え",
+    "localeSyncFailed": "言語設定の同期に失敗しました",
     "themeLight": "ライト",
     "themeDark": "ダーク",
     "themeSunny": "サニー",

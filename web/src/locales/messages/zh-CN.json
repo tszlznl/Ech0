@@ -357,6 +357,8 @@
   },
   "homeNav": {
     "themeToggleTitle": "切换主题（下一个：{mode}）",
+    "localeToggleTitle": "切换显示语言",
+    "localeSyncFailed": "语言偏好同步失败",
     "themeLight": "浅色",
     "themeDark": "深色",
     "themeSunny": "晴日",

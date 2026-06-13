@@ -55,6 +55,7 @@
         >
           <component :is="themeIcon" class="w-4 h-4" />
         </button>
+        <TheLocaleToggle />
         <button
           v-if="!isLogin"
           type="button"
@@ -90,6 +91,7 @@ import Rss from '@/components/icons/rss.vue'
 import Auth from '@/components/icons/auth.vue'
 import Signoff from '@/components/icons/signoff.vue'
 import Zen from '@/components/icons/zen.vue'
+import TheLocaleToggle from '@/components/common/TheLocaleToggle.vue'
 import { storeToRefs } from 'pinia'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
