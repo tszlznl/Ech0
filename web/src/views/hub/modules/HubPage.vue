@@ -27,7 +27,8 @@
         </div>
       </template>
 
-      <div v-if="echoList.length > 0 && !isPreparing && !props.embedded && !hasMusicExtension">
+      <!-- 独立页面：虚拟滚动渲染（音乐卡已改为原生播放器，可安全参与回收） -->
+      <div v-if="echoList.length > 0 && !isPreparing && !props.embedded">
         <DynamicScroller
           class="hub-dynamic-scroller"
           :items="echoList"
@@ -56,6 +57,7 @@
         </DynamicScroller>
       </div>
 
+      <!-- 嵌入模式：宿主自带滚动容器，退回普通列表 -->
       <div v-else-if="echoList.length > 0 && !isPreparing" class="w-full">
         <div
           v-for="item in echoList"
@@ -113,7 +115,6 @@ import { useRouter, useRoute } from 'vue-router'
 import { useBfCacheRestore } from '@/composables/useBfCacheRestore'
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
 import { getEchoFilesBy } from '@/utils/echo'
-import { ExtensionType } from '@/enums/enums'
 import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
@@ -148,9 +149,6 @@ const getButtonClasses = (routeName: string, isBackButton = false) => {
 
 const hubStore = useHubStore()
 const { echoList, isLoading, isPreparing, hasMore, hasTriedInitialLoad } = storeToRefs(hubStore)
-const hasMusicExtension = computed(() =>
-  echoList.value.some((item) => item.extension?.type === ExtensionType.MUSIC),
-)
 
 const mainColumn = ref<HTMLElement | null>(null)
 const sentinelRef = ref<HTMLElement | null>(null)
