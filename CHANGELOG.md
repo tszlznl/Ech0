@@ -7,6 +7,36 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/lin-snow/Ech0/releases) — earlier release notes are not retroactively imported here.
 
 
+## [5.2.2] - 2026-06-13
+
+### Added
+
+- **Connection testing for S3 storage and the AI model.** Both the storage settings and the Agent settings panels gained a "test connection" button that validates the live configuration before you save it. Backend: a new `storage.Probe` (`internal/storage/probe.go`) checks bucket existence and credentials against the supplied S3 config **without touching the saved settings**; `agent.Ping` fires one minimal non-streaming request to verify the protocol / BaseURL / ApiKey / Model are actually usable (it deliberately does *not* require `Enable`, so you can test before turning the feature on, and uses `MaxTokens=16` to avoid an Anthropic empty-text false negative at `max_tokens=1`). New i18n keys for the test-connection states across zh-CN / en-US / ja-JP / de-DE.
+- **Guest-facing language switcher.** A globe-icon popover in the home header lets visitors switch the UI language; logged-in users' picks persist to `user.locale` for cross-device sync. New i18n keys `homeNav.localeToggleTitle` / `homeNav.localeSyncFailed`.
+- **Manual "snapshot now" button with live job progress in the snapshot-schedule settings.** The schedule panel can now trigger a one-off snapshot export and shows the job's progress inline, alongside the existing cron schedule.
+
+### Changed
+
+- **Visitors now see their own browser language by default.** Locale resolution was reordered to *device choice → navigator → site default → fallback*, using a nullable `toSupported()` helper so an unsupported-but-non-empty `navigator` value no longer short-circuits the site-default fallback. Previously a guest on a foreign-language site always saw the owner's `default_locale`.
+- **Language options are unified across the app and labelled with endonyms** (native names — 简体中文 / English / 日本語 / Deutsch), sourced from one shared list and reused by the home filter, system settings, and user settings instead of three divergent inline lists.
+- **Access-token detail modal rebuilt on Headless UI** for proper focus management, accessibility, and enter/leave transitions.
+- **Tag manager popover now positions itself dynamically** relative to the tag button that opened it.
+
+### Fixed
+
+- **The site owner no longer emails themselves a "new comment" notification for comments they post from the admin panel** (`SourceSystem`). Guest comments (`SourceGuest`) and external integration deliveries (`SourceIntegration`) still notify the owner, and replies to a guest still notify the reply target.
+
+### Internal
+
+- **Dependency bumps (Go, `go-patch-minor` group)**: `anthropics/anthropic-sdk-go` 1.46.0 → 1.48.0, `aws/aws-sdk-go-v2` 1.41.9 → 1.41.12, `aws-sdk-go-v2/config` 1.32.20 → 1.32.23, `aws-sdk-go-v2/credentials` 1.19.19 → 1.19.22, `aws-sdk-go-v2/service/s3` 1.102.2 → 1.103.2, `aws/smithy-go` 1.26.0 → 1.27.1.
+- **Dependency bumps (`web/`, `web-patch-minor` group)**: `@cap.js/widget` 0.1.54 → 0.1.56, `@dicebear/core` 10.0.2 → 10.1.0, `vue-i18n` 11.4.4 → 11.4.5, `@types/node` 25.9.1 → 25.9.2, `@vue/eslint-config-typescript` 14.7.0 → 14.8.0, `@vue/test-utils` 2.4.10 → 2.4.11, `stylelint` 17.12.0 → 17.13.0.
+
+
+## [5.2.1] - 2026-06-06
+
+A maintenance release with no user-visible product changes — code formatting, a README community badge (linux.do), and public-directory (`hub/`) entries only.
+
+
 ## [5.2.0] - 2026-06-06
 
 ### Added
@@ -366,7 +396,9 @@ This is primarily a security release: six advisories disclosed since v4.7.2 are 
 
   Practical risk in this repo was negligible (the vulnerable code only runs at PWA build time on developer-controlled input), but the alerts are now resolved at the supply-chain level.
 
-[Unreleased]: https://github.com/lin-snow/Ech0/compare/v5.2.0...HEAD
+[Unreleased]: https://github.com/lin-snow/Ech0/compare/v5.2.2...HEAD
+[5.2.2]: https://github.com/lin-snow/Ech0/compare/v5.2.1...v5.2.2
+[5.2.1]: https://github.com/lin-snow/Ech0/compare/v5.2.0...v5.2.1
 [5.2.0]: https://github.com/lin-snow/Ech0/compare/v5.1.0...v5.2.0
 [5.1.0]: https://github.com/lin-snow/Ech0/compare/v5.0.2...v5.1.0
 [5.0.2]: https://github.com/lin-snow/Ech0/compare/v5.0.0...v5.0.2
