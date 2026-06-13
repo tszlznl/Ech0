@@ -244,14 +244,7 @@
           {{ t('systemSetting.defaultLocale') }}:
         </h2>
         <span v-if="!editMode" class="flex-1 min-w-0 truncate">
-          {{
-            {
-              'en-US': t('commonUi.localeEnUS'),
-              'de-DE': t('commonUi.localeDeDe'),
-              'zh-CN': t('commonUi.localeZhCN'),
-              'ja-JP': t('commonUi.localeJaJP'),
-            }[SystemSetting.default_locale] || t('commonUi.localeZhCN')
-          }}
+          {{ defaultLocaleLabel }}
         </span>
         <BaseSelect
           v-else
@@ -288,6 +281,7 @@ import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { resolveAvatarUrl } from '@/service/request/shared'
 import { useFileQueue } from '@/lib/file'
+import { LOCALE_ENDONYMS, LOCALE_OPTIONS, type AppLocale } from '@/locales'
 
 const settingStore = useSettingStore()
 const { t } = useI18n()
@@ -296,12 +290,11 @@ const { SystemSetting } = storeToRefs(settingStore)
 
 const editMode = ref<boolean>(false)
 const systemLogoSrc = computed(() => resolveAvatarUrl(SystemSetting.value?.server_logo))
-const localeOptions = computed(() => [
-  { label: String(t('commonUi.localeZhCN')), value: 'zh-CN' },
-  { label: String(t('commonUi.localeEnUS')), value: 'en-US' },
-  { label: String(t('commonUi.localeDeDe')), value: 'de-DE' },
-  { label: String(t('commonUi.localeJaJP')), value: 'ja-JP' },
-])
+// 站点默认语言统一用 endonym 选项（与头部切换器、用户界面语言一致）。
+const localeOptions = LOCALE_OPTIONS
+const defaultLocaleLabel = computed(
+  () => LOCALE_ENDONYMS[SystemSetting.value?.default_locale as AppLocale] || LOCALE_ENDONYMS['zh-CN'],
+)
 const { enqueueUpload, waitForTask, clearFinishedUploads } = useFileQueue()
 
 const handleUpdateSystemSetting = async () => {

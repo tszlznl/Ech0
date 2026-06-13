@@ -7,7 +7,10 @@
         <div
           v-if="!isFilteringMode"
           class="home-filter__search-shell"
-          :class="{ 'home-filter__search-shell--with-chat': showChatTrigger && chatAvailable }"
+          :class="{
+            'home-filter__search-shell--with-chat': showChatTrigger && chatAvailable,
+            'home-filter__search-shell--win': !isMac,
+          }"
         >
           <BaseInput
             v-tooltip="t('homeTop.searchTitle')"
@@ -203,13 +206,16 @@ watch(selectedTagIds, (ids) => {
 
 <style scoped>
 .home-filter__search-shell {
+  /* kbd 键帽簇所需的右内边距；非 Mac 的 Ctrl+K 文案更宽，按系统在下方调宽 */
+  --kbd-reserve: 3.25rem;
+
   position: relative;
   flex: 1 1 auto;
   min-width: 0;
   padding: 0.3rem;
 
   /* 留出 kbd 徽章所需的右内边距，避免输入内容与按钮视觉重叠 */
-  padding-right: 3.25rem;
+  padding-right: var(--kbd-reserve);
   border-radius: var(--radius-xs);
   background: var(--filter-search-shell-bg);
   box-shadow: inset 0 0 0 1px var(--color-border-subtle);
@@ -217,7 +223,16 @@ watch(selectedTagIds, (ids) => {
 
 /* 框内同时放对话 + 搜索两个键帽时，右侧留更宽 */
 .home-filter__search-shell--with-chat {
-  padding-right: 5.6rem;
+  --kbd-reserve: 5.6rem;
+}
+
+/* 非 macOS：Ctrl+K / Ctrl+J 文案比 ⌘K/⌘J 宽，键帽会撑大，需要更宽的预留，否则长搜索词会钻到键帽下方 */
+.home-filter__search-shell--win {
+  --kbd-reserve: 4.5rem;
+}
+
+.home-filter__search-shell--win.home-filter__search-shell--with-chat {
+  --kbd-reserve: 7rem;
 }
 
 /* 框内右侧的键帽簇：垂直居中，两个键并排 */

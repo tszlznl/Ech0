@@ -41,7 +41,7 @@ import { useI18n } from 'vue-i18n'
 import { onClickOutside } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import LocaleIcon from '@/components/icons/locale.vue'
-import { setI18nLocale, SUPPORTED_LOCALES, type AppLocale } from '@/locales'
+import { setI18nLocale, LOCALE_OPTIONS, type AppLocale } from '@/locales'
 import { useUserStore } from '@/stores'
 import { fetchUpdateUser } from '@/service/api/user'
 import { theToast } from '@/utils/toast'
@@ -57,17 +57,9 @@ const menuEl = ref<HTMLElement | null>(null)
 
 const currentLocale = computed(() => locale.value)
 
-// 复用 commonUi 现成的语言全名 key，无需新增标签。
-const LABEL_KEYS: Record<AppLocale, string> = {
-  'zh-CN': 'commonUi.localeZhCN',
-  'en-US': 'commonUi.localeEnUS',
-  'de-DE': 'commonUi.localeDeDe',
-  'ja-JP': 'commonUi.localeJaJP',
-}
-
-const options = computed(() =>
-  SUPPORTED_LOCALES.map((value) => ({ value, label: String(t(LABEL_KEYS[value])) })),
-)
+// 选项统一取自 @/locales 的 endonym 表（头部与设置页共用同一份，全站一致）：
+// 各语言永远以自身名字展示，不随当前界面语言翻译。
+const options = LOCALE_OPTIONS
 
 onClickOutside(
   menuEl,

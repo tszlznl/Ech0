@@ -13,6 +13,21 @@ export const SUPPORTED_LOCALES = ['zh-CN', 'en-US', 'de-DE', 'ja-JP'] as const
 
 export type AppLocale = (typeof SUPPORTED_LOCALES)[number]
 
+// 各语言的自称（endonym）：所有语言选择器统一用这份，固定不随界面语言翻译，
+// 这样头部切换器与后台两个设置页（站点默认 / 用户界面语言）展示完全一致。
+export const LOCALE_ENDONYMS: Record<AppLocale, string> = {
+  'zh-CN': '简体中文',
+  'en-US': 'English',
+  'de-DE': 'Deutsch',
+  'ja-JP': '日本語',
+}
+
+// 选择器统一选项（顺序同 SUPPORTED_LOCALES）。
+export const LOCALE_OPTIONS = SUPPORTED_LOCALES.map((value) => ({
+  value,
+  label: LOCALE_ENDONYMS[value],
+}))
+
 const loadedLocales = new Set<string>()
 
 // toSupported 把任意输入映射到受支持的 locale；命中不了就返回 null，

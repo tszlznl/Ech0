@@ -13,11 +13,7 @@
     "add": "Hinzufügen",
     "actions": "Aktionen",
     "optional": "Optional",
-    "none": "Keine",
-    "localeZhCN": "Vereinfachtes Chinesisch",
-    "localeEnUS": "Englisch",
-    "localeDeDe": "Deutsch",
-    "localeJaJP": "Japanisch"
+    "none": "Keine"
   },
   "editor": {
     "tagPickerTooltip": "Tags auswählen",
@@ -520,10 +516,6 @@
     "email": "E-Mail",
     "password": "Passwort",
     "locale": "Sprache",
-    "localeZhShort": "简中",
-    "localeEnShort": "EN",
-    "localeDeShort": "DE",
-    "localeJaShort": "JA",
     "usernamePlaceholder": "Benutzername eingeben",
     "emailPlaceholder": "E-Mail eingeben",
     "passwordPlaceholder": "Passwort eingeben",

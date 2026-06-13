@@ -134,7 +134,7 @@ import { resolveAvatarUrl } from '@/service/request/shared'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { useFileQueue } from '@/lib/file'
 import { useI18n } from 'vue-i18n'
-import { setI18nLocale } from '@/locales'
+import { setI18nLocale, LOCALE_ENDONYMS, LOCALE_OPTIONS, type AppLocale } from '@/locales'
 
 const userStore = useUserStore()
 const { t } = useI18n()
@@ -152,19 +152,11 @@ const userInfo = ref<App.Api.User.UserInfo>({
 
 const editMode = ref<boolean>(false)
 const avatarSrc = computed(() => resolveAvatarUrl(user.value?.avatar))
-const localeOptions = computed(() => [
-  { label: String(t('userSetting.localeZhShort')), value: 'zh-CN' },
-  { label: String(t('userSetting.localeEnShort')), value: 'en-US' },
-  { label: String(t('userSetting.localeDeShort')), value: 'de-DE' },
-  { label: String(t('userSetting.localeJaShort')), value: 'ja-JP' },
-])
-const localeLabel = computed(() => {
-  const locale = userInfo.value.locale
-  if (locale === 'en-US') return t('userSetting.localeEnShort')
-  if (locale === 'de-DE') return t('userSetting.localeDeShort')
-  if (locale === 'ja-JP') return t('userSetting.localeJaShort')
-  return t('userSetting.localeZhShort')
-})
+// 用户界面语言统一用 endonym 选项（与头部切换器、站点默认语言一致）。
+const localeOptions = LOCALE_OPTIONS
+const localeLabel = computed(
+  () => LOCALE_ENDONYMS[userInfo.value.locale as AppLocale] || LOCALE_ENDONYMS['zh-CN'],
+)
 const { enqueueUpload, waitForTask, clearFinishedUploads } = useFileQueue()
 
 const handleUpdateUser = async () => {

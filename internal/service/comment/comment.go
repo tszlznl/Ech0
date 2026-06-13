@@ -209,7 +209,11 @@ func (s *CommentService) CreateComment(
 		return model.CreateCommentResult{}, err
 	}
 	s.emitCommentCreated(ctx, comment)
-	s.notifyOwnerAsync(ctx, "created", comment)
+	// 站长/管理员自己发的评论（SourceSystem），收件人就是站长本人，无需再给自己发「有新评论」提醒；
+	// 但若是回复访客，仍要走 notifyReplyTargetAsync 通知被回复者。
+	if shouldNotifyOwnerOnCreate(comment.Source) {
+		s.notifyOwnerAsync(ctx, "created", comment)
+	}
 	s.notifyReplyTargetAsync(ctx, comment)
 	return model.CreateCommentResult{
 		ID:     comment.ID,
@@ -324,7 +328,9 @@ func (s *CommentService) CreateIntegrationComment(
 	)
 
 	s.emitCommentCreated(ctx, comment)
-	s.notifyOwnerAsync(ctx, "created", comment)
+	if shouldNotifyOwnerOnCreate(comment.Source) {
+		s.notifyOwnerAsync(ctx, "created", comment)
+	}
 	return model.CreateCommentResult{
 		ID:     comment.ID,
 		Status: comment.Status,
@@ -676,6 +682,13 @@ func (s *CommentService) notifyReplyTargetAsync(ctx context.Context, comment mod
 
 func useCommentRecipient(kind string) bool {
 	return kind == "status" || kind == "hot"
+}
+
+// shouldNotifyOwnerOnCreate 判断「有新评论」邮件是否应发给站长。
+// 站长/管理员在后台自己发的评论（SourceSystem），收件人就是站长本人，发给自己没有意义，跳过；
+// 访客评论（SourceGuest）与外部集成投递（SourceIntegration）仍需通知站长。
+func shouldNotifyOwnerOnCreate(source model.SourceType) bool {
+	return source != model.SourceSystem
 }
 
 func parseValidEmail(raw string) (string, bool) {

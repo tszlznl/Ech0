@@ -4,7 +4,7 @@
   <BaseTooltip :content="effectiveTooltip">
     <button
       :class="[
-        'cursor-pointer p-1.5 rounded-[var(--btn-radius)] ring-inset ring-1 ring-[var(--btn-ring-color)] text-[var(--btn-text-color)] outline-none shadow-[var(--btn-shadow)] transition-colors duration-200',
+        'relative cursor-pointer p-1.5 rounded-[var(--btn-radius)] ring-inset ring-1 ring-[var(--btn-ring-color)] text-[var(--btn-text-color)] outline-none shadow-[var(--btn-shadow)] transition-colors duration-200',
         hasBg ? '' : 'bg-[var(--btn-bg-color)]',
         isDisabled
           ? 'cursor-not-allowed opacity-70'
@@ -15,13 +15,15 @@
       :aria-label="resolvedAriaLabel"
       @click="onClick"
     >
-      <span v-if="loading" class="flex items-center justify-center">
-        <TheLoadingIndicator size="sm" :center="false" />
-      </span>
-      <span v-else-if="icon" class="flex items-center justify-center">
+      <!-- 内容（图标 / 文字）始终保留在流中：loading 时仅置为 invisible，撑住按钮原尺寸，避免布局抖动 -->
+      <span v-if="icon" class="flex items-center justify-center" :class="{ invisible: loading }">
         <component :is="icon" class="w-full h-full" />
       </span>
-      <span v-if="$slots.default"><slot /></span>
+      <span v-if="$slots.default" :class="{ invisible: loading }"><slot /></span>
+      <!-- 菊花绝对定位覆盖在按钮正中，不占流，故不影响宽高 -->
+      <span v-if="loading" class="absolute inset-0 flex items-center justify-center">
+        <TheLoadingIndicator size="sm" :center="false" />
+      </span>
     </button>
   </BaseTooltip>
 </template>
