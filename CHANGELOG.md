@@ -7,11 +7,16 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/lin-snow/Ech0/releases) — earlier release notes are not retroactively imported here.
 
 
-## [Unreleased]
+## [5.2.3] - 2026-06-13
 
 ### Changed
 
-- **Music cards now use Ech0's native single-track player.** The Vue player keeps Meting API metadata resolution while replacing APlayer/MetingJS with the browser audio API, Ech0 theme tokens, synchronized lyrics, seeking, and Media Session controls. Playlist responses intentionally play only the first track and no next-track action is exposed.
+- **Music cards now use Ech0's native single-track player.** The Vue player keeps Meting API metadata resolution while replacing APlayer/MetingJS with the browser audio API, Ech0 theme tokens, synchronized lyrics, seeking, and Media Session controls. Playlist responses intentionally play only the first track and no next-track action is exposed. The APlayer/MetingJS scripts and styles are dropped from `web/public`.
+- **The Hub timeline re-enables virtual scrolling for music posts.** Because the native music card survives list recycling (APlayer instances did not), the Hub page no longer falls back to a plain non-virtualized list when a music extension is present — `DynamicScroller` is now used unconditionally on the standalone Hub page, restoring smooth scrolling on long timelines that contain music.
+
+### Fixed
+
+- **Tapping an Echo card on touch devices no longer needs two taps.** The card's "open" button used to be revealed by `:hover`, so on a touch device the first tap only triggered the sticky-hover reveal (swallowing the tap) and a second tap was required. The reveal is now gated behind `@media (hover: hover)`, so it only applies to mouse/hover-capable devices; touch taps open the Echo directly.
 
 
 ## [5.2.2] - 2026-06-13
