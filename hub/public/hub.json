@@ -59,6 +59,14 @@
     {
       "id": "xiaoten",
       "url": "https://echo.xiaoten.com"
+    },
+    {
+      "id": "galaha",
+      "url": "https://galaha.cn"
+    },
+    {
+      "id": "bin",
+      "url": "https://echo.3868088.xyz"
     }
   ]
 }
