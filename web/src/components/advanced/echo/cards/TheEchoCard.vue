@@ -16,7 +16,7 @@
           </div>
           <button
             type="button"
-            class="echo-open-btn flex items-center justify-center w-6 h-6 rounded-sm text-[var(--color-text-muted)] opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:text-[var(--color-text-primary)] focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-border-subtle)]"
+            class="echo-open-btn flex items-center justify-center w-6 h-6 rounded-sm text-[var(--color-text-muted)] opacity-0 transition-opacity duration-150 hover:text-[var(--color-text-primary)] focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-border-subtle)]"
             :aria-label="t('echoCard.openDetail')"
             v-tooltip="t('echoCard.openDetail')"
             @click="handleExpandEcho(echo.id)"
@@ -364,8 +364,14 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
-.echo-timeline:hover .echo-open-btn {
-  animation: echo-open-nudge-left 1200ms ease-out both;
+/* Only reveal the open button on hover-capable (mouse) devices. On touch
+   devices the first tap would otherwise just trigger this reveal (sticky
+   hover), swallowing the click and forcing a second tap on the date. */
+@media (hover: hover) {
+  .echo-timeline:hover .echo-open-btn {
+    opacity: 1;
+    animation: echo-open-nudge-left 1200ms ease-out both;
+  }
 }
 
 .echo-open-btn:focus-visible {
