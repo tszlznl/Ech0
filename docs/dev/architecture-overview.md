@@ -336,7 +336,11 @@ mcp.Server.dispatch(method)：
    ▼
 internal/mcp/Adapter（adapter_*.go）── 注入 8 个领域 service：
    echo / user / comment / file / common / connect / copilot(SummaryService) / setting
-   把每个 service 方法包装成 ToolHandler / ResourceHandler，RegisterAll 注册进 Registry
+   RegisterAll 依次调用：
+     registerEcho{Tools,Resources} · registerUser/Comment/File/Common/ConnectResources
+     registerAgentTools（get_recent，复用 copilotSvc.SummaryService）
+     registerWebhookTools（list/create/update/delete/test，全部路由到 settingSvc，scope=admin:settings）
+   每个 register* 把 service 方法包装成 ToolHandler / ResourceHandler 注册进 Registry
 ```
 
 辅助：`RawTokenFromContext` / `BaseURLFromContext` 从 ctx 取原始 token 与外部 base URL（如 file_upload_guide 需要拼出可访问 URL）。
@@ -444,6 +448,7 @@ internal/mcp/Adapter（adapter_*.go）── 注入 8 个领域 service：
 | `internal/kvstore` | KV 抽象，两实现 | `Store` 接口、`Memory`(易失) / `Persistent`(落库，包 keyvalue repo)；字段命名 `durableKV` / `ephemeralKV` |
 | `internal/transaction` | 事务抽象 | `Transactor.Run`、`GormTransactor` |
 | `internal/storage` | 本地/S3 统一文件抽象（基于 `pkg/virefs`），**有状态单例** | `Manager`、`StorageSelector`、`S3SettingStore`(从 KV 读 S3 设置)、`ReloadFromConfigAndDB`、`ApplyS3Setting` |
+| `internal/i18n` | 后端请求 locale 解析与翻译引擎（`go-i18n/v2`）：Gin 中间件 `Middleware()` 在每次请求时解析 locale，优先级：`lang` 查询参数 / `X-Locale` 请求头 → 用户偏好（DB）→ 站点默认（KV）→ 兜底 `en-US`；嵌入 4 种语言包（zh-CN / en-US / de-DE / ja-JP）；`ApplyUserLocaleFromUserID` 供 Auth 后升级当前请求 locale；内置 CVE-2022-32149 输入防护 | `ResolveLocale`、`NewLocalizer`、`Localize`、`Middleware`、`ApplyUserLocaleFromUserID`；被 `internal/middleware`（注册 locale 中间件）及 copilot `RunStrings` 使用 |
 | `internal/middleware` | 中间件聚合 | `Deps{TokenRevoker}`；实现：auth/scope/cors/origin/ratelimit/maintenance/nocache/staticfile |
 | `internal/captcha` | PoW 验证码（包 `pkg/gocap`），进程级共享 engine | `SiteVerify`、`NewHTTPHandler`（挂在 `/api`） |
 | `internal/visitor` | PV/UV 追踪器，**actor 模型**（单 goroutine 改状态） | `Tracker.Record/Last7Days/Today/Load`、`DayStat`；由 `task/scheduled.VisitorSnapshot` 落库 |
@@ -452,7 +457,7 @@ internal/mcp/Adapter（adapter_*.go）── 注入 8 个领域 service：
 | `internal/agent` | LLM Provider 抽象 + ReAct loop（详见 §7） | `agent.Run`、`Generate`；Provider 适配 OpenAI 兼容 / Anthropic |
 | `internal/mcp` | MCP JSON-RPC 服务端（详见 §8） | `Server.ServeHTTP`、`Registry`、`Adapter` |
 | `internal/embedding` | 向量/RAG embedding 客户端（OpenAI 兼容 `/v1/embeddings`） | `Embed/EmbedOne`；service 层有 `Indexer`、`Search`、`Backfill` |
-| `internal/util/*` | 横切工具：log(zap 包装) / crypto / jwt / img / md / timezone / async / egress / uuid / github / tui ... | 日志须带 `module` 字段，见 `docs/dev/logging.md` |
+| `internal/util/*` | 横切工具：log(zap 包装) / crypto / jwt / img / md / timezone / async / egress / uuid / github / tui / cookie / err / format / url ... | 日志须带 `module` 字段，见 `docs/dev/logging.md` |
 
 **无反向依赖的红线**：`setting`/`kvstore`/`app` 从不 import `service`/`handler`；`job`/`task` 的 runner 可 import service，但 `job`/`task` 核心不 import 具体 runner（靠 `Register` 发现）；`migrator` 核心引擎不依赖 `job`；`agent` 不依赖任何领域包。
 
