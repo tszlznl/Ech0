@@ -8,7 +8,7 @@
 <template>
   <div class="reasoning" :class="{ 'reasoning--active': active }">
     <button class="reasoning__header" :aria-expanded="!collapsed" @click="collapsed = !collapsed">
-      <span class="reasoning__glyph" aria-hidden="true" />
+      <Reasoning class="reasoning__glyph" aria-hidden="true" />
       <span class="reasoning__label">{{ label }}</span>
       <svg
         class="reasoning__chevron"
@@ -36,6 +36,7 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { TheMdPreview } from '@/components/advanced/md'
+import Reasoning from '@/components/icons/reasoning.vue'
 
 const props = defineProps<{
   /** 思考过程文本（markdown） */
@@ -96,18 +97,21 @@ const label = computed<string>(() => {
   color: var(--color-text-secondary);
 }
 
-/* 思考状态点：思考中轻轻呼吸，结束后静止 */
+/* 思考脸图标：思考中着 accent 并轻轻呼吸，结束后随 muted 文字静止 */
 .reasoning__glyph {
-  width: 0.45rem;
-  height: 0.45rem;
+  width: 1.05rem;
+  height: 1.05rem;
   flex-shrink: 0;
-  border-radius: 999px;
-  background: var(--color-text-muted);
-  opacity: 0.6;
+  opacity: 0.85;
+}
+
+/* 图标内置 fill=#888888，统一改用 currentColor 以便随状态/主题着色 */
+.reasoning__glyph :deep(path) {
+  fill: currentColor;
 }
 
 .reasoning--active .reasoning__glyph {
-  background: var(--color-accent);
+  color: var(--color-accent);
   opacity: 1;
   animation: reasoning-pulse 1.4s ease-in-out infinite;
 }
@@ -115,13 +119,11 @@ const label = computed<string>(() => {
 @keyframes reasoning-pulse {
   0%,
   100% {
-    opacity: 0.4;
-    transform: scale(0.85);
+    opacity: 0.5;
   }
 
   50% {
     opacity: 1;
-    transform: scale(1);
   }
 }
 
