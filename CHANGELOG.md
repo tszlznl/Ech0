@@ -7,6 +7,24 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/lin-snow/Ech0/releases) — earlier release notes are not retroactively imported here.
 
 
+## [5.2.4] - 2026-06-19
+
+### Added
+
+- **Chat now shows the model's reasoning process.** When a model emits a thinking/reasoning stream (or inline `<think>` blocks), the chat panel separates that reasoning from the final answer and renders it in a collapsible section with a live "Thinking…" state and a "Thought for {seconds}s" duration once it settles. The reasoning text and its duration are persisted with the chat session so they survive a reload, and inline `<think>` blocks are stripped out of the answer body. New i18n keys `reasoningThinking` / `reasoningDone` across zh-CN / en-US / ja-JP / de-DE.
+- **MCP discovery read tools and a visitor-stats resource.** The inbound MCP server (`/mcp`) now exposes three existing echo read endpoints as tools under `ScopeEchoRead` — `get_hot_posts`, `get_random_post`, `get_on_this_day_posts` — plus a new `ech0://stats/visitors` resource (past 7-day PV/UV) gated by `ScopeAdminSettings` to match the REST `/system/visitor-stats` route. README (`internal/mcp/README.md`) and `docs/usage/mcp-usage.md` updated.
+
+### Internal
+
+- **Removed the unused `vditor` dependency** from `web/` — it had zero references in `web/src` (a leftover after switching to the in-house `TheMdEditor`) and never entered the bundle, narrowing the dependency and supply-chain surface.
+- **Hub instance health check.** A new scheduled GitHub Actions workflow (`hub-health-cleanup.yml`) periodically health-checks public-directory instances and prunes dead ones.
+- **Toolchain bumps**: `pnpm` 11.8.0; Go 1.26.4 in the docker test-image workflow.
+- **Dependency bumps (Go, `go-patch-minor` group)**: `anthropics/anthropic-sdk-go` 1.48.0 → 1.50.1, `aws/aws-sdk-go-v2` 1.41.12 → 1.42.0, `aws-sdk-go-v2/config` 1.32.23 → 1.32.25, `aws-sdk-go-v2/credentials` 1.19.22 → 1.19.24, `aws-sdk-go-v2/service/s3` 1.103.2 → 1.103.3, `aws/smithy-go` 1.27.1 → 1.27.2, `golang.org/x/mod` 0.36.0 → 0.37.0, `golang.org/x/net` 0.55.0 → 0.56.0, `golang.org/x/sync` 0.20.0 → 0.21.0, `golang.org/x/text` 0.37.0 → 0.38.0.
+- **Dependency bumps (`web/`, `web-patch-minor` group)**: `vue` 3.5.35 → 3.5.38, `@dicebear/core` 10.1.0 → 10.3.0, `@dicebear/styles` 10.1.0 → 10.2.0, `unocss` / `@unocss/preset-wind4` 66.7.0 → 66.7.2, `eslint` 10.4.1 → 10.5.0, `prettier` 3.8.3 → 3.8.4, `vue-tsc` 3.3.3 → 3.3.5, `vite-plugin-vue-devtools` 8.1.2 → 8.1.3, `npm-run-all2` 9.0.1 → 9.0.2, `@types/node` 25.9.2 → 25.9.3.
+- **Dependency bumps (`hub/` & `site/`)**: `markdown-it` 14.1.1 → 14.2.0 (hub), `react-router` 7.15.0 → 7.15.1 (site), `vite` 8.0.12 → 8.0.16 (both).
+- **Code structure refactors** for readability/maintainability, and a staticcheck (SA5011) fix in the agent run-loop test.
+
+
 ## [5.2.3] - 2026-06-13
 
 ### Changed
