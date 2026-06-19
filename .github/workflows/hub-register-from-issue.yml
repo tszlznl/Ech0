@@ -33,7 +33,7 @@ jobs:
 
             const hubPath = 'hub/public/hub.json';
             const issueNumber = context.eventName === 'workflow_dispatch'
-              ? Number(core.getInput('issue_number'))
+              ? Number(context.payload.inputs.issue_number)
               : context.issue.number;
 
             if (!Number.isInteger(issueNumber) || issueNumber <= 0) {
