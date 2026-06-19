@@ -33,6 +33,14 @@
 
           <!-- AI：无气泡的 markdown 正文 -->
           <template v-else>
+            <!-- 推理折叠块：推理模型才有，默认折叠成「已思考（用时 X 秒）」，思考中自动展开 -->
+            <ChatReasoning
+              v-if="msg.reasoning !== undefined"
+              :text="msg.reasoning"
+              :active="msg.reasoningActive"
+              :duration-ms="msg.reasoning_ms"
+            />
+
             <!-- 检索状态条：Agent 自主检索时逐条显示关键词（设计 §9 searching 事件） -->
             <div v-if="msg.searches && msg.searches.length > 0" class="searching">
               <span
@@ -59,7 +67,7 @@
             </div>
 
             <div
-              v-if="msg.content.length === 0 && isStreaming(idx)"
+              v-if="msg.content.length === 0 && isStreaming(idx) && !msg.reasoningActive"
               class="thinking"
               :aria-label="t('chatPanel.send')"
             >
@@ -197,6 +205,7 @@ import Send from '@/components/icons/send.vue'
 import { TheMdPreview } from '@/components/advanced/md'
 import AnimatedMarkdown from './AnimatedMarkdown.vue'
 import ChatSources from './ChatSources.vue'
+import ChatReasoning from './ChatReasoning.vue'
 import { ref, computed, nextTick, onBeforeUnmount, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -450,6 +459,19 @@ const streamInto = (question: string, assistant: App.Api.Chat.ChatMessage) => {
       // 区间聚合总结（summarize_echos）的覆盖度，供「📚 已覆盖 N 条」状态条如实展示
       assistant.coverage = coverage
     },
+    onReasoning: (text) => {
+      // 推理模型的思考增量：首段到达即建块并标记「思考中」（折叠块自动展开）
+      if (assistant.reasoning === undefined) {
+        assistant.reasoning = ''
+        assistant.reasoningActive = true
+      }
+      assistant.reasoning += text
+    },
+    onReasoningDone: (durationMs) => {
+      // 推理结束：定格后端权威耗时并停掉「思考中」（折叠块自动收起，舞台让回答案）
+      assistant.reasoning_ms = durationMs
+      assistant.reasoningActive = false
+    },
     onDelta: (text) => {
       assistant.content += text
     },
@@ -505,6 +527,9 @@ const retryLast = () => {
   assistant.searches = []
   assistant.coverage = undefined
   assistant.failed = false
+  assistant.reasoning = undefined
+  assistant.reasoning_ms = undefined
+  assistant.reasoningActive = false
   streamInto(user.content, assistant)
 }
 
@@ -525,7 +550,12 @@ const handleStop = () => {
 // 流式结束（含正常完成 / 出错 / 手动停止）后，若没有正在进行的跳转，尝试收起临时留白：
 // 答案已长到不致回弹时静默收起，过短则保留至下次滚到底/发消息（避免突兀跳变）。
 watch(loading, (now, prev) => {
-  if (prev && !now && !jumping) collapseTailIfSafe()
+  if (!prev || now) return
+  // 流式结束（完成/出错/手动停止）：若推理还卡在「思考中」（如手动停止未收到 reasoning_done），
+  // 就地定格，避免折叠块永远转圈
+  const last = messages.value[messages.value.length - 1]
+  if (last?.role === 'assistant' && last.reasoningActive) last.reasoningActive = false
+  if (!jumping) collapseTailIfSafe()
 })
 
 const handleClear = () => {

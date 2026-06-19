@@ -1088,6 +1088,8 @@
     "sourcesMore": "展开其余 {count} 条来源",
     "sourcesLess": "收起来源",
     "sourceNoContent": "无正文",
+    "reasoningThinking": "深度思考中…",
+    "reasoningDone": "已思考（用时 {seconds} 秒）",
     "navLabel": "问题导航"
   },
   "chatLauncher": {

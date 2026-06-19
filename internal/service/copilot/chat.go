@@ -40,7 +40,8 @@ func (s *CopilotService) agentSetting(ctx context.Context) (settingModel.AgentSe
 // 是否检索、检索几次（search_echos 工具），全过程以 SSE 写入 w。
 //
 // 设计上：尽早写出 SSE 头，之后所有错误都以 SSE "error" 事件回传，而非 HTTP 状态码。
-// SSE 事件：searching（模型决定检索）/ sources（命中来源，可多次）/ delta（文本增量）/
+// SSE 事件：searching（模型决定检索）/ sources（命中来源，可多次）/ reasoning（推理增量，
+// 推理模型才有）/ reasoning_done（推理结束，含耗时 duration_ms）/ delta（文本增量）/
 // done（收尾）/ error（中止）。
 func (s *CopilotService) AskStream(ctx context.Context, question string, locale string, timezone string, w http.ResponseWriter) error {
 	flusher, ok := w.(http.Flusher)
@@ -73,6 +74,21 @@ func (s *CopilotService) AskStream(ctx context.Context, question string, locale 
 	// 收集本轮 assistant 文本与命中来源，正常收尾时一并持久化。
 	var assistantBuf strings.Builder
 	var collectedSources []embeddingModel.SearchResult
+	// 推理（reasoning）分流收集：reasoningBuf 累积思考文本，计时从首个 reasoning 增量起、到首个答案
+	// 增量止（或收尾兜底），算出 reasoningMs 供前端展示「已思考（用时 X 秒）」并随会话持久化。
+	var reasoningBuf strings.Builder
+	var reasoningStart time.Time
+	var reasoningMs int64
+	reasoningEnded := false
+	// endReasoning 在推理结束（答案开始或收尾）时定格耗时并通知前端停止计时；幂等。
+	endReasoning := func() {
+		if reasoningStart.IsZero() || reasoningEnded {
+			return
+		}
+		reasoningEnded = true
+		reasoningMs = time.Since(reasoningStart).Milliseconds()
+		writeSSE(w, flusher, "reasoning_done", map[string]int64{"duration_ms": reasoningMs})
+	}
 
 	agentSetting, err := s.agentSetting(ctx)
 	if err != nil {
@@ -129,15 +145,28 @@ func (s *CopilotService) AskStream(ctx context.Context, question string, locale 
 		case ev, ok := <-stream:
 			if !ok {
 				// Run 正常会在关闭前发 done/error；兜底以 done 收尾
-				s.persistTurn(ctx, userID, question, assistantBuf.String(), collectedSources)
+				endReasoning() // 纯推理无答案时也定格耗时
+				s.persistTurn(ctx, userID, question, assistantTurn{
+					answer: assistantBuf.String(), sources: collectedSources,
+					reasoning: reasoningBuf.String(), reasoningMs: reasoningMs,
+				})
 				writeSSE(w, flusher, "done", map[string]bool{"done": true})
 				return nil
 			}
 			switch ev.Kind {
 			case agent.AgentDelta:
 				if ev.Text != "" {
+					endReasoning() // 首个答案增量 → 推理阶段结束，定格耗时
 					assistantBuf.WriteString(ev.Text)
 					writeSSE(w, flusher, "delta", map[string]string{"text": ev.Text})
+				}
+			case agent.AgentReasoning:
+				if ev.Text != "" {
+					if reasoningStart.IsZero() {
+						reasoningStart = time.Now()
+					}
+					reasoningBuf.WriteString(ev.Text)
+					writeSSE(w, flusher, "reasoning", map[string]string{"text": ev.Text})
 				}
 			case agent.AgentSearching:
 				writeSSE(w, flusher, "searching", map[string]string{
@@ -156,7 +185,11 @@ func (s *CopilotService) AskStream(ctx context.Context, question string, locale 
 					writeSSE(w, flusher, "coverage", meta)
 				}
 			case agent.AgentDone:
-				s.persistTurn(ctx, userID, question, assistantBuf.String(), collectedSources)
+				endReasoning() // 纯推理无答案时也定格耗时
+				s.persistTurn(ctx, userID, question, assistantTurn{
+					answer: assistantBuf.String(), sources: collectedSources,
+					reasoning: reasoningBuf.String(), reasoningMs: reasoningMs,
+				})
 				writeSSE(w, flusher, "done", map[string]bool{"done": true})
 				return nil
 			case agent.AgentError:

@@ -1088,6 +1088,8 @@
     "sourcesMore": "他 {count} 件を表示",
     "sourcesLess": "折りたたむ",
     "sourceNoContent": "本文なし",
+    "reasoningThinking": "思考中…",
+    "reasoningDone": "思考時間 {seconds} 秒",
     "navLabel": "質問ナビゲーション"
   },
   "chatLauncher": {

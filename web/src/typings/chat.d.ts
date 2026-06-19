@@ -49,8 +49,15 @@ declare namespace App {
         // 区间聚合总结的覆盖度（summarize_echos 命中时填充，供覆盖度状态条展示）
         coverage?: ChatCoverage
         // 仅前端瞬态：本轮流式因传输/服务端 error 中断（区别于「正常 done 但空回复」），
-        // 供失败态渲染「重发」入口。不参与持久化（后端只存 role/content/sources）。
+        // 供失败态渲染「重发」入口。
         failed?: boolean
+        // 推理模型的思考过程（reasoning）。后端把内联 <think> 或独立 reasoning_content 分流出来，
+        // 前端折叠展示「已思考（用时 X 秒）」。随会话持久化（后端字段 reasoning）。
+        reasoning?: string
+        // 推理耗时（毫秒），后端权威值，随会话持久化（后端字段 reasoning_ms）。
+        reasoning_ms?: number
+        // 仅前端瞬态：推理是否仍在流式（true→「思考中」；false/缺省→已结束，展示耗时）。不持久化。
+        reasoningActive?: boolean
       }
 
       // SSE 事件载荷
@@ -58,6 +65,8 @@ declare namespace App {
         | { type: 'searching'; data: { name: string; query: string } }
         | { type: 'sources'; data: ChatSource[] }
         | { type: 'coverage'; data: ChatCoverage }
+        | { type: 'reasoning'; data: { text: string } }
+        | { type: 'reasoning_done'; data: { duration_ms: number } }
         | { type: 'delta'; data: { text: string } }
         | { type: 'error'; data: { message: string } }
         | { type: 'done'; data: { done: boolean } }

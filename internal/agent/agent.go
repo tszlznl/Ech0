@@ -71,7 +71,8 @@ func Generate(
 	if err != nil {
 		return "", err
 	}
-	return resp.Text, nil
+	// 剥离推理模型内联的 <think> 块，避免思维过程混进答案（如近期总结 Widget）。
+	return stripReasoning(resp.Text), nil
 }
 
 // Ping 用给定配置发起一次最小的非流式请求，验证协议 / BaseURL / ApiKey / Model 是否真正可用

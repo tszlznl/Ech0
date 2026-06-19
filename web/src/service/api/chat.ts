@@ -27,6 +27,10 @@ interface ChatStreamHandlers {
   onSources?: (sources: App.Api.Chat.ChatSource[]) => void
   /** 区间聚合总结的覆盖度到达（summarize_echos） */
   onCoverage?: (coverage: App.Api.Chat.ChatCoverage) => void
+  /** 推理模型的思考增量（reasoning，可多次），调用方累积到折叠块 */
+  onReasoning?: (text: string) => void
+  /** 推理阶段结束，携带后端权威耗时（毫秒），供展示「已思考（用时 X 秒）」 */
+  onReasoningDone?: (durationMs: number) => void
   onDelta?: (text: string) => void
   onError?: (message: string) => void
   onDone?: () => void
@@ -58,6 +62,12 @@ export function chatStream(question: string, handlers: ChatStreamHandlers): () =
           break
         case 'coverage':
           handlers.onCoverage?.(data as App.Api.Chat.ChatCoverage)
+          break
+        case 'reasoning':
+          handlers.onReasoning?.((data as { text: string }).text)
+          break
+        case 'reasoning_done':
+          handlers.onReasoningDone?.((data as { duration_ms: number }).duration_ms)
           break
         case 'delta':
           handlers.onDelta?.((data as { text: string }).text)

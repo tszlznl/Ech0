@@ -104,10 +104,16 @@ func roleFromString(r string) agent.Role {
 }
 
 // ChatMessage 是持久化在 KeyValue 里的一条聊天消息（仅做展示恢复，模型不读历史）。
+//
+// Reasoning / ReasoningMs 仅 assistant 轮有意义：推理过程文本与其耗时（毫秒），用于前端折叠展示
+// 「已思考（用时 X 秒）」。**只供展示回显，绝不进模型上下文**——historyForModel 只取 Content，
+// 故 reasoning 天然不会被回灌给模型。
 type ChatMessage struct {
-	Role    string                        `json:"role"`
-	Content string                        `json:"content"`
-	Sources []embeddingModel.SearchResult `json:"sources,omitempty"`
+	Role        string                        `json:"role"`
+	Content     string                        `json:"content"`
+	Sources     []embeddingModel.SearchResult `json:"sources,omitempty"`
+	Reasoning   string                        `json:"reasoning,omitempty"`
+	ReasoningMs int64                         `json:"reasoning_ms,omitempty"`
 }
 
 // chatSessionKey 按 userID 生成会话键（每个用户一条会话）。
@@ -153,17 +159,31 @@ func (s *CopilotService) appendTurn(ctx context.Context, userID string, turn ...
 	}
 }
 
+// assistantTurn 收束本轮 assistant 的可持久化产物：答案、来源、推理过程及其耗时。
+type assistantTurn struct {
+	answer      string
+	sources     []embeddingModel.SearchResult
+	reasoning   string
+	reasoningMs int64
+}
+
 // persistTurn 在一轮问答正常收尾时把 user/assistant 两条消息追加进持久化会话。
 // 「答案为空且无来源」视为失败/空轮次（模型一个 token 都没产出）：直接跳过落盘，
 // 既不在持久化会话里留下永久空白气泡，也让前端可就地重发后历史仍保持干净
 // （重发会以同一问题重新跑一轮并在成功时落盘）。
-func (s *CopilotService) persistTurn(ctx context.Context, userID, question, answer string, sources []embeddingModel.SearchResult) {
-	if strings.TrimSpace(answer) == "" && len(sources) == 0 {
+func (s *CopilotService) persistTurn(ctx context.Context, userID, question string, turn assistantTurn) {
+	if strings.TrimSpace(turn.answer) == "" && len(turn.sources) == 0 {
 		return
 	}
 	s.appendTurn(ctx, userID,
 		ChatMessage{Role: "user", Content: question},
-		ChatMessage{Role: "assistant", Content: answer, Sources: sources},
+		ChatMessage{
+			Role:        "assistant",
+			Content:     turn.answer,
+			Sources:     turn.sources,
+			Reasoning:   turn.reasoning,
+			ReasoningMs: turn.reasoningMs,
+		},
 	)
 }
 

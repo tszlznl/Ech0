@@ -174,6 +174,11 @@ func streamRound(
 			if !emit(ctx, out, AgentEvent{Kind: AgentDelta, Text: ev.Text}) {
 				o.aborted = true
 			}
+		case EventReasoningDelta:
+			// 推理只上浮供折叠展示——不写进答案缓冲（不入持久化答案），也不回灌给模型（非答案）。
+			if !emit(ctx, out, AgentEvent{Kind: AgentReasoning, Text: ev.Text}) {
+				o.aborted = true
+			}
 		case EventToolCall:
 			o.calls = append(o.calls, ev.ToolCall)
 		case EventError:

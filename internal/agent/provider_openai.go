@@ -160,6 +160,8 @@ func (p *openaiProvider) stream(ctx context.Context, req Request, ch chan<- Even
 	acc := newToolCallAccumulator()
 	// guard 防「模型把工具调用当正文吐出来」泄漏给用户（详见 toolCallLeakGuard）。
 	guard := &toolCallLeakGuard{}
+	// splitter 把内联在正文里的 <think> 推理段从答案里拆出来（推理模型经 OpenAI 兼容端的怪癖）。
+	splitter := &reasoningSplitter{}
 
 	for {
 		resp, recvErr := stream.Recv()
@@ -175,20 +177,48 @@ func (p *openaiProvider) stream(ctx context.Context, req Request, ch chan<- Even
 		}
 		delta := resp.Choices[0].Delta
 
-		if delta.Content != "" {
-			safe, tripped := guard.feed(delta.Content)
-			if tripped {
-				send(ctx, ch, Event{Kind: EventError, Err: errTextToolCallLeak})
+		// 独立 reasoning_content 字段（DeepSeek reasoner 等）：直接当推理上浮。
+		if delta.ReasoningContent != "" {
+			if !send(ctx, ch, Event{Kind: EventReasoningDelta, Text: delta.ReasoningContent}) {
 				return
 			}
-			if safe != "" && !send(ctx, ch, Event{Kind: EventTextDelta, Text: safe}) {
+		}
+		if delta.Content != "" {
+			answer, reasoning := splitter.feed(delta.Content)
+			if reasoning != "" && !send(ctx, ch, Event{Kind: EventReasoningDelta, Text: reasoning}) {
 				return
+			}
+			// 只有答案段才过工具调用泄漏守卫（推理段里的 <tool_call> 字样不应误触发）。
+			if answer != "" {
+				safe, tripped := guard.feed(answer)
+				if tripped {
+					send(ctx, ch, Event{Kind: EventError, Err: errTextToolCallLeak})
+					return
+				}
+				if safe != "" && !send(ctx, ch, Event{Kind: EventTextDelta, Text: safe}) {
+					return
+				}
 			}
 		}
 		acc.add(delta.ToolCalls)
 	}
 
-	// 流结束：放行守卫暂留的尾巴（确认非工具调用语法），再把累积完整的工具调用依次上浮。
+	// 流结束：先放行拆分器暂留的尾巴（未闭合 <think> 归推理，否则归答案），答案段再过守卫；
+	// 最后放行守卫暂留的尾巴（确认非工具调用语法），再把累积完整的工具调用依次上浮。
+	ansRest, reaRest := splitter.flush()
+	if reaRest != "" && !send(ctx, ch, Event{Kind: EventReasoningDelta, Text: reaRest}) {
+		return
+	}
+	if ansRest != "" {
+		safe, tripped := guard.feed(ansRest)
+		if tripped {
+			send(ctx, ch, Event{Kind: EventError, Err: errTextToolCallLeak})
+			return
+		}
+		if safe != "" && !send(ctx, ch, Event{Kind: EventTextDelta, Text: safe}) {
+			return
+		}
+	}
 	if rest := guard.flush(); rest != "" {
 		if !send(ctx, ch, Event{Kind: EventTextDelta, Text: rest}) {
 			return

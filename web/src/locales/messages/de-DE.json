@@ -1088,6 +1088,8 @@
     "sourcesMore": "{count} weitere anzeigen",
     "sourcesLess": "Weniger anzeigen",
     "sourceNoContent": "Kein Text",
+    "reasoningThinking": "Denkt nach…",
+    "reasoningDone": "{seconds}s nachgedacht",
     "navLabel": "Fragen-Navigation"
   },
   "chatLauncher": {

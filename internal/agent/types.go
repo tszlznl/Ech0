@@ -87,16 +87,17 @@ type Response struct {
 type EventKind int
 
 const (
-	EventTextDelta EventKind = iota // 文本增量
-	EventToolCall                   // 一个拼装完整的工具调用
-	EventDone                       // 本次 Provider 调用结束
-	EventError                      // 传输/协议错误（之后 channel 关闭）
+	EventTextDelta      EventKind = iota // 文本增量（答案正文）
+	EventReasoningDelta                  // 推理增量（reasoning，与答案正文分流，仅供折叠展示）
+	EventToolCall                        // 一个拼装完整的工具调用
+	EventDone                            // 本次 Provider 调用结束
+	EventError                           // 传输/协议错误（之后 channel 关闭）
 )
 
-// Event 是 Provider→Loop 的统一事件。Provider 不懂业务语义，只吐文本增量与工具调用。
+// Event 是 Provider→Loop 的统一事件。Provider 不懂业务语义，只吐文本增量、推理增量与工具调用。
 type Event struct {
 	Kind     EventKind
-	Text     string   // EventTextDelta
+	Text     string   // EventTextDelta / EventReasoningDelta
 	ToolCall ToolCall // EventToolCall
 	Err      error    // EventError
 }
@@ -130,6 +131,7 @@ type AgentEventKind int
 
 const (
 	AgentDelta      AgentEventKind = iota // 文本上屏（跨轮连续）
+	AgentReasoning                        // 推理上屏（reasoning，与答案分流，不入答案/不回灌模型）
 	AgentSearching                        // 模型决定调用工具（含 name + args）
 	AgentToolResult                       // 工具执行完（Meta 即 ToolOutput.Meta，供 sources）
 	AgentDone                             // 收尾
@@ -139,7 +141,7 @@ const (
 // AgentEvent 是 Loop→Copilot Service 的统一事件；语义翻译（searching/sources）在此完成。
 type AgentEvent struct {
 	Kind     AgentEventKind
-	Text     string          // AgentDelta
+	Text     string          // AgentDelta / AgentReasoning
 	ToolName string          // AgentSearching
 	ToolArgs json.RawMessage // AgentSearching
 	Meta     any             // AgentToolResult
