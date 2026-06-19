@@ -440,8 +440,8 @@ func TestRunLoop_ToolImageNoteAppended(t *testing.T) {
 	}
 	if found == nil {
 		t.Fatalf("next round messages should contain the toolImageNote user message")
-	}
-	if len(found.Images) != 1 || found.Images[0].Base64 != "abc" {
+	} else if len(found.Images) != 1 || found.Images[0].Base64 != "abc" {
+		// else-if keeps the deref lexically guarded by found != nil so staticcheck (SA5011) is satisfied.
 		t.Fatalf("toolImageNote message should carry the tool's image, got %+v", found.Images)
 	}
 }
