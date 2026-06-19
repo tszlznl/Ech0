@@ -9,6 +9,7 @@ import (
 	commonService "github.com/lin-snow/ech0/internal/service/common"
 	connectService "github.com/lin-snow/ech0/internal/service/connect"
 	copilotService "github.com/lin-snow/ech0/internal/service/copilot"
+	dashboardService "github.com/lin-snow/ech0/internal/service/dashboard"
 	echoService "github.com/lin-snow/ech0/internal/service/echo"
 	fileService "github.com/lin-snow/ech0/internal/service/file"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
@@ -28,9 +29,10 @@ func NewHandler(
 	connectSvc connectService.Service,
 	agentSvc copilotService.SummaryService,
 	settingSvc settingService.Service,
+	dashboardSvc dashboardService.Service,
 ) *Handler {
 	registry := NewRegistry()
-	adapter := NewAdapter(echoSvc, userSvc, commentSvc, fileSvc, commonSvc, connectSvc, agentSvc, settingSvc)
+	adapter := NewAdapter(echoSvc, userSvc, commentSvc, fileSvc, commonSvc, connectSvc, agentSvc, settingSvc, dashboardSvc)
 	adapter.RegisterAll(registry)
 	return &Handler{server: NewServer(registry)}
 }

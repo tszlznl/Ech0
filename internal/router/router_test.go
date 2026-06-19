@@ -311,7 +311,7 @@ func buildTestHandlers() *handler.Bundle {
 		dashboardHandler.NewDashboardHandler(nil),
 		copilotHandler.NewCopilotHandler(nil, nil),
 		embeddingHandler.NewEmbeddingHandler(nil),
-		mcp.NewHandler(nil, nil, nil, nil, nil, nil, nil, nil),
+		mcp.NewHandler(nil, nil, nil, nil, nil, nil, nil, nil, nil),
 	)
 }
 

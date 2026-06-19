@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
@@ -243,6 +244,35 @@ func TestGetEndpoint(t *testing.T) {
 	srv.ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
 		t.Errorf("GET status = %d, want %d", rec.Code, http.StatusOK)
+	}
+}
+
+// TestAdapterRegistersDiscoveryCapabilities verifies the new discovery
+// tools/resources are wired into RegisterAll with the intended scopes. Nil
+// services are fine here because RegisterAll only registers handlers, it never
+// invokes them. The admin-only scope on the visitor-stats resource is the
+// security-sensitive decision this test guards (REST gates it behind admin too).
+func TestAdapterRegistersDiscoveryCapabilities(t *testing.T) {
+	reg := NewRegistry()
+	NewAdapter(nil, nil, nil, nil, nil, nil, nil, nil, nil).RegisterAll(reg)
+
+	for _, name := range []string{"get_hot_posts", "get_random_post", "get_on_this_day_posts"} {
+		_, scopes, ok := reg.LookupTool(name)
+		if !ok {
+			t.Errorf("tool %q not registered", name)
+			continue
+		}
+		if len(scopes) != 1 || scopes[0] != authModel.ScopeEchoRead {
+			t.Errorf("tool %q scopes = %v, want [%s]", name, scopes, authModel.ScopeEchoRead)
+		}
+	}
+
+	_, scopes, ok := reg.LookupResource("ech0://stats/visitors")
+	if !ok {
+		t.Fatal("resource ech0://stats/visitors not registered")
+	}
+	if len(scopes) != 1 || scopes[0] != authModel.ScopeAdminSettings {
+		t.Errorf("visitor stats scopes = %v, want [%s]", scopes, authModel.ScopeAdminSettings)
 	}
 }
 

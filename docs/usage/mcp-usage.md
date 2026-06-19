@@ -71,7 +71,7 @@ Ech0 的 MCP 端点采用 **Streamable HTTP**（JSON-RPC over HTTP），与 [MCP
 
 ## 能力总览
 
-当前 MCP 共暴露 **26 个 Tool** 与 **9 个 Resource**，按业务域整理如下。
+当前 MCP 共暴露 **29 个 Tool** 与 **10 个 Resource**，按业务域整理如下。
 
 ### Posts & Tags
 
@@ -80,6 +80,9 @@ Ech0 的 MCP 端点采用 **Streamable HTTP**（JSON-RPC over HTTP），与 [MCP
 | Tool | `search_posts` | 按关键词 / 标签 ID 搜索帖子，返回分页结果 `{items, total, page, page_size}` | `echo:read` |
 | Tool | `get_post` | 按 UUID 获取单篇帖子（含内容、标签、点赞数、附件、扩展块） | `echo:read` |
 | Tool | `get_today_posts` | 获取今日发布的帖子（支持 IANA 时区参数） | `echo:read` |
+| Tool | `get_hot_posts` | 获取热门帖子（按点赞 + 评论数加权排序），可选 `limit`（默认 5，1–100） | `echo:read` |
+| Tool | `get_random_post` | 随机返回一篇帖子（无帖子时返回 null） | `echo:read` |
+| Tool | `get_on_this_day_posts` | 获取往年同月同日的帖子（"历史上的今天"，支持 IANA 时区参数） | `echo:read` |
 | Tool | `list_tags` | 列出全部标签（id、名称、使用次数） | `echo:read` |
 | Tool | `create_post` | 创建帖子；支持 `content`、`echo_files`、`layout`、`extension`，至少提供其一 | `echo:write` |
 | Tool | `update_post` | 更新帖子；`echo_files` / `extension` 提供时为**全量替换** | `echo:write` |
@@ -90,6 +93,7 @@ Ech0 的 MCP 端点采用 **Streamable HTTP**（JSON-RPC over HTTP），与 [MCP
 | Resource | `ech0://posts/{id}` | 按 UUID 读取单篇帖子 | `echo:read` |
 | Resource | `ech0://tags` | 全部标签及使用次数 | `echo:read` |
 | Resource | `ech0://stats/heatmap` | 过去 30 个日历日每日发帖数（热力图，UTC 日界） | `echo:read` |
+| Resource | `ech0://stats/visitors` | 过去 7 天每日访客统计 `{date, pv, uv}`（UTC 日界）；仅管理员 | `admin:settings` |
 
 ### Comments
 
