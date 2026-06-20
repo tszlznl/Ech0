@@ -1,1 +1,14 @@
-{}
+{
+  "baozi": {
+    "url": "https://memo.xiaobaozi.cn",
+    "unhealthy_since": "2026-06-20T02:41:20.718Z"
+  },
+  "bin": {
+    "url": "https://echo.3868088.xyz",
+    "unhealthy_since": "2026-06-20T02:41:20.718Z"
+  },
+  "hanier": {
+    "url": "https://i.hanier.top",
+    "unhealthy_since": "2026-06-20T02:41:20.718Z"
+  }
+}
