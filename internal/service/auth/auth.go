@@ -496,13 +496,22 @@ func (authService *AuthService) parseAndValidateClientRedirect(redirect string) 
 	}
 
 	allowed := config.Config().Auth.Redirect.AllowedReturnURLs
+	var implicitSelf []string
 	if authService.durableKV != nil {
-		if oauthSetting, err := coreSetting.Get(context.Background(), authService.durableKV, coreSetting.OAuth2); err == nil &&
-			len(oauthSetting.AuthRedirectAllowedReturnURLs) > 0 {
-			allowed = oauthSetting.AuthRedirectAllowedReturnURLs
+		if oauthSetting, err := coreSetting.Get(context.Background(), authService.durableKV, coreSetting.OAuth2); err == nil {
+			if len(oauthSetting.AuthRedirectAllowedReturnURLs) > 0 {
+				allowed = oauthSetting.AuthRedirectAllowedReturnURLs
+			}
+			// 隐式放行 SPA 写死的本站回跳落点（绑定页 /panel、登录页 /auth）：从 OAuth2 回调地址
+			// 推导本站 origin 后拼出这两条固定路径。它们由前端硬编码、不接受任意路径注入，不违反
+			// GHSA-p64j-f4x9-wq66 的精确比对意图，同时让单域名自托管无需手配白名单即可绑定/登录。
+			implicitSelf = selfClientReturnURLs(oauthSetting.RedirectURI)
 		}
 	}
-	if len(allowed) == 0 {
+	candidates := make([]string, 0, len(allowed)+len(implicitSelf))
+	candidates = append(candidates, allowed...)
+	candidates = append(candidates, implicitSelf...)
+	if len(candidates) == 0 {
 		return nil, errors.New(commonModel.INVALID_PARAMS)
 	}
 	// 按 RFC 6749 §3.1.2 进行 scheme+host+path 的精确比对：仅校验 scheme+host
@@ -514,7 +523,7 @@ func (authService *AuthService) parseAndValidateClientRedirect(redirect string) 
 		strings.ToLower(redirectURL.Host) +
 		redirectURL.Path
 	matched := false
-	for _, item := range allowed {
+	for _, item := range candidates {
 		allowURL, parseErr := url.Parse(strings.TrimSpace(item))
 		if parseErr != nil || allowURL == nil || allowURL.Host == "" {
 			continue
@@ -532,6 +541,21 @@ func (authService *AuthService) parseAndValidateClientRedirect(redirect string) 
 	}
 
 	return redirectURL, nil
+}
+
+// selfClientReturnURLs 从 OAuth2 回调地址（形如 https://host/oauth/<provider>/callback）推导本站
+// origin，返回 SPA 写死的本站客户端回跳落点（绑定页 /panel、登录页 /auth）。这些固定路径作为
+// 隐式放行项并入重定向白名单比对，使单域名自托管开箱即用，无需手动配置 Redirect Allowlist。
+func selfClientReturnURLs(oauthRedirectURI string) []string {
+	u, err := url.Parse(strings.TrimSpace(oauthRedirectURI))
+	if err != nil || u == nil || u.Host == "" {
+		return nil
+	}
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return nil
+	}
+	origin := u.Scheme + "://" + u.Host
+	return []string{origin + "/panel", origin + "/auth"}
 }
 
 const passkeySessionTTL = 5 * time.Minute

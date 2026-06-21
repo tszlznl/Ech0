@@ -4,10 +4,30 @@
 package auth
 
 import (
+	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/lin-snow/ech0/internal/config"
+	"github.com/lin-snow/ech0/internal/kvstore"
+	commonModel "github.com/lin-snow/ech0/internal/model/common"
+	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 )
+
+// oauthKVWithRedirect 构造一个内存 KV，预置一份仅设了 redirect_uri 的 OAuth2 设置，
+// 供隐式放行（/panel、/auth）相关用例使用。
+func oauthKVWithRedirect(t *testing.T, redirectURI string) kvstore.Store {
+	t.Helper()
+	kv := kvstore.NewMemory()
+	raw, err := json.Marshal(settingModel.OAuth2Setting{RedirectURI: redirectURI})
+	if err != nil {
+		t.Fatalf("marshal oauth2 setting: %v", err)
+	}
+	if err := kv.Set(context.Background(), commonModel.OAuth2SettingKey, string(raw)); err != nil {
+		t.Fatalf("seed oauth2 setting: %v", err)
+	}
+	return kv
+}
 
 func TestParseAndValidateClientRedirect_Allowed(t *testing.T) {
 	cfg := config.Config()
@@ -47,5 +67,41 @@ func TestParseAndValidateClientRedirect_PathMismatchDenied(t *testing.T) {
 	)
 	if err == nil {
 		t.Fatalf("expected deny redirect with mismatched path")
+	}
+}
+
+// 隐式放行：SPA 写死的本站回跳落点（/panel、/auth）从 OAuth2 回调地址推导的 origin 得到，
+// 即便用户未配置任何白名单也应放行，使单域名自托管绑定/登录开箱即用。
+func TestParseAndValidateClientRedirect_ImplicitSelfAllowed(t *testing.T) {
+	cfg := config.Config()
+	cfg.Auth.Redirect.AllowedReturnURLs = nil
+
+	svc := &AuthService{durableKV: oauthKVWithRedirect(t, "https://m.example.com/oauth/github/callback")}
+
+	for _, target := range []string{
+		"https://m.example.com/panel",
+		"https://m.example.com/auth?from=test",
+	} {
+		if _, err := svc.parseAndValidateClientRedirect(target); err != nil {
+			t.Fatalf("expected implicit allow for %s, got err: %v", target, err)
+		}
+	}
+}
+
+// 隐式放行只覆盖 /panel、/auth 两条固定路径：同源其它路径在白名单为空时仍须拒绝，
+// 不得把整个 origin 放开（守住 GHSA-p64j-f4x9-wq66 的精确比对意图）。
+func TestParseAndValidateClientRedirect_ImplicitSelfOnlyFixedPaths(t *testing.T) {
+	cfg := config.Config()
+	cfg.Auth.Redirect.AllowedReturnURLs = nil
+
+	svc := &AuthService{durableKV: oauthKVWithRedirect(t, "https://m.example.com/oauth/github/callback")}
+
+	for _, target := range []string{
+		"https://m.example.com/attacker-chosen-path",
+		"https://evil.example.net/panel",
+	} {
+		if _, err := svc.parseAndValidateClientRedirect(target); err == nil {
+			t.Fatalf("expected deny for %s", target)
+		}
 	}
 }
