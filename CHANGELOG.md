@@ -7,6 +7,25 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/lin-snow/Ech0/releases) — earlier release notes are not retroactively imported here.
 
 
+## [5.2.5] - 2026-06-21
+
+### Added
+
+- **Verified-user tooltip in comments.** Hovering the blue verified badge next to a commenter's name now explains what it means — the author is a registered user of this instance — instead of leaving guests to guess. Applied to both top-level comments and replies (shown when `source === 'system'`), reusing the existing floating-vue `v-tooltip`. New i18n key `commentSection.verifiedUser` across zh-CN / en-US / ja-JP / de-DE.
+
+### Changed
+
+- **About panel simplified, with a draggable logo sticker.** The About view dropped its dense field list (product subtitle and the version / commit / author / license / build rows) for a cleaner layout and gained a draggable Ech0 logo sticker that springs back to its origin on release; the "view source on GitHub" link (and its at-commit variant) is kept, and the footer line is shortened to "Powered by Ech0". i18n keys trimmed accordingly across zh-CN / en-US / ja-JP / de-DE.
+
+### Fixed
+
+- **OAuth login/binding now works out-of-the-box on single-domain self-hosts.** `parseAndValidateClientRedirect` implicitly allows the SPA's two hardcoded same-origin return paths — `/panel` (account binding) and `/auth` (login) — derived from the configured OAuth2 callback's origin, so a single-domain deployment no longer has to hand-configure the Redirect Allowlist just to bind or sign in via OAuth. These implicit entries are fixed, front-end-hardcoded paths (no arbitrary-path injection) and are still matched with the same RFC 6749 §3.1.2 exact scheme+host+path comparison, preserving the intent of advisory GHSA-p64j-f4x9-wq66; operator-configured allowlist entries continue to apply. Covered by new `oauth_service_test.go` cases.
+
+### Internal
+
+- **Dependency bump (`web/`)**: `@types/node` 25.9.3 → 25.9.4 (dev).
+
+
 ## [5.2.4] - 2026-06-19
 
 ### Added
