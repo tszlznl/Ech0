@@ -187,6 +187,7 @@
                   <span v-else class="comment-author">{{ item.nickname }}</span>
                   <Verified
                     v-if="item.source === 'system'"
+                    v-tooltip="t('commentSection.verifiedUser')"
                     class="verified-badge-icon h-3! w-3! shrink-0 text-sky-500"
                   />
                   <span class="comment-dot">·</span>
@@ -228,6 +229,7 @@
                     <span v-else class="comment-author">{{ reply.nickname }}</span>
                     <Verified
                       v-if="reply.source === 'system'"
+                      v-tooltip="t('commentSection.verifiedUser')"
                       class="verified-badge-icon h-3! w-3! shrink-0 text-sky-500"
                     />
                     <span class="comment-dot">·</span>
