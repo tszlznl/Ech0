@@ -979,17 +979,9 @@
   },
   "about": {
     "linkAriaLabel": "Über diese Ech0-Instanz",
-    "productSubtitle": "Selbst gehostet · Persönlicher Microblog",
-    "fieldVersion": "Version",
-    "fieldCommit": "Commit",
-    "fieldAuthor": "Autor",
-    "fieldSource": "Quelle",
-    "fieldLicense": "Lizenz",
-    "fieldBuild": "Erstellt",
-    "authorGithub": "GitHub-Profil",
     "viewSource": "Quellcode auf GitHub ansehen",
     "viewSourceAtCommit": "Quellcode {'@'} {commit} auf GitHub ansehen",
-    "poweredBy": "Mit ❤️ gebaut · Powered by Ech0"
+    "poweredBy": "Powered by Ech0"
   },
   "echoPage": {
     "loadingDetail": "Echo-Details werden geladen…"

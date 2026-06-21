@@ -979,17 +979,9 @@
   },
   "about": {
     "linkAriaLabel": "关于本 Ech0 实例",
-    "productSubtitle": "自托管 · 个人微博",
-    "fieldVersion": "版本",
-    "fieldCommit": "批次",
-    "fieldAuthor": "作者",
-    "fieldSource": "源码",
-    "fieldLicense": "授权",
-    "fieldBuild": "构建",
-    "authorGithub": "GitHub 主页",
     "viewSource": "在 GitHub 上查看源代码",
     "viewSourceAtCommit": "在 GitHub 上查看 commit {'@'} {commit} 的源代码",
-    "poweredBy": "用❤️打造 · Powered by Ech0"
+    "poweredBy": "Powered by Ech0"
   },
   "echoPage": {
     "loadingDetail": "正在加载 Echo 详情..."
