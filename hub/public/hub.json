@@ -75,6 +75,10 @@
     {
       "id": "xiaoten",
       "url": "https://echo.xiaoten.com"
+    },
+    {
+      "id": "abao",
+      "url": "https://bk.abao.ad"
     }
   ]
 }
