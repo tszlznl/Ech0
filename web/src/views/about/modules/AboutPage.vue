@@ -31,19 +31,31 @@
         <div class="about-colophon__body">
           <h1 class="about-colophon__name">Ech0</h1>
           <p class="about-colophon__build">
-            v{{ version }}<template v-if="hasCommit"> · {{ commit }}</template>
+            v{{ version
+            }}<template v-if="hasCommit">
+              ·
+              <a
+                :href="commitURL"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="about-link about-colophon__commit"
+                :aria-label="t('about.viewSourceAtCommit', { commit })"
+                :title="t('about.viewSourceAtCommit', { commit })"
+                >{{ commit }}</a
+              ></template
+            >
           </p>
 
           <p class="about-colophon__links">
             <a
-              :href="sourceURL"
+              :href="repoURL"
               target="_blank"
               rel="noopener noreferrer"
               class="about-link"
-              :aria-label="sourceLinkLabel"
-              :title="sourceLinkLabel"
+              :aria-label="t('about.viewSource')"
+              :title="t('about.viewSource')"
             >
-              {{ repoShort }}<span class="about-link__ext" aria-hidden="true">↗</span>
+              {{ t('about.fieldSource') }}<span class="about-link__ext" aria-hidden="true">↗</span>
             </a>
             <span class="about-colophon__sep" aria-hidden="true">·</span>
             <a
@@ -120,23 +132,14 @@ const author = computed(() => settingStore.hello?.author || FALLBACK_AUTHOR)
 const license = computed(() => settingStore.hello?.license || FALLBACK_LICENSE)
 const repoURL = computed(() => settingStore.hello?.repo_url || FALLBACK_REPO)
 
-// Bare repo host/path — a language-neutral source link that sits naturally
-// alongside the version and SPDX license id in the signature block.
-const repoShort = computed(() => repoURL.value.replace(/^https?:\/\//, '').replace(/\/$/, ''))
-
 const copyright = computed(
   () =>
     settingStore.hello?.copyright || `Copyright (C) ${new Date().getFullYear()} ${author.value}`,
 )
 
-// AGPL-3.0 §13 anchor: when we know the exact commit, link the user to /tree/<commit>
-// so the source they receive matches the running binary. Falls back to repo root.
-const sourceURL = computed(() =>
-  hasCommit.value ? `${repoURL.value}/tree/${commit.value}` : repoURL.value,
-)
-const sourceLinkLabel = computed(() =>
-  hasCommit.value ? t('about.viewSourceAtCommit', { commit: commit.value }) : t('about.viewSource'),
-)
+// AGPL-3.0 §13 anchor: the commit hash links to /tree/<commit> so the source the
+// user browses matches the exact running binary.
+const commitURL = computed(() => `${repoURL.value}/tree/${commit.value}`)
 </script>
 
 <style scoped>
@@ -253,6 +256,17 @@ const sourceLinkLabel = computed(() =>
   font-size: 0.8125rem;
   letter-spacing: 0.01em;
   color: var(--color-text-muted);
+}
+
+/* The commit hash is a link — give it a quiet underline so it reads clickable. */
+.about-colophon__commit {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklab, var(--color-text-muted) 50%, transparent);
+  text-underline-offset: 0.2em;
+}
+
+.about-colophon__commit:hover {
+  text-decoration-color: var(--color-accent);
 }
 
 .about-colophon__links {
