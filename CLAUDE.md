@@ -21,7 +21,8 @@ make lint            # golangci-lint run
 make fmt             # golangci-lint fmt
 make wire            # regenerate internal/di/wire_gen.go (run after changing provider sets / DI graph)
 make wire-check      # fails if wire_gen.go is stale vs. wire.go
-make swagger         # swag init -g internal/server/server.go -o internal/swagger --parseInternal
+make openapi         # regenerate OpenAPI spec (Huma type-first) -> internal/openapi/openapi.yaml
+make openapi-check   # fails if the committed OpenAPI spec is stale vs. code (mirrors wire-check)
 
 # Frontend (from web/)
 pnpm install
@@ -34,7 +35,7 @@ pnpm format          # prettier --write src/
 pnpm i18n:check      # runs key / unused / hardcoded / pseudo-smoke checks (required before PR)
 
 # Full pre-PR verification (mandatory per CONTRIBUTING.md)
-make check           # alias of make dev-lint: backend fmt+lint+swagger + web format+lint+i18n:check
+make check           # alias of make dev-lint: backend fmt+lint+openapi + web format+lint+i18n:check
 
 # Single Go test
 go test ./internal/middleware -run TestAuth     # example
@@ -56,7 +57,7 @@ Backend follows a strict layered architecture — **handler → service → repo
 - Cross-domain aliases are required when importing layers: `xxxHandler`, `xxxService`, `xxxRepository`, `xxxModel`, `xxxUtil` (enforced by existing code; see README "Start Backend & Frontend" note).
 - `internal/app` is a generic component lifecycle orchestrator. `internal/server` is the thin Gin/HTTP `Component` it manages. The other managed components are `job.Manager` and `task.Manager` (started in order job → task → server); the `EventRegistrar` registers/drains subscriptions and `setting.Seed` runs via `BeforeStart`/`AfterStop` hooks.
 - `internal/bootstrap/bootstrap.go` runs before Cobra dispatches: loads config, initializes the zap-based logger, sets host env defaults. Config is accessed via `config.Config()` (singleton).
-- HTTP routes live in `internal/router/*.go`, registered per domain and wired up in `internal/server/provider.go`. Swagger annotations on handlers drive `internal/swagger/` output.
+- HTTP routes use **Huma (type-first OpenAPI)** on top of Gin (`humagin` adapter). JSON endpoints are typed `func(ctx, *Input) (*humares.Envelope[T], error)` handlers registered via `huma.Register` in `RegisterHumaOperations` (`internal/router/huma.go`); the unified `huma.API` is created on a no-auth `/api` group, with auth/scope reused from the existing gin middleware via `humares.Bridge`. The shared response contract (envelope `commonModel.Result[T]`, i18n error localization, security declarations) lives in `internal/handler/humares`. The OpenAPI spec is generated from Go types (no annotations) — runtime docs at `/api/docs`, spec at `/api/openapi.json|.yaml`, committed copy at `internal/openapi/openapi.yaml`. Non-JSON endpoints (SSE/WebSocket streams, multipart upload, binary download, OAuth redirects, captcha, cookie/token-issuance auth flows, MCP JSON-RPC) intentionally stay on raw gin in the `setupXxxRoutes` functions.
 
 ### Event bus (Busen)
 
@@ -87,7 +88,7 @@ Two function-calling integrations that point opposite ways:
 
 ## Conventions to respect
 
-- **Before a PR**: `make check` is mandatory (enforces backend lint, frontend lint, i18n checks). `go build ./...` and `pnpm build` must pass. Regenerate Swagger (`make swagger`) whenever routes or request/response shapes change and commit `internal/swagger/`.
+- **Before a PR**: `make check` is mandatory (enforces backend lint, frontend lint, i18n checks). `go build ./...` and `pnpm build` must pass. Regenerate the OpenAPI spec (`make openapi`) whenever routes or request/response shapes change and commit `internal/openapi/openapi.yaml`; CI-style `make openapi-check` fails on drift.
 - **DI changes**: regenerate with `make wire`; CI runs `make wire-check`.
 - **SPDX headers**: every `.go` / `.ts` / `.vue` file needs an SPDX license header. `make spdx` adds missing ones; CI enforces via `make spdx-check`.
 - **Migrator (data portability)**: the admin panel's "数据管理" page wraps a bidirectional Migrator domain. **Import** supports Ech0 snapshot → Ech0 and Memos → Ech0; **Export** produces a unified **Snapshot** (a zip of `data/`, see `internal/migrator/snapshot`) that round-trips back through the `ech0` import. Core engine (importer/exporter execution, ETL, snapshot resource) lives in `internal/migrator`; `internal/service/migrator` is a thin layer doing auth + job lifecycle + DTO + upload orchestration. Export triggers: manual snapshot (`POST /migration/export`, async via `job.Manager`, `TypeExport`), scheduled snapshot (`internal/task/scheduled` cron, syncs through the exporter), and synchronous download (`GET /migration/export/download`). There is no separate "backup" concept — it is all snapshot export.

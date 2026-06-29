@@ -20,7 +20,6 @@ var spaBypassPrefixes = []string{
 	"/api",
 	"/ws",
 	"/mcp",
-	"/swagger",
 }
 
 type WebHandler struct {

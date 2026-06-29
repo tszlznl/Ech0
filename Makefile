@@ -18,7 +18,7 @@ IMAGE_TAG?=latest
 OS?=$(if $(GOHOSTOS),$(GOHOSTOS),linux)
 ARCH?=$(if $(GOHOSTARCH),$(GOHOSTARCH),amd64)
 
-.PHONY: help air-install run dev web-dev check dev-lint lint fmt test wire wire-check swagger openapi openapi-check spdx spdx-check build bump build-image push-image
+.PHONY: help air-install run dev web-dev check dev-lint lint fmt test wire wire-check openapi openapi-check spdx spdx-check build bump build-image push-image
 
 # Semver pattern: X.Y.Z, optionally followed by a -prerelease suffix.
 # (escape $ so make doesn't expand, then escape $$ to a literal $ in shell)
@@ -42,7 +42,8 @@ help:
 	@echo "  make test        - Run Go tests"
 	@echo "  make wire        - Generate DI code via Wire"
 	@echo "  make wire-check  - Verify Wire code is up-to-date"
-	@echo "  make swagger     - Regenerate Swagger docs"
+	@echo "  make openapi     - Regenerate OpenAPI spec (Huma) to internal/openapi/openapi.yaml"
+	@echo "  make openapi-check - Fail if the committed OpenAPI spec is stale"
 	@echo "  make spdx        - Add SPDX/Copyright headers to new .go/.ts/.vue files"
 	@echo "  make spdx-check  - Fail if any source file is missing the SPDX header"
 	@echo "  make build-image - Build Docker image"
@@ -134,9 +135,6 @@ wire:
 
 wire-check: wire
 	git diff --exit-code -- internal/di/wire_gen.go
-
-swagger:
-	swag init -g internal/server/server.go -o internal/swagger --parseInternal
 
 openapi:
 	go run ./cmd/openapi-gen

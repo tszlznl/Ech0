@@ -46,7 +46,9 @@ func TestSetupRouter_RegistersKeyRoutes(t *testing.T) {
 		method string
 		path   string
 	}{
-		{method: http.MethodGet, path: "/swagger/*any"},
+		// Huma type-first docs/spec（取代旧 /swagger）。
+		{method: http.MethodGet, path: "/api/docs"},
+		{method: http.MethodGet, path: "/api/openapi.json"},
 		{method: http.MethodPost, path: "/api/login"},
 		{method: http.MethodPost, path: "/api/echo"},
 		{method: http.MethodGet, path: "/api/init/status"},

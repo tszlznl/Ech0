@@ -155,7 +155,6 @@ func (commonHandler *CommonHandler) GetRobotsTxt(ctx *gin.Context) {
 		"Disallow: /auth",
 		"Disallow: /panel",
 		"Disallow: /init",
-		"Disallow: /swagger/",
 		"Disallow: /healthz",
 		fmt.Sprintf("Sitemap: %s/sitemap.xml", strings.TrimRight(baseURL, "/")),
 		"",

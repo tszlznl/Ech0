@@ -5,16 +5,11 @@ package router
 
 import (
 	"github.com/lin-snow/ech0/internal/handler"
-	_ "github.com/lin-snow/ech0/internal/swagger"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// setupResourceRoutes 设置资源路由
+// setupResourceRoutes 设置资源路由。
+// API 文档已迁移到 Huma 内置 docs：/api/docs（spec：/api/openapi.json|.yaml）。
 func setupResourceRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
-	// Swagger UI
-	appRouterGroup.ResourceGroup.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
 	appRouterGroup.ResourceGroup.GET("/robots.txt", h.CommonHandler.GetRobotsTxt)
 	appRouterGroup.ResourceGroup.GET("/sitemap.xml", h.CommonHandler.GetSitemap)
 	appRouterGroup.ResourceGroup.GET("/rss", h.CommonHandler.GetRss)

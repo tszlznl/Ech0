@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2025-2026 lin-snow
 
-// Package server
+// Package server 提供 Ech0 的 HTTP runtime。
 //
-//	@title			Ech0 API 文档
-//	@version		1.0
-//	@description	开源、自托管轻量级发布平台 Ech0 的 API 文档
-//	@host			localhost:6277
-//	@BasePath		/api
+// API 文档由 Huma（type-first OpenAPI）从 handler 的类型反射生成，
+// 运行时挂在 /api/docs，spec 在 /api/openapi.json|.yaml；
+// 提交到仓库的 spec 见 internal/openapi/openapi.yaml（由 `make openapi` 生成）。
 package server
 
 import (
