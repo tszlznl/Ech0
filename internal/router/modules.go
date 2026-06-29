@@ -106,12 +106,6 @@ func featureRouteModules() []RouteModule {
 			},
 		},
 		routeModule{
-			name: "init",
-			register: func(ctx *RouterContext) {
-				setupInitRoutes(ctx.Groups, ctx.Handlers)
-			},
-		},
-		routeModule{
 			name: "echo",
 			register: func(ctx *RouterContext) {
 				setupEchoRoutes(ctx.Groups, ctx.Handlers)

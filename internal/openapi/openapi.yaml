@@ -27,6 +27,22 @@ components:
         - msg
         - data
       type: object
+    RegisterDto:
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+        locale:
+          type: string
+        password:
+          type: string
+        username:
+          type: string
+      required:
+        - username
+        - password
+        - email
+      type: object
     ReindexStatusResponse:
       additionalProperties: false
       properties:
@@ -54,6 +70,27 @@ components:
       required:
         - status
       type: object
+    ResultInterface {}:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data: {}
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
     ResultReindexStatusResponse:
       additionalProperties: false
       properties:
@@ -75,6 +112,39 @@ components:
         - code
         - msg
         - data
+      type: object
+    ResultStatus:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/Status"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
+    Status:
+      additionalProperties: false
+      properties:
+        initialized:
+          type: boolean
+        owner_exists:
+          type: boolean
+      required:
+        - initialized
+        - owner_exists
       type: object
   securitySchemes:
     bearerAuth:
@@ -155,5 +225,51 @@ paths:
       summary: 查询重建索引作业状态
       tags:
         - Embedding
+  /init/owner:
+    post:
+      description: 创建首个 Owner 账号（仅在未初始化时可用）。
+      operationId: init-owner
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 初始化站点 Owner
+      tags:
+        - Init
+  /init/status:
+    get:
+      description: 返回站点是否已初始化、是否已存在 Owner。
+      operationId: init-status
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultStatus"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 获取系统初始化状态
+      tags:
+        - Init
 servers:
   - url: /api

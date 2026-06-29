@@ -37,6 +37,7 @@ func revokerFromCtx(ctx *RouterContext) authService.TokenRevoker {
 // 迁移新域时在此追加对应的 register*Huma 调用——这是唯一的注册清单，
 // 运行时服务器与离线 spec 生成器（GenerateOpenAPIYAML）共用，保证两者一致。
 func RegisterHumaOperations(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
+	registerInitHuma(api, h)
 	registerEmbeddingHuma(api, h, revoker)
 }
 
