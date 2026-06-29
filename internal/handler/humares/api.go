@@ -4,6 +4,11 @@
 package humares
 
 import (
+	"reflect"
+	"strconv"
+	"strings"
+	"unicode"
+
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humagin"
 	"github.com/gin-gonic/gin"
@@ -11,6 +16,82 @@ import (
 
 // SecuritySchemeBearer 是 OpenAPI 安全方案名，operation 用它声明所需 scope（见 Secured）。
 const SecuritySchemeBearer = "bearerAuth"
+
+// schemaRefPrefix 与 huma.DefaultConfig 使用的前缀保持一致。
+const schemaRefPrefix = "#/components/schemas/"
+
+// newSchemaNamer 返回一个**有状态、撞名消歧**的 schema 命名器。
+//
+// huma 的 DefaultSchemaNamer 忽略包名（comment.SystemSetting 与 setting.SystemSetting
+// 都叫 SystemSetting），跨包同名会在注册时 panic（文档要求此时自定义命名器）。这里：
+// 默认沿用简洁名；仅当某简洁名已被**另一个类型**占用时，给后来者加包名段前缀消歧，
+// 必要时再加序号兜底。绝大多数 schema 名保持干净，且对未来的同名冲突鲁棒。
+func newSchemaNamer() func(reflect.Type, string) string {
+	used := map[string]reflect.Type{}
+	return func(t reflect.Type, hint string) string {
+		name := huma.DefaultSchemaNamer(t, hint)
+		key := derefType(t)
+		if prev, ok := used[name]; ok && prev != key {
+			qualified := packageQualifiedName(t, hint)
+			name = qualified
+			for i := 2; ; i++ {
+				if p, ok := used[name]; !ok || p == key {
+					break
+				}
+				name = qualified + strconv.Itoa(i)
+			}
+		}
+		used[name] = key
+		return name
+	}
+}
+
+// packageQualifiedName 复刻 DefaultSchemaNamer 的拆分，但保留每个点分部件的「包名段」前缀
+// （EchoEcho 这类包名与类型名重复时折叠为 Echo），从而对跨包同名消歧。
+func packageQualifiedName(t reflect.Type, hint string) string {
+	name := derefType(t).String()
+	if name == "" || name == "interface {}" {
+		name = hint
+	}
+	name = strings.ReplaceAll(name, "[]", "List[")
+	var b strings.Builder
+	for _, part := range strings.FieldsFunc(name, func(r rune) bool {
+		return r == '[' || r == ']' || r == '*' || r == ','
+	}) {
+		typeName, pkgSeg := part, ""
+		if dot := strings.LastIndex(part, "."); dot >= 0 {
+			typeName = part[dot+1:]
+			pkgPart := part[:dot]
+			if slash := strings.LastIndex(pkgPart, "/"); slash >= 0 {
+				pkgSeg = pkgPart[slash+1:]
+			} else {
+				pkgSeg = pkgPart
+			}
+		}
+		seg, tn := titleCase(pkgSeg), titleCase(typeName)
+		if seg != "" && !strings.EqualFold(seg, tn) {
+			b.WriteString(seg)
+		}
+		b.WriteString(tn)
+	}
+	return b.String()
+}
+
+func derefType(t reflect.Type) reflect.Type {
+	for t != nil && t.Kind() == reflect.Pointer {
+		t = t.Elem()
+	}
+	return t
+}
+
+func titleCase(s string) string {
+	if s == "" {
+		return ""
+	}
+	r := []rune(s)
+	r[0] = unicode.ToUpper(r[0])
+	return string(r)
+}
 
 // NewAPI 在给定的 gin engine + 无组级鉴权的 group 上创建统一的 Huma API 实例。
 // auth/scope 全部下沉为 per-operation 中间件（见 router 层 + Bridge），
@@ -22,6 +103,8 @@ func NewAPI(engine *gin.Engine, group *gin.RouterGroup, title, version, basePath
 	installErrorModel()
 
 	cfg := huma.DefaultConfig(title, version)
+	// 用撞名消歧的命名器替换默认 registry（跨包同名类型如 SystemSetting 否则会 panic）。
+	cfg.Components.Schemas = huma.NewMapRegistry(schemaRefPrefix, newSchemaNamer())
 	cfg.Servers = []*huma.Server{{URL: basePath}}
 	cfg.Components.SecuritySchemes = map[string]*huma.SecurityScheme{
 		SecuritySchemeBearer: {Type: "http", Scheme: "bearer", BearerFormat: "JWT"},

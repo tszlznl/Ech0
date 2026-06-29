@@ -1,5 +1,128 @@
 components:
   schemas:
+    AccessTokenSetting:
+      additionalProperties: false
+      properties:
+        audience:
+          type: string
+        created_at:
+          format: int64
+          type: integer
+        expiry:
+          format: int64
+          type:
+            - integer
+            - "null"
+        id:
+          type: string
+        jti:
+          type: string
+        last_used_at:
+          format: int64
+          type: integer
+        name:
+          type: string
+        scopes:
+          type: string
+        token:
+          type: string
+        token_type:
+          type: string
+        user_id:
+          type: string
+      required:
+        - id
+        - user_id
+        - token
+        - name
+        - token_type
+        - scopes
+        - audience
+        - jti
+        - expiry
+        - created_at
+      type: object
+    AccessTokenSettingDto:
+      additionalProperties: false
+      properties:
+        audience:
+          type: string
+        expiry:
+          type: string
+        name:
+          type: string
+        scopes:
+          items:
+            type: string
+          type:
+            - array
+            - "null"
+      required:
+        - name
+        - expiry
+        - scopes
+        - audience
+      type: object
+    AgentSetting:
+      additionalProperties: false
+      properties:
+        api_key:
+          type: string
+        base_url:
+          type: string
+        context_window:
+          format: int64
+          type: integer
+        enable:
+          type: boolean
+        model:
+          type: string
+        multimodal:
+          type: boolean
+        prompt:
+          type: string
+        protocol:
+          type: string
+      required:
+        - enable
+        - protocol
+        - model
+        - api_key
+        - prompt
+        - base_url
+        - multimodal
+        - context_window
+      type: object
+    AgentSettingDto:
+      additionalProperties: false
+      properties:
+        api_key:
+          type: string
+        base_url:
+          type: string
+        context_window:
+          format: int64
+          type: integer
+        enable:
+          type: boolean
+        model:
+          type: string
+        multimodal:
+          type: boolean
+        prompt:
+          type: string
+        protocol:
+          type: string
+      required:
+        - enable
+        - protocol
+        - model
+        - api_key
+        - prompt
+        - base_url
+        - multimodal
+        - context_window
+      type: object
     BatchCommentActionDto:
       additionalProperties: false
       properties:
@@ -454,6 +577,56 @@ components:
         - smtp_username
         - smtp_sender
       type: object
+    EmbeddingSetting:
+      additionalProperties: false
+      properties:
+        api_key:
+          type: string
+        base_url:
+          type: string
+        batch_size:
+          format: int64
+          type: integer
+        dim:
+          format: int64
+          type: integer
+        enable:
+          type: boolean
+        model:
+          type: string
+      required:
+        - enable
+        - model
+        - api_key
+        - base_url
+        - dim
+        - batch_size
+      type: object
+    EmbeddingSettingDto:
+      additionalProperties: false
+      properties:
+        api_key:
+          type: string
+        base_url:
+          type: string
+        batch_size:
+          format: int64
+          type: integer
+        dim:
+          format: int64
+          type: integer
+        enable:
+          type: boolean
+        model:
+          type: string
+      required:
+        - enable
+        - model
+        - api_key
+        - base_url
+        - dim
+        - batch_size
+      type: object
     ErrorBody:
       additionalProperties: false
       properties:
@@ -805,6 +978,177 @@ components:
         - level
         - msg
       type: object
+    ModelResultCommentSystemSetting:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/ModelSystemSetting"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
+    ModelSystemSetting:
+      additionalProperties: false
+      properties:
+        captcha_enabled:
+          type: boolean
+        email_notify:
+          $ref: "#/components/schemas/EmailNotifySetting"
+        enable_comment:
+          type: boolean
+        require_approval:
+          type: boolean
+      required:
+        - enable_comment
+        - require_approval
+        - captcha_enabled
+        - email_notify
+      type: object
+    OAuth2Setting:
+      additionalProperties: false
+      properties:
+        auth_redirect_allowed_return_urls:
+          items:
+            type: string
+          type:
+            - array
+            - "null"
+        auth_url:
+          type: string
+        client_id:
+          type: string
+        client_secret:
+          type: string
+        cors_allowed_origins:
+          items:
+            type: string
+          type:
+            - array
+            - "null"
+        enable:
+          type: boolean
+        is_oidc:
+          type: boolean
+        issuer:
+          type: string
+        jwks_url:
+          type: string
+        provider:
+          type: string
+        redirect_uri:
+          type: string
+        scopes:
+          items:
+            type: string
+          type:
+            - array
+            - "null"
+        token_url:
+          type: string
+        user_info_url:
+          type: string
+      required:
+        - enable
+        - provider
+        - client_id
+        - client_secret
+        - redirect_uri
+        - scopes
+        - auth_url
+        - token_url
+        - user_info_url
+        - is_oidc
+        - issuer
+        - jwks_url
+        - auth_redirect_allowed_return_urls
+        - cors_allowed_origins
+      type: object
+    OAuth2SettingDto:
+      additionalProperties: false
+      properties:
+        auth_redirect_allowed_return_urls:
+          items:
+            type: string
+          type:
+            - array
+            - "null"
+        auth_url:
+          type: string
+        client_id:
+          type: string
+        client_secret:
+          type: string
+        cors_allowed_origins:
+          items:
+            type: string
+          type:
+            - array
+            - "null"
+        enable:
+          type: boolean
+        is_oidc:
+          type: boolean
+        issuer:
+          type: string
+        jwks_url:
+          type: string
+        provider:
+          type: string
+        redirect_uri:
+          type: string
+        scopes:
+          items:
+            type: string
+          type:
+            - array
+            - "null"
+        token_url:
+          type: string
+        user_info_url:
+          type: string
+      required:
+        - enable
+        - provider
+        - client_id
+        - client_secret
+        - redirect_uri
+        - scopes
+        - auth_url
+        - token_url
+        - user_info_url
+        - is_oidc
+        - issuer
+        - jwks_url
+        - auth_redirect_allowed_return_urls
+        - cors_allowed_origins
+      type: object
+    OAuth2Status:
+      additionalProperties: false
+      properties:
+        enabled:
+          type: boolean
+        oauth_ready:
+          type: boolean
+        provider:
+          type: string
+      required:
+        - enabled
+        - provider
+        - oauth_ready
+      type: object
     PageQueryDto:
       additionalProperties: false
       properties:
@@ -852,6 +1196,44 @@ components:
       required:
         - items
         - total
+      type: object
+    PasskeySetting:
+      additionalProperties: false
+      properties:
+        webauthn_allowed_origins:
+          items:
+            type: string
+          type:
+            - array
+            - "null"
+        webauthn_rp_id:
+          type: string
+      required:
+        - webauthn_rp_id
+        - webauthn_allowed_origins
+      type: object
+    PasskeySettingDto:
+      additionalProperties: false
+      properties:
+        webauthn_allowed_origins:
+          items:
+            type: string
+          type:
+            - array
+            - "null"
+        webauthn_rp_id:
+          type: string
+      required:
+        - webauthn_rp_id
+        - webauthn_allowed_origins
+      type: object
+    PasskeyStatus:
+      additionalProperties: false
+      properties:
+        passkey_ready:
+          type: boolean
+      required:
+        - passkey_ready
       type: object
     PresignDto:
       additionalProperties: false
@@ -957,6 +1339,28 @@ components:
       required:
         - status
       type: object
+    ResultAgentSetting:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/AgentSetting"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
     ResultCheckUpdateResponse:
       additionalProperties: false
       properties:
@@ -1053,6 +1457,28 @@ components:
           type: integer
         data:
           $ref: "#/components/schemas/Echo"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
+    ResultEmbeddingSetting:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/EmbeddingSetting"
         error_code:
           type: string
         message_key:
@@ -1228,6 +1654,32 @@ components:
           format: int64
           type: integer
         data: {}
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
+    ResultListAccessTokenSetting:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          items:
+            $ref: "#/components/schemas/AccessTokenSetting"
+          type:
+            - array
+            - "null"
         error_code:
           type: string
         message_key:
@@ -1528,6 +1980,76 @@ components:
         - msg
         - data
       type: object
+    ResultListWebhook:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          items:
+            $ref: "#/components/schemas/Webhook"
+          type:
+            - array
+            - "null"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
+    ResultOAuth2Setting:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/OAuth2Setting"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
+    ResultOAuth2Status:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/OAuth2Status"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
     ResultPageQueryResultListEcho:
       additionalProperties: false
       properties:
@@ -1572,6 +2094,50 @@ components:
         - msg
         - data
       type: object
+    ResultPasskeySetting:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/PasskeySetting"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
+    ResultPasskeyStatus:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/PasskeyStatus"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
     ResultPresignDto:
       additionalProperties: false
       properties:
@@ -1602,6 +2168,50 @@ components:
           type: integer
         data:
           $ref: "#/components/schemas/ReindexStatusResponse"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
+    ResultS3Setting:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/S3Setting"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
+    ResultSnapshotSchedule:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/SnapshotSchedule"
         error_code:
           type: string
         message_key:
@@ -1726,6 +2336,82 @@ components:
         - msg
         - data
       type: object
+    S3Setting:
+      additionalProperties: false
+      properties:
+        access_key:
+          type: string
+        bucket_name:
+          type: string
+        cdn_url:
+          type: string
+        enable:
+          type: boolean
+        endpoint:
+          type: string
+        path_prefix:
+          type: string
+        provider:
+          type: string
+        public_read:
+          type: boolean
+        region:
+          type: string
+        secret_key:
+          type: string
+        use_ssl:
+          type: boolean
+      required:
+        - enable
+        - provider
+        - endpoint
+        - access_key
+        - secret_key
+        - bucket_name
+        - region
+        - use_ssl
+        - cdn_url
+        - path_prefix
+        - public_read
+      type: object
+    S3SettingDto:
+      additionalProperties: false
+      properties:
+        access_key:
+          type: string
+        bucket_name:
+          type: string
+        cdn_url:
+          type: string
+        enable:
+          type: boolean
+        endpoint:
+          type: string
+        path_prefix:
+          type: string
+        provider:
+          type: string
+        public_read:
+          type: boolean
+        region:
+          type: string
+        secret_key:
+          type: string
+        use_ssl:
+          type: boolean
+      required:
+        - enable
+        - provider
+        - endpoint
+        - access_key
+        - secret_key
+        - bucket_name
+        - region
+        - use_ssl
+        - cdn_url
+        - path_prefix
+        - public_read
+      type: object
     SearchResult:
       additionalProperties: false
       properties:
@@ -1756,6 +2442,28 @@ components:
         - echo_created
         - distance
       type: object
+    SnapshotSchedule:
+      additionalProperties: false
+      properties:
+        cron_expression:
+          type: string
+        enable:
+          type: boolean
+      required:
+        - enable
+        - cron_expression
+      type: object
+    SnapshotScheduleDto:
+      additionalProperties: false
+      properties:
+        cron_expression:
+          type: string
+        enable:
+          type: boolean
+      required:
+        - enable
+        - cron_expression
+      type: object
     StartGlobalMigrationRequest:
       additionalProperties: false
       properties:
@@ -1782,19 +2490,87 @@ components:
     SystemSetting:
       additionalProperties: false
       properties:
-        captcha_enabled:
+        ICP_number:
+          type: string
+        allow_register:
           type: boolean
-        email_notify:
-          $ref: "#/components/schemas/EmailNotifySetting"
-        enable_comment:
-          type: boolean
-        require_approval:
-          type: boolean
+        custom_css:
+          type: string
+        custom_js:
+          type: string
+        default_locale:
+          type: string
+        footer_content:
+          type: string
+        footer_link:
+          type: string
+        meting_api:
+          type: string
+        server_logo:
+          type: string
+        server_name:
+          type: string
+        server_url:
+          type: string
+        site_title:
+          type: string
       required:
-        - enable_comment
-        - require_approval
-        - captcha_enabled
-        - email_notify
+        - site_title
+        - server_logo
+        - server_name
+        - server_url
+        - allow_register
+        - default_locale
+        - ICP_number
+        - footer_content
+        - footer_link
+        - meting_api
+        - custom_css
+        - custom_js
+      type: object
+    SystemSettingDto:
+      additionalProperties: false
+      properties:
+        ICP_number:
+          type: string
+        allow_register:
+          type: boolean
+        custom_css:
+          type: string
+        custom_js:
+          type: string
+        default_locale:
+          type: string
+        footer_content:
+          type: string
+        footer_link:
+          type: string
+        meting_api:
+          type: string
+        server_logo:
+          type: string
+        server_logo_file_id:
+          type: string
+        server_name:
+          type: string
+        server_url:
+          type: string
+        site_title:
+          type: string
+      required:
+        - site_title
+        - server_logo
+        - server_logo_file_id
+        - server_name
+        - server_url
+        - allow_register
+        - default_locale
+        - ICP_number
+        - footer_content
+        - footer_link
+        - meting_api
+        - custom_css
+        - custom_js
       type: object
     Tag:
       additionalProperties: false
@@ -1819,7 +2595,7 @@ components:
       additionalProperties: false
       properties:
         setting:
-          $ref: "#/components/schemas/SystemSetting"
+          $ref: "#/components/schemas/ModelSystemSetting"
       required:
         - setting
       type: object
@@ -1911,6 +2687,54 @@ components:
         - avatar_file_id
         - locale
       type: object
+    Webhook:
+      additionalProperties: false
+      properties:
+        created_at:
+          format: int64
+          type: integer
+        id:
+          type: string
+        is_active:
+          type: boolean
+        last_status:
+          type: string
+        last_trigger:
+          format: int64
+          type: integer
+        name:
+          type: string
+        updated_at:
+          format: int64
+          type: integer
+        url:
+          type: string
+      required:
+        - id
+        - name
+        - url
+        - is_active
+        - last_status
+        - last_trigger
+        - created_at
+        - updated_at
+      type: object
+    WebhookDto:
+      additionalProperties: false
+      properties:
+        is_active:
+          type: boolean
+        name:
+          type: string
+        secret:
+          type: string
+        url:
+          type: string
+      required:
+        - name
+        - url
+        - is_active
+      type: object
   securitySchemes:
     bearerAuth:
       bearerFormat: JWT
@@ -1921,6 +2745,105 @@ info:
   version: "1.0"
 openapi: 3.1.0
 paths:
+  /access-tokens:
+    get:
+      operationId: access-token-list
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultListAccessTokenSetting"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:token
+      summary: 列出访问令牌
+      tags:
+        - Setting
+    post:
+      operationId: access-token-create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccessTokenSettingDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultString"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:token
+      summary: 创建访问令牌
+      tags:
+        - Setting
+  /access-tokens/{id}:
+    delete:
+      operationId: access-token-delete
+      parameters:
+        - description: 资源 ID（UUID）
+          in: path
+          name: id
+          required: true
+          schema:
+            description: 资源 ID（UUID）
+            format: uuid
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:token
+      summary: 删除访问令牌
+      tags:
+        - Setting
+  /agent/info:
+    get:
+      operationId: agent-info
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultAgentSetting"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 获取 Agent 公开信息
+      tags:
+        - Setting
   /agent/recent:
     get:
       operationId: copilot-recent
@@ -1940,6 +2863,83 @@ paths:
       summary: 获取作者近况的 AI 总结
       tags:
         - Copilot
+  /agent/settings:
+    get:
+      operationId: agent-settings-get
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultAgentSetting"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 获取 Agent 设置
+      tags:
+        - Setting
+    put:
+      operationId: agent-settings-update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentSettingDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 更新 Agent 设置
+      tags:
+        - Setting
+  /agent/settings/test:
+    post:
+      operationId: agent-settings-test
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentSettingDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 测试 Copilot 连接
+      tags:
+        - Setting
   /chat/session:
     delete:
       operationId: copilot-session-clear
@@ -2690,6 +3690,55 @@ paths:
       summary: 查询重建索引作业状态
       tags:
         - Embedding
+  /embedding/settings:
+    get:
+      operationId: embedding-settings-get
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultEmbeddingSetting"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 获取 Embedding 设置
+      tags:
+        - Setting
+    put:
+      operationId: embedding-settings-update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmbeddingSettingDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 更新 Embedding 设置
+      tags:
+        - Setting
   /file/tree:
     get:
       operationId: file-tree
@@ -3183,6 +4232,74 @@ paths:
       summary: 查询全局迁移状态
       tags:
         - Migration
+  /oauth2/settings:
+    get:
+      operationId: oauth2-get
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultOAuth2Setting"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 获取 OAuth2 设置
+      tags:
+        - Setting
+    put:
+      operationId: oauth2-update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OAuth2SettingDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 更新 OAuth2 设置
+      tags:
+        - Setting
+  /oauth2/status:
+    get:
+      operationId: oauth2-status
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultOAuth2Status"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 获取 OAuth2 状态
+      tags:
+        - Setting
   /panel/comments:
     get:
       operationId: comment-panel-list
@@ -3278,7 +4395,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResultSystemSetting"
+                $ref: "#/components/schemas/ModelResultCommentSystemSetting"
           description: OK
         default:
           content:
@@ -3298,7 +4415,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SystemSetting"
+              $ref: "#/components/schemas/ModelSystemSetting"
         required: true
       responses:
         "200":
@@ -3478,6 +4595,74 @@ paths:
       summary: 更新评论审核状态
       tags:
         - Comment
+  /passkey/settings:
+    get:
+      operationId: passkey-get
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultPasskeySetting"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 获取 Passkey 设置
+      tags:
+        - Setting
+    put:
+      operationId: passkey-update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasskeySettingDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 更新 Passkey 设置
+      tags:
+        - Setting
+  /passkey/status:
+    get:
+      operationId: passkey-status
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultPasskeyStatus"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 获取 Passkey 状态
+      tags:
+        - Setting
   /register:
     post:
       operationId: user-register
@@ -3503,6 +4688,178 @@ paths:
       summary: 用户注册
       tags:
         - User
+  /s3/settings:
+    get:
+      operationId: s3-get
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultS3Setting"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 获取 S3 存储设置
+      tags:
+        - Setting
+    put:
+      operationId: s3-update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/S3SettingDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 更新 S3 存储设置
+      tags:
+        - Setting
+  /s3/settings/test:
+    post:
+      operationId: s3-test
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/S3SettingDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 测试 S3 存储连接
+      tags:
+        - Setting
+  /settings:
+    get:
+      operationId: settings-get
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultSystemSetting"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 获取系统全局设置
+      tags:
+        - Setting
+    put:
+      operationId: settings-update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SystemSettingDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 更新系统全局设置
+      tags:
+        - Setting
+  /snapshot/schedule:
+    get:
+      operationId: snapshot-schedule-get
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultSnapshotSchedule"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 获取定时快照计划
+      tags:
+        - Setting
+    post:
+      operationId: snapshot-schedule-update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SnapshotScheduleDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 设置定时快照计划
+      tags:
+        - Setting
   /system/check-update:
     get:
       operationId: dashboard-check-update
@@ -3802,6 +5159,153 @@ paths:
       summary: 获取所有用户
       tags:
         - User
+  /webhook:
+    get:
+      operationId: webhook-list
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultListWebhook"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 获取所有 Webhook
+      tags:
+        - Setting
+    post:
+      operationId: webhook-create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 创建 Webhook
+      tags:
+        - Setting
+  /webhook/{id}:
+    delete:
+      operationId: webhook-delete
+      parameters:
+        - description: 资源 ID（UUID）
+          in: path
+          name: id
+          required: true
+          schema:
+            description: 资源 ID（UUID）
+            format: uuid
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 删除 Webhook
+      tags:
+        - Setting
+    put:
+      operationId: webhook-update
+      parameters:
+        - description: Webhook ID（UUID）
+          in: path
+          name: id
+          required: true
+          schema:
+            description: Webhook ID（UUID）
+            format: uuid
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 更新 Webhook
+      tags:
+        - Setting
+  /webhook/{id}/test:
+    post:
+      operationId: webhook-test
+      parameters:
+        - description: 资源 ID（UUID）
+          in: path
+          name: id
+          required: true
+          schema:
+            description: 资源 ID（UUID）
+            format: uuid
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 测试 Webhook
+      tags:
+        - Setting
   /website/title:
     get:
       operationId: common-website-title

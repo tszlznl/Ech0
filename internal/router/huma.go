@@ -71,6 +71,7 @@ func RegisterHumaOperations(api huma.API, h *handler.Bundle, revoker authService
 	registerEchoHuma(api, h, revoker)
 	registerConnectHuma(api, h, revoker)
 	registerUserHuma(api, h, revoker)
+	registerSettingHuma(api, h, revoker)
 	registerFileHuma(api, h, revoker)
 	registerDashboardHuma(api, h, revoker)
 	registerCopilotHuma(api, h, revoker)

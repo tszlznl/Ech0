@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2025-2026 lin-snow
 
+// Package handler 暴露系统设置相关的 HTTP 接口（Huma type-first，全部 JSON）。
 package handler
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	res "github.com/lin-snow/ech0/internal/handler/response"
+	"context"
+
+	"github.com/lin-snow/ech0/internal/handler/humares"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
+	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 	service "github.com/lin-snow/ech0/internal/service/setting"
 )
 
@@ -23,852 +25,260 @@ func NewSettingHandler(settingService service.Service) *SettingHandler {
 	}
 }
 
-// GetSettings 获取设置
-//
-//	@Summary		获取设置
-//	@Description	获取系统的全局设置
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	handler.Response	"获取设置成功"
-//	@Failure		200	{object}	handler.Response	"获取设置失败"
-//	@Router			/settings [get]
-func (settingHandler *SettingHandler) GetSettings() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		var settings model.SystemSetting
-		if err := settingHandler.settingService.GetSetting(&settings); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
+type (
+	EmptyInput struct{}
+	IDInput    struct {
+		ID string `path:"id" format:"uuid" doc:"资源 ID（UUID）"`
+	}
+	UpdateSettingsInput struct{ Body model.SystemSettingDto }
+	S3SettingInput      struct{ Body model.S3SettingDto }
+	OAuth2SettingInput  struct{ Body model.OAuth2SettingDto }
+	PasskeySettingInput struct{ Body model.PasskeySettingDto }
+	WebhookInput        struct{ Body model.WebhookDto }
+	WebhookIDBodyInput  struct {
+		ID   string `path:"id" format:"uuid" doc:"Webhook ID（UUID）"`
+		Body model.WebhookDto
+	}
+	AccessTokenInput      struct{ Body model.AccessTokenSettingDto }
+	SnapshotScheduleInput struct{ Body model.SnapshotScheduleDto }
+	AgentSettingInput     struct{ Body model.AgentSettingDto }
+	EmbeddingSettingInput struct{ Body model.EmbeddingSettingDto }
+)
 
-		return res.Response{
-			Data: settings,
-			Msg:  commonModel.GET_SETTINGS_SUCCESS,
-		}
-	})
+// --- 公开 ---
+
+// GetSettings 获取系统全局设置（公开）。
+func (h *SettingHandler) GetSettings(ctx context.Context, _ *EmptyInput) (*humares.Envelope[model.SystemSetting], error) {
+	var settings model.SystemSetting
+	if err := h.settingService.GetSetting(&settings); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, settings, commonModel.GET_SETTINGS_SUCCESS), nil
 }
 
-// UpdateSettings 更新设置
-//
-//	@Summary		更新设置
-//	@Description	更新系统的全局设置
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Param			settings	body		model.SystemSettingDto	true	"新的系统设置"
-//	@Success		200			{object}	handler.Response		"更新设置成功"
-//	@Failure		200			{object}	handler.Response		"更新设置失败"
-//	@Router			/settings [put]
-func (settingHandler *SettingHandler) UpdateSettings() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 解析请求体中的参数
-		var newSettings model.SystemSettingDto
-		if err := ctx.ShouldBindJSON(&newSettings); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-
-		if err := settingHandler.settingService.UpdateSetting(ctx.Request.Context(), &newSettings); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Msg: commonModel.UPDATE_SETTINGS_SUCCESS,
-		}
-	})
+// GetOAuth2Status 获取 OAuth2 启用状态（公开）。
+func (h *SettingHandler) GetOAuth2Status(ctx context.Context, _ *EmptyInput) (*humares.Envelope[model.OAuth2Status], error) {
+	var status model.OAuth2Status
+	if err := h.settingService.GetOAuth2Status(&status); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, status, commonModel.GET_OAUTH2_STATUS_SUCCESS), nil
 }
 
-// GetS3Settings 获取 S3 存储设置
-//
-//	@Summary		获取 S3 存储设置
-//	@Description	获取系统的 S3 存储相关设置
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	handler.Response	"获取 S3 存储设置成功"
-//	@Failure		200	{object}	handler.Response	"获取 S3 存储设置失败"
-//	@Router			/s3/settings [get]
-func (settingHandler *SettingHandler) GetS3Settings() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		var s3Setting model.S3Setting
-		if err := settingHandler.settingService.GetS3Setting(ctx.Request.Context(), &s3Setting); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: s3Setting,
-			Msg:  commonModel.GET_S3_SETTINGS_SUCCESS,
-		}
-	})
+// GetPasskeyStatus 获取 Passkey 就绪状态（公开）。
+func (h *SettingHandler) GetPasskeyStatus(ctx context.Context, _ *EmptyInput) (*humares.Envelope[model.PasskeyStatus], error) {
+	var status model.PasskeyStatus
+	if err := h.settingService.GetPasskeyStatus(&status); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, status, commonModel.GET_PASSKEY_STATUS_SUCCESS), nil
 }
 
-// UpdateS3Settings 更新 S3 存储设置
-//
-//	@Summary		更新 S3 存储设置
-//	@Description	更新系统的 S3 存储相关设置
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Param			s3Settings	body		model.S3SettingDto	true	"新的 S3 存储设置"
-//	@Success		200			{object}	handler.Response	"更新 S3 存储设置成功"
-//	@Failure		200			{object}	handler.Response	"更新 S3 存储设置失败"
-//	@Router			/s3/settings [put]
-func (settingHandler *SettingHandler) UpdateS3Settings() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 解析请求体中的参数
-		var newS3Settings model.S3SettingDto
-		if err := ctx.ShouldBindJSON(&newS3Settings); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-
-		if err := settingHandler.settingService.UpdateS3Setting(ctx.Request.Context(), &newS3Settings); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Msg: commonModel.UPDATE_S3_SETTINGS_SUCCESS,
-		}
-	})
+// GetAgentInfo 获取 Agent 公开信息（公开，敏感字段已脱敏）。
+func (h *SettingHandler) GetAgentInfo(ctx context.Context, _ *EmptyInput) (*humares.Envelope[model.AgentSetting], error) {
+	var settings model.AgentSetting
+	if err := h.settingService.GetAgentInfo(&settings); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	settings.ApiKey = ""
+	settings.Prompt = ""
+	settings.BaseURL = ""
+	return humares.OK(ctx, settings, commonModel.GET_SETTINGS_SUCCESS), nil
 }
 
-// TestS3Connection 测试 S3 存储连接
-//
-//	@Summary		测试 S3 存储连接
-//	@Description	使用提交的 S3 配置做一次连通性探测（不保存）
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Param			s3Settings	body		model.S3SettingDto	true	"待测试的 S3 存储设置"
-//	@Success		200			{object}	handler.Response	"测试 S3 存储连接成功"
-//	@Failure		200			{object}	handler.Response	"测试 S3 存储连接失败"
-//	@Router			/s3/settings/test [post]
-func (settingHandler *SettingHandler) TestS3Connection() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		var newS3Settings model.S3SettingDto
-		if err := ctx.ShouldBindJSON(&newS3Settings); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
+// --- admin:settings ---
 
-		if err := settingHandler.settingService.TestS3Connection(ctx.Request.Context(), &newS3Settings); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Msg: commonModel.TEST_S3_CONNECTION_SUCCESS,
-		}
-	})
+// UpdateSettings 更新系统全局设置。
+func (h *SettingHandler) UpdateSettings(ctx context.Context, in *UpdateSettingsInput) (*humares.Envelope[any], error) {
+	if err := h.settingService.UpdateSetting(ctx, &in.Body); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil, commonModel.UPDATE_SETTINGS_SUCCESS), nil
 }
 
-// GetOAuth2Settings 获取 OAuth2 设置
-//
-//	@Summary		获取 OAuth2 设置
-//	@Description	获取系统的 OAuth2 相关设置
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	handler.Response	"获取 OAuth2 设置成功"
-//	@Failure		200	{object}	handler.Response	"获取 OAuth2 设置失败"
-//	@Router			/oauth2/settings [get]
-func (settingHandler *SettingHandler) GetOAuth2Settings() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		var oauthSetting model.OAuth2Setting
-		if err := settingHandler.settingService.GetOAuth2Setting(ctx.Request.Context(), &oauthSetting); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: oauthSetting,
-			Msg:  commonModel.GET_OAUTH_SETTINGS_SUCCESS,
-		}
-	})
+// GetS3Settings 获取 S3 存储设置。
+func (h *SettingHandler) GetS3Settings(ctx context.Context, _ *EmptyInput) (*humares.Envelope[model.S3Setting], error) {
+	var s3Setting model.S3Setting
+	if err := h.settingService.GetS3Setting(ctx, &s3Setting); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, s3Setting, commonModel.GET_S3_SETTINGS_SUCCESS), nil
 }
 
-// UpdateOAuth2Settings 更新 OAuth2 设置
-//
-//	@Summary		更新 OAuth2 设置
-//	@Description	更新系统的 OAuth2 相关设置
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Param			oauthSettings	body		model.OAuth2SettingDto	true	"新的 OAuth 设置"
-//	@Success		200				{object}	handler.Response		"更新 OAuth 设置成功"
-//	@Failure		200				{object}	handler.Response		"更新 OAuth 设置失败"
-//	@Router			/oauth2/settings [put]
-func (settingHandler *SettingHandler) UpdateOAuth2Settings() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 解析请求体中的参数
-		var newOAuthSettings model.OAuth2SettingDto
-		if err := ctx.ShouldBindJSON(&newOAuthSettings); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-
-		if err := settingHandler.settingService.UpdateOAuth2Setting(ctx.Request.Context(), &newOAuthSettings); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Msg: commonModel.UPDATE_OAUTH_SETTINGS_SUCCESS,
-		}
-	})
+// UpdateS3Settings 更新 S3 存储设置。
+func (h *SettingHandler) UpdateS3Settings(ctx context.Context, in *S3SettingInput) (*humares.Envelope[any], error) {
+	if err := h.settingService.UpdateS3Setting(ctx, &in.Body); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil, commonModel.UPDATE_S3_SETTINGS_SUCCESS), nil
 }
 
-// GetOAuth2Status 获取 OAuth2 状态
-//
-//	@Summary		获取 OAuth2 状态
-//	@Description	获取系统的 OAuth2 启用状态
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	handler.Response	"获取 OAuth2 状态成功"
-//	@Failure		200	{object}	handler.Response	"获取 OAuth2 状态失败"
-//	@Router			/oauth2/status [get]
-func (settingHandler *SettingHandler) GetOAuth2Status() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		var status model.OAuth2Status
-		if err := settingHandler.settingService.GetOAuth2Status(&status); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: status,
-			Msg:  commonModel.GET_OAUTH2_STATUS_SUCCESS,
-		}
-	})
+// TestS3Connection 用提交的 S3 配置做一次连通性探测（不保存）。
+func (h *SettingHandler) TestS3Connection(ctx context.Context, in *S3SettingInput) (*humares.Envelope[any], error) {
+	if err := h.settingService.TestS3Connection(ctx, &in.Body); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil, commonModel.TEST_S3_CONNECTION_SUCCESS), nil
 }
 
-// GetPasskeySettings 获取 Passkey 设置
-//
-//	@Summary		获取 Passkey 设置
-//	@Description	获取系统的 Passkey(WebAuthn) 相关设置
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	handler.Response	"获取 Passkey 设置成功"
-//	@Failure		200	{object}	handler.Response	"获取 Passkey 设置失败"
-//	@Router			/passkey/settings [get]
-func (settingHandler *SettingHandler) GetPasskeySettings() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		var passkeySetting model.PasskeySetting
-		if err := settingHandler.settingService.GetPasskeySetting(ctx.Request.Context(), &passkeySetting); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: passkeySetting,
-			Msg:  commonModel.GET_PASSKEY_SETTINGS_SUCCESS,
-		}
-	})
+// GetOAuth2Settings 获取 OAuth2 设置。
+func (h *SettingHandler) GetOAuth2Settings(ctx context.Context, _ *EmptyInput) (*humares.Envelope[model.OAuth2Setting], error) {
+	var oauthSetting model.OAuth2Setting
+	if err := h.settingService.GetOAuth2Setting(ctx, &oauthSetting); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, oauthSetting, commonModel.GET_OAUTH_SETTINGS_SUCCESS), nil
 }
 
-// UpdatePasskeySettings 更新 Passkey 设置
-//
-//	@Summary		更新 Passkey 设置
-//	@Description	更新系统的 Passkey(WebAuthn) 相关设置
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Param			passkeySettings	body		model.PasskeySettingDto	true	"新的 Passkey 设置"
-//	@Success		200				{object}	handler.Response		"更新 Passkey 设置成功"
-//	@Failure		200				{object}	handler.Response		"更新 Passkey 设置失败"
-//	@Router			/passkey/settings [put]
-func (settingHandler *SettingHandler) UpdatePasskeySettings() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		var newPasskeySettings model.PasskeySettingDto
-		if err := ctx.ShouldBindJSON(&newPasskeySettings); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-
-		if err := settingHandler.settingService.UpdatePasskeySetting(ctx.Request.Context(), &newPasskeySettings); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Msg: commonModel.UPDATE_PASSKEY_SETTINGS_SUCCESS,
-		}
-	})
+// UpdateOAuth2Settings 更新 OAuth2 设置。
+func (h *SettingHandler) UpdateOAuth2Settings(ctx context.Context, in *OAuth2SettingInput) (*humares.Envelope[any], error) {
+	if err := h.settingService.UpdateOAuth2Setting(ctx, &in.Body); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil, commonModel.UPDATE_OAUTH_SETTINGS_SUCCESS), nil
 }
 
-// GetPasskeyStatus 获取 Passkey 状态
-//
-//	@Summary		获取 Passkey 状态
-//	@Description	获取系统的 Passkey(WebAuthn) 就绪状态
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	handler.Response	"获取 Passkey 状态成功"
-//	@Failure		200	{object}	handler.Response	"获取 Passkey 状态失败"
-//	@Router			/passkey/status [get]
-func (settingHandler *SettingHandler) GetPasskeyStatus() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		var status model.PasskeyStatus
-		if err := settingHandler.settingService.GetPasskeyStatus(&status); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: status,
-			Msg:  commonModel.GET_PASSKEY_STATUS_SUCCESS,
-		}
-	})
+// GetPasskeySettings 获取 Passkey(WebAuthn) 设置。
+func (h *SettingHandler) GetPasskeySettings(ctx context.Context, _ *EmptyInput) (*humares.Envelope[model.PasskeySetting], error) {
+	var passkeySetting model.PasskeySetting
+	if err := h.settingService.GetPasskeySetting(ctx, &passkeySetting); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, passkeySetting, commonModel.GET_PASSKEY_SETTINGS_SUCCESS), nil
 }
 
-// GetWebhook 获取所有 Webhook
-//
-//	@Summary		获取所有 Webhook
-//	@Description	获取系统中配置的所有 Webhook 列表
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	handler.Response	"获取 Webhook 列表成功"
-//	@Failure		200	{object}	handler.Response	"获取 Webhook 列表失败"
-//	@Router			/webhook [get]
-func (settingHandler *SettingHandler) GetWebhook() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		result, err := settingHandler.settingService.GetAllWebhooks(ctx.Request.Context())
-		if err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: result,
-			Msg:  commonModel.GET_WEBHOOK_SUCCESS,
-		}
-	})
+// UpdatePasskeySettings 更新 Passkey(WebAuthn) 设置。
+func (h *SettingHandler) UpdatePasskeySettings(ctx context.Context, in *PasskeySettingInput) (*humares.Envelope[any], error) {
+	if err := h.settingService.UpdatePasskeySetting(ctx, &in.Body); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil, commonModel.UPDATE_PASSKEY_SETTINGS_SUCCESS), nil
 }
 
-// DeleteWebhook 删除 Webhook
-//
-//	@Summary		删除 Webhook
-//	@Description	根据 ID 删除指定的 Webhook 配置
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Param			id	path		string				true	"要删除的 Webhook ID (UUID)"
-//	@Success		200	{object}	handler.Response	"删除 Webhook 成功"
-//	@Failure		200	{object}	handler.Response	"删除 Webhook 失败"
-//	@Router			/webhook/{id} [delete]
-func (settingHandler *SettingHandler) DeleteWebhook() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 从路径参数中获取 Webhook ID
-		id := ctx.Param("id")
-		if _, err := uuid.Parse(id); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_PARAMS,
-			}
-		}
-
-		if err := settingHandler.settingService.DeleteWebhook(ctx.Request.Context(), id); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Msg: commonModel.DELETE_WEBHOOK_SUCCESS,
-		}
-	})
+// GetWebhook 获取所有 Webhook。
+func (h *SettingHandler) GetWebhook(ctx context.Context, _ *EmptyInput) (*humares.Envelope[[]webhookModel.Webhook], error) {
+	result, err := h.settingService.GetAllWebhooks(ctx)
+	if err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, result, commonModel.GET_WEBHOOK_SUCCESS), nil
 }
 
-// UpdateWebhook 更新 Webhook
-//
-//	@Summary		更新 Webhook
-//	@Description	根据 ID 更新指定的 Webhook 配置
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Param			id		path		string				true	"要更新的 Webhook ID (UUID)"
-//	@Param			webhook	body		model.WebhookDto	true	"新的 Webhook 配置"
-//	@Success		200		{object}	handler.Response	"更新 Webhook 成功"
-//	@Failure		200		{object}	handler.Response	"更新 Webhook 失败"
-//	@Router			/webhook/{id} [put]
-func (settingHandler *SettingHandler) UpdateWebhook() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 从路径参数中获取 Webhook ID
-		id := ctx.Param("id")
-		if _, err := uuid.Parse(id); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_PARAMS,
-			}
-		}
-
-		// 解析请求体中的参数
-		var updatedWebhook model.WebhookDto
-		if err := ctx.ShouldBindJSON(&updatedWebhook); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-
-		if err := settingHandler.settingService.UpdateWebhook(ctx.Request.Context(), id, &updatedWebhook); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Msg: commonModel.UPDATE_WEBHOOK_SUCCESS,
-		}
-	})
+// CreateWebhook 创建新的 Webhook。
+func (h *SettingHandler) CreateWebhook(ctx context.Context, in *WebhookInput) (*humares.Envelope[any], error) {
+	if err := h.settingService.CreateWebhook(ctx, &in.Body); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil, commonModel.CREATE_WEBHOOK_SUCCESS), nil
 }
 
-// CreateWebhook 创建新的 Webhook
-//
-//	@Summary		创建新的 Webhook
-//	@Description	创建一个新的 Webhook 配置
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Param			webhook	body		model.WebhookDto	true	"新的 Webhook 配置"
-//	@Success		200		{object}	handler.Response	"创建 Webhook 成功"
-//	@Failure		200		{object}	handler.Response	"创建 Webhook 失败"
-//	@Router			/webhook [post]
-func (settingHandler *SettingHandler) CreateWebhook() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 解析请求体中的参数
-		var newWebhook model.WebhookDto
-		if err := ctx.ShouldBindJSON(&newWebhook); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-
-		if err := settingHandler.settingService.CreateWebhook(ctx.Request.Context(), &newWebhook); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Msg: commonModel.CREATE_WEBHOOK_SUCCESS,
-		}
-	})
+// UpdateWebhook 根据 ID 更新 Webhook。
+func (h *SettingHandler) UpdateWebhook(ctx context.Context, in *WebhookIDBodyInput) (*humares.Envelope[any], error) {
+	if err := h.settingService.UpdateWebhook(ctx, in.ID, &in.Body); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil, commonModel.UPDATE_WEBHOOK_SUCCESS), nil
 }
 
-// TestWebhook 测试 Webhook 连接
-//
-//	@Summary		测试 Webhook
-//	@Description	根据 ID 触发一次 Webhook 测试请求
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Param			id	path		string				true	"要测试的 Webhook ID (UUID)"
-//	@Success		200	{object}	handler.Response	"测试 Webhook 成功"
-//	@Failure		200	{object}	handler.Response	"测试 Webhook 失败"
-//	@Router			/webhook/{id}/test [post]
-func (settingHandler *SettingHandler) TestWebhook() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		id := ctx.Param("id")
-		if _, err := uuid.Parse(id); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_PARAMS,
-			}
-		}
-
-		if err := settingHandler.settingService.TestWebhook(ctx.Request.Context(), id); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Msg: commonModel.TEST_WEBHOOK_SUCCESS,
-		}
-	})
+// DeleteWebhook 根据 ID 删除 Webhook。
+func (h *SettingHandler) DeleteWebhook(ctx context.Context, in *IDInput) (*humares.Envelope[any], error) {
+	if err := h.settingService.DeleteWebhook(ctx, in.ID); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil, commonModel.DELETE_WEBHOOK_SUCCESS), nil
 }
 
-// ListAccessTokens 列出访问令牌
-//
-//	@Summary		列出访问令牌
-//	@Description	列出当前用户的所有访问令牌
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	handler.Response	"列出访问令牌成功"
-//	@Failure		200	{object}	handler.Response	"列出访问令牌失败"
-//	@Router			/access-tokens [get]
-func (settingHandler *SettingHandler) ListAccessTokens() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		result, err := settingHandler.settingService.ListAccessTokens(ctx.Request.Context())
-		if err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: result,
-			Msg:  commonModel.LIST_ACCESS_TOKENS_SUCCESS,
-		}
-	})
+// TestWebhook 根据 ID 触发一次 Webhook 测试请求。
+func (h *SettingHandler) TestWebhook(ctx context.Context, in *IDInput) (*humares.Envelope[any], error) {
+	if err := h.settingService.TestWebhook(ctx, in.ID); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil, commonModel.TEST_WEBHOOK_SUCCESS), nil
 }
 
-// CreateAccessToken 创建访问令牌
-//
-//	@Summary		创建访问令牌
-//	@Description	为当前用户创建一个新的访问令牌
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Param			accessToken	body		model.AccessTokenSettingDto	true	"新的访问令牌信息"
-//	@Success		200			{object}	handler.Response			"创建访问令牌成功"
-//	@Failure		200			{object}	handler.Response			"创建访问令牌失败"
-//	@Router			/access-tokens [post]
-func (settingHandler *SettingHandler) CreateAccessToken() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 解析请求体中的参数
-		var newAccessToken model.AccessTokenSettingDto
-		if err := ctx.ShouldBindJSON(&newAccessToken); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-
-		createdToken, err := settingHandler.settingService.CreateAccessToken(
-			ctx.Request.Context(),
-			&newAccessToken,
-		)
-		if err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: createdToken,
-			Msg:  commonModel.CREATE_ACCESS_TOKEN_SUCCESS,
-		}
-	})
+// GetSnapshotScheduleSetting 获取定时快照计划。
+func (h *SettingHandler) GetSnapshotScheduleSetting(ctx context.Context, _ *EmptyInput) (*humares.Envelope[model.SnapshotSchedule], error) {
+	var snapshotSchedule model.SnapshotSchedule
+	if err := h.settingService.GetSnapshotScheduleSetting(&snapshotSchedule); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, snapshotSchedule, commonModel.GET_SETTINGS_SUCCESS), nil
 }
 
-// DeleteAccessToken 删除访问令牌
-//
-//	@Summary		删除访问令牌
-//	@Description	根据 ID 删除指定的访问令牌
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Param			id	path		int					true	"要删除的访问令牌 ID"
-//	@Success		200	{object}	handler.Response	"删除访问令牌成功"
-//	@Failure		200	{object}	handler.Response	"删除访问令牌失败"
-//	@Router			/access-tokens/{id} [delete]
-func (settingHandler *SettingHandler) DeleteAccessToken() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 从路径参数中获取 访问令牌 ID
-		id := ctx.Param("id")
-		if _, err := uuid.Parse(id); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_PARAMS,
-			}
-		}
-
-		if err := settingHandler.settingService.DeleteAccessToken(ctx.Request.Context(), id); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Msg: commonModel.DELETE_ACCESS_TOKEN_SUCCESS,
-		}
-	})
+// UpdateSnapshotScheduleSetting 设置定时快照计划。
+func (h *SettingHandler) UpdateSnapshotScheduleSetting(ctx context.Context, in *SnapshotScheduleInput) (*humares.Envelope[any], error) {
+	if err := h.settingService.UpdateSnapshotScheduleSetting(ctx, &in.Body); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil, commonModel.SCHEDULE_SNAPSHOT_SUCCESS), nil
 }
 
-// GetSnapshotScheduleSetting 获取定时快照计划
-//
-//	@Summary		获取定时快照计划
-//	@Description	获取系统的定时快照计划设置
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	handler.Response	"获取定时快照计划成功"
-//	@Failure		200	{object}	handler.Response	"获取定时快照计划失败"
-//	@Router			/snapshot/schedule [get]
-func (settingHandler *SettingHandler) GetSnapshotScheduleSetting() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		var snapshotSchedule model.SnapshotSchedule
-		if err := settingHandler.settingService.GetSnapshotScheduleSetting(&snapshotSchedule); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: snapshotSchedule,
-			Msg:  commonModel.GET_SETTINGS_SUCCESS,
-		}
-	})
+// GetAgentSettings 获取 Agent 设置。
+func (h *SettingHandler) GetAgentSettings(ctx context.Context, _ *EmptyInput) (*humares.Envelope[model.AgentSetting], error) {
+	var settings model.AgentSetting
+	if err := h.settingService.GetAgentSettings(ctx, &settings); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, settings, commonModel.GET_SETTINGS_SUCCESS), nil
 }
 
-// UpdateSnapshotScheduleSetting 更新定时快照计划
-//
-//	@Summary		更新定时快照计划
-//	@Description	为系统设置定时快照计划
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Param			snapshotSchedule	body		model.SnapshotScheduleDto	true	"定时快照计划设置"
-//	@Success		200					{object}	handler.Response			"设置定时快照计划成功"
-//	@Failure		200					{object}	handler.Response			"设置定时快照计划失败"
-//	@Router			/snapshot/schedule [post]
-func (settingHandler *SettingHandler) UpdateSnapshotScheduleSetting() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 解析请求体中的参数
-		var snapshotSchedule model.SnapshotScheduleDto
-		if err := ctx.ShouldBindJSON(&snapshotSchedule); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-
-		if err := settingHandler.settingService.UpdateSnapshotScheduleSetting(ctx.Request.Context(), &snapshotSchedule); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Msg: commonModel.SCHEDULE_SNAPSHOT_SUCCESS,
-		}
-	})
+// UpdateAgentSettings 更新 Agent 设置。
+func (h *SettingHandler) UpdateAgentSettings(ctx context.Context, in *AgentSettingInput) (*humares.Envelope[any], error) {
+	if err := h.settingService.UpdateAgentSettings(ctx, &in.Body); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil, commonModel.UPDATE_SETTINGS_SUCCESS), nil
 }
 
-// GetEmbeddingSettings 获取 Embedding 向量设置
-//
-//	@Summary		获取 Embedding 设置
-//	@Description	获取系统的 Embedding 向量相关设置
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	handler.Response	"获取 Embedding 设置成功"
-//	@Failure		200	{object}	handler.Response	"获取 Embedding 设置失败"
-//	@Router			/embedding/settings [get]
-func (settingHandler *SettingHandler) GetEmbeddingSettings() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		setting, err := settingHandler.settingService.GetEmbeddingSetting(ctx.Request.Context())
-		if err != nil {
-			return res.Response{Err: err}
-		}
-		return res.Response{
-			Data: setting,
-			Msg:  commonModel.GET_SETTINGS_SUCCESS,
-		}
-	})
+// TestAgentConnection 用提交的 Agent 配置做一次最小探活（不保存）。
+func (h *SettingHandler) TestAgentConnection(ctx context.Context, in *AgentSettingInput) (*humares.Envelope[any], error) {
+	if err := h.settingService.TestAgentConnection(ctx, &in.Body); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil, commonModel.AGENT_TEST_CONNECTION_SUCCESS), nil
 }
 
-// UpdateEmbeddingSettings 更新 Embedding 向量设置
-//
-//	@Summary		更新 Embedding 设置
-//	@Description	更新系统的 Embedding 向量相关设置
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Param			settings	body		model.EmbeddingSettingDto	true	"新的 Embedding 设置"
-//	@Success		200			{object}	handler.Response			"更新 Embedding 设置成功"
-//	@Failure		200			{object}	handler.Response			"更新 Embedding 设置失败"
-//	@Router			/embedding/settings [put]
-func (settingHandler *SettingHandler) UpdateEmbeddingSettings() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		var dto model.EmbeddingSettingDto
-		if err := ctx.ShouldBindJSON(&dto); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-		if err := settingHandler.settingService.UpdateEmbeddingSetting(ctx.Request.Context(), dto); err != nil {
-			return res.Response{Err: err}
-		}
-		return res.Response{
-			Msg: commonModel.UPDATE_SETTINGS_SUCCESS,
-		}
-	})
+// GetEmbeddingSettings 获取 Embedding 向量设置。
+func (h *SettingHandler) GetEmbeddingSettings(ctx context.Context, _ *EmptyInput) (*humares.Envelope[model.EmbeddingSetting], error) {
+	setting, err := h.settingService.GetEmbeddingSetting(ctx)
+	if err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, setting, commonModel.GET_SETTINGS_SUCCESS), nil
 }
 
-// GetAgentInfo 获取 Agent 信息
-//
-//	@Summary		获取 Agent 信息
-//	@Description	获取系统的 Agent 信息
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	handler.Response	"获取 Agent 信息成功"
-//	@Failure		200	{object}	handler.Response	"获取 Agent 信息失败"
-//	@Router			/agent/info [get]
-func (settingHandler *SettingHandler) GetAgentInfo() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		var settings model.AgentSetting
-		if err := settingHandler.settingService.GetAgentInfo(&settings); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		settings.ApiKey = ""  // 不返回 API Key 信息
-		settings.Prompt = ""  // 不返回 Prompt 信息
-		settings.BaseURL = "" // 不返回 BaseURL 信息
-
-		return res.Response{
-			Data: settings,
-			Msg:  commonModel.GET_SETTINGS_SUCCESS,
-		}
-	})
+// UpdateEmbeddingSettings 更新 Embedding 向量设置。
+func (h *SettingHandler) UpdateEmbeddingSettings(ctx context.Context, in *EmbeddingSettingInput) (*humares.Envelope[any], error) {
+	if err := h.settingService.UpdateEmbeddingSetting(ctx, in.Body); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil, commonModel.UPDATE_SETTINGS_SUCCESS), nil
 }
 
-// GetAgentSettings 获取 Agent 设置
-//
-//	@Summary		获取 Agent 设置
-//	@Description	获取系统的 Agent 相关设置
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	handler.Response	"获取 Agent 设置成功"
-//	@Failure		200	{object}	handler.Response	"获取 Agent 设置失败"
-//	@Router			/agent/settings [get]
-func (settingHandler *SettingHandler) GetAgentSettings() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		var settings model.AgentSetting
-		if err := settingHandler.settingService.GetAgentSettings(ctx.Request.Context(), &settings); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
+// --- admin:token ---
 
-		return res.Response{
-			Data: settings,
-			Msg:  commonModel.GET_SETTINGS_SUCCESS,
-		}
-	})
+// ListAccessTokens 列出当前用户的所有访问令牌。
+func (h *SettingHandler) ListAccessTokens(ctx context.Context, _ *EmptyInput) (*humares.Envelope[[]model.AccessTokenSetting], error) {
+	result, err := h.settingService.ListAccessTokens(ctx)
+	if err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, result, commonModel.LIST_ACCESS_TOKENS_SUCCESS), nil
 }
 
-// UpdateAgentSettings 更新 Agent 设置
-//
-//	@Summary		更新 Agent 设置
-//	@Description	更新系统的 Agent 相关设置
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Param			settings	body		model.AgentSettingDto	true	"新的 Agent 设置"
-//	@Success		200			{object}	handler.Response		"更新 Agent 设置成功"
-//	@Failure		200			{object}	handler.Response		"更新 Agent 设置失败"
-//	@Router			/agent/settings [put]
-func (settingHandler *SettingHandler) UpdateAgentSettings() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 解析请求体中的参数
-		var newSettings model.AgentSettingDto
-		if err := ctx.ShouldBindJSON(&newSettings); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-
-		if err := settingHandler.settingService.UpdateAgentSettings(ctx.Request.Context(), &newSettings); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Msg: commonModel.UPDATE_SETTINGS_SUCCESS,
-		}
-	})
+// CreateAccessToken 为当前用户创建一个新的访问令牌（返回值即明文 token，仅此一次可见）。
+func (h *SettingHandler) CreateAccessToken(ctx context.Context, in *AccessTokenInput) (*humares.Envelope[string], error) {
+	createdToken, err := h.settingService.CreateAccessToken(ctx, &in.Body)
+	if err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, createdToken, commonModel.CREATE_ACCESS_TOKEN_SUCCESS), nil
 }
 
-// TestAgentConnection 测试 Ech0 Copilot（LLM）连接
-//
-//	@Summary		测试 Ech0 Copilot 连接
-//	@Description	使用提交的 Agent 配置做一次最小探活（不保存）
-//	@Tags			系统设置
-//	@Accept			json
-//	@Produce		json
-//	@Param			settings	body		model.AgentSettingDto	true	"待测试的 Agent 设置"
-//	@Success		200			{object}	handler.Response		"测试 Ech0 Copilot 连接成功"
-//	@Failure		200			{object}	handler.Response		"测试 Ech0 Copilot 连接失败"
-//	@Router			/agent/settings/test [post]
-func (settingHandler *SettingHandler) TestAgentConnection() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		var newSettings model.AgentSettingDto
-		if err := ctx.ShouldBindJSON(&newSettings); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-
-		if err := settingHandler.settingService.TestAgentConnection(ctx.Request.Context(), &newSettings); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Msg: commonModel.AGENT_TEST_CONNECTION_SUCCESS,
-		}
-	})
+// DeleteAccessToken 根据 ID 删除访问令牌。
+func (h *SettingHandler) DeleteAccessToken(ctx context.Context, in *IDInput) (*humares.Envelope[any], error) {
+	if err := h.settingService.DeleteAccessToken(ctx, in.ID); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil, commonModel.DELETE_ACCESS_TOKEN_SUCCESS), nil
 }

@@ -4,140 +4,61 @@
 package router
 
 import (
+	"net/http"
+
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/lin-snow/ech0/internal/handler"
-	"github.com/lin-snow/ech0/internal/middleware"
+	"github.com/lin-snow/ech0/internal/handler/humares"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
+	authService "github.com/lin-snow/ech0/internal/service/auth"
 )
 
-// setupSettingRoutes 设置设置路由
-func setupSettingRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
-	// Public
-	appRouterGroup.PublicRouterGroup.GET("/settings", h.SettingHandler.GetSettings())
-	appRouterGroup.PublicRouterGroup.GET("/oauth2/status", h.SettingHandler.GetOAuth2Status())
-	appRouterGroup.PublicRouterGroup.GET("/passkey/status", h.SettingHandler.GetPasskeyStatus())
-	appRouterGroup.PublicRouterGroup.GET("/agent/info", h.SettingHandler.GetAgentInfo())
+// registerSettingHuma 注册系统设置路由（全部 JSON）。
+func registerSettingHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
+	pub := func(id, method, path, summary string) huma.Operation {
+		return huma.Operation{OperationID: id, Method: method, Path: path, Summary: summary, Tags: []string{"Setting"}}
+	}
+	adminSettings := humares.Secured(authModel.ScopeAdminSettings)
+	adminSettingsMW := securedMW(revoker, authModel.ScopeAdminSettings)
+	admin := func(id, method, path, summary string) huma.Operation {
+		return huma.Operation{OperationID: id, Method: method, Path: path, Summary: summary, Tags: []string{"Setting"}, Security: adminSettings, Middlewares: adminSettingsMW}
+	}
+	adminToken := humares.Secured(authModel.ScopeAdminToken)
+	adminTokenMW := securedMW(revoker, authModel.ScopeAdminToken)
+	token := func(id, method, path, summary string) huma.Operation {
+		return huma.Operation{OperationID: id, Method: method, Path: path, Summary: summary, Tags: []string{"Setting"}, Security: adminToken, Middlewares: adminTokenMW}
+	}
 
-	// Auth
-	appRouterGroup.AuthRouterGroup.PUT(
-		"/settings",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.UpdateSettings(),
-	)
+	// 公开
+	huma.Register(api, pub("settings-get", http.MethodGet, "/settings", "获取系统全局设置"), h.SettingHandler.GetSettings)
+	huma.Register(api, pub("oauth2-status", http.MethodGet, "/oauth2/status", "获取 OAuth2 状态"), h.SettingHandler.GetOAuth2Status)
+	huma.Register(api, pub("passkey-status", http.MethodGet, "/passkey/status", "获取 Passkey 状态"), h.SettingHandler.GetPasskeyStatus)
+	huma.Register(api, pub("agent-info", http.MethodGet, "/agent/info", "获取 Agent 公开信息"), h.SettingHandler.GetAgentInfo)
 
-	appRouterGroup.AuthRouterGroup.GET(
-		"/s3/settings",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.GetS3Settings(),
-	)
-	appRouterGroup.AuthRouterGroup.PUT(
-		"/s3/settings",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.UpdateS3Settings(),
-	)
-	appRouterGroup.AuthRouterGroup.POST(
-		"/s3/settings/test",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.TestS3Connection(),
-	)
+	// admin:settings
+	huma.Register(api, admin("settings-update", http.MethodPut, "/settings", "更新系统全局设置"), h.SettingHandler.UpdateSettings)
+	huma.Register(api, admin("s3-get", http.MethodGet, "/s3/settings", "获取 S3 存储设置"), h.SettingHandler.GetS3Settings)
+	huma.Register(api, admin("s3-update", http.MethodPut, "/s3/settings", "更新 S3 存储设置"), h.SettingHandler.UpdateS3Settings)
+	huma.Register(api, admin("s3-test", http.MethodPost, "/s3/settings/test", "测试 S3 存储连接"), h.SettingHandler.TestS3Connection)
+	huma.Register(api, admin("oauth2-get", http.MethodGet, "/oauth2/settings", "获取 OAuth2 设置"), h.SettingHandler.GetOAuth2Settings)
+	huma.Register(api, admin("oauth2-update", http.MethodPut, "/oauth2/settings", "更新 OAuth2 设置"), h.SettingHandler.UpdateOAuth2Settings)
+	huma.Register(api, admin("passkey-get", http.MethodGet, "/passkey/settings", "获取 Passkey 设置"), h.SettingHandler.GetPasskeySettings)
+	huma.Register(api, admin("passkey-update", http.MethodPut, "/passkey/settings", "更新 Passkey 设置"), h.SettingHandler.UpdatePasskeySettings)
+	huma.Register(api, admin("webhook-list", http.MethodGet, "/webhook", "获取所有 Webhook"), h.SettingHandler.GetWebhook)
+	huma.Register(api, admin("webhook-create", http.MethodPost, "/webhook", "创建 Webhook"), h.SettingHandler.CreateWebhook)
+	huma.Register(api, admin("webhook-update", http.MethodPut, "/webhook/{id}", "更新 Webhook"), h.SettingHandler.UpdateWebhook)
+	huma.Register(api, admin("webhook-delete", http.MethodDelete, "/webhook/{id}", "删除 Webhook"), h.SettingHandler.DeleteWebhook)
+	huma.Register(api, admin("webhook-test", http.MethodPost, "/webhook/{id}/test", "测试 Webhook"), h.SettingHandler.TestWebhook)
+	huma.Register(api, admin("snapshot-schedule-get", http.MethodGet, "/snapshot/schedule", "获取定时快照计划"), h.SettingHandler.GetSnapshotScheduleSetting)
+	huma.Register(api, admin("snapshot-schedule-update", http.MethodPost, "/snapshot/schedule", "设置定时快照计划"), h.SettingHandler.UpdateSnapshotScheduleSetting)
+	huma.Register(api, admin("agent-settings-get", http.MethodGet, "/agent/settings", "获取 Agent 设置"), h.SettingHandler.GetAgentSettings)
+	huma.Register(api, admin("agent-settings-update", http.MethodPut, "/agent/settings", "更新 Agent 设置"), h.SettingHandler.UpdateAgentSettings)
+	huma.Register(api, admin("agent-settings-test", http.MethodPost, "/agent/settings/test", "测试 Copilot 连接"), h.SettingHandler.TestAgentConnection)
+	huma.Register(api, admin("embedding-settings-get", http.MethodGet, "/embedding/settings", "获取 Embedding 设置"), h.SettingHandler.GetEmbeddingSettings)
+	huma.Register(api, admin("embedding-settings-update", http.MethodPut, "/embedding/settings", "更新 Embedding 设置"), h.SettingHandler.UpdateEmbeddingSettings)
 
-	appRouterGroup.AuthRouterGroup.GET(
-		"/oauth2/settings",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.GetOAuth2Settings(),
-	)
-	appRouterGroup.AuthRouterGroup.PUT(
-		"/oauth2/settings",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.UpdateOAuth2Settings(),
-	)
-	appRouterGroup.AuthRouterGroup.GET(
-		"/passkey/settings",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.GetPasskeySettings(),
-	)
-	appRouterGroup.AuthRouterGroup.PUT(
-		"/passkey/settings",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.UpdatePasskeySettings(),
-	)
-
-	appRouterGroup.AuthRouterGroup.GET(
-		"/webhook",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.GetWebhook(),
-	)
-	appRouterGroup.AuthRouterGroup.POST(
-		"/webhook",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.CreateWebhook(),
-	)
-	appRouterGroup.AuthRouterGroup.PUT(
-		"/webhook/:id",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.UpdateWebhook(),
-	)
-	appRouterGroup.AuthRouterGroup.DELETE(
-		"/webhook/:id",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.DeleteWebhook(),
-	)
-	appRouterGroup.AuthRouterGroup.POST(
-		"/webhook/:id/test",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.TestWebhook(),
-	)
-
-	appRouterGroup.AuthRouterGroup.GET(
-		"/access-tokens",
-		middleware.RequireScopes(authModel.ScopeAdminToken),
-		h.SettingHandler.ListAccessTokens(),
-	)
-	appRouterGroup.AuthRouterGroup.POST(
-		"/access-tokens",
-		middleware.RequireScopes(authModel.ScopeAdminToken),
-		h.SettingHandler.CreateAccessToken(),
-	)
-	appRouterGroup.AuthRouterGroup.DELETE(
-		"/access-tokens/:id",
-		middleware.RequireScopes(authModel.ScopeAdminToken),
-		h.SettingHandler.DeleteAccessToken(),
-	)
-
-	appRouterGroup.AuthRouterGroup.GET(
-		"/snapshot/schedule",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.GetSnapshotScheduleSetting(),
-	)
-	appRouterGroup.AuthRouterGroup.POST(
-		"/snapshot/schedule",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.UpdateSnapshotScheduleSetting(),
-	)
-
-	appRouterGroup.AuthRouterGroup.GET(
-		"/agent/settings",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.GetAgentSettings(),
-	)
-	appRouterGroup.AuthRouterGroup.PUT(
-		"/agent/settings",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.UpdateAgentSettings(),
-	)
-	appRouterGroup.AuthRouterGroup.POST(
-		"/agent/settings/test",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.TestAgentConnection(),
-	)
-
-	appRouterGroup.AuthRouterGroup.GET(
-		"/embedding/settings",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.GetEmbeddingSettings(),
-	)
-	appRouterGroup.AuthRouterGroup.PUT(
-		"/embedding/settings",
-		middleware.RequireScopes(authModel.ScopeAdminSettings),
-		h.SettingHandler.UpdateEmbeddingSettings(),
-	)
+	// admin:token
+	huma.Register(api, token("access-token-list", http.MethodGet, "/access-tokens", "列出访问令牌"), h.SettingHandler.ListAccessTokens)
+	huma.Register(api, token("access-token-create", http.MethodPost, "/access-tokens", "创建访问令牌"), h.SettingHandler.CreateAccessToken)
+	huma.Register(api, token("access-token-delete", http.MethodDelete, "/access-tokens/{id}", "删除访问令牌"), h.SettingHandler.DeleteAccessToken)
 }
