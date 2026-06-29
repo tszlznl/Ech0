@@ -14,6 +14,7 @@ require (
 	github.com/charmbracelet/huh v1.0.0
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/coreos/go-oidc/v3 v3.19.0
+	github.com/danielgtaylor/huma/v2 v2.38.0
 	github.com/dgraph-io/ristretto/v2 v2.4.0
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-co-op/gocron/v2 v2.21.2
@@ -130,7 +131,6 @@ require (
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/quic-go/quic-go v0.59.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/standard-webhooks/standard-webhooks/libraries v0.0.1 // indirect
 	github.com/tidwall/gjson v1.19.0 // indirect

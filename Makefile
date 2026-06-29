@@ -18,7 +18,7 @@ IMAGE_TAG?=latest
 OS?=$(if $(GOHOSTOS),$(GOHOSTOS),linux)
 ARCH?=$(if $(GOHOSTARCH),$(GOHOSTARCH),amd64)
 
-.PHONY: help air-install run dev web-dev check dev-lint lint fmt test wire wire-check swagger spdx spdx-check build bump build-image push-image
+.PHONY: help air-install run dev web-dev check dev-lint lint fmt test wire wire-check swagger openapi openapi-check spdx spdx-check build bump build-image push-image
 
 # Semver pattern: X.Y.Z, optionally followed by a -prerelease suffix.
 # (escape $ so make doesn't expand, then escape $$ to a literal $ in shell)
@@ -137,6 +137,12 @@ wire-check: wire
 
 swagger:
 	swag init -g internal/server/server.go -o internal/swagger --parseInternal
+
+openapi:
+	go run ./cmd/openapi-gen
+
+openapi-check: openapi
+	git diff --exit-code -- internal/openapi/openapi.yaml
 
 spdx:
 	node scripts/add-spdx-headers.mjs
