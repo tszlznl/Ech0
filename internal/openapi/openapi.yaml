@@ -56,6 +56,31 @@ components:
         - status
         - version
       type: object
+    CreateExternalFileDto:
+      additionalProperties: false
+      properties:
+        category:
+          type: string
+        content_type:
+          type: string
+        height:
+          format: int64
+          type: integer
+        name:
+          type: string
+        url:
+          type: string
+        width:
+          format: int64
+          type: integer
+      required:
+        - url
+        - content_type
+        - category
+        - width
+        - height
+        - name
+      type: object
     ErrorBody:
       additionalProperties: false
       properties:
@@ -82,6 +107,134 @@ components:
         - code
         - msg
         - data
+      type: object
+    FileDto:
+      additionalProperties: false
+      properties:
+        category:
+          type: string
+        content_type:
+          type: string
+        height:
+          format: int64
+          type: integer
+        id:
+          type: string
+        key:
+          type: string
+        name:
+          type: string
+        size:
+          format: int64
+          type: integer
+        storage_type:
+          type: string
+        url:
+          type: string
+        width:
+          format: int64
+          type: integer
+      required:
+        - id
+        - key
+        - url
+      type: object
+    FileListItemDto:
+      additionalProperties: false
+      properties:
+        content_type:
+          type: string
+        created_at:
+          format: int64
+          type: integer
+        id:
+          type: string
+        key:
+          type: string
+        name:
+          type: string
+        size:
+          format: int64
+          type: integer
+        storage_type:
+          type: string
+        url:
+          type: string
+      required:
+        - id
+        - name
+        - key
+        - storage_type
+        - url
+        - created_at
+      type: object
+    FileListResultDto:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/FileListItemDto"
+          type:
+            - array
+            - "null"
+        total:
+          format: int64
+          type: integer
+      required:
+        - total
+        - items
+      type: object
+    FileTreeNodeDto:
+      additionalProperties: false
+      properties:
+        content_type:
+          type: string
+        file_id:
+          type: string
+        has_children:
+          type: boolean
+        modified_at:
+          format: int64
+          type: integer
+        name:
+          type: string
+        node_type:
+          type: string
+        path:
+          type: string
+        size:
+          format: int64
+          type: integer
+      required:
+        - name
+        - path
+        - node_type
+        - has_children
+      type: object
+    FileTreeResultDto:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/FileTreeNodeDto"
+          type:
+            - array
+            - "null"
+      required:
+        - items
+      type: object
+    GetPresignURLDto:
+      additionalProperties: false
+      properties:
+        content_type:
+          type: string
+        file_name:
+          type: string
+        storage_type:
+          type: string
+      required:
+        - file_name
+        - content_type
       type: object
     Heatmap:
       additionalProperties: false
@@ -123,6 +276,29 @@ components:
         - license
         - author
         - repo_url
+      type: object
+    PresignDto:
+      additionalProperties: false
+      properties:
+        content_type:
+          type: string
+        file_name:
+          type: string
+        file_url:
+          type: string
+        id:
+          type: string
+        key:
+          type: string
+        presign_url:
+          type: string
+      required:
+        - id
+        - file_name
+        - content_type
+        - key
+        - presign_url
+        - file_url
       type: object
     RegisterDto:
       additionalProperties: false
@@ -175,6 +351,72 @@ components:
           type: integer
         data:
           $ref: "#/components/schemas/Connect"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
+    ResultFileDto:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/FileDto"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
+    ResultFileListResultDto:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/FileListResultDto"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
+    ResultFileTreeResultDto:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/FileTreeResultDto"
         error_code:
           type: string
         message_key:
@@ -362,6 +604,28 @@ components:
         - msg
         - data
       type: object
+    ResultPresignDto:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/PresignDto"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
     ResultReindexStatusResponse:
       additionalProperties: false
       properties:
@@ -460,6 +724,23 @@ components:
       required:
         - initialized
         - owner_exists
+      type: object
+    UpdateFileMetaDto:
+      additionalProperties: false
+      properties:
+        content_type:
+          type: string
+        height:
+          format: int64
+          type: integer
+        size:
+          format: int64
+          type: integer
+        width:
+          format: int64
+          type: integer
+      required:
+        - size
       type: object
     User:
       additionalProperties: false
@@ -733,6 +1014,248 @@ paths:
       summary: 查询重建索引作业状态
       tags:
         - Embedding
+  /file/tree:
+    get:
+      operationId: file-tree
+      parameters:
+        - description: 存储类型
+          explode: false
+          in: query
+          name: storage_type
+          required: true
+          schema:
+            description: 存储类型
+            type: string
+        - description: 路径前缀
+          explode: false
+          in: query
+          name: prefix
+          schema:
+            description: 路径前缀
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultFileTreeResultDto"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - file:read
+      summary: 获取文件树
+      tags:
+        - File
+  /file/{id}:
+    delete:
+      operationId: file-delete
+      parameters:
+        - description: 文件 ID
+          in: path
+          name: id
+          required: true
+          schema:
+            description: 文件 ID
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - file:write
+      summary: 删除文件
+      tags:
+        - File
+    get:
+      operationId: file-get
+      parameters:
+        - description: 文件 ID
+          in: path
+          name: id
+          required: true
+          schema:
+            description: 文件 ID
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultFileDto"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - file:read
+      summary: 获取文件元信息
+      tags:
+        - File
+  /file/{id}/meta:
+    put:
+      operationId: file-update-meta
+      parameters:
+        - description: 文件 ID
+          in: path
+          name: id
+          required: true
+          schema:
+            description: 文件 ID
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFileMetaDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultFileDto"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - file:write
+      summary: 更新对象存储文件元信息
+      tags:
+        - File
+  /files:
+    get:
+      operationId: file-list
+      parameters:
+        - description: 页码
+          explode: false
+          in: query
+          name: page
+          schema:
+            description: 页码
+            format: int64
+            type: integer
+        - description: 每页数量
+          explode: false
+          in: query
+          name: pageSize
+          schema:
+            description: 每页数量
+            format: int64
+            type: integer
+        - description: 搜索关键词
+          explode: false
+          in: query
+          name: search
+          schema:
+            description: 搜索关键词
+            type: string
+        - description: 存储类型
+          explode: false
+          in: query
+          name: storage_type
+          schema:
+            description: 存储类型
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultFileListResultDto"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - file:read
+      summary: 分页获取文件列表
+      tags:
+        - File
+  /files/external:
+    post:
+      operationId: file-external
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateExternalFileDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultFileDto"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - file:write
+      summary: 登记外链文件
+      tags:
+        - File
+  /files/presign:
+    put:
+      operationId: file-presign
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetPresignURLDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultPresignDto"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - file:write
+      summary: 获取对象存储直传预签名 URL
+      tags:
+        - File
   /heatmap:
     get:
       operationId: common-heatmap

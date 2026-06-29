@@ -4,32 +4,23 @@
 package router
 
 import (
+	"net/http"
+
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/lin-snow/ech0/internal/handler"
+	"github.com/lin-snow/ech0/internal/handler/humares"
 	"github.com/lin-snow/ech0/internal/middleware"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
+	authService "github.com/lin-snow/ech0/internal/service/auth"
 )
 
+// setupFileRoutes 仅保留非 JSON 端点走裸 gin：二进制流式下载 + multipart 上传。
+// JSON 端点（列表/树/元信息/删除/外链/预签名）由 registerFileHuma 注册。
 func setupFileRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
-	// Auth
-	appRouterGroup.AuthRouterGroup.GET(
-		"/files",
-		middleware.RequireScopes(authModel.ScopeFileRead),
-		h.FileHandler.ListFiles(),
-	)
-	appRouterGroup.AuthRouterGroup.GET(
-		"/file/tree",
-		middleware.RequireScopes(authModel.ScopeFileRead),
-		h.FileHandler.ListFileTree(),
-	)
 	appRouterGroup.AuthRouterGroup.GET(
 		"/file/stream",
 		middleware.RequireScopes(authModel.ScopeFileRead),
 		h.FileHandler.StreamFileByPath,
-	)
-	appRouterGroup.AuthRouterGroup.GET(
-		"/file/:id",
-		middleware.RequireScopes(authModel.ScopeFileRead),
-		h.FileHandler.GetFileByID(),
 	)
 	appRouterGroup.AuthRouterGroup.GET(
 		"/file/:id/stream",
@@ -41,24 +32,82 @@ func setupFileRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 		middleware.RequireScopes(authModel.ScopeFileWrite),
 		h.FileHandler.UploadFile(),
 	)
-	appRouterGroup.AuthRouterGroup.PUT(
-		"/file/:id/meta",
-		middleware.RequireScopes(authModel.ScopeFileWrite),
-		h.FileHandler.UpdateFileMeta(),
-	)
-	appRouterGroup.AuthRouterGroup.POST(
-		"/files/external",
-		middleware.RequireScopes(authModel.ScopeFileWrite),
-		h.FileHandler.CreateExternalFile(),
-	)
-	appRouterGroup.AuthRouterGroup.DELETE(
-		"/file/:id",
-		middleware.RequireScopes(authModel.ScopeFileWrite),
-		h.FileHandler.DeleteFile(),
-	)
-	appRouterGroup.AuthRouterGroup.PUT(
-		"/files/presign",
-		middleware.RequireScopes(authModel.ScopeFileWrite),
-		h.FileHandler.GetFilePresignURL(),
-	)
+}
+
+// registerFileHuma 注册文件的 JSON 端点。
+func registerFileHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
+	read := humares.Secured(authModel.ScopeFileRead)
+	write := humares.Secured(authModel.ScopeFileWrite)
+	readMW := securedMW(revoker, authModel.ScopeFileRead)
+	writeMW := securedMW(revoker, authModel.ScopeFileWrite)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "file-list",
+		Method:      http.MethodGet,
+		Path:        "/files",
+		Summary:     "分页获取文件列表",
+		Tags:        []string{"File"},
+		Security:    read,
+		Middlewares: readMW,
+	}, h.FileHandler.ListFiles)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "file-tree",
+		Method:      http.MethodGet,
+		Path:        "/file/tree",
+		Summary:     "获取文件树",
+		Tags:        []string{"File"},
+		Security:    read,
+		Middlewares: readMW,
+	}, h.FileHandler.ListFileTree)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "file-get",
+		Method:      http.MethodGet,
+		Path:        "/file/{id}",
+		Summary:     "获取文件元信息",
+		Tags:        []string{"File"},
+		Security:    read,
+		Middlewares: readMW,
+	}, h.FileHandler.GetFileByID)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "file-update-meta",
+		Method:      http.MethodPut,
+		Path:        "/file/{id}/meta",
+		Summary:     "更新对象存储文件元信息",
+		Tags:        []string{"File"},
+		Security:    write,
+		Middlewares: writeMW,
+	}, h.FileHandler.UpdateFileMeta)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "file-external",
+		Method:      http.MethodPost,
+		Path:        "/files/external",
+		Summary:     "登记外链文件",
+		Tags:        []string{"File"},
+		Security:    write,
+		Middlewares: writeMW,
+	}, h.FileHandler.CreateExternalFile)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "file-delete",
+		Method:      http.MethodDelete,
+		Path:        "/file/{id}",
+		Summary:     "删除文件",
+		Tags:        []string{"File"},
+		Security:    write,
+		Middlewares: writeMW,
+	}, h.FileHandler.DeleteFile)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "file-presign",
+		Method:      http.MethodPut,
+		Path:        "/files/presign",
+		Summary:     "获取对象存储直传预签名 URL",
+		Tags:        []string{"File"},
+		Security:    write,
+		Middlewares: writeMW,
+	}, h.FileHandler.GetFilePresignURL)
 }
