@@ -1,5 +1,19 @@
 components:
   schemas:
+    CheckUpdateResponse:
+      additionalProperties: false
+      properties:
+        current_version:
+          type: string
+        has_update:
+          type: boolean
+        latest_version:
+          type: string
+      required:
+        - current_version
+        - latest_version
+        - has_update
+      type: object
     Connect:
       additionalProperties: false
       properties:
@@ -80,6 +94,22 @@ components:
         - width
         - height
         - name
+      type: object
+    DayStat:
+      additionalProperties: false
+      properties:
+        date:
+          type: string
+        pv:
+          format: int64
+          type: integer
+        uv:
+          format: int64
+          type: integer
+      required:
+        - date
+        - pv
+        - uv
       type: object
     ErrorBody:
       additionalProperties: false
@@ -277,6 +307,31 @@ components:
         - author
         - repo_url
       type: object
+    LogEntry:
+      additionalProperties: false
+      properties:
+        caller:
+          type: string
+        error:
+          type: string
+        fields:
+          additionalProperties: {}
+          type: object
+        level:
+          type: string
+        module:
+          type: string
+        msg:
+          type: string
+        raw:
+          type: string
+        time:
+          type: string
+      required:
+        - time
+        - level
+        - msg
+      type: object
     PresignDto:
       additionalProperties: false
       properties:
@@ -342,6 +397,28 @@ components:
           type: string
       required:
         - status
+      type: object
+    ResultCheckUpdateResponse:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/CheckUpdateResponse"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
       type: object
     ResultConnect:
       additionalProperties: false
@@ -552,6 +629,32 @@ components:
         - msg
         - data
       type: object
+    ResultListDayStat:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          items:
+            $ref: "#/components/schemas/DayStat"
+          type:
+            - array
+            - "null"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
     ResultListHeatmap:
       additionalProperties: false
       properties:
@@ -561,6 +664,32 @@ components:
         data:
           items:
             $ref: "#/components/schemas/Heatmap"
+          type:
+            - array
+            - "null"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
+    ResultListLogEntry:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          items:
+            $ref: "#/components/schemas/LogEntry"
           type:
             - array
             - "null"
@@ -1372,6 +1501,94 @@ paths:
       summary: 用户注册
       tags:
         - User
+  /system/check-update:
+    get:
+      operationId: dashboard-check-update
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultCheckUpdateResponse"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 检查 Ech0 版本更新
+      tags:
+        - Dashboard
+  /system/logs:
+    get:
+      operationId: dashboard-system-logs
+      parameters:
+        - description: 返回最近多少条（默认 200）
+          explode: false
+          in: query
+          name: tail
+          schema:
+            description: 返回最近多少条（默认 200）
+            type: string
+        - description: 日志级别过滤
+          explode: false
+          in: query
+          name: level
+          schema:
+            description: 日志级别过滤
+            type: string
+        - description: 关键词过滤
+          explode: false
+          in: query
+          name: keyword
+          schema:
+            description: 关键词过滤
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultListLogEntry"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 获取系统历史日志
+      tags:
+        - Dashboard
+  /system/visitor-stats:
+    get:
+      operationId: dashboard-visitor-stats
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultListDayStat"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:settings
+      summary: 获取近七天访客统计
+      tags:
+        - Dashboard
   /user:
     get:
       operationId: user-info

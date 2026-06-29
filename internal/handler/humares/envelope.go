@@ -33,6 +33,18 @@ func OKWithCode[T any](ctx context.Context, data T, code int, messages ...string
 	return &Envelope[T]{Body: localizeResult(ctx, commonModel.OKWithCode(data, code, messages...))}
 }
 
+// OKKeyed 用于 handler 显式指定 message_key（而非由消息文本推导）的成功响应，
+// 对应旧 res.Response{MessageKey: ...} 的场景。
+func OKKeyed[T any](ctx context.Context, data T, msg, messageKey string, params map[string]any) *Envelope[T] {
+	body := commonModel.OK(data, msg)
+	body.MessageKey = messageKey
+	body.MessageParams = params
+	if messageKey != "" {
+		body.Message = i18nUtil.Localize(localizerFrom(ctx), messageKey, body.Message, params)
+	}
+	return &Envelope[T]{Body: body}
+}
+
 // localizeResult 为成功信封补齐 message_key 并本地化 msg。
 func localizeResult[T any](ctx context.Context, body commonModel.Result[T]) commonModel.Result[T] {
 	body.MessageKey = commonModel.MessageKeyFromMessage(body.Message)
