@@ -67,6 +67,7 @@ func optionalMW(revoker authService.TokenRevoker) huma.Middlewares {
 // 运行时服务器与离线 spec 生成器（GenerateOpenAPIYAML）共用，保证两者一致。
 func RegisterHumaOperations(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
 	registerInitHuma(api, h)
+	registerAuthHuma(api, h, revoker)
 	registerCommonHuma(api, h, revoker)
 	registerEchoHuma(api, h, revoker)
 	registerConnectHuma(api, h, revoker)

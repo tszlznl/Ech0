@@ -4,16 +4,29 @@
 package handler
 
 import (
+	"context"
 	"net/url"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/lin-snow/ech0/internal/config"
+	"github.com/lin-snow/ech0/internal/handler/humares"
 	res "github.com/lin-snow/ech0/internal/handler/response"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	cookieUtil "github.com/lin-snow/ech0/internal/util/cookie"
+)
+
+// 已迁移到 Huma 的 Passkey 管理端点输入。
+type (
+	ListPasskeysInput struct{}
+	PasskeyIDInput    struct {
+		ID string `path:"id" format:"uuid" doc:"Passkey 设备 ID（UUID）"`
+	}
+	UpdatePasskeyNameInput struct {
+		ID   string `path:"id" format:"uuid" doc:"Passkey 设备 ID（UUID）"`
+		Body authModel.PasskeyUpdateDeviceNameReq
+	}
 )
 
 func (h *AuthHandler) getPasskeyOriginAndRPID(ctx *gin.Context) (origin string, rpID string) {
@@ -248,14 +261,12 @@ func (h *AuthHandler) PasskeyRegisterFinish() gin.HandlerFunc {
 //	@Success		200	{object}	handler.Response{data=[]model.PasskeyDeviceDto}	"获取成功"
 //	@Failure		200	{object}	handler.Response								"获取失败"
 //	@Router			/passkeys [get]
-func (h *AuthHandler) ListPasskeys() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		devs, err := h.authService.ListPasskeys(ctx.Request.Context())
-		if err != nil {
-			return res.Response{Err: err}
-		}
-		return res.Response{Data: devs}
-	})
+func (h *AuthHandler) ListPasskeys(ctx context.Context, _ *ListPasskeysInput) (*humares.Envelope[[]authModel.PasskeyDeviceDto], error) {
+	devs, err := h.authService.ListPasskeys(ctx)
+	if err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, devs), nil
 }
 
 // DeletePasskey 删除指定的 Passkey 设备
@@ -268,18 +279,11 @@ func (h *AuthHandler) ListPasskeys() gin.HandlerFunc {
 //	@Success		200	{object}	handler.Response	"删除成功"
 //	@Failure		200	{object}	handler.Response	"删除失败"
 //	@Router			/passkeys/{id} [delete]
-func (h *AuthHandler) DeletePasskey() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		idStr := ctx.Param("id")
-		if _, err := uuid.Parse(idStr); err != nil {
-			return res.Response{Msg: commonModel.INVALID_PARAMS, Err: err}
-		}
-
-		if err := h.authService.DeletePasskey(ctx.Request.Context(), idStr); err != nil {
-			return res.Response{Err: err}
-		}
-		return res.Response{}
-	})
+func (h *AuthHandler) DeletePasskey(ctx context.Context, in *PasskeyIDInput) (*humares.Envelope[any], error) {
+	if err := h.authService.DeletePasskey(ctx, in.ID); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil), nil
 }
 
 // UpdatePasskeyDeviceName 更新 Passkey 设备名称
@@ -294,21 +298,9 @@ func (h *AuthHandler) DeletePasskey() gin.HandlerFunc {
 //	@Success		200		{object}	handler.Response					"更新成功"
 //	@Failure		200		{object}	handler.Response					"更新失败"
 //	@Router			/passkeys/{id} [put]
-func (h *AuthHandler) UpdatePasskeyDeviceName() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		idStr := ctx.Param("id")
-		if _, err := uuid.Parse(idStr); err != nil {
-			return res.Response{Msg: commonModel.INVALID_PARAMS, Err: err}
-		}
-
-		var req authModel.PasskeyUpdateDeviceNameReq
-		if err := ctx.ShouldBindJSON(&req); err != nil {
-			return res.Response{Msg: commonModel.INVALID_REQUEST_BODY, Err: err}
-		}
-
-		if err := h.authService.UpdatePasskeyDeviceName(ctx.Request.Context(), idStr, req.DeviceName); err != nil {
-			return res.Response{Err: err}
-		}
-		return res.Response{}
-	})
+func (h *AuthHandler) UpdatePasskeyDeviceName(ctx context.Context, in *UpdatePasskeyNameInput) (*humares.Envelope[any], error) {
+	if err := h.authService.UpdatePasskeyDeviceName(ctx, in.ID, in.Body.DeviceName); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil), nil
 }
