@@ -27,6 +27,47 @@ components:
         - msg
         - data
       type: object
+    Heatmap:
+      additionalProperties: false
+      properties:
+        count:
+          format: int64
+          type: integer
+        date:
+          type: string
+      required:
+        - date
+        - count
+      type: object
+    HelloResponse:
+      additionalProperties: false
+      properties:
+        author:
+          type: string
+        build_time:
+          type: string
+        commit:
+          type: string
+        copyright:
+          type: string
+        hello:
+          type: string
+        license:
+          type: string
+        repo_url:
+          type: string
+        version:
+          type: string
+      required:
+        - hello
+        - copyright
+        - version
+        - commit
+        - build_time
+        - license
+        - author
+        - repo_url
+      type: object
     RegisterDto:
       additionalProperties: false
       properties:
@@ -70,6 +111,28 @@ components:
       required:
         - status
       type: object
+    ResultHelloResponse:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/HelloResponse"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
     ResultInterface {}:
       additionalProperties: false
       properties:
@@ -77,6 +140,32 @@ components:
           format: int64
           type: integer
         data: {}
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
+    ResultListHeatmap:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          items:
+            $ref: "#/components/schemas/Heatmap"
+          type:
+            - array
+            - "null"
         error_code:
           type: string
         message_key:
@@ -121,6 +210,28 @@ components:
           type: integer
         data:
           $ref: "#/components/schemas/Status"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
+    ResultString:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          type: string
         error_code:
           type: string
         message_key:
@@ -225,6 +336,51 @@ paths:
       summary: 查询重建索引作业状态
       tags:
         - Embedding
+  /heatmap:
+    get:
+      operationId: common-heatmap
+      parameters:
+        - description: 客户端时区（IANA 名），用于按本地日界对齐热力图
+          in: header
+          name: X-Timezone
+          schema:
+            description: 客户端时区（IANA 名），用于按本地日界对齐热力图
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultListHeatmap"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 获取发布热力图
+      tags:
+        - Common
+  /hello:
+    get:
+      operationId: common-hello
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultHelloResponse"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: Hello / 版本信息
+      tags:
+        - Common
   /init/owner:
     post:
       description: 创建首个 Owner 账号（仅在未初始化时可用）。
@@ -271,5 +427,35 @@ paths:
       summary: 获取系统初始化状态
       tags:
         - Init
+  /website/title:
+    get:
+      operationId: common-website-title
+      parameters:
+        - description: 目标网站 URL
+          explode: false
+          in: query
+          name: website_url
+          required: true
+          schema:
+            description: 目标网站 URL
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultString"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth: []
+      summary: 获取目标网站标题
+      tags:
+        - Common
 servers:
   - url: /api

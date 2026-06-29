@@ -118,12 +118,6 @@ func featureRouteModules() []RouteModule {
 			},
 		},
 		routeModule{
-			name: "common",
-			register: func(ctx *RouterContext) {
-				setupCommonRoutes(ctx.Groups, ctx.Handlers)
-			},
-		},
-		routeModule{
 			name: "file",
 			register: func(ctx *RouterContext) {
 				setupFileRoutes(ctx.Groups, ctx.Handlers)
