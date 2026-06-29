@@ -336,6 +336,32 @@ components:
         - msg
         - data
       type: object
+    ResultListUser:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          items:
+            $ref: "#/components/schemas/User"
+          type:
+            - array
+            - "null"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
     ResultReindexStatusResponse:
       additionalProperties: false
       properties:
@@ -402,6 +428,28 @@ components:
         - msg
         - data
       type: object
+    ResultUser:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/User"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
     Status:
       additionalProperties: false
       properties:
@@ -412,6 +460,61 @@ components:
       required:
         - initialized
         - owner_exists
+      type: object
+    User:
+      additionalProperties: false
+      properties:
+        avatar:
+          type: string
+        email:
+          type: string
+        id:
+          type: string
+        is_admin:
+          type: boolean
+        is_owner:
+          type: boolean
+        locale:
+          type: string
+        username:
+          type: string
+      required:
+        - id
+        - username
+        - email
+        - is_admin
+        - is_owner
+        - avatar
+        - locale
+      type: object
+    UserInfoDto:
+      additionalProperties: false
+      properties:
+        avatar:
+          type: string
+        avatar_file_id:
+          type: string
+        email:
+          type: string
+        is_admin:
+          type: boolean
+        is_owner:
+          type: boolean
+        locale:
+          type: string
+        password:
+          type: string
+        username:
+          type: string
+      required:
+        - username
+        - password
+        - email
+        - is_admin
+        - is_owner
+        - avatar
+        - avatar_file_id
+        - locale
       type: object
   securitySchemes:
     bearerAuth:
@@ -721,6 +824,164 @@ paths:
       summary: 获取系统初始化状态
       tags:
         - Init
+  /register:
+    post:
+      operationId: user-register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 用户注册
+      tags:
+        - User
+  /user:
+    get:
+      operationId: user-info
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultUser"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - profile:read
+      summary: 获取当前用户信息
+      tags:
+        - User
+    put:
+      operationId: user-update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInfoDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - profile:write
+      summary: 更新当前用户信息
+      tags:
+        - User
+  /user/admin/{id}:
+    put:
+      operationId: user-set-admin
+      parameters:
+        - description: 用户 ID（UUID）
+          in: path
+          name: id
+          required: true
+          schema:
+            description: 用户 ID（UUID）
+            format: uuid
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:user
+      summary: 切换用户管理员权限
+      tags:
+        - User
+  /user/{id}:
+    delete:
+      operationId: user-delete
+      parameters:
+        - description: 用户 ID（UUID）
+          in: path
+          name: id
+          required: true
+          schema:
+            description: 用户 ID（UUID）
+            format: uuid
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:user
+      summary: 删除用户
+      tags:
+        - User
+  /users:
+    get:
+      operationId: user-list
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultListUser"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - admin:user
+      summary: 获取所有用户
+      tags:
+        - User
   /website/title:
     get:
       operationId: common-website-title

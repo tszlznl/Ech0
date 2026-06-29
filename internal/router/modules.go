@@ -94,12 +94,6 @@ func featureRouteModules() []RouteModule {
 			},
 		},
 		routeModule{
-			name: "user",
-			register: func(ctx *RouterContext) {
-				setupUserRoutes(ctx.Groups, ctx.Handlers)
-			},
-		},
-		routeModule{
 			name: "auth",
 			register: func(ctx *RouterContext) {
 				setupAuthRoutes(ctx.Groups, ctx.Handlers)

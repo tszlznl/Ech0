@@ -9,7 +9,6 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/lin-snow/ech0/internal/handler"
 	"github.com/lin-snow/ech0/internal/handler/humares"
-	"github.com/lin-snow/ech0/internal/middleware"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	authService "github.com/lin-snow/ech0/internal/service/auth"
 )
@@ -20,10 +19,7 @@ import (
 // 鉴权复用现有 gin 中间件，经 humares.Bridge 适配为 Huma operation 中间件——零分叉：
 // 拒绝时由中间件直接写出与旧版完全一致的本地化 401/403 响应。
 func registerEmbeddingHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
-	secured := huma.Middlewares{
-		humares.Bridge(middleware.RequireAuth(revoker)),
-		humares.Bridge(middleware.RequireScopes(authModel.ScopeAdminSettings)),
-	}
+	secured := securedMW(revoker, authModel.ScopeAdminSettings)
 	security := humares.Secured(authModel.ScopeAdminSettings)
 
 	huma.Register(api, huma.Operation{

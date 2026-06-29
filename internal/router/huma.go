@@ -34,14 +34,23 @@ func revokerFromCtx(ctx *RouterContext) authService.TokenRevoker {
 	return nil
 }
 
-// securedMW 组合 per-operation 鉴权中间件：先 RequireAuth，再（若有 scope）RequireScopes，
-// 全部复用现有 gin 中间件经 Bridge 适配。配合 humares.Secured(scopes...) 在 spec 中声明。
+// securedMW 组合 per-operation 鉴权中间件：NoCache（旧版 AuthRouterGroup 组级行为）→
+// RequireAuth →（若有 scope）RequireScopes，全部复用现有 gin 中间件经 Bridge 适配。
+// 配合 humares.Secured(scopes...) 在 spec 中声明所需 scope。
 func securedMW(revoker authService.TokenRevoker, scopes ...string) huma.Middlewares {
-	mws := huma.Middlewares{humares.Bridge(middleware.RequireAuth(revoker))}
+	mws := huma.Middlewares{
+		humares.Bridge(middleware.NoCache()),
+		humares.Bridge(middleware.RequireAuth(revoker)),
+	}
 	if len(scopes) > 0 {
 		mws = append(mws, humares.Bridge(middleware.RequireScopes(scopes...)))
 	}
 	return mws
+}
+
+// noCacheMW 用于公开但敏感的 operation（register/login）：仅加 NoCache，不鉴权。
+func noCacheMW() huma.Middlewares {
+	return huma.Middlewares{humares.Bridge(middleware.NoCache())}
 }
 
 // RegisterHumaOperations 注册所有已迁移到 Huma 的域的 operation。
@@ -51,6 +60,7 @@ func RegisterHumaOperations(api huma.API, h *handler.Bundle, revoker authService
 	registerInitHuma(api, h)
 	registerCommonHuma(api, h, revoker)
 	registerConnectHuma(api, h, revoker)
+	registerUserHuma(api, h, revoker)
 	registerEmbeddingHuma(api, h, revoker)
 }
 

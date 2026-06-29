@@ -9,7 +9,6 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/lin-snow/ech0/internal/handler"
 	"github.com/lin-snow/ech0/internal/handler/humares"
-	"github.com/lin-snow/ech0/internal/middleware"
 	authService "github.com/lin-snow/ech0/internal/service/auth"
 )
 
@@ -40,6 +39,6 @@ func registerCommonHuma(api huma.API, h *handler.Bundle, revoker authService.Tok
 		Summary:     "获取目标网站标题",
 		Tags:        []string{"Common"},
 		Security:    humares.Secured(),
-		Middlewares: huma.Middlewares{humares.Bridge(middleware.RequireAuth(revoker))},
+		Middlewares: securedMW(revoker),
 	}, h.CommonHandler.GetWebsiteTitle)
 }
