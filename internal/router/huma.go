@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lin-snow/ech0/internal/handler"
 	"github.com/lin-snow/ech0/internal/handler/humares"
+	"github.com/lin-snow/ech0/internal/middleware"
 	authService "github.com/lin-snow/ech0/internal/service/auth"
 )
 
@@ -33,12 +34,23 @@ func revokerFromCtx(ctx *RouterContext) authService.TokenRevoker {
 	return nil
 }
 
+// securedMW 组合 per-operation 鉴权中间件：先 RequireAuth，再（若有 scope）RequireScopes，
+// 全部复用现有 gin 中间件经 Bridge 适配。配合 humares.Secured(scopes...) 在 spec 中声明。
+func securedMW(revoker authService.TokenRevoker, scopes ...string) huma.Middlewares {
+	mws := huma.Middlewares{humares.Bridge(middleware.RequireAuth(revoker))}
+	if len(scopes) > 0 {
+		mws = append(mws, humares.Bridge(middleware.RequireScopes(scopes...)))
+	}
+	return mws
+}
+
 // RegisterHumaOperations 注册所有已迁移到 Huma 的域的 operation。
 // 迁移新域时在此追加对应的 register*Huma 调用——这是唯一的注册清单，
 // 运行时服务器与离线 spec 生成器（GenerateOpenAPIYAML）共用，保证两者一致。
 func RegisterHumaOperations(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
 	registerInitHuma(api, h)
 	registerCommonHuma(api, h, revoker)
+	registerConnectHuma(api, h, revoker)
 	registerEmbeddingHuma(api, h, revoker)
 }
 

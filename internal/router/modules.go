@@ -130,12 +130,6 @@ func featureRouteModules() []RouteModule {
 			},
 		},
 		routeModule{
-			name: "connect",
-			register: func(ctx *RouterContext) {
-				setupConnectRoutes(ctx.Groups, ctx.Handlers)
-			},
-		},
-		routeModule{
 			name: "dashboard",
 			register: func(ctx *RouterContext) {
 				setupDashboardRoutes(ctx.Groups, ctx.Handlers)

@@ -1,5 +1,61 @@
 components:
   schemas:
+    Connect:
+      additionalProperties: false
+      properties:
+        logo:
+          type: string
+        server_name:
+          type: string
+        server_url:
+          type: string
+        sys_username:
+          type: string
+        today_echos:
+          format: int64
+          type: integer
+        total_echos:
+          format: int64
+          type: integer
+        version:
+          type: string
+      required:
+        - server_name
+        - server_url
+        - logo
+        - total_echos
+        - today_echos
+        - sys_username
+        - version
+      type: object
+    Connected:
+      additionalProperties: false
+      properties:
+        connect_url:
+          type: string
+        id:
+          type: string
+      required:
+        - id
+        - connect_url
+      type: object
+    ConnectedHealth:
+      additionalProperties: false
+      properties:
+        connect_url:
+          type: string
+        id:
+          type: string
+        status:
+          type: string
+        version:
+          type: string
+      required:
+        - id
+        - connect_url
+        - status
+        - version
+      type: object
     ErrorBody:
       additionalProperties: false
       properties:
@@ -111,6 +167,28 @@ components:
       required:
         - status
       type: object
+    ResultConnect:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/Connect"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
     ResultHelloResponse:
       additionalProperties: false
       properties:
@@ -140,6 +218,84 @@ components:
           format: int64
           type: integer
         data: {}
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
+    ResultListConnect:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          items:
+            $ref: "#/components/schemas/Connect"
+          type:
+            - array
+            - "null"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
+    ResultListConnected:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          items:
+            $ref: "#/components/schemas/Connected"
+          type:
+            - array
+            - "null"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
+    ResultListConnectedHealth:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          items:
+            $ref: "#/components/schemas/ConnectedHealth"
+          type:
+            - array
+            - "null"
         error_code:
           type: string
         message_key:
@@ -267,6 +423,144 @@ info:
   version: "1.0"
 openapi: 3.1.0
 paths:
+  /connect:
+    get:
+      operationId: connect-self
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultConnect"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 获取当前实例的连接信息
+      tags:
+        - Connect
+  /connect/list:
+    get:
+      operationId: connect-list
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultListConnected"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 获取当前实例添加的所有连接
+      tags:
+        - Connect
+  /connects:
+    post:
+      operationId: connect-add
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Connected"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - connect:write
+      summary: 添加连接
+      tags:
+        - Connect
+  /connects/health:
+    get:
+      operationId: connect-health
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultListConnectedHealth"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - connect:read
+      summary: 获取互联健康状态
+      tags:
+        - Connect
+  /connects/info:
+    get:
+      operationId: connect-info
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultListConnect"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 获取所有已添加连接的详细信息
+      tags:
+        - Connect
+  /connects/{id}:
+    delete:
+      operationId: connect-delete
+      parameters:
+        - description: 连接 ID（UUID）
+          in: path
+          name: id
+          required: true
+          schema:
+            description: 连接 ID（UUID）
+            format: uuid
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - connect:write
+      summary: 删除连接
+      tags:
+        - Connect
   /embedding/reindex:
     post:
       description: 提交一次全量向量索引回填作业，起即返回（异步）。
