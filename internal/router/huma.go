@@ -53,12 +53,22 @@ func noCacheMW() huma.Middlewares {
 	return huma.Middlewares{humares.Bridge(middleware.NoCache())}
 }
 
+// optionalMW 用于「可匿名降级」的公开可读 operation：NoCache + OptionalAuth（旧
+// OptionalAuthRouterGroup 组级行为）。无 token 按匿名继续，携带有效 token 时识别用户身份。
+func optionalMW(revoker authService.TokenRevoker) huma.Middlewares {
+	return huma.Middlewares{
+		humares.Bridge(middleware.NoCache()),
+		humares.Bridge(middleware.OptionalAuth(revoker)),
+	}
+}
+
 // RegisterHumaOperations 注册所有已迁移到 Huma 的域的 operation。
 // 迁移新域时在此追加对应的 register*Huma 调用——这是唯一的注册清单，
 // 运行时服务器与离线 spec 生成器（GenerateOpenAPIYAML）共用，保证两者一致。
 func RegisterHumaOperations(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
 	registerInitHuma(api, h)
 	registerCommonHuma(api, h, revoker)
+	registerEchoHuma(api, h, revoker)
 	registerConnectHuma(api, h, revoker)
 	registerUserHuma(api, h, revoker)
 	registerFileHuma(api, h, revoker)

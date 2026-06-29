@@ -235,6 +235,14 @@ components:
         - nickname
         - metadata
       type: object
+    CreateTagDto:
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+      required:
+        - name
+      type: object
     DayStat:
       additionalProperties: false
       properties:
@@ -250,6 +258,49 @@ components:
         - date
         - pv
         - uv
+      type: object
+    Echo:
+      additionalProperties: false
+      properties:
+        content:
+          type: string
+        created_at:
+          format: int64
+          type: integer
+        echo_files:
+          items:
+            $ref: "#/components/schemas/EchoFile"
+          type:
+            - array
+            - "null"
+        extension:
+          $ref: "#/components/schemas/EchoExtension"
+        fav_count:
+          format: int64
+          type: integer
+        id:
+          type: string
+        layout:
+          type: string
+        private:
+          type: boolean
+        tags:
+          items:
+            $ref: "#/components/schemas/Tag"
+          type:
+            - array
+            - "null"
+        user_id:
+          type: string
+        username:
+          type: string
+      required:
+        - id
+        - content
+        - private
+        - user_id
+        - fav_count
+        - created_at
       type: object
     EchoExtension:
       additionalProperties: false
@@ -276,6 +327,107 @@ components:
         - payload
         - created_at
         - updated_at
+      type: object
+    EchoExtensionDto:
+      additionalProperties: false
+      properties:
+        payload:
+          additionalProperties: {}
+          type: object
+        type:
+          type: string
+      required:
+        - type
+        - payload
+      type: object
+    EchoFile:
+      additionalProperties: false
+      properties:
+        echo_id:
+          type: string
+        file:
+          $ref: "#/components/schemas/File"
+        file_id:
+          type: string
+        id:
+          type: string
+        sort_order:
+          format: int64
+          type: integer
+      required:
+        - id
+        - echo_id
+        - file_id
+        - sort_order
+      type: object
+    EchoQueryDto:
+      additionalProperties: false
+      properties:
+        dateFrom:
+          format: int64
+          type: integer
+        dateTo:
+          format: int64
+          type: integer
+        page:
+          format: int64
+          type: integer
+        pageSize:
+          format: int64
+          type: integer
+        search:
+          type: string
+        sortBy:
+          type: string
+        sortOrder:
+          type: string
+        tagIds:
+          items:
+            type: string
+          type:
+            - array
+            - "null"
+      required:
+        - page
+        - pageSize
+        - search
+        - tagIds
+        - sortBy
+        - sortOrder
+        - dateFrom
+        - dateTo
+      type: object
+    EchoUpsertDto:
+      additionalProperties: false
+      properties:
+        content:
+          type: string
+        created_at:
+          format: int64
+          type: integer
+        echo_files:
+          items:
+            $ref: "#/components/schemas/EchoFile"
+          type:
+            - array
+            - "null"
+        extension:
+          $ref: "#/components/schemas/EchoExtensionDto"
+        id:
+          type: string
+        layout:
+          type: string
+        private:
+          type: boolean
+        tags:
+          items:
+            $ref: "#/components/schemas/Tag"
+          type:
+            - array
+            - "null"
+      required:
+        - content
+        - private
       type: object
     EmailNotifySetting:
       additionalProperties: false
@@ -653,6 +805,38 @@ components:
         - level
         - msg
       type: object
+    PageQueryDto:
+      additionalProperties: false
+      properties:
+        page:
+          format: int64
+          type: integer
+        pageSize:
+          format: int64
+          type: integer
+        search:
+          type: string
+      required:
+        - page
+        - pageSize
+        - search
+      type: object
+    PageQueryResultListEcho:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/Echo"
+          type:
+            - array
+            - "null"
+        total:
+          format: int64
+          type: integer
+      required:
+        - total
+        - items
+      type: object
     PageResultComment:
       additionalProperties: false
       properties:
@@ -847,6 +1031,28 @@ components:
           type: integer
         data:
           $ref: "#/components/schemas/CreateCommentResult"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
+    ResultEcho:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/Echo"
         error_code:
           type: string
         message_key:
@@ -1166,6 +1372,32 @@ components:
         - msg
         - data
       type: object
+    ResultListEcho:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          items:
+            $ref: "#/components/schemas/Echo"
+          type:
+            - array
+            - "null"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
     ResultListHeatmap:
       additionalProperties: false
       properties:
@@ -1244,6 +1476,32 @@ components:
         - msg
         - data
       type: object
+    ResultListTag:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          items:
+            $ref: "#/components/schemas/Tag"
+          type:
+            - array
+            - "null"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
     ResultListUser:
       additionalProperties: false
       properties:
@@ -1256,6 +1514,28 @@ components:
           type:
             - array
             - "null"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
+    ResultPageQueryResultListEcho:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/PageQueryResultListEcho"
         error_code:
           type: string
         message_key:
@@ -1402,6 +1682,28 @@ components:
         - msg
         - data
       type: object
+    ResultTag:
+      additionalProperties: false
+      properties:
+        code:
+          format: int64
+          type: integer
+        data:
+          $ref: "#/components/schemas/Tag"
+        error_code:
+          type: string
+        message_key:
+          type: string
+        message_params:
+          additionalProperties: {}
+          type: object
+        msg:
+          type: string
+      required:
+        - code
+        - msg
+        - data
+      type: object
     ResultUser:
       additionalProperties: false
       properties:
@@ -1493,6 +1795,25 @@ components:
         - require_approval
         - captcha_enabled
         - email_notify
+      type: object
+    Tag:
+      additionalProperties: false
+      properties:
+        created_at:
+          format: int64
+          type: integer
+        id:
+          type: string
+        name:
+          type: string
+        usage_count:
+          format: int64
+          type: integer
+      required:
+        - id
+        - name
+        - usage_count
+        - created_at
       type: object
     TestEmailRequest:
       additionalProperties: false
@@ -1928,6 +2249,378 @@ paths:
       summary: 删除连接
       tags:
         - Connect
+  /echo:
+    post:
+      operationId: echo-create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EchoUpsertDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - echo:write
+      summary: 创建新的 Echo
+      tags:
+        - Echo
+    put:
+      operationId: echo-update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EchoUpsertDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - echo:write
+      summary: 更新 Echo
+      tags:
+        - Echo
+  /echo/hot:
+    get:
+      operationId: echo-hot
+      parameters:
+        - description: 返回条数，默认 5，最大 20
+          explode: false
+          in: query
+          name: limit
+          schema:
+            default: 5
+            description: 返回条数，默认 5，最大 20
+            format: int64
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultListEcho"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 获取热门 Echo
+      tags:
+        - Echo
+  /echo/like/{id}:
+    put:
+      operationId: echo-like
+      parameters:
+        - description: Echo ID
+          in: path
+          name: id
+          required: true
+          schema:
+            description: Echo ID
+            format: uuid
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 点赞 Echo
+      tags:
+        - Echo
+  /echo/onthisday:
+    get:
+      operationId: echo-onthisday
+      parameters:
+        - description: 客户端时区（IANA 名）
+          in: header
+          name: X-Timezone
+          schema:
+            description: 客户端时区（IANA 名）
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultListEcho"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 那年今日
+      tags:
+        - Echo
+  /echo/page:
+    get:
+      operationId: echo-page-get
+      parameters:
+        - explode: false
+          in: query
+          name: page
+          schema:
+            format: int64
+            type: integer
+        - explode: false
+          in: query
+          name: pageSize
+          schema:
+            format: int64
+            type: integer
+        - explode: false
+          in: query
+          name: search
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultPageQueryResultListEcho"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 分页获取 Echo（Deprecated）
+      tags:
+        - Echo
+    post:
+      operationId: echo-page-post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PageQueryDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultPageQueryResultListEcho"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 分页获取 Echo（Deprecated）
+      tags:
+        - Echo
+  /echo/query:
+    post:
+      operationId: echo-query
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EchoQueryDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultPageQueryResultListEcho"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 统一查询 Echo 列表
+      tags:
+        - Echo
+  /echo/random:
+    get:
+      operationId: echo-random
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultEcho"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 随机返回一篇 Echo
+      tags:
+        - Echo
+  /echo/tag/{tagid}:
+    get:
+      operationId: echo-by-tag
+      parameters:
+        - description: 标签 ID
+          in: path
+          name: tagid
+          required: true
+          schema:
+            description: 标签 ID
+            format: uuid
+            type: string
+        - explode: false
+          in: query
+          name: page
+          schema:
+            format: int64
+            type: integer
+        - explode: false
+          in: query
+          name: pageSize
+          schema:
+            format: int64
+            type: integer
+        - explode: false
+          in: query
+          name: search
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultPageQueryResultListEcho"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 按标签获取 Echo（Deprecated）
+      tags:
+        - Echo
+  /echo/today:
+    get:
+      operationId: echo-today
+      parameters:
+        - description: 客户端时区（IANA 名）
+          in: header
+          name: X-Timezone
+          schema:
+            description: 客户端时区（IANA 名）
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultListEcho"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 获取今天的 Echo
+      tags:
+        - Echo
+  /echo/{id}:
+    delete:
+      operationId: echo-delete
+      parameters:
+        - description: Echo ID
+          in: path
+          name: id
+          required: true
+          schema:
+            description: Echo ID
+            format: uuid
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - echo:write
+      summary: 删除 Echo
+      tags:
+        - Echo
+    get:
+      operationId: echo-get
+      parameters:
+        - description: Echo ID
+          in: path
+          name: id
+          required: true
+          schema:
+            description: Echo ID
+            format: uuid
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultEcho"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 获取指定 ID 的 Echo
+      tags:
+        - Echo
   /embedding/reindex:
     post:
       description: 提交一次全量向量索引回填作业，起即返回（异步）。
@@ -2898,6 +3591,84 @@ paths:
       summary: 获取近七天访客统计
       tags:
         - Dashboard
+  /tag:
+    post:
+      operationId: tag-create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTagDto"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultTag"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - echo:write
+      summary: 创建标签
+      tags:
+        - Echo
+  /tag/{id}:
+    delete:
+      operationId: tag-delete
+      parameters:
+        - description: 标签 ID
+          in: path
+          name: id
+          required: true
+          schema:
+            description: 标签 ID
+            format: uuid
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultInterface {}"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      security:
+        - bearerAuth:
+            - echo:write
+      summary: 删除标签
+      tags:
+        - Echo
+  /tags:
+    get:
+      operationId: tag-list
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultListTag"
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: Error
+      summary: 获取所有标签
+      tags:
+        - Tag
   /user:
     get:
       operationId: user-info

@@ -100,12 +100,6 @@ func featureRouteModules() []RouteModule {
 			},
 		},
 		routeModule{
-			name: "echo",
-			register: func(ctx *RouterContext) {
-				setupEchoRoutes(ctx.Groups, ctx.Handlers)
-			},
-		},
-		routeModule{
 			name: "comment",
 			register: func(ctx *RouterContext) {
 				setupCommentRoutes(ctx.Groups, ctx.Handlers)

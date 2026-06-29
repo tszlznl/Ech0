@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2025-2026 lin-snow
 
+// Package handler 暴露 Echo（动态）与 Tag（标签）相关的 HTTP 接口（Huma type-first）。
+//
+// 读接口走「可匿名降级」中间件（无 token 仅公开内容，管理员可见私密）；写接口需 echo:write。
+// 点赞接口匿名可访问，但叠加 IP 限速 + (IP, echoID) 去重窗口（经桥接的 RateLimitWithIdempotency）。
 package handler
 
 import (
-	"errors"
-	"strconv"
+	"context"
 
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	res "github.com/lin-snow/ech0/internal/handler/response"
+	"github.com/lin-snow/ech0/internal/handler/humares"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/echo"
 	service "github.com/lin-snow/ech0/internal/service/echo"
@@ -27,542 +28,190 @@ func NewEchoHandler(echoService service.Service) *EchoHandler {
 	}
 }
 
-// PostEcho 创建新的Echo
-//
-//	@Summary		创建新的Echo
-//	@Description	用户创建一条新的Echo动态
-//	@Tags			Echo
-//	@Accept			json
-//	@Produce		json
-//	@Param			echo	body		model.EchoUpsertDto	true	"Echo内容"
-//	@Success		200		{object}	handler.Response	"创建成功"
-//	@Failure		200		{object}	handler.Response	"创建失败"
-//	@Router			/echo [post]
-func (echoHandler *EchoHandler) PostEcho() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		var request model.EchoUpsertDto
-		if err := ctx.ShouldBindJSON(&request); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-		newEcho := request.ToModel()
+type (
+	EchoUpsertInput struct {
+		Body model.EchoUpsertDto
+	}
+	EchoIDInput struct {
+		ID string `path:"id" format:"uuid" doc:"Echo ID"`
+	}
+	QueryEchosInput struct {
+		Body commonModel.EchoQueryDto
+	}
+	EchoPageGetInput struct {
+		Page     int    `query:"page"`
+		PageSize int    `query:"pageSize"`
+		Search   string `query:"search"`
+	}
+	EchoPagePostInput struct {
+		Body commonModel.PageQueryDto
+	}
+	GetEchosByTagIDInput struct {
+		TagID    string `path:"tagid" format:"uuid" doc:"标签 ID"`
+		Page     int    `query:"page"`
+		PageSize int    `query:"pageSize"`
+		Search   string `query:"search"`
+	}
+	TimezoneInput struct {
+		Timezone string `header:"X-Timezone" doc:"客户端时区（IANA 名）"`
+	}
+	GetHotEchosInput struct {
+		Limit int `query:"limit" default:"5" doc:"返回条数，默认 5，最大 20"`
+	}
+	GetRandomEchoInput struct{}
+	GetAllTagsInput    struct{}
+	CreateTagInput     struct {
+		Body model.CreateTagDto
+	}
+	TagIDInput struct {
+		ID string `path:"id" format:"uuid" doc:"标签 ID"`
+	}
+	LikeEchoInput struct {
+		ID string `path:"id" format:"uuid" doc:"Echo ID"`
+	}
+)
 
-		if err := echoHandler.echoService.PostEcho(ctx.Request.Context(), newEcho); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
+type echoPage = commonModel.PageQueryResult[[]model.Echo]
 
-		return res.Response{
-			Msg: commonModel.POST_ECHO_SUCCESS,
-		}
-	})
+// PostEcho 创建一条新的 Echo（echo:write）。
+func (echoHandler *EchoHandler) PostEcho(ctx context.Context, in *EchoUpsertInput) (*humares.Envelope[any], error) {
+	if err := echoHandler.echoService.PostEcho(ctx, in.Body.ToModel()); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil, commonModel.POST_ECHO_SUCCESS), nil
 }
 
-// GetEchosByPage 获取Echo列表，支持分页, 兼容 GET Query 和 POST JSON 请求
-//
-// Deprecated: 请使用 POST /echo/query 替代
-//
-//	@Summary		获取Echo列表（分页）[Deprecated]
-//	@Description	Deprecated: 请使用 POST /echo/query 替代。获取Echo列表，支持分页，兼容 GET Query 和 POST JSON 请求
-//	@Tags			Echo
-//	@Accept			json
-//	@Produce		json
-//	@Param			page		query		int								false	"页码（GET方式）"
-//	@Param			pageSize	query		int								false	"每页数量（GET方式）"
-//	@Param			body		body		model.PageQueryDto				false	"分页参数（POST方式）"
-//	@Success		200			{object}	handler.Response{data=object}	"获取成功"
-//	@Failure		200			{object}	handler.Response				"获取失败"
-//	@Router			/echo/page [get]
-//	@Router			/echo/page [post]
-func (echoHandler *EchoHandler) GetEchosByPage() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 获取分页参数
-		var pageRequest commonModel.PageQueryDto
-
-		switch ctx.Request.Method {
-		case "GET":
-			// 尝试从 query 中获取分页参数
-			if err := ctx.ShouldBindQuery(&pageRequest); err != nil {
-				return res.Response{
-					Msg: commonModel.INVALID_QUERY_PARAMS,
-					Err: err,
-				}
-			}
-
-		case "POST":
-			// 尝试从 JSON 中获取分页参数
-			if err := ctx.ShouldBindJSON(&pageRequest); err != nil {
-				return res.Response{
-					Msg: commonModel.INVALID_REQUEST_BODY,
-					Err: err,
-				}
-			}
-
-		default:
-			// 如果不是 GET 或 POST 请求，返回错误
-			{
-				return res.Response{
-					Msg: commonModel.INVALID_REQUEST_METHOD,
-					Err: errors.New(commonModel.INVALID_REQUEST_METHOD),
-				}
-			}
-		}
-
-		result, err := echoHandler.echoService.GetEchosByPage(ctx.Request.Context(), pageRequest)
-		if err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: result,
-			Msg:  commonModel.GET_ECHOS_BY_PAGE_SUCCESS,
-		}
-	})
+// UpdateEcho 更新指定 Echo 内容（echo:write）。
+func (echoHandler *EchoHandler) UpdateEcho(ctx context.Context, in *EchoUpsertInput) (*humares.Envelope[any], error) {
+	if err := echoHandler.echoService.UpdateEcho(ctx, in.Body.ToModel()); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil, commonModel.UPDATE_ECHO_SUCCESS), nil
 }
 
-// DeleteEcho 删除Echo
-//
-//	@Summary		删除Echo
-//	@Description	根据ID删除指定的Echo动态
-//	@Tags			Echo
-//	@Accept			json
-//	@Produce		json
-//	@Param			id	path		int					true	"Echo ID"
-//	@Success		200	{object}	handler.Response	"删除成功"
-//	@Failure		200	{object}	handler.Response	"删除失败"
-//	@Router			/echo/{id} [delete]
-func (echoHandler *EchoHandler) DeleteEcho() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 从 URL 参数获取Echo ID
-		id := ctx.Param("id")
-		if _, err := uuid.Parse(id); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_PARAMS,
-			}
-		}
-
-		if err := echoHandler.echoService.DeleteEchoById(ctx.Request.Context(), id); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Msg: commonModel.DELETE_ECHO_SUCCESS,
-		}
-	})
+// DeleteEcho 根据 ID 删除 Echo（echo:write）。
+func (echoHandler *EchoHandler) DeleteEcho(ctx context.Context, in *EchoIDInput) (*humares.Envelope[any], error) {
+	if err := echoHandler.echoService.DeleteEchoById(ctx, in.ID); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil, commonModel.DELETE_ECHO_SUCCESS), nil
 }
 
-// GetTodayEchos 获取今天的Echo列表
-//
-//	@Summary		获取今天的Echo列表
-//	@Description	获取当前用户今天发布的所有Echo动态
-//	@Tags			Echo
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	handler.Response	"获取成功"
-//	@Failure		200	{object}	handler.Response	"获取失败"
-//	@Router			/echo/today [get]
-func (echoHandler *EchoHandler) GetTodayEchos() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		timezone := timezoneUtil.NormalizeTimezone(ctx.GetHeader(timezoneUtil.DefaultTimezoneHeader))
-		result, err := echoHandler.echoService.GetTodayEchos(ctx.Request.Context(), timezone)
-		if err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: result,
-			Msg:  commonModel.GET_TODAY_ECHOS_SUCCESS,
-		}
-	})
+// LikeEcho 为指定 Echo 点赞（匿名可访问，限速 + 去重）。
+func (echoHandler *EchoHandler) LikeEcho(ctx context.Context, in *LikeEchoInput) (*humares.Envelope[any], error) {
+	if err := echoHandler.echoService.LikeEcho(ctx, in.ID); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil, commonModel.LIKE_ECHO_SUCCESS), nil
 }
 
-// UpdateEcho 更新Echo
-//
-//	@Summary		更新Echo
-//	@Description	更新指定的Echo动态内容
-//	@Tags			Echo
-//	@Accept			json
-//	@Produce		json
-//	@Param			echo	body		model.EchoUpsertDto	true	"要更新的Echo内容"
-//	@Success		200		{object}	handler.Response	"更新成功"
-//	@Failure		200		{object}	handler.Response	"更新失败"
-//	@Router			/echo [put]
-func (echoHandler *EchoHandler) UpdateEcho() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		var request model.EchoUpsertDto
-		if err := ctx.ShouldBindJSON(&request); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-		updateEcho := request.ToModel()
-
-		if err := echoHandler.echoService.UpdateEcho(ctx.Request.Context(), updateEcho); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Msg: commonModel.UPDATE_ECHO_SUCCESS,
-		}
-	})
+// GetEchoById 获取指定 ID 的 Echo 详情（可匿名降级）。
+func (echoHandler *EchoHandler) GetEchoById(ctx context.Context, in *EchoIDInput) (*humares.Envelope[*model.Echo], error) {
+	echo, err := echoHandler.echoService.GetEchoById(ctx, in.ID)
+	if err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, echo, commonModel.GET_ECHO_BY_ID_SUCCESS), nil
 }
 
-// LikeEcho 点赞Echo
-//
-//	@Summary		点赞Echo
-//	@Description	根据ID为指定的Echo动态点赞
-//	@Tags			Echo
-//	@Accept			json
-//	@Produce		json
-//	@Param			id	path		int					true	"Echo ID"
-//	@Success		200	{object}	handler.Response	"点赞成功"
-//	@Failure		200	{object}	handler.Response	"点赞失败"
-//	@Router			/echo/like/{id} [put]
-func (echoHandler *EchoHandler) LikeEcho() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 从 URL 参数获取Echo ID
-		id := ctx.Param("id")
-		if _, err := uuid.Parse(id); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_PARAMS,
-			}
-		}
-
-		if err := echoHandler.echoService.LikeEcho(ctx.Request.Context(), id); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Msg: commonModel.LIKE_ECHO_SUCCESS,
-		}
-	})
+// QueryEchos 统一查询 Echo 列表（可匿名降级）。
+func (echoHandler *EchoHandler) QueryEchos(ctx context.Context, in *QueryEchosInput) (*humares.Envelope[echoPage], error) {
+	result, err := echoHandler.echoService.QueryEchos(ctx, in.Body)
+	if err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, result, commonModel.QUERY_ECHOS_SUCCESS), nil
 }
 
-// GetEchoById 获取指定 ID 的 Echo
-//
-//	@Summary		获取指定ID的Echo
-//	@Description	根据ID获取指定的Echo动态详情
-//	@Tags			Echo
-//	@Accept			json
-//	@Produce		json
-//	@Param			id	path		int					true	"Echo ID"
-//	@Success		200	{object}	handler.Response	"获取成功"
-//	@Failure		200	{object}	handler.Response	"获取失败"
-//	@Router			/echo/{id} [get]
-func (echoHandler *EchoHandler) GetEchoById() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 从 URL 参数获取Echo ID
-		id := ctx.Param("id")
-		if _, err := uuid.Parse(id); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_PARAMS,
-			}
-		}
-
-		echo, err := echoHandler.echoService.GetEchoById(ctx.Request.Context(), id)
-		if err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: echo,
-			Msg:  commonModel.GET_ECHO_BY_ID_SUCCESS,
-		}
-	})
+// GetEchosByPageGet 分页获取 Echo 列表（GET query，Deprecated，请用 POST /echo/query）。
+func (echoHandler *EchoHandler) GetEchosByPageGet(ctx context.Context, in *EchoPageGetInput) (*humares.Envelope[echoPage], error) {
+	return echoHandler.getEchosByPage(ctx, commonModel.PageQueryDto{Page: in.Page, PageSize: in.PageSize, Search: in.Search})
 }
 
-// GetAllTags 获取所有标签
-//
-//	@Summary		获取所有标签
-//	@Description	获取所有标签及其使用次数
-//	@Tags			Tag
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	handler.Response	"获取成功"
-//	@Failure		200	{object}	handler.Response	"获取失败"
-//	@Router			/tags [get]
-func (echoHandler *EchoHandler) GetAllTags() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		tags, err := echoHandler.echoService.GetAllTags()
-		if err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: tags,
-			Msg:  commonModel.GET_ALL_TAGS_SUCCESS,
-		}
-	})
+// GetEchosByPagePost 分页获取 Echo 列表（POST body，Deprecated，请用 POST /echo/query）。
+func (echoHandler *EchoHandler) GetEchosByPagePost(ctx context.Context, in *EchoPagePostInput) (*humares.Envelope[echoPage], error) {
+	return echoHandler.getEchosByPage(ctx, in.Body)
 }
 
-// CreateTag 创建标签
-//
-//	@Summary		创建标签
-//	@Description	管理员显式创建一个标签（不依赖于 Echo 内容中的 #tag 触发）
-//	@Tags			Tag
-//	@Accept			json
-//	@Produce		json
-//	@Param			tag	body		model.CreateTagDto	true	"标签内容"
-//	@Success		200	{object}	handler.Response	"创建成功"
-//	@Failure		200	{object}	handler.Response	"创建失败"
-//	@Router			/tag [post]
-func (echoHandler *EchoHandler) CreateTag() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		var request model.CreateTagDto
-		if err := ctx.ShouldBindJSON(&request); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-
-		tag, err := echoHandler.echoService.CreateTag(ctx.Request.Context(), request.Name)
-		if err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: tag,
-			Msg:  commonModel.CREATE_TAG_SUCCESS,
-		}
-	})
+func (echoHandler *EchoHandler) getEchosByPage(ctx context.Context, page commonModel.PageQueryDto) (*humares.Envelope[echoPage], error) {
+	result, err := echoHandler.echoService.GetEchosByPage(ctx, page)
+	if err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, result, commonModel.GET_ECHOS_BY_PAGE_SUCCESS), nil
 }
 
-// DeleteTag 删除标签
-//
-//	@Summary		删除标签
-//	@Description	根据ID删除指定的标签
-//	@Tags			Tag
-//	@Accept			json
-//	@Produce		json
-//	@Param			id	path		int					true	"标签 ID"
-//	@Success		200	{object}	handler.Response	"删除成功"
-//	@Failure		200	{object}	handler.Response	"删除失败"
-//	@Router			/tag/{id} [delete]
-func (echoHandler *EchoHandler) DeleteTag() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 从 URL 参数获取标签 ID
-		id := ctx.Param("id")
-		if _, err := uuid.Parse(id); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_PARAMS,
-			}
-		}
-
-		if err := echoHandler.echoService.DeleteTag(ctx.Request.Context(), id); err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Msg: commonModel.DELETE_TAG_SUCCESS,
-		}
-	})
+// GetEchosByTagId 按标签 ID 获取 Echo 列表（可匿名降级，Deprecated）。
+func (echoHandler *EchoHandler) GetEchosByTagId(ctx context.Context, in *GetEchosByTagIDInput) (*humares.Envelope[echoPage], error) {
+	result, err := echoHandler.echoService.GetEchosByTagId(ctx, in.TagID, commonModel.PageQueryDto{Page: in.Page, PageSize: in.PageSize, Search: in.Search})
+	if err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, result, commonModel.GET_ECHOS_BY_TAG_ID_SUCCESS), nil
 }
 
-// QueryEchos 统一查询 Echo 列表
-//
-//	@Summary		统一查询 Echo 列表
-//	@Description	统一的 Echo 查询接口，支持分页、搜索、标签过滤、排序等组合条件
-//	@Tags			Echo
-//	@Accept			json
-//	@Produce		json
-//	@Param			body	body		model.EchoQueryDto				true	"查询参数"
-//	@Success		200		{object}	handler.Response{data=object}	"查询成功"
-//	@Failure		200		{object}	handler.Response				"查询失败"
-//	@Router			/echo/query [post]
-func (echoHandler *EchoHandler) QueryEchos() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		var queryRequest commonModel.EchoQueryDto
-		if err := ctx.ShouldBindJSON(&queryRequest); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_REQUEST_BODY,
-				Err: err,
-			}
-		}
-
-		result, err := echoHandler.echoService.QueryEchos(ctx.Request.Context(), queryRequest)
-		if err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: result,
-			Msg:  commonModel.QUERY_ECHOS_SUCCESS,
-		}
-	})
+// GetTodayEchos 获取今天发布的 Echo 列表（可匿名降级）。
+func (echoHandler *EchoHandler) GetTodayEchos(ctx context.Context, in *TimezoneInput) (*humares.Envelope[[]model.Echo], error) {
+	result, err := echoHandler.echoService.GetTodayEchos(ctx, timezoneUtil.NormalizeTimezone(in.Timezone))
+	if err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, result, commonModel.GET_TODAY_ECHOS_SUCCESS), nil
 }
 
-// GetEchosByTagId 获取指定标签 ID 的 Echo 列表
-//
-// Deprecated: 请使用 POST /echo/query 的 tagIds 参数替代
-//
-//	@Summary		获取指定标签 ID 的 Echo 列表 [Deprecated]
-//	@Description	Deprecated: 请使用 POST /echo/query 的 tagIds 参数替代。根据标签 ID 获取包含该标签的 Echo 列表，支持 query 分页与搜索
-//	@Tags			Echo
-//	@Accept			json
-//	@Produce		json
-//	@Param			tagid		path		int								true	"标签 ID"
-//	@Param			page		query		int								false	"页码"
-//	@Param			pageSize	query		int								false	"每页数量"
-//	@Param			search		query		string							false	"搜索关键字"
-//	@Success		200			{object}	handler.Response{data=object}	"获取成功"
-//	@Failure		200			{object}	handler.Response				"获取失败"
-//	@Router			/echo/tag/{tagid} [get]
-func (echoHandler *EchoHandler) GetEchosByTagId() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		// 从 URL 参数获取标签 ID
-		tagId := ctx.Param("tagid")
-		if _, err := uuid.Parse(tagId); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_PARAMS,
-			}
-		}
-
-		// 获取分页/搜索查询参数
-		var pageRequest commonModel.PageQueryDto
-		if err := ctx.ShouldBindQuery(&pageRequest); err != nil {
-			return res.Response{
-				Msg: commonModel.INVALID_QUERY_PARAMS,
-				Err: err,
-			}
-		}
-
-		result, err := echoHandler.echoService.GetEchosByTagId(ctx.Request.Context(), tagId, pageRequest)
-		if err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: result,
-			Msg:  commonModel.GET_ECHOS_BY_TAG_ID_SUCCESS,
-		}
-	})
+// GetHotEchos 获取热门 Echo 列表（可匿名降级）。
+func (echoHandler *EchoHandler) GetHotEchos(ctx context.Context, in *GetHotEchosInput) (*humares.Envelope[[]model.Echo], error) {
+	limit := in.Limit
+	if limit <= 0 {
+		limit = 5
+	}
+	result, err := echoHandler.echoService.GetHotEchos(ctx, limit)
+	if err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, result, commonModel.GET_HOT_ECHOS_SUCCESS), nil
 }
 
-// GetHotEchos 获取热门 Echo 列表
-//
-//	@Summary		获取热门 Echo 列表
-//	@Description	从最近发布的动态池中按「点赞数 + 已审核评论数×2」计算热度并排序，返回前若干条 Echo。需走认证路由（无有效 token 时按匿名处理）；管理员可包含私有 Echo。查询参数 limit 为可选正整数，默认 5，服务端最大返回 20 条；无效或非正整数时使用默认值。
-//	@Tags			Echo
-//	@Accept			json
-//	@Produce		json
-//	@Param			limit	query		int								false	"返回条数，默认 5，最大 20"
-//	@Success		200		{object}	handler.Response{data=object}	"获取成功"
-//	@Failure		200		{object}	handler.Response				"获取失败"
-//	@Router			/echo/hot [get]
-func (echoHandler *EchoHandler) GetHotEchos() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		limit := 5
-		if raw := ctx.Query("limit"); raw != "" {
-			if n, err := strconv.Atoi(raw); err == nil && n > 0 {
-				limit = n
-			}
-		}
-
-		result, err := echoHandler.echoService.GetHotEchos(ctx.Request.Context(), limit)
-		if err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: result,
-			Msg:  commonModel.GET_HOT_ECHOS_SUCCESS,
-		}
-	})
+// GetRandomEcho 随机返回一篇可见 Echo（可匿名降级；无可见内容时 data 为 null）。
+func (echoHandler *EchoHandler) GetRandomEcho(ctx context.Context, _ *GetRandomEchoInput) (*humares.Envelope[*model.Echo], error) {
+	echo, err := echoHandler.echoService.GetRandomEcho(ctx)
+	if err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, echo, commonModel.GET_RANDOM_ECHO_SUCCESS), nil
 }
 
-// GetRandomEcho 随机返回一篇 Echo
-//
-//	@Summary		随机返回一篇Echo
-//	@Description	从当前可见范围内随机返回一篇 Echo。需走认证路由（无有效 token 时按匿名处理，仅返回公开内容；管理员可随机到私密）。无可见内容时 data 为 null。
-//	@Tags			Echo
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	handler.Response	"获取成功"
-//	@Failure		200	{object}	handler.Response	"获取失败"
-//	@Router			/echo/random [get]
-func (echoHandler *EchoHandler) GetRandomEcho() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		echo, err := echoHandler.echoService.GetRandomEcho(ctx.Request.Context())
-		if err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
-
-		return res.Response{
-			Data: echo,
-			Msg:  commonModel.GET_RANDOM_ECHO_SUCCESS,
-		}
-	})
+// GetOnThisDayEchos 那年今日：过去年份中与今天同「月-日」的 Echo（可匿名降级）。
+func (echoHandler *EchoHandler) GetOnThisDayEchos(ctx context.Context, in *TimezoneInput) (*humares.Envelope[[]model.Echo], error) {
+	result, err := echoHandler.echoService.GetOnThisDayEchos(ctx, timezoneUtil.NormalizeTimezone(in.Timezone))
+	if err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, result, commonModel.GET_ON_THIS_DAY_ECHOS_SUCCESS), nil
 }
 
-// GetOnThisDayEchos 那年今日
-//
-//	@Summary		那年今日（On this day）
-//	@Description	返回过去年份中与今天同一「月-日」发布的 Echo（即「那年今日」）。需走认证路由（无有效 token 时按匿名处理，仅返回公开内容；管理员可包含私密）。按客户端时区头判定「今天」，结果按发布时间倒序。
-//	@Tags			Echo
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	handler.Response	"获取成功"
-//	@Failure		200	{object}	handler.Response	"获取失败"
-//	@Router			/echo/onthisday [get]
-func (echoHandler *EchoHandler) GetOnThisDayEchos() gin.HandlerFunc {
-	return res.Execute(func(ctx *gin.Context) res.Response {
-		timezone := timezoneUtil.NormalizeTimezone(ctx.GetHeader(timezoneUtil.DefaultTimezoneHeader))
-		result, err := echoHandler.echoService.GetOnThisDayEchos(ctx.Request.Context(), timezone)
-		if err != nil {
-			return res.Response{
-				Msg: "",
-				Err: err,
-			}
-		}
+// GetAllTags 获取所有标签及其使用次数（公开）。
+func (echoHandler *EchoHandler) GetAllTags(ctx context.Context, _ *GetAllTagsInput) (*humares.Envelope[[]model.Tag], error) {
+	tags, err := echoHandler.echoService.GetAllTags()
+	if err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, tags, commonModel.GET_ALL_TAGS_SUCCESS), nil
+}
 
-		return res.Response{
-			Data: result,
-			Msg:  commonModel.GET_ON_THIS_DAY_ECHOS_SUCCESS,
-		}
-	})
+// CreateTag 管理员显式创建一个标签（echo:write）。
+func (echoHandler *EchoHandler) CreateTag(ctx context.Context, in *CreateTagInput) (*humares.Envelope[*model.Tag], error) {
+	tag, err := echoHandler.echoService.CreateTag(ctx, in.Body.Name)
+	if err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK(ctx, tag, commonModel.CREATE_TAG_SUCCESS), nil
+}
+
+// DeleteTag 根据 ID 删除标签（echo:write）。
+func (echoHandler *EchoHandler) DeleteTag(ctx context.Context, in *TagIDInput) (*humares.Envelope[any], error) {
+	if err := echoHandler.echoService.DeleteTag(ctx, in.ID); err != nil {
+		return nil, humares.Err(ctx, err)
+	}
+	return humares.OK[any](ctx, nil, commonModel.DELETE_TAG_SUCCESS), nil
 }
