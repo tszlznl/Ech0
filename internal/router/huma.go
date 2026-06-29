@@ -63,6 +63,7 @@ func RegisterHumaOperations(api huma.API, h *handler.Bundle, revoker authService
 	registerUserHuma(api, h, revoker)
 	registerFileHuma(api, h, revoker)
 	registerDashboardHuma(api, h, revoker)
+	registerCopilotHuma(api, h, revoker)
 	registerEmbeddingHuma(api, h, revoker)
 }
 
