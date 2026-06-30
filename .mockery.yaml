@@ -56,6 +56,7 @@ packages:
       dir: internal/test/mocks/commentmock
       pkgname: commentmock
     interfaces:
+      Service: {}
       Repository: {}
       Mailer: {}
   github.com/lin-snow/ech0/internal/service/user:
@@ -63,6 +64,7 @@ packages:
       dir: internal/test/mocks/usermock
       pkgname: usermock
     interfaces:
+      Service: {}
       Repository: {}
       UserRepo: {}
       InstallStateRepo: {}
@@ -71,12 +73,14 @@ packages:
       dir: internal/test/mocks/echomock
       pkgname: echomock
     interfaces:
+      Service: {}
       Repository: {}
   github.com/lin-snow/ech0/internal/service/setting:
     config:
       dir: internal/test/mocks/settingmock
       pkgname: settingmock
     interfaces:
+      Service: {}
       SettingRepository: {}
       TokenRevoker: {}
       WebhookRepository: {}
@@ -85,6 +89,7 @@ packages:
       dir: internal/test/mocks/connectmock
       pkgname: connectmock
     interfaces:
+      Service: {}
       Repository: {}
       EchoRepository: {}
   github.com/lin-snow/ech0/internal/service/embedding:
@@ -95,3 +100,39 @@ packages:
       Repository: {}
       Indexer: {}
       EchoReader: {}
+      Embedder: {}
+
+  # ---- handler 层依赖的 Service（以及 auth 服务层测试需要的 Repository/AuthRepo）----
+  github.com/lin-snow/ech0/internal/service/auth:
+    config:
+      dir: internal/test/mocks/authmock
+      pkgname: authmock
+    interfaces:
+      Service: {}
+      Repository: {}
+      AuthRepo: {}
+  github.com/lin-snow/ech0/internal/service/init:
+    config:
+      dir: internal/test/mocks/initmock
+      pkgname: initmock
+    interfaces:
+      Service: {}
+  github.com/lin-snow/ech0/internal/service/dashboard:
+    config:
+      dir: internal/test/mocks/dashboardmock
+      pkgname: dashboardmock
+    interfaces:
+      Service: {}
+  github.com/lin-snow/ech0/internal/service/migrator:
+    config:
+      dir: internal/test/mocks/migratormock
+      pkgname: migratormock
+    interfaces:
+      Service: {}
+  github.com/lin-snow/ech0/internal/service/copilot:
+    config:
+      dir: internal/test/mocks/copilotmock
+      pkgname: copilotmock
+    interfaces:
+      SummaryService: {}
+      ChatService: {}
