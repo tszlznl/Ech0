@@ -114,17 +114,13 @@ const (
 
 // User 错误相关常量
 const (
-	USERNAME_ALREADY_EXISTS        = "用户名已存在"
-	FAILED_TO_GET_GITHUB_LOGIN_URL = "获取 GitHub 登录 URL 失败"
-	FAILED_TO_GET_GOOGLE_LOGIN_URL = "获取 Google 登录 URL 失败"
-	FAILED_TO_GET_QQ_LOGIN_URL     = "获取 QQ 登录 URL 失败"
-	FAILED_TO_GET_CUSTOM_LOGIN_URL = "获取自定义登录 URL 失败"
-	OAUTH2_NOT_CONFIGURED          = "OAuth2 未配置"
-	OAUTH2_NOT_ENABLED             = "OAuth2 未启用"
-	NO_PERMISSION_BINDING_GITHUB   = "没有权限绑定 GitHub 账号"
-	NO_PERMISSION_BINDING_GOOGLE   = "没有权限绑定 Google 账号"
-	NO_PERMISSION_BINDING_QQ       = "没有权限绑定 QQ 账号"
-	NO_PERMISSION_BINDING_CUSTOM   = "没有权限绑定自定义 OAuth2 账号"
+	USERNAME_ALREADY_EXISTS      = "用户名已存在"
+	OAUTH2_NOT_CONFIGURED        = "OAuth2 未配置"
+	OAUTH2_NOT_ENABLED           = "OAuth2 未启用"
+	NO_PERMISSION_BINDING_GITHUB = "没有权限绑定 GitHub 账号"
+	NO_PERMISSION_BINDING_GOOGLE = "没有权限绑定 Google 账号"
+	NO_PERMISSION_BINDING_QQ     = "没有权限绑定 QQ 账号"
+	NO_PERMISSION_BINDING_CUSTOM = "没有权限绑定自定义 OAuth2 账号"
 )
 
 // Connect 错误相关常量
