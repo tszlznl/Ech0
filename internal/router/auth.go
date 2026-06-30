@@ -50,7 +50,7 @@ func registerAuthHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 	read := humares.Secured(authModel.ScopeProfileRead)
 	readMW := securedMW(revoker, authModel.ScopeProfileRead)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "oauth-bind",
 		Method:      http.MethodPost,
 		Path:        "/oauth/{provider}/bind",
@@ -60,7 +60,7 @@ func registerAuthHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Middlewares: writeMW,
 	}, h.AuthHandler.OAuthBind)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "oauth-info",
 		Method:      http.MethodGet,
 		Path:        "/oauth/info",
@@ -70,7 +70,7 @@ func registerAuthHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Middlewares: readMW,
 	}, h.AuthHandler.GetOAuthInfo)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "passkey-list",
 		Method:      http.MethodGet,
 		Path:        "/passkeys",
@@ -80,7 +80,7 @@ func registerAuthHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Middlewares: readMW,
 	}, h.AuthHandler.ListPasskeys)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "passkey-delete",
 		Method:      http.MethodDelete,
 		Path:        "/passkeys/{id}",
@@ -90,7 +90,7 @@ func registerAuthHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Middlewares: writeMW,
 	}, h.AuthHandler.DeletePasskey)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "passkey-update-name",
 		Method:      http.MethodPut,
 		Path:        "/passkeys/{id}",

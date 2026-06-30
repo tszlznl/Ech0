@@ -15,7 +15,7 @@ import (
 
 // registerUserHuma 注册用户路由。
 func registerUserHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "user-register",
 		Method:      http.MethodPost,
 		Path:        "/register",
@@ -24,7 +24,7 @@ func registerUserHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Middlewares: noCacheMW(),
 	}, h.UserHandler.Register)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "user-list",
 		Method:      http.MethodGet,
 		Path:        "/users",
@@ -34,7 +34,7 @@ func registerUserHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Middlewares: securedMW(revoker, authModel.ScopeAdminUser),
 	}, h.UserHandler.GetAllUsers)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "user-info",
 		Method:      http.MethodGet,
 		Path:        "/user",
@@ -44,7 +44,7 @@ func registerUserHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Middlewares: securedMW(revoker, authModel.ScopeProfileRead),
 	}, h.UserHandler.GetUserInfo)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "user-update",
 		Method:      http.MethodPut,
 		Path:        "/user",
@@ -54,7 +54,7 @@ func registerUserHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Middlewares: securedMW(revoker, authModel.ScopeProfileWrite),
 	}, h.UserHandler.UpdateUser)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "user-delete",
 		Method:      http.MethodDelete,
 		Path:        "/user/{id}",
@@ -64,7 +64,7 @@ func registerUserHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Middlewares: securedMW(revoker, authModel.ScopeAdminUser),
 	}, h.UserHandler.DeleteUser)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "user-set-admin",
 		Method:      http.MethodPut,
 		Path:        "/user/admin/{id}",

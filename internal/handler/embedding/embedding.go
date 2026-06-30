@@ -12,8 +12,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/lin-snow/ech0/internal/handler/humares"
 	"github.com/lin-snow/ech0/internal/job"
+	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	jobModel "github.com/lin-snow/ech0/internal/model/job"
 )
 
@@ -48,6 +48,9 @@ type (
 	CancelReindexInput struct{}
 )
 
+// ReindexOutput 重建索引状态输出。
+type ReindexOutput = commonModel.Result[ReindexStatusResponse]
+
 func mapJobToReindexStatus(jb jobModel.Job) ReindexStatusResponse {
 	resp := ReindexStatusResponse{
 		Status:     string(jb.Status),
@@ -63,36 +66,36 @@ func mapJobToReindexStatus(jb jobModel.Job) ReindexStatusResponse {
 }
 
 // Reindex 提交一次全量向量索引回填作业（管理员）；起即返回，不阻塞。
-func (embeddingHandler *EmbeddingHandler) Reindex(ctx context.Context, _ *ReindexInput) (*humares.Envelope[ReindexStatusResponse], error) {
+func (embeddingHandler *EmbeddingHandler) Reindex(ctx context.Context, _ *ReindexInput) (ReindexOutput, error) {
 	jb, err := embeddingHandler.jobManager.Submit(ctx, jobModel.TypeReindex, nil)
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return ReindexOutput{}, err
 	}
-	return humares.OK(ctx, mapJobToReindexStatus(jb)), nil
+	return commonModel.OK(mapJobToReindexStatus(jb)), nil
 }
 
 // ReindexStatus 查询重建索引作业状态（前端按 type 轮询，无需 id）。
 // 查无作业行时合成 idle，供前端判断「无进行中重建」。
-func (embeddingHandler *EmbeddingHandler) ReindexStatus(ctx context.Context, _ *ReindexStatusInput) (*humares.Envelope[ReindexStatusResponse], error) {
+func (embeddingHandler *EmbeddingHandler) ReindexStatus(ctx context.Context, _ *ReindexStatusInput) (ReindexOutput, error) {
 	jb, err := embeddingHandler.jobManager.Get(ctx, jobModel.TypeReindex)
 	if errors.Is(err, job.ErrNotFound) {
-		return humares.OK(ctx, ReindexStatusResponse{Status: reindexStatusIdle}), nil
+		return commonModel.OK(ReindexStatusResponse{Status: reindexStatusIdle}), nil
 	}
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return ReindexOutput{}, err
 	}
-	return humares.OK(ctx, mapJobToReindexStatus(jb)), nil
+	return commonModel.OK(mapJobToReindexStatus(jb)), nil
 }
 
 // CancelReindex 取消进行中的重建索引作业；返回最新状态（前端轮询收敛到 cancelled）。
-func (embeddingHandler *EmbeddingHandler) CancelReindex(ctx context.Context, _ *CancelReindexInput) (*humares.Envelope[ReindexStatusResponse], error) {
+func (embeddingHandler *EmbeddingHandler) CancelReindex(ctx context.Context, _ *CancelReindexInput) (ReindexOutput, error) {
 	_ = embeddingHandler.jobManager.Cancel(jobModel.TypeReindex)
 	jb, err := embeddingHandler.jobManager.Get(ctx, jobModel.TypeReindex)
 	if errors.Is(err, job.ErrNotFound) {
-		return humares.OK(ctx, ReindexStatusResponse{Status: reindexStatusIdle}), nil
+		return commonModel.OK(ReindexStatusResponse{Status: reindexStatusIdle}), nil
 	}
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return ReindexOutput{}, err
 	}
-	return humares.OK(ctx, mapJobToReindexStatus(jb)), nil
+	return commonModel.OK(mapJobToReindexStatus(jb)), nil
 }

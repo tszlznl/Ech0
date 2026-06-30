@@ -12,7 +12,7 @@ import (
 
 // registerInitHuma 注册系统初始化路由（公开，无鉴权）。
 func registerInitHuma(api huma.API, h *handler.Bundle) {
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "init-status",
 		Method:      http.MethodGet,
 		Path:        "/init/status",
@@ -21,7 +21,7 @@ func registerInitHuma(api huma.API, h *handler.Bundle) {
 		Tags:        []string{"Init"},
 	}, h.InitHandler.GetInitStatus)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "init-owner",
 		Method:      http.MethodPost,
 		Path:        "/init/owner",

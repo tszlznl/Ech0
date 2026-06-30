@@ -42,11 +42,11 @@ func registerMigrationHuma(api huma.API, h *handler.Bundle, revoker authService.
 		return o
 	}
 
-	huma.Register(api, register("migration-start", http.MethodPost, "/migration/start", "启动全局数据迁移"), h.MigrationHandler.StartMigration)
-	huma.Register(api, register("migration-status", http.MethodGet, "/migration/status", "查询全局迁移状态"), h.MigrationHandler.GetMigrationStatus)
-	huma.Register(api, register("migration-cancel", http.MethodPost, "/migration/cancel", "取消进行中的全局迁移"), h.MigrationHandler.CancelMigration)
-	huma.Register(api, register("migration-cleanup", http.MethodPost, "/migration/cleanup", "清理迁移中间产物"), h.MigrationHandler.CleanupMigration)
-	huma.Register(api, register("migration-export", http.MethodPost, "/migration/export", "提交导出作业"), h.MigrationHandler.StartExport)
-	huma.Register(api, register("migration-export-status", http.MethodGet, "/migration/export/status", "查询导出作业状态"), h.MigrationHandler.GetExportStatus)
-	huma.Register(api, register("migration-export-cancel", http.MethodPost, "/migration/export/cancel", "取消导出作业"), h.MigrationHandler.CancelExport)
+	reg(api, register("migration-start", http.MethodPost, "/migration/start", "启动全局数据迁移"), h.MigrationHandler.StartMigration)
+	reg(api, register("migration-status", http.MethodGet, "/migration/status", "查询全局迁移状态"), h.MigrationHandler.GetMigrationStatus)
+	reg(api, register("migration-cancel", http.MethodPost, "/migration/cancel", "取消进行中的全局迁移"), h.MigrationHandler.CancelMigration)
+	reg(api, register("migration-cleanup", http.MethodPost, "/migration/cleanup", "清理迁移中间产物"), h.MigrationHandler.CleanupMigration)
+	reg(api, register("migration-export", http.MethodPost, "/migration/export", "提交导出作业"), h.MigrationHandler.StartExport)
+	reg(api, register("migration-export-status", http.MethodGet, "/migration/export/status", "查询导出作业状态"), h.MigrationHandler.GetExportStatus)
+	reg(api, register("migration-export-cancel", http.MethodPost, "/migration/export/cancel", "取消导出作业"), h.MigrationHandler.CancelExport)
 }

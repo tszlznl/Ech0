@@ -22,32 +22,15 @@ type Envelope[T any] struct {
 	Body commonModel.Result[T]
 }
 
-// OK 构造成功响应。按 message 推导 message_key 并本地化 msg，与 response.Execute 成功路径一致；
-// 前端仍可凭 message_key 自行渲染。localizer 由 injectLocalizer 注入到 ctx。
-func OK[T any](ctx context.Context, data T, messages ...string) *Envelope[T] {
-	return &Envelope[T]{Body: localizeResult(ctx, commonModel.OK(data, messages...))}
-}
-
-// OKWithCode 同 OK，但允许自定义业务 code（对应 response.Execute 的 res.Code != 0 分支）。
-func OKWithCode[T any](ctx context.Context, data T, code int, messages ...string) *Envelope[T] {
-	return &Envelope[T]{Body: localizeResult(ctx, commonModel.OKWithCode(data, code, messages...))}
-}
-
-// OKKeyed 用于 handler 显式指定 message_key（而非由消息文本推导）的成功响应，
-// 对应旧 res.Response{MessageKey: ...} 的场景。
-func OKKeyed[T any](ctx context.Context, data T, msg, messageKey string, params map[string]any) *Envelope[T] {
-	body := commonModel.OK(data, msg)
-	body.MessageKey = messageKey
-	body.MessageParams = params
-	if messageKey != "" {
-		body.Message = i18nUtil.Localize(localizerFrom(ctx), messageKey, body.Message, params)
-	}
-	return &Envelope[T]{Body: body}
-}
-
-// localizeResult 为成功信封补齐 message_key 并本地化 msg。
+// localizeResult 为成功信封补齐 message_key 并本地化 msg。由 Wrap 调用。
+//
+// 仅当 MessageKey 为空时才由 message 文本推导——这样 handler 可在 Result 上**预设**
+// message_key（如 dashboard GetSystemLogs），不会被覆盖；绝大多数端点 MessageKey 为空，
+// 行为与重构前一致（按 message 文本推导后本地化）。
 func localizeResult[T any](ctx context.Context, body commonModel.Result[T]) commonModel.Result[T] {
-	body.MessageKey = commonModel.MessageKeyFromMessage(body.Message)
+	if body.MessageKey == "" {
+		body.MessageKey = commonModel.MessageKeyFromMessage(body.Message)
+	}
 	if body.MessageKey != "" {
 		body.Message = i18nUtil.Localize(localizerFrom(ctx), body.MessageKey, body.Message, body.MessageParams)
 	}

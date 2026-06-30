@@ -11,7 +11,6 @@ import (
 	"context"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lin-snow/ech0/internal/handler/humares"
 	res "github.com/lin-snow/ech0/internal/handler/response"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	service "github.com/lin-snow/ech0/internal/service/file"
@@ -55,68 +54,76 @@ type (
 	}
 )
 
+type ( // 输出
+	FileListOutput = commonModel.Result[commonModel.FileListResultDto]
+	FileTreeOutput = commonModel.Result[commonModel.FileTreeResultDto]
+	FileOutput     = commonModel.Result[commonModel.FileDto]
+	PresignOutput  = commonModel.Result[commonModel.PresignDto]
+	EmptyOutput    = commonModel.Result[any]
+)
+
 // ListFiles 分页获取文件列表（file:read）。
-func (fileHandler *FileHandler) ListFiles(ctx context.Context, in *ListFilesInput) (*humares.Envelope[commonModel.FileListResultDto], error) {
+func (fileHandler *FileHandler) ListFiles(ctx context.Context, in *ListFilesInput) (FileListOutput, error) {
 	query := commonModel.FileListQueryDto{Page: in.Page, PageSize: in.PageSize, Search: in.Search, StorageType: in.StorageType}
 	result, err := fileHandler.fileService.ListFiles(ctx, query)
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return FileListOutput{}, err
 	}
-	return humares.OK(ctx, result), nil
+	return commonModel.OK(result), nil
 }
 
 // ListFileTree 按存储类型/前缀返回文件树（file:read）。
-func (fileHandler *FileHandler) ListFileTree(ctx context.Context, in *ListFileTreeInput) (*humares.Envelope[commonModel.FileTreeResultDto], error) {
+func (fileHandler *FileHandler) ListFileTree(ctx context.Context, in *ListFileTreeInput) (FileTreeOutput, error) {
 	query := commonModel.FileTreeQueryDto{StorageType: in.StorageType, Prefix: in.Prefix}
 	result, err := fileHandler.fileService.ListFileTree(ctx, query)
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return FileTreeOutput{}, err
 	}
-	return humares.OK(ctx, result), nil
+	return commonModel.OK(result), nil
 }
 
 // GetFileByID 获取单个文件的元信息（file:read）。
-func (fileHandler *FileHandler) GetFileByID(ctx context.Context, in *GetFileByIDInput) (*humares.Envelope[commonModel.FileDto], error) {
+func (fileHandler *FileHandler) GetFileByID(ctx context.Context, in *GetFileByIDInput) (FileOutput, error) {
 	fileDto, err := fileHandler.fileService.GetFileByID(ctx, in.ID)
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return FileOutput{}, err
 	}
-	return humares.OK(ctx, fileDto), nil
+	return commonModel.OK(fileDto), nil
 }
 
 // UpdateFileMeta 更新对象存储文件元信息（file:write，用于预签名直传完成后回填 size/width/height）。
-func (fileHandler *FileHandler) UpdateFileMeta(ctx context.Context, in *UpdateFileMetaInput) (*humares.Envelope[commonModel.FileDto], error) {
+func (fileHandler *FileHandler) UpdateFileMeta(ctx context.Context, in *UpdateFileMetaInput) (FileOutput, error) {
 	fileDto, err := fileHandler.fileService.UpdateFileMeta(ctx, in.ID, in.Body)
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return FileOutput{}, err
 	}
-	return humares.OK(ctx, fileDto), nil
+	return commonModel.OK(fileDto), nil
 }
 
 // CreateExternalFile 登记一个外链文件（file:write）。
-func (fileHandler *FileHandler) CreateExternalFile(ctx context.Context, in *CreateExternalFileInput) (*humares.Envelope[commonModel.FileDto], error) {
+func (fileHandler *FileHandler) CreateExternalFile(ctx context.Context, in *CreateExternalFileInput) (FileOutput, error) {
 	fileDto, err := fileHandler.fileService.CreateExternalFile(ctx, in.Body)
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return FileOutput{}, err
 	}
-	return humares.OK(ctx, fileDto, commonModel.UPLOAD_SUCCESS), nil
+	return commonModel.OK(fileDto, commonModel.UPLOAD_SUCCESS), nil
 }
 
 // DeleteFile 删除文件（file:write）。
-func (fileHandler *FileHandler) DeleteFile(ctx context.Context, in *DeleteFileInput) (*humares.Envelope[any], error) {
+func (fileHandler *FileHandler) DeleteFile(ctx context.Context, in *DeleteFileInput) (EmptyOutput, error) {
 	if err := fileHandler.fileService.DeleteFile(ctx, in.ID); err != nil {
-		return nil, humares.Err(ctx, err)
+		return EmptyOutput{}, err
 	}
-	return humares.OK[any](ctx, nil, commonModel.DELETE_SUCCESS), nil
+	return commonModel.OK[any](nil, commonModel.DELETE_SUCCESS), nil
 }
 
 // GetFilePresignURL 获取对象存储直传预签名 URL（file:write）。
-func (fileHandler *FileHandler) GetFilePresignURL(ctx context.Context, in *GetFilePresignURLInput) (*humares.Envelope[commonModel.PresignDto], error) {
+func (fileHandler *FileHandler) GetFilePresignURL(ctx context.Context, in *GetFilePresignURLInput) (PresignOutput, error) {
 	presignDto, err := fileHandler.fileService.GetFilePresignURL(ctx, &in.Body)
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return PresignOutput{}, err
 	}
-	return humares.OK(ctx, presignDto, commonModel.GET_S3_PRESIGN_URL_SUCCESS), nil
+	return commonModel.OK(presignDto, commonModel.GET_S3_PRESIGN_URL_SUCCESS), nil
 }
 
 // --- 以下为非 JSON 端点，仍走裸 gin（multipart 上传 / 二进制流式下载） ---

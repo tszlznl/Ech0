@@ -22,7 +22,7 @@ func registerEmbeddingHuma(api huma.API, h *handler.Bundle, revoker authService.
 	secured := securedMW(revoker, authModel.ScopeAdminSettings)
 	security := humares.Secured(authModel.ScopeAdminSettings)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "embedding-reindex",
 		Method:      http.MethodPost,
 		Path:        "/embedding/reindex",
@@ -33,7 +33,7 @@ func registerEmbeddingHuma(api huma.API, h *handler.Bundle, revoker authService.
 		Middlewares: secured,
 	}, h.EmbeddingHandler.Reindex)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "embedding-reindex-status",
 		Method:      http.MethodGet,
 		Path:        "/embedding/reindex/status",
@@ -44,7 +44,7 @@ func registerEmbeddingHuma(api huma.API, h *handler.Bundle, revoker authService.
 		Middlewares: secured,
 	}, h.EmbeddingHandler.ReindexStatus)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "embedding-reindex-cancel",
 		Method:      http.MethodPost,
 		Path:        "/embedding/reindex/cancel",

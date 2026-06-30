@@ -29,7 +29,7 @@ func registerDashboardHuma(api huma.API, h *handler.Bundle, revoker authService.
 	sec := humares.Secured(authModel.ScopeAdminSettings)
 	mw := securedMW(revoker, authModel.ScopeAdminSettings)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "dashboard-check-update",
 		Method:      http.MethodGet,
 		Path:        "/system/check-update",
@@ -39,7 +39,7 @@ func registerDashboardHuma(api huma.API, h *handler.Bundle, revoker authService.
 		Middlewares: mw,
 	}, h.DashboardHandler.CheckUpdate)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "dashboard-system-logs",
 		Method:      http.MethodGet,
 		Path:        "/system/logs",
@@ -49,7 +49,7 @@ func registerDashboardHuma(api huma.API, h *handler.Bundle, revoker authService.
 		Middlewares: mw,
 	}, h.DashboardHandler.GetSystemLogs)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "dashboard-visitor-stats",
 		Method:      http.MethodGet,
 		Path:        "/system/visitor-stats",

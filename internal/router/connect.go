@@ -16,7 +16,7 @@ import (
 // registerConnectHuma 注册实例互联（Connect）路由。
 func registerConnectHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
 	// 公开读
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "connect-self",
 		Method:      http.MethodGet,
 		Path:        "/connect",
@@ -24,7 +24,7 @@ func registerConnectHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Connect"},
 	}, h.ConnectHandler.GetConnect)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "connect-list",
 		Method:      http.MethodGet,
 		Path:        "/connect/list",
@@ -32,7 +32,7 @@ func registerConnectHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Connect"},
 	}, h.ConnectHandler.GetConnects)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "connect-info",
 		Method:      http.MethodGet,
 		Path:        "/connects/info",
@@ -41,7 +41,7 @@ func registerConnectHuma(api huma.API, h *handler.Bundle, revoker authService.To
 	}, h.ConnectHandler.GetConnectsInfo)
 
 	// 鉴权 + scope
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "connect-health",
 		Method:      http.MethodGet,
 		Path:        "/connects/health",
@@ -51,7 +51,7 @@ func registerConnectHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Middlewares: securedMW(revoker, authModel.ScopeConnectRead),
 	}, h.ConnectHandler.GetConnectsHealth)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "connect-add",
 		Method:      http.MethodPost,
 		Path:        "/connects",
@@ -61,7 +61,7 @@ func registerConnectHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Middlewares: securedMW(revoker, authModel.ScopeConnectWrite),
 	}, h.ConnectHandler.AddConnect)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "connect-delete",
 		Method:      http.MethodDelete,
 		Path:        "/connects/{id}",

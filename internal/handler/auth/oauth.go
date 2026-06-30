@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lin-snow/ech0/internal/handler/humares"
 	res "github.com/lin-snow/ech0/internal/handler/response"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
@@ -26,6 +25,11 @@ type (
 	GetOAuthInfoInput struct {
 		Provider string `query:"provider" doc:"OAuth2 提供商，默认 github"`
 	}
+)
+
+type ( // 输出（OAuth）
+	OAuthBindOutput = commonModel.Result[string]
+	OAuthInfoOutput = commonModel.Result[userModel.OAuthInfoDto]
 )
 
 func normalizeOAuthProvider(provider string) (string, bool) {
@@ -114,16 +118,16 @@ func (h *AuthHandler) OAuthCallback() gin.HandlerFunc {
 //	@Success		200			{object}	handler.Response			"绑定 URL"
 //	@Failure		200			{object}	handler.Response			"参数无效或绑定失败"
 //	@Router			/oauth/{provider}/bind [post]
-func (h *AuthHandler) OAuthBind(ctx context.Context, in *OAuthBindInput) (*humares.Envelope[string], error) {
+func (h *AuthHandler) OAuthBind(ctx context.Context, in *OAuthBindInput) (OAuthBindOutput, error) {
 	provider, ok := normalizeOAuthProvider(in.Provider)
 	if !ok {
-		return nil, humares.Err(ctx, commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, commonModel.INVALID_PARAMS))
+		return OAuthBindOutput{}, commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, commonModel.INVALID_PARAMS)
 	}
 	bindURL, err := h.authService.BindOAuth(ctx, provider, in.Body.RedirectURI)
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return OAuthBindOutput{}, err
 	}
-	return humares.OK(ctx, bindURL, commonModel.GET_OAUTH_BINGURL_SUCCESS), nil
+	return commonModel.OK(bindURL, commonModel.GET_OAUTH_BINGURL_SUCCESS), nil
 }
 
 // GetOAuthInfo 获取当前用户的 OAuth2 绑定信息
@@ -135,7 +139,7 @@ func (h *AuthHandler) OAuthBind(ctx context.Context, in *OAuthBindInput) (*humar
 //	@Param			provider	query		string				false	"OAuth2 提供商，默认 github"
 //	@Success		200			{object}	handler.Response	"OAuth2 绑定信息"
 //	@Router			/oauth/info [get]
-func (h *AuthHandler) GetOAuthInfo(ctx context.Context, in *GetOAuthInfoInput) (*humares.Envelope[userModel.OAuthInfoDto], error) {
+func (h *AuthHandler) GetOAuthInfo(ctx context.Context, in *GetOAuthInfoInput) (OAuthInfoOutput, error) {
 	provider := in.Provider
 	switch provider {
 	case string(commonModel.OAuth2GITHUB),
@@ -148,7 +152,7 @@ func (h *AuthHandler) GetOAuthInfo(ctx context.Context, in *GetOAuthInfoInput) (
 
 	// 与旧实现一致：忽略查询错误，返回（可能为空的）绑定信息。
 	oauthInfo, _ := h.authService.GetOAuthInfo(ctx, provider)
-	return humares.OK(ctx, oauthInfo, commonModel.GET_OAUTH_INFO_SUCCESS), nil
+	return commonModel.OK(oauthInfo, commonModel.GET_OAUTH_INFO_SUCCESS), nil
 }
 
 func (h *AuthHandler) BindGitHub() gin.HandlerFunc {

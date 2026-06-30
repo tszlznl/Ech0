@@ -16,7 +16,7 @@ import (
 // 注意：RSS / robots.txt / sitemap.xml / healthz 是非 JSON（XML/纯文本）输出，
 // 仍由 setupResourceRoutes 走裸 gin，不在此迁移。
 func registerCommonHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "common-heatmap",
 		Method:      http.MethodGet,
 		Path:        "/heatmap",
@@ -24,7 +24,7 @@ func registerCommonHuma(api huma.API, h *handler.Bundle, revoker authService.Tok
 		Tags:        []string{"Common"},
 	}, h.CommonHandler.GetHeatMap)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "common-hello",
 		Method:      http.MethodGet,
 		Path:        "/hello",
@@ -32,7 +32,7 @@ func registerCommonHuma(api huma.API, h *handler.Bundle, revoker authService.Tok
 		Tags:        []string{"Common"},
 	}, h.CommonHandler.HelloEch0)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "common-website-title",
 		Method:      http.MethodGet,
 		Path:        "/website/title",

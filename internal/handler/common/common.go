@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lin-snow/ech0/internal/handler/humares"
 	res "github.com/lin-snow/ech0/internal/handler/response"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	service "github.com/lin-snow/ech0/internal/service/common"
@@ -39,6 +38,12 @@ type (
 	}
 )
 
+type ( // 输出
+	HeatmapOutput = commonModel.Result[[]commonModel.Heatmap]
+	HelloOutput   = commonModel.Result[HelloResponse]
+	StringOutput  = commonModel.Result[string]
+)
+
 type CommonHandler struct {
 	commonService service.Service
 }
@@ -61,13 +66,12 @@ func NewCommonHandler(commonService service.Service) *CommonHandler {
 	}
 }
 
-func (commonHandler *CommonHandler) GetHeatMap(ctx context.Context, in *GetHeatMapInput) (*humares.Envelope[[]commonModel.Heatmap], error) {
-	timezone := timezoneUtil.NormalizeTimezone(in.Timezone)
-	heatMap, err := commonHandler.commonService.GetHeatMap(timezone)
+func (commonHandler *CommonHandler) GetHeatMap(ctx context.Context, in *GetHeatMapInput) (HeatmapOutput, error) {
+	heatMap, err := commonHandler.commonService.GetHeatMap(timezoneUtil.NormalizeTimezone(in.Timezone))
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return HeatmapOutput{}, err
 	}
-	return humares.OK(ctx, heatMap, commonModel.GET_HEATMAP_SUCCESS), nil
+	return commonModel.OK(heatMap, commonModel.GET_HEATMAP_SUCCESS), nil
 }
 
 func (commonHandler *CommonHandler) GetRss(ctx *gin.Context) {
@@ -94,7 +98,7 @@ func (commonHandler *CommonHandler) GetRss(ctx *gin.Context) {
 	ctx.Data(http.StatusOK, contentType, []byte(atom))
 }
 
-func (commonHandler *CommonHandler) HelloEch0(ctx context.Context, _ *HelloInput) (*humares.Envelope[HelloResponse], error) {
+func (commonHandler *CommonHandler) HelloEch0(ctx context.Context, _ *HelloInput) (HelloOutput, error) {
 	// 扁平化 version 信息（version/commit/build_time/license/author/repo_url）到顶层，
 	// 前端 About 页直接读取，作为单一信息源。
 	hello := HelloResponse{
@@ -102,7 +106,7 @@ func (commonHandler *CommonHandler) HelloEch0(ctx context.Context, _ *HelloInput
 		Copyright: versionPkg.Copyright(),
 		Info:      versionPkg.Get(),
 	}
-	return humares.OK(ctx, hello, commonModel.GET_HELLO_SUCCESS), nil
+	return commonModel.OK(hello, commonModel.GET_HELLO_SUCCESS), nil
 }
 
 func (commonHandler *CommonHandler) Healthz() gin.HandlerFunc {
@@ -120,12 +124,12 @@ func (commonHandler *CommonHandler) Healthz() gin.HandlerFunc {
 	})
 }
 
-func (commonHandler *CommonHandler) GetWebsiteTitle(ctx context.Context, in *GetWebsiteTitleInput) (*humares.Envelope[string], error) {
+func (commonHandler *CommonHandler) GetWebsiteTitle(ctx context.Context, in *GetWebsiteTitleInput) (StringOutput, error) {
 	title, err := commonHandler.commonService.GetWebsiteTitle(in.WebsiteURL)
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return StringOutput{}, err
 	}
-	return humares.OK(ctx, title, commonModel.GET_WEBSITE_TITLE_SUCCESS), nil
+	return commonModel.OK(title, commonModel.GET_WEBSITE_TITLE_SUCCESS), nil
 }
 
 func resolveBaseURL(ctx *gin.Context) string {

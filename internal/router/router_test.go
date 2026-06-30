@@ -4,6 +4,7 @@
 package router
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -67,6 +68,44 @@ func TestSetupRouter_RegistersKeyRoutes(t *testing.T) {
 		if !containsRoute(routes, expected.method, expected.path) {
 			t.Fatalf("expected route missing: %s %s", expected.method, expected.path)
 		}
+	}
+}
+
+// TestSetupRouter_EnvelopeContract 锁住 Huma 端点的响应信封契约：handler 返回
+// commonModel.Result（自带成功提示），经外挂的 humares.Wrap 套成 Envelope。验证重构后
+// 线上形态仍是 { code, msg, data }（handler 自身不认识 Huma）。
+//
+// 用 /api/hello：公开、不碰 DB，且其成功文案不映射 i18n key（localizeResult 推导出空 key 后
+// 跳过翻译），故不依赖测试环境里未初始化的 i18n bundle，断言稳定。
+func TestSetupRouter_EnvelopeContract(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	initTestDatabase(t)
+	engine := gin.New()
+	SetupRouter(engine, buildTestHandlers(), buildTestMWDeps())
+
+	req := httptest.NewRequest(http.MethodGet, "/api/hello", nil)
+	rec := httptest.NewRecorder()
+	engine.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d (body=%s)", rec.Code, rec.Body.String())
+	}
+	var body struct {
+		Code int            `json:"code"`
+		Msg  string         `json:"msg"`
+		Data map[string]any `json:"data"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode envelope failed: %v (body=%s)", err, rec.Body.String())
+	}
+	if body.Code != 1 {
+		t.Fatalf("expected success code=1, got %d", body.Code)
+	}
+	if body.Msg == "" {
+		t.Fatalf("expected non-empty msg, got empty")
+	}
+	if body.Data["hello"] == nil {
+		t.Fatalf("expected data.hello carried through envelope, got data=%v", body.Data)
 	}
 }
 

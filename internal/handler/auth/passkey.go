@@ -10,7 +10,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/lin-snow/ech0/internal/config"
-	"github.com/lin-snow/ech0/internal/handler/humares"
 	res "github.com/lin-snow/ech0/internal/handler/response"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
@@ -27,6 +26,11 @@ type (
 		ID   string `path:"id" format:"uuid" doc:"Passkey 设备 ID（UUID）"`
 		Body authModel.PasskeyUpdateDeviceNameReq
 	}
+)
+
+type ( // 输出（Passkey）
+	PasskeyListOutput = commonModel.Result[[]authModel.PasskeyDeviceDto]
+	EmptyOutput       = commonModel.Result[any]
 )
 
 func (h *AuthHandler) getPasskeyOriginAndRPID(ctx *gin.Context) (origin string, rpID string) {
@@ -261,12 +265,12 @@ func (h *AuthHandler) PasskeyRegisterFinish() gin.HandlerFunc {
 //	@Success		200	{object}	handler.Response{data=[]model.PasskeyDeviceDto}	"获取成功"
 //	@Failure		200	{object}	handler.Response								"获取失败"
 //	@Router			/passkeys [get]
-func (h *AuthHandler) ListPasskeys(ctx context.Context, _ *ListPasskeysInput) (*humares.Envelope[[]authModel.PasskeyDeviceDto], error) {
+func (h *AuthHandler) ListPasskeys(ctx context.Context, _ *ListPasskeysInput) (PasskeyListOutput, error) {
 	devs, err := h.authService.ListPasskeys(ctx)
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return PasskeyListOutput{}, err
 	}
-	return humares.OK(ctx, devs), nil
+	return commonModel.OK(devs), nil
 }
 
 // DeletePasskey 删除指定的 Passkey 设备
@@ -279,11 +283,11 @@ func (h *AuthHandler) ListPasskeys(ctx context.Context, _ *ListPasskeysInput) (*
 //	@Success		200	{object}	handler.Response	"删除成功"
 //	@Failure		200	{object}	handler.Response	"删除失败"
 //	@Router			/passkeys/{id} [delete]
-func (h *AuthHandler) DeletePasskey(ctx context.Context, in *PasskeyIDInput) (*humares.Envelope[any], error) {
+func (h *AuthHandler) DeletePasskey(ctx context.Context, in *PasskeyIDInput) (EmptyOutput, error) {
 	if err := h.authService.DeletePasskey(ctx, in.ID); err != nil {
-		return nil, humares.Err(ctx, err)
+		return EmptyOutput{}, err
 	}
-	return humares.OK[any](ctx, nil), nil
+	return commonModel.OK[any](nil), nil
 }
 
 // UpdatePasskeyDeviceName 更新 Passkey 设备名称
@@ -298,9 +302,9 @@ func (h *AuthHandler) DeletePasskey(ctx context.Context, in *PasskeyIDInput) (*h
 //	@Success		200		{object}	handler.Response					"更新成功"
 //	@Failure		200		{object}	handler.Response					"更新失败"
 //	@Router			/passkeys/{id} [put]
-func (h *AuthHandler) UpdatePasskeyDeviceName(ctx context.Context, in *UpdatePasskeyNameInput) (*humares.Envelope[any], error) {
+func (h *AuthHandler) UpdatePasskeyDeviceName(ctx context.Context, in *UpdatePasskeyNameInput) (EmptyOutput, error) {
 	if err := h.authService.UpdatePasskeyDeviceName(ctx, in.ID, in.Body.DeviceName); err != nil {
-		return nil, humares.Err(ctx, err)
+		return EmptyOutput{}, err
 	}
-	return humares.OK[any](ctx, nil), nil
+	return commonModel.OK[any](nil), nil
 }

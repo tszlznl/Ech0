@@ -41,7 +41,7 @@ func registerFileHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 	readMW := securedMW(revoker, authModel.ScopeFileRead)
 	writeMW := securedMW(revoker, authModel.ScopeFileWrite)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "file-list",
 		Method:      http.MethodGet,
 		Path:        "/files",
@@ -51,7 +51,7 @@ func registerFileHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Middlewares: readMW,
 	}, h.FileHandler.ListFiles)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "file-tree",
 		Method:      http.MethodGet,
 		Path:        "/file/tree",
@@ -61,7 +61,7 @@ func registerFileHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Middlewares: readMW,
 	}, h.FileHandler.ListFileTree)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "file-get",
 		Method:      http.MethodGet,
 		Path:        "/file/{id}",
@@ -71,7 +71,7 @@ func registerFileHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Middlewares: readMW,
 	}, h.FileHandler.GetFileByID)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "file-update-meta",
 		Method:      http.MethodPut,
 		Path:        "/file/{id}/meta",
@@ -81,7 +81,7 @@ func registerFileHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Middlewares: writeMW,
 	}, h.FileHandler.UpdateFileMeta)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "file-external",
 		Method:      http.MethodPost,
 		Path:        "/files/external",
@@ -91,7 +91,7 @@ func registerFileHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Middlewares: writeMW,
 	}, h.FileHandler.CreateExternalFile)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "file-delete",
 		Method:      http.MethodDelete,
 		Path:        "/file/{id}",
@@ -101,7 +101,7 @@ func registerFileHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Middlewares: writeMW,
 	}, h.FileHandler.DeleteFile)
 
-	huma.Register(api, huma.Operation{
+	reg(api, huma.Operation{
 		OperationID: "file-presign",
 		Method:      http.MethodPut,
 		Path:        "/files/presign",

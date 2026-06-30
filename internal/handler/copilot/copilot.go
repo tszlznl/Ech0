@@ -9,7 +9,6 @@ import (
 	"context"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lin-snow/ech0/internal/handler/humares"
 	i18n "github.com/lin-snow/ech0/internal/i18n"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	copilotService "github.com/lin-snow/ech0/internal/service/copilot"
@@ -31,36 +30,42 @@ func NewCopilotHandler(
 	}
 }
 
-type (
+type ( // 输入
 	GetRecentInput    struct{}
 	GetSessionInput   struct{}
 	ClearSessionInput struct{}
 )
 
+type ( // 输出
+	RecentOutput  = commonModel.Result[string]
+	SessionOutput = commonModel.Result[[]copilotService.ChatMessage]
+	EmptyOutput   = commonModel.Result[any]
+)
+
 // GetRecent 返回作者近况的 AI 总结（公开）。
-func (h *CopilotHandler) GetRecent(ctx context.Context, _ *GetRecentInput) (*humares.Envelope[string], error) {
+func (h *CopilotHandler) GetRecent(ctx context.Context, _ *GetRecentInput) (RecentOutput, error) {
 	gen, err := h.summaryService.GetRecent(ctx)
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return RecentOutput{}, err
 	}
-	return humares.OK(ctx, gen, commonModel.AGENT_GET_RECENT_SUCCESS), nil
+	return commonModel.OK(gen, commonModel.AGENT_GET_RECENT_SUCCESS), nil
 }
 
 // GetSession 返回当前登录用户的持久化 Chat 会话（admin:settings）。
-func (h *CopilotHandler) GetSession(ctx context.Context, _ *GetSessionInput) (*humares.Envelope[[]copilotService.ChatMessage], error) {
+func (h *CopilotHandler) GetSession(ctx context.Context, _ *GetSessionInput) (SessionOutput, error) {
 	session, err := h.chatService.GetSession(ctx)
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return SessionOutput{}, err
 	}
-	return humares.OK(ctx, session, commonModel.CHAT_SESSION_GET_SUCCESS), nil
+	return commonModel.OK(session, commonModel.CHAT_SESSION_GET_SUCCESS), nil
 }
 
 // ClearSession 删除当前登录用户的持久化 Chat 会话（admin:settings，不可恢复）。
-func (h *CopilotHandler) ClearSession(ctx context.Context, _ *ClearSessionInput) (*humares.Envelope[any], error) {
+func (h *CopilotHandler) ClearSession(ctx context.Context, _ *ClearSessionInput) (EmptyOutput, error) {
 	if err := h.chatService.ClearSession(ctx); err != nil {
-		return nil, humares.Err(ctx, err)
+		return EmptyOutput{}, err
 	}
-	return humares.OK[any](ctx, nil, commonModel.CHAT_SESSION_CLEAR_SUCCESS), nil
+	return commonModel.OK[any](nil, commonModel.CHAT_SESSION_CLEAR_SUCCESS), nil
 }
 
 type askRequest struct {

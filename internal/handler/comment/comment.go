@@ -15,7 +15,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lin-snow/ech0/internal/handler/humares"
 	model "github.com/lin-snow/ech0/internal/model/comment"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	service "github.com/lin-snow/ech0/internal/service/comment"
@@ -115,56 +114,66 @@ type (
 	}
 )
 
+type ( // 输出
+	FormMetaOutput       = commonModel.Result[model.FormMeta]
+	PublicCommentsOutput = commonModel.Result[[]model.PublicComment]
+	CreateCommentOutput  = commonModel.Result[model.CreateCommentResult]
+	PanelCommentsOutput  = commonModel.Result[model.PageResult[model.Comment]]
+	CommentOutput        = commonModel.Result[model.Comment]
+	CommentSettingOutput = commonModel.Result[model.SystemSetting]
+	EmptyOutput          = commonModel.Result[any]
+)
+
 // GetFormMeta 返回评论表单元信息（公开，需 StashMeta + OptionalViewer）。
-func (h *CommentHandler) GetFormMeta(ctx context.Context, _ *GetFormMetaInput) (*humares.Envelope[model.FormMeta], error) {
+func (h *CommentHandler) GetFormMeta(ctx context.Context, _ *GetFormMetaInput) (FormMetaOutput, error) {
 	m := metaFrom(ctx)
 	data, err := h.commentService.GetFormMeta(ctx, m.clientIP, m.baseURL)
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return FormMetaOutput{}, err
 	}
-	return humares.OK(ctx, data), nil
+	return commonModel.OK(data), nil
 }
 
 // ListCommentsByEchoID 按 echo_id 列出公开评论（公开）。
-func (h *CommentHandler) ListCommentsByEchoID(ctx context.Context, in *ListCommentsByEchoInput) (*humares.Envelope[[]model.PublicComment], error) {
+func (h *CommentHandler) ListCommentsByEchoID(ctx context.Context, in *ListCommentsByEchoInput) (PublicCommentsOutput, error) {
 	comments, err := h.commentService.ListPublicByEchoID(ctx, strings.TrimSpace(in.EchoID))
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return PublicCommentsOutput{}, err
 	}
-	return humares.OK(ctx, comments), nil
+	return commonModel.OK(comments), nil
 }
 
 // ListPublicComments 列出最新公开评论（公开）。
-func (h *CommentHandler) ListPublicComments(ctx context.Context, in *ListPublicCommentsInput) (*humares.Envelope[[]model.PublicComment], error) {
+func (h *CommentHandler) ListPublicComments(ctx context.Context, in *ListPublicCommentsInput) (PublicCommentsOutput, error) {
 	comments, err := h.commentService.ListPublicComments(ctx, in.Limit)
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return PublicCommentsOutput{}, err
 	}
-	return humares.OK(ctx, comments), nil
+	return commonModel.OK(comments), nil
 }
 
 // CreateComment 创建一条公开评论（公开，需 StashMeta + OptionalViewer）。
-func (h *CommentHandler) CreateComment(ctx context.Context, in *CreateCommentInput) (*humares.Envelope[model.CreateCommentResult], error) {
+func (h *CommentHandler) CreateComment(ctx context.Context, in *CreateCommentInput) (CreateCommentOutput, error) {
 	m := metaFrom(ctx)
 	result, err := h.commentService.CreateComment(ctx, m.clientIP, m.userAgent, &in.Body)
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return CreateCommentOutput{}, err
 	}
-	return humares.OK(ctx, result), nil
+	return commonModel.OK(result), nil
 }
 
 // CreateIntegrationComment 经访问令牌（comment:write + integration/mcp-remote 受众）创建评论。
-func (h *CommentHandler) CreateIntegrationComment(ctx context.Context, in *CreateIntegrationCommentInput) (*humares.Envelope[model.CreateCommentResult], error) {
+func (h *CommentHandler) CreateIntegrationComment(ctx context.Context, in *CreateIntegrationCommentInput) (CreateCommentOutput, error) {
 	m := metaFrom(ctx)
 	result, err := h.commentService.CreateIntegrationComment(ctx, m.clientIP, m.userAgent, &in.Body)
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return CreateCommentOutput{}, err
 	}
-	return humares.OK(ctx, result), nil
+	return commonModel.OK(result), nil
 }
 
 // ListPanelComments 管理面板列出评论（comment:moderate）。
-func (h *CommentHandler) ListPanelComments(ctx context.Context, in *ListPanelCommentsInput) (*humares.Envelope[model.PageResult[model.Comment]], error) {
+func (h *CommentHandler) ListPanelComments(ctx context.Context, in *ListPanelCommentsInput) (PanelCommentsOutput, error) {
 	var hot *bool
 	if raw := strings.TrimSpace(in.Hot); raw != "" {
 		if v, err := strconv.ParseBool(raw); err == nil {
@@ -180,75 +189,75 @@ func (h *CommentHandler) ListPanelComments(ctx context.Context, in *ListPanelCom
 		Hot:      hot,
 	})
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return PanelCommentsOutput{}, err
 	}
-	return humares.OK(ctx, data), nil
+	return commonModel.OK(data), nil
 }
 
 // GetCommentByID 获取单条评论（comment:moderate）。
-func (h *CommentHandler) GetCommentByID(ctx context.Context, in *GetCommentByIDInput) (*humares.Envelope[model.Comment], error) {
+func (h *CommentHandler) GetCommentByID(ctx context.Context, in *GetCommentByIDInput) (CommentOutput, error) {
 	data, err := h.commentService.GetCommentByID(ctx, strings.TrimSpace(in.ID))
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return CommentOutput{}, err
 	}
-	return humares.OK(ctx, data), nil
+	return commonModel.OK(data), nil
 }
 
 // UpdateCommentStatus 更新评论审核状态（comment:moderate）。
-func (h *CommentHandler) UpdateCommentStatus(ctx context.Context, in *UpdateCommentStatusInput) (*humares.Envelope[any], error) {
+func (h *CommentHandler) UpdateCommentStatus(ctx context.Context, in *UpdateCommentStatusInput) (EmptyOutput, error) {
 	if err := h.commentService.UpdateCommentStatus(ctx, strings.TrimSpace(in.ID), in.Body.Status); err != nil {
-		return nil, humares.Err(ctx, err)
+		return EmptyOutput{}, err
 	}
-	return humares.OK[any](ctx, nil), nil
+	return commonModel.OK[any](nil), nil
 }
 
 // UpdateCommentHot 置顶/取消置顶评论（comment:moderate）。
-func (h *CommentHandler) UpdateCommentHot(ctx context.Context, in *UpdateCommentHotInput) (*humares.Envelope[any], error) {
+func (h *CommentHandler) UpdateCommentHot(ctx context.Context, in *UpdateCommentHotInput) (EmptyOutput, error) {
 	if err := h.commentService.UpdateCommentHot(ctx, strings.TrimSpace(in.ID), in.Body.Hot); err != nil {
-		return nil, humares.Err(ctx, err)
+		return EmptyOutput{}, err
 	}
-	return humares.OK[any](ctx, nil), nil
+	return commonModel.OK[any](nil), nil
 }
 
 // DeleteComment 删除评论（comment:moderate）。
-func (h *CommentHandler) DeleteComment(ctx context.Context, in *DeleteCommentInput) (*humares.Envelope[any], error) {
+func (h *CommentHandler) DeleteComment(ctx context.Context, in *DeleteCommentInput) (EmptyOutput, error) {
 	if err := h.commentService.DeleteComment(ctx, strings.TrimSpace(in.ID)); err != nil {
-		return nil, humares.Err(ctx, err)
+		return EmptyOutput{}, err
 	}
-	return humares.OK[any](ctx, nil, commonModel.DELETE_SUCCESS), nil
+	return commonModel.OK[any](nil, commonModel.DELETE_SUCCESS), nil
 }
 
 // BatchAction 批量操作评论（comment:moderate）。
-func (h *CommentHandler) BatchAction(ctx context.Context, in *BatchActionInput) (*humares.Envelope[any], error) {
+func (h *CommentHandler) BatchAction(ctx context.Context, in *BatchActionInput) (EmptyOutput, error) {
 	if err := h.commentService.BatchAction(ctx, in.Body.Action, in.Body.IDs); err != nil {
-		return nil, humares.Err(ctx, err)
+		return EmptyOutput{}, err
 	}
-	return humares.OK[any](ctx, nil), nil
+	return commonModel.OK[any](nil), nil
 }
 
 // GetCommentSetting 获取评论系统设置（comment:moderate）。
-func (h *CommentHandler) GetCommentSetting(ctx context.Context, _ *GetCommentSettingInput) (*humares.Envelope[model.SystemSetting], error) {
+func (h *CommentHandler) GetCommentSetting(ctx context.Context, _ *GetCommentSettingInput) (CommentSettingOutput, error) {
 	data, err := h.commentService.GetSystemSetting(ctx)
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return CommentSettingOutput{}, err
 	}
-	return humares.OK(ctx, data), nil
+	return commonModel.OK(data), nil
 }
 
 // UpdateCommentSetting 更新评论系统设置（comment:moderate）。
-func (h *CommentHandler) UpdateCommentSetting(ctx context.Context, in *UpdateCommentSettingInput) (*humares.Envelope[any], error) {
+func (h *CommentHandler) UpdateCommentSetting(ctx context.Context, in *UpdateCommentSettingInput) (EmptyOutput, error) {
 	if err := h.commentService.UpdateSystemSetting(ctx, in.Body); err != nil {
-		return nil, humares.Err(ctx, err)
+		return EmptyOutput{}, err
 	}
-	return humares.OK[any](ctx, nil, commonModel.UPDATE_SETTINGS_SUCCESS), nil
+	return commonModel.OK[any](nil, commonModel.UPDATE_SETTINGS_SUCCESS), nil
 }
 
 // TestCommentEmail 发送测试邮件以验证评论通知配置（comment:moderate）。
-func (h *CommentHandler) TestCommentEmail(ctx context.Context, in *TestCommentEmailInput) (*humares.Envelope[any], error) {
+func (h *CommentHandler) TestCommentEmail(ctx context.Context, in *TestCommentEmailInput) (EmptyOutput, error) {
 	if err := h.commentService.SendTestEmail(ctx, in.Body.Setting); err != nil {
-		return nil, humares.Err(ctx, err)
+		return EmptyOutput{}, err
 	}
-	return humares.OK[any](ctx, nil), nil
+	return commonModel.OK[any](nil), nil
 }
 
 func (h *CommentHandler) attachOptionalViewer(ctx *gin.Context) {

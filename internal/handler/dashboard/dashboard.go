@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lin-snow/ech0/internal/handler/humares"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	service "github.com/lin-snow/ech0/internal/service/dashboard"
 	githubUtil "github.com/lin-snow/ech0/internal/util/github"
@@ -53,33 +52,39 @@ type (
 	}
 )
 
+type ( // 输出
+	CheckUpdateOutput  = commonModel.Result[CheckUpdateResponse]
+	LogsOutput         = commonModel.Result[[]logUtil.LogEntry]
+	VisitorStatsOutput = commonModel.Result[[]visitor.DayStat]
+)
+
 // CheckUpdate 检查 Ech0 版本更新（admin:settings）。
-func (dashboardHandler *DashboardHandler) CheckUpdate(ctx context.Context, _ *CheckUpdateInput) (*humares.Envelope[CheckUpdateResponse], error) {
+func (dashboardHandler *DashboardHandler) CheckUpdate(ctx context.Context, _ *CheckUpdateInput) (CheckUpdateOutput, error) {
 	latestVersion, err := githubUtil.GetLatestVersion()
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return CheckUpdateOutput{}, err
 	}
 
 	cur := semver.Canonical("v" + strings.TrimPrefix(strings.TrimSpace(versionPkg.Version), "v"))
 	lat := semver.Canonical("v" + strings.TrimPrefix(strings.TrimSpace(latestVersion), "v"))
 	hasUpdate := cur != "" && lat != "" && semver.Compare(lat, cur) > 0
 
-	return humares.OK(ctx, CheckUpdateResponse{
+	return commonModel.OK(CheckUpdateResponse{
 		CurrentVersion: versionPkg.Version,
 		LatestVersion:  latestVersion,
 		HasUpdate:      hasUpdate,
 	}), nil
 }
 
-// GetSystemLogs 获取系统历史日志（admin:settings）。
-func (dashboardHandler *DashboardHandler) GetSystemLogs(ctx context.Context, in *GetSystemLogsInput) (*humares.Envelope[[]logUtil.LogEntry], error) {
+// GetSystemLogs 获取系统历史日志（admin:settings）。成功响应预设显式 message_key（localizeResult 不覆盖）。
+func (dashboardHandler *DashboardHandler) GetSystemLogs(ctx context.Context, in *GetSystemLogsInput) (LogsOutput, error) {
 	tail := 200
 	if rawTail := strings.TrimSpace(in.Tail); rawTail != "" {
 		n, err := strconv.Atoi(rawTail)
 		if err != nil || n <= 0 {
-			return nil, humares.Err(ctx, commonModel.NewBizErrorWithMessageKey(
+			return LogsOutput{}, commonModel.NewBizErrorWithMessageKey(
 				commonModel.ErrCodeInvalidQuery, commonModel.INVALID_QUERY_PARAMS, commonModel.MsgKeyDashboardTailBad, nil,
-			))
+			)
 		}
 		tail = n
 	}
@@ -90,14 +95,16 @@ func (dashboardHandler *DashboardHandler) GetSystemLogs(ctx context.Context, in 
 		Keyword: in.Keyword,
 	})
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return LogsOutput{}, err
 	}
-	return humares.OKKeyed(ctx, logs, "获取系统日志成功", commonModel.MsgKeyDashboardLogsOk, nil), nil
+	result := commonModel.OK(logs, "获取系统日志成功")
+	result.MessageKey = commonModel.MsgKeyDashboardLogsOk
+	return result, nil
 }
 
-// GetVisitorStats 获取近七天访客统计（admin:settings）。
-func (dashboardHandler *DashboardHandler) GetVisitorStats(ctx context.Context, _ *GetVisitorStatsInput) (*humares.Envelope[[]visitor.DayStat], error) {
-	return humares.OK(ctx, dashboardHandler.dashboardService.GetVisitorStats()), nil
+// GetVisitorStats 获取近七天访客统计（admin:settings）。service 无 error 返回，故补 nil。
+func (dashboardHandler *DashboardHandler) GetVisitorStats(ctx context.Context, _ *GetVisitorStatsInput) (VisitorStatsOutput, error) {
+	return commonModel.OK(dashboardHandler.dashboardService.GetVisitorStats()), nil
 }
 
 // --- 以下为实时日志订阅，仍走裸 gin（WebSocket / SSE） ---

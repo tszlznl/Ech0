@@ -7,7 +7,6 @@ package handler
 import (
 	"context"
 
-	"github.com/lin-snow/ech0/internal/handler/humares"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/user"
@@ -23,7 +22,7 @@ func NewUserHandler(userService service.Service) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 
-type (
+type ( // 输入
 	RegisterInput struct {
 		Body authModel.RegisterDto
 	}
@@ -40,54 +39,60 @@ type (
 	GetUserInfoInput struct{}
 )
 
+type ( // 输出
+	UserListOutput = commonModel.Result[[]model.User]
+	UserOutput     = commonModel.Result[model.User]
+	EmptyOutput    = commonModel.Result[any]
+)
+
 // Register 注册新用户账号（公开）。
-func (userHandler *UserHandler) Register(ctx context.Context, in *RegisterInput) (*humares.Envelope[any], error) {
+func (userHandler *UserHandler) Register(ctx context.Context, in *RegisterInput) (EmptyOutput, error) {
 	if err := userHandler.userService.Register(&in.Body); err != nil {
-		return nil, humares.Err(ctx, err)
+		return EmptyOutput{}, err
 	}
-	return humares.OK[any](ctx, nil, commonModel.REGISTER_SUCCESS), nil
+	return commonModel.OK[any](nil, commonModel.REGISTER_SUCCESS), nil
 }
 
 // UpdateUser 更新当前已认证用户的个人信息（profile:write）。
-func (userHandler *UserHandler) UpdateUser(ctx context.Context, in *UpdateUserInput) (*humares.Envelope[any], error) {
+func (userHandler *UserHandler) UpdateUser(ctx context.Context, in *UpdateUserInput) (EmptyOutput, error) {
 	if err := userHandler.userService.UpdateUser(ctx, in.Body); err != nil {
-		return nil, humares.Err(ctx, err)
+		return EmptyOutput{}, err
 	}
-	return humares.OK[any](ctx, nil, commonModel.UPDATE_USER_SUCCESS), nil
+	return commonModel.OK[any](nil, commonModel.UPDATE_USER_SUCCESS), nil
 }
 
 // UpdateUserAdmin 由管理员切换指定用户的管理员状态（admin:user）。
-func (userHandler *UserHandler) UpdateUserAdmin(ctx context.Context, in *UpdateUserAdminInput) (*humares.Envelope[any], error) {
+func (userHandler *UserHandler) UpdateUserAdmin(ctx context.Context, in *UpdateUserAdminInput) (EmptyOutput, error) {
 	if err := userHandler.userService.UpdateUserAdmin(ctx, in.ID); err != nil {
-		return nil, humares.Err(ctx, err)
+		return EmptyOutput{}, err
 	}
-	return humares.OK[any](ctx, nil, commonModel.UPDATE_USER_SUCCESS), nil
+	return commonModel.OK[any](nil, commonModel.UPDATE_USER_SUCCESS), nil
 }
 
 // GetAllUsers 管理员获取系统中所有用户的列表（admin:user）。
-func (userHandler *UserHandler) GetAllUsers(ctx context.Context, _ *GetAllUsersInput) (*humares.Envelope[[]model.User], error) {
+func (userHandler *UserHandler) GetAllUsers(ctx context.Context, _ *GetAllUsersInput) (UserListOutput, error) {
 	allusers, err := userHandler.userService.GetAllUsers(ctx)
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return UserListOutput{}, err
 	}
-	return humares.OK(ctx, allusers, commonModel.GET_USER_SUCCESS), nil
+	return commonModel.OK(allusers, commonModel.GET_USER_SUCCESS), nil
 }
 
 // DeleteUser 管理员根据 ID 删除指定用户（admin:user）。
-func (userHandler *UserHandler) DeleteUser(ctx context.Context, in *DeleteUserInput) (*humares.Envelope[any], error) {
+func (userHandler *UserHandler) DeleteUser(ctx context.Context, in *DeleteUserInput) (EmptyOutput, error) {
 	if err := userHandler.userService.DeleteUser(ctx, in.ID); err != nil {
-		return nil, humares.Err(ctx, err)
+		return EmptyOutput{}, err
 	}
-	return humares.OK[any](ctx, nil, commonModel.DELETE_USER_SUCCESS), nil
+	return commonModel.OK[any](nil, commonModel.DELETE_USER_SUCCESS), nil
 }
 
 // GetUserInfo 获取当前已认证用户的详细信息（profile:read）。
-func (userHandler *UserHandler) GetUserInfo(ctx context.Context, _ *GetUserInfoInput) (*humares.Envelope[model.User], error) {
+func (userHandler *UserHandler) GetUserInfo(ctx context.Context, _ *GetUserInfoInput) (UserOutput, error) {
 	userid := viewer.MustFromContext(ctx).UserID()
 	user, err := userHandler.userService.GetUserByID(userid)
 	user.Password = ""
 	if err != nil {
-		return nil, humares.Err(ctx, err)
+		return UserOutput{}, err
 	}
-	return humares.OK(ctx, user, commonModel.GET_USER_INFO_SUCCESS), nil
+	return commonModel.OK(user, commonModel.GET_USER_INFO_SUCCESS), nil
 }
