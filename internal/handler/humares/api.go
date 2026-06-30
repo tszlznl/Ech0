@@ -123,8 +123,13 @@ func NewAPI(engine *gin.Engine, group *gin.RouterGroup, title, version, basePath
 	cfg.Transformers = nil
 	cfg.SchemasPath = ""
 
+	// 关掉 Huma 内置 docs（默认 Stoplight Elements），改用离线 self-host 的 Scalar（见 docs.go）。
+	// spec 路由（/api/openapi.json|.yaml）不受影响，仍由 humagin 注册。
+	cfg.DocsPath = ""
+
 	api := humagin.NewWithGroup(engine, group, cfg)
 	api.UseMiddleware(injectLocalizer)
+	registerScalarDocs(group, basePath)
 	return api
 }
 
