@@ -103,7 +103,6 @@ func installErrorModel() {
 	}
 }
 
-// detailSuffix 把 Huma 的字段级校验错误拼成 " (字段A: ...; 字段B: ...)" 形式的后缀。
 func detailSuffix(errs []error) string {
 	details := make([]string, 0, len(errs))
 	for _, e := range errs {

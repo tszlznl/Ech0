@@ -2,9 +2,6 @@
 // Copyright (C) 2025-2026 lin-snow
 
 // Package handler 暴露数据迁移（导入/导出快照）的 HTTP 接口。
-//
-// 控制面 JSON 端点（start/status/cancel/cleanup/export）走 Huma type-first；
-// multipart 上传源 zip 与二进制快照下载仍走裸 gin（见本文件下方 + setupMigrationRoutes）。
 package handler
 
 import (
@@ -27,7 +24,7 @@ func NewMigrationHandler(migrationService service.Service) *MigrationHandler {
 	}
 }
 
-type ( // 输入
+type (
 	StartMigrationInput struct {
 		Body migratorModel.StartGlobalMigrationRequest
 	}
@@ -39,13 +36,12 @@ type ( // 输入
 	CancelExportInput       struct{}
 )
 
-type ( // 输出
+type (
 	GlobalMigrationOutput = commonModel.Result[migratorModel.GlobalMigrationStateDTO]
 	ExportOutput          = commonModel.Result[migratorModel.ExportStateDTO]
 	EmptyOutput           = commonModel.Result[any]
 )
 
-// StartMigration 启动一次全局数据迁移（admin:settings）。
 func (h *MigrationHandler) StartMigration(ctx context.Context, in *StartMigrationInput) (GlobalMigrationOutput, error) {
 	data, err := h.migrationService.StartGlobalMigration(ctx, in.Body)
 	if err != nil {
@@ -54,7 +50,6 @@ func (h *MigrationHandler) StartMigration(ctx context.Context, in *StartMigratio
 	return commonModel.OK(data), nil
 }
 
-// GetMigrationStatus 查询全局迁移状态（admin:settings）。
 func (h *MigrationHandler) GetMigrationStatus(ctx context.Context, _ *GetMigrationStatusInput) (GlobalMigrationOutput, error) {
 	data, err := h.migrationService.GetGlobalMigrationStatus(ctx)
 	if err != nil {
@@ -63,7 +58,6 @@ func (h *MigrationHandler) GetMigrationStatus(ctx context.Context, _ *GetMigrati
 	return commonModel.OK(data), nil
 }
 
-// CancelMigration 取消进行中的全局迁移（admin:settings）。
 func (h *MigrationHandler) CancelMigration(ctx context.Context, _ *CancelMigrationInput) (GlobalMigrationOutput, error) {
 	data, err := h.migrationService.CancelGlobalMigration(ctx)
 	if err != nil {
@@ -72,7 +66,6 @@ func (h *MigrationHandler) CancelMigration(ctx context.Context, _ *CancelMigrati
 	return commonModel.OK(data), nil
 }
 
-// CleanupMigration 清理迁移中间产物（admin:settings）。
 func (h *MigrationHandler) CleanupMigration(ctx context.Context, _ *CleanupMigrationInput) (EmptyOutput, error) {
 	if err := h.migrationService.CleanupGlobalMigration(ctx); err != nil {
 		return EmptyOutput{}, err
@@ -80,7 +73,6 @@ func (h *MigrationHandler) CleanupMigration(ctx context.Context, _ *CleanupMigra
 	return commonModel.OK[any](nil), nil
 }
 
-// StartExport 提交一次导出作业（手动快照异步出口，admin:settings）。
 func (h *MigrationHandler) StartExport(ctx context.Context, _ *StartExportInput) (ExportOutput, error) {
 	data, err := h.migrationService.StartExport(ctx)
 	if err != nil {
@@ -89,7 +81,6 @@ func (h *MigrationHandler) StartExport(ctx context.Context, _ *StartExportInput)
 	return commonModel.OK(data), nil
 }
 
-// GetExportStatus 查询导出作业状态（admin:settings）。
 func (h *MigrationHandler) GetExportStatus(ctx context.Context, _ *GetExportStatusInput) (ExportOutput, error) {
 	data, err := h.migrationService.GetExportStatus(ctx)
 	if err != nil {
@@ -98,7 +89,6 @@ func (h *MigrationHandler) GetExportStatus(ctx context.Context, _ *GetExportStat
 	return commonModel.OK(data), nil
 }
 
-// CancelExport 协作式取消在跑导出作业（admin:settings）。
 func (h *MigrationHandler) CancelExport(ctx context.Context, _ *CancelExportInput) (ExportOutput, error) {
 	data, err := h.migrationService.CancelExport(ctx)
 	if err != nil {

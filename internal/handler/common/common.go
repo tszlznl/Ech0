@@ -20,7 +20,6 @@ import (
 	versionPkg "github.com/lin-snow/ech0/internal/version"
 )
 
-// Huma 端点的输入/输出类型（XML/feed/健康检查仍走 gin，见本文件下方）。
 type (
 	GetHeatMapInput struct {
 		Timezone string `header:"X-Timezone" doc:"客户端时区（IANA 名），用于按本地日界对齐热力图"`
@@ -38,7 +37,7 @@ type (
 	}
 )
 
-type ( // 输出
+type (
 	HeatmapOutput = commonModel.Result[[]commonModel.Heatmap]
 	HelloOutput   = commonModel.Result[HelloResponse]
 	StringOutput  = commonModel.Result[string]
@@ -99,8 +98,6 @@ func (commonHandler *CommonHandler) GetRss(ctx *gin.Context) {
 }
 
 func (commonHandler *CommonHandler) HelloEch0(ctx context.Context, _ *HelloInput) (HelloOutput, error) {
-	// 扁平化 version 信息（version/commit/build_time/license/author/repo_url）到顶层，
-	// 前端 About 页直接读取，作为单一信息源。
 	hello := HelloResponse{
 		Hello:     "Hello, Ech0! 👋",
 		Copyright: versionPkg.Copyright(),

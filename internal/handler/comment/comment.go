@@ -2,10 +2,6 @@
 // Copyright (C) 2025-2026 lin-snow
 
 // Package handler 暴露评论相关的 HTTP 接口（Huma type-first）。
-//
-// 公开评论端点需要请求侧元数据（ClientIP / UserAgent / baseURL）与可选 viewer，
-// 这些只能从 *gin.Context 取得，故由 StashMeta / OptionalViewer 两个 gin 中间件经
-// humares.Bridge 注入到 request context，再由 Huma handler 读取。captcha 仍走裸 gin。
 package handler
 
 import (
@@ -114,7 +110,7 @@ type (
 	}
 )
 
-type ( // 输出
+type (
 	FormMetaOutput       = commonModel.Result[model.FormMeta]
 	PublicCommentsOutput = commonModel.Result[[]model.PublicComment]
 	CreateCommentOutput  = commonModel.Result[model.CreateCommentResult]
@@ -124,7 +120,6 @@ type ( // 输出
 	EmptyOutput          = commonModel.Result[any]
 )
 
-// GetFormMeta 返回评论表单元信息（公开，需 StashMeta + OptionalViewer）。
 func (h *CommentHandler) GetFormMeta(ctx context.Context, _ *GetFormMetaInput) (FormMetaOutput, error) {
 	m := metaFrom(ctx)
 	data, err := h.commentService.GetFormMeta(ctx, m.clientIP, m.baseURL)
@@ -134,7 +129,6 @@ func (h *CommentHandler) GetFormMeta(ctx context.Context, _ *GetFormMetaInput) (
 	return commonModel.OK(data), nil
 }
 
-// ListCommentsByEchoID 按 echo_id 列出公开评论（公开）。
 func (h *CommentHandler) ListCommentsByEchoID(ctx context.Context, in *ListCommentsByEchoInput) (PublicCommentsOutput, error) {
 	comments, err := h.commentService.ListPublicByEchoID(ctx, strings.TrimSpace(in.EchoID))
 	if err != nil {
@@ -143,7 +137,6 @@ func (h *CommentHandler) ListCommentsByEchoID(ctx context.Context, in *ListComme
 	return commonModel.OK(comments), nil
 }
 
-// ListPublicComments 列出最新公开评论（公开）。
 func (h *CommentHandler) ListPublicComments(ctx context.Context, in *ListPublicCommentsInput) (PublicCommentsOutput, error) {
 	comments, err := h.commentService.ListPublicComments(ctx, in.Limit)
 	if err != nil {
@@ -152,7 +145,6 @@ func (h *CommentHandler) ListPublicComments(ctx context.Context, in *ListPublicC
 	return commonModel.OK(comments), nil
 }
 
-// CreateComment 创建一条公开评论（公开，需 StashMeta + OptionalViewer）。
 func (h *CommentHandler) CreateComment(ctx context.Context, in *CreateCommentInput) (CreateCommentOutput, error) {
 	m := metaFrom(ctx)
 	result, err := h.commentService.CreateComment(ctx, m.clientIP, m.userAgent, &in.Body)
@@ -172,7 +164,6 @@ func (h *CommentHandler) CreateIntegrationComment(ctx context.Context, in *Creat
 	return commonModel.OK(result), nil
 }
 
-// ListPanelComments 管理面板列出评论（comment:moderate）。
 func (h *CommentHandler) ListPanelComments(ctx context.Context, in *ListPanelCommentsInput) (PanelCommentsOutput, error) {
 	var hot *bool
 	if raw := strings.TrimSpace(in.Hot); raw != "" {
@@ -194,7 +185,6 @@ func (h *CommentHandler) ListPanelComments(ctx context.Context, in *ListPanelCom
 	return commonModel.OK(data), nil
 }
 
-// GetCommentByID 获取单条评论（comment:moderate）。
 func (h *CommentHandler) GetCommentByID(ctx context.Context, in *GetCommentByIDInput) (CommentOutput, error) {
 	data, err := h.commentService.GetCommentByID(ctx, strings.TrimSpace(in.ID))
 	if err != nil {
@@ -203,7 +193,6 @@ func (h *CommentHandler) GetCommentByID(ctx context.Context, in *GetCommentByIDI
 	return commonModel.OK(data), nil
 }
 
-// UpdateCommentStatus 更新评论审核状态（comment:moderate）。
 func (h *CommentHandler) UpdateCommentStatus(ctx context.Context, in *UpdateCommentStatusInput) (EmptyOutput, error) {
 	if err := h.commentService.UpdateCommentStatus(ctx, strings.TrimSpace(in.ID), in.Body.Status); err != nil {
 		return EmptyOutput{}, err
@@ -211,7 +200,6 @@ func (h *CommentHandler) UpdateCommentStatus(ctx context.Context, in *UpdateComm
 	return commonModel.OK[any](nil), nil
 }
 
-// UpdateCommentHot 置顶/取消置顶评论（comment:moderate）。
 func (h *CommentHandler) UpdateCommentHot(ctx context.Context, in *UpdateCommentHotInput) (EmptyOutput, error) {
 	if err := h.commentService.UpdateCommentHot(ctx, strings.TrimSpace(in.ID), in.Body.Hot); err != nil {
 		return EmptyOutput{}, err
@@ -219,7 +207,6 @@ func (h *CommentHandler) UpdateCommentHot(ctx context.Context, in *UpdateComment
 	return commonModel.OK[any](nil), nil
 }
 
-// DeleteComment 删除评论（comment:moderate）。
 func (h *CommentHandler) DeleteComment(ctx context.Context, in *DeleteCommentInput) (EmptyOutput, error) {
 	if err := h.commentService.DeleteComment(ctx, strings.TrimSpace(in.ID)); err != nil {
 		return EmptyOutput{}, err
@@ -227,7 +214,6 @@ func (h *CommentHandler) DeleteComment(ctx context.Context, in *DeleteCommentInp
 	return commonModel.OK[any](nil, commonModel.DELETE_SUCCESS), nil
 }
 
-// BatchAction 批量操作评论（comment:moderate）。
 func (h *CommentHandler) BatchAction(ctx context.Context, in *BatchActionInput) (EmptyOutput, error) {
 	if err := h.commentService.BatchAction(ctx, in.Body.Action, in.Body.IDs); err != nil {
 		return EmptyOutput{}, err
@@ -235,7 +221,6 @@ func (h *CommentHandler) BatchAction(ctx context.Context, in *BatchActionInput) 
 	return commonModel.OK[any](nil), nil
 }
 
-// GetCommentSetting 获取评论系统设置（comment:moderate）。
 func (h *CommentHandler) GetCommentSetting(ctx context.Context, _ *GetCommentSettingInput) (CommentSettingOutput, error) {
 	data, err := h.commentService.GetSystemSetting(ctx)
 	if err != nil {
@@ -244,7 +229,6 @@ func (h *CommentHandler) GetCommentSetting(ctx context.Context, _ *GetCommentSet
 	return commonModel.OK(data), nil
 }
 
-// UpdateCommentSetting 更新评论系统设置（comment:moderate）。
 func (h *CommentHandler) UpdateCommentSetting(ctx context.Context, in *UpdateCommentSettingInput) (EmptyOutput, error) {
 	if err := h.commentService.UpdateSystemSetting(ctx, in.Body); err != nil {
 		return EmptyOutput{}, err
@@ -252,7 +236,6 @@ func (h *CommentHandler) UpdateCommentSetting(ctx context.Context, in *UpdateCom
 	return commonModel.OK[any](nil, commonModel.UPDATE_SETTINGS_SUCCESS), nil
 }
 
-// TestCommentEmail 发送测试邮件以验证评论通知配置（comment:moderate）。
 func (h *CommentHandler) TestCommentEmail(ctx context.Context, in *TestCommentEmailInput) (EmptyOutput, error) {
 	if err := h.commentService.SendTestEmail(ctx, in.Body.Setting); err != nil {
 		return EmptyOutput{}, err

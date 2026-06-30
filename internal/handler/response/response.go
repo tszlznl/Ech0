@@ -14,29 +14,20 @@ import (
 	errorUtil "github.com/lin-snow/ech0/internal/util/err"
 )
 
-// Response 代表 handler 层的执行结果封装
-//
 // swagger:model Response
 type Response struct {
-	// Code 状态码，非0时表示自定义HTTP业务状态码
 	Code int `json:"code"`
 
-	// Data 响应数据，具体内容因接口而异
 	Data any `json:"data,omitempty"`
 
-	// Msg 返回信息，通常是状态描述
 	Msg string `json:"msg"`
 
-	// ErrorCode 业务错误码，可选
 	ErrorCode string `json:"error_code,omitempty"`
 
-	// MessageKey 国际化消息 key，可选
 	MessageKey string `json:"message_key,omitempty"`
 
-	// MessageParams 国际化模板参数，可选
 	MessageParams map[string]any `json:"message_params,omitempty"`
 
-	// Err 错误信息，序列化时忽略（仅供内部日志使用）
 	// swagger:ignore
 	Err error `json:"-"`
 }
@@ -93,7 +84,6 @@ func Execute(fn func(ctx *gin.Context) Response) gin.HandlerFunc {
 			successMsg = i18nUtil.Localize(i18nUtil.LocalizerFromGin(ctx), messageKey, res.Msg, res.MessageParams)
 		}
 
-		// 支持自定义 code
 		if res.Code != 0 {
 			ctx.JSON(http.StatusOK, commonModel.OKWithCode(res.Data, res.Code, successMsg))
 		} else {

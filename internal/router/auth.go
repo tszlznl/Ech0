@@ -8,7 +8,6 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/lin-snow/ech0/internal/handler"
-	"github.com/lin-snow/ech0/internal/handler/humares"
 	"github.com/lin-snow/ech0/internal/middleware"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	authService "github.com/lin-snow/ech0/internal/service/auth"
@@ -45,58 +44,43 @@ func setupAuthRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 
 // registerAuthHuma 注册**干净 JSON** 的认证端点（无 cookie / 无重定向 / 无 WebAuthn blob）。
 func registerAuthHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
-	write := humares.Secured(authModel.ScopeProfileWrite)
-	writeMW := securedMW(revoker, authModel.ScopeProfileWrite)
-	read := humares.Secured(authModel.ScopeProfileRead)
-	readMW := securedMW(revoker, authModel.ScopeProfileRead)
-
-	reg(api, huma.Operation{
+	register(api, secured(revoker, authModel.ScopeProfileWrite), huma.Operation{
 		OperationID: "oauth-bind",
 		Method:      http.MethodPost,
 		Path:        "/oauth/{provider}/bind",
 		Summary:     "绑定 OAuth2 账号到当前用户",
 		Tags:        []string{"Auth"},
-		Security:    write,
-		Middlewares: writeMW,
 	}, h.AuthHandler.OAuthBind)
 
-	reg(api, huma.Operation{
+	register(api, secured(revoker, authModel.ScopeProfileRead), huma.Operation{
 		OperationID: "oauth-info",
 		Method:      http.MethodGet,
 		Path:        "/oauth/info",
 		Summary:     "获取当前用户的 OAuth2 绑定信息",
 		Tags:        []string{"Auth"},
-		Security:    read,
-		Middlewares: readMW,
 	}, h.AuthHandler.GetOAuthInfo)
 
-	reg(api, huma.Operation{
+	register(api, secured(revoker, authModel.ScopeProfileRead), huma.Operation{
 		OperationID: "passkey-list",
 		Method:      http.MethodGet,
 		Path:        "/passkeys",
 		Summary:     "列出当前用户的 Passkey 设备",
 		Tags:        []string{"Auth"},
-		Security:    read,
-		Middlewares: readMW,
 	}, h.AuthHandler.ListPasskeys)
 
-	reg(api, huma.Operation{
+	register(api, secured(revoker, authModel.ScopeProfileWrite), huma.Operation{
 		OperationID: "passkey-delete",
 		Method:      http.MethodDelete,
 		Path:        "/passkeys/{id}",
 		Summary:     "删除 Passkey 设备",
 		Tags:        []string{"Auth"},
-		Security:    write,
-		Middlewares: writeMW,
 	}, h.AuthHandler.DeletePasskey)
 
-	reg(api, huma.Operation{
+	register(api, secured(revoker, authModel.ScopeProfileWrite), huma.Operation{
 		OperationID: "passkey-update-name",
 		Method:      http.MethodPut,
 		Path:        "/passkeys/{id}",
 		Summary:     "更新 Passkey 设备名称",
 		Tags:        []string{"Auth"},
-		Security:    write,
-		Middlewares: writeMW,
 	}, h.AuthHandler.UpdatePasskeyDeviceName)
 }

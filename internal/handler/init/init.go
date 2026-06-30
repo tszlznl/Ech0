@@ -21,19 +21,18 @@ func NewInitHandler(initService service.Service) *InitHandler {
 	return &InitHandler{initService: initService}
 }
 
-type ( // 输入
+type (
 	GetInitStatusInput struct{}
 	InitOwnerInput     struct {
 		Body authModel.RegisterDto
 	}
 )
 
-type ( // 输出
+type (
 	StatusOutput = commonModel.Result[initModel.Status]
 	EmptyOutput  = commonModel.Result[any]
 )
 
-// GetInitStatus 返回站点是否已初始化、是否已存在 Owner（前端引导首次部署）。
 func (h *InitHandler) GetInitStatus(ctx context.Context, _ *GetInitStatusInput) (StatusOutput, error) {
 	status, err := h.initService.GetStatus()
 	if err != nil {
@@ -42,7 +41,6 @@ func (h *InitHandler) GetInitStatus(ctx context.Context, _ *GetInitStatusInput) 
 	return commonModel.OK(status), nil
 }
 
-// InitOwner 创建首个 Owner 账号（仅在未初始化时可用）。
 func (h *InitHandler) InitOwner(ctx context.Context, in *InitOwnerInput) (EmptyOutput, error) {
 	if err := h.initService.InitOwner(&in.Body); err != nil {
 		return EmptyOutput{}, err

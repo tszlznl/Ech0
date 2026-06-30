@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2025-2026 lin-snow
 
-// Package handler 暴露 Ech0 Copilot 的 HTTP 接口：AI 近期总结与 Chat 会话（JSON，Huma）
-// 以及 Chat 流式问答（SSE，裸 gin）。
+// Package handler 暴露 Ech0 Copilot 的 HTTP 接口。
 package handler
 
 import (
@@ -30,19 +29,18 @@ func NewCopilotHandler(
 	}
 }
 
-type ( // 输入
+type (
 	GetRecentInput    struct{}
 	GetSessionInput   struct{}
 	ClearSessionInput struct{}
 )
 
-type ( // 输出
+type (
 	RecentOutput  = commonModel.Result[string]
 	SessionOutput = commonModel.Result[[]copilotService.ChatMessage]
 	EmptyOutput   = commonModel.Result[any]
 )
 
-// GetRecent 返回作者近况的 AI 总结（公开）。
 func (h *CopilotHandler) GetRecent(ctx context.Context, _ *GetRecentInput) (RecentOutput, error) {
 	gen, err := h.summaryService.GetRecent(ctx)
 	if err != nil {
@@ -51,7 +49,6 @@ func (h *CopilotHandler) GetRecent(ctx context.Context, _ *GetRecentInput) (Rece
 	return commonModel.OK(gen, commonModel.AGENT_GET_RECENT_SUCCESS), nil
 }
 
-// GetSession 返回当前登录用户的持久化 Chat 会话（admin:settings）。
 func (h *CopilotHandler) GetSession(ctx context.Context, _ *GetSessionInput) (SessionOutput, error) {
 	session, err := h.chatService.GetSession(ctx)
 	if err != nil {
@@ -60,7 +57,6 @@ func (h *CopilotHandler) GetSession(ctx context.Context, _ *GetSessionInput) (Se
 	return commonModel.OK(session, commonModel.CHAT_SESSION_GET_SUCCESS), nil
 }
 
-// ClearSession 删除当前登录用户的持久化 Chat 会话（admin:settings，不可恢复）。
 func (h *CopilotHandler) ClearSession(ctx context.Context, _ *ClearSessionInput) (EmptyOutput, error) {
 	if err := h.chatService.ClearSession(ctx); err != nil {
 		return EmptyOutput{}, err

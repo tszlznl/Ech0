@@ -22,7 +22,7 @@ func NewUserHandler(userService service.Service) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 
-type ( // 输入
+type (
 	RegisterInput struct {
 		Body authModel.RegisterDto
 	}
@@ -39,13 +39,12 @@ type ( // 输入
 	GetUserInfoInput struct{}
 )
 
-type ( // 输出
+type (
 	UserListOutput = commonModel.Result[[]model.User]
 	UserOutput     = commonModel.Result[model.User]
 	EmptyOutput    = commonModel.Result[any]
 )
 
-// Register 注册新用户账号（公开）。
 func (userHandler *UserHandler) Register(ctx context.Context, in *RegisterInput) (EmptyOutput, error) {
 	if err := userHandler.userService.Register(&in.Body); err != nil {
 		return EmptyOutput{}, err
@@ -53,7 +52,6 @@ func (userHandler *UserHandler) Register(ctx context.Context, in *RegisterInput)
 	return commonModel.OK[any](nil, commonModel.REGISTER_SUCCESS), nil
 }
 
-// UpdateUser 更新当前已认证用户的个人信息（profile:write）。
 func (userHandler *UserHandler) UpdateUser(ctx context.Context, in *UpdateUserInput) (EmptyOutput, error) {
 	if err := userHandler.userService.UpdateUser(ctx, in.Body); err != nil {
 		return EmptyOutput{}, err
@@ -61,7 +59,6 @@ func (userHandler *UserHandler) UpdateUser(ctx context.Context, in *UpdateUserIn
 	return commonModel.OK[any](nil, commonModel.UPDATE_USER_SUCCESS), nil
 }
 
-// UpdateUserAdmin 由管理员切换指定用户的管理员状态（admin:user）。
 func (userHandler *UserHandler) UpdateUserAdmin(ctx context.Context, in *UpdateUserAdminInput) (EmptyOutput, error) {
 	if err := userHandler.userService.UpdateUserAdmin(ctx, in.ID); err != nil {
 		return EmptyOutput{}, err
@@ -69,7 +66,6 @@ func (userHandler *UserHandler) UpdateUserAdmin(ctx context.Context, in *UpdateU
 	return commonModel.OK[any](nil, commonModel.UPDATE_USER_SUCCESS), nil
 }
 
-// GetAllUsers 管理员获取系统中所有用户的列表（admin:user）。
 func (userHandler *UserHandler) GetAllUsers(ctx context.Context, _ *GetAllUsersInput) (UserListOutput, error) {
 	allusers, err := userHandler.userService.GetAllUsers(ctx)
 	if err != nil {
@@ -78,7 +74,6 @@ func (userHandler *UserHandler) GetAllUsers(ctx context.Context, _ *GetAllUsersI
 	return commonModel.OK(allusers, commonModel.GET_USER_SUCCESS), nil
 }
 
-// DeleteUser 管理员根据 ID 删除指定用户（admin:user）。
 func (userHandler *UserHandler) DeleteUser(ctx context.Context, in *DeleteUserInput) (EmptyOutput, error) {
 	if err := userHandler.userService.DeleteUser(ctx, in.ID); err != nil {
 		return EmptyOutput{}, err
@@ -86,7 +81,6 @@ func (userHandler *UserHandler) DeleteUser(ctx context.Context, in *DeleteUserIn
 	return commonModel.OK[any](nil, commonModel.DELETE_USER_SUCCESS), nil
 }
 
-// GetUserInfo 获取当前已认证用户的详细信息（profile:read）。
 func (userHandler *UserHandler) GetUserInfo(ctx context.Context, _ *GetUserInfoInput) (UserOutput, error) {
 	userid := viewer.MustFromContext(ctx).UserID()
 	user, err := userHandler.userService.GetUserByID(userid)

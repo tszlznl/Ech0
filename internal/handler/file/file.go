@@ -2,9 +2,6 @@
 // Copyright (C) 2025-2026 lin-snow
 
 // Package handler 暴露文件相关的 HTTP 接口。
-//
-// JSON 端点（列表/树/元信息/删除/外链/预签名）走 Huma type-first；
-// 二进制流式下载与 multipart 上传仍走裸 gin（见本文件下方 + setupFileRoutes）。
 package handler
 
 import (
@@ -54,7 +51,7 @@ type (
 	}
 )
 
-type ( // 输出
+type (
 	FileListOutput = commonModel.Result[commonModel.FileListResultDto]
 	FileTreeOutput = commonModel.Result[commonModel.FileTreeResultDto]
 	FileOutput     = commonModel.Result[commonModel.FileDto]
@@ -62,7 +59,6 @@ type ( // 输出
 	EmptyOutput    = commonModel.Result[any]
 )
 
-// ListFiles 分页获取文件列表（file:read）。
 func (fileHandler *FileHandler) ListFiles(ctx context.Context, in *ListFilesInput) (FileListOutput, error) {
 	query := commonModel.FileListQueryDto{Page: in.Page, PageSize: in.PageSize, Search: in.Search, StorageType: in.StorageType}
 	result, err := fileHandler.fileService.ListFiles(ctx, query)
@@ -72,7 +68,6 @@ func (fileHandler *FileHandler) ListFiles(ctx context.Context, in *ListFilesInpu
 	return commonModel.OK(result), nil
 }
 
-// ListFileTree 按存储类型/前缀返回文件树（file:read）。
 func (fileHandler *FileHandler) ListFileTree(ctx context.Context, in *ListFileTreeInput) (FileTreeOutput, error) {
 	query := commonModel.FileTreeQueryDto{StorageType: in.StorageType, Prefix: in.Prefix}
 	result, err := fileHandler.fileService.ListFileTree(ctx, query)
@@ -82,7 +77,6 @@ func (fileHandler *FileHandler) ListFileTree(ctx context.Context, in *ListFileTr
 	return commonModel.OK(result), nil
 }
 
-// GetFileByID 获取单个文件的元信息（file:read）。
 func (fileHandler *FileHandler) GetFileByID(ctx context.Context, in *GetFileByIDInput) (FileOutput, error) {
 	fileDto, err := fileHandler.fileService.GetFileByID(ctx, in.ID)
 	if err != nil {
@@ -100,7 +94,6 @@ func (fileHandler *FileHandler) UpdateFileMeta(ctx context.Context, in *UpdateFi
 	return commonModel.OK(fileDto), nil
 }
 
-// CreateExternalFile 登记一个外链文件（file:write）。
 func (fileHandler *FileHandler) CreateExternalFile(ctx context.Context, in *CreateExternalFileInput) (FileOutput, error) {
 	fileDto, err := fileHandler.fileService.CreateExternalFile(ctx, in.Body)
 	if err != nil {
@@ -109,7 +102,6 @@ func (fileHandler *FileHandler) CreateExternalFile(ctx context.Context, in *Crea
 	return commonModel.OK(fileDto, commonModel.UPLOAD_SUCCESS), nil
 }
 
-// DeleteFile 删除文件（file:write）。
 func (fileHandler *FileHandler) DeleteFile(ctx context.Context, in *DeleteFileInput) (EmptyOutput, error) {
 	if err := fileHandler.fileService.DeleteFile(ctx, in.ID); err != nil {
 		return EmptyOutput{}, err
@@ -117,7 +109,6 @@ func (fileHandler *FileHandler) DeleteFile(ctx context.Context, in *DeleteFileIn
 	return commonModel.OK[any](nil, commonModel.DELETE_SUCCESS), nil
 }
 
-// GetFilePresignURL 获取对象存储直传预签名 URL（file:write）。
 func (fileHandler *FileHandler) GetFilePresignURL(ctx context.Context, in *GetFilePresignURLInput) (PresignOutput, error) {
 	presignDto, err := fileHandler.fileService.GetFilePresignURL(ctx, &in.Body)
 	if err != nil {

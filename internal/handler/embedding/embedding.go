@@ -2,9 +2,6 @@
 // Copyright (C) 2025-2026 lin-snow
 
 // Package handler 暴露 Embedding 向量索引的 HTTP 接口（Huma type-first）。
-//
-// Embedding 设置（get/update）归口到 setting 域；此处仅保留索引操作。重建索引为异步作业：
-// 触发即返回，前端按类型轮询 /embedding/reindex/status，可中途取消。
 package handler
 
 import (
@@ -48,7 +45,6 @@ type (
 	CancelReindexInput struct{}
 )
 
-// ReindexOutput 重建索引状态输出。
 type ReindexOutput = commonModel.Result[ReindexStatusResponse]
 
 func mapJobToReindexStatus(jb jobModel.Job) ReindexStatusResponse {
@@ -65,7 +61,6 @@ func mapJobToReindexStatus(jb jobModel.Job) ReindexStatusResponse {
 	return resp
 }
 
-// Reindex 提交一次全量向量索引回填作业（管理员）；起即返回，不阻塞。
 func (embeddingHandler *EmbeddingHandler) Reindex(ctx context.Context, _ *ReindexInput) (ReindexOutput, error) {
 	jb, err := embeddingHandler.jobManager.Submit(ctx, jobModel.TypeReindex, nil)
 	if err != nil {
@@ -87,7 +82,6 @@ func (embeddingHandler *EmbeddingHandler) ReindexStatus(ctx context.Context, _ *
 	return commonModel.OK(mapJobToReindexStatus(jb)), nil
 }
 
-// CancelReindex 取消进行中的重建索引作业；返回最新状态（前端轮询收敛到 cancelled）。
 func (embeddingHandler *EmbeddingHandler) CancelReindex(ctx context.Context, _ *CancelReindexInput) (ReindexOutput, error) {
 	_ = embeddingHandler.jobManager.Cancel(jobModel.TypeReindex)
 	jb, err := embeddingHandler.jobManager.Get(ctx, jobModel.TypeReindex)

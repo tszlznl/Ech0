@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lin-snow/ech0/internal/handler"
 	"github.com/lin-snow/ech0/internal/handler/humares"
-	"github.com/lin-snow/ech0/internal/middleware"
 	authService "github.com/lin-snow/ech0/internal/service/auth"
 )
 
@@ -24,42 +23,6 @@ const (
 func setupHumaAPI(r *gin.Engine) huma.API {
 	humaGroup := r.Group(humaAPIBase)
 	return humares.NewAPI(r, humaGroup, humaAPITitle, humaAPIVersion, humaAPIBase)
-}
-
-// revokerFromCtx 从路由上下文取出 token 吊销器（供 Bridge 复用 RequireAuth）。
-func revokerFromCtx(ctx *RouterContext) authService.TokenRevoker {
-	if ctx.MWDeps != nil {
-		return ctx.MWDeps.TokenRevoker
-	}
-	return nil
-}
-
-// securedMW 组合 per-operation 鉴权中间件：NoCache（旧版 AuthRouterGroup 组级行为）→
-// RequireAuth →（若有 scope）RequireScopes，全部复用现有 gin 中间件经 Bridge 适配。
-// 配合 humares.Secured(scopes...) 在 spec 中声明所需 scope。
-func securedMW(revoker authService.TokenRevoker, scopes ...string) huma.Middlewares {
-	mws := huma.Middlewares{
-		humares.Bridge(middleware.NoCache()),
-		humares.Bridge(middleware.RequireAuth(revoker)),
-	}
-	if len(scopes) > 0 {
-		mws = append(mws, humares.Bridge(middleware.RequireScopes(scopes...)))
-	}
-	return mws
-}
-
-// noCacheMW 用于公开但敏感的 operation（register/login）：仅加 NoCache，不鉴权。
-func noCacheMW() huma.Middlewares {
-	return huma.Middlewares{humares.Bridge(middleware.NoCache())}
-}
-
-// optionalMW 用于「可匿名降级」的公开可读 operation：NoCache + OptionalAuth（旧
-// OptionalAuthRouterGroup 组级行为）。无 token 按匿名继续，携带有效 token 时识别用户身份。
-func optionalMW(revoker authService.TokenRevoker) huma.Middlewares {
-	return huma.Middlewares{
-		humares.Bridge(middleware.NoCache()),
-		humares.Bridge(middleware.OptionalAuth(revoker)),
-	}
 }
 
 // RegisterHumaOperations 注册所有已迁移到 Huma 的域的 operation。

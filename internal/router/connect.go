@@ -8,15 +8,13 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/lin-snow/ech0/internal/handler"
-	"github.com/lin-snow/ech0/internal/handler/humares"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	authService "github.com/lin-snow/ech0/internal/service/auth"
 )
 
 // registerConnectHuma 注册实例互联（Connect）路由。
 func registerConnectHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
-	// 公开读
-	reg(api, huma.Operation{
+	register(api, public(), huma.Operation{
 		OperationID: "connect-self",
 		Method:      http.MethodGet,
 		Path:        "/connect",
@@ -24,7 +22,7 @@ func registerConnectHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Connect"},
 	}, h.ConnectHandler.GetConnect)
 
-	reg(api, huma.Operation{
+	register(api, public(), huma.Operation{
 		OperationID: "connect-list",
 		Method:      http.MethodGet,
 		Path:        "/connect/list",
@@ -32,7 +30,7 @@ func registerConnectHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Connect"},
 	}, h.ConnectHandler.GetConnects)
 
-	reg(api, huma.Operation{
+	register(api, public(), huma.Operation{
 		OperationID: "connect-info",
 		Method:      http.MethodGet,
 		Path:        "/connects/info",
@@ -40,34 +38,27 @@ func registerConnectHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Connect"},
 	}, h.ConnectHandler.GetConnectsInfo)
 
-	// 鉴权 + scope
-	reg(api, huma.Operation{
+	register(api, secured(revoker, authModel.ScopeConnectRead), huma.Operation{
 		OperationID: "connect-health",
 		Method:      http.MethodGet,
 		Path:        "/connects/health",
 		Summary:     "获取互联健康状态",
 		Tags:        []string{"Connect"},
-		Security:    humares.Secured(authModel.ScopeConnectRead),
-		Middlewares: securedMW(revoker, authModel.ScopeConnectRead),
 	}, h.ConnectHandler.GetConnectsHealth)
 
-	reg(api, huma.Operation{
+	register(api, secured(revoker, authModel.ScopeConnectWrite), huma.Operation{
 		OperationID: "connect-add",
 		Method:      http.MethodPost,
 		Path:        "/connects",
 		Summary:     "添加连接",
 		Tags:        []string{"Connect"},
-		Security:    humares.Secured(authModel.ScopeConnectWrite),
-		Middlewares: securedMW(revoker, authModel.ScopeConnectWrite),
 	}, h.ConnectHandler.AddConnect)
 
-	reg(api, huma.Operation{
+	register(api, secured(revoker, authModel.ScopeConnectWrite), huma.Operation{
 		OperationID: "connect-delete",
 		Method:      http.MethodDelete,
 		Path:        "/connects/{id}",
 		Summary:     "删除连接",
 		Tags:        []string{"Connect"},
-		Security:    humares.Secured(authModel.ScopeConnectWrite),
-		Middlewares: securedMW(revoker, authModel.ScopeConnectWrite),
 	}, h.ConnectHandler.DeleteConnect)
 }

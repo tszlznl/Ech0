@@ -8,7 +8,6 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/lin-snow/ech0/internal/handler"
-	"github.com/lin-snow/ech0/internal/handler/humares"
 	"github.com/lin-snow/ech0/internal/middleware"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	authService "github.com/lin-snow/ech0/internal/service/auth"
@@ -25,7 +24,7 @@ func setupCopilotRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 
 // registerCopilotHuma 注册 Copilot 的 JSON 端点。
 func registerCopilotHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
-	reg(api, huma.Operation{
+	register(api, public(), huma.Operation{
 		OperationID: "copilot-recent",
 		Method:      http.MethodGet,
 		Path:        "/agent/recent",
@@ -33,26 +32,19 @@ func registerCopilotHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Copilot"},
 	}, h.CopilotHandler.GetRecent)
 
-	sec := humares.Secured(authModel.ScopeAdminSettings)
-	mw := securedMW(revoker, authModel.ScopeAdminSettings)
-
-	reg(api, huma.Operation{
+	register(api, secured(revoker, authModel.ScopeAdminSettings), huma.Operation{
 		OperationID: "copilot-session-get",
 		Method:      http.MethodGet,
 		Path:        "/chat/session",
 		Summary:     "获取持久化 Chat 会话",
 		Tags:        []string{"Copilot"},
-		Security:    sec,
-		Middlewares: mw,
 	}, h.CopilotHandler.GetSession)
 
-	reg(api, huma.Operation{
+	register(api, secured(revoker, authModel.ScopeAdminSettings), huma.Operation{
 		OperationID: "copilot-session-clear",
 		Method:      http.MethodDelete,
 		Path:        "/chat/session",
 		Summary:     "清除持久化 Chat 会话",
 		Tags:        []string{"Copilot"},
-		Security:    sec,
-		Middlewares: mw,
 	}, h.CopilotHandler.ClearSession)
 }

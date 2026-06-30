@@ -26,22 +26,26 @@ func setupCommentRoutes(appRouterGroup *AppRouterGroup, _ *handler.Bundle) {
 }
 
 // registerCommentHuma 注册评论的 JSON 端点。
+//
+// 公开评论端点需要请求侧元数据（StashMeta）与可选 viewer（OptionalViewer），二者是**非鉴权**的
+// 请求处理中间件，故在 op 字面量里显式声明，不混进 posture。
 func registerCommentHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
 	nc := humares.Bridge(middleware.NoCache())
 	stash := humares.Bridge(h.CommentHandler.StashMeta())
-	optional := humares.Bridge(h.CommentHandler.OptionalViewer())
+	optViewer := humares.Bridge(h.CommentHandler.OptionalViewer())
+	moderate := secured(revoker, authModel.ScopeCommentMod)
 
 	// 公开端点
-	reg(api, huma.Operation{
+	register(api, public(), huma.Operation{
 		OperationID: "comment-form-meta",
 		Method:      http.MethodGet,
 		Path:        "/comments/form",
 		Summary:     "获取评论表单元信息",
 		Tags:        []string{"Comment"},
-		Middlewares: huma.Middlewares{nc, stash, optional},
+		Middlewares: huma.Middlewares{nc, stash, optViewer},
 	}, h.CommentHandler.GetFormMeta)
 
-	reg(api, huma.Operation{
+	register(api, public(), huma.Operation{
 		OperationID: "comment-list-by-echo",
 		Method:      http.MethodGet,
 		Path:        "/comments",
@@ -50,7 +54,7 @@ func registerCommentHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Middlewares: huma.Middlewares{nc},
 	}, h.CommentHandler.ListCommentsByEchoID)
 
-	reg(api, huma.Operation{
+	register(api, public(), huma.Operation{
 		OperationID: "comment-list-public",
 		Method:      http.MethodGet,
 		Path:        "/comments/public",
@@ -59,121 +63,95 @@ func registerCommentHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Middlewares: huma.Middlewares{nc},
 	}, h.CommentHandler.ListPublicComments)
 
-	reg(api, huma.Operation{
+	register(api, public(), huma.Operation{
 		OperationID: "comment-create",
 		Method:      http.MethodPost,
 		Path:        "/comments",
 		Summary:     "创建公开评论",
 		Tags:        []string{"Comment"},
-		Middlewares: huma.Middlewares{stash, optional},
+		Middlewares: huma.Middlewares{stash, optViewer},
 	}, h.CommentHandler.CreateComment)
 
 	// 集成端点：访问令牌（comment:write + integration/mcp-remote 受众）
-	integrationMW := append(securedMW(revoker, authModel.ScopeCommentWrite),
-		humares.Bridge(middleware.RequireAudience(authModel.AudienceIntegration, authModel.AudienceMCPRemote)),
-		stash,
-	)
-	reg(api, huma.Operation{
+	register(api, secured(revoker, authModel.ScopeCommentWrite).audience(authModel.AudienceIntegration, authModel.AudienceMCPRemote), huma.Operation{
 		OperationID: "comment-create-integration",
 		Method:      http.MethodPost,
 		Path:        "/comments/integration",
 		Summary:     "经访问令牌创建评论（集成）",
 		Tags:        []string{"Comment"},
-		Security:    humares.Secured(authModel.ScopeCommentWrite),
-		Middlewares: integrationMW,
+		Middlewares: huma.Middlewares{stash},
 	}, h.CommentHandler.CreateIntegrationComment)
 
 	// 管理面板端点（comment:moderate）
-	sec := humares.Secured(authModel.ScopeCommentMod)
-	mw := securedMW(revoker, authModel.ScopeCommentMod)
-
-	reg(api, huma.Operation{
+	register(api, moderate, huma.Operation{
 		OperationID: "comment-panel-list",
 		Method:      http.MethodGet,
 		Path:        "/panel/comments",
 		Summary:     "管理面板列出评论",
 		Tags:        []string{"Comment"},
-		Security:    sec,
-		Middlewares: mw,
 	}, h.CommentHandler.ListPanelComments)
 
-	reg(api, huma.Operation{
+	register(api, moderate, huma.Operation{
 		OperationID: "comment-panel-get",
 		Method:      http.MethodGet,
 		Path:        "/panel/comments/{id}",
 		Summary:     "获取单条评论",
 		Tags:        []string{"Comment"},
-		Security:    sec,
-		Middlewares: mw,
 	}, h.CommentHandler.GetCommentByID)
 
-	reg(api, huma.Operation{
+	register(api, moderate, huma.Operation{
 		OperationID: "comment-panel-status",
 		Method:      http.MethodPatch,
 		Path:        "/panel/comments/{id}/status",
 		Summary:     "更新评论审核状态",
 		Tags:        []string{"Comment"},
-		Security:    sec,
-		Middlewares: mw,
 	}, h.CommentHandler.UpdateCommentStatus)
 
-	reg(api, huma.Operation{
+	register(api, moderate, huma.Operation{
 		OperationID: "comment-panel-hot",
 		Method:      http.MethodPatch,
 		Path:        "/panel/comments/{id}/hot",
 		Summary:     "置顶/取消置顶评论",
 		Tags:        []string{"Comment"},
-		Security:    sec,
-		Middlewares: mw,
 	}, h.CommentHandler.UpdateCommentHot)
 
-	reg(api, huma.Operation{
+	register(api, moderate, huma.Operation{
 		OperationID: "comment-panel-delete",
 		Method:      http.MethodDelete,
 		Path:        "/panel/comments/{id}",
 		Summary:     "删除评论",
 		Tags:        []string{"Comment"},
-		Security:    sec,
-		Middlewares: mw,
 	}, h.CommentHandler.DeleteComment)
 
-	reg(api, huma.Operation{
+	register(api, moderate, huma.Operation{
 		OperationID: "comment-panel-batch",
 		Method:      http.MethodPost,
 		Path:        "/panel/comments/batch",
 		Summary:     "批量操作评论",
 		Tags:        []string{"Comment"},
-		Security:    sec,
-		Middlewares: mw,
 	}, h.CommentHandler.BatchAction)
 
-	reg(api, huma.Operation{
+	register(api, moderate, huma.Operation{
 		OperationID: "comment-panel-settings-get",
 		Method:      http.MethodGet,
 		Path:        "/panel/comments/settings",
 		Summary:     "获取评论系统设置",
 		Tags:        []string{"Comment"},
-		Security:    sec,
-		Middlewares: mw,
 	}, h.CommentHandler.GetCommentSetting)
 
-	reg(api, huma.Operation{
+	register(api, moderate, huma.Operation{
 		OperationID: "comment-panel-settings-update",
 		Method:      http.MethodPut,
 		Path:        "/panel/comments/settings",
 		Summary:     "更新评论系统设置",
 		Tags:        []string{"Comment"},
-		Security:    sec,
-		Middlewares: mw,
 	}, h.CommentHandler.UpdateCommentSetting)
 
-	reg(api, huma.Operation{
+	register(api, moderate, huma.Operation{
 		OperationID: "comment-panel-test-email",
 		Method:      http.MethodPost,
 		Path:        "/panel/comments/settings/test-email",
 		Summary:     "发送评论通知测试邮件",
 		Tags:        []string{"Comment"},
-		Security:    sec,
-		Middlewares: mw,
 	}, h.CommentHandler.TestCommentEmail)
 }

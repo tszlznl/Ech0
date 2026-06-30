@@ -2,9 +2,6 @@
 // Copyright (C) 2025-2026 lin-snow
 
 // Package handler 暴露仪表盘相关的 HTTP 接口。
-//
-// JSON 端点（检查更新/历史日志/访客统计）走 Huma type-first；
-// 日志的 SSE / WebSocket 实时订阅仍走裸 gin（见本文件下方 + setupDashboardRoutes）。
 package handler
 
 import (
@@ -44,7 +41,6 @@ type (
 	}
 	GetVisitorStatsInput struct{}
 
-	// CheckUpdateResponse 版本检查结果。
 	CheckUpdateResponse struct {
 		CurrentVersion string `json:"current_version"`
 		LatestVersion  string `json:"latest_version"`
@@ -52,13 +48,12 @@ type (
 	}
 )
 
-type ( // 输出
+type (
 	CheckUpdateOutput  = commonModel.Result[CheckUpdateResponse]
 	LogsOutput         = commonModel.Result[[]logUtil.LogEntry]
 	VisitorStatsOutput = commonModel.Result[[]visitor.DayStat]
 )
 
-// CheckUpdate 检查 Ech0 版本更新（admin:settings）。
 func (dashboardHandler *DashboardHandler) CheckUpdate(ctx context.Context, _ *CheckUpdateInput) (CheckUpdateOutput, error) {
 	latestVersion, err := githubUtil.GetLatestVersion()
 	if err != nil {
@@ -107,9 +102,6 @@ func (dashboardHandler *DashboardHandler) GetVisitorStats(ctx context.Context, _
 	return commonModel.OK(dashboardHandler.dashboardService.GetVisitorStats()), nil
 }
 
-// --- 以下为实时日志订阅，仍走裸 gin（WebSocket / SSE） ---
-
-// WSSubscribeSystemLogs 通过 WebSocket 订阅系统日志。
 func (dashboardHandler *DashboardHandler) WSSubscribeSystemLogs() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		token := ctx.Query("token")
@@ -138,7 +130,6 @@ func (dashboardHandler *DashboardHandler) WSSubscribeSystemLogs() gin.HandlerFun
 	}
 }
 
-// SSESubscribeSystemLogs 通过 SSE 订阅系统日志（WS 兜底）。
 func (dashboardHandler *DashboardHandler) SSESubscribeSystemLogs() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		token := ctx.Query("token")

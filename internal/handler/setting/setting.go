@@ -2,9 +2,6 @@
 // Copyright (C) 2025-2026 lin-snow
 
 // Package handler 暴露系统设置相关的 HTTP 接口（Huma type-first，全部 JSON）。
-//
-// handler 返回 commonModel.Result[T]（经包内 XxxOutput 别名，自带成功提示），由注册处的
-// humares.Wrap 做 i18n 本地化并套成 Huma 信封——handler 不认识 Huma。
 package handler
 
 import (
@@ -20,14 +17,13 @@ type SettingHandler struct {
 	settingService service.Service
 }
 
-// NewSettingHandler SettingHandler 的构造函数
 func NewSettingHandler(settingService service.Service) *SettingHandler {
 	return &SettingHandler{
 		settingService: settingService,
 	}
 }
 
-type ( // 输入
+type (
 	EmptyInput struct{}
 	IDInput    struct {
 		ID string `path:"id" format:"uuid" doc:"资源 ID（UUID）"`
@@ -47,7 +43,7 @@ type ( // 输入
 	EmbeddingSettingInput struct{ Body model.EmbeddingSettingDto }
 )
 
-type ( // 输出
+type (
 	SystemSettingOutput    = commonModel.Result[model.SystemSetting]
 	OAuth2StatusOutput     = commonModel.Result[model.OAuth2Status]
 	PasskeyStatusOutput    = commonModel.Result[model.PasskeyStatus]
@@ -63,9 +59,6 @@ type ( // 输出
 	EmptyOutput            = commonModel.Result[any]
 )
 
-// --- 公开 ---
-
-// GetSettings 获取系统全局设置（公开）。
 func (h *SettingHandler) GetSettings(ctx context.Context, _ *EmptyInput) (SystemSettingOutput, error) {
 	var settings model.SystemSetting
 	if err := h.settingService.GetSetting(&settings); err != nil {
@@ -74,7 +67,6 @@ func (h *SettingHandler) GetSettings(ctx context.Context, _ *EmptyInput) (System
 	return commonModel.OK(settings, commonModel.GET_SETTINGS_SUCCESS), nil
 }
 
-// GetOAuth2Status 获取 OAuth2 启用状态（公开）。
 func (h *SettingHandler) GetOAuth2Status(ctx context.Context, _ *EmptyInput) (OAuth2StatusOutput, error) {
 	var status model.OAuth2Status
 	if err := h.settingService.GetOAuth2Status(&status); err != nil {
@@ -83,7 +75,6 @@ func (h *SettingHandler) GetOAuth2Status(ctx context.Context, _ *EmptyInput) (OA
 	return commonModel.OK(status, commonModel.GET_OAUTH2_STATUS_SUCCESS), nil
 }
 
-// GetPasskeyStatus 获取 Passkey 就绪状态（公开）。
 func (h *SettingHandler) GetPasskeyStatus(ctx context.Context, _ *EmptyInput) (PasskeyStatusOutput, error) {
 	var status model.PasskeyStatus
 	if err := h.settingService.GetPasskeyStatus(&status); err != nil {
@@ -104,9 +95,6 @@ func (h *SettingHandler) GetAgentInfo(ctx context.Context, _ *EmptyInput) (Agent
 	return commonModel.OK(settings, commonModel.GET_SETTINGS_SUCCESS), nil
 }
 
-// --- admin:settings ---
-
-// UpdateSettings 更新系统全局设置。
 func (h *SettingHandler) UpdateSettings(ctx context.Context, in *UpdateSettingsInput) (EmptyOutput, error) {
 	if err := h.settingService.UpdateSetting(ctx, &in.Body); err != nil {
 		return EmptyOutput{}, err
@@ -114,7 +102,6 @@ func (h *SettingHandler) UpdateSettings(ctx context.Context, in *UpdateSettingsI
 	return commonModel.OK[any](nil, commonModel.UPDATE_SETTINGS_SUCCESS), nil
 }
 
-// GetS3Settings 获取 S3 存储设置。
 func (h *SettingHandler) GetS3Settings(ctx context.Context, _ *EmptyInput) (S3SettingOutput, error) {
 	var s3Setting model.S3Setting
 	if err := h.settingService.GetS3Setting(ctx, &s3Setting); err != nil {
@@ -123,7 +110,6 @@ func (h *SettingHandler) GetS3Settings(ctx context.Context, _ *EmptyInput) (S3Se
 	return commonModel.OK(s3Setting, commonModel.GET_S3_SETTINGS_SUCCESS), nil
 }
 
-// UpdateS3Settings 更新 S3 存储设置。
 func (h *SettingHandler) UpdateS3Settings(ctx context.Context, in *S3SettingInput) (EmptyOutput, error) {
 	if err := h.settingService.UpdateS3Setting(ctx, &in.Body); err != nil {
 		return EmptyOutput{}, err
@@ -139,7 +125,6 @@ func (h *SettingHandler) TestS3Connection(ctx context.Context, in *S3SettingInpu
 	return commonModel.OK[any](nil, commonModel.TEST_S3_CONNECTION_SUCCESS), nil
 }
 
-// GetOAuth2Settings 获取 OAuth2 设置。
 func (h *SettingHandler) GetOAuth2Settings(ctx context.Context, _ *EmptyInput) (OAuth2SettingOutput, error) {
 	var oauthSetting model.OAuth2Setting
 	if err := h.settingService.GetOAuth2Setting(ctx, &oauthSetting); err != nil {
@@ -148,7 +133,6 @@ func (h *SettingHandler) GetOAuth2Settings(ctx context.Context, _ *EmptyInput) (
 	return commonModel.OK(oauthSetting, commonModel.GET_OAUTH_SETTINGS_SUCCESS), nil
 }
 
-// UpdateOAuth2Settings 更新 OAuth2 设置。
 func (h *SettingHandler) UpdateOAuth2Settings(ctx context.Context, in *OAuth2SettingInput) (EmptyOutput, error) {
 	if err := h.settingService.UpdateOAuth2Setting(ctx, &in.Body); err != nil {
 		return EmptyOutput{}, err
@@ -156,7 +140,6 @@ func (h *SettingHandler) UpdateOAuth2Settings(ctx context.Context, in *OAuth2Set
 	return commonModel.OK[any](nil, commonModel.UPDATE_OAUTH_SETTINGS_SUCCESS), nil
 }
 
-// GetPasskeySettings 获取 Passkey(WebAuthn) 设置。
 func (h *SettingHandler) GetPasskeySettings(ctx context.Context, _ *EmptyInput) (PasskeySettingOutput, error) {
 	var passkeySetting model.PasskeySetting
 	if err := h.settingService.GetPasskeySetting(ctx, &passkeySetting); err != nil {
@@ -165,7 +148,6 @@ func (h *SettingHandler) GetPasskeySettings(ctx context.Context, _ *EmptyInput) 
 	return commonModel.OK(passkeySetting, commonModel.GET_PASSKEY_SETTINGS_SUCCESS), nil
 }
 
-// UpdatePasskeySettings 更新 Passkey(WebAuthn) 设置。
 func (h *SettingHandler) UpdatePasskeySettings(ctx context.Context, in *PasskeySettingInput) (EmptyOutput, error) {
 	if err := h.settingService.UpdatePasskeySetting(ctx, &in.Body); err != nil {
 		return EmptyOutput{}, err
@@ -173,7 +155,6 @@ func (h *SettingHandler) UpdatePasskeySettings(ctx context.Context, in *PasskeyS
 	return commonModel.OK[any](nil, commonModel.UPDATE_PASSKEY_SETTINGS_SUCCESS), nil
 }
 
-// GetWebhook 获取所有 Webhook。
 func (h *SettingHandler) GetWebhook(ctx context.Context, _ *EmptyInput) (WebhookListOutput, error) {
 	result, err := h.settingService.GetAllWebhooks(ctx)
 	if err != nil {
@@ -182,7 +163,6 @@ func (h *SettingHandler) GetWebhook(ctx context.Context, _ *EmptyInput) (Webhook
 	return commonModel.OK(result, commonModel.GET_WEBHOOK_SUCCESS), nil
 }
 
-// CreateWebhook 创建新的 Webhook。
 func (h *SettingHandler) CreateWebhook(ctx context.Context, in *WebhookInput) (EmptyOutput, error) {
 	if err := h.settingService.CreateWebhook(ctx, &in.Body); err != nil {
 		return EmptyOutput{}, err
@@ -190,7 +170,6 @@ func (h *SettingHandler) CreateWebhook(ctx context.Context, in *WebhookInput) (E
 	return commonModel.OK[any](nil, commonModel.CREATE_WEBHOOK_SUCCESS), nil
 }
 
-// UpdateWebhook 根据 ID 更新 Webhook。
 func (h *SettingHandler) UpdateWebhook(ctx context.Context, in *WebhookIDBodyInput) (EmptyOutput, error) {
 	if err := h.settingService.UpdateWebhook(ctx, in.ID, &in.Body); err != nil {
 		return EmptyOutput{}, err
@@ -198,7 +177,6 @@ func (h *SettingHandler) UpdateWebhook(ctx context.Context, in *WebhookIDBodyInp
 	return commonModel.OK[any](nil, commonModel.UPDATE_WEBHOOK_SUCCESS), nil
 }
 
-// DeleteWebhook 根据 ID 删除 Webhook。
 func (h *SettingHandler) DeleteWebhook(ctx context.Context, in *IDInput) (EmptyOutput, error) {
 	if err := h.settingService.DeleteWebhook(ctx, in.ID); err != nil {
 		return EmptyOutput{}, err
@@ -206,7 +184,6 @@ func (h *SettingHandler) DeleteWebhook(ctx context.Context, in *IDInput) (EmptyO
 	return commonModel.OK[any](nil, commonModel.DELETE_WEBHOOK_SUCCESS), nil
 }
 
-// TestWebhook 根据 ID 触发一次 Webhook 测试请求。
 func (h *SettingHandler) TestWebhook(ctx context.Context, in *IDInput) (EmptyOutput, error) {
 	if err := h.settingService.TestWebhook(ctx, in.ID); err != nil {
 		return EmptyOutput{}, err
@@ -214,7 +191,6 @@ func (h *SettingHandler) TestWebhook(ctx context.Context, in *IDInput) (EmptyOut
 	return commonModel.OK[any](nil, commonModel.TEST_WEBHOOK_SUCCESS), nil
 }
 
-// GetSnapshotScheduleSetting 获取定时快照计划。
 func (h *SettingHandler) GetSnapshotScheduleSetting(ctx context.Context, _ *EmptyInput) (SnapshotScheduleOutput, error) {
 	var snapshotSchedule model.SnapshotSchedule
 	if err := h.settingService.GetSnapshotScheduleSetting(&snapshotSchedule); err != nil {
@@ -223,7 +199,6 @@ func (h *SettingHandler) GetSnapshotScheduleSetting(ctx context.Context, _ *Empt
 	return commonModel.OK(snapshotSchedule, commonModel.GET_SETTINGS_SUCCESS), nil
 }
 
-// UpdateSnapshotScheduleSetting 设置定时快照计划。
 func (h *SettingHandler) UpdateSnapshotScheduleSetting(ctx context.Context, in *SnapshotScheduleInput) (EmptyOutput, error) {
 	if err := h.settingService.UpdateSnapshotScheduleSetting(ctx, &in.Body); err != nil {
 		return EmptyOutput{}, err
@@ -231,7 +206,6 @@ func (h *SettingHandler) UpdateSnapshotScheduleSetting(ctx context.Context, in *
 	return commonModel.OK[any](nil, commonModel.SCHEDULE_SNAPSHOT_SUCCESS), nil
 }
 
-// GetAgentSettings 获取 Agent 设置。
 func (h *SettingHandler) GetAgentSettings(ctx context.Context, _ *EmptyInput) (AgentSettingOutput, error) {
 	var settings model.AgentSetting
 	if err := h.settingService.GetAgentSettings(ctx, &settings); err != nil {
@@ -240,7 +214,6 @@ func (h *SettingHandler) GetAgentSettings(ctx context.Context, _ *EmptyInput) (A
 	return commonModel.OK(settings, commonModel.GET_SETTINGS_SUCCESS), nil
 }
 
-// UpdateAgentSettings 更新 Agent 设置。
 func (h *SettingHandler) UpdateAgentSettings(ctx context.Context, in *AgentSettingInput) (EmptyOutput, error) {
 	if err := h.settingService.UpdateAgentSettings(ctx, &in.Body); err != nil {
 		return EmptyOutput{}, err
@@ -256,7 +229,6 @@ func (h *SettingHandler) TestAgentConnection(ctx context.Context, in *AgentSetti
 	return commonModel.OK[any](nil, commonModel.AGENT_TEST_CONNECTION_SUCCESS), nil
 }
 
-// GetEmbeddingSettings 获取 Embedding 向量设置。
 func (h *SettingHandler) GetEmbeddingSettings(ctx context.Context, _ *EmptyInput) (EmbeddingSettingOutput, error) {
 	setting, err := h.settingService.GetEmbeddingSetting(ctx)
 	if err != nil {
@@ -265,7 +237,6 @@ func (h *SettingHandler) GetEmbeddingSettings(ctx context.Context, _ *EmptyInput
 	return commonModel.OK(setting, commonModel.GET_SETTINGS_SUCCESS), nil
 }
 
-// UpdateEmbeddingSettings 更新 Embedding 向量设置。
 func (h *SettingHandler) UpdateEmbeddingSettings(ctx context.Context, in *EmbeddingSettingInput) (EmptyOutput, error) {
 	if err := h.settingService.UpdateEmbeddingSetting(ctx, in.Body); err != nil {
 		return EmptyOutput{}, err
@@ -273,9 +244,6 @@ func (h *SettingHandler) UpdateEmbeddingSettings(ctx context.Context, in *Embedd
 	return commonModel.OK[any](nil, commonModel.UPDATE_SETTINGS_SUCCESS), nil
 }
 
-// --- admin:token ---
-
-// ListAccessTokens 列出当前用户的所有访问令牌。
 func (h *SettingHandler) ListAccessTokens(ctx context.Context, _ *EmptyInput) (AccessTokenListOutput, error) {
 	result, err := h.settingService.ListAccessTokens(ctx)
 	if err != nil {
@@ -293,7 +261,6 @@ func (h *SettingHandler) CreateAccessToken(ctx context.Context, in *AccessTokenI
 	return commonModel.OK(createdToken, commonModel.CREATE_ACCESS_TOKEN_SUCCESS), nil
 }
 
-// DeleteAccessToken 根据 ID 删除访问令牌。
 func (h *SettingHandler) DeleteAccessToken(ctx context.Context, in *IDInput) (EmptyOutput, error) {
 	if err := h.settingService.DeleteAccessToken(ctx, in.ID); err != nil {
 		return EmptyOutput{}, err

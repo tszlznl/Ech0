@@ -8,7 +8,6 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/lin-snow/ech0/internal/handler"
-	"github.com/lin-snow/ech0/internal/handler/humares"
 	authService "github.com/lin-snow/ech0/internal/service/auth"
 )
 
@@ -16,7 +15,7 @@ import (
 // 注意：RSS / robots.txt / sitemap.xml / healthz 是非 JSON（XML/纯文本）输出，
 // 仍由 setupResourceRoutes 走裸 gin，不在此迁移。
 func registerCommonHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
-	reg(api, huma.Operation{
+	register(api, public(), huma.Operation{
 		OperationID: "common-heatmap",
 		Method:      http.MethodGet,
 		Path:        "/heatmap",
@@ -24,7 +23,7 @@ func registerCommonHuma(api huma.API, h *handler.Bundle, revoker authService.Tok
 		Tags:        []string{"Common"},
 	}, h.CommonHandler.GetHeatMap)
 
-	reg(api, huma.Operation{
+	register(api, public(), huma.Operation{
 		OperationID: "common-hello",
 		Method:      http.MethodGet,
 		Path:        "/hello",
@@ -32,13 +31,11 @@ func registerCommonHuma(api huma.API, h *handler.Bundle, revoker authService.Tok
 		Tags:        []string{"Common"},
 	}, h.CommonHandler.HelloEch0)
 
-	reg(api, huma.Operation{
+	register(api, secured(revoker), huma.Operation{
 		OperationID: "common-website-title",
 		Method:      http.MethodGet,
 		Path:        "/website/title",
 		Summary:     "获取目标网站标题",
 		Tags:        []string{"Common"},
-		Security:    humares.Secured(),
-		Middlewares: securedMW(revoker),
 	}, h.CommonHandler.GetWebsiteTitle)
 }

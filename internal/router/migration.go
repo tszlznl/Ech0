@@ -8,7 +8,6 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/lin-snow/ech0/internal/handler"
-	"github.com/lin-snow/ech0/internal/handler/humares"
 	"github.com/lin-snow/ech0/internal/middleware"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	authService "github.com/lin-snow/ech0/internal/service/auth"
@@ -30,23 +29,61 @@ func setupMigrationRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 
 // registerMigrationHuma 注册数据迁移控制面的 JSON 端点（admin:settings）。
 func registerMigrationHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
-	sec := humares.Secured(authModel.ScopeAdminSettings)
-	mw := securedMW(revoker, authModel.ScopeAdminSettings)
-	meta := func(id, summary string) huma.Operation {
-		return huma.Operation{OperationID: id, Summary: summary, Tags: []string{"Migration"}, Security: sec, Middlewares: mw}
-	}
-	register := func(id, method, path, summary string) huma.Operation {
-		o := meta(id, summary)
-		o.Method = method
-		o.Path = path
-		return o
-	}
+	admin := secured(revoker, authModel.ScopeAdminSettings)
 
-	reg(api, register("migration-start", http.MethodPost, "/migration/start", "启动全局数据迁移"), h.MigrationHandler.StartMigration)
-	reg(api, register("migration-status", http.MethodGet, "/migration/status", "查询全局迁移状态"), h.MigrationHandler.GetMigrationStatus)
-	reg(api, register("migration-cancel", http.MethodPost, "/migration/cancel", "取消进行中的全局迁移"), h.MigrationHandler.CancelMigration)
-	reg(api, register("migration-cleanup", http.MethodPost, "/migration/cleanup", "清理迁移中间产物"), h.MigrationHandler.CleanupMigration)
-	reg(api, register("migration-export", http.MethodPost, "/migration/export", "提交导出作业"), h.MigrationHandler.StartExport)
-	reg(api, register("migration-export-status", http.MethodGet, "/migration/export/status", "查询导出作业状态"), h.MigrationHandler.GetExportStatus)
-	reg(api, register("migration-export-cancel", http.MethodPost, "/migration/export/cancel", "取消导出作业"), h.MigrationHandler.CancelExport)
+	register(api, admin, huma.Operation{
+		OperationID: "migration-start",
+		Method:      http.MethodPost,
+		Path:        "/migration/start",
+		Summary:     "启动全局数据迁移",
+		Tags:        []string{"Migration"},
+	}, h.MigrationHandler.StartMigration)
+
+	register(api, admin, huma.Operation{
+		OperationID: "migration-status",
+		Method:      http.MethodGet,
+		Path:        "/migration/status",
+		Summary:     "查询全局迁移状态",
+		Tags:        []string{"Migration"},
+	}, h.MigrationHandler.GetMigrationStatus)
+
+	register(api, admin, huma.Operation{
+		OperationID: "migration-cancel",
+		Method:      http.MethodPost,
+		Path:        "/migration/cancel",
+		Summary:     "取消进行中的全局迁移",
+		Tags:        []string{"Migration"},
+	}, h.MigrationHandler.CancelMigration)
+
+	register(api, admin, huma.Operation{
+		OperationID: "migration-cleanup",
+		Method:      http.MethodPost,
+		Path:        "/migration/cleanup",
+		Summary:     "清理迁移中间产物",
+		Tags:        []string{"Migration"},
+	}, h.MigrationHandler.CleanupMigration)
+
+	register(api, admin, huma.Operation{
+		OperationID: "migration-export",
+		Method:      http.MethodPost,
+		Path:        "/migration/export",
+		Summary:     "提交导出作业",
+		Tags:        []string{"Migration"},
+	}, h.MigrationHandler.StartExport)
+
+	register(api, admin, huma.Operation{
+		OperationID: "migration-export-status",
+		Method:      http.MethodGet,
+		Path:        "/migration/export/status",
+		Summary:     "查询导出作业状态",
+		Tags:        []string{"Migration"},
+	}, h.MigrationHandler.GetExportStatus)
+
+	register(api, admin, huma.Operation{
+		OperationID: "migration-export-cancel",
+		Method:      http.MethodPost,
+		Path:        "/migration/export/cancel",
+		Summary:     "取消导出作业",
+		Tags:        []string{"Migration"},
+	}, h.MigrationHandler.CancelExport)
 }
