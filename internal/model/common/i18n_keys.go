@@ -3,9 +3,15 @@
 
 package model
 
+import (
+	"errors"
+	"strings"
+)
+
 const (
 	MsgKeyCommonSuccess               = "common.success"
 	MsgKeyCommonRequestFailed         = "common.request_failed"
+	MsgKeyCommonInvalidRequest        = "common.invalid_request"
 	MsgKeyInvalidQueryParams          = "common.invalid_query_params"
 	MsgKeySettingUpdateOK             = "setting.update_success"
 	MsgKeyAgentModelMissing           = "agent.model_missing"
@@ -21,6 +27,7 @@ const (
 	MsgKeyAuthTokenGenerateFailed     = "auth.token_generate_failed"
 	MsgKeyDashboardLogsOk             = "dashboard.logs.success"
 	MsgKeyDashboardTailBad            = "dashboard.logs.tail_invalid"
+	MsgKeyDashboardCheckUpdateFailed  = "dashboard.check_update_failed"
 )
 
 func MessageKeyFromErrorCode(code string) string {
@@ -63,4 +70,22 @@ func MessageKeyFromMessage(msg string) string {
 	default:
 		return ""
 	}
+}
+
+// ResolveFailureFields 解析失败响应的稳定 wire 字段（error_code / message_key / params），
+// 不做本地化。这是 humares.Err（Huma 路径）与 response.Execute（gin 路径）共用的优先级阶梯，
+// 收敛到一处避免两套响应契约各自维护时漂移。base 是已 HandleError 过的回退消息文本。
+//
+//  1. *BizError：取 Code；MessageKey 缺失时按 Code 映射；带 Params。
+//  2. 其余 error：无 error_code，按消息文本 base 映射 message_key。
+func ResolveFailureFields(err error, base string) (code, messageKey string, params map[string]any) {
+	var bizErr *BizError
+	if errors.As(err, &bizErr) {
+		key := strings.TrimSpace(bizErr.MessageKey)
+		if key == "" {
+			key = MessageKeyFromErrorCode(bizErr.Code)
+		}
+		return bizErr.Code, key, bizErr.Params
+	}
+	return "", MessageKeyFromMessage(base), nil
 }

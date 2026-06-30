@@ -57,7 +57,14 @@ type (
 func (dashboardHandler *DashboardHandler) CheckUpdate(ctx context.Context, _ *CheckUpdateInput) (CheckUpdateOutput, error) {
 	latestVersion, err := githubUtil.GetLatestVersion()
 	if err != nil {
-		return CheckUpdateOutput{}, err
+		// 包成带 message_key 的 BizError：用户看到本地化的「检查更新失败」而非底层网络错误串，
+		// 同时保留 Err 供 HandleError 记录底层原因。
+		return CheckUpdateOutput{}, &commonModel.BizError{
+			Code:       commonModel.ErrCodeInternal,
+			Msg:        commonModel.CHECK_UPDATE_FAILED,
+			MessageKey: commonModel.MsgKeyDashboardCheckUpdateFailed,
+			Err:        err,
+		}
 	}
 
 	cur := semver.Canonical("v" + strings.TrimPrefix(strings.TrimSpace(versionPkg.Version), "v"))

@@ -54,6 +54,7 @@ const (
 // 业务错误码
 const (
 	ErrCodeInvalidRequest          = "INVALID_REQUEST"
+	ErrCodeInternal                = "INTERNAL_ERROR"
 	ErrCodePermissionDenied        = "PERMISSION_DENIED"
 	ErrCodeInitAlreadyDone         = "INIT_ALREADY_DONE"
 	ErrCodeInitOwnerExists         = "INIT_OWNER_EXISTS"
@@ -145,6 +146,11 @@ const (
 // Migration 错误相关常量
 const (
 	MIGRATION_JOB_NOT_FOUND = "迁移任务不存在"
+)
+
+// Dashboard 错误相关常量
+const (
+	CHECK_UPDATE_FAILED = "检查更新失败"
 )
 
 // Agent 错误相关常量

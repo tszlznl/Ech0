@@ -4,7 +4,6 @@
 package handler
 
 import (
-	"errors"
 	"net/http"
 	"strings"
 
@@ -43,35 +42,26 @@ func Execute(fn func(ctx *gin.Context) Response) gin.HandlerFunc {
 			})
 			localizer := i18nUtil.LocalizerFromGin(ctx)
 
-			var bizErr *commonModel.BizError
-			if errors.As(res.Err, &bizErr) {
-				messageKey := strings.TrimSpace(bizErr.MessageKey)
-				if messageKey == "" {
-					messageKey = commonModel.MessageKeyFromErrorCode(bizErr.Code)
-				}
-				msg = i18nUtil.Localize(localizer, messageKey, msg, bizErr.Params)
-				ctx.JSON(http.StatusBadRequest, commonModel.FailWithLocalized[string](msg, bizErr.Code, messageKey, bizErr.Params))
-				return
-			}
+			// 失败映射阶梯（BizError → key，否则按消息文本映射）与 Huma 路径共用，见 commonModel.ResolveFailureFields。
+			code, messageKey, params := commonModel.ResolveFailureFields(res.Err, msg)
 
-			if res.ErrorCode != "" {
-				messageKey := strings.TrimSpace(res.MessageKey)
+			// gin 路径专有：res.Err 非 BizError 但 handler 在 Response 上显式设了 ErrorCode，用 res 上的字段兜底。
+			if code == "" && res.ErrorCode != "" {
+				code = res.ErrorCode
+				messageKey = strings.TrimSpace(res.MessageKey)
 				if messageKey == "" {
 					messageKey = commonModel.MessageKeyFromErrorCode(res.ErrorCode)
 				}
-				msg = i18nUtil.Localize(localizer, messageKey, msg, res.MessageParams)
-				ctx.JSON(http.StatusBadRequest, commonModel.FailWithLocalized[string](msg, res.ErrorCode, messageKey, res.MessageParams))
+				params = res.MessageParams
+			}
+
+			if code == "" && messageKey == "" {
+				ctx.JSON(http.StatusBadRequest, commonModel.Fail[string](msg))
 				return
 			}
 
-			messageKey := commonModel.MessageKeyFromMessage(msg)
-			msg = i18nUtil.Localize(localizer, messageKey, msg, nil)
-			if messageKey != "" {
-				ctx.JSON(http.StatusBadRequest, commonModel.FailWithLocalized[string](msg, "", messageKey, nil))
-				return
-			}
-
-			ctx.JSON(http.StatusBadRequest, commonModel.Fail[string](msg))
+			msg = i18nUtil.Localize(localizer, messageKey, msg, params)
+			ctx.JSON(http.StatusBadRequest, commonModel.FailWithLocalized[string](msg, code, messageKey, params))
 			return
 		}
 
