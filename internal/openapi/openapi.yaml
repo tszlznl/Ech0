@@ -1,7 +1,7 @@
 components:
   schemas:
     AccessTokenSetting:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         audience:
           type: string
@@ -32,7 +32,7 @@ components:
           type: string
       type: object
     AccessTokenSettingDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         audience:
           type: string
@@ -48,7 +48,7 @@ components:
             - "null"
       type: object
     AgentSetting:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         api_key:
           type: string
@@ -69,7 +69,7 @@ components:
           type: string
       type: object
     AgentSettingDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         api_key:
           type: string
@@ -90,7 +90,7 @@ components:
           type: string
       type: object
     BatchCommentActionDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         action:
           type: string
@@ -102,7 +102,7 @@ components:
             - "null"
       type: object
     ChatMessage:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         content:
           type: string
@@ -121,7 +121,7 @@ components:
             - "null"
       type: object
     CheckUpdateResponse:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         current_version:
           type: string
@@ -131,7 +131,7 @@ components:
           type: string
       type: object
     Comment:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         content:
           type: string
@@ -163,7 +163,7 @@ components:
           type: string
       type: object
     Connect:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         logo:
           type: string
@@ -183,7 +183,7 @@ components:
           type: string
       type: object
     Connected:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         connect_url:
           type: string
@@ -191,7 +191,7 @@ components:
           type: string
       type: object
     ConnectedHealth:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         connect_url:
           type: string
@@ -203,7 +203,7 @@ components:
           type: string
       type: object
     CreateCommentDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         captcha_token:
           type: string
@@ -225,7 +225,7 @@ components:
           type: string
       type: object
     CreateCommentResult:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         id:
           type: string
@@ -233,7 +233,7 @@ components:
           type: string
       type: object
     CreateExternalFileDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         category:
           type: string
@@ -251,7 +251,7 @@ components:
           type: integer
       type: object
     CreateIntegrationCommentDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         content:
           type: string
@@ -263,13 +263,13 @@ components:
           type: string
       type: object
     CreateTagDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         name:
           type: string
       type: object
     DayStat:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         date:
           type: string
@@ -281,7 +281,7 @@ components:
           type: integer
       type: object
     Echo:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         content:
           type: string
@@ -317,7 +317,7 @@ components:
           type: string
       type: object
     EchoExtension:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         created_at:
           format: int64
@@ -336,7 +336,7 @@ components:
           type: integer
       type: object
     EchoExtensionDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         payload:
           additionalProperties: {}
@@ -345,7 +345,7 @@ components:
           type: string
       type: object
     EchoFile:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         echo_id:
           type: string
@@ -360,7 +360,7 @@ components:
           type: integer
       type: object
     EchoQueryDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         dateFrom:
           format: int64
@@ -388,7 +388,7 @@ components:
             - "null"
       type: object
     EchoUpsertDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         content:
           type: string
@@ -417,7 +417,7 @@ components:
             - "null"
       type: object
     EmailNotifySetting:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         enabled:
           type: boolean
@@ -436,7 +436,7 @@ components:
           type: string
       type: object
     EmbeddingSetting:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         api_key:
           type: string
@@ -454,7 +454,7 @@ components:
           type: string
       type: object
     EmbeddingSettingDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         api_key:
           type: string
@@ -472,7 +472,7 @@ components:
           type: string
       type: object
     ErrorBody:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           description: 业务状态码，失败为 0
@@ -495,7 +495,7 @@ components:
           type: string
       type: object
     ExportStateDTO:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         error_message:
           type: string
@@ -522,7 +522,7 @@ components:
           type: integer
       type: object
     File:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         bucket:
           type: string
@@ -558,7 +558,7 @@ components:
           type: integer
       type: object
     FileDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         category:
           type: string
@@ -585,7 +585,7 @@ components:
           type: integer
       type: object
     FileListItemDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         content_type:
           type: string
@@ -607,7 +607,7 @@ components:
           type: string
       type: object
     FileListResultDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         items:
           items:
@@ -620,7 +620,7 @@ components:
           type: integer
       type: object
     FileTreeNodeDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         content_type:
           type: string
@@ -642,7 +642,7 @@ components:
           type: integer
       type: object
     FileTreeResultDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         items:
           items:
@@ -652,7 +652,7 @@ components:
             - "null"
       type: object
     FormMeta:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         captcha_api_endpoint:
           type: string
@@ -667,7 +667,7 @@ components:
           type: integer
       type: object
     GetPresignURLDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         content_type:
           type: string
@@ -677,7 +677,7 @@ components:
           type: string
       type: object
     GlobalMigrationStateDTO:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         error_message:
           type: string
@@ -704,7 +704,7 @@ components:
           type: integer
       type: object
     Heatmap:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         count:
           format: int64
@@ -713,7 +713,7 @@ components:
           type: string
       type: object
     HelloResponse:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         author:
           type: string
@@ -733,7 +733,7 @@ components:
           type: string
       type: object
     LogEntry:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         caller:
           type: string
@@ -754,7 +754,7 @@ components:
           type: string
       type: object
     ModelResultCommentSystemSetting:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -772,7 +772,7 @@ components:
           type: string
       type: object
     ModelSystemSetting:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         captcha_enabled:
           type: boolean
@@ -784,7 +784,7 @@ components:
           type: boolean
       type: object
     OAuth2Setting:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         auth_redirect_allowed_return_urls:
           items:
@@ -828,7 +828,7 @@ components:
           type: string
       type: object
     OAuth2SettingDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         auth_redirect_allowed_return_urls:
           items:
@@ -872,7 +872,7 @@ components:
           type: string
       type: object
     OAuth2Status:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         enabled:
           type: boolean
@@ -882,14 +882,14 @@ components:
           type: string
       type: object
     OAuthBindBody:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         redirect_uri:
           description: OAuth 回调地址
           type: string
       type: object
     OAuthInfoDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         auth_type:
           type: string
@@ -903,7 +903,7 @@ components:
           type: string
       type: object
     PageQueryDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         page:
           format: int64
@@ -915,7 +915,7 @@ components:
           type: string
       type: object
     PageQueryResultListEcho:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         items:
           items:
@@ -928,7 +928,7 @@ components:
           type: integer
       type: object
     PageResultComment:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         items:
           items:
@@ -941,7 +941,7 @@ components:
           type: integer
       type: object
     PasskeyDeviceDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         aaguid:
           type: string
@@ -957,7 +957,7 @@ components:
           type: integer
       type: object
     PasskeySetting:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         webauthn_allowed_origins:
           items:
@@ -969,7 +969,7 @@ components:
           type: string
       type: object
     PasskeySettingDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         webauthn_allowed_origins:
           items:
@@ -981,19 +981,19 @@ components:
           type: string
       type: object
     PasskeyStatus:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         passkey_ready:
           type: boolean
       type: object
     PasskeyUpdateDeviceNameReq:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         device_name:
           type: string
       type: object
     PresignDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         content_type:
           type: string
@@ -1009,7 +1009,7 @@ components:
           type: string
       type: object
     PublicComment:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         content:
           type: string
@@ -1037,7 +1037,7 @@ components:
           type: string
       type: object
     RegisterDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         email:
           type: string
@@ -1049,7 +1049,7 @@ components:
           type: string
       type: object
     ReindexStatusResponse:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         error:
           description: 失败原因（status=failed 时）
@@ -1074,7 +1074,7 @@ components:
           type: string
       type: object
     ResultAgentSetting:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1092,7 +1092,7 @@ components:
           type: string
       type: object
     ResultCheckUpdateResponse:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1110,7 +1110,7 @@ components:
           type: string
       type: object
     ResultComment:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1128,7 +1128,7 @@ components:
           type: string
       type: object
     ResultConnect:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1146,7 +1146,7 @@ components:
           type: string
       type: object
     ResultCreateCommentResult:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1164,7 +1164,7 @@ components:
           type: string
       type: object
     ResultEcho:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1182,7 +1182,7 @@ components:
           type: string
       type: object
     ResultEmbeddingSetting:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1200,7 +1200,7 @@ components:
           type: string
       type: object
     ResultExportStateDTO:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1218,7 +1218,7 @@ components:
           type: string
       type: object
     ResultFileDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1236,7 +1236,7 @@ components:
           type: string
       type: object
     ResultFileListResultDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1254,7 +1254,7 @@ components:
           type: string
       type: object
     ResultFileTreeResultDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1272,7 +1272,7 @@ components:
           type: string
       type: object
     ResultFormMeta:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1290,7 +1290,7 @@ components:
           type: string
       type: object
     ResultGlobalMigrationStateDTO:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1308,7 +1308,7 @@ components:
           type: string
       type: object
     ResultHelloResponse:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1326,7 +1326,7 @@ components:
           type: string
       type: object
     ResultInterface {}:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1343,7 +1343,7 @@ components:
           type: string
       type: object
     ResultListAccessTokenSetting:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1365,7 +1365,7 @@ components:
           type: string
       type: object
     ResultListChatMessage:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1387,7 +1387,7 @@ components:
           type: string
       type: object
     ResultListConnect:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1409,7 +1409,7 @@ components:
           type: string
       type: object
     ResultListConnected:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1431,7 +1431,7 @@ components:
           type: string
       type: object
     ResultListConnectedHealth:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1453,7 +1453,7 @@ components:
           type: string
       type: object
     ResultListDayStat:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1475,7 +1475,7 @@ components:
           type: string
       type: object
     ResultListEcho:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1497,7 +1497,7 @@ components:
           type: string
       type: object
     ResultListHeatmap:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1519,7 +1519,7 @@ components:
           type: string
       type: object
     ResultListLogEntry:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1541,7 +1541,7 @@ components:
           type: string
       type: object
     ResultListPasskeyDeviceDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1563,7 +1563,7 @@ components:
           type: string
       type: object
     ResultListPublicComment:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1585,7 +1585,7 @@ components:
           type: string
       type: object
     ResultListTag:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1607,7 +1607,7 @@ components:
           type: string
       type: object
     ResultListUser:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1629,7 +1629,7 @@ components:
           type: string
       type: object
     ResultListWebhook:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1651,7 +1651,7 @@ components:
           type: string
       type: object
     ResultOAuth2Setting:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1669,7 +1669,7 @@ components:
           type: string
       type: object
     ResultOAuth2Status:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1687,7 +1687,7 @@ components:
           type: string
       type: object
     ResultOAuthInfoDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1705,7 +1705,7 @@ components:
           type: string
       type: object
     ResultPageQueryResultListEcho:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1723,7 +1723,7 @@ components:
           type: string
       type: object
     ResultPageResultComment:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1741,7 +1741,7 @@ components:
           type: string
       type: object
     ResultPasskeySetting:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1759,7 +1759,7 @@ components:
           type: string
       type: object
     ResultPasskeyStatus:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1777,7 +1777,7 @@ components:
           type: string
       type: object
     ResultPresignDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1795,7 +1795,7 @@ components:
           type: string
       type: object
     ResultReindexStatusResponse:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1813,7 +1813,7 @@ components:
           type: string
       type: object
     ResultS3Setting:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1831,7 +1831,7 @@ components:
           type: string
       type: object
     ResultSnapshotSchedule:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1849,7 +1849,7 @@ components:
           type: string
       type: object
     ResultStatus:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1867,7 +1867,7 @@ components:
           type: string
       type: object
     ResultString:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1885,7 +1885,7 @@ components:
           type: string
       type: object
     ResultSystemSetting:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1903,7 +1903,7 @@ components:
           type: string
       type: object
     ResultTag:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1921,7 +1921,7 @@ components:
           type: string
       type: object
     ResultUser:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         code:
           format: int64
@@ -1939,7 +1939,7 @@ components:
           type: string
       type: object
     S3Setting:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         access_key:
           type: string
@@ -1965,7 +1965,7 @@ components:
           type: boolean
       type: object
     S3SettingDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         access_key:
           type: string
@@ -1991,7 +1991,7 @@ components:
           type: boolean
       type: object
     SearchResult:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         content:
           type: string
@@ -2015,7 +2015,7 @@ components:
           type: string
       type: object
     SnapshotSchedule:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         cron_expression:
           type: string
@@ -2023,7 +2023,7 @@ components:
           type: boolean
       type: object
     SnapshotScheduleDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         cron_expression:
           type: string
@@ -2031,7 +2031,7 @@ components:
           type: boolean
       type: object
     StartGlobalMigrationRequest:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         source_payload:
           additionalProperties: {}
@@ -2040,7 +2040,7 @@ components:
           type: string
       type: object
     Status:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         initialized:
           type: boolean
@@ -2048,7 +2048,7 @@ components:
           type: boolean
       type: object
     SystemSetting:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         ICP_number:
           type: string
@@ -2076,7 +2076,7 @@ components:
           type: string
       type: object
     SystemSettingDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         ICP_number:
           type: string
@@ -2106,7 +2106,7 @@ components:
           type: string
       type: object
     Tag:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         created_at:
           format: int64
@@ -2120,25 +2120,25 @@ components:
           type: integer
       type: object
     TestEmailRequest:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         setting:
           $ref: "#/components/schemas/ModelSystemSetting"
       type: object
     UpdateCommentHotDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         hot:
           type: boolean
       type: object
     UpdateCommentStatusDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         status:
           type: string
       type: object
     UpdateFileMetaDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         content_type:
           type: string
@@ -2153,7 +2153,7 @@ components:
           type: integer
       type: object
     User:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         avatar:
           type: string
@@ -2171,7 +2171,7 @@ components:
           type: string
       type: object
     UserInfoDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         avatar:
           type: string
@@ -2191,7 +2191,7 @@ components:
           type: string
       type: object
     Webhook:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         created_at:
           format: int64
@@ -2214,7 +2214,7 @@ components:
           type: string
       type: object
     WebhookDto:
-      additionalProperties: false
+      additionalProperties: true
       properties:
         is_active:
           type: boolean
