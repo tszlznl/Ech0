@@ -30,17 +30,6 @@ components:
           type: string
         user_id:
           type: string
-      required:
-        - id
-        - user_id
-        - token
-        - name
-        - token_type
-        - scopes
-        - audience
-        - jti
-        - expiry
-        - created_at
       type: object
     AccessTokenSettingDto:
       additionalProperties: false
@@ -57,11 +46,6 @@ components:
           type:
             - array
             - "null"
-      required:
-        - name
-        - expiry
-        - scopes
-        - audience
       type: object
     AgentSetting:
       additionalProperties: false
@@ -83,15 +67,6 @@ components:
           type: string
         protocol:
           type: string
-      required:
-        - enable
-        - protocol
-        - model
-        - api_key
-        - prompt
-        - base_url
-        - multimodal
-        - context_window
       type: object
     AgentSettingDto:
       additionalProperties: false
@@ -113,15 +88,6 @@ components:
           type: string
         protocol:
           type: string
-      required:
-        - enable
-        - protocol
-        - model
-        - api_key
-        - prompt
-        - base_url
-        - multimodal
-        - context_window
       type: object
     BatchCommentActionDto:
       additionalProperties: false
@@ -134,9 +100,6 @@ components:
           type:
             - array
             - "null"
-      required:
-        - action
-        - ids
       type: object
     ChatMessage:
       additionalProperties: false
@@ -156,9 +119,6 @@ components:
           type:
             - array
             - "null"
-      required:
-        - role
-        - content
       type: object
     CheckUpdateResponse:
       additionalProperties: false
@@ -169,10 +129,6 @@ components:
           type: boolean
         latest_version:
           type: string
-      required:
-        - current_version
-        - latest_version
-        - has_update
       type: object
     Comment:
       additionalProperties: false
@@ -205,17 +161,6 @@ components:
           type: string
         website:
           type: string
-      required:
-        - id
-        - echo_id
-        - nickname
-        - email
-        - content
-        - status
-        - hot
-        - source
-        - created_at
-        - updated_at
       type: object
     Connect:
       additionalProperties: false
@@ -236,14 +181,6 @@ components:
           type: integer
         version:
           type: string
-      required:
-        - server_name
-        - server_url
-        - logo
-        - total_echos
-        - today_echos
-        - sys_username
-        - version
       type: object
     Connected:
       additionalProperties: false
@@ -252,9 +189,6 @@ components:
           type: string
         id:
           type: string
-      required:
-        - id
-        - connect_url
       type: object
     ConnectedHealth:
       additionalProperties: false
@@ -267,11 +201,6 @@ components:
           type: string
         version:
           type: string
-      required:
-        - id
-        - connect_url
-        - status
-        - version
       type: object
     CreateCommentDto:
       additionalProperties: false
@@ -294,16 +223,6 @@ components:
           type: string
         website:
           type: string
-      required:
-        - echo_id
-        - parent_id
-        - nickname
-        - email
-        - website
-        - content
-        - hp_field
-        - form_token
-        - captcha_token
       type: object
     CreateCommentResult:
       additionalProperties: false
@@ -312,9 +231,6 @@ components:
           type: string
         status:
           type: string
-      required:
-        - id
-        - status
       type: object
     CreateExternalFileDto:
       additionalProperties: false
@@ -333,13 +249,6 @@ components:
         width:
           format: int64
           type: integer
-      required:
-        - url
-        - content_type
-        - category
-        - width
-        - height
-        - name
       type: object
     CreateIntegrationCommentDto:
       additionalProperties: false
@@ -352,19 +261,12 @@ components:
           type: string
         nickname:
           type: string
-      required:
-        - echo_id
-        - content
-        - nickname
-        - metadata
       type: object
     CreateTagDto:
       additionalProperties: false
       properties:
         name:
           type: string
-      required:
-        - name
       type: object
     DayStat:
       additionalProperties: false
@@ -377,10 +279,6 @@ components:
         uv:
           format: int64
           type: integer
-      required:
-        - date
-        - pv
-        - uv
       type: object
     Echo:
       additionalProperties: false
@@ -417,13 +315,6 @@ components:
           type: string
         username:
           type: string
-      required:
-        - id
-        - content
-        - private
-        - user_id
-        - fav_count
-        - created_at
       type: object
     EchoExtension:
       additionalProperties: false
@@ -443,13 +334,6 @@ components:
         updated_at:
           format: int64
           type: integer
-      required:
-        - id
-        - echo_id
-        - type
-        - payload
-        - created_at
-        - updated_at
       type: object
     EchoExtensionDto:
       additionalProperties: false
@@ -459,9 +343,6 @@ components:
           type: object
         type:
           type: string
-      required:
-        - type
-        - payload
       type: object
     EchoFile:
       additionalProperties: false
@@ -477,11 +358,6 @@ components:
         sort_order:
           format: int64
           type: integer
-      required:
-        - id
-        - echo_id
-        - file_id
-        - sort_order
       type: object
     EchoQueryDto:
       additionalProperties: false
@@ -510,15 +386,6 @@ components:
           type:
             - array
             - "null"
-      required:
-        - page
-        - pageSize
-        - search
-        - tagIds
-        - sortBy
-        - sortOrder
-        - dateFrom
-        - dateTo
       type: object
     EchoUpsertDto:
       additionalProperties: false
@@ -548,9 +415,6 @@ components:
           type:
             - array
             - "null"
-      required:
-        - content
-        - private
       type: object
     EmailNotifySetting:
       additionalProperties: false
@@ -570,12 +434,6 @@ components:
           type: string
         smtp_username:
           type: string
-      required:
-        - enabled
-        - smtp_host
-        - smtp_port
-        - smtp_username
-        - smtp_sender
       type: object
     EmbeddingSetting:
       additionalProperties: false
@@ -594,13 +452,6 @@ components:
           type: boolean
         model:
           type: string
-      required:
-        - enable
-        - model
-        - api_key
-        - base_url
-        - dim
-        - batch_size
       type: object
     EmbeddingSettingDto:
       additionalProperties: false
@@ -619,13 +470,6 @@ components:
           type: boolean
         model:
           type: string
-      required:
-        - enable
-        - model
-        - api_key
-        - base_url
-        - dim
-        - batch_size
       type: object
     ErrorBody:
       additionalProperties: false
@@ -649,10 +493,6 @@ components:
         msg:
           description: 状态描述（回退文案）
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ExportStateDTO:
       additionalProperties: false
@@ -680,10 +520,6 @@ components:
         version:
           format: int64
           type: integer
-      required:
-        - version
-        - status
-        - error_message
       type: object
     File:
       additionalProperties: false
@@ -720,16 +556,6 @@ components:
         width:
           format: int64
           type: integer
-      required:
-        - id
-        - key
-        - storage_type
-        - url
-        - name
-        - size
-        - category
-        - user_id
-        - created_at
       type: object
     FileDto:
       additionalProperties: false
@@ -757,10 +583,6 @@ components:
         width:
           format: int64
           type: integer
-      required:
-        - id
-        - key
-        - url
       type: object
     FileListItemDto:
       additionalProperties: false
@@ -783,13 +605,6 @@ components:
           type: string
         url:
           type: string
-      required:
-        - id
-        - name
-        - key
-        - storage_type
-        - url
-        - created_at
       type: object
     FileListResultDto:
       additionalProperties: false
@@ -803,9 +618,6 @@ components:
         total:
           format: int64
           type: integer
-      required:
-        - total
-        - items
       type: object
     FileTreeNodeDto:
       additionalProperties: false
@@ -828,11 +640,6 @@ components:
         size:
           format: int64
           type: integer
-      required:
-        - name
-        - path
-        - node_type
-        - has_children
       type: object
     FileTreeResultDto:
       additionalProperties: false
@@ -843,8 +650,6 @@ components:
           type:
             - array
             - "null"
-      required:
-        - items
       type: object
     FormMeta:
       additionalProperties: false
@@ -860,12 +665,6 @@ components:
         min_submit_ms:
           format: int64
           type: integer
-      required:
-        - form_token
-        - min_submit_ms
-        - captcha_enabled
-        - captcha_api_endpoint
-        - enable_comment
       type: object
     GetPresignURLDto:
       additionalProperties: false
@@ -876,9 +675,6 @@ components:
           type: string
         storage_type:
           type: string
-      required:
-        - file_name
-        - content_type
       type: object
     GlobalMigrationStateDTO:
       additionalProperties: false
@@ -906,11 +702,6 @@ components:
         version:
           format: int64
           type: integer
-      required:
-        - version
-        - source_type
-        - status
-        - error_message
       type: object
     Heatmap:
       additionalProperties: false
@@ -920,9 +711,6 @@ components:
           type: integer
         date:
           type: string
-      required:
-        - date
-        - count
       type: object
     HelloResponse:
       additionalProperties: false
@@ -943,15 +731,6 @@ components:
           type: string
         version:
           type: string
-      required:
-        - hello
-        - copyright
-        - version
-        - commit
-        - build_time
-        - license
-        - author
-        - repo_url
       type: object
     LogEntry:
       additionalProperties: false
@@ -973,10 +752,6 @@ components:
           type: string
         time:
           type: string
-      required:
-        - time
-        - level
-        - msg
       type: object
     ModelResultCommentSystemSetting:
       additionalProperties: false
@@ -995,10 +770,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ModelSystemSetting:
       additionalProperties: false
@@ -1011,11 +782,6 @@ components:
           type: boolean
         require_approval:
           type: boolean
-      required:
-        - enable_comment
-        - require_approval
-        - captcha_enabled
-        - email_notify
       type: object
     OAuth2Setting:
       additionalProperties: false
@@ -1060,21 +826,6 @@ components:
           type: string
         user_info_url:
           type: string
-      required:
-        - enable
-        - provider
-        - client_id
-        - client_secret
-        - redirect_uri
-        - scopes
-        - auth_url
-        - token_url
-        - user_info_url
-        - is_oidc
-        - issuer
-        - jwks_url
-        - auth_redirect_allowed_return_urls
-        - cors_allowed_origins
       type: object
     OAuth2SettingDto:
       additionalProperties: false
@@ -1119,21 +870,6 @@ components:
           type: string
         user_info_url:
           type: string
-      required:
-        - enable
-        - provider
-        - client_id
-        - client_secret
-        - redirect_uri
-        - scopes
-        - auth_url
-        - token_url
-        - user_info_url
-        - is_oidc
-        - issuer
-        - jwks_url
-        - auth_redirect_allowed_return_urls
-        - cors_allowed_origins
       type: object
     OAuth2Status:
       additionalProperties: false
@@ -1144,10 +880,6 @@ components:
           type: boolean
         provider:
           type: string
-      required:
-        - enabled
-        - provider
-        - oauth_ready
       type: object
     OAuthBindBody:
       additionalProperties: false
@@ -1155,8 +887,6 @@ components:
         redirect_uri:
           description: OAuth 回调地址
           type: string
-      required:
-        - redirect_uri
       type: object
     OAuthInfoDto:
       additionalProperties: false
@@ -1171,12 +901,6 @@ components:
           type: string
         user_id:
           type: string
-      required:
-        - provider
-        - user_id
-        - oauth_id
-        - issuer
-        - auth_type
       type: object
     PageQueryDto:
       additionalProperties: false
@@ -1189,10 +913,6 @@ components:
           type: integer
         search:
           type: string
-      required:
-        - page
-        - pageSize
-        - search
       type: object
     PageQueryResultListEcho:
       additionalProperties: false
@@ -1206,9 +926,6 @@ components:
         total:
           format: int64
           type: integer
-      required:
-        - total
-        - items
       type: object
     PageResultComment:
       additionalProperties: false
@@ -1222,9 +939,6 @@ components:
         total:
           format: int64
           type: integer
-      required:
-        - items
-        - total
       type: object
     PasskeyDeviceDto:
       additionalProperties: false
@@ -1241,12 +955,6 @@ components:
         last_used_at:
           format: int64
           type: integer
-      required:
-        - id
-        - device_name
-        - aaguid
-        - last_used_at
-        - created_at
       type: object
     PasskeySetting:
       additionalProperties: false
@@ -1259,9 +967,6 @@ components:
             - "null"
         webauthn_rp_id:
           type: string
-      required:
-        - webauthn_rp_id
-        - webauthn_allowed_origins
       type: object
     PasskeySettingDto:
       additionalProperties: false
@@ -1274,25 +979,18 @@ components:
             - "null"
         webauthn_rp_id:
           type: string
-      required:
-        - webauthn_rp_id
-        - webauthn_allowed_origins
       type: object
     PasskeyStatus:
       additionalProperties: false
       properties:
         passkey_ready:
           type: boolean
-      required:
-        - passkey_ready
       type: object
     PasskeyUpdateDeviceNameReq:
       additionalProperties: false
       properties:
         device_name:
           type: string
-      required:
-        - device_name
       type: object
     PresignDto:
       additionalProperties: false
@@ -1309,13 +1007,6 @@ components:
           type: string
         presign_url:
           type: string
-      required:
-        - id
-        - file_name
-        - content_type
-        - key
-        - presign_url
-        - file_url
       type: object
     PublicComment:
       additionalProperties: false
@@ -1344,16 +1035,6 @@ components:
           type: integer
         website:
           type: string
-      required:
-        - id
-        - echo_id
-        - nickname
-        - content
-        - status
-        - hot
-        - source
-        - created_at
-        - updated_at
       type: object
     RegisterDto:
       additionalProperties: false
@@ -1366,10 +1047,6 @@ components:
           type: string
         username:
           type: string
-      required:
-        - username
-        - password
-        - email
       type: object
     ReindexStatusResponse:
       additionalProperties: false
@@ -1395,8 +1072,6 @@ components:
           examples:
             - running
           type: string
-      required:
-        - status
       type: object
     ResultAgentSetting:
       additionalProperties: false
@@ -1415,10 +1090,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultCheckUpdateResponse:
       additionalProperties: false
@@ -1437,10 +1108,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultComment:
       additionalProperties: false
@@ -1459,10 +1126,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultConnect:
       additionalProperties: false
@@ -1481,10 +1144,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultCreateCommentResult:
       additionalProperties: false
@@ -1503,10 +1162,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultEcho:
       additionalProperties: false
@@ -1525,10 +1180,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultEmbeddingSetting:
       additionalProperties: false
@@ -1547,10 +1198,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultExportStateDTO:
       additionalProperties: false
@@ -1569,10 +1216,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultFileDto:
       additionalProperties: false
@@ -1591,10 +1234,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultFileListResultDto:
       additionalProperties: false
@@ -1613,10 +1252,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultFileTreeResultDto:
       additionalProperties: false
@@ -1635,10 +1270,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultFormMeta:
       additionalProperties: false
@@ -1657,10 +1288,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultGlobalMigrationStateDTO:
       additionalProperties: false
@@ -1679,10 +1306,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultHelloResponse:
       additionalProperties: false
@@ -1701,10 +1324,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultInterface {}:
       additionalProperties: false
@@ -1722,10 +1341,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultListAccessTokenSetting:
       additionalProperties: false
@@ -1748,10 +1363,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultListChatMessage:
       additionalProperties: false
@@ -1774,10 +1385,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultListConnect:
       additionalProperties: false
@@ -1800,10 +1407,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultListConnected:
       additionalProperties: false
@@ -1826,10 +1429,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultListConnectedHealth:
       additionalProperties: false
@@ -1852,10 +1451,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultListDayStat:
       additionalProperties: false
@@ -1878,10 +1473,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultListEcho:
       additionalProperties: false
@@ -1904,10 +1495,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultListHeatmap:
       additionalProperties: false
@@ -1930,10 +1517,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultListLogEntry:
       additionalProperties: false
@@ -1956,10 +1539,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultListPasskeyDeviceDto:
       additionalProperties: false
@@ -1982,10 +1561,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultListPublicComment:
       additionalProperties: false
@@ -2008,10 +1583,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultListTag:
       additionalProperties: false
@@ -2034,10 +1605,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultListUser:
       additionalProperties: false
@@ -2060,10 +1627,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultListWebhook:
       additionalProperties: false
@@ -2086,10 +1649,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultOAuth2Setting:
       additionalProperties: false
@@ -2108,10 +1667,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultOAuth2Status:
       additionalProperties: false
@@ -2130,10 +1685,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultOAuthInfoDto:
       additionalProperties: false
@@ -2152,10 +1703,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultPageQueryResultListEcho:
       additionalProperties: false
@@ -2174,10 +1721,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultPageResultComment:
       additionalProperties: false
@@ -2196,10 +1739,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultPasskeySetting:
       additionalProperties: false
@@ -2218,10 +1757,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultPasskeyStatus:
       additionalProperties: false
@@ -2240,10 +1775,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultPresignDto:
       additionalProperties: false
@@ -2262,10 +1793,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultReindexStatusResponse:
       additionalProperties: false
@@ -2284,10 +1811,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultS3Setting:
       additionalProperties: false
@@ -2306,10 +1829,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultSnapshotSchedule:
       additionalProperties: false
@@ -2328,10 +1847,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultStatus:
       additionalProperties: false
@@ -2350,10 +1865,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultString:
       additionalProperties: false
@@ -2372,10 +1883,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultSystemSetting:
       additionalProperties: false
@@ -2394,10 +1901,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultTag:
       additionalProperties: false
@@ -2416,10 +1919,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     ResultUser:
       additionalProperties: false
@@ -2438,10 +1937,6 @@ components:
           type: object
         msg:
           type: string
-      required:
-        - code
-        - msg
-        - data
       type: object
     S3Setting:
       additionalProperties: false
@@ -2468,18 +1963,6 @@ components:
           type: string
         use_ssl:
           type: boolean
-      required:
-        - enable
-        - provider
-        - endpoint
-        - access_key
-        - secret_key
-        - bucket_name
-        - region
-        - use_ssl
-        - cdn_url
-        - path_prefix
-        - public_read
       type: object
     S3SettingDto:
       additionalProperties: false
@@ -2506,18 +1989,6 @@ components:
           type: string
         use_ssl:
           type: boolean
-      required:
-        - enable
-        - provider
-        - endpoint
-        - access_key
-        - secret_key
-        - bucket_name
-        - region
-        - use_ssl
-        - cdn_url
-        - path_prefix
-        - public_read
       type: object
     SearchResult:
       additionalProperties: false
@@ -2542,12 +2013,6 @@ components:
             - "null"
         username:
           type: string
-      required:
-        - echo_id
-        - content
-        - username
-        - echo_created
-        - distance
       type: object
     SnapshotSchedule:
       additionalProperties: false
@@ -2556,9 +2021,6 @@ components:
           type: string
         enable:
           type: boolean
-      required:
-        - enable
-        - cron_expression
       type: object
     SnapshotScheduleDto:
       additionalProperties: false
@@ -2567,9 +2029,6 @@ components:
           type: string
         enable:
           type: boolean
-      required:
-        - enable
-        - cron_expression
       type: object
     StartGlobalMigrationRequest:
       additionalProperties: false
@@ -2579,9 +2038,6 @@ components:
           type: object
         source_type:
           type: string
-      required:
-        - source_type
-        - source_payload
       type: object
     Status:
       additionalProperties: false
@@ -2590,9 +2046,6 @@ components:
           type: boolean
         owner_exists:
           type: boolean
-      required:
-        - initialized
-        - owner_exists
       type: object
     SystemSetting:
       additionalProperties: false
@@ -2621,19 +2074,6 @@ components:
           type: string
         site_title:
           type: string
-      required:
-        - site_title
-        - server_logo
-        - server_name
-        - server_url
-        - allow_register
-        - default_locale
-        - ICP_number
-        - footer_content
-        - footer_link
-        - meting_api
-        - custom_css
-        - custom_js
       type: object
     SystemSettingDto:
       additionalProperties: false
@@ -2664,20 +2104,6 @@ components:
           type: string
         site_title:
           type: string
-      required:
-        - site_title
-        - server_logo
-        - server_logo_file_id
-        - server_name
-        - server_url
-        - allow_register
-        - default_locale
-        - ICP_number
-        - footer_content
-        - footer_link
-        - meting_api
-        - custom_css
-        - custom_js
       type: object
     Tag:
       additionalProperties: false
@@ -2692,35 +2118,24 @@ components:
         usage_count:
           format: int64
           type: integer
-      required:
-        - id
-        - name
-        - usage_count
-        - created_at
       type: object
     TestEmailRequest:
       additionalProperties: false
       properties:
         setting:
           $ref: "#/components/schemas/ModelSystemSetting"
-      required:
-        - setting
       type: object
     UpdateCommentHotDto:
       additionalProperties: false
       properties:
         hot:
           type: boolean
-      required:
-        - hot
       type: object
     UpdateCommentStatusDto:
       additionalProperties: false
       properties:
         status:
           type: string
-      required:
-        - status
       type: object
     UpdateFileMetaDto:
       additionalProperties: false
@@ -2736,8 +2151,6 @@ components:
         width:
           format: int64
           type: integer
-      required:
-        - size
       type: object
     User:
       additionalProperties: false
@@ -2756,14 +2169,6 @@ components:
           type: string
         username:
           type: string
-      required:
-        - id
-        - username
-        - email
-        - is_admin
-        - is_owner
-        - avatar
-        - locale
       type: object
     UserInfoDto:
       additionalProperties: false
@@ -2784,15 +2189,6 @@ components:
           type: string
         username:
           type: string
-      required:
-        - username
-        - password
-        - email
-        - is_admin
-        - is_owner
-        - avatar
-        - avatar_file_id
-        - locale
       type: object
     Webhook:
       additionalProperties: false
@@ -2816,15 +2212,6 @@ components:
           type: integer
         url:
           type: string
-      required:
-        - id
-        - name
-        - url
-        - is_active
-        - last_status
-        - last_trigger
-        - created_at
-        - updated_at
       type: object
     WebhookDto:
       additionalProperties: false
@@ -2837,10 +2224,6 @@ components:
           type: string
         url:
           type: string
-      required:
-        - name
-        - url
-        - is_active
       type: object
   securitySchemes:
     bearerAuth:

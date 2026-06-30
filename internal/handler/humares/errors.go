@@ -83,19 +83,36 @@ func Err(ctx context.Context, err error) error {
 
 // installErrorModel 覆写 Huma 的全局错误构造器，让框架级错误（请求体解析失败、
 // 路径/查询参数校验失败等）也统一成 Result 信封而非 problem+json。由 NewAPI 调用。
+//
+// Huma 的字段级校验详情（哪个字段、为何失败）经 detailSuffix 附到 msg 末尾，便于定位；
+// 前端按 message_key 渲染本地化文案，不受 msg 后缀影响。
 func installErrorModel() {
-	huma.NewErrorWithContext = func(hctx huma.Context, status int, msg string, _ ...error) huma.StatusError {
+	huma.NewErrorWithContext = func(hctx huma.Context, status int, msg string, errs ...error) huma.StatusError {
 		loc := i18nUtil.LocalizerFromGin(humagin.Unwrap(hctx))
-		localized := i18nUtil.Localize(loc, commonModel.MsgKeyInvalidQueryParams, msg, nil)
+		localized := i18nUtil.Localize(loc, commonModel.MsgKeyInvalidQueryParams, msg, nil) + detailSuffix(errs)
 		return &apiError{
 			status: status,
 			body:   commonModel.FailWithLocalized[any](localized, commonModel.ErrCodeInvalidRequest, commonModel.MsgKeyInvalidQueryParams, nil),
 		}
 	}
-	huma.NewError = func(status int, msg string, _ ...error) huma.StatusError {
+	huma.NewError = func(status int, msg string, errs ...error) huma.StatusError {
 		return &apiError{
 			status: status,
-			body:   commonModel.FailWithLocalized[any](msg, commonModel.ErrCodeInvalidRequest, commonModel.MsgKeyInvalidQueryParams, nil),
+			body:   commonModel.FailWithLocalized[any](msg+detailSuffix(errs), commonModel.ErrCodeInvalidRequest, commonModel.MsgKeyInvalidQueryParams, nil),
 		}
 	}
+}
+
+// detailSuffix 把 Huma 的字段级校验错误拼成 " (字段A: ...; 字段B: ...)" 形式的后缀。
+func detailSuffix(errs []error) string {
+	details := make([]string, 0, len(errs))
+	for _, e := range errs {
+		if e != nil {
+			details = append(details, e.Error())
+		}
+	}
+	if len(details) == 0 {
+		return ""
+	}
+	return " (" + strings.Join(details, "; ") + ")"
 }

@@ -103,6 +103,10 @@ func NewAPI(engine *gin.Engine, group *gin.RouterGroup, title, version, basePath
 	installErrorModel()
 
 	cfg := huma.DefaultConfig(title, version)
+	// 字段默认 optional，对齐 gin ShouldBind 的行为：前端到处发部分 body / 省略可选查询参数，
+	// Huma 默认却把所有字段当 required，会把这些请求全部 422。显式 `required:"true"` 仍必填，
+	// path 参数始终必填。NewAPI 会把该配置拷进下方自定义 registry（api.go: mr.config=config.registryConfig）。
+	cfg.FieldsOptionalByDefault = true
 	// 用撞名消歧的命名器替换默认 registry（跨包同名类型如 SystemSetting 否则会 panic）。
 	cfg.Components.Schemas = huma.NewMapRegistry(schemaRefPrefix, newSchemaNamer())
 	cfg.Servers = []*huma.Server{{URL: basePath}}
