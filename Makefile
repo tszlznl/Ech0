@@ -18,13 +18,17 @@ IMAGE_TAG?=latest
 OS?=$(if $(GOHOSTOS),$(GOHOSTOS),linux)
 ARCH?=$(if $(GOHOSTARCH),$(GOHOSTARCH),amd64)
 
-.PHONY: help air-install run dev web-dev check dev-lint lint fmt test wire wire-check openapi openapi-check spdx spdx-check build bump build-image push-image
+.PHONY: help air-install run dev web-dev check dev-lint lint fmt test test-race test-cover mocks mocks-check wire wire-check openapi openapi-check spdx spdx-check build bump build-image push-image
 
 # Semver pattern: X.Y.Z, optionally followed by a -prerelease suffix.
 # (escape $ so make doesn't expand, then escape $$ to a literal $ in shell)
 SEMVER_PATTERN := ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$$
 
 AIR_BIN := $(shell command -v air 2>/dev/null || echo "$(GOPATH)/bin/air")
+
+# mockery 仅作代码生成器，不进 go.mod（用 go run 固定版本调用），保持模块图精简。
+# 版本 pin 死，保证任何机器/CI 生成结果一致，`make mocks-check` 才稳定。
+MOCKERY_VERSION ?= v3.7.1
 
 help:
 	@echo "Available targets:"
@@ -40,6 +44,10 @@ help:
 	@echo "  make lint        - Run golangci-lint checks"
 	@echo "  make fmt         - Run golangci-lint formatters"
 	@echo "  make test        - Run Go tests"
+	@echo "  make test-race   - Run Go tests with the race detector"
+	@echo "  make test-cover  - Run Go tests with coverage, print total"
+	@echo "  make mocks       - Regenerate testify mocks via mockery (internal/test/mocks)"
+	@echo "  make mocks-check - Fail if generated mocks are stale vs code"
 	@echo "  make wire        - Generate DI code via Wire"
 	@echo "  make wire-check  - Verify Wire code is up-to-date"
 	@echo "  make openapi     - Regenerate OpenAPI spec (Huma) to internal/openapi/openapi.yaml"
@@ -129,6 +137,24 @@ fmt:
 
 test:
 	go test ./...
+
+# 竞态检测需要 CGO（go-sqlite3 也需要），显式开启避免环境默认值差异。
+test-race:
+	CGO_ENABLED=1 go test -race ./...
+
+# 覆盖率：原子计数（配合 -race 安全），跑完打印总覆盖率。
+test-cover:
+	CGO_ENABLED=1 go test -coverprofile=coverage.out -covermode=atomic ./...
+	go tool cover -func=coverage.out | tail -1
+
+# 重新生成 testify mock（输出到 internal/test/mocks/<domain>mock）。mockery 用 go run 固定版本调用，
+# 不进 go.mod；生成物含 SPDX 头（scripts/spdx-boilerplate.txt）与「DO NOT EDIT」标记，golangci-lint 自动跳过。
+mocks:
+	go run github.com/vektra/mockery/v3@$(MOCKERY_VERSION)
+
+# 校验提交的 mock 与当前接口一致（对齐 wire-check / openapi-check 的「生成物入库 + 漂移即失败」习惯）。
+mocks-check: mocks
+	git diff --exit-code -- internal/test/mocks
 
 wire:
 	go generate ./internal/di
