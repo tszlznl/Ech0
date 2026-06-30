@@ -33,6 +33,66 @@ func newDocsRouter() *gin.Engine {
 	return r
 }
 
+// newAPIRouter 走完整 NewAPI 装配（按 renderer 决定挂内置 docs 还是 Scalar），用于验证默认/可选切换。
+func newAPIRouter(docs DocsRenderer) *gin.Engine {
+	r := gin.New()
+	NewAPI(r, r.Group(testBasePath), "test", "1.0", testBasePath, docs)
+	return r
+}
+
+func TestParseDocsRenderer(t *testing.T) {
+	cases := map[string]DocsRenderer{
+		"scalar":     DocsRendererScalar,
+		"Scalar":     DocsRendererScalar,
+		"  scalar  ": DocsRendererScalar,
+		"stoplight":  DocsRendererStoplight,
+		"":           DocsRendererStoplight,
+		"swagger-ui": DocsRendererStoplight, // 未知值回退默认
+		"nonsense":   DocsRendererStoplight,
+	}
+	for in, want := range cases {
+		if got := ParseDocsRenderer(in); got != want {
+			t.Errorf("ParseDocsRenderer(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+func TestNewAPI_DefaultUsesHumaBuiltinDocs(t *testing.T) {
+	r := newAPIRouter(DocsRendererStoplight)
+
+	// 默认应保留 Huma 内置 docs（Stoplight），且不注册自托管 Scalar bundle 路由。
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, testBasePath+"/docs", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("built-in docs: expected 200, got %d", rec.Code)
+	}
+	if !strings.Contains(strings.ToLower(rec.Body.String()), "stoplight") {
+		t.Fatalf("built-in docs should render Stoplight; got: %s", rec.Body.String())
+	}
+
+	rec = httptest.NewRecorder()
+	r.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, testBasePath+scalarScriptRoute, nil))
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("scalar bundle must NOT be registered under default; got %d", rec.Code)
+	}
+}
+
+func TestNewAPI_ScalarRendererServesScalar(t *testing.T) {
+	r := newAPIRouter(DocsRendererScalar)
+
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, testBasePath+"/docs", nil))
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), "Scalar.createApiReference") {
+		t.Fatalf("scalar renderer should serve Scalar HTML; code=%d body=%s", rec.Code, rec.Body.String())
+	}
+
+	rec = httptest.NewRecorder()
+	r.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, testBasePath+scalarScriptRoute, nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("scalar bundle should be served; got %d", rec.Code)
+	}
+}
+
 func TestScalarDocs_HTMLReferencesLocalAssets(t *testing.T) {
 	r := newDocsRouter()
 

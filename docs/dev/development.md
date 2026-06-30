@@ -41,6 +41,9 @@ Install [Swagger](https://github.com/swaggo/gin-swagger) to generate/use OpenAPI
 📌 **Agent (Copilot) Parameters**
 - `ECH0_AGENT_TIMEOUT_SECONDS` — per-run timeout (seconds) for a single Copilot chat run, covering the whole tool loop; default `120`, `<=0` disables the extra timeout.
 
+📌 **OpenAPI Docs Panel**
+- `ECH0_OPENAPI_DOCS_RENDERER` — renderer for the `/api/docs` panel: `stoplight` (default, Huma's built-in Stoplight Elements, loaded from CDN) or `scalar` (self-hosted offline Scalar, asset embedded in the binary — no network needed). Unknown values fall back to `stoplight`.
+
 ## Frontend Requirements
 
 📌 **NodeJS v25.5.0+, PNPM v10.30.0+**

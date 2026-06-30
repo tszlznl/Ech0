@@ -29,6 +29,24 @@ const scalarVersion = "1.62.0"
 //go:embed assets/scalar.standalone.js.gz
 var scalarBundleGz []byte
 
+// DocsRenderer 选择 /api/docs 的文档面板。默认 Stoplight（Huma 内置），Scalar 为离线自托管可选项。
+type DocsRenderer string
+
+const (
+	// DocsRendererStoplight 用 Huma 内置面板（Stoplight Elements）——默认。
+	DocsRendererStoplight DocsRenderer = "stoplight"
+	// DocsRendererScalar 用本文件自托管的离线 Scalar。
+	DocsRendererScalar DocsRenderer = "scalar"
+)
+
+// ParseDocsRenderer 把配置里的原始字符串归一化为受支持的渲染器；未知值一律回退到默认（Stoplight）。
+func ParseDocsRenderer(s string) DocsRenderer {
+	if strings.EqualFold(strings.TrimSpace(s), string(DocsRendererScalar)) {
+		return DocsRendererScalar
+	}
+	return DocsRendererStoplight
+}
+
 // 以下三条均为「Huma group 前缀（basePath）之后」的相对路径；页面里要用的绝对地址由
 // buildScalarHTML 拼 basePath 得到（如 basePath=/api → /api/docs、/api/docs/scalar.standalone.js）。
 const (

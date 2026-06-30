@@ -8,6 +8,7 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/gin-gonic/gin"
+	"github.com/lin-snow/ech0/internal/config"
 	"github.com/lin-snow/ech0/internal/handler"
 	"github.com/lin-snow/ech0/internal/handler/humares"
 	"github.com/lin-snow/ech0/internal/middleware"
@@ -29,7 +30,8 @@ const (
 // 可共存于同一份 OpenAPI 文档。docs: /api/docs，spec: /api/openapi.json|.yaml。
 func setupHumaAPI(r *gin.Engine) huma.API {
 	humaGroup := r.Group(humaAPIBase)
-	return humares.NewAPI(r, humaGroup, humaAPITitle, humaAPIVersion, humaAPIBase)
+	docs := humares.ParseDocsRenderer(config.Config().OpenAPI.DocsRenderer)
+	return humares.NewAPI(r, humaGroup, humaAPITitle, humaAPIVersion, humaAPIBase, docs)
 }
 
 // posture 是一个 JSON 端点的「认证(Authn) + 授权(Authz)」姿态。它一处同时产出：

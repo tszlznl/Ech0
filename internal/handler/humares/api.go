@@ -99,7 +99,10 @@ func titleCase(s string) string {
 //
 // basePath 写入 OpenAPI.Servers，使 spec 中的相对路径（如 /echo/query）拼上 /api 前缀。
 // docs 在 group 前缀下：/api/docs、/api/openapi.json、/api/openapi.yaml。
-func NewAPI(engine *gin.Engine, group *gin.RouterGroup, title, version, basePath string) huma.API {
+//
+// docs 选择文档面板：默认 DocsRendererStoplight 直接用 Huma 内置面板；DocsRendererScalar 时
+// 关掉内置 docs、改挂离线自托管的 Scalar（见 docs.go）。两者都不影响生成的 OpenAPI spec。
+func NewAPI(engine *gin.Engine, group *gin.RouterGroup, title, version, basePath string, docs DocsRenderer) huma.API {
 	installErrorModel()
 
 	cfg := huma.DefaultConfig(title, version)
@@ -123,13 +126,18 @@ func NewAPI(engine *gin.Engine, group *gin.RouterGroup, title, version, basePath
 	cfg.Transformers = nil
 	cfg.SchemasPath = ""
 
-	// 关掉 Huma 内置 docs（默认 Stoplight Elements），改用离线 self-host 的 Scalar（见 docs.go）。
-	// spec 路由（/api/openapi.json|.yaml）不受影响，仍由 humagin 注册。
-	cfg.DocsPath = ""
+	// 选 Scalar 时关掉 Huma 内置 docs（默认 Stoplight Elements），避免与自托管 Scalar 抢占 /api/docs；
+	// 默认（Stoplight）保留 Huma 内置 docs 路由。spec 路由（/api/openapi.json|.yaml）始终由 humagin 注册。
+	useScalar := docs == DocsRendererScalar
+	if useScalar {
+		cfg.DocsPath = ""
+	}
 
 	api := humagin.NewWithGroup(engine, group, cfg)
 	api.UseMiddleware(injectLocalizer)
-	registerScalarDocs(group, basePath)
+	if useScalar {
+		registerScalarDocs(group, basePath)
+	}
 	return api
 }
 
