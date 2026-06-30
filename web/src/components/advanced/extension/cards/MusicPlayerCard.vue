@@ -361,9 +361,9 @@ async function play() {
     await audio.play()
   } catch (error) {
     isAudioLoading.value = false
-    if (
-      !(error instanceof DOMException && ['AbortError', 'NotAllowedError'].includes(error.name))
-    ) {
+    if (!(
+      error instanceof DOMException && ['AbortError', 'NotAllowedError'].includes(error.name)
+    )) {
       audioFailed.value = true
     }
   }

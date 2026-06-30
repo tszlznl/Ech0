@@ -21,7 +21,6 @@ import (
 	"github.com/lin-snow/ech0/internal/mcp"
 )
 
-// Bundle 聚合各业务 Handler。
 type Bundle struct {
 	WebHandler       *webHandler.WebHandler
 	UserHandler      *userHandler.UserHandler
@@ -40,7 +39,6 @@ type Bundle struct {
 	MCPHandler       *mcp.Handler
 }
 
-// NewBundle 创建 Handler 聚合实例。
 func NewBundle(
 	webHandler *webHandler.WebHandler,
 	userHandler *userHandler.UserHandler,

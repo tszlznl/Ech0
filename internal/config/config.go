@@ -21,6 +21,7 @@ var (
 
 type AppConfig struct {
 	Server    ServerConfig
+	OpenAPI   OpenAPIConfig
 	Database  DatabaseConfig
 	Log       LogConfig
 	Auth      AuthConfig
@@ -53,6 +54,13 @@ type ServerConfig struct {
 	Port string `env:"ECH0_SERVER_PORT"` // 服务器端口
 	Host string `env:"ECH0_SERVER_HOST"` // 服务器主机地址
 	Mode string `env:"ECH0_SERVER_MODE"` // 运行模式，可能的值为 "debug" 或 "release"
+}
+
+// OpenAPIConfig 是 OpenAPI 文档（/api/docs、/api/openapi.*）相关配置。
+type OpenAPIConfig struct {
+	// DocsRenderer 选择 /api/docs 的文档面板：
+	// "stoplight"（默认，Huma 内置 Stoplight Elements）或 "scalar"（离线自托管 Scalar）。
+	DocsRenderer string `env:"ECH0_OPENAPI_DOCS_RENDERER"`
 }
 
 type DatabaseConfig struct {
@@ -200,6 +208,9 @@ func defaultConfig() *AppConfig {
 			Port: "6277",
 			Host: "0.0.0.0",
 			Mode: "release",
+		},
+		OpenAPI: OpenAPIConfig{
+			DocsRenderer: "stoplight",
 		},
 		Database: DatabaseConfig{
 			Type:    "sqlite",

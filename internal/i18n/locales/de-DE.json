@@ -1,6 +1,7 @@
 [
   { "id": "common.success", "translation": "Anfrage erfolgreich" },
   { "id": "common.request_failed", "translation": "Anfrage fehlgeschlagen" },
+  { "id": "common.invalid_request", "translation": "Ungültige Anfrage" },
   { "id": "common.invalid_query_params", "translation": "Ungültige Abfrageparameter" },
   { "id": "setting.update_success", "translation": "Einstellungen erfolgreich aktualisiert!" },
   { "id": "agent.model_missing", "translation": "Agent-Modellname ist nicht konfiguriert oder leer" },
@@ -17,5 +18,6 @@
   { "id": "comment_manager.title", "translation": "Kommentarsystem-Einstellungen" },
   { "id": "comment_manager.subtitle", "translation": "Kommentarfunktion, Moderationsregeln und Captcha zentral verwalten." },
   { "id": "dashboard.logs.success", "translation": "Systemlogs erfolgreich abgerufen" },
-  { "id": "dashboard.logs.tail_invalid", "translation": "tail muss eine positive Zahl sein" }
+  { "id": "dashboard.logs.tail_invalid", "translation": "tail muss eine positive Zahl sein" },
+  { "id": "dashboard.check_update_failed", "translation": "Prüfung auf Updates fehlgeschlagen" }
 ]

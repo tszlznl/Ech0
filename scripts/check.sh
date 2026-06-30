@@ -24,7 +24,7 @@ STEPS=(
   "spdx|$C_HDR_ALL|全仓：SPDX/Copyright 头补齐 (scripts/add-spdx-headers.mjs)|node scripts/add-spdx-headers.mjs"
   "go-fmt|$C_HDR|后端：格式化 (golangci-lint fmt)|golangci-lint fmt"
   "go-lint|$C_HDR|后端：Lint (golangci-lint run)|golangci-lint run"
-  "swagger|$C_HDR|后端：Swagger 文档生成 (swag init)|swag init -g internal/server/server.go -o internal/swagger --parseInternal"
+  "openapi|$C_HDR|后端：OpenAPI 规格生成 (Huma, make openapi)|go run ./cmd/openapi-gen"
   "web-format|$C_HDR_WEB|前端 web：格式化 (prettier --write src/)|(cd web && pnpm format)"
   "web-lint|$C_HDR_WEB|前端 web：Lint (eslint . --fix)|(cd web && pnpm lint)"
   "web-style|$C_HDR_WEB|前端 web：Stylelint (stylelint --fix)|(cd web && pnpm lint:style)"

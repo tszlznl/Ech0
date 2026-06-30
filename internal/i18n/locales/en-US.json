@@ -1,6 +1,7 @@
 [
   { "id": "common.success", "translation": "Request succeeded" },
   { "id": "common.request_failed", "translation": "Request failed" },
+  { "id": "common.invalid_request", "translation": "Invalid request" },
   { "id": "common.invalid_query_params", "translation": "Invalid query parameters" },
   { "id": "setting.update_success", "translation": "Settings updated successfully!" },
   { "id": "agent.model_missing", "translation": "Agent model name is not configured or is empty" },
@@ -17,5 +18,6 @@
   { "id": "comment_manager.title", "translation": "Comment System Settings" },
   { "id": "comment_manager.subtitle", "translation": "Manage comment toggles, moderation policy, and captcha settings in one place." },
   { "id": "dashboard.logs.success", "translation": "System logs retrieved successfully" },
-  { "id": "dashboard.logs.tail_invalid", "translation": "tail must be a positive number" }
+  { "id": "dashboard.logs.tail_invalid", "translation": "tail must be a positive number" },
+  { "id": "dashboard.check_update_failed", "translation": "Failed to check for updates" }
 ]
