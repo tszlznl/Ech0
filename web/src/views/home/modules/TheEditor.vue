@@ -59,7 +59,7 @@ watch(
     if (newVal.length > 0) {
       const bvRegex = /(BV[0-9A-Za-z]{10})/
       const ytRegex =
-        /(?:https?:\/\/(?:www\.)?)?(?:youtu\.be\/|youtube\.com\/(?:(?:watch)?\?(?:.*&)?v(?:i)?=|(?:embed)\/))([\w-]+)/
+        /(?:https?:\/\/(?:www\.)?)?(?:youtu\.be\/|youtube\.com\/(?:(?:watch)?\?(?:.*&)?v(?:i)?=|(?:embed|shorts|live)\/))([\w-]+)/
       let match = newVal.match(bvRegex)
       if (match) {
         extensionToAdd.value.extension = match[0]
