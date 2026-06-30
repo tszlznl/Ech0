@@ -19,9 +19,15 @@ const localizerKey ctxKey = iota
 
 // injectLocalizer 是注册到 huma.API 的全局中间件：把 gin i18n 中间件已解析好的 localizer
 // 注入到 handler 的 context，供 OK/Err 本地化使用（huma handler 拿不到 *gin.Context）。
+//
+// 关键：必须写进 gctx.Request 的 context（与 RequireAuth 注入 viewer、StashMeta 注入元数据
+// 同一条链），而不能用 huma.WithValue 包裹 ctx——后者会在 auth 之前**快照** ctx.Context()
+// 并覆盖之，导致之后 attach 到 gctx.Request 的 viewer/meta 对 handler 不可见。
 func injectLocalizer(ctx huma.Context, next func(huma.Context)) {
-	loc := i18nUtil.LocalizerFromGin(humagin.Unwrap(ctx))
-	next(huma.WithValue(ctx, localizerKey, loc))
+	gctx := humagin.Unwrap(ctx)
+	loc := i18nUtil.LocalizerFromGin(gctx)
+	gctx.Request = gctx.Request.WithContext(context.WithValue(gctx.Request.Context(), localizerKey, loc))
+	next(ctx)
 }
 
 // localizerFrom 从 context 取回 injectLocalizer 注入的 localizer；缺失时返回 nil，
