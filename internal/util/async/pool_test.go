@@ -5,6 +5,7 @@ package async
 
 import (
 	"errors"
+	"sync"
 	"sync/atomic"
 	"testing"
 
@@ -159,4 +160,46 @@ func TestWorkerPool_StopWaitsForInFlightJobs(t *testing.T) {
 	<-stopReturned // Stop 现在应当返回
 
 	assert.Equal(t, int32(queued+1), atomic.LoadInt32(&finished), "Stop 返回时所有入队任务都应已执行")
+}
+
+// TestWorkerPool_ConcurrentSubmitAndStop 是关停竞争的回归测试：大量 goroutine 并发 Submit
+// 的同时另一线程 Stop。修复前 Submit 在 RUnlock 之后才向 channel 发送，与 Stop 的
+// close(jobs) 形成 send-after-close 窗口（旧实现靠 recover 兜 panic）；修复后 Submit 全程持读锁
+// 直到发送完成，而 close 仅在写锁内发生 —— 二者互斥，结构上不可能向已关闭 channel 发送。
+//
+// 在 `-race -count=N` 下反复运行应当：不 panic、无数据竞争、且 Stop/Wait 不阻塞（wg 计数始终平衡）。
+func TestWorkerPool_ConcurrentSubmitAndStop(t *testing.T) {
+	pool := NewWorkerPool(4, 8)
+
+	const submitters = 16
+	const perSubmitter = 50
+
+	var executed int32
+	var submittersWg sync.WaitGroup
+	submittersWg.Add(submitters)
+	for range submitters {
+		go func() {
+			defer submittersWg.Done()
+			for range perSubmitter {
+				pool.Submit(func() error {
+					atomic.AddInt32(&executed, 1)
+					return nil
+				})
+			}
+		}()
+	}
+
+	// 在提交途中并发关停（Stop 内部会 close + Wait）。
+	pool.Stop()
+
+	// 所有 Submit 调用都应正常返回（不因 send-on-closed 崩溃），Wait 不应阻塞。
+	require.NotPanics(t, func() {
+		submittersWg.Wait()
+		pool.Wait()
+	}, "并发 Submit/Stop 不应 panic 或死锁")
+
+	// 关停后被丢弃的任务数不确定，但执行数必须落在 [0, 全部] 内。
+	got := atomic.LoadInt32(&executed)
+	assert.GreaterOrEqual(t, got, int32(0))
+	assert.LessOrEqual(t, got, int32(submitters*perSubmitter), "执行数不应超过提交总数")
 }

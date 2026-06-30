@@ -47,24 +47,20 @@ func (p *WorkerPool) start() {
 	}
 }
 
-// Submit 提交一个任务到工作池
+// Submit 提交一个任务到工作池。
+//
+// 关停安全：全程持读锁直到 send 完成，而 Stop 的 close(p.jobs) 只在写锁内发生，
+// 二者互斥 —— 因此 send 永远不会落到已关闭的 channel 上（无需再用 recover 兜 panic）。
+// 缓冲满时 send 阻塞，但 worker 不持锁、持续 drain，排空后 send 即返回、随后 Stop 才能拿到写锁，
+// 故不会死锁（前提 workerCount > 0，与原行为一致）。
 func (p *WorkerPool) Submit(job func() error) {
 	p.mu.RLock()
+	defer p.mu.RUnlock()
 	if p.stopped {
-		p.mu.RUnlock()
 		return
 	}
 	p.wg.Add(1)
-	jobs := p.jobs
-	p.mu.RUnlock()
-
-	defer func() {
-		if recover() != nil {
-			// channel 已关闭时回收计数，避免 Wait 永久阻塞。
-			p.wg.Done()
-		}
-	}()
-	jobs <- job
+	p.jobs <- job
 }
 
 // Wait 等待所有任务完成

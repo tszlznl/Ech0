@@ -49,14 +49,20 @@ jobs:
           CGO_ENABLED: "1"
         run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
 
+      # 与本地 `make test-cover` 同口径：RAW 含生成代码；CALIBRATED 滤掉 mockery 生成的 mock
+      # 与 Wire 生成的 wire_gen.go（这两类永不需测、纯稀释分母），是衡量人写代码覆盖率的诚实口径。
       - name: Coverage summary
         if: always()
         run: |
           if [ -f coverage.out ]; then
+            grep -v -E 'internal/test/mocks/|/wire_gen\.go:' coverage.out > coverage.calibrated.out
+            RAW=$(go tool cover -func=coverage.out | tail -1 | awk '{print $NF}')
+            CAL=$(go tool cover -func=coverage.calibrated.out | tail -1 | awk '{print $NF}')
             {
               echo "### Backend coverage";
               echo '```';
-              go tool cover -func=coverage.out | tail -1;
+              echo "RAW        (incl. generated): $RAW";
+              echo "CALIBRATED (excl. generated): $CAL";
               echo '```';
             } >> "$GITHUB_STEP_SUMMARY"
           fi

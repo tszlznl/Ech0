@@ -47,6 +47,12 @@ type ConnectService struct {
 	connectsInfoCacheExpires time.Time
 	connectsInfoCacheValid   bool
 	connectsInfoFetcher      singleflight.Group
+
+	// peerFetcher 拉取单个对端实例的连接信息；默认 fetchPeerConnectInfo（egress.Fetch 带
+	// SSRF Guard，会拒绝回环/私网地址）。因 Guard 会拦掉 httptest 的 127.0.0.1，测试无法用真
+	// HTTP 覆盖编排逻辑，故抽成可注入函数：测试注入返回 canned Connect 的替身，即可覆盖
+	// fetchConnectsInfo 的并发扇出/重试/去重与健康聚合，而不触发真实网络。
+	peerFetcher func(peerConnectURL string, requestTimeout time.Duration) (model.Connect, error)
 }
 
 func NewConnectService(
@@ -62,7 +68,18 @@ func NewConnectService(
 		echoRepository:    echoRepository,
 		commonService:     commonService,
 		durableKV:         durableKV,
+		peerFetcher:       fetchPeerConnectInfo,
 	}
+}
+
+// WithPeerFetcher 替换对端拉取实现（默认 fetchPeerConnectInfo）并返回自身，主要供测试注入替身：
+//
+//	svc := service.NewConnectService(...).WithPeerFetcher(fakeFetch)
+func (connectService *ConnectService) WithPeerFetcher(
+	f func(peerConnectURL string, requestTimeout time.Duration) (model.Connect, error),
+) *ConnectService {
+	connectService.peerFetcher = f
+	return connectService
 }
 
 // AddConnect 添加连接
@@ -315,7 +332,7 @@ func (connectService *ConnectService) fetchConnectsInfo() ([]model.Connect, erro
 					}
 				}
 
-				data, err := fetchPeerConnectInfo(conn.ConnectURL, requestTimeout)
+				data, err := connectService.peerFetcher(conn.ConnectURL, requestTimeout)
 				if err != nil {
 					lastErr = err
 					logUtil.GetLogger().Error("fetch connection info failed",
@@ -506,7 +523,7 @@ func (connectService *ConnectService) GetConnectsHealth() ([]model.ConnectedHeal
 				Status: "offline", Version: "",
 			}
 
-			data, err := fetchPeerConnectInfo(conn.ConnectURL, healthProbeTimeout)
+			data, err := connectService.peerFetcher(conn.ConnectURL, healthProbeTimeout)
 			if err != nil {
 				out[i] = h
 				return

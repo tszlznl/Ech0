@@ -1215,6 +1215,9 @@ func exchangeOAuthCode(setting *settingModel.OAuth2Setting, code string) (*oauth
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	// 让 oauth2 走我们带超时的共享客户端（而非无超时的 http.DefaultClient）；
+	// 同时这是测试用的注入点：白盒测试覆写包级 oidcHTTPClient 即可把 token 交换打到 httptest。
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, oidcHTTPClient)
 	token, err := config.Exchange(ctx, code)
 	if err != nil {
 		return nil, err

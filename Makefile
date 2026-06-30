@@ -143,9 +143,15 @@ test-race:
 	CGO_ENABLED=1 go test -race ./...
 
 # 覆盖率：原子计数（配合 -race 安全），跑完打印总覆盖率。
+# 同时输出 RAW 与 CALIBRATED 两个口径：CALIBRATED 滤掉生成代码（mockery 生成的
+# mock 全 0%、Wire 生成的 wire_gen.go 几乎 0%），是衡量「人写代码」覆盖率的诚实口径。
+# 仅后处理 profile，不改测试执行 → 确定可复现；CI 的 coverage summary 用同一过滤。
+COVER_EXCLUDE := internal/test/mocks/|/wire_gen\.go:
 test-cover:
 	CGO_ENABLED=1 go test -coverprofile=coverage.out -covermode=atomic ./...
-	go tool cover -func=coverage.out | tail -1
+	@grep -v -E '$(COVER_EXCLUDE)' coverage.out > coverage.calibrated.out
+	@printf 'RAW        (incl. generated): '; go tool cover -func=coverage.out            | tail -1 | awk '{print $$NF}'
+	@printf 'CALIBRATED (excl. generated): '; go tool cover -func=coverage.calibrated.out | tail -1 | awk '{print $$NF}'
 
 # 重新生成 testify mock（输出到 internal/test/mocks/<domain>mock）。mockery 用 go run 固定版本调用，
 # 不进 go.mod；生成物含 SPDX 头（scripts/spdx-boilerplate.txt）与「DO NOT EDIT」标记，golangci-lint 自动跳过。
