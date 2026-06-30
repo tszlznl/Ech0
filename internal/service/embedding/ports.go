@@ -9,7 +9,16 @@ import (
 
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	model "github.com/lin-snow/ech0/internal/model/embedding"
+	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 )
+
+// Embedder 是文本向量化的可注入依赖（默认实现 internal/embedding.Client）。
+// 抽出接口是为了让 IndexEcho/Search/Backfill 的"取向量"步骤在测试中可用替身，
+// 不必真发 /v1/embeddings 请求，从而覆盖 seam 之后的 upsert / 作者收口 / 分页逻辑。
+type Embedder interface {
+	Embed(ctx context.Context, setting settingModel.EmbeddingSetting, inputs []string) ([][]float32, error)
+	EmbedOne(ctx context.Context, setting settingModel.EmbeddingSetting, input string) ([]float32, error)
+}
 
 // Service 是 Embedding 索引与检索的对外接口。
 //

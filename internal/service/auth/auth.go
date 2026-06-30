@@ -49,6 +49,10 @@ type AuthService struct {
 	repository Repository
 	authRepo   AuthRepo
 	durableKV  kvstore.Store
+	// resolveAdapter 解析 OAuth provider 适配器；默认 getOAuthProviderAdapter，
+	// 测试可注入返回 canned identity 的 fake，从而覆盖 HandleOAuthCallback/resolveOAuthCallback
+	// 全流程而不触发真实 OAuth token/userinfo HTTP。
+	resolveAdapter func(provider string) (oauthProviderAdapter, error)
 }
 
 func NewAuthService(
@@ -58,10 +62,11 @@ func NewAuthService(
 	durableKV kvstore.Store,
 ) *AuthService {
 	return &AuthService{
-		transactor: tx,
-		repository: repository,
-		authRepo:   authRepo,
-		durableKV:  durableKV,
+		transactor:     tx,
+		repository:     repository,
+		authRepo:       authRepo,
+		durableKV:      durableKV,
+		resolveAdapter: getOAuthProviderAdapter,
 	}
 }
 
@@ -220,7 +225,7 @@ func (authService *AuthService) HandleOAuthCallback(
 		return "", errors.New(commonModel.INVALID_PARAMS)
 	}
 
-	adapter, err := getOAuthProviderAdapter(provider)
+	adapter, err := authService.resolveAdapter(provider)
 	if err != nil {
 		return "", err
 	}
@@ -1210,6 +1215,9 @@ func exchangeOAuthCode(setting *settingModel.OAuth2Setting, code string) (*oauth
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	// 让 oauth2 走我们带超时的共享客户端（而非无超时的 http.DefaultClient）；
+	// 同时这是测试用的注入点：白盒测试覆写包级 oidcHTTPClient 即可把 token 交换打到 httptest。
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, oidcHTTPClient)
 	token, err := config.Exchange(ctx, code)
 	if err != nil {
 		return nil, err

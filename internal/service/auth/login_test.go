@@ -1,0 +1,198 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 lin-snow
+
+package auth
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"testing"
+	"time"
+
+	"github.com/lin-snow/ech0/internal/config"
+	"github.com/lin-snow/ech0/internal/kvstore"
+	authModel "github.com/lin-snow/ech0/internal/model/auth"
+	commonModel "github.com/lin-snow/ech0/internal/model/common"
+	settingModel "github.com/lin-snow/ech0/internal/model/setting"
+	userModel "github.com/lin-snow/ech0/internal/model/user"
+	"github.com/lin-snow/ech0/internal/test/helpers"
+	authmock "github.com/lin-snow/ech0/internal/test/mocks/authmock"
+	cryptoUtil "github.com/lin-snow/ech0/internal/util/crypto"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+)
+
+// mustJSON 序列化任意值为 JSON 字符串，失败即终止用例。供本包多份测试文件共用。
+func mustJSON(t *testing.T, v any) string {
+	t.Helper()
+	raw, err := json.Marshal(v)
+	require.NoError(t, err)
+	return string(raw)
+}
+
+// ---------------------------------------------------------------------------
+// Login：空参短路 / 用户不存在 / 密码错 / 成功签发双 token
+// ---------------------------------------------------------------------------
+
+func TestLogin(t *testing.T) {
+	helpers.SetJWTSecret(t, "login-secret")
+
+	const username = "alice"
+	const plainPassword = "s3cr3t"
+	hashed := cryptoUtil.MD5Encrypt(plainPassword)
+
+	cases := []struct {
+		name      string
+		dto       authModel.LoginDto
+		setupRepo func(repo *authmock.MockRepository)
+		wantErr   string // 期望的 i18n 错误常量；空串表示期望成功
+	}{
+		{
+			name:      "empty username short-circuits before repo",
+			dto:       authModel.LoginDto{Username: "", Password: plainPassword},
+			setupRepo: func(*authmock.MockRepository) {}, // 不应触达 repo
+			wantErr:   commonModel.USERNAME_OR_PASSWORD_NOT_BE_EMPTY,
+		},
+		{
+			name:      "empty password short-circuits before repo",
+			dto:       authModel.LoginDto{Username: username, Password: ""},
+			setupRepo: func(*authmock.MockRepository) {},
+			wantErr:   commonModel.USERNAME_OR_PASSWORD_NOT_BE_EMPTY,
+		},
+		{
+			name: "user not found maps to USER_NOTFOUND",
+			dto:  authModel.LoginDto{Username: username, Password: plainPassword},
+			setupRepo: func(repo *authmock.MockRepository) {
+				repo.EXPECT().
+					GetUserByUsername(mock.Anything, username).
+					Return(userModel.User{}, errors.New("record not found")).
+					Once()
+			},
+			wantErr: commonModel.USER_NOTFOUND,
+		},
+		{
+			name: "wrong password maps to PASSWORD_INCORRECT",
+			dto:  authModel.LoginDto{Username: username, Password: plainPassword},
+			setupRepo: func(repo *authmock.MockRepository) {
+				repo.EXPECT().
+					GetUserByUsername(mock.Anything, username).
+					Return(userModel.User{ID: "u-1", Username: username, Password: "different-hash"}, nil).
+					Once()
+			},
+			wantErr: commonModel.PASSWORD_INCORRECT,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			svc, repo, _, _ := newSvc(t, kvstore.NewMemory())
+			tc.setupRepo(repo)
+
+			pair, err := svc.Login(&tc.dto)
+			require.EqualError(t, err, tc.wantErr)
+			assert.Nil(t, pair)
+		})
+	}
+
+	t.Run("success issues a non-empty token pair", func(t *testing.T) {
+		svc, repo, _, _ := newSvc(t, kvstore.NewMemory())
+		repo.EXPECT().
+			GetUserByUsername(mock.Anything, username).
+			Return(userModel.User{ID: "u-1", Username: username, Password: hashed}, nil).
+			Once()
+
+		pair, err := svc.Login(&authModel.LoginDto{Username: username, Password: plainPassword})
+		require.NoError(t, err)
+		require.NotNil(t, pair)
+		assert.NotEmpty(t, pair.AccessToken)
+		assert.NotEmpty(t, pair.RefreshToken)
+		assert.Equal(t, config.Config().Auth.Jwt.Expires, pair.ExpiresIn)
+	})
+}
+
+// ---------------------------------------------------------------------------
+// RevokeToken / IsTokenRevoked：纯委派给 authRepo
+// ---------------------------------------------------------------------------
+
+func TestRevokeToken_Delegates(t *testing.T) {
+	svc, _, authRepo, _ := newSvc(t, kvstore.NewMemory())
+
+	authRepo.EXPECT().RevokeToken("jti-1", 5*time.Minute).Once()
+	svc.RevokeToken("jti-1", 5*time.Minute)
+}
+
+func TestIsTokenRevoked_Delegates(t *testing.T) {
+	cases := []struct {
+		name string
+		want bool
+	}{
+		{name: "revoked", want: true},
+		{name: "not revoked", want: false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			svc, _, authRepo, _ := newSvc(t, kvstore.NewMemory())
+			authRepo.EXPECT().IsTokenRevoked("jti-x").Return(tc.want).Once()
+			assert.Equal(t, tc.want, svc.IsTokenRevoked("jti-x"))
+		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// ExchangeOAuthCode：一次性码命中 / 未命中，均纯委派给 authRepo
+// ---------------------------------------------------------------------------
+
+func TestExchangeOAuthCode(t *testing.T) {
+	t.Run("hit returns stored pair", func(t *testing.T) {
+		svc, _, authRepo, _ := newSvc(t, kvstore.NewMemory())
+		want := &authModel.TokenPair{AccessToken: "acc", RefreshToken: "ref", ExpiresIn: 900}
+		authRepo.EXPECT().GetAndDeleteOAuthCode("code-1").Return(want, nil).Once()
+
+		got, err := svc.ExchangeOAuthCode("code-1")
+		require.NoError(t, err)
+		assert.Same(t, want, got)
+	})
+
+	t.Run("miss propagates error", func(t *testing.T) {
+		svc, _, authRepo, _ := newSvc(t, kvstore.NewMemory())
+		sentinel := errors.New("code not found or expired")
+		authRepo.EXPECT().GetAndDeleteOAuthCode("missing").Return(nil, sentinel).Once()
+
+		got, err := svc.ExchangeOAuthCode("missing")
+		require.ErrorIs(t, err, sentinel)
+		assert.Nil(t, got)
+	})
+}
+
+// ---------------------------------------------------------------------------
+// PasskeyBoundary：从 passkey_setting 读取 RPID/Origins；读取/解析失败回退空值
+// ---------------------------------------------------------------------------
+
+func TestPasskeyBoundary(t *testing.T) {
+	t.Run("returns configured rp id and origins", func(t *testing.T) {
+		kv := kvstore.NewMemory()
+		raw := mustJSON(t, settingModel.PasskeySetting{
+			WebAuthnRPID:           "example.com",
+			WebAuthnAllowedOrigins: []string{"https://example.com", "https://app.example.com"},
+		})
+		require.NoError(t, kv.Set(context.Background(), commonModel.PasskeySettingKey, raw))
+
+		svc, _, _, _ := newSvc(t, kv)
+		rpID, origins := svc.PasskeyBoundary(context.Background())
+		assert.Equal(t, "example.com", rpID)
+		assert.Equal(t, []string{"https://example.com", "https://app.example.com"}, origins)
+	})
+
+	t.Run("corrupt setting falls back to empty boundary", func(t *testing.T) {
+		kv := kvstore.NewMemory()
+		// 写入无法反序列化的值，使 coreSetting.Get 返回错误 → PasskeyBoundary 走 err 分支。
+		require.NoError(t, kv.Set(context.Background(), commonModel.PasskeySettingKey, "not-valid-json"))
+
+		svc, _, _, _ := newSvc(t, kv)
+		rpID, origins := svc.PasskeyBoundary(context.Background())
+		assert.Empty(t, rpID)
+		assert.Nil(t, origins)
+	})
+}

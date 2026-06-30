@@ -37,6 +37,21 @@ func NewStorageManager(durableKV kvstore.Store) *Manager {
 	return m
 }
 
+// NewStorageManagerForTest builds a Manager backed purely by local storage rooted
+// at dataRoot, with object storage off and no DB. It exists so tests can exercise
+// the file service against an isolated temp dir (t.TempDir()) instead of the
+// config-derived ./data/files — Manager's fields are unexported, so an external
+// test helper cannot assemble one without this seam. It performs no global side
+// effects (does not register the URL resolver) to keep parallel test binaries clean.
+func NewStorageManagerForTest(dataRoot string) *Manager {
+	cfg := config.StorageConfig{DataRoot: dataRoot}
+	return &Manager{
+		defaultCfg: cfg,
+		durableKV:  nil,
+		selector:   NewStorageSelector(cfg),
+	}
+}
+
 func (m *Manager) GetSelector() *StorageSelector {
 	m.mu.RLock()
 	defer m.mu.RUnlock()

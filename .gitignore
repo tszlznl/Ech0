@@ -45,8 +45,7 @@ go.work
 # TODO: where does this rule come from?
 docs/_book
 
-# TODO: where does this rule come from?
-test/
+
 
 ### Vuejs ###
 # Recommended template: Node.gitignore
@@ -58,6 +57,9 @@ yarn-error.log
 
 # End of https://www.toptal.com/developers/gitignore/api/go,vue,vuejs,visualstudiocode
 /data/*
+# 运行/测试时 zap logger 会按当前工作目录写 data/app.log（如 internal/**/data/app.log），
+# 统一忽略任意层级的 data/ 目录，避免把测试产生的日志/库文件误提交。
+data/
 temp
 tmp/
 bin/

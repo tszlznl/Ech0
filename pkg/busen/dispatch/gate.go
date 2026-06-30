@@ -47,9 +47,13 @@ func (g *Gate) Leave() {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
-	if g.active > 0 {
-		g.active--
+	// 未配对/多余的 Leave（active 已为 0）：此时 idle 已处于 closed 状态，必须直接
+	// no-op 返回。否则会再次 close 一个已关闭的 channel → panic: close of closed channel。
+	if g.active == 0 {
+		return
 	}
+	g.active--
+	// 仅在 active 由 >0 降到 0 的「沿」上关闭 idle，唤醒 Wait。
 	if g.active == 0 {
 		close(g.idle)
 	}

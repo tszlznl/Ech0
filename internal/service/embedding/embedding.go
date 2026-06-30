@@ -28,6 +28,7 @@ type EmbeddingService struct {
 	repo       Repository
 	durableKV  kvstore.Store
 	echoReader EchoReader
+	embedder   Embedder
 }
 
 var (
@@ -35,8 +36,18 @@ var (
 	_ Indexer = (*EmbeddingService)(nil)
 )
 
+// 构造函数保持 3 参数签名，Wire 直接调用、无需 make wire（变参会被 Wire 当成需注入的
+// []Option 依赖而报错，故不用变参）。测试通过下方 WithEmbedder 链式注入替身。
 func NewEmbeddingService(repo Repository, durableKV kvstore.Store, echoReader EchoReader) *EmbeddingService {
-	return &EmbeddingService{repo: repo, durableKV: durableKV, echoReader: echoReader}
+	return &EmbeddingService{repo: repo, durableKV: durableKV, echoReader: echoReader, embedder: embedding.Client{}}
+}
+
+// WithEmbedder 替换向量化依赖（默认 embedding.Client{}）并返回自身，主要供测试注入 mock：
+//
+//	svc := service.NewEmbeddingService(repo, kv, reader).WithEmbedder(mockEmbedder)
+func (s *EmbeddingService) WithEmbedder(e Embedder) *EmbeddingService {
+	s.embedder = e
+	return s
 }
 
 func (s *EmbeddingService) getSetting(ctx context.Context) (settingModel.EmbeddingSetting, error) {
@@ -122,7 +133,7 @@ func (s *EmbeddingService) IndexEcho(ctx context.Context, echo echoModel.Echo) e
 		return err
 	}
 
-	vec, err := embedding.EmbedOne(ctx, setting, text)
+	vec, err := s.embedder.EmbedOne(ctx, setting, text)
 	if err != nil {
 		return err
 	}
@@ -153,7 +164,7 @@ func (s *EmbeddingService) Search(ctx context.Context, query string, k int, auth
 	if k <= 0 {
 		k = defaultTopK
 	}
-	vec, err := embedding.EmbedOne(ctx, setting, query)
+	vec, err := s.embedder.EmbedOne(ctx, setting, query)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +213,7 @@ func (s *EmbeddingService) Backfill(ctx context.Context, onProgress func(Backfil
 		}
 
 		if len(texts) > 0 {
-			vecs, embErr := embedding.Embed(ctx, setting, texts)
+			vecs, embErr := s.embedder.Embed(ctx, setting, texts)
 			if embErr != nil {
 				logUtil.GetLogger().Error("backfill embed failed", zap.Error(embErr))
 				result.Failed += len(texts)

@@ -123,3 +123,17 @@ func EmbedOne(
 	}
 	return vecs[0], nil
 }
+
+// Client 把包级 Embed/EmbedOne 暴露为可注入依赖（默认实现）。service 层通过
+// embedding 域的 Embedder 接口持有它，测试时可替换为 mock，从而覆盖"取向量"之后的逻辑。
+type Client struct{}
+
+// Embed 委托给包级 Embed。
+func (Client) Embed(ctx context.Context, setting settingModel.EmbeddingSetting, inputs []string) ([][]float32, error) {
+	return Embed(ctx, setting, inputs)
+}
+
+// EmbedOne 委托给包级 EmbedOne。
+func (Client) EmbedOne(ctx context.Context, setting settingModel.EmbeddingSetting, input string) ([]float32, error) {
+	return EmbedOne(ctx, setting, input)
+}
