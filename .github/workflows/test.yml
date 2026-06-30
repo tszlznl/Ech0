@@ -2,9 +2,21 @@
 # 这是仓库首个在 PR 上运行 go test 的 workflow。覆盖率只写进 job summary，不设硬阈值。
 name: Backend Tests
 
-# 仅手动触发（workflow_dispatch）—— 暂不在 PR/push 上自动跑，避免消耗 GitHub Actions 额度。
-# 需要时在 Actions 页面手动 Run；本地用 `make test-race` / `make test-cover` 即可。
+# 触发：PR 与 push 到 main 时自动跑，外加手动 workflow_dispatch。
+# 用 paths 过滤只在后端相关文件变更时触发（后端测试不依赖前端，template/dist 用占位即可），
+# 避免纯前端/文档改动空耗 GitHub Actions 额度。concurrency 取消同分支旧跑。
 on:
+  pull_request:
+    paths: &backend-paths
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
+      - ".mockery.yaml"
+      - "Makefile"
+      - ".github/workflows/test.yml"
+  push:
+    branches: [main]
+    paths: *backend-paths
   workflow_dispatch:
 
 concurrency:
