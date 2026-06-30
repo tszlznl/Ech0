@@ -11,11 +11,11 @@ import (
 	authService "github.com/lin-snow/ech0/internal/service/auth"
 )
 
-// registerCommonHuma 注册通用 JSON 路由。
+// registerCommon 注册通用 JSON 路由。
 // 注意：RSS / robots.txt / sitemap.xml / healthz 是非 JSON（XML/纯文本）输出，
 // 仍由 setupResourceRoutes 走裸 gin，不在此迁移。
-func registerCommonHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
-	register(api, public(), huma.Operation{
+func registerCommon(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
+	route(api, public(), huma.Operation{
 		OperationID: "common-heatmap",
 		Method:      http.MethodGet,
 		Path:        "/heatmap",
@@ -23,7 +23,7 @@ func registerCommonHuma(api huma.API, h *handler.Bundle, revoker authService.Tok
 		Tags:        []string{"Common"},
 	}, h.CommonHandler.GetHeatMap)
 
-	register(api, public(), huma.Operation{
+	route(api, public(), huma.Operation{
 		OperationID: "common-hello",
 		Method:      http.MethodGet,
 		Path:        "/hello",
@@ -31,7 +31,7 @@ func registerCommonHuma(api huma.API, h *handler.Bundle, revoker authService.Tok
 		Tags:        []string{"Common"},
 	}, h.CommonHandler.HelloEch0)
 
-	register(api, secured(revoker), huma.Operation{
+	route(api, secured(revoker), huma.Operation{
 		OperationID: "common-website-title",
 		Method:      http.MethodGet,
 		Path:        "/website/title",

@@ -14,7 +14,7 @@ import (
 )
 
 // setupFileRoutes 仅保留非 JSON 端点走裸 gin：二进制流式下载 + multipart 上传。
-// JSON 端点（列表/树/元信息/删除/外链/预签名）由 registerFileHuma 注册。
+// JSON 端点（列表/树/元信息/删除/外链/预签名）由 registerFile 注册。
 func setupFileRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	appRouterGroup.AuthRouterGroup.GET(
 		"/file/stream",
@@ -33,9 +33,9 @@ func setupFileRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	)
 }
 
-// registerFileHuma 注册文件的 JSON 端点。
-func registerFileHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
-	register(api, secured(revoker, authModel.ScopeFileRead), huma.Operation{
+// registerFile 注册文件的 JSON 端点。
+func registerFile(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
+	route(api, secured(revoker, authModel.ScopeFileRead), huma.Operation{
 		OperationID: "file-list",
 		Method:      http.MethodGet,
 		Path:        "/files",
@@ -43,7 +43,7 @@ func registerFileHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"File"},
 	}, h.FileHandler.ListFiles)
 
-	register(api, secured(revoker, authModel.ScopeFileRead), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeFileRead), huma.Operation{
 		OperationID: "file-tree",
 		Method:      http.MethodGet,
 		Path:        "/file/tree",
@@ -51,7 +51,7 @@ func registerFileHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"File"},
 	}, h.FileHandler.ListFileTree)
 
-	register(api, secured(revoker, authModel.ScopeFileRead), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeFileRead), huma.Operation{
 		OperationID: "file-get",
 		Method:      http.MethodGet,
 		Path:        "/file/{id}",
@@ -59,7 +59,7 @@ func registerFileHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"File"},
 	}, h.FileHandler.GetFileByID)
 
-	register(api, secured(revoker, authModel.ScopeFileWrite), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeFileWrite), huma.Operation{
 		OperationID: "file-update-meta",
 		Method:      http.MethodPut,
 		Path:        "/file/{id}/meta",
@@ -67,7 +67,7 @@ func registerFileHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"File"},
 	}, h.FileHandler.UpdateFileMeta)
 
-	register(api, secured(revoker, authModel.ScopeFileWrite), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeFileWrite), huma.Operation{
 		OperationID: "file-external",
 		Method:      http.MethodPost,
 		Path:        "/files/external",
@@ -75,7 +75,7 @@ func registerFileHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"File"},
 	}, h.FileHandler.CreateExternalFile)
 
-	register(api, secured(revoker, authModel.ScopeFileWrite), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeFileWrite), huma.Operation{
 		OperationID: "file-delete",
 		Method:      http.MethodDelete,
 		Path:        "/file/{id}",
@@ -83,7 +83,7 @@ func registerFileHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"File"},
 	}, h.FileHandler.DeleteFile)
 
-	register(api, secured(revoker, authModel.ScopeFileWrite), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeFileWrite), huma.Operation{
 		OperationID: "file-presign",
 		Method:      http.MethodPut,
 		Path:        "/files/presign",

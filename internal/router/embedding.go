@@ -12,10 +12,10 @@ import (
 	authService "github.com/lin-snow/ech0/internal/service/auth"
 )
 
-// registerEmbeddingHuma 注册 Embedding 向量索引操作（owner / 管理员，需 admin:settings scope）。
-// 注意：Embedding 设置（get/update）仍归口到 registerSettingHuma（尚未迁移）。
-func registerEmbeddingHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
-	register(api, secured(revoker, authModel.ScopeAdminSettings), huma.Operation{
+// registerEmbedding 注册 Embedding 向量索引操作（owner / 管理员，需 admin:settings scope）。
+// 注意：Embedding 设置（get/update）仍归口到 registerSetting（尚未迁移）。
+func registerEmbedding(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
+	route(api, secured(revoker, authModel.ScopeAdminSettings), huma.Operation{
 		OperationID: "embedding-reindex",
 		Method:      http.MethodPost,
 		Path:        "/embedding/reindex",
@@ -24,7 +24,7 @@ func registerEmbeddingHuma(api huma.API, h *handler.Bundle, revoker authService.
 		Tags:        []string{"Embedding"},
 	}, h.EmbeddingHandler.Reindex)
 
-	register(api, secured(revoker, authModel.ScopeAdminSettings), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeAdminSettings), huma.Operation{
 		OperationID: "embedding-reindex-status",
 		Method:      http.MethodGet,
 		Path:        "/embedding/reindex/status",
@@ -33,7 +33,7 @@ func registerEmbeddingHuma(api huma.API, h *handler.Bundle, revoker authService.
 		Tags:        []string{"Embedding"},
 	}, h.EmbeddingHandler.ReindexStatus)
 
-	register(api, secured(revoker, authModel.ScopeAdminSettings), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeAdminSettings), huma.Operation{
 		OperationID: "embedding-reindex-cancel",
 		Method:      http.MethodPost,
 		Path:        "/embedding/reindex/cancel",

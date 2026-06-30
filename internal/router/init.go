@@ -10,9 +10,9 @@ import (
 	"github.com/lin-snow/ech0/internal/handler"
 )
 
-// registerInitHuma 注册系统初始化路由（公开，无鉴权）。
-func registerInitHuma(api huma.API, h *handler.Bundle) {
-	register(api, public(), huma.Operation{
+// registerInit 注册系统初始化路由（公开，无鉴权）。
+func registerInit(api huma.API, h *handler.Bundle) {
+	route(api, public(), huma.Operation{
 		OperationID: "init-status",
 		Method:      http.MethodGet,
 		Path:        "/init/status",
@@ -21,7 +21,7 @@ func registerInitHuma(api huma.API, h *handler.Bundle) {
 		Tags:        []string{"Init"},
 	}, h.InitHandler.GetInitStatus)
 
-	register(api, public(), huma.Operation{
+	route(api, public(), huma.Operation{
 		OperationID: "init-owner",
 		Method:      http.MethodPost,
 		Path:        "/init/owner",

@@ -17,10 +17,10 @@ import (
 	authService "github.com/lin-snow/ech0/internal/service/auth"
 )
 
-// registerEchoHuma 注册 Echo / Tag 路由（全部 JSON，已无裸 gin 端点）。
-func registerEchoHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
+// registerEcho 注册 Echo / Tag 路由（全部 JSON，已无裸 gin 端点）。
+func registerEcho(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
 	// 点赞：匿名可访问，叠加 IP 限速 + (IP, echoID) 去重窗口；窗口内重复请求按幂等返回成功形状。
-	register(api, public(), huma.Operation{
+	route(api, public(), huma.Operation{
 		OperationID: "echo-like",
 		Method:      http.MethodPut,
 		Path:        "/echo/like/{id}",
@@ -31,7 +31,7 @@ func registerEchoHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		}))},
 	}, h.EchoHandler.LikeEcho)
 
-	register(api, public(), huma.Operation{
+	route(api, public(), huma.Operation{
 		OperationID: "tag-list",
 		Method:      http.MethodGet,
 		Path:        "/tags",
@@ -40,7 +40,7 @@ func registerEchoHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 	}, h.EchoHandler.GetAllTags)
 
 	// 可匿名降级读接口
-	register(api, optional(revoker), huma.Operation{
+	route(api, optional(revoker), huma.Operation{
 		OperationID: "echo-query",
 		Method:      http.MethodPost,
 		Path:        "/echo/query",
@@ -48,7 +48,7 @@ func registerEchoHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"Echo"},
 	}, h.EchoHandler.QueryEchos)
 
-	register(api, optional(revoker), huma.Operation{
+	route(api, optional(revoker), huma.Operation{
 		OperationID: "echo-page-get",
 		Method:      http.MethodGet,
 		Path:        "/echo/page",
@@ -56,7 +56,7 @@ func registerEchoHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"Echo"},
 	}, h.EchoHandler.GetEchosByPageGet)
 
-	register(api, optional(revoker), huma.Operation{
+	route(api, optional(revoker), huma.Operation{
 		OperationID: "echo-page-post",
 		Method:      http.MethodPost,
 		Path:        "/echo/page",
@@ -64,7 +64,7 @@ func registerEchoHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"Echo"},
 	}, h.EchoHandler.GetEchosByPagePost)
 
-	register(api, optional(revoker), huma.Operation{
+	route(api, optional(revoker), huma.Operation{
 		OperationID: "echo-by-tag",
 		Method:      http.MethodGet,
 		Path:        "/echo/tag/{tagid}",
@@ -72,7 +72,7 @@ func registerEchoHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"Echo"},
 	}, h.EchoHandler.GetEchosByTagId)
 
-	register(api, optional(revoker), huma.Operation{
+	route(api, optional(revoker), huma.Operation{
 		OperationID: "echo-today",
 		Method:      http.MethodGet,
 		Path:        "/echo/today",
@@ -80,7 +80,7 @@ func registerEchoHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"Echo"},
 	}, h.EchoHandler.GetTodayEchos)
 
-	register(api, optional(revoker), huma.Operation{
+	route(api, optional(revoker), huma.Operation{
 		OperationID: "echo-hot",
 		Method:      http.MethodGet,
 		Path:        "/echo/hot",
@@ -88,7 +88,7 @@ func registerEchoHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"Echo"},
 	}, h.EchoHandler.GetHotEchos)
 
-	register(api, optional(revoker), huma.Operation{
+	route(api, optional(revoker), huma.Operation{
 		OperationID: "echo-random",
 		Method:      http.MethodGet,
 		Path:        "/echo/random",
@@ -96,7 +96,7 @@ func registerEchoHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"Echo"},
 	}, h.EchoHandler.GetRandomEcho)
 
-	register(api, optional(revoker), huma.Operation{
+	route(api, optional(revoker), huma.Operation{
 		OperationID: "echo-onthisday",
 		Method:      http.MethodGet,
 		Path:        "/echo/onthisday",
@@ -104,7 +104,7 @@ func registerEchoHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"Echo"},
 	}, h.EchoHandler.GetOnThisDayEchos)
 
-	register(api, optional(revoker), huma.Operation{
+	route(api, optional(revoker), huma.Operation{
 		OperationID: "echo-get",
 		Method:      http.MethodGet,
 		Path:        "/echo/{id}",
@@ -113,7 +113,7 @@ func registerEchoHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 	}, h.EchoHandler.GetEchoById)
 
 	// 写接口（echo:write）
-	register(api, secured(revoker, authModel.ScopeEchoWrite), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeEchoWrite), huma.Operation{
 		OperationID: "echo-create",
 		Method:      http.MethodPost,
 		Path:        "/echo",
@@ -121,7 +121,7 @@ func registerEchoHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"Echo"},
 	}, h.EchoHandler.PostEcho)
 
-	register(api, secured(revoker, authModel.ScopeEchoWrite), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeEchoWrite), huma.Operation{
 		OperationID: "echo-update",
 		Method:      http.MethodPut,
 		Path:        "/echo",
@@ -129,7 +129,7 @@ func registerEchoHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"Echo"},
 	}, h.EchoHandler.UpdateEcho)
 
-	register(api, secured(revoker, authModel.ScopeEchoWrite), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeEchoWrite), huma.Operation{
 		OperationID: "echo-delete",
 		Method:      http.MethodDelete,
 		Path:        "/echo/{id}",
@@ -137,7 +137,7 @@ func registerEchoHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"Echo"},
 	}, h.EchoHandler.DeleteEcho)
 
-	register(api, secured(revoker, authModel.ScopeEchoWrite), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeEchoWrite), huma.Operation{
 		OperationID: "tag-create",
 		Method:      http.MethodPost,
 		Path:        "/tag",
@@ -145,7 +145,7 @@ func registerEchoHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"Echo"},
 	}, h.EchoHandler.CreateTag)
 
-	register(api, secured(revoker, authModel.ScopeEchoWrite), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeEchoWrite), huma.Operation{
 		OperationID: "tag-delete",
 		Method:      http.MethodDelete,
 		Path:        "/tag/{id}",

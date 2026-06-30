@@ -27,11 +27,11 @@ func setupMigrationRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	)
 }
 
-// registerMigrationHuma 注册数据迁移控制面的 JSON 端点（admin:settings）。
-func registerMigrationHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
+// registerMigration 注册数据迁移控制面的 JSON 端点（admin:settings）。
+func registerMigration(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
 	admin := secured(revoker, authModel.ScopeAdminSettings)
 
-	register(api, admin, huma.Operation{
+	route(api, admin, huma.Operation{
 		OperationID: "migration-start",
 		Method:      http.MethodPost,
 		Path:        "/migration/start",
@@ -39,7 +39,7 @@ func registerMigrationHuma(api huma.API, h *handler.Bundle, revoker authService.
 		Tags:        []string{"Migration"},
 	}, h.MigrationHandler.StartMigration)
 
-	register(api, admin, huma.Operation{
+	route(api, admin, huma.Operation{
 		OperationID: "migration-status",
 		Method:      http.MethodGet,
 		Path:        "/migration/status",
@@ -47,7 +47,7 @@ func registerMigrationHuma(api huma.API, h *handler.Bundle, revoker authService.
 		Tags:        []string{"Migration"},
 	}, h.MigrationHandler.GetMigrationStatus)
 
-	register(api, admin, huma.Operation{
+	route(api, admin, huma.Operation{
 		OperationID: "migration-cancel",
 		Method:      http.MethodPost,
 		Path:        "/migration/cancel",
@@ -55,7 +55,7 @@ func registerMigrationHuma(api huma.API, h *handler.Bundle, revoker authService.
 		Tags:        []string{"Migration"},
 	}, h.MigrationHandler.CancelMigration)
 
-	register(api, admin, huma.Operation{
+	route(api, admin, huma.Operation{
 		OperationID: "migration-cleanup",
 		Method:      http.MethodPost,
 		Path:        "/migration/cleanup",
@@ -63,7 +63,7 @@ func registerMigrationHuma(api huma.API, h *handler.Bundle, revoker authService.
 		Tags:        []string{"Migration"},
 	}, h.MigrationHandler.CleanupMigration)
 
-	register(api, admin, huma.Operation{
+	route(api, admin, huma.Operation{
 		OperationID: "migration-export",
 		Method:      http.MethodPost,
 		Path:        "/migration/export",
@@ -71,7 +71,7 @@ func registerMigrationHuma(api huma.API, h *handler.Bundle, revoker authService.
 		Tags:        []string{"Migration"},
 	}, h.MigrationHandler.StartExport)
 
-	register(api, admin, huma.Operation{
+	route(api, admin, huma.Operation{
 		OperationID: "migration-export-status",
 		Method:      http.MethodGet,
 		Path:        "/migration/export/status",
@@ -79,7 +79,7 @@ func registerMigrationHuma(api huma.API, h *handler.Bundle, revoker authService.
 		Tags:        []string{"Migration"},
 	}, h.MigrationHandler.GetExportStatus)
 
-	register(api, admin, huma.Operation{
+	route(api, admin, huma.Operation{
 		OperationID: "migration-export-cancel",
 		Method:      http.MethodPost,
 		Path:        "/migration/export/cancel",

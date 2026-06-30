@@ -25,18 +25,18 @@ func setupCommentRoutes(appRouterGroup *AppRouterGroup, _ *handler.Bundle) {
 	appRouterGroup.PublicRouterGroup.Any("/cap/*any", gin.WrapH(captchaHandler))
 }
 
-// registerCommentHuma 注册评论的 JSON 端点。
+// registerComment 注册评论的 JSON 端点。
 //
 // 公开评论端点需要请求侧元数据（StashMeta）与可选 viewer（OptionalViewer），二者是**非鉴权**的
 // 请求处理中间件，故在 op 字面量里显式声明，不混进 posture。
-func registerCommentHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
+func registerComment(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
 	nc := humares.Bridge(middleware.NoCache())
 	stash := humares.Bridge(h.CommentHandler.StashMeta())
 	optViewer := humares.Bridge(h.CommentHandler.OptionalViewer())
 	moderate := secured(revoker, authModel.ScopeCommentMod)
 
 	// 公开端点
-	register(api, public(), huma.Operation{
+	route(api, public(), huma.Operation{
 		OperationID: "comment-form-meta",
 		Method:      http.MethodGet,
 		Path:        "/comments/form",
@@ -45,7 +45,7 @@ func registerCommentHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Middlewares: huma.Middlewares{nc, stash, optViewer},
 	}, h.CommentHandler.GetFormMeta)
 
-	register(api, public(), huma.Operation{
+	route(api, public(), huma.Operation{
 		OperationID: "comment-list-by-echo",
 		Method:      http.MethodGet,
 		Path:        "/comments",
@@ -54,7 +54,7 @@ func registerCommentHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Middlewares: huma.Middlewares{nc},
 	}, h.CommentHandler.ListCommentsByEchoID)
 
-	register(api, public(), huma.Operation{
+	route(api, public(), huma.Operation{
 		OperationID: "comment-list-public",
 		Method:      http.MethodGet,
 		Path:        "/comments/public",
@@ -63,7 +63,7 @@ func registerCommentHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Middlewares: huma.Middlewares{nc},
 	}, h.CommentHandler.ListPublicComments)
 
-	register(api, public(), huma.Operation{
+	route(api, public(), huma.Operation{
 		OperationID: "comment-create",
 		Method:      http.MethodPost,
 		Path:        "/comments",
@@ -73,7 +73,7 @@ func registerCommentHuma(api huma.API, h *handler.Bundle, revoker authService.To
 	}, h.CommentHandler.CreateComment)
 
 	// 集成端点：访问令牌（comment:write + integration/mcp-remote 受众）
-	register(api, secured(revoker, authModel.ScopeCommentWrite).audience(authModel.AudienceIntegration, authModel.AudienceMCPRemote), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeCommentWrite).audience(authModel.AudienceIntegration, authModel.AudienceMCPRemote), huma.Operation{
 		OperationID: "comment-create-integration",
 		Method:      http.MethodPost,
 		Path:        "/comments/integration",
@@ -83,7 +83,7 @@ func registerCommentHuma(api huma.API, h *handler.Bundle, revoker authService.To
 	}, h.CommentHandler.CreateIntegrationComment)
 
 	// 管理面板端点（comment:moderate）
-	register(api, moderate, huma.Operation{
+	route(api, moderate, huma.Operation{
 		OperationID: "comment-panel-list",
 		Method:      http.MethodGet,
 		Path:        "/panel/comments",
@@ -91,7 +91,7 @@ func registerCommentHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Comment"},
 	}, h.CommentHandler.ListPanelComments)
 
-	register(api, moderate, huma.Operation{
+	route(api, moderate, huma.Operation{
 		OperationID: "comment-panel-get",
 		Method:      http.MethodGet,
 		Path:        "/panel/comments/{id}",
@@ -99,7 +99,7 @@ func registerCommentHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Comment"},
 	}, h.CommentHandler.GetCommentByID)
 
-	register(api, moderate, huma.Operation{
+	route(api, moderate, huma.Operation{
 		OperationID: "comment-panel-status",
 		Method:      http.MethodPatch,
 		Path:        "/panel/comments/{id}/status",
@@ -107,7 +107,7 @@ func registerCommentHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Comment"},
 	}, h.CommentHandler.UpdateCommentStatus)
 
-	register(api, moderate, huma.Operation{
+	route(api, moderate, huma.Operation{
 		OperationID: "comment-panel-hot",
 		Method:      http.MethodPatch,
 		Path:        "/panel/comments/{id}/hot",
@@ -115,7 +115,7 @@ func registerCommentHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Comment"},
 	}, h.CommentHandler.UpdateCommentHot)
 
-	register(api, moderate, huma.Operation{
+	route(api, moderate, huma.Operation{
 		OperationID: "comment-panel-delete",
 		Method:      http.MethodDelete,
 		Path:        "/panel/comments/{id}",
@@ -123,7 +123,7 @@ func registerCommentHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Comment"},
 	}, h.CommentHandler.DeleteComment)
 
-	register(api, moderate, huma.Operation{
+	route(api, moderate, huma.Operation{
 		OperationID: "comment-panel-batch",
 		Method:      http.MethodPost,
 		Path:        "/panel/comments/batch",
@@ -131,7 +131,7 @@ func registerCommentHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Comment"},
 	}, h.CommentHandler.BatchAction)
 
-	register(api, moderate, huma.Operation{
+	route(api, moderate, huma.Operation{
 		OperationID: "comment-panel-settings-get",
 		Method:      http.MethodGet,
 		Path:        "/panel/comments/settings",
@@ -139,7 +139,7 @@ func registerCommentHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Comment"},
 	}, h.CommentHandler.GetCommentSetting)
 
-	register(api, moderate, huma.Operation{
+	route(api, moderate, huma.Operation{
 		OperationID: "comment-panel-settings-update",
 		Method:      http.MethodPut,
 		Path:        "/panel/comments/settings",
@@ -147,7 +147,7 @@ func registerCommentHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Comment"},
 	}, h.CommentHandler.UpdateCommentSetting)
 
-	register(api, moderate, huma.Operation{
+	route(api, moderate, huma.Operation{
 		OperationID: "comment-panel-test-email",
 		Method:      http.MethodPost,
 		Path:        "/panel/comments/settings/test-email",

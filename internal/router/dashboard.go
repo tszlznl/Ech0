@@ -23,9 +23,9 @@ func setupDashboardRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	appRouterGroup.WSRouterGroup.GET("/system/logs", h.DashboardHandler.WSSubscribeSystemLogs())
 }
 
-// registerDashboardHuma 注册仪表盘的 JSON 端点（admin:settings）。
-func registerDashboardHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
-	register(api, secured(revoker, authModel.ScopeAdminSettings), huma.Operation{
+// registerDashboard 注册仪表盘的 JSON 端点（admin:settings）。
+func registerDashboard(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
+	route(api, secured(revoker, authModel.ScopeAdminSettings), huma.Operation{
 		OperationID: "dashboard-check-update",
 		Method:      http.MethodGet,
 		Path:        "/system/check-update",
@@ -33,7 +33,7 @@ func registerDashboardHuma(api huma.API, h *handler.Bundle, revoker authService.
 		Tags:        []string{"Dashboard"},
 	}, h.DashboardHandler.CheckUpdate)
 
-	register(api, secured(revoker, authModel.ScopeAdminSettings), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeAdminSettings), huma.Operation{
 		OperationID: "dashboard-system-logs",
 		Method:      http.MethodGet,
 		Path:        "/system/logs",
@@ -41,7 +41,7 @@ func registerDashboardHuma(api huma.API, h *handler.Bundle, revoker authService.
 		Tags:        []string{"Dashboard"},
 	}, h.DashboardHandler.GetSystemLogs)
 
-	register(api, secured(revoker, authModel.ScopeAdminSettings), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeAdminSettings), huma.Operation{
 		OperationID: "dashboard-visitor-stats",
 		Method:      http.MethodGet,
 		Path:        "/system/visitor-stats",

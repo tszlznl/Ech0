@@ -12,9 +12,9 @@ import (
 	authService "github.com/lin-snow/ech0/internal/service/auth"
 )
 
-// registerConnectHuma 注册实例互联（Connect）路由。
-func registerConnectHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
-	register(api, public(), huma.Operation{
+// registerConnect 注册实例互联（Connect）路由。
+func registerConnect(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
+	route(api, public(), huma.Operation{
 		OperationID: "connect-self",
 		Method:      http.MethodGet,
 		Path:        "/connect",
@@ -22,7 +22,7 @@ func registerConnectHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Connect"},
 	}, h.ConnectHandler.GetConnect)
 
-	register(api, public(), huma.Operation{
+	route(api, public(), huma.Operation{
 		OperationID: "connect-list",
 		Method:      http.MethodGet,
 		Path:        "/connect/list",
@@ -30,7 +30,7 @@ func registerConnectHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Connect"},
 	}, h.ConnectHandler.GetConnects)
 
-	register(api, public(), huma.Operation{
+	route(api, public(), huma.Operation{
 		OperationID: "connect-info",
 		Method:      http.MethodGet,
 		Path:        "/connects/info",
@@ -38,7 +38,7 @@ func registerConnectHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Connect"},
 	}, h.ConnectHandler.GetConnectsInfo)
 
-	register(api, secured(revoker, authModel.ScopeConnectRead), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeConnectRead), huma.Operation{
 		OperationID: "connect-health",
 		Method:      http.MethodGet,
 		Path:        "/connects/health",
@@ -46,7 +46,7 @@ func registerConnectHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Connect"},
 	}, h.ConnectHandler.GetConnectsHealth)
 
-	register(api, secured(revoker, authModel.ScopeConnectWrite), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeConnectWrite), huma.Operation{
 		OperationID: "connect-add",
 		Method:      http.MethodPost,
 		Path:        "/connects",
@@ -54,7 +54,7 @@ func registerConnectHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Connect"},
 	}, h.ConnectHandler.AddConnect)
 
-	register(api, secured(revoker, authModel.ScopeConnectWrite), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeConnectWrite), huma.Operation{
 		OperationID: "connect-delete",
 		Method:      http.MethodDelete,
 		Path:        "/connects/{id}",

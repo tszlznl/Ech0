@@ -22,9 +22,9 @@ func setupCopilotRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	)
 }
 
-// registerCopilotHuma 注册 Copilot 的 JSON 端点。
-func registerCopilotHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
-	register(api, public(), huma.Operation{
+// registerCopilot 注册 Copilot 的 JSON 端点。
+func registerCopilot(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
+	route(api, public(), huma.Operation{
 		OperationID: "copilot-recent",
 		Method:      http.MethodGet,
 		Path:        "/agent/recent",
@@ -32,7 +32,7 @@ func registerCopilotHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Copilot"},
 	}, h.CopilotHandler.GetRecent)
 
-	register(api, secured(revoker, authModel.ScopeAdminSettings), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeAdminSettings), huma.Operation{
 		OperationID: "copilot-session-get",
 		Method:      http.MethodGet,
 		Path:        "/chat/session",
@@ -40,7 +40,7 @@ func registerCopilotHuma(api huma.API, h *handler.Bundle, revoker authService.To
 		Tags:        []string{"Copilot"},
 	}, h.CopilotHandler.GetSession)
 
-	register(api, secured(revoker, authModel.ScopeAdminSettings), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeAdminSettings), huma.Operation{
 		OperationID: "copilot-session-clear",
 		Method:      http.MethodDelete,
 		Path:        "/chat/session",

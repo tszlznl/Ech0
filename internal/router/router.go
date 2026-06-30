@@ -26,7 +26,7 @@ type AppRouterGroup struct {
 //
 //  1. 核心（顺序敏感）：模板 → 静态文件 → 全局中间件 → 路由分组 → Huma API。
 //     其中 Huma API 必须在全局中间件**之后**创建，使 /api/docs、/api/openapi.* 继承 Recovery/i18n/CORS。
-//  2. 业务域路由：各域的裸 gin 端点（SSE/WS/上传/下载/captcha）+ RegisterHumaOperations 注册的 JSON 端点。
+//  2. 业务域路由：各域的裸 gin 端点（SSE/WS/上传/下载/captcha）+ registerOperations 注册的 JSON 端点。
 func SetupRouter(r *gin.Engine, h *handler.Bundle, mwDeps *middleware.Deps) {
 	// 1. 核心
 	setupTemplateRoutes(r, h)
@@ -43,7 +43,7 @@ func SetupRouter(r *gin.Engine, h *handler.Bundle, mwDeps *middleware.Deps) {
 	setupFileRoutes(groups, h)
 	setupDashboardRoutes(groups, h)
 	setupCopilotRoutes(groups, h)
-	RegisterHumaOperations(api, h, revoker) // 所有已迁移到 Huma 的 JSON 端点
+	registerOperations(api, h, revoker) // 所有已迁移到 Huma 的 JSON 端点
 	setupMigrationRoutes(groups, h)
 	setupMCPRoutes(groups, h)
 }

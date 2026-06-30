@@ -42,9 +42,9 @@ func setupAuthRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	)
 }
 
-// registerAuthHuma 注册**干净 JSON** 的认证端点（无 cookie / 无重定向 / 无 WebAuthn blob）。
-func registerAuthHuma(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
-	register(api, secured(revoker, authModel.ScopeProfileWrite), huma.Operation{
+// registerAuth 注册**干净 JSON** 的认证端点（无 cookie / 无重定向 / 无 WebAuthn blob）。
+func registerAuth(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {
+	route(api, secured(revoker, authModel.ScopeProfileWrite), huma.Operation{
 		OperationID: "oauth-bind",
 		Method:      http.MethodPost,
 		Path:        "/oauth/{provider}/bind",
@@ -52,7 +52,7 @@ func registerAuthHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"Auth"},
 	}, h.AuthHandler.OAuthBind)
 
-	register(api, secured(revoker, authModel.ScopeProfileRead), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeProfileRead), huma.Operation{
 		OperationID: "oauth-info",
 		Method:      http.MethodGet,
 		Path:        "/oauth/info",
@@ -60,7 +60,7 @@ func registerAuthHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"Auth"},
 	}, h.AuthHandler.GetOAuthInfo)
 
-	register(api, secured(revoker, authModel.ScopeProfileRead), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeProfileRead), huma.Operation{
 		OperationID: "passkey-list",
 		Method:      http.MethodGet,
 		Path:        "/passkeys",
@@ -68,7 +68,7 @@ func registerAuthHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"Auth"},
 	}, h.AuthHandler.ListPasskeys)
 
-	register(api, secured(revoker, authModel.ScopeProfileWrite), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeProfileWrite), huma.Operation{
 		OperationID: "passkey-delete",
 		Method:      http.MethodDelete,
 		Path:        "/passkeys/{id}",
@@ -76,7 +76,7 @@ func registerAuthHuma(api huma.API, h *handler.Bundle, revoker authService.Token
 		Tags:        []string{"Auth"},
 	}, h.AuthHandler.DeletePasskey)
 
-	register(api, secured(revoker, authModel.ScopeProfileWrite), huma.Operation{
+	route(api, secured(revoker, authModel.ScopeProfileWrite), huma.Operation{
 		OperationID: "passkey-update-name",
 		Method:      http.MethodPut,
 		Path:        "/passkeys/{id}",
