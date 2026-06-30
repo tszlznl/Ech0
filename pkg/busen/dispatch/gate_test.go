@@ -108,21 +108,36 @@ func TestGateActiveCountGatesIdle(t *testing.T) {
 	}
 }
 
-// TestGateLeaveUnderflowDoubleClose documents current behavior: a Leave with no
-// matching Enter keeps the active counter from going negative (the `active > 0`
-// guard), but it then attempts to close the already-closed idle channel and
-// panics. This pins the present semantics; if the channel close is later guarded
-// too, update this test. See the run notes for the latent double-close finding.
-func TestGateLeaveUnderflowDoubleClose(t *testing.T) {
+// TestGateLeaveUnderflowIsSafeNoop verifies that an unmatched / surplus Leave is a
+// safe no-op: it neither drives active negative nor double-closes the already-closed
+// idle channel (which previously panicked with "close of closed channel"). It also
+// confirms the gate is still usable afterwards — the idle channel must not be left
+// in a broken state.
+func TestGateLeaveUnderflowIsSafeNoop(t *testing.T) {
 	g := dispatch.NewGate()
 
-	var recovered any
-	func() {
-		defer func() { recovered = recover() }()
+	// Several surplus Leave calls on a fresh (idle) gate must not panic.
+	for i := 0; i < 3; i++ {
 		g.Leave()
-	}()
+	}
 
-	if recovered == nil {
-		t.Fatalf("expected panic from underflow Leave double-closing idle, got none")
+	// Still idle: Wait returns immediately.
+	if err := g.Wait(context.Background()); err != nil {
+		t.Fatalf("Wait after no-op Leave = %v, want nil", err)
+	}
+
+	// A subsequent normal Enter/Leave cycle still works (idle was not corrupted).
+	if !g.Enter() {
+		t.Fatalf("Enter after no-op Leave should succeed")
+	}
+	g.Leave()
+	if err := g.Wait(context.Background()); err != nil {
+		t.Fatalf("Wait after Enter/Leave cycle = %v, want nil", err)
+	}
+
+	// A surplus Leave after a completed cycle is also a no-op.
+	g.Leave()
+	if err := g.Wait(context.Background()); err != nil {
+		t.Fatalf("Wait after post-cycle surplus Leave = %v, want nil", err)
 	}
 }

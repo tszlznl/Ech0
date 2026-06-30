@@ -289,7 +289,10 @@ func TestGetConnectsInfo_PartialFailureAggregation(t *testing.T) {
 		"https://good.example": {connect: model.Connect{ServerName: "good", ServerURL: "https://good.srv"}},
 		"https://bad.example":  {err: errors.New("peer unreachable")},
 	})
-	svc := connectService.NewConnectService(nil, repo, nil, nil, nil).WithPeerFetcher(fetcher)
+	// WithRetryBaseDelay(0)：bad.example 要耗尽 3 次重试，注入 0 退避避免真实 1s+2s 墙钟等待。
+	svc := connectService.NewConnectService(nil, repo, nil, nil, nil).
+		WithPeerFetcher(fetcher).
+		WithRetryBaseDelay(0)
 
 	got, err := svc.GetConnectsInfo()
 	require.NoError(t, err)
@@ -310,7 +313,10 @@ func TestGetConnectsInfo_RetryThenSuccess(t *testing.T) {
 		}
 		return model.Connect{ServerName: "flaky", ServerURL: "https://flaky.srv"}, nil
 	}
-	svc := connectService.NewConnectService(nil, repo, nil, nil, nil).WithPeerFetcher(fetcher)
+	// WithRetryBaseDelay(0)：第二次尝试前的退避注入 0，避免真实 1s 墙钟等待。
+	svc := connectService.NewConnectService(nil, repo, nil, nil, nil).
+		WithPeerFetcher(fetcher).
+		WithRetryBaseDelay(0)
 
 	got, err := svc.GetConnectsInfo()
 	require.NoError(t, err)

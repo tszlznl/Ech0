@@ -33,6 +33,9 @@ const (
 	siteMetricsTimezone         = "UTC"
 	healthProbeTimeout          = 5 * time.Second
 	healthOverallTimeout        = 30 * time.Second
+	// connectRetryBaseDelay 是 fetchConnectsInfo 拉取失败后指数退避的基准延迟（1s, 2s, ...）。
+	// 抽成可注入字段（见 retryBaseDelay / WithRetryBaseDelay）后，测试可设为 0 让重试路径瞬时跑完。
+	connectRetryBaseDelay = 1 * time.Second
 )
 
 type ConnectService struct {
@@ -53,6 +56,10 @@ type ConnectService struct {
 	// HTTP 覆盖编排逻辑，故抽成可注入函数：测试注入返回 canned Connect 的替身，即可覆盖
 	// fetchConnectsInfo 的并发扇出/重试/去重与健康聚合，而不触发真实网络。
 	peerFetcher func(peerConnectURL string, requestTimeout time.Duration) (model.Connect, error)
+
+	// retryBaseDelay 是 fetchConnectsInfo 重试退避的基准延迟；默认 connectRetryBaseDelay(1s)。
+	// 测试用 WithRetryBaseDelay(0) 设为 0，使失败/重试路径不再 sleep 真实墙钟时间。
+	retryBaseDelay time.Duration
 }
 
 func NewConnectService(
@@ -69,6 +76,7 @@ func NewConnectService(
 		commonService:     commonService,
 		durableKV:         durableKV,
 		peerFetcher:       fetchPeerConnectInfo,
+		retryBaseDelay:    connectRetryBaseDelay,
 	}
 }
 
@@ -79,6 +87,14 @@ func (connectService *ConnectService) WithPeerFetcher(
 	f func(peerConnectURL string, requestTimeout time.Duration) (model.Connect, error),
 ) *ConnectService {
 	connectService.peerFetcher = f
+	return connectService
+}
+
+// WithRetryBaseDelay 覆盖重试退避基准延迟并返回自身，主要供测试设为 0 消除墙钟等待：
+//
+//	svc := service.NewConnectService(...).WithRetryBaseDelay(0)
+func (connectService *ConnectService) WithRetryBaseDelay(d time.Duration) *ConnectService {
+	connectService.retryBaseDelay = d
 	return connectService
 }
 
@@ -293,8 +309,8 @@ func (connectService *ConnectService) fetchConnectsInfo() ([]model.Connect, erro
 
 	// 重试配置：平衡速度和可靠性
 	const maxRetries = 3
-	const baseDelay = 1 * time.Second
-	const requestTimeout = 3 * time.Second // 单个请求超时时间（降低到3秒，加快失败检测）
+	baseDelay := connectService.retryBaseDelay // 可注入（默认 1s；测试可设为 0）
+	const requestTimeout = 3 * time.Second     // 单个请求超时时间（降低到3秒，加快失败检测）
 
 	for _, conn := range connects {
 		wg.Add(1)
@@ -322,13 +338,15 @@ func (connectService *ConnectService) fetchConnectsInfo() ([]model.Connect, erro
 				default:
 				}
 
-				// 计算当前重试的延迟时间（指数退避）
+				// 计算当前重试的延迟时间（指数退避）；delay<=0 时跳过等待（测试注入 0）。
 				if attempt > 0 {
 					delay := baseDelay * time.Duration(1<<(attempt-1)) // 1s, 2s, 4s...
-					select {
-					case <-time.After(delay):
-					case <-ctx.Done():
-						return
+					if delay > 0 {
+						select {
+						case <-time.After(delay):
+						case <-ctx.Done():
+							return
+						}
 					}
 				}
 
