@@ -7,11 +7,11 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
-	"go.uber.org/zap"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 )
 
 // clientConfig holds the resolved options for NewClient.
@@ -88,21 +88,21 @@ func (l *loggingRoundTripper) RoundTrip(req *http.Request) (*http.Response, erro
 	if err != nil {
 		logUtil.Debug(
 			"egress request failed",
-			zap.String("module", "egress"),
-			zap.String("method", req.Method),
-			zap.String("host", req.URL.Host),
-			zap.Int64("latency_ms", latencyMs),
-			zap.Error(err),
+			slog.String("module", "egress"),
+			slog.String("method", req.Method),
+			slog.String("host", req.URL.Host),
+			slog.Int64("latency_ms", latencyMs),
+			logUtil.Err(err),
 		)
 		return resp, err
 	}
 	logUtil.Debug(
 		"egress request",
-		zap.String("module", "egress"),
-		zap.String("method", req.Method),
-		zap.String("host", req.URL.Host),
-		zap.Int("status", resp.StatusCode),
-		zap.Int64("latency_ms", latencyMs),
+		slog.String("module", "egress"),
+		slog.String("method", req.Method),
+		slog.String("host", req.URL.Host),
+		slog.Int("status", resp.StatusCode),
+		slog.Int64("latency_ms", latencyMs),
 	)
 	return resp, err
 }
@@ -162,8 +162,8 @@ func Fetch(url, method string, h Header, timeout ...time.Duration) ([]byte, erro
 		if closeErr := resp.Body.Close(); closeErr != nil {
 			logUtil.Warn(
 				"close response body failed",
-				zap.String("module", "egress"),
-				zap.Error(closeErr),
+				slog.String("module", "egress"),
+				logUtil.Err(closeErr),
 			)
 		}
 	}()

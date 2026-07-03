@@ -5,11 +5,11 @@ package webhook
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/lin-snow/ech0/internal/event"
 	eventbus "github.com/lin-snow/ech0/internal/event/bus"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
-	"go.uber.org/zap"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 )
 
 // Registrations 让 Dispatcher 作为普通事件订阅者自注册：为每个可观测事件登记一条同步订阅，
@@ -42,12 +42,12 @@ func observe[T event.Named](
 		obs, err := event.NewWebhookObservation(v.EventName(), v, meta)
 		if err != nil {
 			logUtil.GetLogger().Warn("build webhook observation failed",
-				zap.String("event", v.EventName()), zap.Error(err))
+				slog.String("event", v.EventName()), logUtil.Err(err))
 			return nil
 		}
 		if err := deliver(ctx, obs); err != nil {
 			logUtil.GetLogger().Warn("dispatch webhook observation failed",
-				zap.String("event", v.EventName()), zap.Error(err))
+				slog.String("event", v.EventName()), logUtil.Err(err))
 		}
 		return nil
 	})

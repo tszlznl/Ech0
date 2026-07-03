@@ -13,16 +13,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"time"
 
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 	"github.com/lin-snow/ech0/pkg/virefs"
 	vizip "github.com/lin-snow/ech0/pkg/virefs/plugin/zip"
-	"go.uber.org/zap"
 )
 
 // ErrNoSnapshot 表示快照目录下尚无可下载的快照（需先执行一次导出）。
@@ -85,7 +85,7 @@ func Create() (string, string, error) {
 	if err := vizip.Pack(ctx, dataFS, keys, f); err != nil {
 		if closeErr := f.Close(); closeErr != nil {
 			logUtil.GetLogger().Warn("Failed to close snapshot zip after pack error",
-				zap.String("path", tempPath), zap.String("error", closeErr.Error()))
+				slog.String("path", tempPath), slog.String("error", closeErr.Error()))
 		}
 		_ = os.Remove(tempPath)
 		return "", "", fmt.Errorf("pack zip: %w", err)
@@ -148,7 +148,7 @@ func Unpack(zipPath, destDir string) error {
 	defer func() {
 		if closeErr := f.Close(); closeErr != nil {
 			logUtil.GetLogger().Warn("Failed to close snapshot zip reader",
-				zap.String("path", zipPath), zap.String("error", closeErr.Error()))
+				slog.String("path", zipPath), slog.String("error", closeErr.Error()))
 		}
 	}()
 

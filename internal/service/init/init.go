@@ -9,8 +9,7 @@ import (
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	initModel "github.com/lin-snow/ech0/internal/model/init"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
-	"go.uber.org/zap"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 )
 
 type InitService struct {
@@ -58,7 +57,7 @@ func (s *InitService) InitOwner(registerDto *authModel.RegisterDto) error {
 	// 内部自行解析/判断）。写仍走 SettingService（写走域），此处「首次建站编排」是其天然归属。
 	// best-effort：失败不阻断初始化，仅告警。
 	if err := s.settingService.BootstrapDefaultLocale(context.Background(), registerDto.Locale); err != nil {
-		logUtil.GetLogger().Warn("Failed to bootstrap default locale on init owner", zap.Error(err))
+		logUtil.GetLogger().Warn("Failed to bootstrap default locale on init owner", logUtil.Err(err))
 	}
 	return nil
 }

@@ -17,8 +17,7 @@ import (
 	model "github.com/lin-snow/ech0/internal/model/embedding"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	coreSetting "github.com/lin-snow/ech0/internal/setting"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
-	"go.uber.org/zap"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 )
 
 // 检索默认返回的命中条数
@@ -215,7 +214,7 @@ func (s *EmbeddingService) Backfill(ctx context.Context, onProgress func(Backfil
 		if len(texts) > 0 {
 			vecs, embErr := s.embedder.Embed(ctx, setting, texts)
 			if embErr != nil {
-				logUtil.GetLogger().Error("backfill embed failed", zap.Error(embErr))
+				logUtil.GetLogger().Error("backfill embed failed", logUtil.Err(embErr))
 				result.Failed += len(texts)
 				lastErr = embErr
 			} else {

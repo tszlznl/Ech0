@@ -61,7 +61,7 @@ air-install:
 	go install github.com/air-verse/air@latest
 
 run:
-	go run -ldflags "$(LDFLAGS)" ./cmd/ech0 serve
+	ECH0_SERVER_MODE=debug go run -ldflags "$(LDFLAGS)" ./cmd/ech0 serve
 
 build:
 	go build -ldflags "$(LDFLAGS)" -o ./bin/ech0 ./cmd/ech0
@@ -118,7 +118,7 @@ dev:
 		echo "air not found, installing..."; \
 		$(MAKE) air-install; \
 	fi
-	"$(AIR_BIN)" -c .air.toml
+	ECH0_SERVER_MODE=debug "$(AIR_BIN)" -c .air.toml
 
 web-dev:
 	cd web && pnpm dev

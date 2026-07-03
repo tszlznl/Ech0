@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
+	"log/slog"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -28,12 +29,11 @@ import (
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/transaction"
 	imgUtil "github.com/lin-snow/ech0/internal/util/img"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	urlUtil "github.com/lin-snow/ech0/internal/util/url"
 	"github.com/lin-snow/ech0/pkg/busen"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"github.com/lin-snow/ech0/pkg/virefs"
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -197,7 +197,7 @@ func (s *FileService) UploadFile(
 			Key:      key,
 		},
 	); err != nil {
-		logUtil.GetLogger().Error("Failed to publish resource uploaded event", zap.Error(err))
+		logUtil.GetLogger().Error("Failed to publish resource uploaded event", logUtil.Err(err))
 	}
 
 	return commonModel.FileDto{
@@ -627,9 +627,9 @@ func (s *FileService) ListFileTree(
 			if item.FileID == "" {
 				logUtil.GetLogger().Warn(
 					"Tree key mapping missing file id, fallback to url mapping",
-					zap.String("path", node.Path),
-					zap.Strings("key_candidates", candidates),
-					zap.String("storage_type", string(storageType)),
+					slog.String("path", node.Path),
+					slog.Any("key_candidates", candidates),
+					slog.String("storage_type", string(storageType)),
 				)
 				if url, ok := urlByPath[node.Path]; ok {
 					item.FileID = idByURL[url]
@@ -754,9 +754,9 @@ func (s *FileService) streamReader(
 	if _, err := io.Copy(ctx.Writer, reader); err != nil {
 		logUtil.GetLogger().Warn(
 			"stream file copy failed",
-			zap.String("file_id", fileID),
-			zap.String("storage_type", storageType),
-			zap.Error(err),
+			slog.String("file_id", fileID),
+			slog.String("storage_type", storageType),
+			logUtil.Err(err),
 		)
 	}
 }
@@ -865,17 +865,17 @@ func (s *FileService) CleanupOrphanFiles() error {
 				_ = s.fileRepository.DeleteTempByID(ctx, temp.ID)
 				continue
 			}
-			logUtil.GetLogger().Warn("Failed to load temp file record", zap.String("temp_id", temp.ID), zap.Error(err))
+			logUtil.GetLogger().Warn("Failed to load temp file record", slog.String("temp_id", temp.ID), logUtil.Err(err))
 			continue
 		}
 
 		if dryRun {
 			logUtil.GetLogger().Info(
 				"Temp cleanup candidate(dry-run)",
-				zap.String("temp_id", temp.ID),
-				zap.String("file_id", temp.FileID),
-				zap.String("file_key", fileRecord.Key),
-				zap.String("storage_type", fileRecord.StorageType),
+				slog.String("temp_id", temp.ID),
+				slog.String("file_id", temp.FileID),
+				slog.String("file_key", fileRecord.Key),
+				slog.String("storage_type", fileRecord.StorageType),
 			)
 			continue
 		}
@@ -884,9 +884,9 @@ func (s *FileService) CleanupOrphanFiles() error {
 			if err := s.DeleteStoredFile(fileRecord.StorageType, fileRecord.Key); err != nil {
 				logUtil.GetLogger().Warn(
 					"Failed to delete temp stored file",
-					zap.String("temp_id", temp.ID),
-					zap.String("file_id", temp.FileID),
-					zap.Error(err),
+					slog.String("temp_id", temp.ID),
+					slog.String("file_id", temp.FileID),
+					logUtil.Err(err),
 				)
 				continue
 			}
@@ -894,28 +894,28 @@ func (s *FileService) CleanupOrphanFiles() error {
 		if err := s.fileRepository.Delete(ctx, temp.FileID); err != nil {
 			logUtil.GetLogger().Warn(
 				"Failed to delete temp file record",
-				zap.String("temp_id", temp.ID),
-				zap.String("file_id", temp.FileID),
-				zap.Error(err),
+				slog.String("temp_id", temp.ID),
+				slog.String("file_id", temp.FileID),
+				logUtil.Err(err),
 			)
 			continue
 		}
 		if err := s.fileRepository.DeleteTempByID(ctx, temp.ID); err != nil {
 			logUtil.GetLogger().Warn(
 				"Failed to delete temp tracking record",
-				zap.String("temp_id", temp.ID),
-				zap.String("file_id", temp.FileID),
-				zap.Error(err),
+				slog.String("temp_id", temp.ID),
+				slog.String("file_id", temp.FileID),
+				logUtil.Err(err),
 			)
 			continue
 		}
 		deletedCount++
 	}
 	if dryRun {
-		logUtil.GetLogger().Info("Temp cleanup dry-run completed", zap.Int("candidates", len(temps)))
+		logUtil.GetLogger().Info("Temp cleanup dry-run completed", slog.Int("candidates", len(temps)))
 		return nil
 	}
-	logUtil.GetLogger().Info("Temp cleanup completed", zap.Int("deleted", deletedCount), zap.Int("candidates", len(temps)))
+	logUtil.GetLogger().Info("Temp cleanup completed", slog.Int("deleted", deletedCount), slog.Int("candidates", len(temps)))
 
 	return nil
 }

@@ -8,14 +8,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	versionPkg "github.com/lin-snow/ech0/internal/version"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
-	"go.uber.org/zap"
 )
 
 const toolTimeout = 10 * time.Second
@@ -97,11 +97,11 @@ func (s *Server) handlePost(w http.ResponseWriter, r *http.Request) {
 	result, rpcErr := s.dispatch(r, &req, v)
 
 	logUtil.GetLogger().Info("mcp_request",
-		zap.String("method", req.Method),
-		zap.String("user_id", v.UserID()),
-		zap.String("token_id", v.TokenID()),
-		zap.Duration("latency", time.Since(start)),
-		zap.Bool("error", rpcErr != nil),
+		slog.String("method", req.Method),
+		slog.String("user_id", v.UserID()),
+		slog.String("token_id", v.TokenID()),
+		slog.Duration("latency", time.Since(start)),
+		slog.Bool("error", rpcErr != nil),
 	)
 
 	if rpcErr != nil {

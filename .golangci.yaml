@@ -17,6 +17,11 @@ linters:
       - path: ^pkg/virefs/
         linters:
           - errcheck
+      # pkg/log/tint 是 verbatim vendored 的第三方库（lmittmann/tint, MIT），不按本仓 lint 习惯改。
+      - path: ^pkg/log/tint/
+        linters:
+          - errcheck
+          - staticcheck
 
 formatters:
   # Enable specific formatter.

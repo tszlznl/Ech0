@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"sync"
 	"time"
@@ -18,11 +19,10 @@ import (
 	coreSetting "github.com/lin-snow/ech0/internal/setting"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"github.com/lin-snow/ech0/internal/util/egress"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	urlUtil "github.com/lin-snow/ech0/internal/util/url"
 	versionPkg "github.com/lin-snow/ech0/internal/version"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
-	"go.uber.org/zap"
 	"golang.org/x/sync/singleflight"
 )
 
@@ -330,9 +330,9 @@ func (connectService *ConnectService) fetchConnectsInfo() ([]model.Connect, erro
 					logUtil.GetLogger().
 						Info(
 							"fetch connection info cancelled",
-							zap.String("module", "connect"),
-							zap.String("connect_url", conn.ConnectURL),
-							zap.Error(ctx.Err()),
+							slog.String("module", "connect"),
+							slog.String("connect_url", conn.ConnectURL),
+							logUtil.Err(ctx.Err()),
 						)
 					return // 总体超时直接退出
 				default:
@@ -354,17 +354,17 @@ func (connectService *ConnectService) fetchConnectsInfo() ([]model.Connect, erro
 				if err != nil {
 					lastErr = err
 					logUtil.GetLogger().Error("fetch connection info failed",
-						zap.String("module", "connect"),
-						zap.String("connect_url", conn.ConnectURL),
-						zap.Int("attempt", attempt+1),
-						zap.Error(lastErr),
+						slog.String("module", "connect"),
+						slog.String("connect_url", conn.ConnectURL),
+						slog.Int("attempt", attempt+1),
+						logUtil.Err(lastErr),
 					)
 					if attempt == maxRetries-1 {
 						logUtil.GetLogger().Error("fetch connection info exhausted retries",
-							zap.String("module", "connect"),
-							zap.String("connect_url", conn.ConnectURL),
-							zap.Int("retries", maxRetries),
-							zap.Error(lastErr),
+							slog.String("module", "connect"),
+							slog.String("connect_url", conn.ConnectURL),
+							slog.Int("retries", maxRetries),
+							logUtil.Err(lastErr),
 						)
 					}
 					continue
@@ -375,9 +375,9 @@ func (connectService *ConnectService) fetchConnectsInfo() ([]model.Connect, erro
 				if _, exists := seenURLs[data.ServerURL]; exists {
 					seenMutex.Unlock()
 					logUtil.GetLogger().Info("connection info duplicated",
-						zap.String("module", "connect"),
-						zap.String("connect_url", conn.ConnectURL),
-						zap.String("server_url", data.ServerURL),
+						slog.String("module", "connect"),
+						slog.String("connect_url", conn.ConnectURL),
+						slog.String("server_url", data.ServerURL),
 					)
 					return // 重复数据，直接返回
 				}
@@ -385,9 +385,9 @@ func (connectService *ConnectService) fetchConnectsInfo() ([]model.Connect, erro
 				seenMutex.Unlock()
 
 				logUtil.GetLogger().Info("fetch connection info succeeded",
-					zap.String("module", "connect"),
-					zap.String("connect_url", conn.ConnectURL),
-					zap.String("server_name", data.ServerName),
+					slog.String("module", "connect"),
+					slog.String("connect_url", conn.ConnectURL),
+					slog.String("server_name", data.ServerName),
 				)
 				connectChan <- data
 				return // 成功处理，退出重试循环
@@ -425,22 +425,22 @@ func (connectService *ConnectService) fetchConnectsInfo() ([]model.Connect, erro
 		mu.Lock()
 		count := len(connectList)
 		mu.Unlock()
-		logUtil.GetLogger().Info("collect connection info completed", zap.String("module", "connect"), zap.Int("valid_count", count))
+		logUtil.GetLogger().Info("collect connection info completed", slog.String("module", "connect"), slog.Int("valid_count", count))
 	case <-ctx.Done():
 		// 超时，等待收集器完成或超时
-		logUtil.GetLogger().Info("collect connection info timeout, waiting collector", zap.String("module", "connect"))
+		logUtil.GetLogger().Info("collect connection info timeout, waiting collector", slog.String("module", "connect"))
 		select {
 		case <-collectDone:
 			// 收集器已完成
-			logUtil.GetLogger().Info("collector completed", zap.String("module", "connect"))
+			logUtil.GetLogger().Info("collector completed", slog.String("module", "connect"))
 		case <-time.After(200 * time.Millisecond):
 			// 给收集器额外的时间处理缓冲区中的数据
-			logUtil.GetLogger().Info("collector timeout", zap.String("module", "connect"))
+			logUtil.GetLogger().Info("collector timeout", slog.String("module", "connect"))
 		}
 		mu.Lock()
 		count := len(connectList)
 		mu.Unlock()
-		logUtil.GetLogger().Info("collect connection info timeout completed", zap.String("module", "connect"), zap.Int("valid_count", count))
+		logUtil.GetLogger().Info("collect connection info timeout completed", slog.String("module", "connect"), slog.Int("valid_count", count))
 	}
 
 	// 安全地返回结果

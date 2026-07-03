@@ -7,17 +7,16 @@ import (
 	"errors"
 
 	model "github.com/lin-snow/ech0/internal/model/common"
-	util "github.com/lin-snow/ech0/internal/util/log"
-	"go.uber.org/zap"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 )
 
-// HandleError 处理错误信息，记录日志并返回错误消息
+// HandleError 处理错误信息，记录日志并返回错误消息（级别与可见性维持现状：Error）。
 func HandleError(se *model.ServerError) string {
 	if se.Err != nil {
-		if se.Msg == "" || len(se.Msg) == 0 {
+		if se.Msg == "" {
 			se.Msg = se.Err.Error()
 		}
-		util.GetLogger().Error(se.Msg, zap.Error(se.Err))
+		logUtil.GetLogger().Error(se.Msg, logUtil.Err(se.Err))
 	}
 
 	return se.Msg
@@ -35,13 +34,13 @@ func ExtractBizErrorCode(err error) string {
 	return ""
 }
 
-// HandlePanicError 处理 panic 错误，记录日志并触发 panic
+// HandlePanicError 处理 panic 错误，记录日志（含调用栈）并触发 panic。
 func HandlePanicError(se *model.ServerError) {
 	if se.Err != nil {
-		if se.Msg == "" || len(se.Msg) == 0 {
+		if se.Msg == "" {
 			se.Msg = se.Err.Error()
 		}
-		util.GetLogger().Panic(se.Msg, zap.Error(se.Err))
+		logUtil.Panic(se.Msg, logUtil.Err(se.Err)) // 记录 panic 级别日志（含栈）后 panic
 	}
 
 	panic(se.Msg)

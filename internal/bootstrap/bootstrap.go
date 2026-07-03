@@ -5,15 +5,25 @@ package bootstrap
 
 import (
 	"github.com/lin-snow/ech0/internal/config"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 )
 
 func initLogger() {
 	cfg := config.Config()
+
+	// dev（ECH0_SERVER_MODE=debug）下默认开彩色控制台（tint）：把 Format 切到 console 并开 Color。
+	// 文件输出始终是 JSON，不受影响；prod 维持配置原样（默认 json → stdout 结构化）。
+	dev := cfg.Server.Mode == "debug"
+	logFormat := cfg.Log.Format
+	if dev && (logFormat == "" || logFormat == "json") {
+		logFormat = "console"
+	}
+
 	logUtil.InitLoggerWithConfig(logUtil.LogConfig{
 		Level:   cfg.Log.Level,
-		Format:  cfg.Log.Format,
+		Format:  logFormat,
 		Console: cfg.Log.Console,
+		Color:   dev,
 		File: logUtil.FileConfig{
 			Enable:     cfg.Log.FileEnable,
 			Filename:   cfg.Log.FilePath,

@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/mail"
 	"net/url"
 	"strconv"
@@ -30,8 +31,8 @@ import (
 	coreSetting "github.com/lin-snow/ech0/internal/setting"
 	jwtUtil "github.com/lin-snow/ech0/internal/util/jwt"
 	"github.com/lin-snow/ech0/pkg/busen"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
-	"go.uber.org/zap"
 )
 
 const (
@@ -318,13 +319,13 @@ func (s *CommentService) CreateIntegrationComment(
 		return model.CreateCommentResult{}, err
 	}
 
-	zap.L().Info("integration comment created",
-		zap.String("comment_id", comment.ID),
-		zap.String("echo_id", comment.EchoID),
-		zap.String("token_id", tokenID),
-		zap.String("user_id", userID),
-		zap.String("source", string(comment.Source)),
-		zap.String("metadata", strings.TrimSpace(dto.Metadata)),
+	logUtil.GetLogger().Info("integration comment created",
+		slog.String("comment_id", comment.ID),
+		slog.String("echo_id", comment.EchoID),
+		slog.String("token_id", tokenID),
+		slog.String("user_id", userID),
+		slog.String("source", string(comment.Source)),
+		slog.String("metadata", strings.TrimSpace(dto.Metadata)),
 	)
 
 	s.emitCommentCreated(ctx, comment)
@@ -610,9 +611,9 @@ func (s *CommentService) notifyOwnerAsync(ctx context.Context, kind string, comm
 		var ok bool
 		recipient, ok = parseValidEmail(comment.Email)
 		if !ok {
-			zap.L().Info("skip comment notify mail due to invalid commenter email",
-				zap.String("kind", kind),
-				zap.String("comment_id", comment.ID))
+			logUtil.GetLogger().Info("skip comment notify mail due to invalid commenter email",
+				slog.String("kind", kind),
+				slog.String("comment_id", comment.ID))
 			return
 		}
 	} else {
@@ -628,7 +629,7 @@ func (s *CommentService) notifyOwnerAsync(ctx context.Context, kind string, comm
 		notifyCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		if err := s.sendOwnerMail(notifyCtx, cfg, msg); err != nil {
-			zap.L().Warn("comment notify mail failed", zap.Error(err), zap.String("comment_id", comment.ID))
+			logUtil.GetLogger().Warn("comment notify mail failed", logUtil.Err(err), slog.String("comment_id", comment.ID))
 		}
 	}(setting.EmailNotify, MailMessage{
 		To:       recipient,
@@ -669,8 +670,8 @@ func (s *CommentService) notifyReplyTargetAsync(ctx context.Context, comment mod
 		notifyCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		if err := s.sendOwnerMail(notifyCtx, cfg, msg); err != nil {
-			zap.L().Warn("comment reply notify mail failed",
-				zap.Error(err), zap.String("comment_id", comment.ID))
+			logUtil.GetLogger().Warn("comment reply notify mail failed",
+				logUtil.Err(err), slog.String("comment_id", comment.ID))
 		}
 	}(setting.EmailNotify, MailMessage{
 		To:       targetEmail,

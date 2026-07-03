@@ -9,6 +9,7 @@ package s3
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"os"
 	"time"
 
@@ -16,8 +17,7 @@ import (
 	"github.com/lin-snow/ech0/internal/migrator/spec"
 	migratorModel "github.com/lin-snow/ech0/internal/model/migrator"
 	"github.com/lin-snow/ech0/internal/storage"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
-	"go.uber.org/zap"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 )
 
 const uploadTimeout = 60 * time.Minute
@@ -68,11 +68,11 @@ func (e *Exporter) uploadToS3(artifactPath, fileName string) {
 		switch {
 		case errors.Is(err, context.DeadlineExceeded):
 			logUtil.GetLogger().Warn("Failed to upload snapshot to S3: upload timeout reached",
-				zap.Duration("timeout", uploadTimeout), zap.Error(err))
+				slog.Duration("timeout", uploadTimeout), logUtil.Err(err))
 		case errors.Is(err, context.Canceled):
-			logUtil.GetLogger().Warn("Failed to upload snapshot to S3: upload context canceled", zap.Error(err))
+			logUtil.GetLogger().Warn("Failed to upload snapshot to S3: upload context canceled", logUtil.Err(err))
 		default:
-			logUtil.GetLogger().Warn("Failed to upload snapshot to S3", zap.Error(err))
+			logUtil.GetLogger().Warn("Failed to upload snapshot to S3", logUtil.Err(err))
 		}
 	}
 }

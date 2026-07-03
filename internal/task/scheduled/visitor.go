@@ -5,14 +5,14 @@ package scheduled
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/go-co-op/gocron/v2"
 	visitorModel "github.com/lin-snow/ech0/internal/model/visitor"
 	visitorRepository "github.com/lin-snow/ech0/internal/repository/visitor"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"github.com/lin-snow/ech0/internal/visitor"
-	"go.uber.org/zap"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 )
 
 const visitorSnapshotTag = "VisitorSnapshotSchedule"
@@ -43,14 +43,14 @@ func (v *VisitorSnapshot) Schedule(ctx context.Context, s gocron.Scheduler) erro
 			cutoff := cutoffDate(time.Now().UTC())
 			if err := v.repo.DeleteOlderThan(context.Background(), cutoff); err != nil {
 				logUtil.GetLogger().Error("Failed to cleanup visitor stats",
-					zap.String("module", logModule), zap.Error(err))
+					slog.String("module", logModule), logUtil.Err(err))
 			}
 		}),
 		gocron.WithTags(visitorSnapshotTag),
 	)
 	if err != nil {
 		logUtil.GetLogger().Error("Failed to schedule visitor snapshot task",
-			zap.String("module", logModule), zap.Error(err))
+			slog.String("module", logModule), logUtil.Err(err))
 	}
 	return err
 }
@@ -68,7 +68,7 @@ func (v *VisitorSnapshot) flush(ctx context.Context) {
 	today := v.tracker.TodayStat()
 	if err := v.repo.UpsertDailyStat(ctx, buildDailyStat(today)); err != nil {
 		logUtil.GetLogger().Error("Failed to upsert visitor daily stat",
-			zap.String("module", logModule), zap.Error(err))
+			slog.String("module", logModule), logUtil.Err(err))
 	}
 }
 
@@ -79,7 +79,7 @@ func (v *VisitorSnapshot) restore(ctx context.Context) error {
 	stats, err := v.repo.GetRecentDays(ctx, 7)
 	if err != nil {
 		logUtil.GetLogger().Error("Failed to load visitor stats",
-			zap.String("module", logModule), zap.Error(err))
+			slog.String("module", logModule), logUtil.Err(err))
 		return err
 	}
 	if len(stats) == 0 {

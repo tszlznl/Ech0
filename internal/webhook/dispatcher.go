@@ -5,14 +5,14 @@ package webhook
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/lin-snow/ech0/internal/config"
 	"github.com/lin-snow/ech0/internal/event"
 	webhookModel "github.com/lin-snow/ech0/internal/model/webhook"
 	asyncUtil "github.com/lin-snow/ech0/internal/util/async"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
-	"go.uber.org/zap"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 )
 
 type WebhookStore interface {
@@ -62,7 +62,7 @@ func (wd *Dispatcher) Dispatch(ctx context.Context, wh *webhookModel.Webhook, ob
 	triggerAt := time.Now().UTC().Unix()
 	if err := wd.sender.Deliver(wh, obs); err != nil {
 		wd.updateWebhookStatus(ctx, wh.ID, "failed", triggerAt)
-		logUtil.GetLogger().Error("Webhook Handle Failed", zap.String("name", wh.Name), zap.String("url", wh.URL), zap.Error(err))
+		logUtil.GetLogger().Error("Webhook Handle Failed", slog.String("name", wh.Name), slog.String("url", wh.URL), logUtil.Err(err))
 		return
 	}
 	wd.updateWebhookStatus(ctx, wh.ID, "success", triggerAt)
@@ -88,9 +88,9 @@ func (wd *Dispatcher) updateWebhookStatus(
 	if err := wd.repo.UpdateWebhookDeliveryStatus(ctx, webhookID, status, triggerAt); err != nil {
 		logUtil.GetLogger().Warn(
 			"update webhook delivery status failed",
-			zap.String("webhook_id", webhookID),
-			zap.String("status", status),
-			zap.Error(err),
+			slog.String("webhook_id", webhookID),
+			slog.String("status", status),
+			logUtil.Err(err),
 		)
 	}
 }

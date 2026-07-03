@@ -6,8 +6,7 @@ package async
 import (
 	"sync"
 
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
-	"go.uber.org/zap"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 )
 
 // WorkerPool 是一个可复用的通用异步任务池
@@ -39,7 +38,7 @@ func (p *WorkerPool) start() {
 					defer p.wg.Done()
 					if err := job(); err != nil {
 						logUtil.GetLogger().
-							Error("worker job failed", zap.Error(err))
+							Error("worker job failed", logUtil.Err(err))
 					}
 				}()
 			}

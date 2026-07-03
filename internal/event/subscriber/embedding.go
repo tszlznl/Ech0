@@ -10,8 +10,7 @@ import (
 	"github.com/lin-snow/ech0/internal/event"
 	eventbus "github.com/lin-snow/ech0/internal/event/bus"
 	embeddingService "github.com/lin-snow/ech0/internal/service/embedding"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
-	"go.uber.org/zap"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 )
 
 // EmbeddingProcessor 订阅 Echo 增删改事件，维护向量索引（增量）。
@@ -46,7 +45,7 @@ func (ep *EmbeddingProcessor) withRetry(fn func() error) error {
 		}
 		time.Sleep(time.Duration(attempt+1) * 500 * time.Millisecond)
 	}
-	logUtil.GetLogger().Warn("embedding index failed after retries", zap.Error(err))
+	logUtil.GetLogger().Warn("embedding index failed after retries", logUtil.Err(err))
 	return err
 }
 

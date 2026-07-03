@@ -1,30 +1,35 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2025-2026 lin-snow
 
-package util
+package log
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
+	"runtime"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	model "github.com/lin-snow/ech0/internal/model/common"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-// Logger 全局日志记录器
+// initLoggerPanic 是初始化 logger 失败时的 panic 前缀。内联此常量以避免 pkg/ 反向依赖 internal/。
+const initLoggerPanic = "初始化 Logger 失败"
+
+// 全局日志记录器（slog）与其协作单例。
 var (
-	Logger        *zap.Logger
+	Logger        *slog.Logger
 	loggerMu      sync.Mutex
+	levelVar      = new(slog.LevelVar)
 	fileWriter    *lumberjack.Logger
 	currentConfig LogConfig
 	streamHub     *LogStreamHub
@@ -41,6 +46,8 @@ type LogConfig struct {
 	Format string `yaml:"format"  json:"format"`
 	// 是否输出到控制台
 	Console bool `yaml:"console" json:"console"`
+	// Color 控制控制台叶子是否彩色（dev 开 / prod 关）；仅作用于控制台，不影响文件与内存流。
+	Color bool `yaml:"-"       json:"-"`
 	// 文件输出配置
 	File FileConfig `yaml:"file"    json:"file"`
 	// 内存流式日志配置
@@ -129,10 +136,7 @@ func InitLoggerWithConfig(config LogConfig) {
 func initializeLogger(config LogConfig) {
 	currentConfig = config
 
-	if Logger != nil {
-		_ = Logger.Sync()
-		Logger = nil
-	}
+	Logger = nil
 	stopFileSink()
 	if fileWriter != nil {
 		_ = fileWriter.Close()
@@ -143,27 +147,8 @@ func initializeLogger(config LogConfig) {
 		streamHub = nil
 	}
 
-	// 解析日志级别
-	level, err := zapcore.ParseLevel(config.Level)
-	if err != nil {
-		level = zapcore.InfoLevel
-	}
-
-	// 创建编码器配置
-	encoderConfig := zapcore.EncoderConfig{
-		TimeKey:        "time",
-		LevelKey:       "level",
-		NameKey:        "module",
-		CallerKey:      "caller",
-		FunctionKey:    zapcore.OmitKey,
-		MessageKey:     "msg",
-		StacktraceKey:  "stacktrace",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder,
-		EncodeTime:     zapcore.ISO8601TimeEncoder,
-		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeCaller:   zapcore.ShortCallerEncoder,
-	}
+	// 解析日志级别（无效时回退 info）。用 LevelVar 让各叶子共享同一个动态级别。
+	levelVar.Set(parseLevel(config.Level))
 
 	// 初始化内存日志流 Hub
 	streamHub = newLogStreamHub(
@@ -172,38 +157,13 @@ func initializeLogger(config LogConfig) {
 		normalizeDropPolicy(config.Stream.DropPolicy),
 	)
 
-	var cores []zapcore.Core
-
-	// 控制台输出
-	if config.Console {
-		consoleConfig := encoderConfig
-
-		var consoleEncoder zapcore.Encoder
-		if config.Format == "json" {
-			consoleEncoder = zapcore.NewJSONEncoder(consoleConfig)
-		} else {
-			consoleConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-			consoleEncoder = zapcore.NewConsoleEncoder(consoleConfig)
-		}
-
-		consoleCore := zapcore.NewCore(
-			consoleEncoder,
-			zapcore.AddSync(os.Stdout),
-			level,
-		)
-		cores = append(cores, consoleCore)
-	}
-
-	// 文件输出由内存流异步消费者处理，避免阻塞主日志链路
+	// 文件输出：仍由内存流的异步消费者写入（保持异步，避免把 fsync/轮转压到日志热路径）。
 	if config.File.Enable {
-		// 确保日志目录存在
 		logDir := filepath.Dir(config.File.Filename)
 		if err := os.MkdirAll(logDir, 0o755); err != nil {
-			panic(model.INIT_LOGGER_PANIC + ": 创建日志目录失败: " + err.Error())
+			panic(initLoggerPanic + ": 创建日志目录失败: " + err.Error())
 		}
-
-		// 配置日志轮转
-		writer := &lumberjack.Logger{
+		fileWriter = &lumberjack.Logger{
 			Filename:   config.File.Filename,
 			MaxSize:    config.File.MaxSize,
 			MaxBackups: config.File.MaxBackups,
@@ -211,34 +171,38 @@ func initializeLogger(config LogConfig) {
 			Compress:   config.File.Compress,
 			LocalTime:  true,
 		}
-		fileWriter = writer
 		startFileSink(config)
 	}
 
-	// 如果没有配置任何输出，使用默认控制台输出
-	if len(cores) == 0 {
-		cores = append(cores, zapcore.NewCore(
-			zapcore.NewConsoleEncoder(encoderConfig),
-			zapcore.AddSync(os.Stdout),
-			level,
-		))
+	// 组装叶子 handler：控制台叶（始终存在，保证 stdout 有输出，对齐旧兜底行为）+ 内存环叶。
+	leaves := []slog.Handler{
+		newConsoleLeaf(config, levelVar),
+		&ringHandler{hub: streamHub, level: levelVar},
 	}
 
-	// 合并所有核心
-	core := zapcore.NewTee(cores...)
-	core = &streamCore{
-		Core:   core,
-		level:  level,
-		hub:    streamHub,
-		parser: zapcore.NewJSONEncoder(encoderConfig),
-	}
+	Logger = slog.New(&fanoutHandler{leaves: leaves})
+}
 
-	// 创建 logger
-	Logger = zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
+// parseLevel 把配置字符串解析为 slog.Level（含 panic/fatal 自定义级别）。
+func parseLevel(s string) slog.Level {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "debug":
+		return slog.LevelDebug
+	case "warn", "warning":
+		return slog.LevelWarn
+	case "error":
+		return slog.LevelError
+	case "panic":
+		return LevelPanic
+	case "fatal":
+		return LevelFatal
+	default:
+		return slog.LevelInfo
+	}
 }
 
 // GetLogger 获取日志记录器实例
-func GetLogger() *zap.Logger {
+func GetLogger() *slog.Logger {
 	loggerMu.Lock()
 	defer loggerMu.Unlock()
 
@@ -257,10 +221,7 @@ func CloseLogger() {
 	loggerMu.Lock()
 	defer loggerMu.Unlock()
 
-	if Logger != nil {
-		_ = Logger.Sync()
-		Logger = nil
-	}
+	Logger = nil
 	stopFileSink()
 	if fileWriter != nil {
 		_ = fileWriter.Close()
@@ -289,53 +250,88 @@ func ReopenLogger() {
 }
 
 // Debug 打印调试级别日志
-func Debug(msg string, fields ...zap.Field) {
-	defer func() {
-		if r := recover(); r != nil {
-			_, _ = os.Stderr.WriteString("Recovered panic in logger.Debug\n")
-		}
-	}()
-	GetLogger().Debug(msg, fields...)
+//
+//go:noinline
+func Debug(msg string, attrs ...slog.Attr) {
+	logWithAttrs(slog.LevelDebug, msg, attrs)
 }
 
 // Info 打印信息级别日志
-func Info(msg string, fields ...zap.Field) {
-	defer func() {
-		if r := recover(); r != nil {
-			_, _ = os.Stderr.WriteString("Recovered panic in logger.Info\n")
-		}
-	}()
-	GetLogger().Info(msg, fields...)
+//
+//go:noinline
+func Info(msg string, attrs ...slog.Attr) {
+	logWithAttrs(slog.LevelInfo, msg, attrs)
 }
 
 // Warn 打印警告级别日志
-func Warn(msg string, fields ...zap.Field) {
-	defer func() {
-		if r := recover(); r != nil {
-			_, _ = os.Stderr.WriteString("Recovered panic in logger.Warn\n")
-		}
-	}()
-	GetLogger().Warn(msg, fields...)
+//
+//go:noinline
+func Warn(msg string, attrs ...slog.Attr) {
+	logWithAttrs(slog.LevelWarn, msg, attrs)
 }
 
 // Error 打印错误级别日志
-func Error(msg string, fields ...zap.Field) {
-	defer func() {
-		if r := recover(); r != nil {
-			_, _ = os.Stderr.WriteString("Recovered panic in logger.Error\n")
-		}
-	}()
-	GetLogger().Error(msg, fields...)
+//
+//go:noinline
+func Error(msg string, attrs ...slog.Attr) {
+	logWithAttrs(slog.LevelError, msg, attrs)
 }
 
 // Panic 打印恐慌级别日志并触发 panic
-func Panic(msg string, fields ...zap.Field) {
-	GetLogger().Panic(msg, fields...)
+//
+//go:noinline
+func Panic(msg string, attrs ...slog.Attr) {
+	logWithStack(LevelPanic, msg, attrs)
+	panic(msg)
 }
 
 // Fatal 打印致命错误级别日志并终止程序
-func Fatal(msg string, fields ...zap.Field) {
-	GetLogger().Fatal(msg, fields...)
+//
+//go:noinline
+func Fatal(msg string, attrs ...slog.Attr) {
+	logWithStack(LevelFatal, msg, attrs)
+	// 退出前同步排空异步落盘，保证最后一行落到 app.log。
+	loggerMu.Lock()
+	stopFileSink()
+	loggerMu.Unlock()
+	os.Exit(1)
+}
+
+// logWithAttrs 手动捕获真实调用点的 PC 再交给 Handler，
+// 这样通过包级函数打的日志 caller 指向业务代码，而非本文件。
+//
+//go:noinline
+func logWithAttrs(level slog.Level, msg string, attrs []slog.Attr) {
+	defer func() {
+		if r := recover(); r != nil {
+			_, _ = os.Stderr.WriteString("Recovered panic in logger\n")
+		}
+	}()
+
+	logger := GetLogger()
+	ctx := context.Background()
+	if !logger.Enabled(ctx, level) {
+		return
+	}
+	var pcs [1]uintptr
+	runtime.Callers(3, pcs[:]) // 跳过 Callers / logWithAttrs / 包级封装 → 业务调用点
+	r := slog.NewRecord(time.Now(), level, msg, pcs[0])
+	r.AddAttrs(attrs...)
+	_ = logger.Handler().Handle(ctx, r)
+}
+
+// logWithStack 与 logWithAttrs 相同，但额外附带调用栈（供 Panic/Fatal 使用）。
+//
+//go:noinline
+func logWithStack(level slog.Level, msg string, attrs []slog.Attr) {
+	logger := GetLogger()
+	ctx := context.Background()
+	var pcs [1]uintptr
+	runtime.Callers(3, pcs[:])
+	r := slog.NewRecord(time.Now(), level, msg, pcs[0])
+	r.AddAttrs(attrs...)
+	r.AddAttrs(slog.String("stacktrace", string(debug.Stack())))
+	_ = logger.Handler().Handle(ctx, r)
 }
 
 // SubscribeLogs 订阅实时日志流。
@@ -417,41 +413,6 @@ func QueryLogFileTail(path string, limit int, level, keyword string) ([]LogEntry
 		return nil, err
 	}
 	return buffer, nil
-}
-
-type streamCore struct {
-	zapcore.Core
-	level  zapcore.Level
-	hub    *LogStreamHub
-	parser zapcore.Encoder
-}
-
-func (c *streamCore) Enabled(level zapcore.Level) bool {
-	return c.Core.Enabled(level)
-}
-
-func (c *streamCore) With(fields []zap.Field) zapcore.Core {
-	return &streamCore{
-		Core:   c.Core.With(fields),
-		level:  c.level,
-		hub:    c.hub,
-		parser: c.parser.Clone(),
-	}
-}
-
-func (c *streamCore) Check(entry zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore.CheckedEntry {
-	if c.Enabled(entry.Level) {
-		return ce.AddCore(entry, c)
-	}
-	return ce
-}
-
-func (c *streamCore) Write(entry zapcore.Entry, fields []zap.Field) error {
-	err := c.Core.Write(entry, fields)
-	if c.hub != nil {
-		c.hub.Publish(buildLogEntry(c.parser.Clone(), entry, fields))
-	}
-	return err
 }
 
 type LogStreamHub struct {
@@ -605,12 +566,30 @@ func startFileSink(config LogConfig) {
 			_, _ = fileWriter.Write([]byte(payload))
 			lines = lines[:0]
 		}
+		appendLine := func(entry LogEntry) {
+			if line := strings.TrimSpace(entry.Raw); line != "" {
+				lines = append(lines, line)
+			}
+		}
 
 		for {
 			select {
 			case <-fileSinkStop:
-				flush()
-				return
+				// 停止前排空剩余缓冲，保证已投递的行不丢（Fatal 依赖此保证）。
+				for {
+					select {
+					case entry, ok := <-stream:
+						if ok {
+							appendLine(entry)
+							continue
+						}
+						flush()
+						return
+					default:
+						flush()
+						return
+					}
+				}
 			case <-ticker.C:
 				flush()
 			case entry, ok := <-stream:
@@ -618,11 +597,7 @@ func startFileSink(config LogConfig) {
 					flush()
 					return
 				}
-				line := strings.TrimSpace(entry.Raw)
-				if line == "" {
-					continue
-				}
-				lines = append(lines, line)
+				appendLine(entry)
 				if len(lines) >= flushBatch {
 					flush()
 				}
@@ -667,43 +642,6 @@ func normalizeDropPolicy(policy string) string {
 	}
 }
 
-func buildLogEntry(enc zapcore.Encoder, entry zapcore.Entry, fields []zap.Field) LogEntry {
-	e := LogEntry{
-		Time:   entry.Time.Format(time.RFC3339),
-		Level:  entry.Level.String(),
-		Msg:    entry.Message,
-		Module: entry.LoggerName,
-		Caller: entry.Caller.TrimmedPath(),
-	}
-	if len(fields) == 0 {
-		obj, _ := json.Marshal(e)
-		e.Raw = string(obj)
-		return e
-	}
-
-	buf, err := enc.EncodeEntry(entry, fields)
-	if err == nil && buf != nil {
-		line := strings.TrimSpace(buf.String())
-		e.Raw = line
-		buf.Free()
-	}
-
-	var parsed map[string]any
-	if e.Raw != "" && json.Unmarshal([]byte(e.Raw), &parsed) == nil {
-		e = parseMapAsEntry(parsed, e.Raw)
-		return e
-	}
-
-	fieldMap := make(map[string]any, len(fields))
-	for _, f := range fields {
-		fieldMap[f.Key] = "<complex>"
-	}
-	e.Fields = fieldMap
-	obj, _ := json.Marshal(e)
-	e.Raw = string(obj)
-	return e
-}
-
 func parseLogLine(line string) LogEntry {
 	var payload map[string]any
 	if err := json.Unmarshal([]byte(line), &payload); err != nil {
@@ -731,6 +669,12 @@ func parseMapAsEntry(payload map[string]any, raw string) LogEntry {
 		switch k {
 		case "time", "level", "msg", "module", "caller", "error":
 			continue
+		case "source":
+			// 防御：万一有原生 slog 行漏进来（source 是嵌套对象），拍平成 caller，不糊进 Fields。
+			if entry.Caller == "" {
+				entry.Caller = sourceMapToCaller(v)
+			}
+			continue
 		default:
 			fields[k] = v
 			if k == "err" && entry.Error == "" {
@@ -745,6 +689,23 @@ func parseMapAsEntry(payload map[string]any, raw string) LogEntry {
 		entry.Msg = raw
 	}
 	return entry
+}
+
+// sourceMapToCaller 把 slog 的嵌套 source 对象 {file,line,function} 拍平成 pkg/file.go:line。
+func sourceMapToCaller(v any) string {
+	m, ok := v.(map[string]any)
+	if !ok {
+		return ""
+	}
+	file := toString(m["file"])
+	if file == "" {
+		return ""
+	}
+	caller := trimSourcePath(file)
+	if line := toString(m["line"]); line != "" {
+		caller += ":" + line
+	}
+	return caller
 }
 
 func toString(v any) string {

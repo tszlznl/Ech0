@@ -6,12 +6,12 @@ package task
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"sync"
 	"time"
 
 	"github.com/go-co-op/gocron/v2"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
-	"go.uber.org/zap"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 )
 
 const logModule = "task"
@@ -54,7 +54,7 @@ func (m *Manager) Start(ctx context.Context) error {
 	for _, t := range m.tasks {
 		if err := t.Schedule(ctx, m.scheduler); err != nil {
 			logUtil.GetLogger().Error("failed to schedule task",
-				zap.String("module", logModule), zap.String("task", t.Name()), zap.Error(err))
+				slog.String("module", logModule), slog.String("task", t.Name()), logUtil.Err(err))
 			return err
 		}
 	}
@@ -81,7 +81,7 @@ func (m *Manager) Stop(ctx context.Context) error {
 
 	if err := m.scheduler.Shutdown(); err != nil {
 		logUtil.GetLogger().Error("failed to shutdown scheduler",
-			zap.String("module", logModule), zap.Error(err))
+			slog.String("module", logModule), logUtil.Err(err))
 		return err
 	}
 	m.started = false

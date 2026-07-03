@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -14,9 +15,8 @@ import (
 	"github.com/lin-snow/ech0/internal/agent"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	embeddingModel "github.com/lin-snow/ech0/internal/model/embedding"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
-	"go.uber.org/zap"
 )
 
 // maxStoredChatMessages 是单个用户持久化会话保留的最大消息条数（超出取最近 N 条）。
@@ -150,12 +150,12 @@ func (s *CopilotService) appendTurn(ctx context.Context, userID string, turn ...
 	payload, err := json.Marshal(msgs)
 	if err != nil {
 		logUtil.GetLogger().Warn("failed to marshal chat session",
-			zap.String("module", "copilot"), zap.Error(err))
+			slog.String("module", "copilot"), logUtil.Err(err))
 		return
 	}
 	if err := s.durableKV.Set(ctx, chatSessionKey(userID), string(payload)); err != nil {
 		logUtil.GetLogger().Warn("failed to persist chat session",
-			zap.String("module", "copilot"), zap.Error(err))
+			slog.String("module", "copilot"), logUtil.Err(err))
 	}
 }
 

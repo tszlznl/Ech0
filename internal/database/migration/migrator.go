@@ -6,12 +6,12 @@ package migration
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
-	"go.uber.org/zap"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 	"gorm.io/gorm"
 )
 
@@ -55,7 +55,7 @@ func defaultOptions() migrateOptions {
 // Migrate 是 migration 子包统一入口，按顺序执行迁移器集合。
 func Migrate(db *gorm.DB, optionFns ...Option) {
 	if db == nil {
-		logUtil.Warn("database migration skipped: db is nil", zap.String("module", "database"))
+		logUtil.Warn("database migration skipped: db is nil", slog.String("module", "database"))
 		return
 	}
 
@@ -73,10 +73,10 @@ func Migrate(db *gorm.DB, optionFns ...Option) {
 			if err != nil {
 				logUtil.Warn(
 					"database migrator state check failed",
-					zap.String("module", "database"),
-					zap.String("migrator", migrator.Name()),
-					zap.String("marker_key", markerKey),
-					zap.Error(err),
+					slog.String("module", "database"),
+					slog.String("migrator", migrator.Name()),
+					slog.String("marker_key", markerKey),
+					logUtil.Err(err),
 				)
 				if opts.stopOnError {
 					return
@@ -86,9 +86,9 @@ func Migrate(db *gorm.DB, optionFns ...Option) {
 			if done {
 				logUtil.Info(
 					"database migrator skipped (already done)",
-					zap.String("module", "database"),
-					zap.String("migrator", migrator.Name()),
-					zap.String("marker_key", markerKey),
+					slog.String("module", "database"),
+					slog.String("migrator", migrator.Name()),
+					slog.String("marker_key", markerKey),
 				)
 				continue
 			}
@@ -97,9 +97,9 @@ func Migrate(db *gorm.DB, optionFns ...Option) {
 		if err := migrator.Migrate(db); err != nil {
 			logUtil.Warn(
 				"database migrator failed",
-				zap.String("module", "database"),
-				zap.String("migrator", migrator.Name()),
-				zap.Error(err),
+				slog.String("module", "database"),
+				slog.String("migrator", migrator.Name()),
+				logUtil.Err(err),
 			)
 			if opts.stopOnError {
 				return
@@ -111,10 +111,10 @@ func Migrate(db *gorm.DB, optionFns ...Option) {
 			if err := markMigratorDone(db, markerKey, migrator.Name()); err != nil {
 				logUtil.Warn(
 					"database migrator mark done failed",
-					zap.String("module", "database"),
-					zap.String("migrator", migrator.Name()),
-					zap.String("marker_key", markerKey),
-					zap.Error(err),
+					slog.String("module", "database"),
+					slog.String("migrator", migrator.Name()),
+					slog.String("marker_key", markerKey),
+					logUtil.Err(err),
 				)
 				if opts.stopOnError {
 					return

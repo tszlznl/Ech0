@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/lin-snow/ech0/internal/migrator/spec"
@@ -15,8 +16,7 @@ import (
 	migratorModel "github.com/lin-snow/ech0/internal/model/migrator"
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	echoRepository "github.com/lin-snow/ech0/internal/repository/echo"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
-	"go.uber.org/zap"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 )
 
 // ImportEngine 跑迁移数据导入的编排:选来源 Importer 适配器 → 运行 → 应用配置 → 失效缓存 →
@@ -50,14 +50,14 @@ func (im *ImportEngine) Import(
 	report func(phase string, snapshot any),
 ) (any, error) {
 	logUtil.GetLogger().Info("global migration started",
-		zap.String("module", "migration"),
-		zap.String("source_type", payload.SourceType),
+		slog.String("module", "migration"),
+		slog.String("source_type", payload.SourceType),
 	)
 	defer func() {
 		if err := CleanupTmpDirFromPayload(payload.SourcePayload); err != nil {
 			logUtil.GetLogger().Warn("Failed to cleanup migration temp directory",
-				zap.String("module", "migration"),
-				zap.Error(err),
+				slog.String("module", "migration"),
+				logUtil.Err(err),
 			)
 		}
 	}()
@@ -91,12 +91,12 @@ func (im *ImportEngine) Import(
 	report(migratorModel.MigrationPhaseCompleted, nil)
 
 	logUtil.GetLogger().Info("global migration completed",
-		zap.String("module", "migration"),
-		zap.String("source_type", payload.SourceType),
-		zap.Int64("processed", result.Processed),
-		zap.Int64("success_count", result.SuccessCount),
-		zap.Int64("fail_count", result.FailCount),
-		zap.String("job_id", result.JobID),
+		slog.String("module", "migration"),
+		slog.String("source_type", payload.SourceType),
+		slog.Int64("processed", result.Processed),
+		slog.Int64("success_count", result.SuccessCount),
+		slog.Int64("fail_count", result.FailCount),
+		slog.String("job_id", result.JobID),
 	)
 
 	enriched := payload

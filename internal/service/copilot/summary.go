@@ -12,9 +12,8 @@ import (
 	"github.com/lin-snow/ech0/internal/agent"
 	"github.com/lin-snow/ech0/internal/i18n"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
-	"go.uber.org/zap"
 )
 
 // GetRecent 返回站点作者近期活动的 AI 自然语言总结（带缓存 + singleflight 防击穿）。
@@ -37,7 +36,7 @@ func (s *CopilotService) GetRecent(ctx context.Context) (string, error) {
 
 		if err := s.durableKV.Set(ctx, cacheKey, output); err != nil {
 			logUtil.GetLogger().
-				Error("Failed to add or update key value", zap.Error(err))
+				Error("Failed to add or update key value", logUtil.Err(err))
 		}
 
 		return output, nil

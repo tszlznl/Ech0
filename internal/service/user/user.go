@@ -19,10 +19,9 @@ import (
 	coreSetting "github.com/lin-snow/ech0/internal/setting"
 	"github.com/lin-snow/ech0/internal/transaction"
 	cryptoUtil "github.com/lin-snow/ech0/internal/util/crypto"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"github.com/lin-snow/ech0/pkg/busen"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
-	"go.uber.org/zap"
 )
 
 // UserService 用户服务结构体，提供用户相关的业务逻辑处理
@@ -272,7 +271,7 @@ func (userService *UserService) UpdateUser(ctx context.Context, userdto model.Us
 	}
 	if avatarChanged && strings.TrimSpace(userdto.AvatarFileID) != "" {
 		if err := userService.fileService.ConfirmTempFiles(ctx, []string{userdto.AvatarFileID}); err != nil {
-			logUtil.GetLogger().Warn("confirm temp avatar file failed", zap.Error(err))
+			logUtil.GetLogger().Warn("confirm temp avatar file failed", logUtil.Err(err))
 		}
 	}
 

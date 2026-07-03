@@ -5,6 +5,7 @@ package scheduled
 
 import (
 	"context"
+	"log/slog"
 	"strings"
 	"sync"
 
@@ -14,9 +15,8 @@ import (
 	"github.com/lin-snow/ech0/internal/kvstore"
 	coreMigrator "github.com/lin-snow/ech0/internal/migrator"
 	coreSetting "github.com/lin-snow/ech0/internal/setting"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"github.com/lin-snow/ech0/pkg/busen"
-	"go.uber.org/zap"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 )
 
 const snapshotScheduleTag = "SnapshotSchedule"
@@ -104,24 +104,24 @@ func (s *Snapshot) reload(ctx context.Context) error {
 	schedule, err := coreSetting.Get(ctx, s.durableKV, coreSetting.Snapshot)
 	if err != nil {
 		logUtil.GetLogger().Error("Failed to read snapshot schedule, keeping current jobs",
-			zap.String("module", logModule), zap.Error(err))
+			slog.String("module", logModule), logUtil.Err(err))
 		return err
 	}
 
 	// 先移除旧作业，避免重复触发（启动时无旧作业，是无害 no-op）。
 	s.scheduler.RemoveByTags(snapshotScheduleTag)
 	if !schedule.Enable {
-		logUtil.GetLogger().Info("Snapshot schedule disabled, jobs removed", zap.String("module", logModule))
+		logUtil.GetLogger().Info("Snapshot schedule disabled, jobs removed", slog.String("module", logModule))
 		return nil
 	}
 
 	if err := s.scheduleJob(schedule.CronExpression); err != nil {
 		logUtil.GetLogger().Error("Failed to apply snapshot schedule",
-			zap.String("module", logModule), zap.Error(err))
+			slog.String("module", logModule), logUtil.Err(err))
 		return err
 	}
 	logUtil.GetLogger().Info("Snapshot schedule applied",
-		zap.String("module", logModule), zap.String("cron", schedule.CronExpression))
+		slog.String("module", logModule), slog.String("cron", schedule.CronExpression))
 	return nil
 }
 
@@ -138,8 +138,8 @@ func (s *Snapshot) scheduleJob(cronExpression string) error {
 
 			if _, err := s.exporter.Export(ctx, func(string, any) {}); err != nil {
 				logUtil.GetLogger().Error("Failed to execute scheduled snapshot",
-					zap.String("module", logModule),
-					zap.Error(err))
+					slog.String("module", logModule),
+					logUtil.Err(err))
 				return
 			}
 
@@ -152,7 +152,7 @@ func (s *Snapshot) scheduleJob(cronExpression string) error {
 	)
 	if err != nil {
 		logUtil.GetLogger().Error("Failed to schedule snapshot task",
-			zap.String("module", logModule), zap.Error(err))
+			slog.String("module", logModule), logUtil.Err(err))
 	}
 	return err
 }

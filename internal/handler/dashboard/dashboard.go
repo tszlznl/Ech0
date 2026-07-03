@@ -15,10 +15,9 @@ import (
 	service "github.com/lin-snow/ech0/internal/service/dashboard"
 	githubUtil "github.com/lin-snow/ech0/internal/util/github"
 	jwtUtil "github.com/lin-snow/ech0/internal/util/jwt"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	versionPkg "github.com/lin-snow/ech0/internal/version"
 	"github.com/lin-snow/ech0/internal/visitor"
-	"go.uber.org/zap"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 	"golang.org/x/mod/semver"
 )
 
@@ -132,7 +131,7 @@ func (dashboardHandler *DashboardHandler) WSSubscribeSystemLogs() gin.HandlerFun
 			},
 		)
 		if err != nil {
-			logUtil.GetLogger().Error("WebSocket Subscribe System Logs Failed", zap.Error(err))
+			logUtil.GetLogger().Error("WebSocket Subscribe System Logs Failed", logUtil.Err(err))
 		}
 	}
 }
@@ -160,7 +159,7 @@ func (dashboardHandler *DashboardHandler) SSESubscribeSystemLogs() gin.HandlerFu
 			},
 		)
 		if err != nil {
-			logUtil.GetLogger().Error("SSE Subscribe System Logs Failed", zap.Error(err))
+			logUtil.GetLogger().Error("SSE Subscribe System Logs Failed", logUtil.Err(err))
 		}
 	}
 }

@@ -6,7 +6,7 @@ package service
 import (
 	"testing"
 
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 )
 
 // TestMatchesSystemLogFilter 白盒覆盖 matchesSystemLogFilter 的纯过滤逻辑：

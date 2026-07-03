@@ -17,11 +17,10 @@ import (
 	model "github.com/lin-snow/ech0/internal/model/echo"
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/transaction"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	urlUtil "github.com/lin-snow/ech0/internal/util/url"
 	"github.com/lin-snow/ech0/pkg/busen"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
-	"go.uber.org/zap"
 )
 
 type EchoService struct {
@@ -101,7 +100,7 @@ func (echoService *EchoService) PostEcho(ctx context.Context, newEcho *model.Ech
 		eventbus.Notify(context.Background(), echoService.bus, event.EchoCreated{Echo: *savedEcho, User: user})
 	}
 	if err := echoService.fileService.ConfirmTempFiles(ctx, collectEchoFileIDs(newEcho)); err != nil {
-		logUtil.GetLogger().Warn("confirm temp files after post echo failed", zap.Error(err))
+		logUtil.GetLogger().Warn("confirm temp files after post echo failed", logUtil.Err(err))
 	}
 
 	return nil
@@ -273,7 +272,7 @@ func (echoService *EchoService) UpdateEcho(ctx context.Context, echo *model.Echo
 
 	eventbus.Notify(context.Background(), echoService.bus, event.EchoUpdated{Echo: *echo, User: user})
 	if err := echoService.fileService.ConfirmTempFiles(ctx, collectEchoFileIDs(echo)); err != nil {
-		logUtil.GetLogger().Warn("confirm temp files after update echo failed", zap.Error(err))
+		logUtil.GetLogger().Warn("confirm temp files after update echo failed", logUtil.Err(err))
 	}
 
 	return nil

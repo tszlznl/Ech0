@@ -5,11 +5,11 @@ package bus
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/lin-snow/ech0/internal/event"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"github.com/lin-snow/ech0/pkg/busen"
-	"go.uber.org/zap"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 )
 
 // Emit 按事件类型发布到总线（busen 按精确 Go 类型路由，无需 topic）。若事件实现 event.Keyed，
@@ -32,6 +32,6 @@ func Notify[T any](ctx context.Context, b *busen.Bus, evt T) {
 		if n, ok := any(evt).(event.Named); ok {
 			name = n.EventName()
 		}
-		logUtil.GetLogger().Warn("event publish failed", zap.String("event", name), zap.Error(err))
+		logUtil.GetLogger().Warn("event publish failed", slog.String("event", name), logUtil.Err(err))
 	}
 }

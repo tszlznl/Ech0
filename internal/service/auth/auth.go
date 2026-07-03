@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -31,9 +32,8 @@ import (
 	cryptoUtil "github.com/lin-snow/ech0/internal/util/crypto"
 	"github.com/lin-snow/ech0/internal/util/egress"
 	jwtUtil "github.com/lin-snow/ech0/internal/util/jwt"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
-	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 )
 
@@ -231,7 +231,7 @@ func (authService *AuthService) HandleOAuthCallback(
 	}
 	identity, err := adapter.ResolveIdentity(setting, code, oauthState)
 	if err != nil {
-		logUtil.Error("resolve oauth identity failed", zap.String("provider", provider), zap.Error(err))
+		logUtil.Error("resolve oauth identity failed", slog.String("provider", provider), logUtil.Err(err))
 		return "", err
 	}
 
@@ -357,11 +357,11 @@ func (authService *AuthService) resolveOAuthCallback(
 		if oauthState.UserID != "" {
 			logUtil.Warn(
 				"auth audit",
-				zap.String("provider", provider),
-				zap.String("action", "oauth_login"),
-				zap.String("user_id", ""),
-				zap.String("result", "fail"),
-				zap.String("reason", "unexpected_user_id_in_login_state"),
+				slog.String("provider", provider),
+				slog.String("action", "oauth_login"),
+				slog.String("user_id", ""),
+				slog.String("result", "fail"),
+				slog.String("reason", "unexpected_user_id_in_login_state"),
 			)
 			return "", errors.New(commonModel.INVALID_PARAMS)
 		}
@@ -386,28 +386,28 @@ func (authService *AuthService) resolveOAuthCallback(
 			)
 		}
 		if err != nil {
-			logUtil.Error("fetch user by oauth id failed", zap.String("provider", provider), zap.Error(err))
+			logUtil.Error("fetch user by oauth id failed", slog.String("provider", provider), logUtil.Err(err))
 			logUtil.Warn(
 				"auth audit",
-				zap.String("provider", provider),
-				zap.String("action", "oauth_login"),
-				zap.String("user_id", ""),
-				zap.String("result", "fail"),
-				zap.String("reason", "identity_not_bound_or_lookup_failed"),
+				slog.String("provider", provider),
+				slog.String("action", "oauth_login"),
+				slog.String("user_id", ""),
+				slog.String("result", "fail"),
+				slog.String("reason", "identity_not_bound_or_lookup_failed"),
 			)
 			return "", err
 		}
 
 		tokenPair, err := authService.issueUserToken(user)
 		if err != nil {
-			logUtil.Error("generate oauth login token failed", zap.String("provider", provider), zap.Error(err))
+			logUtil.Error("generate oauth login token failed", slog.String("provider", provider), logUtil.Err(err))
 			logUtil.Warn(
 				"auth audit",
-				zap.String("provider", provider),
-				zap.String("action", "oauth_login"),
-				zap.String("user_id", user.ID),
-				zap.String("result", "fail"),
-				zap.String("reason", "issue_token_failed"),
+				slog.String("provider", provider),
+				slog.String("action", "oauth_login"),
+				slog.String("user_id", user.ID),
+				slog.String("result", "fail"),
+				slog.String("reason", "issue_token_failed"),
 			)
 			return "", err
 		}
@@ -424,11 +424,11 @@ func (authService *AuthService) resolveOAuthCallback(
 		redirectURL.RawQuery = query.Encode()
 		logUtil.Info(
 			"auth audit",
-			zap.String("provider", provider),
-			zap.String("action", "oauth_login"),
-			zap.String("user_id", user.ID),
-			zap.String("result", "success"),
-			zap.String("reason", ""),
+			slog.String("provider", provider),
+			slog.String("action", "oauth_login"),
+			slog.String("user_id", user.ID),
+			slog.String("result", "success"),
+			slog.String("reason", ""),
 		)
 
 		return redirectURL.String(), nil
@@ -437,11 +437,11 @@ func (authService *AuthService) resolveOAuthCallback(
 		if oauthState.UserID == "" {
 			logUtil.Warn(
 				"auth audit",
-				zap.String("provider", provider),
-				zap.String("action", "oauth_bind"),
-				zap.String("user_id", ""),
-				zap.String("result", "fail"),
-				zap.String("reason", "missing_user_id"),
+				slog.String("provider", provider),
+				slog.String("action", "oauth_bind"),
+				slog.String("user_id", ""),
+				slog.String("result", "fail"),
+				slog.String("reason", "missing_user_id"),
 			)
 			return "", errors.New(commonModel.INVALID_PARAMS)
 		}
@@ -458,11 +458,11 @@ func (authService *AuthService) resolveOAuthCallback(
 		}); err != nil {
 			logUtil.Warn(
 				"auth audit",
-				zap.String("provider", provider),
-				zap.String("action", "oauth_bind"),
-				zap.String("user_id", oauthState.UserID),
-				zap.String("result", "fail"),
-				zap.String("reason", "bind_persist_failed"),
+				slog.String("provider", provider),
+				slog.String("action", "oauth_bind"),
+				slog.String("user_id", oauthState.UserID),
+				slog.String("result", "fail"),
+				slog.String("reason", "bind_persist_failed"),
 			)
 			return "", err
 		}
@@ -476,11 +476,11 @@ func (authService *AuthService) resolveOAuthCallback(
 		redirectURL.RawQuery = query.Encode()
 		logUtil.Info(
 			"auth audit",
-			zap.String("provider", provider),
-			zap.String("action", "oauth_bind"),
-			zap.String("user_id", oauthState.UserID),
-			zap.String("result", "success"),
-			zap.String("reason", ""),
+			slog.String("provider", provider),
+			slog.String("action", "oauth_bind"),
+			slog.String("user_id", oauthState.UserID),
+			slog.String("result", "success"),
+			slog.String("reason", ""),
 		)
 		return redirectURL.String(), nil
 	default:

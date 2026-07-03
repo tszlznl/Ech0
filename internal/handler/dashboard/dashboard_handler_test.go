@@ -15,8 +15,8 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	dashboardService "github.com/lin-snow/ech0/internal/service/dashboard"
 	dashboardmock "github.com/lin-snow/ech0/internal/test/mocks/dashboardmock"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	"github.com/lin-snow/ech0/internal/visitor"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

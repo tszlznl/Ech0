@@ -6,14 +6,14 @@ package snapshot
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"sort"
 	"strings"
 
 	"github.com/lin-snow/ech0/internal/config"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 	"github.com/lin-snow/ech0/pkg/virefs"
-	"go.uber.org/zap"
 )
 
 const (
@@ -68,7 +68,7 @@ func UploadToS3(ctx context.Context, snapshotFilePath, fileName string, cfg conf
 	defer func() {
 		if closeErr := f.Close(); closeErr != nil {
 			logUtil.GetLogger().Warn("Failed to close snapshot file after s3 upload",
-				zap.String("path", snapshotFilePath), zap.Error(closeErr))
+				slog.String("path", snapshotFilePath), logUtil.Err(closeErr))
 		}
 	}()
 
@@ -83,11 +83,11 @@ func UploadToS3(ctx context.Context, snapshotFilePath, fileName string, cfg conf
 	}
 
 	logUtil.GetLogger().Info("Snapshot uploaded to S3",
-		zap.String("key", s3Key))
+		slog.String("key", s3Key))
 
 	if err := cleanupOldS3Snapshots(ctx, s3FS, s3SnapshotKeepCount); err != nil {
 		logUtil.GetLogger().Warn("Failed to cleanup old S3 snapshots",
-			zap.Error(err))
+			logUtil.Err(err))
 	}
 
 	return nil
@@ -123,10 +123,10 @@ func cleanupOldS3Snapshots(ctx context.Context, s3FS virefs.FS, keepCount int) e
 	for _, key := range toDelete {
 		if err := s3FS.Delete(ctx, key); err != nil {
 			logUtil.GetLogger().Warn("Failed to delete old S3 snapshot",
-				zap.String("key", key), zap.Error(err))
+				slog.String("key", key), logUtil.Err(err))
 		} else {
 			logUtil.GetLogger().Info("Deleted old S3 snapshot",
-				zap.String("key", key))
+				slog.String("key", key))
 		}
 	}
 

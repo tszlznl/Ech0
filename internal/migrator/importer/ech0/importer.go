@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -20,9 +21,8 @@ import (
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
 	"github.com/lin-snow/ech0/internal/storage"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
-	"go.uber.org/zap"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -60,11 +60,11 @@ func (e *Importer) Import(ctx context.Context, req spec.ImportRequest) (spec.Imp
 		"failed_items":  []spec.FailedItem{},
 	}
 	logUtil.GetLogger().Info("migration ech0 started",
-		zap.String("module", "migration"),
-		zap.String("job_id", jobID),
-		zap.String("source_db", sourceDBPath),
-		zap.String("source_root", sourceRoot),
-		zap.Int64("total", total),
+		slog.String("module", "migration"),
+		slog.String("job_id", jobID),
+		slog.String("source_db", sourceDBPath),
+		slog.String("source_root", sourceRoot),
+		slog.Int64("total", total),
 	)
 
 	if req.UpdateProgress != nil {
@@ -96,9 +96,9 @@ func (e *Importer) Import(ctx context.Context, req spec.ImportRequest) (spec.Imp
 		return nil
 	}); err != nil {
 		logUtil.GetLogger().Error("migration ech0 failed",
-			zap.String("module", "migration"),
-			zap.String("job_id", jobID),
-			zap.Error(err),
+			slog.String("module", "migration"),
+			slog.String("job_id", jobID),
+			logUtil.Err(err),
 		)
 		return spec.ImportResult{}, err
 	}
@@ -125,11 +125,11 @@ func (e *Importer) Import(ctx context.Context, req spec.ImportRequest) (spec.Imp
 		})
 	}
 	logUtil.GetLogger().Info("migration ech0 finished",
-		zap.String("module", "migration"),
-		zap.String("job_id", jobID),
-		zap.Int64("processed", total),
-		zap.Int64("success_count", total),
-		zap.Int64("fail_count", 0),
+		slog.String("module", "migration"),
+		slog.String("job_id", jobID),
+		slog.Int64("processed", total),
+		slog.Int64("success_count", total),
+		slog.Int64("fail_count", 0),
 	)
 
 	return spec.ImportResult{
@@ -167,9 +167,9 @@ func migrateEchos(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB, sourceRoo
 		}
 	}
 	logUtil.GetLogger().Info("migration ech0 phase completed",
-		zap.String("module", "migration"),
-		zap.String("phase", "echos"),
-		zap.Int("count", len(sourceEchos)),
+		slog.String("module", "migration"),
+		slog.String("phase", "echos"),
+		slog.Int("count", len(sourceEchos)),
 	)
 	sourceExtensions, err := loadRows[echoModel.EchoExtension](ctx, sourceDB, "echo_extensions")
 	if err != nil {
@@ -181,9 +181,9 @@ func migrateEchos(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB, sourceRoo
 		}
 	}
 	logUtil.GetLogger().Info("migration ech0 phase completed",
-		zap.String("module", "migration"),
-		zap.String("phase", "echo_extensions"),
-		zap.Int("count", len(sourceExtensions)),
+		slog.String("module", "migration"),
+		slog.String("phase", "echo_extensions"),
+		slog.Int("count", len(sourceExtensions)),
 	)
 
 	if err := migrateTags(ctx, tx, sourceDB); err != nil {
@@ -271,12 +271,12 @@ func migrateTags(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB) error {
 		}
 	}
 	logUtil.GetLogger().Info("migration ech0 phase completed",
-		zap.String("module", "migration"),
-		zap.String("phase", "tags"),
-		zap.Int("source_tags", len(sourceTags)),
-		zap.Int("source_echo_tags", len(sourceEchoTags)),
-		zap.Int("created_tags", len(newTags)),
-		zap.Int("created_echo_tags", len(newEchoTags)),
+		slog.String("module", "migration"),
+		slog.String("phase", "tags"),
+		slog.Int("source_tags", len(sourceTags)),
+		slog.Int("source_echo_tags", len(sourceEchoTags)),
+		slog.Int("created_tags", len(newTags)),
+		slog.Int("created_echo_tags", len(newEchoTags)),
 	)
 	return nil
 }
@@ -380,21 +380,21 @@ func migrateFiles(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB, sourceRoo
 			// 本地文件缺失不阻断整任务，避免历史仅数据库快照导致整体失败。
 			localCopyFailed++
 			logUtil.GetLogger().Warn("migration ech0 local file copy skipped",
-				zap.String("module", "migration"),
-				zap.String("file_key", file.Key),
-				zap.Error(err),
+				slog.String("module", "migration"),
+				slog.String("file_key", file.Key),
+				logUtil.Err(err),
 			)
 			continue
 		}
 	}
 	logUtil.GetLogger().Info("migration ech0 phase completed",
-		zap.String("module", "migration"),
-		zap.String("phase", "files"),
-		zap.Int("source_files", len(sourceFiles)),
-		zap.Int("source_echo_files", len(sourceEchoFiles)),
-		zap.Int("created_files", len(newFiles)),
-		zap.Int("created_echo_files", len(newEchoFiles)),
-		zap.Int("local_copy_failed", localCopyFailed),
+		slog.String("module", "migration"),
+		slog.String("phase", "files"),
+		slog.Int("source_files", len(sourceFiles)),
+		slog.Int("source_echo_files", len(sourceEchoFiles)),
+		slog.Int("created_files", len(newFiles)),
+		slog.Int("created_echo_files", len(newEchoFiles)),
+		slog.Int("local_copy_failed", localCopyFailed),
 	)
 	return nil
 }
@@ -411,9 +411,9 @@ func migrateComments(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB) error 
 		return fmt.Errorf("migrate comments: %w", err)
 	}
 	logUtil.GetLogger().Info("migration ech0 phase completed",
-		zap.String("module", "migration"),
-		zap.String("phase", "comments"),
-		zap.Int("count", len(sourceComments)),
+		slog.String("module", "migration"),
+		slog.String("phase", "comments"),
+		slog.Int("count", len(sourceComments)),
 	)
 	return nil
 }
@@ -503,9 +503,9 @@ func appendSettingToReport(sourceDB *gorm.DB, report map[string]any, key string,
 	var payload any
 	if err := json.Unmarshal([]byte(trimmed), &payload); err != nil {
 		logUtil.GetLogger().Warn("migration ech0 setting parse skipped",
-			zap.String("module", "migration"),
-			zap.String("setting_key", key),
-			zap.Error(err),
+			slog.String("module", "migration"),
+			slog.String("setting_key", key),
+			logUtil.Err(err),
 		)
 		return
 	}

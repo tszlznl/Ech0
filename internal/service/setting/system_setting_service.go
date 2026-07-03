@@ -12,10 +12,9 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
 	coreSetting "github.com/lin-snow/ech0/internal/setting"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
 	urlUtil "github.com/lin-snow/ech0/internal/util/url"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
-	"go.uber.org/zap"
 )
 
 // GetSetting 获取系统设置。缺省值/归一化统一由 setting 引擎处理，启动 seeder 已落库，
@@ -110,7 +109,7 @@ func (settingService *SettingService) UpdateSetting(
 	}
 	if serverLogoChanged && strings.TrimSpace(newSetting.ServerLogoFileID) != "" {
 		if err := settingService.fileService.ConfirmTempFiles(ctx, []string{newSetting.ServerLogoFileID}); err != nil {
-			logUtil.GetLogger().Warn("confirm temp server logo file failed", zap.Error(err))
+			logUtil.GetLogger().Warn("confirm temp server logo file failed", logUtil.Err(err))
 		}
 	}
 	return nil

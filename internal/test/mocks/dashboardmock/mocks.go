@@ -11,8 +11,8 @@ import (
 	"net/http"
 
 	"github.com/lin-snow/ech0/internal/service/dashboard"
-	"github.com/lin-snow/ech0/internal/util/log"
 	"github.com/lin-snow/ech0/internal/visitor"
+	"github.com/lin-snow/ech0/pkg/log"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -44,23 +44,23 @@ func (_m *MockService) EXPECT() *MockService_Expecter {
 }
 
 // GetSystemLogs provides a mock function for the type MockService
-func (_mock *MockService) GetSystemLogs(query service.SystemLogQuery) ([]util.LogEntry, error) {
+func (_mock *MockService) GetSystemLogs(query service.SystemLogQuery) ([]log.LogEntry, error) {
 	ret := _mock.Called(query)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetSystemLogs")
 	}
 
-	var r0 []util.LogEntry
+	var r0 []log.LogEntry
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(service.SystemLogQuery) ([]util.LogEntry, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(service.SystemLogQuery) ([]log.LogEntry, error)); ok {
 		return returnFunc(query)
 	}
-	if returnFunc, ok := ret.Get(0).(func(service.SystemLogQuery) []util.LogEntry); ok {
+	if returnFunc, ok := ret.Get(0).(func(service.SystemLogQuery) []log.LogEntry); ok {
 		r0 = returnFunc(query)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]util.LogEntry)
+			r0 = ret.Get(0).([]log.LogEntry)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(service.SystemLogQuery) error); ok {
@@ -95,12 +95,12 @@ func (_c *MockService_GetSystemLogs_Call) Run(run func(query service.SystemLogQu
 	return _c
 }
 
-func (_c *MockService_GetSystemLogs_Call) Return(logEntrys []util.LogEntry, err error) *MockService_GetSystemLogs_Call {
+func (_c *MockService_GetSystemLogs_Call) Return(logEntrys []log.LogEntry, err error) *MockService_GetSystemLogs_Call {
 	_c.Call.Return(logEntrys, err)
 	return _c
 }
 
-func (_c *MockService_GetSystemLogs_Call) RunAndReturn(run func(query service.SystemLogQuery) ([]util.LogEntry, error)) *MockService_GetSystemLogs_Call {
+func (_c *MockService_GetSystemLogs_Call) RunAndReturn(run func(query service.SystemLogQuery) ([]log.LogEntry, error)) *MockService_GetSystemLogs_Call {
 	_c.Call.Return(run)
 	return _c
 }

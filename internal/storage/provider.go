@@ -5,14 +5,14 @@ package storage
 
 import (
 	"context"
+	"log/slog"
 	"strings"
 
 	"github.com/google/wire"
 	"github.com/lin-snow/ech0/internal/config"
 	"github.com/lin-snow/ech0/internal/kvstore"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 	"github.com/lin-snow/ech0/pkg/virefs"
-	"go.uber.org/zap"
 )
 
 func ProvideStorageManager(durableKV kvstore.Store) *Manager { return NewStorageManager(durableKV) }
@@ -53,7 +53,7 @@ func buildLocalFS(cfg config.StorageConfig, schema *virefs.Schema) virefs.FS {
 		virefs.WithLocalKeyFunc(schema.Resolve),
 	)
 	if err != nil {
-		logUtil.Warn("create local fs failed, fallback to defaults", zap.String("module", "storage"), zap.Error(err))
+		logUtil.Warn("create local fs failed, fallback to defaults", slog.String("module", "storage"), logUtil.Err(err))
 		fs, _ = virefs.NewLocalFS("data/files",
 			virefs.WithCreateRoot(),
 			virefs.WithAtomicWrite(),
@@ -101,7 +101,7 @@ func buildS3FS(cfg config.StorageConfig, schema *virefs.Schema) virefs.FS {
 		SecretKey: cfg.SecretKey,
 	}, opts...)
 	if err != nil {
-		logUtil.Warn("create s3 fs failed, fallback to local", zap.String("module", "storage"), zap.Error(err))
+		logUtil.Warn("create s3 fs failed, fallback to local", slog.String("module", "storage"), logUtil.Err(err))
 		return buildLocalFS(cfg, schema)
 	}
 	return fs

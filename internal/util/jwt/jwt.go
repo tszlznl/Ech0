@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -15,8 +16,7 @@ import (
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	userModel "github.com/lin-snow/ech0/internal/model/user"
 	cryptoUtil "github.com/lin-snow/ech0/internal/util/crypto"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
-	"go.uber.org/zap"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 )
 
 // CreateClaims 创建浏览器会话的 access token claims。
@@ -170,7 +170,7 @@ func parseTokenRaw(tokenString string) (*authModel.MyClaims, error) {
 		return claims, nil
 	}
 
-	logUtil.Warn("parse token claims type mismatch", zap.String("module", "jwt"))
+	logUtil.Warn("parse token claims type mismatch", slog.String("module", "jwt"))
 	return nil, errors.New("unknown claims type, cannot proceed")
 }
 

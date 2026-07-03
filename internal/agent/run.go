@@ -5,11 +5,11 @@ package agent
 
 import (
 	"context"
+	"log/slog"
 	"strings"
 	"unicode/utf8"
 
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
-	"go.uber.org/zap"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -262,9 +262,9 @@ func execTools(
 		tc := calls[idx]
 		if execErrs[idx] != nil {
 			logUtil.GetLogger().Warn("agent tool execute failed",
-				zap.String("module", "agent"),
-				zap.String("tool", tc.Name),
-				zap.Error(execErrs[idx]))
+				slog.String("module", "agent"),
+				slog.String("tool", tc.Name),
+				logUtil.Err(execErrs[idx]))
 			toolMsgs[idx] = Message{Role: RoleTool, ToolCallID: tc.ID, Content: strs.ToolError + execErrs[idx].Error()}
 			continue
 		}

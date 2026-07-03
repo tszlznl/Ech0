@@ -8,12 +8,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
 	jobModel "github.com/lin-snow/ech0/internal/model/job"
-	logUtil "github.com/lin-snow/ech0/internal/util/log"
-	"go.uber.org/zap"
+	logUtil "github.com/lin-snow/ech0/pkg/log"
 )
 
 const logModule = "job"
@@ -91,7 +91,7 @@ func (m *Manager) Submit(ctx context.Context, jobType string, payload []byte) (j
 
 	go m.run(runCtx, jobType, runner, pending)
 
-	logUtil.GetLogger().Info("job submitted", zap.String("module", logModule), zap.String("type", jobType))
+	logUtil.GetLogger().Info("job submitted", slog.String("module", logModule), slog.String("type", jobType))
 	return pending, nil
 }
 
@@ -104,7 +104,7 @@ func (m *Manager) run(runCtx context.Context, jobType string, runner Runner, bas
 	base.Status = jobModel.StatusRunning
 	if err := m.repo.Upsert(dbCtx, &base); err != nil {
 		logUtil.GetLogger().Error("job mark running failed",
-			zap.String("module", logModule), zap.String("type", jobType), zap.Error(err))
+			slog.String("module", logModule), slog.String("type", jobType), logUtil.Err(err))
 	}
 
 	result, runErr := runner.Run(runCtx, []byte(base.Payload), report)
@@ -117,25 +117,25 @@ func (m *Manager) run(runCtx context.Context, jobType string, runner Runner, bas
 	case errors.Is(runCtx.Err(), context.Canceled):
 		base.Status = jobModel.StatusCancelled
 		base.Error = ""
-		logUtil.GetLogger().Warn("job cancelled", zap.String("module", logModule), zap.String("type", jobType))
+		logUtil.GetLogger().Warn("job cancelled", slog.String("module", logModule), slog.String("type", jobType))
 	case runErr != nil:
 		base.Status = jobModel.StatusFailed
 		base.Error = runErr.Error()
 		logUtil.GetLogger().Error("job failed",
-			zap.String("module", logModule), zap.String("type", jobType), zap.Error(runErr))
+			slog.String("module", logModule), slog.String("type", jobType), logUtil.Err(runErr))
 	default:
 		base.Status = jobModel.StatusSuccess
 		base.Error = ""
 		if result != nil {
 			base.Payload = mustJSON(result)
 		}
-		logUtil.GetLogger().Info("job succeeded", zap.String("module", logModule), zap.String("type", jobType))
+		logUtil.GetLogger().Info("job succeeded", slog.String("module", logModule), slog.String("type", jobType))
 	}
 
 	if err := m.repo.Upsert(dbCtx, &base); err != nil {
 		logUtil.GetLogger().Error("job persist terminal failed",
-			zap.String("module", logModule), zap.String("type", jobType),
-			zap.String("status", string(base.Status)), zap.Error(err))
+			slog.String("module", logModule), slog.String("type", jobType),
+			slog.String("status", string(base.Status)), logUtil.Err(err))
 	}
 
 	m.clear(jobType)
@@ -208,7 +208,7 @@ func (m *Manager) Name() string { return "job" }
 // Start 把上次进程残留的 pending/running 行扫成 failed，避免前端永久转圈。幂等。
 func (m *Manager) Start(ctx context.Context) error {
 	if err := m.repo.SweepRunning(ctx, "interrupted by restart"); err != nil {
-		logUtil.GetLogger().Error("sweep orphan jobs failed", zap.String("module", logModule), zap.Error(err))
+		logUtil.GetLogger().Error("sweep orphan jobs failed", slog.String("module", logModule), logUtil.Err(err))
 		return err
 	}
 	return nil
