@@ -12,17 +12,17 @@ import BaseAvatar from '@/components/common/BaseAvatar.vue'
 import TheMdPreview from '@/components/advanced/md/TheMdPreview.vue'
 import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { ImageLayout } from '@/enums/enums'
-import { getEchoFilesBy } from '../utils/echoFiles'
 import { useFetch } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import { localStg } from '../utils/storage'
 import { formatHubDate } from '../utils/formatHubDate'
 
-// 必须保持 defineAsyncComponent。改回静态 import 会让 TheImageGallery 进入 entry chunk
+// 必须保持 defineAsyncComponent。改回静态 import 会让媒体渲染器进入 entry chunk
 // 的静态依赖图，与 index 形成循环引用 → 运行时 `A is not a function`（Vue 的 isFunction
 // 在 var 提升后尚未赋值时被调用）。详见 commit 51630d20 之后的 hub.ech0.app 事故。
-const TheImageGallery = defineAsyncComponent({
-  loader: () => import('@/components/advanced/gallery/TheImageGallery.vue'),
+// TheMediaPlayer 按类别分派图片/音频/视频，内部对画廊亦为 async import。
+const TheMediaPlayer = defineAsyncComponent({
+  loader: () => import('@/components/advanced/media/TheMediaPlayer.vue'),
   onError(error, retry, fail, attempts) {
     if (attempts <= 3) {
       retry()
@@ -46,9 +46,6 @@ const props = withDefaults(
 const { t } = useI18n()
 
 const fav_count = ref<number>(props.echo.fav_count)
-const echoImageFiles = computed(() =>
-  getEchoFilesBy(props.echo, { categories: ['image'], dedupeBy: 'id' }),
-)
 const server_url = computed(() => props.echo.server_url)
 const echo_id = computed(() => props.echo.id)
 const isLikeAnimating = ref(false)
@@ -157,15 +154,15 @@ const handleLikeEcho = async () => {
           <div class="mx-auto w-11/12 pl-1 mb-3">
             <TheMdPreview :content="props.echo.content" />
           </div>
-          <TheImageGallery
-            :images="echoImageFiles"
+          <TheMediaPlayer
+            :echo="props.echo"
             :base-url="echo.server_url"
             :layout="props.echo.layout"
           />
         </template>
         <template v-else>
-          <TheImageGallery
-            :images="echoImageFiles"
+          <TheMediaPlayer
+            :echo="props.echo"
             :base-url="echo.server_url"
             :layout="props.echo.layout"
           />

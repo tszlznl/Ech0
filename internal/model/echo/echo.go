@@ -83,4 +83,7 @@ const (
 	LayoutHorizontal = "horizontal"
 	LayoutCarousel   = "carousel"
 	LayoutStack      = "stack"
+	// LayoutNone 表示"无图片布局"：音频/视频 Echo 使用，卡片对其走平铺(media-first)，
+	// 播放器本就忽略 layout。用于把 image 专属的多布局语义从音视频身上剥离。
+	LayoutNone = "none"
 )

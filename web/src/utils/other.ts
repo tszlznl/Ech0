@@ -251,6 +251,11 @@ export const getHubImageUrl = (image: App.Api.Ech0.FileObject, baseurl: string) 
   return resolveFileUrl(image, baseurl)
 }
 
+// 获取 HubEcho 的任意文件（音频/视频等）URL，解析到远端服务器基址。
+export const getHubFileUrl = (file: App.Api.Ech0.FileObject, baseurl: string) => {
+  return resolveFileUrl(file, baseurl)
+}
+
 /**
  * Base64URL to Uint8Array
  * 用于解析服务端返回的 WebAuthn publicKey

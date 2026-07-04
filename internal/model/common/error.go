@@ -91,9 +91,10 @@ const (
 
 // Echo 错误相关常量
 const (
-	NO_PERMISSION_DENIED  = "没有权限,请联系系统管理员"
-	ECHO_CAN_NOT_BE_EMPTY = "ECHO 内容不能为空"
-	ECHO_NOT_FOUND        = "找不到Echo"
+	NO_PERMISSION_DENIED       = "没有权限,请联系系统管理员"
+	ECHO_CAN_NOT_BE_EMPTY      = "ECHO 内容不能为空"
+	ECHO_NOT_FOUND             = "找不到Echo"
+	ECHO_MIXED_FILE_CATEGORIES = "一条 Echo 只能包含同一类型的文件"
 )
 
 // Common 错误相关常量

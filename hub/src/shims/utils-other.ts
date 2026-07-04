@@ -36,3 +36,6 @@ export const getImageUrl = (image: App.Api.Ech0.FileObject) => resolveFileUrl(im
 
 export const getHubImageUrl = (image: App.Api.Ech0.FileObject, baseurl: string) =>
   resolveFileUrl(image, baseurl)
+
+export const getHubFileUrl = (file: App.Api.Ech0.FileObject, baseurl: string) =>
+  resolveFileUrl(file, baseurl)

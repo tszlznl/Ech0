@@ -110,6 +110,9 @@ func (s *FileService) UploadFile(
 	if category == storage.CategoryAudio {
 		limit = int64(config.Config().Upload.AudioMaxSize)
 	}
+	if category == storage.CategoryVideo {
+		limit = int64(config.Config().Upload.VideoMaxSize)
+	}
 	if file.Size > limit {
 		return commonModel.FileDto{}, errors.New(commonModel.FILE_SIZE_EXCEED_LIMIT)
 	}
@@ -182,6 +185,9 @@ func (s *FileService) UploadFile(
 	uploadType := commonModel.ImageType
 	if category == storage.CategoryAudio {
 		uploadType = commonModel.AudioType
+	}
+	if category == storage.CategoryVideo {
+		uploadType = commonModel.VideoType
 	}
 
 	user.Password = ""
@@ -387,6 +393,48 @@ func (s *FileService) GetFileByID(ctx context.Context, id string) (commonModel.F
 		Width:       fileRecord.Width,
 		Height:      fileRecord.Height,
 	}, nil
+}
+
+// GetFilesByIDs batch-loads file metadata for the given IDs. It performs a
+// single admin check and a single repository query, and is used by callers
+// (e.g. the echo service) that need each attached file's Category without
+// paying N per-file lookups. Missing IDs are simply absent from the result.
+func (s *FileService) GetFilesByIDs(ctx context.Context, ids []string) ([]commonModel.FileDto, error) {
+	userid := viewer.MustFromContext(ctx).UserID()
+	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
+	if err != nil {
+		return nil, err
+	}
+	if !user.IsAdmin {
+		return nil, errors.New(commonModel.NO_PERMISSION_DENIED)
+	}
+
+	if len(ids) == 0 {
+		return []commonModel.FileDto{}, nil
+	}
+
+	files, err := s.fileRepository.ListByIDs(context.Background(), ids)
+	if err != nil {
+		return nil, err
+	}
+
+	dtos := make([]commonModel.FileDto, 0, len(files))
+	for i := range files {
+		f := files[i]
+		dtos = append(dtos, commonModel.FileDto{
+			ID:          f.ID,
+			Name:        f.Name,
+			Key:         f.Key,
+			StorageType: f.StorageType,
+			URL:         f.URL,
+			ContentType: f.ContentType,
+			Category:    f.Category,
+			Size:        f.Size,
+			Width:       f.Width,
+			Height:      f.Height,
+		})
+	}
+	return dtos, nil
 }
 
 func (s *FileService) UpdateFileMeta(
@@ -793,6 +841,9 @@ func (s *FileService) GetFilePresignURL(
 	if strings.HasPrefix(contentType, "audio/") {
 		category = storage.CategoryAudio
 	}
+	if strings.HasPrefix(contentType, "video/") {
+		category = storage.CategoryVideo
+	}
 	if err := validateFileUploadByName(dto.FileName, contentType, config.Config().Upload.AllowedTypes); err != nil {
 		return result, err
 	}
@@ -1002,6 +1053,7 @@ var safeExtMIME = map[string][]string{
 	".wav":  {"audio/wav", "audio/x-wav"},
 	".m4a":  {"audio/mp4", "audio/x-m4a"},
 	".ogg":  {"audio/ogg"},
+	".mp4":  {"video/mp4"},
 }
 
 // MIME types that indicate executable/document content; files whose magic

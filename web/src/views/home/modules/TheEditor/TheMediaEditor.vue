@@ -1,10 +1,30 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
-  <div class="editor-image-panel">
+  <div class="editor-media-panel">
     <h2 class="text-[var(--color-text-secondary)] font-bold my-2">
-      {{ t('editor.imageSectionTitle') }}
+      {{ t('editor.mediaSectionTitle') }}
     </h2>
+
+    <!-- 媒体类别切换（图片/音频/视频）；有附件后锁定，禁止切换 -->
+    <div class="mb-3 flex items-center gap-2">
+      <span class="text-[var(--color-text-secondary)]">{{ t('editor.mediaTypeLabel') }}</span>
+      <BaseButton
+        v-for="opt in mediaTypeOptions"
+        :key="opt.value"
+        :icon="opt.icon"
+        class="w-7 h-7 sm:w-7 sm:h-7 rounded-md"
+        :class="
+          effectiveCategory === opt.value
+            ? 'ring-2 ring-[var(--color-accent)]'
+            : 'opacity-70 hover:opacity-100'
+        "
+        :disabled="hasFile && effectiveCategory !== opt.value"
+        @click="editorStore.setSelectedCategory(opt.value)"
+        :tooltip="opt.label"
+      />
+    </div>
+
     <div v-if="!fileUploading" class="flex items-center gap-2 mb-3">
       <div class="flex items-center gap-2">
         <span class="text-[var(--color-text-secondary)]">{{ t('editor.imageAddMethod') }}</span>
@@ -33,8 +53,8 @@
       </div>
     </div>
 
-    <!-- 布局方式选择 -->
-    <div class="mb-2 flex items-center gap-2">
+    <!-- 布局方式选择（仅图片） -->
+    <div v-if="effectiveCategory === FILE_CATEGORY.IMAGE" class="mb-2 flex items-center gap-2">
       <span class="text-[var(--color-text-secondary)]">{{ t('editor.imageLayout') }}</span>
       <BaseSelect
         v-model="echoToAdd.layout"
@@ -44,9 +64,12 @@
       />
     </div>
 
-    <!-- 智能压缩 -->
+    <!-- 智能压缩（仅图片） -->
     <div
-      v-if="fileToAdd.storage_type !== FILE_STORAGE_TYPE.EXTERNAL"
+      v-if="
+        effectiveCategory === FILE_CATEGORY.IMAGE &&
+        fileToAdd.storage_type !== FILE_STORAGE_TYPE.EXTERNAL
+      "
       class="mb-3 flex items-center"
     >
       <span class="text-[var(--color-text-secondary)]">{{ t('editor.imageSmartCompress') }}</span>
@@ -69,15 +92,19 @@
     </div>
 
     <div class="my-1">
-      <!-- 图片上传 -->
+      <!-- 媒体上传（key 绑定类别：切换时重挂载，刷新 accept/大小上限快照） -->
       <TheUploader
         v-if="fileToAdd.storage_type !== FILE_STORAGE_TYPE.EXTERNAL"
+        :key="effectiveCategory"
         :fileStorageType="fileToAdd.storage_type"
-        :EnableCompressor="enableCompressor"
-        :maxFileSize="IMAGE_MAX_FILE_SIZE"
+        :fileCategory="effectiveCategory"
+        :allowedFileTypes="acceptedTypes"
+        :EnableCompressor="enableCompressor && effectiveCategory === FILE_CATEGORY.IMAGE"
+        :maxFileSize="maxFileSize"
+        :maxFiles="maxFiles"
       />
 
-      <!-- 图片直链 -->
+      <!-- 媒体直链 -->
       <div
         v-if="fileToAdd.storage_type === FILE_STORAGE_TYPE.EXTERNAL"
         class="flex items-center gap-2"
@@ -100,15 +127,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, type Component } from 'vue'
 import { useEditorStore, useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { ImageLayout } from '@/enums/enums'
-import { FILE_STORAGE_TYPE } from '@/constants/file'
+import { FILE_CATEGORY, FILE_STORAGE_TYPE, type FileCategory } from '@/constants/file'
 import Url from '@/components/icons/url.vue'
 import Upload from '@/components/icons/upload.vue'
 import Bucket from '@/components/icons/bucket.vue'
 import Addmore from '@/components/icons/addmore.vue'
+import ImageIcon from '@/components/icons/image.vue'
+import AudioIcon from '@/components/icons/audio.vue'
+import VideoIcon from '@/components/icons/videomedia.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseSelect from '@/components/common/BaseSelect.vue'
 import BaseSwitch from '@/components/common/BaseSwitch.vue'
@@ -117,12 +147,14 @@ import TheUploader from '@/components/advanced/TheUploader.vue'
 import { localStg } from '@/utils/storage'
 import { useI18n } from 'vue-i18n'
 
-// Mirror the backend's default image upload cap (config.go: ImageMaxSize = 20 MiB)
-// so an oversized file is rejected up-front instead of after a wasted upload.
-const IMAGE_MAX_FILE_SIZE = 20 * 1024 * 1024
+// Per-category upload caps, mirroring the backend defaults (config.go) so an
+// oversized file is rejected up-front instead of after a wasted upload.
+const IMAGE_MAX_FILE_SIZE = 20 * 1024 * 1024 // ImageMaxSize
+const AUDIO_MAX_FILE_SIZE = 20 * 1024 * 1024 // AudioMaxSize
+const VIDEO_MAX_FILE_SIZE = 64 * 1024 * 1024 // VideoMaxSize
 
 const editorStore = useEditorStore()
-const { fileToAdd, fileUploading, echoToAdd } = storeToRefs(editorStore)
+const { fileToAdd, fileUploading, echoToAdd, effectiveCategory, hasFile } = storeToRefs(editorStore)
 const settingStore = useSettingStore()
 const { S3Setting } = storeToRefs(settingStore)
 const enableCompressor = ref<boolean>(false)
@@ -135,6 +167,42 @@ const handleSetFileSource = (source: App.Api.File.StorageType) => {
   localStg.setItem('file_storage_type', source)
 }
 
+// 媒体类别选项（切换器）
+const mediaTypeOptions = computed<{ value: FileCategory; label: string; icon: Component }[]>(() => [
+  { value: FILE_CATEGORY.IMAGE, label: String(t('editor.mediaTypeImage')), icon: ImageIcon },
+  { value: FILE_CATEGORY.AUDIO, label: String(t('editor.mediaTypeAudio')), icon: AudioIcon },
+  { value: FILE_CATEGORY.VIDEO, label: String(t('editor.mediaTypeVideo')), icon: VideoIcon },
+])
+
+// 依类别决定上传器可接受的 MIME 与大小上限
+const acceptedTypes = computed<string[]>(() => {
+  switch (effectiveCategory.value) {
+    case FILE_CATEGORY.AUDIO:
+      return ['audio/*']
+    case FILE_CATEGORY.VIDEO:
+      return ['video/mp4']
+    default:
+      return ['image/*']
+  }
+})
+const maxFileSize = computed<number>(() => {
+  switch (effectiveCategory.value) {
+    case FILE_CATEGORY.AUDIO:
+      return AUDIO_MAX_FILE_SIZE
+    case FILE_CATEGORY.VIDEO:
+      return VIDEO_MAX_FILE_SIZE
+    default:
+      return IMAGE_MAX_FILE_SIZE
+  }
+})
+
+// 单条 Echo 的媒体数量上限：图片支持多图画廊（最多 9 张）；
+// 音频/视频每条仅 1 个，与后端单类别硬校验一致，前端先行拦截。
+const IMAGE_MAX_FILES = 9
+const maxFiles = computed<number>(() =>
+  effectiveCategory.value === FILE_CATEGORY.IMAGE ? IMAGE_MAX_FILES : 1,
+)
+
 // 布局选择
 const layoutOptions = computed(() => [
   { label: String(t('editor.layoutWaterfall')), value: ImageLayout.WATERFALL },
@@ -146,7 +214,7 @@ const layoutOptions = computed(() => [
 </script>
 
 <style scoped>
-.editor-image-panel {
+.editor-media-panel {
   margin: 0.75rem 0;
   padding: 0.75rem;
   border: 1px dashed var(--color-border-strong);

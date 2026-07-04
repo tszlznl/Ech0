@@ -2,7 +2,7 @@
 // Copyright (C) 2025-2026 lin-snow
 
 import { computed, ref } from 'vue'
-import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
+import { FILE_CATEGORY, FILE_STORAGE_TYPE, type FileCategory } from '@/constants/file'
 import { createExternalFile, globalFileRegistry, useFileAttachments } from '@/lib/file'
 import { getImageSize } from '@/utils/image'
 import { getFileToAddUrl } from '@/utils/other'
@@ -33,10 +33,42 @@ export function useFilesModule({ t }: FilesModuleDeps) {
 
   const hasFile = computed(() => filesToAdd.value.length > 0)
 
+  // 用户在空状态下选择的上传类别（图片/音频/视频）。有附件后由 mediaCategory 锁定。
+  const selectedCategory = ref<FileCategory>(FILE_CATEGORY.IMAGE)
+
+  // 已锁定的媒体类别：一旦有附件，取第一个附件的类别；否则为 null（未锁定）。
+  // 一条 Echo 只能包含单一类别的文件，后端亦有硬校验。
+  const mediaCategory = computed<FileCategory | null>(
+    () => (filesToAdd.value[0]?.category as FileCategory | undefined) ?? null,
+  )
+
+  // 编辑器实际生效的类别：锁定优先，否则用用户所选。驱动上传器的 accept / 大小上限。
+  const effectiveCategory = computed<FileCategory>(
+    () => mediaCategory.value ?? selectedCategory.value,
+  )
+
+  // 切换上传类别；已有附件（类别已锁定）时拒绝切换并提示。
+  const setSelectedCategory = (category: FileCategory) => {
+    if (mediaCategory.value && mediaCategory.value !== category) {
+      theToast.info(t('editor.categoryLockedHint'))
+      return
+    }
+    selectedCategory.value = category
+  }
+
   const handleAddMoreFile = async () => {
+    // 单类别约束：待加入文件的类别与已锁定类别不一致时拒绝，避免一条 Echo 混挂多类文件。
+    const incomingCategory =
+      (fileToAdd.value.category as FileCategory | undefined) ?? effectiveCategory.value
+    if (mediaCategory.value && mediaCategory.value !== incomingCategory) {
+      theToast.error(t('editor.mixedCategoryRejected'))
+      return
+    }
+
     let width: number | undefined = fileToAdd.value.width
     let height: number | undefined = fileToAdd.value.height
-    if (width === undefined || height === undefined) {
+    // 仅图片需要宽高（画廊比例占位）；音视频跳过探测。
+    if (incomingCategory === FILE_CATEGORY.IMAGE && (width === undefined || height === undefined)) {
       try {
         const previewUrl = getFileToAddUrl(fileToAdd.value)
         const size = await getImageSize(previewUrl || fileToAdd.value.url)
@@ -57,7 +89,7 @@ export function useFilesModule({ t }: FilesModuleDeps) {
 
       const created = await createExternalFile({
         url: externalUrl,
-        category: FILE_CATEGORY.IMAGE,
+        category: incomingCategory,
         width: width,
         height: height,
       })
@@ -76,7 +108,7 @@ export function useFilesModule({ t }: FilesModuleDeps) {
       id: fileToAdd.value.id,
       url: fileToAdd.value.url,
       storage_type: fileToAdd.value.storage_type,
-      category: fileToAdd.value.category,
+      category: incomingCategory,
       content_type: fileToAdd.value.content_type,
       key: fileToAdd.value.key ? fileToAdd.value.key : '',
       size: fileToAdd.value.size,
@@ -149,6 +181,7 @@ export function useFilesModule({ t }: FilesModuleDeps) {
         : FILE_STORAGE_TYPE.LOCAL,
       key: '',
     }
+    selectedCategory.value = FILE_CATEGORY.IMAGE
     resetAttachments([])
   }
 
@@ -158,10 +191,14 @@ export function useFilesModule({ t }: FilesModuleDeps) {
     fileToAdd,
     filesToAdd,
     fileIndex,
+    selectedCategory,
     // computed
     hasFile,
+    mediaCategory,
+    effectiveCategory,
     // methods
     handleAddMoreFile,
+    setSelectedCategory,
     setFilesToAdd,
     reorderFilesByIds,
     removeFileAt,

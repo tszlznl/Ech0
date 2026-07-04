@@ -65,6 +65,20 @@ func TestValidateFileUpload(t *testing.T) {
 			wantErr:      false,
 		},
 		{
+			name:         "legal mp4 video passes",
+			filename:     "clip.mp4",
+			detectedMIME: "video/mp4",
+			allowed:      []string{"video/mp4"},
+			wantErr:      false,
+		},
+		{
+			name:         "mp4 with octet-stream sniff is accepted for whitelisted ext",
+			filename:     "clip.mp4",
+			detectedMIME: "application/octet-stream",
+			allowed:      []string{"video/mp4"},
+			wantErr:      false,
+		},
+		{
 			name:         "uppercase extension is normalized",
 			filename:     "PHOTO.PNG",
 			detectedMIME: "image/png",
@@ -156,6 +170,20 @@ func TestValidateFileUpload(t *testing.T) {
 			filename:     "photo.png",
 			detectedMIME: "image/png",
 			allowed:      []string{"image/gif"},
+			wantErr:      true,
+		},
+		{
+			name:         "mp4 rejected when video/mp4 not on allowlist",
+			filename:     "clip.mp4",
+			detectedMIME: "video/mp4",
+			allowed:      []string{"image/png"},
+			wantErr:      true,
+		},
+		{
+			name:         "html content disguised as mp4 rejected via magic-byte gate",
+			filename:     "fake.mp4",
+			detectedMIME: "text/html",
+			allowed:      []string{"video/mp4"},
 			wantErr:      true,
 		},
 		{

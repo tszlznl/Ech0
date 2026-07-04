@@ -2,10 +2,13 @@
 // Copyright (C) 2025-2026 lin-snow
 
 import { FILE_STORAGE_TYPE } from '@/constants/file'
-import { filterFiles, type FileSelectorOptions } from '@/lib/file'
+// 直接引 selectors 而非 @/lib/file barrel：让本模块（及经由它的 TheMediaPlayer）
+// 不牵连整个 file 子系统，从而可被隔离 bundle 的 hub 项目安全复用。
+import { filterFiles, type FileSelectorOptions } from '@/lib/file/selectors/file-selectors'
 
 type EchoLike = {
   id?: string
+  layout?: string | null
   echo_files?: Array<{
     echo_id?: string
     file_id?: string
@@ -54,6 +57,19 @@ export function getEchoFilesBy(
 // backward-compatible alias
 export const getEchoImages = (echo?: EchoLike | null) =>
   getEchoFilesBy(echo, { categories: ['image'] })
+
+// 对应 ImageLayout.GRID / HORIZONTAL / STACK。
+// 这里刻意用字面量而非引入 ImageLayout 枚举，保持本模块可被隔离 bundle 的 hub 项目安全复用。
+const CONTENT_LEADING_LAYOUTS = ['grid', 'horizontal', 'stack']
+
+/**
+ * 卡片里正文是否应排在媒体上方（媒体在下）：仅 GRID / HORIZONTAL / STACK 这几种图片布局如此。
+ * 其余情况（瀑布流 / 单图轮播、音频、视频）都是媒体在上、正文在下。
+ */
+export function isContentLeadingEcho(echo?: EchoLike | null): boolean {
+  const layout = echo?.layout
+  return !!layout && CONTENT_LEADING_LAYOUTS.includes(layout)
+}
 
 function normalizeStorageType(raw: unknown): App.Api.File.StorageType {
   const value = String(raw || '').toLowerCase()

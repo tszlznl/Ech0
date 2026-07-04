@@ -227,6 +227,11 @@ func TestUpdateEcho_Success(t *testing.T) {
 		CommonGetUserByUserId(mock.Anything, adminID).
 		Return(helpers.NewUser(helpers.AsAdmin), nil).
 		Once()
+	// 单文件 echo 通过单类别校验（一次批量读类别）。
+	file.EXPECT().
+		GetFilesByIDs(mock.Anything, []string{"file-1"}).
+		Return([]commonModel.FileDto{{ID: "file-1", Category: "image"}}, nil).
+		Once()
 	tx.EXPECT().Run(mock.Anything, mock.Anything).RunAndReturn(runTx).Once()
 	repo.EXPECT().GetTagsByNames(mock.Anything, mock.Anything).Return([]*echoModel.Tag{}, nil).Once()
 
