@@ -1024,7 +1024,8 @@
     "unsupported": "お使いのブラウザは動画再生に対応していません",
     "play": "動画を再生",
     "close": "閉じる",
-    "label": "動画"
+    "label": "動画",
+    "fullscreen": "全画面"
   },
   "githubCard": {
     "avatarAlt": "アバター"

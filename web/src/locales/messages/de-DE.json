@@ -1024,7 +1024,8 @@
     "unsupported": "Ihr Browser unterstützt keine Videowiedergabe",
     "play": "Video abspielen",
     "close": "Schließen",
-    "label": "Video"
+    "label": "Video",
+    "fullscreen": "Vollbild"
   },
   "githubCard": {
     "avatarAlt": "Avatar"
