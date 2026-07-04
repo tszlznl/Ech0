@@ -39,7 +39,7 @@
     "imageSourceObject": "S3存储",
     "imageLayout": "选择布局方式：",
     "imageSmartCompress": "智能压缩：",
-    "currentUploadMode": "当前上传方式为",
+    "currentUploadMode": "当前存储方式为",
     "uploadingSuffix": "，正在上传中...",
     "addMoreImages": "添加更多附件",
     "layoutWaterfall": "瀑布流",

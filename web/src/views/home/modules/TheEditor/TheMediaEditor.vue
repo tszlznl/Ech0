@@ -6,22 +6,17 @@
       {{ t('editor.mediaSectionTitle') }}
     </h2>
 
-    <!-- 媒体类别切换（图片/音频/视频）；有附件后锁定，禁止切换 -->
+    <!-- 媒体类别切换（图片/音频/视频）：分段控件，激活项浮起高亮；
+         有附件后由 setSelectedCategory 软锁定，点其他类别会提示需先移除文件 -->
     <div class="mb-3 flex items-center gap-2">
-      <span class="text-[var(--color-text-secondary)]">{{ t('editor.mediaTypeLabel') }}</span>
-      <BaseButton
-        v-for="opt in mediaTypeOptions"
-        :key="opt.value"
-        :icon="opt.icon"
-        class="w-7 h-7 sm:w-7 sm:h-7 rounded-md"
-        :class="
-          effectiveCategory === opt.value
-            ? 'ring-2 ring-[var(--color-accent)]'
-            : 'opacity-70 hover:opacity-100'
-        "
-        :disabled="hasFile && effectiveCategory !== opt.value"
-        @click="editorStore.setSelectedCategory(opt.value)"
-        :tooltip="opt.label"
+      <span class="shrink-0 whitespace-nowrap text-[var(--color-text-secondary)]">{{
+        t('editor.mediaTypeLabel')
+      }}</span>
+      <BaseSegmented
+        class="media-type-seg"
+        :modelValue="effectiveCategory"
+        :options="mediaTypeOptions"
+        @update:modelValue="onSelectCategory"
       />
     </div>
 
@@ -127,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, type Component } from 'vue'
+import { computed, ref } from 'vue'
 import { useEditorStore, useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { ImageLayout } from '@/enums/enums'
@@ -136,10 +131,8 @@ import Url from '@/components/icons/url.vue'
 import Upload from '@/components/icons/upload.vue'
 import Bucket from '@/components/icons/bucket.vue'
 import Addmore from '@/components/icons/addmore.vue'
-import ImageIcon from '@/components/icons/image.vue'
-import AudioIcon from '@/components/icons/audio.vue'
-import VideoIcon from '@/components/icons/videomedia.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
+import BaseSegmented from '@/components/common/BaseSegmented.vue'
 import BaseSelect from '@/components/common/BaseSelect.vue'
 import BaseSwitch from '@/components/common/BaseSwitch.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
@@ -154,7 +147,7 @@ const AUDIO_MAX_FILE_SIZE = 20 * 1024 * 1024 // AudioMaxSize
 const VIDEO_MAX_FILE_SIZE = 64 * 1024 * 1024 // VideoMaxSize
 
 const editorStore = useEditorStore()
-const { fileToAdd, fileUploading, echoToAdd, effectiveCategory, hasFile } = storeToRefs(editorStore)
+const { fileToAdd, fileUploading, echoToAdd, effectiveCategory } = storeToRefs(editorStore)
 const settingStore = useSettingStore()
 const { S3Setting } = storeToRefs(settingStore)
 const enableCompressor = ref<boolean>(false)
@@ -167,12 +160,13 @@ const handleSetFileSource = (source: App.Api.File.StorageType) => {
   localStg.setItem('file_storage_type', source)
 }
 
-// 媒体类别选项（切换器）
-const mediaTypeOptions = computed<{ value: FileCategory; label: string; icon: Component }[]>(() => [
-  { value: FILE_CATEGORY.IMAGE, label: String(t('editor.mediaTypeImage')), icon: ImageIcon },
-  { value: FILE_CATEGORY.AUDIO, label: String(t('editor.mediaTypeAudio')), icon: AudioIcon },
-  { value: FILE_CATEGORY.VIDEO, label: String(t('editor.mediaTypeVideo')), icon: VideoIcon },
+// 媒体类别选项（分段控件；BaseSegmented 只吃 label/value）
+const mediaTypeOptions = computed<{ label: string; value: FileCategory }[]>(() => [
+  { label: String(t('editor.mediaTypeImage')), value: FILE_CATEGORY.IMAGE },
+  { label: String(t('editor.mediaTypeAudio')), value: FILE_CATEGORY.AUDIO },
+  { label: String(t('editor.mediaTypeVideo')), value: FILE_CATEGORY.VIDEO },
 ])
+const onSelectCategory = (v: string) => editorStore.setSelectedCategory(v as FileCategory)
 
 // 依类别决定上传器可接受的 MIME 与大小上限
 const acceptedTypes = computed<string[]>(() => {
@@ -219,5 +213,18 @@ const layoutOptions = computed(() => [
   padding: 0.75rem;
   border: 1px dashed var(--color-border-strong);
   border-radius: var(--radius-xs);
+}
+
+/* 媒体类别分段控件：缩小到与下方存储图标按钮(h-7 ≈ 1.75rem)相近的高度，
+   并去掉组件自带的 margin-bottom（在 flex 行里多余）。用后代选择器提高特异性，
+   避免改动通用 BaseSegmented 组件本身（面板 tab 仍用原尺寸）。 */
+.editor-media-panel .media-type-seg {
+  margin-bottom: 0;
+  padding: 0.15rem;
+}
+
+.editor-media-panel .media-type-seg :deep(.seg__btn) {
+  padding: 0.25rem 0.7rem;
+  font-size: 0.8rem;
 }
 </style>

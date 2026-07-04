@@ -39,7 +39,7 @@
     "imageSourceObject": "S3",
     "imageLayout": "レイアウトを選択：",
     "imageSmartCompress": "スマート圧縮：",
-    "currentUploadMode": "現在のアップロード方式：",
+    "currentUploadMode": "現在の保存方式：",
     "uploadingSuffix": "、アップロード中...",
     "addMoreImages": "さらに追加",
     "layoutWaterfall": "ウォーターフォール",

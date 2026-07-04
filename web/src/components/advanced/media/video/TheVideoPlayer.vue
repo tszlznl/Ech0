@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { getFileUrl, getHubFileUrl } from '@/utils/other'
 import { formatMediaTime } from '../shared/time'
@@ -99,21 +99,39 @@ function prefersReducedMotion() {
   return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 }
 
-// 桌面端 hover：内联静音预览播放；离开则暂停并回到首帧，恢复封面观感。
+// hover 停留达到该时长才开始预览播放，避免鼠标只是划过就触发拉流、浪费带宽。
+const HOVER_PLAY_DELAY = 300
+let hoverTimer: ReturnType<typeof setTimeout> | null = null
+
+function clearHoverTimer() {
+  if (hoverTimer !== null) {
+    clearTimeout(hoverTimer)
+    hoverTimer = null
+  }
+}
+
+// 桌面端 hover：停留满 300ms 才内联静音预览播放；离开（或未满时长即移开）则取消/暂停并回到首帧。
 function onEnter(event: MouseEvent) {
   if (prefersReducedMotion()) return
   const video = (event.currentTarget as HTMLElement).querySelector('video')
   if (!video) return
-  video.muted = true
-  void video.play().catch(() => {})
+  clearHoverTimer()
+  hoverTimer = setTimeout(() => {
+    hoverTimer = null
+    video.muted = true
+    void video.play().catch(() => {})
+  }, HOVER_PLAY_DELAY)
 }
 
 function onLeave(event: MouseEvent) {
+  clearHoverTimer()
   const video = (event.currentTarget as HTMLElement).querySelector('video')
   if (!video) return
   video.pause()
   video.currentTime = 0
 }
+
+onBeforeUnmount(clearHoverTimer)
 
 function aspectStyle(item: { width?: number; height?: number }, idx: number) {
   const meta = metaByIndex.value[idx]

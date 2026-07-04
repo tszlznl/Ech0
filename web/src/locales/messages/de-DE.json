@@ -39,7 +39,7 @@
     "imageSourceObject": "S3",
     "imageLayout": "Layout wählen:",
     "imageSmartCompress": "Intelligente Komprimierung:",
-    "currentUploadMode": "Aktueller Upload-Modus:",
+    "currentUploadMode": "Aktuelle Speicherart:",
     "uploadingSuffix": ", wird hochgeladen…",
     "addMoreImages": "Weitere Anhänge hinzufügen",
     "layoutWaterfall": "Wasserfall",

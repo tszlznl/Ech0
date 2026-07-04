@@ -39,7 +39,7 @@
     "imageSourceObject": "S3",
     "imageLayout": "Select layout:",
     "imageSmartCompress": "Smart compression:",
-    "currentUploadMode": "Current upload mode:",
+    "currentUploadMode": "Current storage method:",
     "uploadingSuffix": ", uploading...",
     "addMoreImages": "Add more attachments",
     "layoutWaterfall": "Waterfall",
