@@ -10,11 +10,11 @@
         :class="['w-8 h-8 sm:w-9 sm:h-9 rounded-xs'].join(' ')"
         :tooltip="currentMode === Mode.ECH0 ? t('editor.more') : t('editor.backToEditor')"
       />
-      <!-- Photo Upload -->
+      <!-- Attachment Upload -->
       <BaseButton
         v-if="currentMode === Mode.ECH0"
-        :icon="ImageUpload"
-        @click="handleAddImageMode"
+        :icon="AttachmentIcon"
+        @click="handleAddMediaMode"
         class="w-8 h-8 sm:w-9 sm:h-9 rounded-xs"
         :tooltip="t('editor.addImage')"
       />
@@ -151,7 +151,7 @@
 
 <script setup lang="ts">
 import Advance from '@/components/icons/advance.vue'
-import ImageUpload from '@/components/icons/image.vue'
+import AttachmentIcon from '@/components/icons/attachment.vue'
 import ImageIcon from '@/components/icons/image.vue'
 import Public from '@/components/icons/public.vue'
 import Private from '@/components/icons/private.vue'
@@ -246,7 +246,7 @@ const handleChangeMode = () => {
   editorStore.toggleMode()
 }
 
-const handleAddImageMode = () => {
+const handleAddMediaMode = () => {
   fileToAdd.value.storage_type = FILE_STORAGE_TYPE.LOCAL
 
   // 检查localStg中是否有记忆的上传方式
@@ -255,7 +255,7 @@ const handleAddImageMode = () => {
     fileToAdd.value.storage_type = rememberedSource
   }
 
-  editorStore.setMode(Mode.Image)
+  editorStore.setMode(Mode.Media)
 }
 
 const handleExitUpdateMode = () => {

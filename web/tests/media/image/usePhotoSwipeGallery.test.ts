@@ -4,7 +4,7 @@
 import { defineComponent, ref } from 'vue'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { usePhotoSwipeGallery } from '@/components/advanced/gallery/composables/usePhotoSwipeGallery'
+import { usePhotoSwipeGallery } from '@/components/advanced/media/image/composables/usePhotoSwipeGallery'
 
 type MockPhotoSwipeInstance = {
   options: Record<string, unknown>

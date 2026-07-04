@@ -6,7 +6,7 @@ export enum Mode {
   ECH0 = 0, // 默认编辑状态
   Panel = 1, // 显示面板状态
   EXTEN = 3, // 处理扩展状态
-  Image = 5, // 图片上传状态
+  Media = 5, // 媒体上传状态（图片/音频/视频）
   TagManage = 6, // 标签管理状态
 }
 
@@ -27,6 +27,17 @@ export enum ImageLayout {
   HORIZONTAL = 'horizontal', // 横向布局
   CAROUSEL = 'carousel', // 单图轮播布局
   STACK = 'stack', // 堆叠（多行交错、白边、轻微旋转）
+}
+
+// 视频布局：目前仅平铺(none)展示，卡片走 media-first、播放器忽略 layout。
+// 独立枚举为未来可能的多布局（如剧场/画中画）留结构。
+export enum VideoLayout {
+  DEFAULT = 'none',
+}
+
+// 音频布局：目前仅平铺(none)展示。独立枚举为未来可能的多布局（如紧凑/歌单）留结构。
+export enum AudioLayout {
+  DEFAULT = 'none',
 }
 
 // S3 Service Provider

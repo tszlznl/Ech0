@@ -106,30 +106,28 @@
 
     <div class="timeline-content">
       <div class="px-4 py-3">
-        <template
-          v-if="
-            props.echo.layout === ImageLayout.GRID ||
-            props.echo.layout === ImageLayout.HORIZONTAL ||
-            props.echo.layout === ImageLayout.STACK
-          "
-        >
+        <template v-if="isContentLeadingEcho(props.echo)">
           <div class="mx-auto w-11/12 pl-1 mb-3">
             <TheMdPreview :content="props.echo.content" />
           </div>
 
-          <TheImageGallery
-            :images="echoImageFiles"
-            :layout="props.echo.layout"
-            :priority="props.index === 0"
-          />
+          <div :class="{ 'mx-auto w-11/12 pl-1': isAvEcho }">
+            <TheMediaPlayer
+              :echo="props.echo"
+              :layout="props.echo.layout"
+              :priority="props.index === 0"
+            />
+          </div>
         </template>
 
         <template v-else>
-          <TheImageGallery
-            :images="echoImageFiles"
-            :layout="props.echo.layout"
-            :priority="props.index === 0"
-          />
+          <div :class="{ 'mx-auto w-11/12 pl-1': isAvEcho }">
+            <TheMediaPlayer
+              :echo="props.echo"
+              :layout="props.echo.layout"
+              :priority="props.index === 0"
+            />
+          </div>
 
           <div class="mx-auto w-11/12 pl-1 mt-3">
             <TheMdPreview :content="props.echo.content" />
@@ -165,14 +163,13 @@ import More from '@/components/icons/more.vue'
 import EditEcho from '@/components/icons/editecho.vue'
 import Open from '@/components/icons/open.vue'
 import { useRouter } from 'vue-router'
-import { ImageLayout } from '@/enums/enums'
+import { getEchoFilesBy, isContentLeadingEcho } from '@/utils/echo'
 import { formatDate } from '@/utils/other'
-import { getEchoFilesBy } from '@/utils/echo'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useI18n } from 'vue-i18n'
 
-const TheImageGallery = defineAsyncComponent(
-  () => import('@/components/advanced/gallery/TheImageGallery.vue'),
+const TheMediaPlayer = defineAsyncComponent(
+  () => import('@/components/advanced/media/TheMediaPlayer.vue'),
 )
 const TheExtensionRenderer = defineAsyncComponent(
   () => import('@/components/advanced/extension/TheExtensionRenderer.vue'),
@@ -190,10 +187,12 @@ const props = defineProps<{
   index?: number
 }>()
 
-const userStore = useUserStore()
-const echoImageFiles = computed(() =>
-  getEchoFilesBy(props.echo, { categories: ['image'], dedupeBy: 'id' }),
+// 音视频作为「正文级」区块，与正文同宽对齐；图片保持满宽铺满卡片。
+const isAvEcho = computed(
+  () => getEchoFilesBy(props.echo, { categories: ['audio', 'video'] }).length > 0,
 )
+
+const userStore = useUserStore()
 
 const echoStore = useEchoStore()
 const editorStore = useEditorStore()

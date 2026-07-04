@@ -72,6 +72,22 @@ func NewFileService(
 	}
 }
 
+// uploadPolicyFor resolves the per-category upload rules — the max size (bytes)
+// and the upload event type — from config. Centralizing both here keeps them
+// from drifting as media categories are added (previously each was its own
+// if-ladder in UploadFile); a new category is one extra case, not two.
+func uploadPolicyFor(category storage.Category) (maxSize int, uploadType commonModel.UploadFileType) {
+	upload := config.Config().Upload
+	switch category {
+	case storage.CategoryAudio:
+		return upload.AudioMaxSize, commonModel.AudioType
+	case storage.CategoryVideo:
+		return upload.VideoMaxSize, commonModel.VideoType
+	default:
+		return upload.ImageMaxSize, commonModel.ImageType
+	}
+}
+
 func (s *FileService) UploadFile(
 	ctx context.Context,
 	file *multipart.FileHeader,
@@ -106,11 +122,8 @@ func (s *FileService) UploadFile(
 	// identify by magic bytes alone, e.g. AVIF, FLAC).
 	contentType := resolveContentType(file.Filename, detectedMIME)
 
-	limit := int64(config.Config().Upload.ImageMaxSize)
-	if category == storage.CategoryAudio {
-		limit = int64(config.Config().Upload.AudioMaxSize)
-	}
-	if file.Size > limit {
+	maxSize, uploadType := uploadPolicyFor(category)
+	if file.Size > int64(maxSize) {
 		return commonModel.FileDto{}, errors.New(commonModel.FILE_SIZE_EXCEED_LIMIT)
 	}
 
@@ -177,11 +190,6 @@ func (s *FileService) UploadFile(
 		_ = s.fileRepository.Delete(context.Background(), fileRecord.ID)
 		_ = s.DeleteStoredFile(fileRecord.StorageType, fileRecord.Key)
 		return commonModel.FileDto{}, err
-	}
-
-	uploadType := commonModel.ImageType
-	if category == storage.CategoryAudio {
-		uploadType = commonModel.AudioType
 	}
 
 	user.Password = ""
@@ -387,6 +395,43 @@ func (s *FileService) GetFileByID(ctx context.Context, id string) (commonModel.F
 		Width:       fileRecord.Width,
 		Height:      fileRecord.Height,
 	}, nil
+}
+
+// GetFilesByIDs batch-loads file metadata for the given IDs in a single query,
+// used by callers (e.g. the echo service) that need each attached file's Category
+// without paying N per-file lookups. Missing IDs are simply absent from the result.
+//
+// It is authorization-agnostic on purpose: its only caller runs inside
+// PostEcho/UpdateEcho, which already gate on IsAdmin, so re-checking here would
+// just repeat a users-table lookup on the write hot path. Any future caller must
+// enforce access control itself before calling this.
+func (s *FileService) GetFilesByIDs(ctx context.Context, ids []string) ([]commonModel.FileDto, error) {
+	if len(ids) == 0 {
+		return []commonModel.FileDto{}, nil
+	}
+
+	files, err := s.fileRepository.ListByIDs(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+
+	dtos := make([]commonModel.FileDto, 0, len(files))
+	for i := range files {
+		f := files[i]
+		dtos = append(dtos, commonModel.FileDto{
+			ID:          f.ID,
+			Name:        f.Name,
+			Key:         f.Key,
+			StorageType: f.StorageType,
+			URL:         f.URL,
+			ContentType: f.ContentType,
+			Category:    f.Category,
+			Size:        f.Size,
+			Width:       f.Width,
+			Height:      f.Height,
+		})
+	}
+	return dtos, nil
 }
 
 func (s *FileService) UpdateFileMeta(
@@ -793,6 +838,9 @@ func (s *FileService) GetFilePresignURL(
 	if strings.HasPrefix(contentType, "audio/") {
 		category = storage.CategoryAudio
 	}
+	if strings.HasPrefix(contentType, "video/") {
+		category = storage.CategoryVideo
+	}
 	if err := validateFileUploadByName(dto.FileName, contentType, config.Config().Upload.AllowedTypes); err != nil {
 		return result, err
 	}
@@ -1002,6 +1050,7 @@ var safeExtMIME = map[string][]string{
 	".wav":  {"audio/wav", "audio/x-wav"},
 	".m4a":  {"audio/mp4", "audio/x-m4a"},
 	".ogg":  {"audio/ogg"},
+	".mp4":  {"video/mp4"},
 }
 
 // MIME types that indicate executable/document content; files whose magic

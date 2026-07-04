@@ -65,7 +65,8 @@ func (echoService *EchoService) PostEcho(ctx context.Context, newEcho *model.Ech
 		layout != model.LayoutGrid &&
 		layout != model.LayoutHorizontal &&
 		layout != model.LayoutCarousel &&
-		layout != model.LayoutStack) {
+		layout != model.LayoutStack &&
+		layout != model.LayoutNone) {
 		newEcho.Layout = model.LayoutWaterfall
 	}
 
@@ -79,6 +80,10 @@ func (echoService *EchoService) PostEcho(ctx context.Context, newEcho *model.Ech
 
 	if isEchoEmpty(newEcho) {
 		return errors.New(commonModel.ECHO_CAN_NOT_BE_EMPTY)
+	}
+
+	if err := echoService.validateSingleFileCategory(ctx, newEcho); err != nil {
+		return err
 	}
 
 	if err := echoService.transactor.Run(ctx, func(txCtx context.Context) error {
@@ -241,7 +246,8 @@ func (echoService *EchoService) UpdateEcho(ctx context.Context, echo *model.Echo
 		layout != model.LayoutGrid &&
 		layout != model.LayoutHorizontal &&
 		layout != model.LayoutCarousel &&
-		layout != model.LayoutStack) {
+		layout != model.LayoutStack &&
+		layout != model.LayoutNone) {
 		echo.Layout = model.LayoutWaterfall
 	}
 
@@ -257,6 +263,10 @@ func (echoService *EchoService) UpdateEcho(ctx context.Context, echo *model.Echo
 
 	if isEchoEmpty(echo) {
 		return errors.New(commonModel.ECHO_CAN_NOT_BE_EMPTY)
+	}
+
+	if err := echoService.validateSingleFileCategory(ctx, echo); err != nil {
+		return err
 	}
 
 	if err := echoService.transactor.Run(ctx, func(txCtx context.Context) error {
@@ -630,6 +640,39 @@ func isEchoEmpty(echo *model.Echo) bool {
 	}
 	content := strings.TrimSpace(echo.Content)
 	return content == "" && len(echo.EchoFiles) == 0 && echo.Extension == nil
+}
+
+// validateSingleFileCategory enforces that all files attached to an echo share
+// a single category (image | audio | video), and that audio/video echoes carry
+// at most one clip. Mixing categories — or attaching more than one audio/video
+// file — is rejected. An echo with no attachments is always allowed. Categories
+// are read from the persisted File records (the request-carried EchoFile.File is
+// zero-valued), so a client cannot bypass the rule by lying about categories.
+func (echoService *EchoService) validateSingleFileCategory(ctx context.Context, echo *model.Echo) error {
+	ids := collectEchoFileIDs(echo)
+	if len(ids) == 0 {
+		return nil
+	}
+
+	files, err := echoService.fileService.GetFilesByIDs(ctx, ids)
+	if err != nil {
+		return err
+	}
+
+	counts := make(map[storage.Category]int, len(files))
+	for _, f := range files {
+		counts[storage.NormalizeCategory(f.Category)]++
+	}
+
+	if len(counts) > 1 {
+		return errors.New(commonModel.ECHO_MIXED_FILE_CATEGORIES)
+	}
+	for cat, count := range counts {
+		if (cat == storage.CategoryAudio || cat == storage.CategoryVideo) && count > 1 {
+			return errors.New(commonModel.ECHO_MIXED_FILE_CATEGORIES)
+		}
+	}
+	return nil
 }
 
 func collectEchoFileIDs(echo *model.Echo) []string {

@@ -5,8 +5,8 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { theToast } from '@/utils/toast'
 import { fetchAddEcho, fetchUpdateEcho } from '@/service/api'
-import { Mode, ExtensionType, ImageLayout } from '@/enums/enums'
-import { FILE_STORAGE_TYPE } from '@/constants/file'
+import { Mode, ExtensionType, ImageLayout, VideoLayout, AudioLayout } from '@/enums/enums'
+import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { useEchoStore } from '@/stores'
 import { localStg } from '@/utils/storage'
 import { globalFileRegistry } from '@/lib/file'
@@ -196,6 +196,17 @@ export const useEditorStore = defineStore('editorStore', () => {
           sort_order: index,
         }))
 
+      // 按媒体类别定 layout：视频/音频用各自枚举的默认（平铺，卡片走 media-first）；
+      // 图片/纯文本时清掉从音视频残留的非图片布局，回落到默认图片布局。
+      const mediaCat = files.mediaCategory.value
+      if (mediaCat === FILE_CATEGORY.VIDEO) {
+        echoToAdd.value.layout = VideoLayout.DEFAULT
+      } else if (mediaCat === FILE_CATEGORY.AUDIO) {
+        echoToAdd.value.layout = AudioLayout.DEFAULT
+      } else if (!Object.values(ImageLayout).includes(echoToAdd.value.layout as ImageLayout)) {
+        echoToAdd.value.layout = ImageLayout.WATERFALL
+      }
+
       // 回填标签板块
       echoToAdd.value.tags = (tagToAdd.value ?? [])
         .map((name) => name.trim())
@@ -309,6 +320,9 @@ export const useEditorStore = defineStore('editorStore', () => {
     fileToAdd: files.fileToAdd,
     filesToAdd: files.filesToAdd,
     fileIndex: files.fileIndex,
+    selectedCategory: files.selectedCategory,
+    mediaCategory: files.mediaCategory,
+    effectiveCategory: files.effectiveCategory,
 
     websiteToAdd: extension.websiteToAdd,
     videoURL: extension.videoURL,
@@ -325,6 +339,7 @@ export const useEditorStore = defineStore('editorStore', () => {
     toggleMode,
     clearEditor,
     handleAddMoreFile: files.handleAddMoreFile,
+    setSelectedCategory: files.setSelectedCategory,
     handleAddOrUpdateEcho,
     handleAddOrUpdate,
     handleExitUpdateMode,

@@ -18,11 +18,11 @@
       @drop.prevent="handleDrop"
     >
       <span class="text-[var(--color-text-primary)] font-medium">
-        <slot name="drop-title">{{ t('uploader.dropHere') }}</slot>
+        <slot name="drop-title">{{ dropTitle }}</slot>
       </span>
       <span class="text-xs text-[var(--color-text-muted)]">
         <slot name="drop-hint" :max="maxFiles" :max-file-size="maxFileSize">
-          {{ t('uploader.dropHint', { max: maxFiles }) }}
+          {{ dropHintText }}
         </slot>
       </span>
     </button>
@@ -57,12 +57,20 @@
         @drop.prevent="onItemDrop(item)"
         @dragend="onItemDragEnd"
       >
-        <!-- Thumbnail -->
+        <!-- Thumbnail: images show a preview; audio/video show a type icon
+             (a blob URL in <img> would render broken for non-image files). -->
         <img
+          v-if="isImageItem(item)"
           :src="item.preview"
           alt=""
           class="w-10 h-10 object-cover rounded-sm shrink-0 bg-[var(--color-bg-muted)]"
         />
+        <span
+          v-else
+          class="w-10 h-10 flex items-center justify-center rounded-sm shrink-0 bg-[var(--color-bg-muted)] text-[var(--color-text-muted)]"
+        >
+          <component :is="isVideoItem(item) ? VideoIcon : AudioIcon" class="w-5 h-5" />
+        </span>
 
         <!-- Info column -->
         <div class="flex-1 min-w-0">
@@ -134,7 +142,7 @@
           <button
             type="button"
             class="text-xs px-2 py-0.5 rounded cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-border-subtle)]"
-            @click.stop="remove(item.id)"
+            @click.stop="handleRemoveItem(item)"
             :title="t('uploader.removeItem')"
           >
             ✕
@@ -174,6 +182,9 @@ import { useI18n } from 'vue-i18n'
 import { useEditorStore } from '@/stores'
 import { useUpload, UPLOAD_STATUS, type QueueItem, type UploadStatus } from '@/lib/file/useUpload'
 import { formatBytes } from '@/utils/file'
+import AudioIcon from '@/components/icons/audio.vue'
+import VideoIcon from '@/components/icons/videomedia.vue'
+import { FILE_CATEGORY } from '@/constants/file'
 
 const props = withDefaults(
   defineProps<{
@@ -206,6 +217,26 @@ const acceptAttr = computed(() => allowedTypes.value.join(','))
 const maxFiles = computed(() => props.maxFiles)
 const maxFileSize = computed(() => props.maxFileSize)
 
+// Drop-zone 文案按媒体类别切换；音频/视频不支持粘贴，故文案不含“粘贴”。
+const isSingleMedia = computed(
+  () => props.fileCategory === FILE_CATEGORY.AUDIO || props.fileCategory === FILE_CATEGORY.VIDEO,
+)
+const dropTitle = computed(() => {
+  switch (props.fileCategory) {
+    case FILE_CATEGORY.AUDIO:
+      return t('uploader.dropHereAudio')
+    case FILE_CATEGORY.VIDEO:
+      return t('uploader.dropHereVideo')
+    default:
+      return t('uploader.dropHere')
+  }
+})
+const dropHintText = computed(() =>
+  isSingleMedia.value
+    ? t('uploader.dropHintSingle', { max: maxFiles.value })
+    : t('uploader.dropHint', { max: maxFiles.value }),
+)
+
 const { items, isUploading, totalActive, addFiles, retry, remove, moveItem, cancelAll } = useUpload(
   {
     storageType: toRef(props, 'fileStorageType'),
@@ -229,12 +260,45 @@ watch(
   { immediate: true },
 )
 
+// 队列 ✕：删完自己的队列项后，把已投递到 filesToAdd 的同一文件一并移除，
+// 否则用户"删掉"的文件仍会随发布 payload 一起提交（两份列表漂移的一半）。
+function handleRemoveItem(item: QueueItem) {
+  const fileId = item.result?.id
+  remove(item.id)
+  if (!fileId) return
+  const idx = editorStore.filesToAdd.findIndex((f) => f.id === fileId)
+  if (idx >= 0) editorStore.removeFileAt(idx)
+}
+
+// 另一半对账：当某个已投递文件在别处（大预览的 ✕ / 外链移除）被移出 filesToAdd 时，
+// 同步剔除本队列里对应的成功项，避免残留幽灵行继续占用 maxFiles 名额（音视频 maxFiles=1
+// 时会因此卡住无法替换）。用 id 串作为 watch 源，仅在增删时触发、重排不误伤。
+watch(
+  () => editorStore.filesToAdd.map((f) => f.id ?? '').join('|'),
+  () => {
+    const present = new Set(editorStore.filesToAdd.map((f) => f.id).filter(Boolean))
+    for (const item of [...items.value]) {
+      if (item.status === UPLOAD_STATUS.SUCCESS && item.result?.id && !present.has(item.result.id)) {
+        remove(item.id)
+      }
+    }
+  },
+)
+
 const hasReorderable = computed(
   () => items.value.filter((i) => i.status === UPLOAD_STATUS.SUCCESS).length >= 2,
 )
 
 function isReorderable(item: QueueItem): boolean {
   return item.status === UPLOAD_STATUS.SUCCESS
+}
+
+function isImageItem(item: QueueItem): boolean {
+  return item.file.type.startsWith('image/')
+}
+
+function isVideoItem(item: QueueItem): boolean {
+  return item.file.type.startsWith('video/')
 }
 
 function openFilePicker() {

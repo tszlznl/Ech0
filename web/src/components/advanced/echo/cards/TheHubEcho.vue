@@ -46,30 +46,16 @@
     </div>
 
     <div class="hub-echo-body py-1.5">
-      <template
-        v-if="
-          props.echo.layout === ImageLayout.GRID ||
-          props.echo.layout === ImageLayout.HORIZONTAL ||
-          props.echo.layout === ImageLayout.STACK
-        "
-      >
+      <template v-if="isContentLeadingEcho(props.echo)">
         <div class="mb-2.5">
           <TheMdPreview :content="props.echo.content" />
         </div>
 
-        <TheImageGallery
-          :images="echoImageFiles"
-          :baseUrl="echo.server_url"
-          :layout="props.echo.layout"
-        />
+        <TheMediaPlayer :echo="props.echo" :baseUrl="echo.server_url" :layout="props.echo.layout" />
       </template>
 
       <template v-else>
-        <TheImageGallery
-          :images="echoImageFiles"
-          :baseUrl="echo.server_url"
-          :layout="props.echo.layout"
-        />
+        <TheMediaPlayer :echo="props.echo" :baseUrl="echo.server_url" :layout="props.echo.layout" />
 
         <div class="mt-2.5">
           <TheMdPreview :content="props.echo.content" />
@@ -108,17 +94,18 @@
 <script setup lang="ts">
 import Verified from '@/components/icons/verified.vue'
 import GrayLike from '@/components/icons/graylike.vue'
-import TheImageGallery from '@/components/advanced/gallery/TheImageGallery.vue'
 import { TheMdPreview } from '@/components/advanced/md'
 import { computed, defineAsyncComponent, ref, watch } from 'vue'
-import { ImageLayout } from '@/enums/enums'
+import { isContentLeadingEcho } from '@/utils/echo'
 import { formatDate } from '@/utils/other'
-import { getEchoFilesBy } from '@/utils/echo'
 import { useFetch } from '@vueuse/core'
 import { theToast } from '@/utils/toast'
 import { localStg } from '@/utils/storage'
 import { useI18n } from 'vue-i18n'
 
+const TheMediaPlayer = defineAsyncComponent(
+  () => import('@/components/advanced/media/TheMediaPlayer.vue'),
+)
 const TheExtensionRenderer = defineAsyncComponent(
   () => import('@/components/advanced/extension/TheExtensionRenderer.vue'),
 )
@@ -131,9 +118,6 @@ const props = defineProps<{
 const { t } = useI18n()
 
 const fav_count = ref<number>(props.echo.fav_count)
-const echoImageFiles = computed(() =>
-  getEchoFilesBy(props.echo, { categories: ['image'], dedupeBy: 'id' }),
-)
 const server_url = computed(() => props.echo.server_url)
 const echo_id = computed(() => props.echo.id)
 const isLikeAnimating = ref(false)

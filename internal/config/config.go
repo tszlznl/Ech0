@@ -109,11 +109,13 @@ type WebAuthnConfig struct {
 }
 
 type UploadConfig struct {
+	AllowedTypes []string // 允许上传的文件类型
 	ImageMaxSize int      `env:"ECH0_UPLOAD_IMAGE_MAX_SIZE"` // 图片文件的最大上传大小，单位为字节
 	AudioMaxSize int      `env:"ECH0_UPLOAD_AUDIO_MAX_SIZE"` // 音频文件的最大上传大小，单位为字节
-	AllowedTypes []string // 允许上传的文件类型
-	ImagePath    string   `env:"ECH0_UPLOAD_IMAGE_PATH"` // 图片文件存储路径
-	AudioPath    string   `env:"ECH0_UPLOAD_AUDIO_PATH"` // 音频文件存储路径
+	VideoMaxSize int      `env:"ECH0_UPLOAD_VIDEO_MAX_SIZE"` // 视频文件的最大上传大小，单位为字节
+	ImagePath    string   `env:"ECH0_UPLOAD_IMAGE_PATH"`     // 图片文件存储路径
+	AudioPath    string   `env:"ECH0_UPLOAD_AUDIO_PATH"`     // 音频文件存储路径
+	VideoPath    string   `env:"ECH0_UPLOAD_VIDEO_PATH"`     // 视频文件存储路径
 }
 
 type SettingConfig struct {
@@ -255,8 +257,10 @@ func defaultConfig() *AppConfig {
 		Upload: UploadConfig{
 			ImageMaxSize: 20971520,
 			AudioMaxSize: 20971520,
+			VideoMaxSize: 67108864,
 			ImagePath:    "data/files/images/",
 			AudioPath:    "data/files/audios/",
+			VideoPath:    "data/files/videos/",
 			AllowedTypes: []string{
 				"image/jpeg",
 				"image/png",
@@ -267,6 +271,7 @@ func defaultConfig() *AppConfig {
 				"audio/flac",
 				"audio/wav",
 				"audio/mp4",
+				"video/mp4",
 			},
 		},
 		Event: EventConfig{

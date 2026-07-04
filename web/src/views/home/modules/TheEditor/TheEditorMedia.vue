@@ -1,25 +1,27 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
-  <!-- 图片预览 -->
+  <!-- 媒体预览（图片可放大；音频/视频复用展示端播放器，观感与发布后一致） -->
   <div
     v-if="
       filesToAdd &&
       filesToAdd.length > 0 &&
-      (currentMode === Mode.ECH0 || currentMode === Mode.Image)
+      (currentMode === Mode.ECH0 || currentMode === Mode.Media)
     "
-    class="relative rounded-lg shadow-lg w-5/6 mx-auto my-7"
+    class="relative w-11/12 mx-auto my-7"
   >
     <button
       @click="handleRemoveImage"
       :disabled="isDeleting"
-      class="absolute -top-3 -right-4 bg-[var(--color-accent-soft)] hover:bg-[var(--color-danger)]/30 text-[var(--color-text-secondary)] rounded-lg w-7 h-7 flex items-center justify-center shadow-[var(--shadow-sm)] disabled:opacity-60 disabled:cursor-not-allowed"
+      class="absolute -top-2.5 -right-2.5 z-[2] w-7 h-7 flex items-center justify-center rounded-full bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)] shadow-[var(--shadow-sm)] transition-colors hover:bg-[var(--color-danger)] hover:text-white hover:border-[var(--color-danger)] disabled:opacity-60 disabled:cursor-not-allowed"
       v-tooltip="t('editor.removeImage')"
     >
-      <Close class="w-4 h-4" />
+      <Close color="currentColor" class="w-4 h-4" />
     </button>
-    <div class="rounded-lg overflow-hidden">
-      <template v-for="(img, idx) in filesToAdd" :key="idx">
+
+    <!-- 图片：可点击放大预览，多图轮播 -->
+    <div v-if="isImage" class="rounded-lg overflow-hidden shadow-lg">
+      <template v-for="(file, idx) in filesToAdd" :key="idx">
         <button
           type="button"
           class="block w-full bg-transparent border-0 p-0 cursor-zoom-in"
@@ -27,7 +29,7 @@
           @click="openPreview(fileIndex)"
         >
           <img
-            :src="getImageToAddUrl(img)"
+            :src="getImageToAddUrl(file)"
             alt="Image"
             class="w-full h-auto max-w-full object-cover"
             loading="lazy"
@@ -35,6 +37,12 @@
         </button>
       </template>
     </div>
+
+    <!-- 音频 -->
+    <TheAudioPlayer v-else-if="isAudio" :files="mediaFiles" />
+
+    <!-- 视频 -->
+    <TheVideoPlayer v-else :files="mediaFiles" />
   </div>
   <!-- 图片切换 -->
   <div v-if="filesToAdd.length > 1" class="flex items-center justify-center">
@@ -56,15 +64,17 @@ import { storeToRefs } from 'pinia'
 import Next from '@/components/icons/next.vue'
 import Prev from '@/components/icons/prev.vue'
 import Close from '@/components/icons/close.vue'
+import TheAudioPlayer from '@/components/advanced/media/audio/TheAudioPlayer.vue'
+import TheVideoPlayer from '@/components/advanced/media/video/TheVideoPlayer.vue'
 import { getImageToAddUrl } from '@/utils/other'
 import { deleteFileById } from '@/lib/file'
 import { theToast } from '@/utils/toast'
 import { useEchoStore, useEditorStore } from '@/stores'
 import { Mode } from '@/enums/enums'
-import { FILE_STORAGE_TYPE } from '@/constants/file'
+import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useI18n } from 'vue-i18n'
-import { usePhotoSwipeGallery } from '@/components/advanced/gallery/composables/usePhotoSwipeGallery'
+import { usePhotoSwipeGallery } from '@/components/advanced/media/image/composables/usePhotoSwipeGallery'
 
 const { openConfirm } = useBaseDialog()
 const { t } = useI18n()
@@ -82,7 +92,7 @@ const isDeleting = ref<boolean>(false)
 const echoStore = useEchoStore()
 const { echoToUpdate } = storeToRefs(echoStore)
 const editorStore = useEditorStore()
-const { filesToAdd, currentMode, isUpdateMode } = storeToRefs(editorStore)
+const { filesToAdd, currentMode, isUpdateMode, mediaCategory } = storeToRefs(editorStore)
 const previewItems = computed(() =>
   filesToAdd.value.map((image, idx) => ({
     src: getImageToAddUrl(image),
@@ -92,6 +102,17 @@ const previewItems = computed(() =>
   })),
 )
 const { open: openPreview } = usePhotoSwipeGallery(previewItems)
+
+const isAudio = computed(() => mediaCategory.value === FILE_CATEGORY.AUDIO)
+const isVideo = computed(() => mediaCategory.value === FILE_CATEGORY.VIDEO)
+// 图片是默认分类：既非音频也非视频即按图片处理（与轮播/放大预览一致）。
+const isImage = computed(() => !isAudio.value && !isVideo.value)
+
+// 编辑器里的 FileToAdd 与展示端 FileObject 仅差 echo_id 等字段；补齐后复用同一套播放器，
+// URL 解析走同一个 resolveFileUrl，预览观感与发布后完全一致。音视频每条至多一个。
+const mediaFiles = computed<App.Api.Ech0.FileObject[]>(() =>
+  filesToAdd.value.map((file) => ({ ...file, id: file.id ?? '', echo_id: '' })),
+)
 
 const handleRemoveImage = () => {
   if (isDeleting.value) return

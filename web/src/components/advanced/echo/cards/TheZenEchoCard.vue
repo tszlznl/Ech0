@@ -48,28 +48,18 @@
     </div>
 
     <div class="zen-echo-body py-1.5">
-      <template
-        v-if="
-          echo.layout === ImageLayout.GRID ||
-          echo.layout === ImageLayout.HORIZONTAL ||
-          echo.layout === ImageLayout.STACK
-        "
-      >
+      <template v-if="isContentLeadingEcho(echo)">
         <div v-if="echo.content" class="mb-2.5">
           <TheMdPreview :content="echo.content" />
         </div>
 
-        <div v-if="images.length > 0">
-          <TheImageGallery :images="images" :layout="echo.layout" />
-        </div>
+        <TheMediaPlayer :echo="echo" :layout="echo.layout" />
       </template>
 
       <template v-else>
-        <div v-if="images.length > 0">
-          <TheImageGallery :images="images" :layout="echo.layout" />
-        </div>
+        <TheMediaPlayer :echo="echo" :layout="echo.layout" />
 
-        <div v-if="echo.content" :class="images.length > 0 ? 'mt-2.5' : ''">
+        <div v-if="echo.content" :class="hasMedia ? 'mt-2.5' : ''">
           <TheMdPreview :content="echo.content" />
         </div>
       </template>
@@ -93,13 +83,12 @@ import Lock from '@/components/icons/lock.vue'
 import { useSettingStore } from '@/stores'
 import { resolveAvatarUrl } from '@/service/request/shared'
 import { formatDate } from '@/utils/other'
-import { getEchoFilesBy } from '@/utils/echo'
-import { ImageLayout } from '@/enums/enums'
+import { getEchoFilesBy, isContentLeadingEcho } from '@/utils/echo'
 
 const { t } = useI18n()
 
-const TheImageGallery = defineAsyncComponent(
-  () => import('@/components/advanced/gallery/TheImageGallery.vue'),
+const TheMediaPlayer = defineAsyncComponent(
+  () => import('@/components/advanced/media/TheMediaPlayer.vue'),
 )
 
 const props = defineProps<{
@@ -113,7 +102,8 @@ const { SystemSetting } = storeToRefs(settingStore)
 
 const siteName = computed(() => String(SystemSetting.value?.server_name ?? 'Ech0'))
 const avatarUrl = computed(() => resolveAvatarUrl(SystemSetting.value?.server_logo))
-const images = computed(() => getEchoFilesBy(props.echo, { categories: ['image'], dedupeBy: 'id' }))
+// 是否有任意媒体（图/音/视）——用于正文与媒体之间的间距。
+const hasMedia = computed(() => getEchoFilesBy(props.echo, { dedupeBy: 'id' }).length > 0)
 
 const goDetail = () => {
   router.push({ name: 'echo', params: { echoId: String(props.echo.id) } })

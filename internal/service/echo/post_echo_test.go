@@ -260,3 +260,38 @@ func TestPostEcho_RefetchError(t *testing.T) {
 
 	require.ErrorIs(t, err, boom)
 }
+
+// TestPostEcho_LayoutNonePreserved 确认 "none" 布局（音频/视频 Echo 使用）不被归一化成 waterfall。
+func TestPostEcho_LayoutNonePreserved(t *testing.T) {
+	repo := echomock.NewMockRepository(t)
+	common := commonmock.NewMockService(t)
+	file := filemock.NewMockService(t)
+	tx := txmock.NewMockTransactor(t)
+	bus := helpers.NewTestBus(t)
+
+	common.EXPECT().
+		CommonGetUserByUserId(mock.Anything, adminID).
+		Return(helpers.NewUser(helpers.AsAdmin), nil).
+		Once()
+	tx.EXPECT().Run(mock.Anything, mock.Anything).RunAndReturn(runTx).Once()
+	repo.EXPECT().GetTagsByNames(mock.Anything, mock.Anything).Return([]*echoModel.Tag{}, nil).Once()
+
+	var created echoModel.Echo
+	repo.EXPECT().
+		CreateEcho(mock.Anything, mock.Anything).
+		Run(func(_ context.Context, e *echoModel.Echo) { created = *e }).
+		Return(nil).
+		Once()
+	repo.EXPECT().InvalidateEchoCaches().Once()
+	saved := helpers.NewEcho(func(e *echoModel.Echo) { e.ID = "saved-none" })
+	repo.EXPECT().GetEchosById(mock.Anything, mock.Anything).Return(&saved, nil).Once()
+	file.EXPECT().ConfirmTempFiles(mock.Anything, mock.Anything).Return(nil).Once()
+
+	svc := echoService.NewEchoService(tx, common, file, repo, func() *busen.Bus { return bus })
+	require.NoError(t, svc.PostEcho(helpers.CtxAsUser(adminID), &echoModel.Echo{
+		Content: "audio post",
+		Layout:  echoModel.LayoutNone,
+	}))
+
+	assert.Equal(t, echoModel.LayoutNone, created.Layout)
+}

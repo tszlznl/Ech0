@@ -15,6 +15,7 @@ const (
 	MsgKeyInvalidQueryParams          = "common.invalid_query_params"
 	MsgKeySettingUpdateOK             = "setting.update_success"
 	MsgKeyAgentModelMissing           = "agent.model_missing"
+	MsgKeyEchoMixedFileCategories     = "echo.mixed_file_categories"
 	MsgKeyAuthTokenMissing            = "auth.token_missing"
 	MsgKeyAuthTokenInvalid            = "auth.token_invalid"
 	MsgKeyAuthTokenParse              = "auth.token_parse_error"
@@ -67,6 +68,8 @@ func MessageKeyFromMessage(msg string) string {
 		return MsgKeySettingUpdateOK
 	case AGENT_MODEL_MISSING:
 		return MsgKeyAgentModelMissing
+	case ECHO_MIXED_FILE_CATEGORIES:
+		return MsgKeyEchoMixedFileCategories
 	default:
 		return ""
 	}

@@ -516,6 +516,74 @@ func (_c *MockService_GetFilePresignURL_Call) RunAndReturn(run func(ctx context.
 	return _c
 }
 
+// GetFilesByIDs provides a mock function for the type MockService
+func (_mock *MockService) GetFilesByIDs(ctx context.Context, ids []string) ([]model.FileDto, error) {
+	ret := _mock.Called(ctx, ids)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetFilesByIDs")
+	}
+
+	var r0 []model.FileDto
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []string) ([]model.FileDto, error)); ok {
+		return returnFunc(ctx, ids)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []string) []model.FileDto); ok {
+		r0 = returnFunc(ctx, ids)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.FileDto)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, []string) error); ok {
+		r1 = returnFunc(ctx, ids)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockService_GetFilesByIDs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetFilesByIDs'
+type MockService_GetFilesByIDs_Call struct {
+	*mock.Call
+}
+
+// GetFilesByIDs is a helper method to define mock.On call
+//   - ctx context.Context
+//   - ids []string
+func (_e *MockService_Expecter) GetFilesByIDs(ctx any, ids any) *MockService_GetFilesByIDs_Call {
+	return &MockService_GetFilesByIDs_Call{Call: _e.mock.On("GetFilesByIDs", ctx, ids)}
+}
+
+func (_c *MockService_GetFilesByIDs_Call) Run(run func(ctx context.Context, ids []string)) *MockService_GetFilesByIDs_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []string
+		if args[1] != nil {
+			arg1 = args[1].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockService_GetFilesByIDs_Call) Return(fileDtos []model.FileDto, err error) *MockService_GetFilesByIDs_Call {
+	_c.Call.Return(fileDtos, err)
+	return _c
+}
+
+func (_c *MockService_GetFilesByIDs_Call) RunAndReturn(run func(ctx context.Context, ids []string) ([]model.FileDto, error)) *MockService_GetFilesByIDs_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListFileTree provides a mock function for the type MockService
 func (_mock *MockService) ListFileTree(ctx context.Context, query model.FileTreeQueryDto) (model.FileTreeResultDto, error) {
 	ret := _mock.Called(ctx, query)
@@ -1588,6 +1656,74 @@ func (_c *MockFileRepository_GetByRoute_Call) Return(file *model1.File, err erro
 }
 
 func (_c *MockFileRepository_GetByRoute_Call) RunAndReturn(run func(ctx context.Context, storageType string, provider string, bucket string, key string) (*model1.File, error)) *MockFileRepository_GetByRoute_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListByIDs provides a mock function for the type MockFileRepository
+func (_mock *MockFileRepository) ListByIDs(ctx context.Context, ids []string) ([]model1.File, error) {
+	ret := _mock.Called(ctx, ids)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListByIDs")
+	}
+
+	var r0 []model1.File
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []string) ([]model1.File, error)); ok {
+		return returnFunc(ctx, ids)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []string) []model1.File); ok {
+		r0 = returnFunc(ctx, ids)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model1.File)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, []string) error); ok {
+		r1 = returnFunc(ctx, ids)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockFileRepository_ListByIDs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListByIDs'
+type MockFileRepository_ListByIDs_Call struct {
+	*mock.Call
+}
+
+// ListByIDs is a helper method to define mock.On call
+//   - ctx context.Context
+//   - ids []string
+func (_e *MockFileRepository_Expecter) ListByIDs(ctx any, ids any) *MockFileRepository_ListByIDs_Call {
+	return &MockFileRepository_ListByIDs_Call{Call: _e.mock.On("ListByIDs", ctx, ids)}
+}
+
+func (_c *MockFileRepository_ListByIDs_Call) Run(run func(ctx context.Context, ids []string)) *MockFileRepository_ListByIDs_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []string
+		if args[1] != nil {
+			arg1 = args[1].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockFileRepository_ListByIDs_Call) Return(files []model1.File, err error) *MockFileRepository_ListByIDs_Call {
+	_c.Call.Return(files, err)
+	return _c
+}
+
+func (_c *MockFileRepository_ListByIDs_Call) RunAndReturn(run func(ctx context.Context, ids []string) ([]model1.File, error)) *MockFileRepository_ListByIDs_Call {
 	_c.Call.Return(run)
 	return _c
 }
