@@ -278,7 +278,11 @@ watch(
   () => {
     const present = new Set(editorStore.filesToAdd.map((f) => f.id).filter(Boolean))
     for (const item of [...items.value]) {
-      if (item.status === UPLOAD_STATUS.SUCCESS && item.result?.id && !present.has(item.result.id)) {
+      if (
+        item.status === UPLOAD_STATUS.SUCCESS &&
+        item.result?.id &&
+        !present.has(item.result.id)
+      ) {
         remove(item.id)
       }
     }
