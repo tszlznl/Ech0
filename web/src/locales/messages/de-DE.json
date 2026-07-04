@@ -135,7 +135,7 @@
     "imageUrlRequired": "Anhang-URL darf nicht leer sein",
     "externalRegisterFailed": "Externes Bild konnte nicht registriert werden, bitte erneut versuchen",
     "uploadNoPreviewUrl": "Upload abgeschlossen, aber keine Vorschau-URL vorhanden – bitte erneut versuchen",
-    "fileUploadingWait": "Bilder werden noch hochgeladen. Bitte warten, bevor du veröffentlichst",
+    "fileUploadingWait": "Anhänge werden noch hochgeladen. Bitte warten, bevor du veröffentlichst",
     "attachmentMissingFileId": "Es gibt Anhänge ohne zugewiesene file_id",
     "updateEchoEmpty": "Das zu aktualisierende Echo darf nicht leer sein!",
     "addEchoEmpty": "Das zu veröffentlichende Echo darf nicht leer sein!",

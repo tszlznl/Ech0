@@ -135,7 +135,7 @@
     "imageUrlRequired": "附件链接不能为空",
     "externalRegisterFailed": "直链入库失败，请重试",
     "uploadNoPreviewUrl": "上传完成但未拿到可预览地址，请重试",
-    "fileUploadingWait": "图片仍在上传中，请等待上传完成后再发布",
+    "fileUploadingWait": "附件仍在上传中，请等待上传完成后再发布",
     "attachmentMissingFileId": "存在未绑定 file_id 的附件",
     "updateEchoEmpty": "待更新的Echo不能为空！",
     "addEchoEmpty": "待添加的Echo不能为空！",

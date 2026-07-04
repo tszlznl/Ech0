@@ -135,7 +135,7 @@
     "imageUrlRequired": "Attachment URL cannot be empty",
     "externalRegisterFailed": "Failed to register external image, please retry",
     "uploadNoPreviewUrl": "Upload finished but preview URL is missing, please retry",
-    "fileUploadingWait": "Images are still uploading. Please wait before publishing",
+    "fileUploadingWait": "Attachments are still uploading. Please wait before publishing",
     "attachmentMissingFileId": "There are attachments without bound file_id",
     "updateEchoEmpty": "Echo to update cannot be empty!",
     "addEchoEmpty": "Echo to publish cannot be empty!",

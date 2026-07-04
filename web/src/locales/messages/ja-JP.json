@@ -135,7 +135,7 @@
     "imageUrlRequired": "添付ファイルのURLを空にはできません",
     "externalRegisterFailed": "外部URLの登録に失敗しました。再試行してください",
     "uploadNoPreviewUrl": "アップロードは完了しましたが、プレビューURLを取得できませんでした。再試行してください",
-    "fileUploadingWait": "画像のアップロード中です。完了を待ってから公開してください",
+    "fileUploadingWait": "添付ファイルのアップロード中です。完了を待ってから公開してください",
     "attachmentMissingFileId": "file_id が紐付いていない添付ファイルがあります",
     "updateEchoEmpty": "更新するEchoが空です！",
     "addEchoEmpty": "追加するEchoが空です！",
