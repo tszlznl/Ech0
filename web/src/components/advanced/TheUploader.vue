@@ -142,7 +142,7 @@
           <button
             type="button"
             class="text-xs px-2 py-0.5 rounded cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-border-subtle)]"
-            @click.stop="remove(item.id)"
+            @click.stop="handleRemoveItem(item)"
             :title="t('uploader.removeItem')"
           >
             ✕
@@ -258,6 +258,31 @@ watch(
     editorStore.fileUploading = v
   },
   { immediate: true },
+)
+
+// 队列 ✕：删完自己的队列项后，把已投递到 filesToAdd 的同一文件一并移除，
+// 否则用户"删掉"的文件仍会随发布 payload 一起提交（两份列表漂移的一半）。
+function handleRemoveItem(item: QueueItem) {
+  const fileId = item.result?.id
+  remove(item.id)
+  if (!fileId) return
+  const idx = editorStore.filesToAdd.findIndex((f) => f.id === fileId)
+  if (idx >= 0) editorStore.removeFileAt(idx)
+}
+
+// 另一半对账：当某个已投递文件在别处（大预览的 ✕ / 外链移除）被移出 filesToAdd 时，
+// 同步剔除本队列里对应的成功项，避免残留幽灵行继续占用 maxFiles 名额（音视频 maxFiles=1
+// 时会因此卡住无法替换）。用 id 串作为 watch 源，仅在增删时触发、重排不误伤。
+watch(
+  () => editorStore.filesToAdd.map((f) => f.id ?? '').join('|'),
+  () => {
+    const present = new Set(editorStore.filesToAdd.map((f) => f.id).filter(Boolean))
+    for (const item of [...items.value]) {
+      if (item.status === UPLOAD_STATUS.SUCCESS && item.result?.id && !present.has(item.result.id)) {
+        remove(item.id)
+      }
+    }
+  },
 )
 
 const hasReorderable = computed(

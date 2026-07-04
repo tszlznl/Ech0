@@ -33,6 +33,7 @@
     "mediaTypeVideo": "视频",
     "mixedCategoryRejected": "一条 Echo 只能包含同一类型的文件",
     "categoryLockedHint": "已有文件，需先移除后才能切换类型",
+    "singleMediaLimit": "音频 / 视频每条 Echo 只能有一个，替换前请先移除当前文件",
     "imageAddMethod": "选择存储方式：",
     "imageSourceExternal": "直链",
     "imageSourceLocal": "本地存储",

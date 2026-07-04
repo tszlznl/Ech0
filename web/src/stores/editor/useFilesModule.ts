@@ -65,6 +65,15 @@ export function useFilesModule({ t }: FilesModuleDeps) {
       return
     }
 
+    // 单片段约束：音频/视频每条 Echo 至多一个（后端亦硬校验）。已有附件时拒绝再加，
+    // 覆盖 URL 直链路径与更新模式下上传器上限没算上已存在片段的漏网场景。
+    const isSingleClipCategory =
+      incomingCategory === FILE_CATEGORY.AUDIO || incomingCategory === FILE_CATEGORY.VIDEO
+    if (isSingleClipCategory && filesToAdd.value.length > 0) {
+      theToast.error(t('editor.singleMediaLimit'))
+      return
+    }
+
     let width: number | undefined = fileToAdd.value.width
     let height: number | undefined = fileToAdd.value.height
     // 仅图片需要宽高（画廊比例占位）；音视频跳过探测。

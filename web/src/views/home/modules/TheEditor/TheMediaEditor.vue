@@ -89,7 +89,7 @@
     <div class="my-1">
       <!-- 媒体上传（key 绑定类别：切换时重挂载，刷新 accept/大小上限快照） -->
       <TheUploader
-        v-if="fileToAdd.storage_type !== FILE_STORAGE_TYPE.EXTERNAL"
+        v-if="fileToAdd.storage_type !== FILE_STORAGE_TYPE.EXTERNAL && !singleClipFull"
         :key="effectiveCategory"
         :fileStorageType="fileToAdd.storage_type"
         :fileCategory="effectiveCategory"
@@ -98,6 +98,14 @@
         :maxFileSize="maxFileSize"
         :maxFiles="maxFiles"
       />
+
+      <!-- 音视频单片段已满：不再挂上传器，避免白传一份被后端/前端拒绝；提示先移除再替换 -->
+      <div
+        v-else-if="singleClipFull && fileToAdd.storage_type !== FILE_STORAGE_TYPE.EXTERNAL"
+        class="text-[var(--color-text-muted)] text-sm px-1 py-2"
+      >
+        {{ t('editor.singleMediaLimit') }}
+      </div>
 
       <!-- 媒体直链 -->
       <div
@@ -110,7 +118,7 @@
           :placeholder="t('editor.imageUrlPlaceholder')"
         />
         <BaseButton
-          v-if="fileToAdd.url != ''"
+          v-if="fileToAdd.url != '' && !singleClipFull"
           :icon="Addmore"
           class="w-8 h-8 sm:w-8 sm:h-8 rounded-md shrink-0"
           @click="editorStore.handleAddMoreFile"
@@ -147,7 +155,17 @@ const AUDIO_MAX_FILE_SIZE = 20 * 1024 * 1024 // AudioMaxSize
 const VIDEO_MAX_FILE_SIZE = 64 * 1024 * 1024 // VideoMaxSize
 
 const editorStore = useEditorStore()
-const { fileToAdd, fileUploading, echoToAdd, effectiveCategory } = storeToRefs(editorStore)
+const { fileToAdd, filesToAdd, fileUploading, echoToAdd, effectiveCategory } =
+  storeToRefs(editorStore)
+
+// 音视频每条 Echo 至多一个：已有附件时视为"已满",隐藏上传入口(改为提示先移除再替换)。
+// 图片走多图画廊不受此限。这样既避免更新模式下白传一份被拒，也不触碰 maxFiles 的双列表计数。
+const singleClipFull = computed(
+  () =>
+    (effectiveCategory.value === FILE_CATEGORY.AUDIO ||
+      effectiveCategory.value === FILE_CATEGORY.VIDEO) &&
+    filesToAdd.value.length > 0,
+)
 const settingStore = useSettingStore()
 const { S3Setting } = storeToRefs(settingStore)
 const enableCompressor = ref<boolean>(false)

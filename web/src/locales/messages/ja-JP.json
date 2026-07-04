@@ -33,6 +33,7 @@
     "mediaTypeVideo": "動画",
     "mixedCategoryRejected": "1 つの Echo には同じ種類のファイルしか含められません",
     "categoryLockedHint": "種別を切り替えるには既存のファイルを削除してください",
+    "singleMediaLimit": "音声 / 動画は 1 つの Echo につき 1 つまで。差し替えるには現在のファイルを削除してください",
     "imageAddMethod": "保存方式を選択：",
     "imageSourceExternal": "外部URL",
     "imageSourceLocal": "ローカル",

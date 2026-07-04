@@ -12,20 +12,22 @@ import (
 )
 
 // inlineableMIMEPrefixes lists Content-Type prefixes that are safe to display
-// inline in the browser (images and audio only).
+// inline in the browser (image / audio / video media). Everything else is forced
+// to download to avoid in-browser execution of documents/scripts.
 var inlineableMIMEPrefixes = []string{
 	"image/",
 	"audio/",
+	"video/",
 }
 
 // StaticFileSecurity returns a middleware that hardens responses served from the
 // public file endpoint:
 //   - X-Content-Type-Options: nosniff (prevents MIME-sniffing attacks).
-//   - Content-Disposition: attachment for non-image/audio files (forces download
+//   - Content-Disposition: attachment for non-media files (forces download
 //     instead of in-browser execution).
-//   - Cache-Control: long-lived immutable cache for inlineable assets (image/audio).
-//     Stored filenames are content-hashed (see storage layer), so reusing a key
-//     implies identical bytes.
+//   - Cache-Control: long-lived immutable cache for inlineable assets
+//     (image/audio/video). Stored filenames are content-hashed (see storage
+//     layer), so reusing a key implies identical bytes.
 //
 // All response headers must be set before c.Next(): http.FileServer's first body
 // Write triggers an implicit WriteHeader(200) that flushes the header map to the

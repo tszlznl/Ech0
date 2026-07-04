@@ -33,6 +33,7 @@
     "mediaTypeVideo": "Video",
     "mixedCategoryRejected": "Ein Echo darf nur Dateien eines einzigen Typs enthalten",
     "categoryLockedHint": "Vorhandene Dateien entfernen, um den Typ zu wechseln",
+    "singleMediaLimit": "Nur ein Audio / Video pro Echo – aktuelle Datei vor dem Ersetzen entfernen",
     "imageAddMethod": "Speicherart wählen:",
     "imageSourceExternal": "URL",
     "imageSourceLocal": "Lokal",

@@ -16,7 +16,7 @@
       class="video-media__poster"
       :style="aspectStyle(item, idx)"
       :aria-label="t('videoPlayer.play')"
-      @click="open(idx)"
+      @click="open(idx, $event)"
       @mouseenter="onEnter"
       @mouseleave="onLeave"
     >
@@ -145,7 +145,15 @@ function durationLabel(idx: number) {
   return duration ? formatMediaTime(duration) : ''
 }
 
-function open(idx: number) {
+function open(idx: number, event?: MouseEvent) {
+  // 进灯箱前先停掉封面的 hover 静音预览：指针停在原处不会触发 mouseleave，
+  // 否则封面视频会在灯箱底下继续解码/拉流，形成两个视频同时播放。
+  clearHoverTimer()
+  const poster = (event?.currentTarget as HTMLElement | undefined)?.querySelector('video')
+  if (poster) {
+    poster.pause()
+    poster.currentTime = 0
+  }
   activeIndex.value = idx
 }
 
