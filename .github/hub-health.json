@@ -1,4 +1,12 @@
 {
+  "moeouo-ech0": {
+    "url": "https://time.moeouo.cn",
+    "unhealthy_since": "2026-07-04T02:10:21.498Z"
+  },
+  "qixz": {
+    "url": "https://mm.qixz.cn",
+    "unhealthy_since": "2026-07-04T02:10:21.498Z"
+  },
   "sumy": {
     "url": "https://tree.lstudy.qzz.io",
     "unhealthy_since": "2026-07-01T02:46:27.469Z"
