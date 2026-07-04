@@ -367,6 +367,10 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener('paste', handlePaste)
   cancelAll()
+  // 卸载时 uploads 已被 cancelAll 中止，必须显式把"上传中"标志落回 false：
+  // 单片段上传成功会令上层 v-if 立刻卸载本组件，watch(isUploading) 来不及把
+  // fileUploading 置回 false 就被清理，否则发布会一直被 fileUploadingWait 拦住。
+  editorStore.fileUploading = false
 })
 
 // ---------- Drag-to-reorder ----------
