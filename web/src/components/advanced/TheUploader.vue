@@ -182,9 +182,11 @@ import { useI18n } from 'vue-i18n'
 import { useEditorStore } from '@/stores'
 import { useUpload, UPLOAD_STATUS, type QueueItem, type UploadStatus } from '@/lib/file/useUpload'
 import { formatBytes } from '@/utils/file'
+import { theToast } from '@/utils/toast'
+import { deleteFileById } from '@/lib/file'
 import AudioIcon from '@/components/icons/audio.vue'
 import VideoIcon from '@/components/icons/videomedia.vue'
-import { FILE_CATEGORY } from '@/constants/file'
+import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 
 const props = withDefaults(
   defineProps<{
@@ -260,14 +262,31 @@ watch(
   { immediate: true },
 )
 
-// 队列 ✕：删完自己的队列项后，把已投递到 filesToAdd 的同一文件一并移除，
-// 否则用户"删掉"的文件仍会随发布 payload 一起提交（两份列表漂移的一半）。
-function handleRemoveItem(item: QueueItem) {
+// 队列 ✕：与大预览的 ✕ 行为一致——出队后
+//   1) 把已上传到本地/S3 的文件从后端删除（直链不归我们存储，跳过），避免留下孤儿文件；
+//   2) 从 filesToAdd 移除，否则用户"删掉"的文件仍会随发布 payload 提交（两份列表漂移的一半）；
+//   3) 更新模式下把删除同步回该 Echo，否则 echo_files 会悬挂已删文件直到下次保存。
+// 后端删除失败不阻断前端移除，仅告警（可能残留孤儿文件，由临时文件回收兜底）。
+async function handleRemoveItem(item: QueueItem) {
   const fileId = item.result?.id
+  const storageType = item.result?.storage_type
   remove(item.id)
   if (!fileId) return
+
+  if (storageType === FILE_STORAGE_TYPE.LOCAL || storageType === FILE_STORAGE_TYPE.OBJECT) {
+    try {
+      await deleteFileById(fileId)
+    } catch {
+      theToast.error(String(t('editor.removeImageRemoteFailed')))
+    }
+  }
+
   const idx = editorStore.filesToAdd.findIndex((f) => f.id === fileId)
   if (idx >= 0) editorStore.removeFileAt(idx)
+
+  if (editorStore.isUpdateMode) {
+    await editorStore.handleAddOrUpdateEcho(true)
+  }
 }
 
 // 另一半对账：当某个已投递文件在别处（大预览的 ✕ / 外链移除）被移出 filesToAdd 时，
