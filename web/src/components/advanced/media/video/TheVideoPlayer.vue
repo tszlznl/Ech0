@@ -52,7 +52,12 @@
         {{ t('videoPlayer.label') }}
       </span>
       <!-- 右上角全屏按钮：与左上 tag 对称的图标+文字矩形，是进灯箱大屏播放的唯一入口 -->
-      <button type="button" class="video-media__fullscreen" @click.stop="open(idx, $event)">
+      <button
+        type="button"
+        class="video-media__fullscreen"
+        :class="{ 'is-visible': playingByIndex[idx] }"
+        @click.stop="open(idx, $event)"
+      >
         <Full color="currentColor" />
         {{ t('videoPlayer.fullscreen') }}
       </button>
@@ -421,16 +426,11 @@ function close() {
   height: 0.9rem;
 }
 
+/* 桌面 hover/focus 时淡入；播放中（含移动端点击封面后）常显 —— 与右下角倒计时同步 */
 .video-media__poster:hover .video-media__fullscreen,
-.video-media__poster:focus-within .video-media__fullscreen {
+.video-media__poster:focus-within .video-media__fullscreen,
+.video-media__fullscreen.is-visible {
   opacity: 1;
-}
-
-/* 触摸设备无 hover：矩形按钮带文字、触控目标已足够，直接常显 */
-@media (hover: none) {
-  .video-media__fullscreen {
-    opacity: 1;
-  }
 }
 
 .video-media__badge {
