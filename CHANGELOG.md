@@ -7,6 +7,28 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/lin-snow/Ech0/releases) — earlier release notes are not retroactively imported here.
 
 
+## [5.4.0] - 2026-07-04
+
+This release turns Ech0 into a fuller media timeline — **an Echo can now carry uploaded audio or video, not just images**, each with a native in-app player. Under the hood, the logging backend was rebuilt on the standard library's `log/slog`, retiring zap.
+
+### Added
+
+- **Audio and video attachments, with native players.** An Echo can now include an uploaded audio track or an MP4 video alongside (or instead of) images. `video/mp4` joins the allowed upload types, and the composer's former image panel became a unified **media panel** where you pick a category — image, audio, or video — before attaching. Playback is fully in-app and theme-aware: a new audio player (seekable progress bar with elapsed / total time) and a video player that plays inline and expands into a fullscreen lightbox, both rendered on the timeline cards, the Echo detail view, and the public Hub. Default upload limits are **20 MiB per image (up to 9 per Echo)**, **20 MiB per audio file**, and **64 MiB per video**, tunable via `ECH0_UPLOAD_IMAGE_MAX_SIZE` / `ECH0_UPLOAD_AUDIO_MAX_SIZE` / `ECH0_UPLOAD_VIDEO_MAX_SIZE`; video files are stored under `data/files/videos/` (`ECH0_UPLOAD_VIDEO_PATH`). New attachment / media i18n keys across zh-CN / en-US / ja-JP / de-DE.
+
+### Changed
+
+- **Each Echo holds a single media category — images, audio, or video, not a mix.** Once you attach a file the category locks, and audio and video are capped at **one file per Echo** (images stay at up to 9). This is enforced as a hard check in `PostEcho` / `UpdateEcho` **before** the write transaction — not merely a UI guard — so mixed-category or multi-audio/-video payloads are rejected at the service layer. A dedicated `none` layout was introduced for audio/video Echoes, so the image-only layout options (grid / carousel / horizontal / stack) no longer apply to them.
+- **Colorized console logs in development.** When the server runs in `debug` mode (`ECH0_SERVER_MODE=debug`), console output now defaults to a tinted, human-readable format; file output stays structured JSON and production behavior is unchanged.
+
+### Internal
+
+- **Logging rebuilt on `log/slog`; zap retired.** The logging stack moved from `go.uber.org/zap` to an in-house `pkg/log` package on top of the standard library's `log/slog`, with a vendored `tint` handler (`pkg/log/tint`) powering the colorized console output above. `go.uber.org/zap` and `go.uber.org/multierr` were dropped from the module graph, and call sites across bootstrap, services, migrator, job, event bus, MCP, and agent were migrated to the new logger.
+- **Log querying & stream-hub tests.** New `query_test.go` (missing-file handling, level / keyword filtering, entry-limit enforcement) and `streamhub_test.go` (subscribe / publish / dropped-message backpressure) cover the dashboard log viewer.
+- **Single-media-category coverage.** New backend tests (`single_category_test.go`, plus added `post_echo` / `mutate_echo` cases) verify the reject-before-transaction path; `FileService.GetFilesByIDs` batch-loads attached files' categories in one query instead of N per-file lookups.
+- **Frontend media reorganization.** The former `gallery/` tree was folded into `media/{image,audio,video}` behind a single `TheMediaPlayer` dispatcher; the editor's `Mode.Image` became `Mode.Media`, and separate `VideoLayout` / `AudioLayout` enums were split out to leave room for future layouts. The public Hub card reuses the same `TheMediaPlayer`.
+- **Housekeeping.** General code-structure refactors for readability, and `TODO.md` pruned of the retired Ech0 CLI/TUI items.
+
+
 ## [5.3.0] - 2026-06-30
 
 This release is anchored by two large engineering efforts — a **type-first OpenAPI rebuild (Huma)** and the project's **first real backend test suite** — plus the security and stability fixes that writing those tests surfaced.
