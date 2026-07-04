@@ -45,7 +45,7 @@ It stays lightweight, easy to deploy, and fully open-source.
 **Probably not for you if you need:**
 - a bi-directional knowledge base workflow (for example Obsidian-style PKM)
 - a team-first collaborative docs workspace (for example Notion-style docs)
-- a private-only memo app with no publishing or timeline focus
+- a pure note-taking / memo tool with no timeline or publishing at all
 
 ![Interface Preview](./docs/imgs/screenshot.png)
 
@@ -116,6 +116,7 @@ See [Quick Deployment](./DEPLOYMENT.md#quick-deployment) for Docker Compose and 
 
 ### Media & Assets
 
+- 🎬 **Multi-Format Media Attachments**: Attach images, audio, and video directly to each Echo, rendered inline with a gallery and built-in audio/video players.
 - 📁 **Visual File Manager**: Built-in capabilities for file upload, browsing, and asset management.
 
 ### Social & Interaction

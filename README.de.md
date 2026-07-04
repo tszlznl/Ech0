@@ -45,7 +45,7 @@ Es bleibt dabei leichtgewichtig, einfach zu deployen und vollständig Open Sourc
 **Eher nicht geeignet, wenn du brauchst:**
 - einen bidirektionalen Knowledge-Base-Workflow (z. B. Obsidian-artiges PKM)
 - einen Team-orientierten kollaborativen Docs-Workspace (z. B. Notion-artige Dokumente)
-- eine reine Privat-Memo-App ohne Veröffentlichungs- oder Timeline-Fokus
+- ein reines Notiz-/Memo-Tool ganz ohne Timeline oder Veröffentlichung
 
 ![Oberflächen-Vorschau](./docs/imgs/screenshot.png)
 
@@ -115,6 +115,7 @@ Weitere Optionen wie Docker Compose und Helm findest du unter [Schnelles Deploym
 
 ### Medien & Assets
 
+- 🎬 **Multi-Format-Medienanhänge**: Bilder, Audio und Video direkt an jede Echo anhängen – inline dargestellt mit Galerie und eingebauten Audio-/Video-Playern.
 - 📁 **Visueller Datei-Manager**: Eingebaute Funktionen für Datei-Upload, Browsing und Asset-Verwaltung.
 
 ### Soziales & Interaktion
