@@ -1025,7 +1025,8 @@
     "play": "播放视频",
     "close": "关闭",
     "label": "视频",
-    "fullscreen": "全屏"
+    "fullscreen": "全屏",
+    "paused": "已暂停"
   },
   "githubCard": {
     "avatarAlt": "头像"

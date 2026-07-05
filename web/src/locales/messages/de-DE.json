@@ -1025,7 +1025,8 @@
     "play": "Video abspielen",
     "close": "Schließen",
     "label": "Video",
-    "fullscreen": "Vollbild"
+    "fullscreen": "Vollbild",
+    "paused": "Pausiert"
   },
   "githubCard": {
     "avatarAlt": "Avatar"
