@@ -7,6 +7,24 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/lin-snow/Ech0/releases) — earlier release notes are not retroactively imported here.
 
 
+## [5.4.1] - 2026-07-05
+
+A focused follow-up to 5.4.0's media support: the inline video player got a round of playback-UX fixes and polish.
+
+### Added
+
+- **Long-press to preview on touch devices.** Mobile had no equivalent of the desktop hover preview — press-and-hold on an inline video now plays a muted preview and releases back to the poster frame, while a tap still toggles sound playback. The long-press is distinguished from a scroll (finger movement cancels it) and suppresses the iOS "save video" callout menu.
+
+### Changed
+
+- **The inline video overlay was reworked for a cleaner watch.** The corner tags now auto-hide about two seconds into playback and reappear only when you actually move the pointer — incidental hand-tremor and page-scroll jitter are filtered out (by a small movement threshold), so they no longer keep the controls awake. The top-left tag now doubles as the status chip: the "Video" label at rest, a live remaining-time countdown while playing, and "Paused" once you pause it — so the separate bottom-right time badge was retired. Clicking an inline video now toggles play / pause (it was play-only before).
+
+### Fixed
+
+- **Click-to-play from a preview is no longer silent.** Promoting the muted hover / long-press preview to sound only flipped the `muted` flag without re-invoking `play()` inside the click gesture, and browsers won't route audio for a video that began playing muted unless playback is re-asserted under the user gesture — so it kept playing with no sound. A click now unmutes **and** replays within the same gesture.
+- **Fullscreen resumes instead of restarting.** Opening the fullscreen lightbox spun up a fresh player that always started at 0; it now carries the inline playback position across and seeks to it, so the big-screen view continues from where the card left off.
+
+
 ## [5.4.0] - 2026-07-04
 
 This release turns Ech0 into a fuller media timeline — **an Echo can now carry uploaded audio or video, not just images**, each with a native in-app player. Under the hood, the logging backend was rebuilt on the standard library's `log/slog`, retiring zap.
