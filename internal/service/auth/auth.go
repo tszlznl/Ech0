@@ -97,14 +97,36 @@ func (authService *AuthService) Login(loginDto *authModel.LoginDto) (*authModel.
 		return nil, errors.New(commonModel.USERNAME_OR_PASSWORD_NOT_BE_EMPTY)
 	}
 
-	loginDto.Password = cryptoUtil.MD5Encrypt(loginDto.Password)
-	user, err := authService.repository.GetUserByUsername(context.Background(), loginDto.Username)
+	ctx := context.Background()
+	user, err := authService.repository.GetUserByUsername(ctx, loginDto.Username)
 	if err != nil {
 		return nil, errors.New(commonModel.USER_NOTFOUND)
 	}
-	if user.Password != loginDto.Password {
+
+	localAuth, err := authService.repository.GetLocalAuthByUserID(ctx, user.ID)
+	if err != nil {
+		// 无本地密码认证行（纯外部身份账号或数据缺失）→ 统一按凭证错误处理，不泄露具体原因
 		return nil, errors.New(commonModel.PASSWORD_INCORRECT)
 	}
+	if !cryptoUtil.CheckPassword(localAuth.PasswordAlgo, localAuth.PasswordHash, loginDto.Password) {
+		return nil, errors.New(commonModel.PASSWORD_INCORRECT)
+	}
+
+	// 惰性升级：存量非 bcrypt 口令校验通过后，就地换算为 bcrypt 落库。
+	// best-effort —— 升级写失败只告警，绝不阻断这次已认证成功的登录。
+	if localAuth.PasswordAlgo != cryptoUtil.AlgoBcrypt {
+		if newHash, hashErr := cryptoUtil.HashPassword(loginDto.Password); hashErr == nil {
+			if upErr := authService.repository.UpdateLocalAuthPassword(ctx, user.ID, newHash, cryptoUtil.AlgoBcrypt); upErr != nil {
+				logUtil.GetLogger().Warn(
+					"lazy upgrade password hash failed",
+					slog.String("module", "auth"),
+					slog.String("user_id", user.ID),
+					logUtil.Err(upErr),
+				)
+			}
+		}
+	}
+
 	return authService.issueUserToken(user)
 }
 
