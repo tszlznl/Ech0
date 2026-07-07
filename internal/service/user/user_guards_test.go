@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
@@ -265,6 +266,28 @@ func TestRegister_Success(t *testing.T) {
 	assert.Equal(t, "newbie-id", localAuth.UserID)
 	assert.Equal(t, cryptoUtil.AlgoBcrypt, localAuth.PasswordAlgo)
 	assert.True(t, cryptoUtil.CheckPassword(localAuth.PasswordAlgo, localAuth.PasswordHash, "pw"))
+}
+
+func TestRegister_PasswordTooLong(t *testing.T) {
+	svc, m := newUserSvc(t)
+	m.repo.EXPECT().IsInitialized(mock.Anything).Return(true, nil).Once()
+	m.repo.EXPECT().GetAllUsers(mock.Anything).Return(nil, nil).Once()
+	// 超过 bcrypt 72 字节上限应在哈希/建号前被拦下（GetUserByUsername/CreateUser 都不应被触达）。
+
+	longPw := strings.Repeat("a", cryptoUtil.MaxPasswordBytes+1)
+	err := svc.Register(&authModel.RegisterDto{Username: "u", Password: longPw})
+	require.EqualError(t, err, commonModel.PASSWORD_TOO_LONG)
+}
+
+func TestUpdateUser_PasswordTooLong(t *testing.T) {
+	svc, m := newUserSvc(t)
+	// 操作者为 admin，改自己的资料；超长密码应在写库前被拒。
+	m.repo.EXPECT().GetUserByID(mock.Anything, "admin-1").
+		Return(helpers.NewUser(withID("admin-1"), helpers.AsAdmin), nil).Once()
+
+	longPw := strings.Repeat("a", cryptoUtil.MaxPasswordBytes+1)
+	err := svc.UpdateUser(helpers.CtxAsUser("admin-1"), userModel.UserInfoDto{Password: longPw})
+	require.EqualError(t, err, commonModel.PASSWORD_TOO_LONG)
 }
 
 // ---------------------------------------------------------------------------

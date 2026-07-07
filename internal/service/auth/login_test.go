@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
 
 // mustJSON 序列化任意值为 JSON 字符串，失败即终止用例。供本包多份测试文件共用。
@@ -85,7 +86,24 @@ func TestLogin(t *testing.T) {
 					Once()
 				repo.EXPECT().
 					GetLocalAuthByUserID(mock.Anything, userID).
-					Return(userModel.UserLocalAuth{}, errors.New("record not found")).
+					Return(userModel.UserLocalAuth{}, gorm.ErrRecordNotFound).
+					Once()
+			},
+			wantErr: commonModel.PASSWORD_INCORRECT,
+		},
+		{
+			// 真实 DB 故障（非 ErrRecordNotFound）应 fail-closed 为 PASSWORD_INCORRECT，
+			// 不泄露内部错误（并在实现里记 Warn，此处只断言对外行为）。
+			name: "local auth lookup db error maps to PASSWORD_INCORRECT",
+			dto:  authModel.LoginDto{Username: username, Password: plainPassword},
+			setupRepo: func(repo *authmock.MockRepository) {
+				repo.EXPECT().
+					GetUserByUsername(mock.Anything, username).
+					Return(userModel.User{ID: userID, Username: username}, nil).
+					Once()
+				repo.EXPECT().
+					GetLocalAuthByUserID(mock.Anything, userID).
+					Return(userModel.UserLocalAuth{}, errors.New("db down")).
 					Once()
 			},
 			wantErr: commonModel.PASSWORD_INCORRECT,

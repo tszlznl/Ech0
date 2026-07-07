@@ -35,6 +35,7 @@ import (
 	logUtil "github.com/lin-snow/ech0/pkg/log"
 	"github.com/lin-snow/ech0/pkg/viewer"
 	"golang.org/x/oauth2"
+	"gorm.io/gorm"
 )
 
 // oidcHTTPClient is the shared client for outbound OIDC/OAuth2 requests. It
@@ -105,7 +106,16 @@ func (authService *AuthService) Login(loginDto *authModel.LoginDto) (*authModel.
 
 	localAuth, err := authService.repository.GetLocalAuthByUserID(ctx, user.ID)
 	if err != nil {
-		// 无本地密码认证行（纯外部身份账号或数据缺失）→ 统一按凭证错误处理，不泄露具体原因
+		// 无本地密码认证行（纯外部身份账号）→ 统一按凭证错误处理，不泄露"无本地密码"。
+		// 但真实 DB 故障要留痕：否则瞬时故障会被误显示为"密码错误"，且无从排障。
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			logUtil.GetLogger().Warn(
+				"load local auth failed",
+				slog.String("module", "auth"),
+				slog.String("user_id", user.ID),
+				logUtil.Err(err),
+			)
+		}
 		return nil, errors.New(commonModel.PASSWORD_INCORRECT)
 	}
 	if !cryptoUtil.CheckPassword(localAuth.PasswordAlgo, localAuth.PasswordHash, loginDto.Password) {

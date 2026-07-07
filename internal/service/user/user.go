@@ -57,6 +57,15 @@ func NewUserService(
 	}
 }
 
+// ensurePasswordLength 在写入前拦掉超过 bcrypt 72 字节上限的口令，返回可本地化的业务错误，
+// 避免 bcrypt.GenerateFromPassword 抛出裸英文 ErrPasswordTooLong 直达前端。
+func ensurePasswordLength(password string) error {
+	if len(password) > cryptoUtil.MaxPasswordBytes {
+		return errors.New(commonModel.PASSWORD_TOO_LONG)
+	}
+	return nil
+}
+
 // InitOwner 初始化 Owner 账号
 //
 // 参数:
@@ -84,6 +93,9 @@ func (userService *UserService) InitOwner(registerDto *authModel.RegisterDto) er
 	}
 
 	// 对 owner 初始密码做 bcrypt 哈希，落入 user_local_auth。
+	if err := ensurePasswordLength(registerDto.Password); err != nil {
+		return err
+	}
 	passwordHash, err := cryptoUtil.HashPassword(registerDto.Password)
 	if err != nil {
 		return err
@@ -170,6 +182,9 @@ func (userService *UserService) Register(registerDto *authModel.RegisterDto) err
 	}
 
 	// 对密码做 bcrypt 哈希，落入 user_local_auth（不再挂在 User 上）
+	if err := ensurePasswordLength(registerDto.Password); err != nil {
+		return err
+	}
 	passwordHash, err := cryptoUtil.HashPassword(registerDto.Password)
 	if err != nil {
 		return err
@@ -255,6 +270,9 @@ func (userService *UserService) UpdateUser(ctx context.Context, userdto model.Us
 	// 检查是否需要更新密码（改密写入 user_local_auth，不再挂在 User 上）
 	var newPasswordHash string
 	if userdto.Password != "" {
+		if err := ensurePasswordLength(userdto.Password); err != nil {
+			return err
+		}
 		hashed, err := cryptoUtil.HashPassword(userdto.Password)
 		if err != nil {
 			return err

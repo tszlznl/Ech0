@@ -17,6 +17,10 @@ const (
 	AlgoBcrypt = "bcrypt" // 当前算法：自带盐、自描述哈希串
 )
 
+// MaxPasswordBytes 是 bcrypt 接受的口令字节上限——超过 72 字节 GenerateFromPassword 会返回
+// ErrPasswordTooLong。写入侧据此前置校验，避免把 bcrypt 的裸英文错误抛给用户。
+const MaxPasswordBytes = 72
+
 // MD5Encrypt 对内容进行 MD5 编码。
 //
 // 已废弃用于新密码——仅保留给存量 AlgoMD5 口令的校验（见 CheckPassword）。
