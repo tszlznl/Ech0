@@ -159,6 +159,7 @@ func InitDatabase() {
 			// 本地密码迁入 user_local_auth：回填必须先于删列。
 			dbMigration.NewUserLocalAuthBackfillMigrator(),
 			dbMigration.NewUsersPasswordDropMigrator(),
+			dbMigration.NewEchoExtensionOrphansMigrator(),
 		),
 	)
 }
