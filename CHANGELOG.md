@@ -7,6 +7,19 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/lin-snow/Ech0/releases) — earlier release notes are not retroactively imported here.
 
 
+## [5.4.5] - 2026-07-18
+
+A small storage-compatibility release: the **Other** S3 provider can now opt into **path-style addressing** from the admin panel, unblocking self-hosted S3-compatible services that don't speak virtual-hosted style.
+
+### Added
+
+- **A "Path-style access" toggle for the `Other` S3 provider.** Addressing style used to be decided entirely by the provider preset — MinIO and R2 use path-style, AWS uses virtual-hosted — and `Other` silently followed AWS, so a self-hosted S3-compatible service that only supports path-style (Ceph, Garage, SeaweedFS, …) behind a DNS-style endpoint could fail to connect, with no way to fix it. (IP endpoints like `127.0.0.1:9000` were unaffected: the SDK already falls back to path-style for those.) The storage settings panel now shows a **Path-style access** switch when the provider is `Other` — also seedable via `ECH0_S3_USE_PATH_STYLE` — and it applies to every S3 code path: uploads, presigned URLs, the connection probe, and snapshot export. Named providers keep their presets (the toggle is ignored and zeroed on save unless the provider is `Other`), existing `Other` setups keep their current behavior until it's explicitly switched on, and the toggle only changes SDK API requests — stored public URLs keep their shape.
+
+### Internal
+
+- **The storage layer's three S3 client-config construction sites were collapsed into one helper**, so the connection probe, the runtime filesystem, and the storage selector are guaranteed to build the client from identical parameters — what you test is what you run.
+
+
 ## [5.4.4] - 2026-07-18
 
 A reliability release centered on the database and on leftover-data hygiene. SQLite now runs in **WAL mode** with tuned connection parameters, and snapshot export packs a **consistent database copy** instead of the live file — together making both day-to-day writes and backups sturdier. Alongside that, two long-standing residue leaks were plugged: deleted Echos no longer strand their extension rows, and direct-link attachments abandoned in a draft no longer linger in the database forever.
@@ -585,6 +598,7 @@ This is primarily a security release: six advisories disclosed since v4.7.2 are 
   Practical risk in this repo was negligible (the vulnerable code only runs at PWA build time on developer-controlled input), but the alerts are now resolved at the supply-chain level.
 
 [Unreleased]: https://github.com/lin-snow/Ech0/compare/v5.4.4...HEAD
+[5.4.5]: https://github.com/lin-snow/Ech0/compare/v5.4.4...v5.4.5
 [5.4.4]: https://github.com/lin-snow/Ech0/compare/v5.4.3...v5.4.4
 [5.4.3]: https://github.com/lin-snow/Ech0/compare/v5.4.2...v5.4.3
 [5.4.2]: https://github.com/lin-snow/Ech0/compare/v5.4.1...v5.4.2
