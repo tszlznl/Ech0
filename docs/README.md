@@ -25,6 +25,14 @@
 | [dev/logging.md](dev/logging.md) | 日志库使用与字段约定 |
 | [dev/access-token-scope-design.md](dev/access-token-scope-design.md) | Access Token 的 `typ` / scope / audience 设计背景（实现以代码为准） |
 
+## 商业推演（`business/`）
+
+**假设性沙盘推演，非项目实际计划**。Ech0 当前不打算商业化，此目录仅用于完整走一遍「如果要商业化」的决策过程。
+
+| 文档 | 说明 |
+|------|------|
+| [business/commercialization-blueprint.md](business/commercialization-blueprint.md) | 商业化闭环推演：资产盘点、定位与红线、四条收入腿、定价、获客到复购的完整闭环、工程分仓策略、单位经济模型、风险与路线图 |
+
 ## 资源（`imgs/`）
 
 Logo、架构示意图等静态资源；根目录 [README.md](../README.md) 中的预览图等链接指向此处。
