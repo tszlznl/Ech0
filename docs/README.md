@@ -32,6 +32,7 @@
 | 文档 | 说明 |
 |------|------|
 | [business/commercialization-blueprint.md](business/commercialization-blueprint.md) | 商业化闭环推演：资产盘点、定位与红线、四条收入腿、定价、获客到复购的完整闭环、工程分仓策略、单位经济模型、风险与路线图 |
+| [business/compliance-reality-check.md](business/compliance-reality-check.md) | 合规现实检验：托管 UGC 的责任转移、国内经营性 ICP/安全评估/实名/内容审核的成本量级、海外 DMCA/GDPR 对照，以及它如何否决蓝图的主力产品 |
 
 ## 资源（`imgs/`）
 
