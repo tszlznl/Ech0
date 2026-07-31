@@ -7,6 +7,16 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/lin-snow/Ech0/releases) — earlier release notes are not retroactively imported here.
 
 
+## [Unreleased]
+
+### Changed
+
+- **Dependency bumps (Go, `go-patch-minor` group)**: `anthropics/anthropic-sdk-go` 1.57.0 → 1.61.0, `aws/aws-sdk-go-v2` 1.42.1 → 1.43.0 (plus `config` / `credentials` / `service/s3` patch bumps), `aws/smithy-go` 1.27.3 → 1.27.4, `danielgtaylor/huma/v2` 2.38.0 → 2.39.0.
+- **Dependency bumps (`web/`)**: `pinia` 3.0.4 → 4.0.2 — a technical-only major (ESM-only build, and `@vue/devtools-api` became a required peer dependency, now declared explicitly in `package.json`); `vue` 3.5.39 → 3.5.40, `vue-i18n` 11.4.6 → 11.4.8, `vue-router` 5.1.0 → 5.2.0, plus dev-tooling minors (`vite` 8.1.5, `eslint` 10.8.0, `eslint-plugin-vue` 10.10.0, `prettier` 3.9.6, `stylelint` 17.14.1, `vite-plugin-vue-devtools` 8.2.1, `vue-tsc` 3.3.8, `@vitejs/plugin-vue` 6.0.8).
+- **Dependency bumps (`hub/`)**: `brace-expansion` 2.1.1 → 2.1.2 — lockfile-only security backport for [CVE-2026-13149](https://github.com/juliangruber/brace-expansion/pull/123).
+- **Dependency bumps (CI)**: `actions/setup-node` 6 → 7, `actions/setup-go` 6 → 7.
+
+
 ## [5.4.6] - 2026-07-18
 
 A follow-up to 5.4.5's addressing work: the public object URL now follows the same addressing style the SDK uses, so images uploaded to **virtual-hosted-only** services (Tencent COS, Alibaba OSS, …) display instead of appearing broken.
@@ -606,7 +616,7 @@ This is primarily a security release: six advisories disclosed since v4.7.2 are 
 
   Practical risk in this repo was negligible (the vulnerable code only runs at PWA build time on developer-controlled input), but the alerts are now resolved at the supply-chain level.
 
-[Unreleased]: https://github.com/lin-snow/Ech0/compare/v5.4.4...HEAD
+[Unreleased]: https://github.com/lin-snow/Ech0/compare/v5.4.6...HEAD
 [5.4.6]: https://github.com/lin-snow/Ech0/compare/v5.4.5...v5.4.6
 [5.4.5]: https://github.com/lin-snow/Ech0/compare/v5.4.4...v5.4.5
 [5.4.4]: https://github.com/lin-snow/Ech0/compare/v5.4.3...v5.4.4
