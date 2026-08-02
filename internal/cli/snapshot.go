@@ -54,7 +54,7 @@ func DoExportSnapshot(output string) error {
 	}
 
 	tuiUtil.PrintCLIWithBox(
-		tuiUtil.CLIInfoItem{Title: "🗄️  Snapshot", Msg: path},
+		tuiUtil.CLIBoxHeader{Icon: "🗄️", Title: "Snapshot", Value: path},
 		tuiUtil.CLIInfoItem{Title: "Size", Msg: strconv.FormatInt(outcome.Size, 10) + " bytes"},
 	)
 	return nil

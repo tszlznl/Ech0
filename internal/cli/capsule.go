@@ -56,7 +56,6 @@ func DoExportCapsule(opts ExportCapsuleOptions) error {
 	}
 
 	items := []tuiUtil.CLIInfoItem{
-		{Title: "📦 Capsule", Msg: result.Path},
 		{Title: "Echoes", Msg: strconv.Itoa(result.Echoes)},
 		{Title: "Files", Msg: fmt.Sprintf("%d (external: %d)", result.Files, result.ExternalFiles)},
 		{Title: "Comments", Msg: strconv.Itoa(result.Comments)},
@@ -64,11 +63,14 @@ func DoExportCapsule(opts ExportCapsuleOptions) error {
 	}
 	if result.SkippedPrivate > 0 {
 		items = append(items, tuiUtil.CLIInfoItem{
-			Title: "Skipped (private)",
-			Msg:   strconv.Itoa(result.SkippedPrivate) + "  — use --include-private to carry them",
+			Title: "Skipped",
+			Msg:   strconv.Itoa(result.SkippedPrivate) + " private — use --include-private to carry them",
 		})
 	}
-	tuiUtil.PrintCLIWithBox(items...)
+	tuiUtil.PrintCLIWithBox(
+		tuiUtil.CLIBoxHeader{Icon: "📦", Title: "Capsule", Value: result.Path},
+		items...,
+	)
 	return nil
 }
 
@@ -133,12 +135,11 @@ func DoImportCapsule(path string, opts ImportCapsuleOptions) error {
 		return err
 	}
 
-	title := "📥 Imported"
+	header := tuiUtil.CLIBoxHeader{Icon: "📥", Title: "Imported", Value: path}
 	if opts.DryRun {
-		title = "🔍 Dry run (nothing written)"
+		header = tuiUtil.CLIBoxHeader{Icon: "🔍", Title: "Dry run", Value: path + "  (nothing written)"}
 	}
 	items := []tuiUtil.CLIInfoItem{
-		{Title: title, Msg: path},
 		{Title: "Echoes", Msg: fmt.Sprintf("created %d, skipped %d", result.EchoesCreated, result.EchoesSkipped)},
 		{
 			Title: "Files",
@@ -152,15 +153,15 @@ func DoImportCapsule(path string, opts ImportCapsuleOptions) error {
 		},
 	}
 	if result.SkippedPrivate > 0 {
-		items = append(items, tuiUtil.CLIInfoItem{Title: "Skipped (private)", Msg: strconv.Itoa(result.SkippedPrivate)})
+		items = append(items, tuiUtil.CLIInfoItem{Title: "Skipped", Msg: strconv.Itoa(result.SkippedPrivate) + " private"})
 	}
 	if len(result.SiteFieldsFilled) > 0 {
-		items = append(items, tuiUtil.CLIInfoItem{Title: "Site fields filled", Msg: strings.Join(result.SiteFieldsFilled, ", ")})
+		items = append(items, tuiUtil.CLIInfoItem{Title: "Site filled", Msg: strings.Join(result.SiteFieldsFilled, ", ")})
 	}
 	if len(result.Renames) > 0 {
-		items = append(items, tuiUtil.CLIInfoItem{Title: "Renamed keys", Msg: strings.Join(result.Renames, "\n")})
+		items = append(items, tuiUtil.CLIInfoItem{Title: "Renamed", Msg: strings.Join(result.Renames, "\n")})
 	}
-	tuiUtil.PrintCLIWithBox(items...)
+	tuiUtil.PrintCLIWithBox(header, items...)
 
 	// 导入不发布事件（spec §11.3）：向量索引不会自动跟进，明说一句免得用户以为坏了。
 	if !opts.DryRun && result.EchoesCreated > 0 {
@@ -195,7 +196,7 @@ func DoBuild(path, output, baseURL string) error {
 	}
 
 	tuiUtil.PrintCLIWithBox(
-		tuiUtil.CLIInfoItem{Title: "🌐 Static site", Msg: result.Path},
+		tuiUtil.CLIBoxHeader{Icon: "🌐", Title: "Static site", Value: result.Path},
 		tuiUtil.CLIInfoItem{Title: "Echoes", Msg: strconv.Itoa(result.Echoes)},
 		tuiUtil.CLIInfoItem{Title: "Files", Msg: strconv.Itoa(result.Files)},
 		tuiUtil.CLIInfoItem{Title: "Comments", Msg: strconv.Itoa(result.Comments)},
