@@ -9,6 +9,10 @@ For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/
 
 ## [Unreleased]
 
+### Added
+
+- **Quick search can now filter by visibility (public / private).** The command palette (⌘K) gains a three-state **Visibility** section — *All*, *Public only*, *Private only* — shown only to logged-in admins; anonymous visitors don't see it and the timeline behaves exactly as before. An active filter shows up as a clearable chip next to the search box, like date-range and tag filters. Server-side, `POST /api/echo/query` accepts an optional `private` boolean; requests without private-content permission have it silently ignored and keep getting public-only results, so nothing can leak.
+
 ### Changed
 
 - **Built-in MCP server upgraded to protocol revision `2026-07-28`** (latest MCP spec, replacing `2025-11-25`) — **breaking for legacy MCP clients**. The server is now stateless per the new spec: the `initialize` handshake is gone (replaced by `server/discover`), every request must carry `params._meta` protocol metadata plus the `MCP-Protocol-Version` / `Mcp-Method` / `Mcp-Name` headers (validated with HTTP 400 + `-32020`/`-32022` on mismatch), unknown methods return HTTP 404, results carry `resultType` and `_meta.serverInfo`, and discover/list/read results include cache hints (`ttlMs` + `cacheScope`). `GET /mcp` (old status endpoint) and `DELETE /mcp` now return 405. Clients must speak `2026-07-28` — official SDKs (TypeScript v2, Go v1.7+, Python, C# v2) handle this automatically; legacy `initialize` clients receive a diagnostic naming the supported version.

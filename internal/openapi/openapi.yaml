@@ -374,6 +374,8 @@ components:
         pageSize:
           format: int64
           type: integer
+        private:
+          type: boolean
         search:
           type: string
         sortBy:
