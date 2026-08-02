@@ -202,11 +202,19 @@ func (s *session) run(ctx context.Context) error {
 	return s.applyConnects()
 }
 
-// resolveOwner 定位 owner。Echo.UserID 是 not null 外键，没有 owner 就无从兜底，
-// 这属于目标库不可用而非胶囊问题，直接失败。
+// ErrNoOwner 表示目标库里没有站主账号。胶囊刻意不携带账号与凭据，内容必须挂到既有站主
+// 名下，所以这是「目标实例还不可用」而非「胶囊有问题」——两者要给用户的下一步完全不同，
+// 故单列一个哨兵，让 CLI 与 Web 各自给出合适的指引。
+var ErrNoOwner = errors.New("target instance has no owner account")
+
+// resolveOwner 定位 owner。Echo.UserID 是 not null 外键，没有 owner 就无从兜底。
 func (s *session) resolveOwner() error {
 	var owner userModel.User
-	if err := s.db.Where("is_owner = ?", true).First(&owner).Error; err != nil {
+	err := s.db.Where("is_owner = ?", true).First(&owner).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return ErrNoOwner
+	}
+	if err != nil {
 		return fmt.Errorf("capsule import: locate owner user: %w", err)
 	}
 	s.ownerID = owner.ID

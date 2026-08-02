@@ -5,8 +5,10 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -15,6 +17,7 @@ import (
 	capsuleCheck "github.com/lin-snow/ech0/internal/capsule/check"
 	capsuleExport "github.com/lin-snow/ech0/internal/capsule/export"
 	capsuleImporter "github.com/lin-snow/ech0/internal/capsule/importer"
+	"github.com/lin-snow/ech0/internal/config"
 	tuiUtil "github.com/lin-snow/ech0/internal/util/tui"
 	versionPkg "github.com/lin-snow/ech0/internal/version"
 )
@@ -132,6 +135,24 @@ func DoImportCapsule(path string, opts ImportCapsuleOptions) error {
 		DryRun:         opts.DryRun,
 	})
 	if err != nil {
+		// 裸抛 "record not found" 会让人以为胶囊坏了。真正要做的是先把站主建出来，
+		// 而最常见的诱因是在没有 data/ 的目录里执行——ech0 会就地新建一个空库，
+		// 所以这里报绝对路径：走错目录的人一眼就能看出来。
+		if errors.Is(err, capsuleImporter.ErrNoOwner) {
+			dbPath := config.Config().Database.Path
+			if abs, absErr := filepath.Abs(dbPath); absErr == nil {
+				dbPath = abs
+			}
+			return fmt.Errorf(`%w
+
+A capsule carries no accounts, so its content needs an existing owner to belong to.
+Database in use: %s
+
+  · Importing into an existing instance? Run this command from that instance's
+    directory — ech0 resolves the database relative to the current directory.
+  · Setting up a new instance? Create the owner first: run "ech0 serve", open the
+    site and complete the setup, then retry`, err, dbPath)
+		}
 		return err
 	}
 
