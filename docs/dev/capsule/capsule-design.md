@@ -96,7 +96,7 @@ connects:                    # 互联实例列表快照
 
 ### 4.3 Echo 文件格式
 
-文件名：`echoes/<年>/<YYYY-MM-DD>-<UUID 前 8 位>.md`（UUIDv7 自带时序，前缀日期仅为浏览友好；原 Q5 已裁决）。
+文件名：`echoes/<年>/<YYYY-MM-DD>-<UUID 末 8 位>.md`（末 8 位落在 UUIDv7 的随机段；前 48 位是时间戳，同批创建的条目前缀重合到没有辨识度）。
 
 ```markdown
 ---
@@ -310,7 +310,9 @@ adapter 需要覆盖的只读端点（首页/详情/hub 所需）：
 
 ## 7. 与现有系统的关系
 
-- **服务端零侵入**：不改路由、不改 handler；`export` 复用 repository/service 层读取路径，`import` 复用 service 层写入路径但**不发布事件**（原 Q13，见 §10）。
+- **服务端零侵入（v1 约束，已在 Web 集成时解除）**：v1 刻意不碰服务端——不改路由、不改 handler，胶囊只有 CLI 一条路。这条约束保证了胶囊能作为纯增量能力落地，但也把「导出内容/搬家」挡在了只会用面板的用户之外。Web 集成推翻了它：`POST /migration/export` 增加 `format`、`GET /migration/export/download` 增加 `?format=`、`source_type` 增加 `capsule`，DI 里多一个 `migrator.CapsuleEngine`。推翻的理由是这条约束保护的是**实现的整洁**，而拦住的是**用户的实际需要**；且集成代价很低——胶囊三个包的入口本就是不依赖作业框架的纯函数，接进既有 job.Manager 只是加了个分派分支。
+  - 边界仍在：胶囊包**依旧**不过 service 层（直连 GORM）、**依旧**不发布事件（原 Q13）。Web 只是多了一个调用方，胶囊本身的语义一个字没改。
+  - 产物落位是新增的正确性约束：胶囊产物独占 `data/files/capsules/`，因为它与快照都遵循「只保留最新一份」，共用目录会互删——尤其定时快照走 gocron 直连 ExportEngine、不过 job.Manager，作业互斥拦不住它。同理该目录**必须**进快照排除列表，否则每次快照都把上一个胶囊打进去、雪球式膨胀。两条不变量都在 `internal/migrator/artifact` 里收口。
 - **Migrator zip 快照**继续作为字节级灾备（含 SQLite 原文件与全部运行时状态）；胶囊负责内容级交换与迁移（§4.8）。
 - 新增 Extension 类型时，schema 映射表（§4.3）**必须同步更新**——这是发布公开契约后的持续纪律成本，需写进贡献指南。
 
@@ -345,7 +347,7 @@ adapter 需要覆盖的只读端点（首页/详情/hub 所需）：
 - **`files[]` = `File` 列 1:1**（随「导出即转储」原则修订）：不设 `path` 字段——DB 无此列，位置由 `files/ + Resolve(key)` 纯函数派生；`key/category/name/content_type/size/width/height/id` 全部原样携带（可选）；幂等先按 `id` 复用、再按 key+内容哈希去重、撞名走 keygen 改名；export 取不回托管字节必须报错列清单（自包含是硬承诺）。
 - **导入不发布事件、无逃生门**（原 Q13）：webhook 回放历史内容属语义错误而非仅噪音；embedding 走既有回填命令覆盖存量；`--emit-events` 作为「不该有人用的逃生门」被整体移除（纯契约面积）。
 - **private 默认排除**（原 Q2）：export/import 双端默认排除 `private: true`，`--include-private` 显式包含；不做加密（胶囊定位可公开分享，私密内容要么不出门、要么显式带走）。
-- **文件命名**（原 Q5）：`echoes/<年>/<YYYY-MM-DD>-<id 前 8 位>.md`；命名仅浏览友好，语义一律以 frontmatter 为准。
+- **文件命名**（原 Q5，实现阶段修订）：`echoes/<年>/<YYYY-MM-DD>-<id 末 8 位>.md`；命名仅浏览友好，语义一律以 frontmatter 为准。原定「前 8 位」被真实数据推翻——UUIDv7 前 48 位是时间戳，实测 287 条里 270 条共用同一前缀，判别位必须取随机段。
 - **site 子集**（原 Q7）：「渲染所需皆入，运维行为皆弃」——`SystemSetting` 十二字段仅踢 `allow_register`；键名 = json tag 原样（import 整块反序列化零映射）；`server_logo` 原样字符串不本地化；`custom_js`/`custom_css` 非空时 check 警告（第三方胶囊 = 执行对方代码）。
 - **产出 `api/connect`**（原 Q10，推翻此前倾向）：与活实例响应体同形的冻结快照，远端探测路径零改动可消费；无扩展名文件的 Content-Type 局限记入 spec。
 - **原样导入**（原 Q12）：胶囊形态尽量贴近 DB 形态，导入 1:1 入库禁止数值转换；`username` 逐字保留，仅补全内部必填外键 `UserID`（同名挂接，否则挂 owner）；无 `--overwrite`。

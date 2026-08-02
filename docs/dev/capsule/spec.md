@@ -1,8 +1,11 @@
-# Ech0 Capsule 规格（草案 v1）
+# Ech0 Capsule 规格 v1
 
-> **状态：草案。** 本文是 Capsule 格式与相关 CLI 的**规范性定义**——只写「是什么」。
+> **状态：已实现（v1）。** 本文是 Capsule 格式与相关命令的**规范性定义**——只写「是什么」。
 > 设计依据、备选方案与讨论见 [`capsule-design.md`](./capsule-design.md)；文中 Q 编号指向该文档 §9。
-> 【待定】标记的条目尚未定稿，其余条目为当前共识。
+> 面向用户的操作指南见 [`../../usage/capsule.md`](../../usage/capsule.md)。
+> 实现位于 `internal/capsule/`（核心格式）与 `internal/capsule/{export,check,importer,build}`，
+> CLI 接线在 `cmd/capsule.go` + `internal/cli/capsule.go`，Web 接线在 `internal/migrator/capsule.go`
+> + `internal/service/migrator` + `internal/job/runner`（见 §9.1）。
 
 **用词约定**：**必须** / **禁止** = 违反即校验错误；**应当** = 违反产生警告；**可选** = 消费者不得因缺失而报错。
 
@@ -51,16 +54,18 @@
 | `site.custom_css` / `site.custom_js` | string | 可选 | 非空时 `check` **应当**告警（第三方胶囊 = 执行对方代码） |
 | `owner.username` | string | **必须** | 归属兜底：Echo 未标 `username` 时的默认作者 |
 | `connects` | list | 可选 | 互联实例快照，元素为 `{url: string}` |
+| `files` | list | 可选 | **未挂在任何 Echo 上的文件行**，元素形状与 §4.2 的 `files[]` 完全一致。见下 |
 
 - `site.*` 子集遵循「渲染所需皆入，运维行为皆弃」：`AllowRegister` 等行为开关**禁止**入胶囊。
 - `site.*` 键名 = `SystemSetting` 的 json tag **原样**（`site_title`/`server_logo`/`ICP_number`…）：import 时整块直接反序列化进 `SystemSetting`，零映射代码（「导出即转储」原则，见 §11）。
 - 凭据（密码哈希、token、OAuth/Passkey、S3 密钥、SMTP、Agent 配置）**禁止**出现在胶囊任何位置。
+- **`files` 块的存在理由**：库中 `files` 是独立表，而 frontmatter 只能表达「挂在这条 Echo 上的文件」。站点 logo、以及上传后没用上的附件，其字节会随记录驱动导出进 `files/`，元数据却无处安放——没有这个块，导入侧就还原不出这些行，最直接的后果是**搬家之后 `site.server_logo` 变成死链**。生产者**必须**把这类行写入 `files`；消费者**必须**为其建行并落字节，但**禁止**建立任何 Echo 关联。归属跟随执行导入的 owner（胶囊不携带 `user_id`）。
 
 ## 4. Echo 文件
 
 ### 4.1 路径与命名
 
-- 位置：`echoes/<YYYY>/<YYYY-MM-DD>-<id 前 8 位>.md`，`<YYYY>`/`<YYYY-MM-DD>` 取自 `created_at`。
+- 位置：`echoes/<YYYY>/<YYYY-MM-DD>-<id 去横线后的末 8 位>.md`，`<YYYY>`/`<YYYY-MM-DD>` 取自 `created_at`。取**末** 8 位是因为 Echo 的 id 是 UUIDv7，前 48 位为时间戳——同一批创建的条目前缀高度重合（真实实例上出现过 287 条中 270 条共用同一前 8 位、单日挤进 5 条），只能靠 `-2`/`-3` 后缀区分，等于没有辨识度；末 8 位落在随机段，天然离散。同名时**必须**在 `.md` 前追加 `-2`、`-3`… 去重。
 - 命名仅为浏览友好：消费者**必须**以 frontmatter 为准，**禁止**从文件名解析任何语义。
 
 ### 4.2 Frontmatter 字段
@@ -84,7 +89,7 @@
 | `id` | string(UUID) | 可选 | `File.ID` 原样；缺省 import 生成。幂等锚点：目标库同 `id` 已存在 → 直接复用行 |
 | `key` | string | 与 `url` 互斥 | `File.Key` 原样（托管文件的扁平存储键，**禁止**含 `/` 或 `..`）。字节**必须**位于 `files/ + Resolve(key)`（§6 路由表）——位置由 `key` 纯函数派生，胶囊不存路径 |
 | `url` | string(URL) | 与 `key` 互斥 | 外链文件（`storage_type=external`）的 `File.URL` 原样透传，**不**本地化 |
-| `category` | enum | 可选 | `File.Category`：`image\|video\|audio\|document\|file`；缺省按扩展名派生，`url` 条目**应当**显式给出 |
+| `category` | enum | 可选 | `File.Category`：`image\|video\|audio\|pdf\|markdown\|file`（`storage.Category` 全集，与 `NormalizeCategory` 一致）；缺省按扩展名派生，`url` 条目**应当**显式给出 |
 | `name` | string | 可选 | `File.Name` 原始文件名（keygen 后的 key 不可读，此字段保留人类信息） |
 | `content_type` | string | 可选 | `File.ContentType`；缺省按扩展名推导，兜底类别与无扩展名文件应当显式给出 |
 | `size` | int ≥ 0 | 可选 | `File.Size`；提供时 `check` **应当**核对实际字节数（完整性校验红利） |
@@ -130,14 +135,18 @@
 - 子目录固定五类：`images/ audios/ videos/ documents/ files/`（对应 `RouteByExt` 四类 + `DefaultRoute("files/")` 兜底；`files/files/` 即兜底类别的 mirror，属预期布局）。
 - 生产者**必须**按 `files` 表记录驱动写入（`Resolve(key)` 落位），**禁止**盲目拷贝 `DataRoot`：`data/files/snapshots/` 等非托管产物不得进入胶囊。「目录拷贝」仅是近似心智模型。
 - 胶囊**必须**自包含：所有 `files[].key` 对应 `files/ + Resolve(key)` 的字节都在胶囊内；S3 托管文件由生产者下载入胶囊。外链（`url`）文件除外。
-- 未被任何 Echo / `site.server_logo` 引用的文件：合法，`check` **应当**告警（悬空文件）。
+- 既不被任何 Echo 的 `files[]`、也不被清单 `files` 块声明的字节：合法，`check` **应当**告警（悬空文件）。真实导出不会产生这种情况——未挂 Echo 的文件行都会进清单 `files` 块；它只在手写胶囊里出现。
 
 ## 7. 校验规则（`ech0 check`）
 
 | 级别 | 条件 |
 |---|---|
-| **错误**（拒绝 import/build） | `ech0.yaml` 缺失或 `schema_version` 不识别；`id`/`created_at` 缺失或非法；`layout`/`extension.type`/`files[].category` 非法枚举；`files[].key` 含 `/` 或 `..`，或字节不存在于 `files/ + Resolve(key)`；`key`+`url` 同时存在或同时缺失；`comments.yaml` 出现禁止字段；`id` 重复 |
-| **警告** | 孤儿评论；悬空媒体文件；未知字段/未知顶层路径；`custom_js`/`custom_css` 非空；`status != approved` 的评论；`files[].size` 与实际字节数不符；正文、`extension.payload` 或 `site.server_logo` 内嵌实例相关 URL（`site.server_url` 前缀或 `/api/files/` 引用，迁移后可能断链） |
+| **错误**（拒绝 import/build） | `ech0.yaml` 缺失或 `schema_version` 不识别；`id`/`created_at` 缺失或非法；有 `extension` 但 `type` 或 `payload` 缺失；`files[].key` 含 `/` 或 `..`，或字节不存在于 `files/ + Resolve(key)`；`key`+`url` 同时存在或同时缺失；`comments.yaml` 出现禁止字段；`id` 重复 |
+| **警告** | **`layout`/`extension.type`/`files[].category` 取值不在已知枚举内**（见下）；孤儿评论；悬空媒体文件；未知字段/未知顶层路径；`custom_js`/`custom_css` 非空；`status != approved` 的评论；`files[].size` 与实际字节数不符；正文、`extension.payload` 或 `site.server_logo` 内嵌实例相关 URL（`site.server_url` 前缀或 `/api/files/` 引用，迁移后可能断链） |
+
+**表现层枚举只警告、不阻断**：`layout`、`files[].category`、`extension.type` 都只影响「怎么渲染」，内容本身完好。消费者**必须**优雅降级——`layout` 回落 `waterfall`、`category` 回落 `file`、不认得的 `extension.type` 跳过渲染——而**禁止**因此拒绝整个胶囊。理由有二：其一，活实例的写路径本就如此（`service/echo` 把未知 `layout` 归一成 `waterfall`），规范没有理由比它描述的系统更严格；其二，这与 §8「消费者必须忽略未知字段」是同一类前向兼容问题——未知的枚举**取值**和未知的**字段**都可能来自更新的版本或第三方生产者。缺失 `extension.type` 仍是硬错：`payload` 的结构随 `type` 而异，没有它就无从解释。
+
+> 降级只发生在**消费侧的渲染**（`build`）。`export`/`import` 一律逐字保留原值——库里是 `stream` 就导出 `stream`、导入回去还是 `stream`（§11 的 1:1 纪律）。
 
 - `--fix` 可自动修复项：缺失 `id`（生成 UUIDv7 回写 frontmatter）。仅此一项，后续扩展须逐项列入本规格。
 - `ech0 import capsule` / `ech0 build` 隐式执行同一套校验。
@@ -173,6 +182,26 @@ ech0 build            [<path>=./capsule] [-o ./dist] [--base-url /]
 
 退出码：`0` 成功；`1` 校验错误或执行失败；仅警告不影响退出码。
 
+## 9.1 HTTP 接口（Web 面板）
+
+`export capsule` 与 `import capsule` 另有一条等价的 HTTP 路径，供面板使用；两条路复用同一批
+`internal/capsule/*` 入口，语义完全一致。`check` 与 `build` **只有** CLI。全部端点沿用既有导出
+/迁移域的 `admin:settings` 权限。
+
+| 端点 | 胶囊相关增量 |
+|---|---|
+| `POST /migration/export` | 请求体 `{format?: "snapshot"\|"capsule", include_private?: bool}`；两者皆可省，省略即「快照、不含私密」 |
+| `GET /migration/export/status` | 响应新增 `format`，标明当前产物是哪种格式 |
+| `GET /migration/export/download` | 新增 `?format=` 查询参数，缺省 `snapshot` |
+| `POST /migration/upload` | `source_type` 新增取值 `capsule` |
+| `POST /migration/start` | `source_type: "capsule"` 时，`source_payload.include_private` 控制是否导入私密条目 |
+
+- 未知 `format` **必须**拒绝，**禁止**静默回落到快照——悄悄给出另一种产物会让用户拿错东西。
+- 胶囊产物落在 `data/files/capsules/`，与快照的 `data/files/snapshots/` 分居两个槽位，各自只保留最新
+  一份。两个目录都**必须**排除在快照打包之外（`internal/migrator/artifact` 收口）。
+- Web 导入与 CLI 一样把校验作为硬前置：有错误级发现即拒绝落库，错误摘要回填进作业的 `error_message`。
+- 导出胶囊**禁止**发布 `SystemSnapshot` 事件：webhook 订阅它来确认「备份已完成」，而胶囊不是备份。
+
 ## 10. `ech0 build` 产物约定
 
 ```text
@@ -197,10 +226,12 @@ DB ↔ 胶囊字段映射（权威表见 design §4.3）；往返保真度：
 
 | 数据 | 往返 |
 |---|---|
-| Echo 全量（正文/tags/layout/extension/private/fav_count/created_at/id）、托管媒体字节、site 公开子集、connects | ✅ 完整 |
+| Echo 全量（正文/tags/layout/extension/private/fav_count/created_at/id）、托管媒体字节与文件行（含未挂 Echo 的）、site 公开子集、connects | ✅ 完整 |
 | 评论 | ⚠️ 有损（Public 投影，无 email/ip_hash/user_id） |
 | 外链文件 | ⚠️ URL 透传，字节不随胶囊 |
 | 账号/凭据/运维配置/embeddings/访客统计/日志 | ❌ 不往返 |
+
+> **一处收敛性偏差**：胶囊省略 `files[].size` 时，import 按实际字节数补齐（源库把 size 存成 `0` 的历史行会因此被修正）。这是元数据修复而非内容改写，且一轮往返后即收敛——`export → import → export` 的第二份胶囊会比第一份多出这些 `size`，之后再无差异。
 
 ### 11.1 `files[]` 落地语义（import）
 
@@ -218,7 +249,8 @@ DB ↔ 胶囊字段映射（权威表见 design §4.3）；往返保真度：
 
 - **幂等按 `id`**：目标库已存在同 `id` 的 Echo → 跳过并报告，不覆盖不合并；无 `--overwrite`（重复执行安全）。
 - **原样导入原则**：胶囊字段值 1:1 写入对应 DB 列，**禁止**数值转换——`username` 逐字入库不改写、`fav_count`/`status`/正文原样。唯一例外是补全胶囊不携带的**内部必填外键** `Echo.UserID`：同名用户存在则挂接，否则挂到执行导入的 owner（权限归属）；展示归属始终以原样保留的 `username` 为准。
-- **站点设置**：`site` 子集仅在目标实例对应项为空时填充，不覆盖已有配置。
+- **站点设置**：`site` 子集仅填「未配置项」，**禁止**覆盖已配置项。「未配置」= 当前值为空串**或**逐字等于 `setting.System.Default()`（config 派生）的对应值——不能只判空串：全新实例的 `site_title`/`server_logo`/`server_url` 等在 KV 缺键时本就返回非空默认值，只判空串会让站点身份在「搬站到新实例」这个头号用例里永远导不进去。
+- **评论归属**：以「落库后目标 `echo_id` 在 `echos` 表中是否存在」为准——本轮新建的与此前已导入的同等对待。往既有 Echo 追加评论不构成对该 Echo 的修改，故不受「幂等跳过」牵连；幂等由评论自身 `id` 保证。宿主不存在（含因 `private` 被排除）→ 记为孤儿并跳过。
 - **不发布事件**：导入不触发事件总线（webhook/embedding/agent 订阅者不响应）；报告末尾提示可在后台触发索引重建覆盖导入内容。
 
 ## 12. 待定项索引
