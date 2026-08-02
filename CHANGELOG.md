@@ -9,12 +9,26 @@ For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/
 
 ## [Unreleased]
 
+## [5.5.0] - 2026-08-02
+
+Ech0 gets a way out. **Capsules** turn everything you have written into a self-contained
+folder of markdown and media that you can read, keep, hand to another instance, or compile
+into a static site — from the dashboard or the terminal.
+
 ### Added
 
 - **Capsule: a portable, human-readable format for your content — plus a one-command static site.** Four new CLI commands ship together. `ech0 export capsule` writes your instance to a plain directory (or `--zip`): one frontmatter-markdown file per echo, a `comments.yaml` snapshot, `ech0.yaml` for site info, and the media bytes laid out exactly as they are on disk — S3-hosted files are pulled down so the capsule is always self-contained (if any byte can't be fetched the export fails loudly rather than producing a capsule with holes). `ech0 import capsule` merges one back **idempotently**: echoes are matched by id and skipped if they already exist, values land 1:1 with no conversion, and nothing is ever overwritten. `ech0 check` validates a capsule with errors/warnings and can `--fix` missing ids. `ech0 build` compiles a capsule into a static, read-only site that reuses the real Ech0 frontend — no Node or pnpm needed, the assets are embedded in the binary — ready to drop on GitHub Pages or Cloudflare Pages, with likes and comments shown frozen and read-only. The format is a published spec, so hand-writing a capsule or converting from another tool is supported. See [`docs/usage/capsule.md`](docs/usage/capsule.md).
+- **Capsules are now available from the dashboard, not just the CLI.** *Panel → Data management* gains a format choice on **Export** — *Snapshot* (the default) or *Capsule* — and a third source card on **Import**, *Ech0 Capsule*. The two formats are deliberately not presented as interchangeable: the snapshot card states that it is a full backup containing accounts and credentials and is the only format that can restore an instance, while picking Capsule surfaces a warning that it carries no accounts or credentials and cannot be used for disaster recovery, plus an opt-in *Include private content* switch (off by default). Importing a capsule is append-only and idempotent — entries are matched by id, so re-importing the same capsule creates nothing new and never wipes or overwrites what you already have — and validation runs first, refusing to write anything if the capsule has errors. Downloads always point at whatever the job actually produced, even if you flip the selector afterwards. Capsule artifacts live in `data/files/capsules/`, kept separate from snapshots so the two can't delete each other, and excluded from snapshots so backups don't swallow them. The CLI commands are unchanged; both routes drive the same engine.
 - **`ech0 export snapshot` / `ech0 import snapshot` are now available from the CLI.** The full-instance backup and restore that previously existed only as a dashboard job can now be driven from a terminal or a cron entry. Restoring is destructive and requires an explicit `--yes`.
 - **Quick search can now filter by visibility (public / private).** The command palette (⌘K) gains a three-state **Visibility** section — *All*, *Public only*, *Private only* — shown only to logged-in admins; anonymous visitors don't see it and the timeline behaves exactly as before. An active filter shows up as a clearable chip next to the search box, like date-range and tag filters. Server-side, `POST /api/echo/query` accepts an optional `private` boolean; requests without private-content permission have it silently ignored and keep getting public-only results, so nothing can leak.
-- **Capsules are now available from the dashboard, not just the CLI.** *Panel → Data management* gains a format choice on **Export** — *Snapshot* (the default) or *Capsule* — and a third source card on **Import**, *Ech0 Capsule*. The two formats are deliberately not presented as interchangeable: the snapshot card states that it is a full backup containing accounts and credentials and is the only format that can restore an instance, while picking Capsule surfaces a warning that it carries no accounts or credentials and cannot be used for disaster recovery, plus an opt-in *Include private content* switch (off by default). Importing a capsule is append-only and idempotent — entries are matched by id, so re-importing the same capsule creates nothing new and never wipes or overwrites what you already have — and validation runs first, refusing to write anything if the capsule has errors. Downloads always point at whatever the job actually produced, even if you flip the selector afterwards. Capsule artifacts live in `data/files/capsules/`, kept separate from snapshots so the two can't delete each other, and excluded from snapshots so backups don't swallow them. The CLI commands are unchanged; both routes drive the same engine.
+
+### Changed
+
+- **`ech0 version` and the other CLI result boxes were restyled.** The box used to run its heading and its numbers through one `label: value` formatter, so the leading emoji sat in the label column and pushed that row out of line with everything under it. Headings now sit on their own line and the figures below them line up in a column.
+
+## [5.4.7] - 2026-07-31
+
+> Recorded retroactively: v5.4.7 was tagged and published without its CHANGELOG section.
 
 ### Changed
 
@@ -625,7 +639,9 @@ This is primarily a security release: six advisories disclosed since v4.7.2 are 
 
   Practical risk in this repo was negligible (the vulnerable code only runs at PWA build time on developer-controlled input), but the alerts are now resolved at the supply-chain level.
 
-[Unreleased]: https://github.com/lin-snow/Ech0/compare/v5.4.6...HEAD
+[Unreleased]: https://github.com/lin-snow/Ech0/compare/v5.5.0...HEAD
+[5.5.0]: https://github.com/lin-snow/Ech0/compare/v5.4.7...v5.5.0
+[5.4.7]: https://github.com/lin-snow/Ech0/compare/v5.4.6...v5.4.7
 [5.4.6]: https://github.com/lin-snow/Ech0/compare/v5.4.5...v5.4.6
 [5.4.5]: https://github.com/lin-snow/Ech0/compare/v5.4.4...v5.4.5
 [5.4.4]: https://github.com/lin-snow/Ech0/compare/v5.4.3...v5.4.4
