@@ -2,21 +2,5 @@
   "airtouch": {
     "url": "https://mm.airtouch.top",
     "unhealthy_since": "2026-08-10T01:09:06.181Z"
-  },
-  "ciraos": {
-    "url": "https://ech0.ciraos.top",
-    "unhealthy_since": "2026-08-11T01:07:46.464Z"
-  },
-  "galaha": {
-    "url": "https://galaha.cn",
-    "unhealthy_since": "2026-08-11T01:07:46.464Z"
-  },
-  "jinvic": {
-    "url": "https://mblog.jinvic.top",
-    "unhealthy_since": "2026-08-11T01:07:46.464Z"
-  },
-  "sunboy-echo": {
-    "url": "https://echo.sunboy.ltd",
-    "unhealthy_since": "2026-08-11T01:07:46.464Z"
   }
 }
