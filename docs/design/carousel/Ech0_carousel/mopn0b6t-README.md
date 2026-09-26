@@ -189,7 +189,7 @@ For the simplest path, the [Try in 60 Seconds](#try-in-60-seconds) snippet above
    Ech0 currently uses a lightweight role model (Owner / Admin / regular user) to keep operation simple and predictable. The permission model will continue to evolve based on community feedback.
 
 8. **Why can't others see their Connect avatar?**
-   Set your current instance URL in `System Settings - Service URL`, for example `https://memo.vaaat.com` (must include `http://` or `https://`).
+   Set your current instance URL in `System Settings - Service URL`, for example `https://memo.sn0w.fyi/` (must include `http://` or `https://`).
 
 9. **What is the MetingAPI option in settings?**
    It is the API endpoint used by music cards to resolve playable stream metadata. You can provide your own trusted endpoint; when left empty, Ech0 falls back to a default resolver endpoint. For production, a self-controlled endpoint is recommended.
