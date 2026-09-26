@@ -4,7 +4,7 @@
 
 # Ech0
 
-[Vorschau](https://memo.vaaat.com/) · [Offizielle Seite & Dokumentation](https://www.ech0.app/) · [Releases](https://lin-snow.github.io/Ech0/) · [Ech0 Hub](https://hub.ech0.app/)
+[Vorschau](https://memo.sn0w.fyi/) · [Offizielle Seite & Dokumentation](https://www.ech0.app/) · [Releases](https://lin-snow.github.io/Ech0/) · [Ech0 Hub](https://hub.ech0.app/)
 
 <a title="en-US" href="./README.md"><img src="https://img.shields.io/badge/-English-545759?style=for-the-badge" alt="English"></a> <a title="zh" href="./README.zh.md"><img src="https://img.shields.io/badge/-简体中文-545759?style=for-the-badge" alt="简体中文"></a> <img src="https://img.shields.io/badge/-Deutsch-F54A00?style=for-the-badge" alt="Deutsch"> <a title="ja" href="./README.ja.md"><img src="https://img.shields.io/badge/-日本語-545759?style=for-the-badge" alt="日本語"></a>
 
