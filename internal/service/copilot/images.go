@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"image"
 	"image/color"
-	"image/draw"
 	_ "image/gif" // registers the GIF decoder for image.Decode
 	"image/jpeg"
 	_ "image/png" // registers the PNG decoder for image.Decode
@@ -15,6 +14,9 @@ import (
 	"path"
 	"strings"
 	"sync"
+
+	"golang.org/x/image/draw"
+	_ "golang.org/x/image/webp" // registers the WebP decoder for image.Decode
 )
 
 // What a vision request can carry, per the providers' published limits:
@@ -75,8 +77,7 @@ func mediaTypeOfURL(declared, url string) (string, bool) {
 // fitForVision returns an image the providers will take, downscaling and
 // re-encoding when it is larger than they would use. It gives up — the image
 // is simply not attached — when the format is unsupported, or when the image
-// cannot be decoded (WebP, for which the standard library has no decoder) and
-// is already too large to send as it is.
+// cannot be decoded and is already too large to send as it is.
 func fitForVision(data []byte) (mediaType string, out []byte, ok bool) {
 	mediaType, ok = sniffMediaType(data)
 	if !ok {
@@ -106,10 +107,9 @@ func fitForVision(data []byte) (mediaType string, out []byte, ok bool) {
 	return "image/jpeg", buf.Bytes(), true
 }
 
-// downscale shrinks src so its long edge is at most edge, averaging each
-// destination pixel over the source pixels it covers — a box filter, which is
-// what a downscale needs and all the standard library allows. Transparency is
-// flattened onto white, since the result is encoded as JPEG.
+// downscale shrinks src so its long edge is at most edge, with Catmull-Rom
+// resampling. Transparency is flattened onto white first, since the result is
+// encoded as JPEG and would otherwise turn transparent areas black.
 func downscale(src image.Image, edge int) image.Image {
 	b := src.Bounds()
 	w, h := b.Dx(), b.Dy()
@@ -120,34 +120,9 @@ func downscale(src image.Image, edge int) image.Image {
 		dw, dh = max(w*edge/h, 1), edge
 	}
 
-	flat := image.NewRGBA(b)
-	draw.Draw(flat, b, image.NewUniform(color.White), image.Point{}, draw.Src)
-	draw.Draw(flat, b, src, b.Min, draw.Over)
-	if dw == w && dh == h {
-		return flat
-	}
-
 	dst := image.NewRGBA(image.Rect(0, 0, dw, dh))
-	for y := range dh {
-		y0, y1 := y*h/dh, max((y+1)*h/dh, y*h/dh+1)
-		for x := range dw {
-			x0, x1 := x*w/dw, max((x+1)*w/dw, x*w/dw+1)
-			var r, g, bl, n uint32
-			for sy := y0; sy < y1; sy++ {
-				row := flat.Pix[sy*flat.Stride:]
-				for sx := x0; sx < x1; sx++ {
-					p := row[sx*4 : sx*4+3]
-					r += uint32(p[0])
-					g += uint32(p[1])
-					bl += uint32(p[2])
-					n++
-				}
-			}
-			o := dst.PixOffset(x, y)
-			dst.Pix[o], dst.Pix[o+1], dst.Pix[o+2], dst.Pix[o+3] =
-				uint8(r/n), uint8(g/n), uint8(bl/n), 0xff
-		}
-	}
+	draw.Draw(dst, dst.Bounds(), image.NewUniform(color.White), image.Point{}, draw.Src)
+	draw.CatmullRom.Scale(dst, dst.Bounds(), src, b, draw.Over, nil)
 	return dst
 }
 

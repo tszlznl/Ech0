@@ -9,6 +9,7 @@ import (
 	"image/color"
 	"image/jpeg"
 	"image/png"
+	"os"
 	"testing"
 )
 
@@ -39,6 +40,26 @@ func TestFitForVision_LargeImageIsDownscaled(t *testing.T) {
 	mt, out, ok := fitForVision(encodePNG(t, 3200, 1600))
 	if !ok || mt != "image/jpeg" {
 		t.Fatalf("got %q ok=%v, want a re-encoded JPEG", mt, ok)
+	}
+	img, err := jpeg.Decode(bytes.NewReader(out))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b := img.Bounds(); b.Dx() != maxImageEdge || b.Dy() != maxImageEdge/2 {
+		t.Fatalf("size = %dx%d, want %dx%d", b.Dx(), b.Dy(), maxImageEdge, maxImageEdge/2)
+	}
+}
+
+// A WebP larger than the providers use is decoded and downscaled like any
+// other format, rather than sent at full size or dropped.
+func TestFitForVision_LargeWebPIsDownscaled(t *testing.T) {
+	data, err := os.ReadFile("testdata/wide-2400x1200.webp")
+	if err != nil {
+		t.Fatal(err)
+	}
+	mt, out, ok := fitForVision(data)
+	if !ok || mt != "image/jpeg" {
+		t.Fatalf("got %q ok=%v, want a downscaled JPEG", mt, ok)
 	}
 	img, err := jpeg.Decode(bytes.NewReader(out))
 	if err != nil {
