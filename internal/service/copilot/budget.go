@@ -3,27 +3,73 @@
 
 package service
 
-import settingModel "github.com/lin-snow/ech0/internal/model/setting"
+import (
+	"encoding/json"
 
-const (
-	defaultContextWindow = 256_000
-	contextUsableRatio   = 0.6
-	contextReserveTokens = 8_000
-	minAggregateBudget   = 2_000
+	"github.com/lin-snow/ech0/internal/agent"
 )
 
-func aggregateBudgetTokens(setting settingModel.AgentSetting) int {
-	window := setting.ContextWindow
+// contextPlan divides one model's context window between the parts of a chat
+// request, all in estimated tokens (agent.EstimateTokens).
+//
+// The parts are sized together because they share one window: a summary sized
+// against the whole window leaves no room for the prompt and history it is sent
+// alongside, and the loop's trimming then drops the summary itself — the model
+// writes a year-end review from nothing. Each share here is carved out of what
+// the others leave.
+type contextPlan struct {
+	// Input is the ceiling for the whole request, handed to the run loop.
+	Input int
+	// History is what earlier turns of the conversation may take.
+	History int
+	// Material is what one summarize_echos result may take.
+	Material int
+}
+
+const (
+	// defaultContextWindow is assumed when the operator has not set one. It is
+	// deliberately modest: overestimating the window fails the request with
+	// context_length_exceeded, while underestimating only means summaries go
+	// through one more map-reduce pass.
+	defaultContextWindow = 64_000
+	minContextWindow     = 4_000
+
+	// The model's own output is budgeted out of the window first.
+	minOutputReserve = 1_024
+	maxOutputReserve = 16_000
+
+	// estimateMargin absorbs the estimator's error against real tokenizers.
+	estimateMargin = 0.9
+
+	minHistoryTokens = 300
+	maxHistoryTokens = 16_000
+
+	// minAggregateBudget keeps map-reduce chunks large enough to be worth a call.
+	minAggregateBudget = 1_000
+)
+
+func planContext(window, fixedTokens int) contextPlan {
 	if window <= 0 {
 		window = defaultContextWindow
 	}
-	budget := int(float64(window)*contextUsableRatio) - contextReserveTokens
-	if budget < minAggregateBudget {
-		return minAggregateBudget
-	}
-	return budget
+	window = max(window, minContextWindow)
+
+	reserve := min(max(window/4, minOutputReserve), maxOutputReserve)
+	input := int(float64(window-reserve) * estimateMargin)
+	free := max(input-fixedTokens, 0)
+
+	history := min(max(free/4, minHistoryTokens), maxHistoryTokens, free/2)
+	material := max((free-history)*6/10, minAggregateBudget)
+
+	return contextPlan{Input: input, History: history, Material: material}
 }
 
-func chatContextBudgetTokens(setting settingModel.AgentSetting) int {
-	return aggregateBudgetTokens(setting)
+// toolDefTokens is what the tool declarations cost on every request.
+func toolDefTokens(tools []agent.Tool) int {
+	n := 0
+	for _, t := range tools {
+		raw, _ := json.Marshal(t.Def)
+		n += agent.EstimateTokens(string(raw))
+	}
+	return n
 }

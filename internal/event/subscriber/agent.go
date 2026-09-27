@@ -42,6 +42,11 @@ func (ap *AgentProcessor) HandleEchoUpdated(ctx context.Context, e event.EchoUpd
 	return ap.handle(ctx)
 }
 
+func (ap *AgentProcessor) HandleEchoDeleted(ctx context.Context, e event.EchoDeleted) error {
+	_ = e
+	return ap.handle(ctx)
+}
+
 func (ap *AgentProcessor) HandleUserDeleted(ctx context.Context, e event.UserDeleted) error {
 	_ = e
 	return ap.handle(ctx)
@@ -55,6 +60,7 @@ func (ap *AgentProcessor) Registrations() []eventbus.Registration {
 	return []eventbus.Registration{
 		eventbus.On(ap.HandleEchoCreated, eventbus.AsyncParallel()...),
 		eventbus.On(ap.HandleEchoUpdated, eventbus.AsyncParallel()...),
+		eventbus.On(ap.HandleEchoDeleted, eventbus.AsyncParallel()...),
 		eventbus.On(ap.HandleUserDeleted, eventbus.AsyncParallel()...),
 	}
 }
