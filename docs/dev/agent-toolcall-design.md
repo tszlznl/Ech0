@@ -341,11 +341,11 @@ emit AgentDone   // 到达 maxRounds 仍未收尾，强制结束（已产出的�
 | # | 议题 | 决策 |
 |---|---|---|
 | 1 | `search_echos` 是否暴露 `top_k` 给模型 | **固定 6，不暴露**。模型只传 `query`，减少自由度带来的不稳定，行为可预测。 |
-| 2 | 是否加 `keyword_search`(FTS) 作第二工具 | **本期只做 vector search**。无 embedding 兜底议题另案处理，不进本重构。 |
+| 2 | 是否加 `keyword_search`(FTS) 作第二工具 | **本期只做 vector search**。无 embedding 兜底议题另案处理，不进本重构。（后续已补：索引未建/报错/结果不足 top-k 时，`searchByQuery` 以关键词检索补足并去重。） |
 | 3 | v1 是否开启多轮历史 | **先单轮验证工具体验**。历史接入点已预留（§11），跑通后再开多轮。 |
 | 4 | Gemini 协议去留 | **整协议下线（方案 B）**。`agent` 仅保留 OpenAI 兼容 + Anthropic（见 §15.1）。 |
 | 5 | 年终/区间总结怎么做 | **独立工具 `summarize_echos` + 窗口自适应 map-reduce**，不把 `search_echos` 撑成万能（见 §18）。 |
-| 6 | 模型窗口如何感知 | **`AgentSetting` 新增可选 `ContextWindow`**（0=按 256k 保守默认），驱动聚合取数预算（见 §18.3）。 |
+| 6 | 模型窗口如何感知 | **`AgentSetting` 新增可选 `ContextWindow`**（0=按 64k 保守默认），驱动整次请求的预算划分（见 §18.3）。 |
 
 ### 15.1 Gemini 整协议下线（方案 B，已定）
 
@@ -473,14 +473,20 @@ export function sseStream<E = unknown>(opts: {
 
 ### 18.3 `AgentSetting.ContextWindow` 与 token 预算
 
-新增可选字段 `ContextWindow int`（token；0=未配置）。前端以 `256k`/`1m` 友好单位填写，解析成 token 数存储（`web/src/utils/tokenSize.ts`）。预算模型（`budget.go`）：
+新增可选字段 `ContextWindow int`（token；0=未配置）。前端以 `128k`/`1m` 友好单位填写，解析成 token 数存储（`web/src/utils/tokenSize.ts`）。预算模型（`budget.go` 的 `planContext`）把**同一个窗口**一次性分给请求的各部分，而不是各算各的：
 
 ```
-window  = ContextWindow>0 ? ContextWindow : 256_000   // 默认保守 256k
-usable  = max(window * 0.6 - 8_000, 2_000)            // 扣掉 system/工具定义/成稿留白，留下塞物料的预算
+window   = ContextWindow>0 ? ContextWindow : 64_000         // 未配置按保守 64k；高估会直接超长报错，低估只是多一轮 map-reduce
+reserve  = clamp(window/4, 1_024, 16_000)                   // 先留出模型输出
+input    = (window - reserve) * 0.9                          // 整个请求的上限（交给 Loop 的 trimContext），0.9 吸收估算误差
+free     = input - (system prompt + 工具定义 + 本轮问题)
+history  = clamp(free/4, 300, 16_000)，且 ≤ free/2            // 多轮历史
+material = max((free - history) * 0.6, 1_000)               // 一次 summarize_echos 的物料上限
 ```
 
-度量复用 `estimateTokens`（rune 计数，CJK≈1/字），不引 tokenizer。
+度量用 `agent.EstimateTokens`：CJK 按 1 token/字，其余按 3 字符/token（偏保守，不引 tokenizer）。旧实现按 rune 计数，会把英文高估 3~4 倍。
+
+Loop 侧 `trimContext` 超限时按「价值从低到高」让步：先清空更早轮次的工具结果，再丢图片，最后才按比例截断**最新一轮**的结果（并标注已截断），绝不整条丢掉最新结果——否则模型会在没有材料的情况下写总结。
 
 ### 18.4 `summarize_echos` 工具
 
