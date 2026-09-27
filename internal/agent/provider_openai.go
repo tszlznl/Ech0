@@ -105,7 +105,9 @@ func (p *openaiProvider) buildTools(defs []ToolDef) []openai.Tool {
 }
 
 // buildRequest is the one place a portable Request becomes a Chat Completions
-// request, so the per-model rules apply to Complete and Stream alike.
+// request, shared by Complete and Stream. Sampling is sent only when the
+// operator configured it; no output ceiling is sent at all, which is the one
+// choice every compatible server and every model accepts.
 func (p *openaiProvider) buildRequest(req Request) openai.ChatCompletionRequest {
 	chatReq := openai.ChatCompletionRequest{
 		Model:    p.setting.Model,
@@ -115,17 +117,8 @@ func (p *openaiProvider) buildRequest(req Request) openai.ChatCompletionRequest 
 	if len(chatReq.Tools) > 0 && req.ToolChoice == ToolChoiceNone {
 		chatReq.ToolChoice = "none"
 	}
-	if t := req.temperatureFor(p.setting.Model); t != nil {
-		chatReq.Temperature = *t
-	}
-	if req.MaxTokens > 0 {
-		// Reasoning models reject max_tokens outright; everything else keeps it,
-		// because plenty of compatible servers still do not read the newer field.
-		if isOpenAIReasoningModel(p.setting.Model) {
-			chatReq.MaxCompletionTokens = req.MaxTokens
-		} else {
-			chatReq.MaxTokens = req.MaxTokens
-		}
+	if t := p.setting.Temperature; t != nil {
+		chatReq.Temperature = float32(*t)
 	}
 	return chatReq
 }

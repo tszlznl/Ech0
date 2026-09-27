@@ -73,11 +73,8 @@ func (p *openaiResponsesProvider) buildParams(req Request) (responses.ResponseNe
 	if isOpenAIReasoningModel(p.setting.Model) {
 		params.Include = []responses.ResponseIncludable{responses.ResponseIncludableReasoningEncryptedContent}
 	}
-	if t := req.temperatureFor(p.setting.Model); t != nil {
-		params.Temperature = param.NewOpt(float64(*t))
-	}
-	if req.MaxTokens > 0 {
-		params.MaxOutputTokens = param.NewOpt(int64(req.MaxTokens))
+	if t := p.setting.Temperature; t != nil {
+		params.Temperature = param.NewOpt(*t)
 	}
 	return params, nil
 }

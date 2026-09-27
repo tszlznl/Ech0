@@ -145,10 +145,6 @@ type Request struct {
 	Messages   []Message
 	Tools      []ToolDef
 	ToolChoice ToolChoice
-	// Temperature is a preference, not a requirement: providers drop it for
-	// models that reject sampling parameters (see acceptsSampling).
-	Temperature *float32
-	MaxTokens   int
 }
 
 type Response struct {
@@ -190,7 +186,6 @@ type RunRequest struct {
 	Messages         []Message
 	Tools            []Tool
 	MaxRounds        int
-	Temp             *float32
 	Strings          RunStrings
 	Timeout          time.Duration
 	MaxContextTokens int

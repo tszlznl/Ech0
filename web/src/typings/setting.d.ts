@@ -135,6 +135,8 @@ declare namespace App {
         base_url: string
         multimodal: boolean
         context_window: number
+        /** Omitted = not sent; the model runs at its own default. */
+        temperature?: number
       }
 
       type AgentSettingDto = {
@@ -146,6 +148,8 @@ declare namespace App {
         base_url: string
         multimodal: boolean
         context_window: number
+        /** Omitted = not sent; the model runs at its own default. */
+        temperature?: number
       }
     }
   }

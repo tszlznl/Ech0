@@ -17,42 +17,6 @@ import (
 	openai "github.com/sashabaranov/go-openai"
 )
 
-func TestAcceptsSampling(t *testing.T) {
-	cases := map[string]bool{
-		"gpt-4o":                            true,
-		"gpt-4.1-mini":                      true,
-		"deepseek-chat":                     true,
-		"qwen3:32b":                         true,
-		"gpt-5":                             false,
-		"gpt-5-mini":                        false,
-		"o3":                                false,
-		"o4-mini":                           false,
-		"openai/o3-mini":                    false,
-		"claude-3-5-sonnet-20241022":        true,
-		"claude-3-haiku-20240307":           true,
-		"claude-sonnet-4-5-20250929":        true,
-		"claude-opus-4-20250514":            true,
-		"claude-opus-4-6":                   true,
-		"claude-sonnet-4-6":                 true,
-		"claude-haiku-4-5":                  true,
-		"claude-opus-4-7":                   false,
-		"claude-opus-4-8":                   false,
-		"claude-opus-5":                     false,
-		"claude-opus-5-5":                   false,
-		"claude-sonnet-5":                   false,
-		"claude-fable-5-1":                  false,
-		"anthropic/claude-opus-5":           false,
-		"us.anthropic.claude-opus-4-7-v1:0": false,
-		"claude-opus-4-7@20260101":          false,
-		"claude-opus-4-5@20251101":          true,
-	}
-	for id, want := range cases {
-		if got := acceptsSampling(id); got != want {
-			t.Errorf("acceptsSampling(%q) = %v, want %v", id, got, want)
-		}
-	}
-}
-
 func TestRunLoop_FailedCallIsRetriedNotDeduped(t *testing.T) {
 	calls := 0
 	tool := Tool{
@@ -198,22 +162,21 @@ func TestToolCallAccumulator_MissingIndexSplitsByID(t *testing.T) {
 	}
 }
 
-func TestOpenAIBuildRequest_ReasoningModel(t *testing.T) {
-	temp := float32(0.4)
+// Sampling is the operator's call, per model: nothing is sent unless it was
+// configured, and what was configured is sent as-is. No output ceiling is sent
+// either, so no model has a field name to reject.
+func TestOpenAIBuildRequest_SamplingOnlyWhenConfigured(t *testing.T) {
 	p := &openaiProvider{setting: model.AgentSetting{Model: "o4-mini"}}
 	req := p.buildRequest(Request{
-		Messages:    []Message{{Role: RoleUser, Content: "hi"}},
-		Tools:       []ToolDef{{Name: "t", Parameters: json.RawMessage(`{"type":"object"}`)}},
-		ToolChoice:  ToolChoiceNone,
-		Temperature: &temp,
-		MaxTokens:   16,
+		Messages:   []Message{{Role: RoleUser, Content: "hi"}},
+		Tools:      []ToolDef{{Name: "t", Parameters: json.RawMessage(`{"type":"object"}`)}},
+		ToolChoice: ToolChoiceNone,
 	})
 	body := wireBody(t, req)
-	if _, has := body["temperature"]; has {
-		t.Fatalf("reasoning model must not get temperature: %v", body)
-	}
-	if _, has := body["max_tokens"]; has || body["max_completion_tokens"] != float64(16) {
-		t.Fatalf("reasoning model needs max_completion_tokens instead of max_tokens: %v", body)
+	for _, k := range []string{"temperature", "max_tokens", "max_completion_tokens"} {
+		if _, has := body[k]; has {
+			t.Fatalf("%s must not be sent unless configured: %v", k, body)
+		}
 	}
 	if req.ToolChoice != "none" {
 		t.Fatalf("tool_choice = %v, want none", req.ToolChoice)
@@ -222,11 +185,11 @@ func TestOpenAIBuildRequest_ReasoningModel(t *testing.T) {
 		t.Fatalf("go-openai would reject this request client-side: %v", err)
 	}
 
-	p.setting.Model = "gpt-4o"
-	req = p.buildRequest(Request{Messages: []Message{{Role: RoleUser, Content: "hi"}}, Temperature: &temp, MaxTokens: 16})
-	body = wireBody(t, req)
-	if body["temperature"] != 0.4 || body["max_tokens"] != float64(16) || body["tool_choice"] != nil {
-		t.Fatalf("ordinary model should keep its sampling and max_tokens, got %v", body)
+	temp := 0.4
+	p.setting = model.AgentSetting{Model: "gpt-4o", Temperature: &temp}
+	body = wireBody(t, p.buildRequest(Request{Messages: []Message{{Role: RoleUser, Content: "hi"}}}))
+	if got, ok := body["temperature"].(float64); !ok || float32(got) != float32(temp) {
+		t.Fatalf("configured temperature should be sent, got %v", body["temperature"])
 	}
 }
 
@@ -259,30 +222,29 @@ func TestOpenAIBuildMessages_ReplaysReasoningContent(t *testing.T) {
 }
 
 func TestAnthropicBuildParams_FinalRoundAndSampling(t *testing.T) {
-	temp := float32(0.4)
 	tools := []ToolDef{{Name: "t", Parameters: json.RawMessage(`{"type":"object","properties":{}}`)}}
 
 	p := &anthropicProvider{setting: model.AgentSetting{Model: "claude-opus-5"}}
 	params := p.buildParams(Request{
-		Messages:    []Message{{Role: RoleUser, Content: "hi"}},
-		Tools:       tools,
-		ToolChoice:  ToolChoiceNone,
-		Temperature: &temp,
+		Messages:   []Message{{Role: RoleUser, Content: "hi"}},
+		Tools:      tools,
+		ToolChoice: ToolChoiceNone,
 	})
 	if len(params.Tools) != 1 || params.ToolChoice.OfNone == nil {
 		t.Fatalf("final round must declare tools with tool_choice none, got tools=%d choice=%+v", len(params.Tools), params.ToolChoice)
 	}
 	if params.Temperature.Valid() {
-		t.Fatalf("claude-opus-5 rejects temperature; it must not be sent")
+		t.Fatalf("temperature must not be sent unless configured")
 	}
-	if params.MaxTokens != anthropicDefaultMaxTokens {
+	if params.MaxTokens != anthropicMaxTokens {
 		t.Fatalf("max_tokens = %d", params.MaxTokens)
 	}
 
-	p.setting.Model = "claude-sonnet-4-5"
-	params = p.buildParams(Request{Messages: []Message{{Role: RoleUser, Content: "hi"}}, Temperature: &temp})
-	if !params.Temperature.Valid() {
-		t.Fatalf("claude-sonnet-4-5 still takes temperature")
+	temp := 0.3
+	p.setting.Temperature = &temp
+	params = p.buildParams(Request{Messages: []Message{{Role: RoleUser, Content: "hi"}}})
+	if !params.Temperature.Valid() || params.Temperature.Value != temp {
+		t.Fatalf("configured temperature should be sent, got %+v", params.Temperature)
 	}
 }
 
@@ -309,7 +271,6 @@ func TestAnthropicBuildMessages_ReplaysNativeTurnAndErrors(t *testing.T) {
 }
 
 func TestResponsesBuildParams_ReasoningModel(t *testing.T) {
-	temp := float32(0.4)
 	p := &openaiResponsesProvider{setting: model.AgentSetting{Model: "gpt-5"}}
 	params, err := p.buildParams(Request{
 		Messages: []Message{
@@ -320,9 +281,8 @@ func TestResponsesBuildParams_ReasoningModel(t *testing.T) {
 			},
 			{Role: RoleTool, ToolCallID: "c1", Content: "hit"},
 		},
-		Tools:       []ToolDef{{Name: "s", Parameters: json.RawMessage(`{"type":"object"}`)}},
-		ToolChoice:  ToolChoiceNone,
-		Temperature: &temp,
+		Tools:      []ToolDef{{Name: "s", Parameters: json.RawMessage(`{"type":"object"}`)}},
+		ToolChoice: ToolChoiceNone,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -332,7 +292,7 @@ func TestResponsesBuildParams_ReasoningModel(t *testing.T) {
 	_ = json.Unmarshal(raw, &body)
 
 	if _, has := body["temperature"]; has {
-		t.Fatalf("gpt-5 rejects temperature on the Responses API")
+		t.Fatalf("temperature must not be sent unless configured")
 	}
 	if body["tool_choice"] != "none" {
 		t.Fatalf("tool_choice = %v, want none", body["tool_choice"])

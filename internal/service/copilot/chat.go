@@ -22,10 +22,6 @@ import (
 	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
-// chatTemperature is a preference: providers drop it for models that reject
-// sampling parameters (OpenAI reasoning models, Claude Opus 4.7+ and 5-series).
-const chatTemperature float32 = 0.4
-
 func (s *CopilotService) agentSetting(ctx context.Context) (settingModel.AgentSetting, error) {
 	var setting settingModel.AgentSetting
 	raw, err := s.durableKV.Get(ctx, commonModel.AgentSettingKey)
@@ -137,13 +133,11 @@ func (s *CopilotService) AskStream(ctx context.Context, question string, locale 
 
 	history := historyForModel(s.loadSession(ctx, userID), locale, plan.History, loc)
 
-	temp := chatTemperature
 	stream, err := agent.Run(ctx, agent.RunRequest{
 		Setting:          agentSetting,
 		Messages:         buildChatMessages(history, question, locale, today, tagNames, currentUser.Username),
 		Tools:            tools(plan.Material),
 		MaxRounds:        config.Config().Agent.MaxRounds,
-		Temp:             &temp,
 		Strings:          runStringsFor(locale),
 		Timeout:          time.Duration(config.Config().Agent.TimeoutSeconds) * time.Second,
 		MaxContextTokens: plan.Input,

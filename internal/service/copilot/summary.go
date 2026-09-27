@@ -145,7 +145,7 @@ func (s *CopilotService) buildRecentSummary(ctx context.Context, setting setting
 
 	in = append(in, memos...)
 
-	output, err := agent.Generate(ctx, setting, in, true, nil)
+	output, err := agent.Generate(ctx, setting, in, true)
 	if err != nil {
 		return "", err
 	}

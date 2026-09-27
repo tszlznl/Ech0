@@ -133,7 +133,7 @@ func runLoop(b *budget, provider Provider, req RunRequest, out chan<- AgentEvent
 
 	for round := 0; round < maxRounds; round++ {
 		trimContext(messages, req.MaxContextTokens, strs)
-		o := streamRound(b, provider, out, messages, toolDefs, ToolChoiceAuto, req.Temp)
+		o := streamRound(b, provider, out, messages, toolDefs, ToolChoiceAuto)
 		if o.aborted {
 			return
 		}
@@ -165,7 +165,7 @@ func runLoop(b *budget, provider Provider, req RunRequest, out chan<- AgentEvent
 		finalChoice = ToolChoiceNone
 	}
 	trimContext(messages, req.MaxContextTokens, strs)
-	o := streamRound(b, provider, out, messages, toolDefs, finalChoice, req.Temp)
+	o := streamRound(b, provider, out, messages, toolDefs, finalChoice)
 	if o.aborted {
 		return
 	}
@@ -191,16 +191,14 @@ func streamRound(
 	messages []Message,
 	toolDefs []ToolDef,
 	choice ToolChoice,
-	temp *float32,
 ) roundOutcome {
 	ctx, cancel := b.step()
 	defer cancel()
 
 	evCh, err := provider.Stream(ctx, Request{
-		Messages:    messages,
-		Tools:       toolDefs,
-		ToolChoice:  choice,
-		Temperature: temp,
+		Messages:   messages,
+		Tools:      toolDefs,
+		ToolChoice: choice,
 	})
 	if err != nil {
 		return roundOutcome{err: err}

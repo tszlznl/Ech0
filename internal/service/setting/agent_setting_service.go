@@ -79,6 +79,10 @@ func (settingService *SettingService) UpdateAgentSettings(
 		BaseURL:       urlUtil.TrimURL(newSetting.BaseURL),
 		Multimodal:    newSetting.Multimodal,
 		ContextWindow: max(0, newSetting.ContextWindow),
+		Temperature:   newSetting.Temperature,
+	}
+	if !validTemperature(setting.Temperature) {
+		return errors.New(commonModel.INVALID_PARAMS)
 	}
 	return coreSetting.Agent.Set(ctx, settingService.durableKV, setting)
 }
@@ -102,9 +106,21 @@ func (settingService *SettingService) TestAgentConnection(
 		Model:    newSetting.Model,
 		ApiKey:   newSetting.ApiKey,
 		BaseURL:  urlUtil.TrimURL(newSetting.BaseURL),
+		// Tested with the temperature it will run with, so a value the model
+		// rejects fails here rather than in the first chat.
+		Temperature: newSetting.Temperature,
+	}
+	if !validTemperature(setting.Temperature) {
+		return errors.New(commonModel.INVALID_PARAMS)
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, agentTestTimeout)
 	defer cancel()
 	return agent.Ping(ctx, setting)
+}
+
+// validTemperature accepts an unset temperature or one in the range every
+// provider documents (Anthropic stops at 1, and rejects above that itself).
+func validTemperature(t *float64) bool {
+	return t == nil || (*t >= 0 && *t <= 2)
 }

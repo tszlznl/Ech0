@@ -15,21 +15,10 @@ import (
 	model "github.com/lin-snow/ech0/internal/model/setting"
 )
 
-// anthropicDefaultMaxTokens is the output ceiling when a request names none.
+// anthropicMaxTokens is the output ceiling the API requires on every request.
 // It is a ceiling, not a target, and a low one truncates long summaries and
-// the thinking that current models do by default before answering; the
-// pre-4 models cap output lower and keep the old value.
-const (
-	anthropicDefaultMaxTokens = 16_000
-	anthropicLegacyMaxTokens  = 4096
-)
-
-func anthropicMaxTokens(model string) int64 {
-	if major, _, ok := claudeVersion(model); ok && major < 4 {
-		return anthropicLegacyMaxTokens
-	}
-	return anthropicDefaultMaxTokens
-}
+// the thinking current models do by default before answering.
+const anthropicMaxTokens = 16_000
 
 var errAnthropicRefusal = errors.New("anthropic: 模型拒绝回答该请求（stop_reason=refusal）")
 
@@ -56,13 +45,9 @@ func (p *anthropicProvider) newClient() anthropic.Client {
 func (p *anthropicProvider) buildParams(req Request) anthropic.MessageNewParams {
 	systemBlocks, msgs := p.buildMessages(req.Messages)
 
-	maxTokens := anthropicMaxTokens(p.setting.Model)
-	if req.MaxTokens > 0 {
-		maxTokens = int64(req.MaxTokens)
-	}
 	params := anthropic.MessageNewParams{
 		Model:     anthropic.Model(p.setting.Model),
-		MaxTokens: maxTokens,
+		MaxTokens: anthropicMaxTokens,
 		Messages:  msgs,
 	}
 	if len(systemBlocks) > 0 {
@@ -75,8 +60,8 @@ func (p *anthropicProvider) buildParams(req Request) anthropic.MessageNewParams 
 			params.ToolChoice = anthropic.ToolChoiceUnionParam{OfNone: &anthropic.ToolChoiceNoneParam{}}
 		}
 	}
-	if t := req.temperatureFor(p.setting.Model); t != nil {
-		params.Temperature = param.NewOpt(float64(*t))
+	if t := p.setting.Temperature; t != nil {
+		params.Temperature = param.NewOpt(*t)
 	}
 	return params
 }

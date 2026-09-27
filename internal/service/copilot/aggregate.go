@@ -154,7 +154,7 @@ func (s *CopilotService) mapReduceSummary(
 		digest, mErr := agent.Generate(ctx, setting, []agent.Message{
 			{Role: agent.RoleSystem, Content: aggregateMapPromptFor(locale)},
 			{Role: agent.RoleUser, Content: formatEchosByMonth(ch, loc)},
-		}, false, nil)
+		}, false)
 		if mErr != nil {
 			return "", 0, mErr
 		}
@@ -166,7 +166,7 @@ func (s *CopilotService) mapReduceSummary(
 		reduced, rErr := agent.Generate(ctx, setting, []agent.Message{
 			{Role: agent.RoleSystem, Content: aggregateReducePromptFor(locale)},
 			{Role: agent.RoleUser, Content: joined},
-		}, false, nil)
+		}, false)
 		if rErr != nil {
 			return "", 0, rErr
 		}
