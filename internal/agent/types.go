@@ -26,6 +26,20 @@ type Message struct {
 	ToolCalls  []ToolCall
 	ToolCallID string
 	Images     []ImagePart
+
+	// IsError marks a tool result as a failure, so providers that can say so on
+	// the wire (Anthropic's is_error) do, instead of the model having to infer
+	// it from the wording.
+	IsError bool
+
+	// Native is the provider's own record of an assistant turn, carried back
+	// verbatim on the next request of the same run. Some protocols refuse a
+	// continuation that drops part of what the model produced — DeepSeek's
+	// reasoning_content, Claude's signed thinking blocks, OpenAI's encrypted
+	// reasoning items — and none of that belongs in a portable Message. The loop
+	// never looks inside; a provider only reads back values of its own type, so
+	// a value from any other provider is ignored rather than misread.
+	Native any
 }
 
 type ImagePart struct {
@@ -113,9 +127,26 @@ type ToolOutput struct {
 	Images  []ImagePart
 }
 
+// ToolChoice is how the model may use the tools a request declares.
+type ToolChoice uint8
+
+const (
+	// ToolChoiceAuto lets the model decide. The zero value.
+	ToolChoiceAuto ToolChoice = iota
+	// ToolChoiceNone keeps the tools declared but forbids calling them. It is
+	// how a run asks for a final answer once the history already holds tool
+	// calls: dropping the declarations instead is rejected by Anthropic
+	// ("requests which include tool_use or tool_result blocks must define
+	// tools") and is off the documented path for the other protocols.
+	ToolChoiceNone
+)
+
 type Request struct {
-	Messages    []Message
-	Tools       []ToolDef
+	Messages   []Message
+	Tools      []ToolDef
+	ToolChoice ToolChoice
+	// Temperature is a preference, not a requirement: providers drop it for
+	// models that reject sampling parameters (see acceptsSampling).
 	Temperature *float32
 	MaxTokens   int
 }
@@ -139,6 +170,9 @@ type Event struct {
 	Text     string
 	ToolCall ToolCall
 	Err      error
+	// Native rides on EventDone: the provider's own record of the turn, to be
+	// stored on the assistant Message the loop appends (see Message.Native).
+	Native any
 }
 
 type RunStrings struct {
@@ -147,6 +181,7 @@ type RunStrings struct {
 	ToolError       string
 	ImageNote       string
 	ContextTrimNote string
+	TruncateNote    string
 	Malformed       string
 }
 

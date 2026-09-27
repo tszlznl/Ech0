@@ -15,7 +15,31 @@ import (
 	model "github.com/lin-snow/ech0/internal/model/setting"
 )
 
-const anthropicDefaultMaxTokens = 4096
+// anthropicDefaultMaxTokens is the output ceiling when a request names none.
+// It is a ceiling, not a target, and a low one truncates long summaries and
+// the thinking that current models do by default before answering; the
+// pre-4 models cap output lower and keep the old value.
+const (
+	anthropicDefaultMaxTokens = 16_000
+	anthropicLegacyMaxTokens  = 4096
+)
+
+func anthropicMaxTokens(model string) int64 {
+	if major, _, ok := claudeVersion(model); ok && major < 4 {
+		return anthropicLegacyMaxTokens
+	}
+	return anthropicDefaultMaxTokens
+}
+
+var errAnthropicRefusal = errors.New("anthropic: 模型拒绝回答该请求（stop_reason=refusal）")
+
+// anthropicTurn is an assistant turn exactly as the API returned it. Replaying
+// it verbatim is the documented way to continue a tool loop: it keeps the
+// signed thinking blocks current models produce by default, which the API
+// requires back unchanged on the turn that called the tools.
+type anthropicTurn struct {
+	content []anthropic.ContentBlockParamUnion
+}
 
 type anthropicProvider struct {
 	setting model.AgentSetting
@@ -32,7 +56,7 @@ func (p *anthropicProvider) newClient() anthropic.Client {
 func (p *anthropicProvider) buildParams(req Request) anthropic.MessageNewParams {
 	systemBlocks, msgs := p.buildMessages(req.Messages)
 
-	maxTokens := int64(anthropicDefaultMaxTokens)
+	maxTokens := anthropicMaxTokens(p.setting.Model)
 	if req.MaxTokens > 0 {
 		maxTokens = int64(req.MaxTokens)
 	}
@@ -47,9 +71,12 @@ func (p *anthropicProvider) buildParams(req Request) anthropic.MessageNewParams 
 	}
 	if tools := p.buildTools(req.Tools); len(tools) > 0 {
 		params.Tools = tools
+		if req.ToolChoice == ToolChoiceNone {
+			params.ToolChoice = anthropic.ToolChoiceUnionParam{OfNone: &anthropic.ToolChoiceNoneParam{}}
+		}
 	}
-	if req.Temperature != nil {
-		params.Temperature = param.NewOpt(float64(*req.Temperature))
+	if t := req.temperatureFor(p.setting.Model); t != nil {
+		params.Temperature = param.NewOpt(float64(*t))
 	}
 	return params
 }
@@ -59,6 +86,9 @@ func (p *anthropicProvider) generate(ctx context.Context, req Request) (string, 
 	resp, err := client.Messages.New(ctx, p.buildParams(req))
 	if err != nil {
 		return "", nil, err
+	}
+	if resp.StopReason == anthropic.StopReasonRefusal {
+		return "", nil, errAnthropicRefusal
 	}
 
 	var text strings.Builder
@@ -110,6 +140,10 @@ func (p *anthropicProvider) buildMessages(in []Message) ([]anthropic.TextBlockPa
 			systemBlocks = append(systemBlocks, anthropic.TextBlockParam{Text: m.Content})
 		case RoleAssistant:
 			flush()
+			if turn, ok := m.Native.(anthropicTurn); ok && len(turn.content) > 0 {
+				msgs = append(msgs, anthropic.NewAssistantMessage(turn.content...))
+				continue
+			}
 			var blocks []anthropic.ContentBlockParamUnion
 			if m.Content != "" {
 				blocks = append(blocks, anthropic.NewTextBlock(m.Content))
@@ -121,7 +155,7 @@ func (p *anthropicProvider) buildMessages(in []Message) ([]anthropic.TextBlockPa
 				msgs = append(msgs, anthropic.NewAssistantMessage(blocks...))
 			}
 		case RoleTool:
-			pendingTools = append(pendingTools, anthropic.NewToolResultBlock(m.ToolCallID, m.Content, false))
+			pendingTools = append(pendingTools, anthropic.NewToolResultBlock(m.ToolCallID, m.Content, m.IsError))
 		default:
 			flush()
 			msgs = append(msgs, anthropic.NewUserMessage(userBlocks(m)...))
@@ -209,8 +243,13 @@ func (p *anthropicProvider) stream(ctx context.Context, req Request, ch chan<- E
 		}
 
 		if delta, ok := event.AsAny().(anthropic.ContentBlockDeltaEvent); ok {
-			if td, ok := delta.Delta.AsAny().(anthropic.TextDelta); ok && td.Text != "" {
-				if !send(ctx, ch, Event{Kind: EventTextDelta, Text: td.Text}) {
+			switch d := delta.Delta.AsAny().(type) {
+			case anthropic.TextDelta:
+				if d.Text != "" && !send(ctx, ch, Event{Kind: EventTextDelta, Text: d.Text}) {
+					return
+				}
+			case anthropic.ThinkingDelta:
+				if d.Thinking != "" && !send(ctx, ch, Event{Kind: EventReasoningDelta, Text: d.Thinking}) {
 					return
 				}
 			}
@@ -221,10 +260,14 @@ func (p *anthropicProvider) stream(ctx context.Context, req Request, ch chan<- E
 		send(ctx, ch, Event{Kind: EventError, Err: err})
 		return
 	}
+	if acc.StopReason == anthropic.StopReasonRefusal {
+		send(ctx, ch, Event{Kind: EventError, Err: errAnthropicRefusal})
+		return
+	}
 	for _, tc := range toolCallsFromContent(acc.Content) {
 		if !send(ctx, ch, Event{Kind: EventToolCall, ToolCall: tc}) {
 			return
 		}
 	}
-	send(ctx, ch, Event{Kind: EventDone})
+	send(ctx, ch, Event{Kind: EventDone, Native: anthropicTurn{content: acc.ToParam().Content}})
 }

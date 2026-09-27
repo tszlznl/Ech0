@@ -25,7 +25,18 @@ const (
 	respEventError                 = "error"
 )
 
-const respItemTypeFunctionCall = "function_call"
+const (
+	respItemTypeFunctionCall = "function_call"
+	respItemTypeReasoning    = "reasoning"
+)
+
+// respTurn carries a reasoning model's reasoning items into the next request.
+// With store=false the server keeps nothing between calls, so the only way the
+// model sees its own reasoning when a tool result comes back is the encrypted
+// copy it handed out — OpenAI's documented pattern for stateless tool loops.
+type respTurn struct {
+	reasoning []responses.ResponseReasoningItemParam
+}
 
 type openaiResponsesProvider struct {
 	setting model.AgentSetting
@@ -54,8 +65,16 @@ func (p *openaiResponsesProvider) buildParams(req Request) (responses.ResponseNe
 		Tools: tools,
 		Store: param.NewOpt(false),
 	}
-	if req.Temperature != nil {
-		params.Temperature = param.NewOpt(float64(*req.Temperature))
+	if len(tools) > 0 && req.ToolChoice == ToolChoiceNone {
+		params.ToolChoice = responses.ResponseNewParamsToolChoiceUnion{
+			OfToolChoiceMode: param.NewOpt(responses.ToolChoiceOptionsNone),
+		}
+	}
+	if isOpenAIReasoningModel(p.setting.Model) {
+		params.Include = []responses.ResponseIncludable{responses.ResponseIncludableReasoningEncryptedContent}
+	}
+	if t := req.temperatureFor(p.setting.Model); t != nil {
+		params.Temperature = param.NewOpt(float64(*t))
 	}
 	if req.MaxTokens > 0 {
 		params.MaxOutputTokens = param.NewOpt(int64(req.MaxTokens))
@@ -70,6 +89,11 @@ func (p *openaiResponsesProvider) buildInput(in []Message) responses.ResponseInp
 		case RoleSystem:
 			items = append(items, responses.ResponseInputItemParamOfMessage(m.Content, responses.EasyInputMessageRoleSystem))
 		case RoleAssistant:
+			if turn, ok := m.Native.(respTurn); ok {
+				for i := range turn.reasoning {
+					items = append(items, responses.ResponseInputItemUnionParam{OfReasoning: &turn.reasoning[i]})
+				}
+			}
 			if m.Content != "" {
 				items = append(
 					items,
@@ -176,6 +200,7 @@ func (p *openaiResponsesProvider) stream(ctx context.Context, req Request, ch ch
 
 	pipe := &textPipeline{}
 	calls := &respToolCalls{}
+	var turn any
 
 	for stream.Next() {
 		ev := stream.Current()
@@ -192,6 +217,7 @@ func (p *openaiResponsesProvider) stream(ctx context.Context, req Request, ch ch
 			calls.addItem(ev.Item)
 		case respEventCompleted:
 			calls.addFinal(ev.Response.Output)
+			turn = respReasoningOf(ev.Response.Output)
 		case respEventFailed:
 			send(ctx, ch, Event{Kind: EventError, Err: fmt.Errorf(
 				"openai responses: %s", respFailureMessage(ev.Response.Error),
@@ -217,7 +243,28 @@ func (p *openaiResponsesProvider) stream(ctx context.Context, req Request, ch ch
 			return
 		}
 	}
-	send(ctx, ch, Event{Kind: EventDone})
+	send(ctx, ch, Event{Kind: EventDone, Native: turn})
+}
+
+// respReasoningOf keeps the reasoning items that can be replayed. One without
+// encrypted content is only a reference to server-side state that store=false
+// never created, and sending it back fails the request.
+func respReasoningOf(output []responses.ResponseOutputItemUnion) any {
+	var items []responses.ResponseReasoningItemParam
+	for _, item := range output {
+		if item.Type != respItemTypeReasoning {
+			continue
+		}
+		r := item.AsReasoning()
+		if r.EncryptedContent == "" {
+			continue
+		}
+		items = append(items, r.ToParam())
+	}
+	if len(items) == 0 {
+		return nil
+	}
+	return respTurn{reasoning: items}
 }
 
 type respToolCalls struct {

@@ -20,7 +20,7 @@ import (
 
 func respMarshalParams(t *testing.T, req Request) map[string]any {
 	t.Helper()
-	p := &openaiResponsesProvider{setting: model.AgentSetting{Model: "gpt-5"}}
+	p := &openaiResponsesProvider{setting: model.AgentSetting{Model: "gpt-4.1"}}
 	params, err := p.buildParams(req)
 	if err != nil {
 		t.Fatalf("buildParams failed: %v", err)
