@@ -28,7 +28,7 @@ func normalizeAgentProtocol(protocol string) string {
 }
 
 func (settingService *SettingService) GetAgentInfo(setting *model.AgentSetting) error {
-	v, err := coreSetting.Get(context.Background(), settingService.durableKV, coreSetting.Agent)
+	v, err := coreSetting.Agent.Get(context.Background(), settingService.durableKV)
 	if err != nil {
 		return err
 	}
@@ -49,7 +49,7 @@ func (settingService *SettingService) GetAgentSettings(
 		return errors.New(commonModel.NO_PERMISSION_DENIED)
 	}
 
-	v, err := coreSetting.Get(ctx, settingService.durableKV, coreSetting.Agent)
+	v, err := coreSetting.Agent.Get(ctx, settingService.durableKV)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (settingService *SettingService) UpdateAgentSettings(
 		Multimodal:    newSetting.Multimodal,
 		ContextWindow: max(0, newSetting.ContextWindow),
 	}
-	return coreSetting.Set(ctx, settingService.durableKV, coreSetting.Agent, setting)
+	return coreSetting.Agent.Set(ctx, settingService.durableKV, setting)
 }
 
 func (settingService *SettingService) TestAgentConnection(

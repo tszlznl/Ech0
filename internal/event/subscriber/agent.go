@@ -26,7 +26,7 @@ func NewAgentProcessor(
 }
 
 func (ap *AgentProcessor) handle(ctx context.Context) error {
-	if _, err := coreSetting.Get(ctx, ap.durableKV, coreSetting.Agent); err != nil {
+	if _, err := coreSetting.Agent.Get(ctx, ap.durableKV); err != nil {
 		return err
 	}
 	return ap.clearCache()

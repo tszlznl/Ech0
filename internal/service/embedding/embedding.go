@@ -44,7 +44,7 @@ func (s *EmbeddingService) WithEmbedder(e Embedder) *EmbeddingService {
 }
 
 func (s *EmbeddingService) getSetting(ctx context.Context) (settingModel.EmbeddingSetting, error) {
-	return coreSetting.Get(ctx, s.durableKV, coreSetting.Embedding)
+	return coreSetting.Embedding.Get(ctx, s.durableKV)
 }
 
 func (s *EmbeddingService) Enabled(ctx context.Context) bool {
