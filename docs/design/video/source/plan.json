@@ -1,0 +1,839 @@
+{
+  "demo": false,
+  "product": "Ech0 — a timeline you own",
+  "style": "repo",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "duration": 80,
+  "repo": "../../../..",
+  "audioRequired": true,
+  "sfxRequired": true,
+  "typography": {
+    "mode": "english",
+    "enFont": "Iowan Old Style (product --font-family-display)",
+    "uiFont": "system sans (product --font-family-sans)",
+    "monoFont": "ui-monospace (product --font-family-mono)",
+    "exceptionReason": "User chose 'Horizontal 16:9 · 60s · English' — English-only film, no Chinese titles."
+  },
+  "audio": {
+    "ducking": {
+      "enabled": true
+    },
+    "beatGrid": {
+      "bpm": 96,
+      "offset": 0
+    },
+    "music": {
+      "file": "assets/music.wav",
+      "gain": 0.5,
+      "source": "code-original: tools/score.py"
+    },
+    "cues": [
+      {
+        "at": 0.624,
+        "actionId": "open-dot",
+        "file": "assets/sfx/pop.wav",
+        "gain": 1.45,
+        "role": "sfx",
+        "kind": "pop",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 1.249,
+        "actionId": "open-type",
+        "file": "assets/sfx/typing.wav",
+        "gain": 3.4,
+        "role": "sfx",
+        "kind": "typing",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 2.99,
+        "actionId": "open-ring",
+        "file": "assets/sfx/sweep.wav",
+        "gain": 1.4,
+        "role": "sfx",
+        "kind": "transition",
+        "syncOffset": 0.135
+      },
+      {
+        "at": 4.997,
+        "actionId": "echo-rings",
+        "file": "assets/sfx/resolve.wav",
+        "gain": 1.0,
+        "role": "sfx",
+        "kind": "ding-dong",
+        "syncOffset": 0.003
+      },
+      {
+        "at": 6.929,
+        "actionId": "echo-rail",
+        "file": "assets/sfx/whoosh.wav",
+        "gain": 1.7,
+        "role": "sfx",
+        "kind": "transition",
+        "syncOffset": 0.071
+      },
+      {
+        "at": 9.999,
+        "actionId": "write-type",
+        "file": "assets/sfx/typing-x6.wav",
+        "gain": 3.4,
+        "role": "sfx",
+        "kind": "typing",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 13.749,
+        "actionId": "write-tag",
+        "file": "assets/sfx/click.wav",
+        "gain": 2.5,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 14.374,
+        "actionId": "write-tag-pick",
+        "file": "assets/sfx/click-alt.wav",
+        "gain": 2.8,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 16.249,
+        "actionId": "write-publish-open",
+        "file": "assets/sfx/pop.wav",
+        "gain": 1.45,
+        "role": "sfx",
+        "kind": "pop",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 16.874,
+        "actionId": "write-publish",
+        "file": "assets/sfx/click.wav",
+        "gain": 2.5,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 18.122,
+        "actionId": "land-ring",
+        "file": "assets/sfx/success.wav",
+        "gain": 1.25,
+        "role": "sfx",
+        "kind": "ding-dong",
+        "syncOffset": 0.003
+      },
+      {
+        "at": 32.499,
+        "actionId": "reach-click",
+        "file": "assets/sfx/click.wav",
+        "gain": 2.5,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 35.532,
+        "actionId": "reach-hit-connect",
+        "file": "assets/sfx/click-alt.wav",
+        "gain": 2.8,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 35.924,
+        "actionId": "reach-hit-rss",
+        "file": "assets/sfx/click-alt.wav",
+        "gain": 2.8,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 36.216,
+        "actionId": "reach-hit-comment",
+        "file": "assets/sfx/click-alt.wav",
+        "gain": 2.8,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 39.549,
+        "actionId": "copilot-type",
+        "file": "assets/sfx/typing-x3.wav",
+        "gain": 3.4,
+        "role": "sfx",
+        "kind": "typing",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 41.179,
+        "actionId": "copilot-send",
+        "file": "assets/sfx/whoosh.wav",
+        "gain": 1.7,
+        "role": "sfx",
+        "kind": "transition",
+        "syncOffset": 0.071
+      },
+      {
+        "at": 42.499,
+        "actionId": "copilot-sources",
+        "file": "assets/sfx/pop.wav",
+        "gain": 1.45,
+        "role": "sfx",
+        "kind": "pop",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 51.179,
+        "actionId": "panel-fold",
+        "file": "assets/sfx/whoosh.wav",
+        "gain": 1.7,
+        "role": "sfx",
+        "kind": "transition",
+        "syncOffset": 0.071
+      },
+      {
+        "at": 53.749,
+        "actionId": "panel-nav-comments",
+        "file": "assets/sfx/click.wav",
+        "gain": 2.5,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 54.374,
+        "actionId": "panel-tab-comments",
+        "file": "assets/sfx/click-alt.wav",
+        "gain": 2.8,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 56.249,
+        "actionId": "panel-nav-storage",
+        "file": "assets/sfx/click.wav",
+        "gain": 2.5,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 56.874,
+        "actionId": "panel-tab-files",
+        "file": "assets/sfx/click-alt.wav",
+        "gain": 2.8,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 57.499,
+        "actionId": "panel-tree-root",
+        "file": "assets/sfx/pop.wav",
+        "gain": 1.45,
+        "role": "sfx",
+        "kind": "pop",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 58.124,
+        "actionId": "panel-tree-images",
+        "file": "assets/sfx/pop.wav",
+        "gain": 1.45,
+        "role": "sfx",
+        "kind": "pop",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 58.749,
+        "actionId": "panel-nav-ext",
+        "file": "assets/sfx/click.wav",
+        "gain": 2.5,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 59.374,
+        "actionId": "panel-tab-mcp",
+        "file": "assets/sfx/click-alt.wav",
+        "gain": 2.8,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 62.499,
+        "actionId": "panel-nav-logs",
+        "file": "assets/sfx/click.wav",
+        "gain": 2.5,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 62.899,
+        "actionId": "panel-log-live",
+        "file": "assets/sfx/toggle.wav",
+        "gain": 2.4,
+        "role": "sfx",
+        "kind": "toggle",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 66.249,
+        "actionId": "own-nav",
+        "file": "assets/sfx/click.wav",
+        "gain": 2.5,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 66.874,
+        "actionId": "own-tab",
+        "file": "assets/sfx/click-alt.wav",
+        "gain": 2.8,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 67.499,
+        "actionId": "own-type",
+        "file": "assets/sfx/typing-x5.wav",
+        "gain": 4.0,
+        "role": "sfx",
+        "kind": "typing",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 69.999,
+        "actionId": "own-mark",
+        "file": "assets/sfx/click-alt.wav",
+        "gain": 2.8,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 71.249,
+        "actionId": "own-capsule",
+        "file": "assets/sfx/click.wav",
+        "gain": 2.5,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 75.499,
+        "actionId": "close-assemble",
+        "file": "assets/sfx/pop.wav",
+        "gain": 1.45,
+        "role": "sfx",
+        "kind": "pop",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 75.8115,
+        "actionId": "close-assemble-2",
+        "file": "assets/sfx/pop.wav",
+        "gain": 1.45,
+        "role": "sfx",
+        "kind": "pop",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 76.124,
+        "actionId": "close-assemble-3",
+        "file": "assets/sfx/pop.wav",
+        "gain": 1.45,
+        "role": "sfx",
+        "kind": "pop",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 76.999,
+        "actionId": "close-type",
+        "file": "assets/sfx/typing.wav",
+        "gain": 3.4,
+        "role": "sfx",
+        "kind": "typing",
+        "syncOffset": 0.001
+      }
+    ]
+  },
+  "shots": [
+    {
+      "id": "open",
+      "start": 0,
+      "end": 5,
+      "type": "title",
+      "headlineEn": "Say it once.",
+      "headline": "Say it once.",
+      "description": "",
+      "descriptionAt": 0,
+      "claim": false,
+      "source": [],
+      "plainExplanation": "One orange dot — the dot every Echo starts with — appears and a sentence is typed beside it.",
+      "component": null,
+      "actions": [
+        {
+          "id": "open-dot",
+          "at": 0.625,
+          "action": "orange dot appears",
+          "soundRequired": true
+        },
+        {
+          "id": "open-type",
+          "at": 1.25,
+          "action": "sentence typed",
+          "soundRequired": true
+        },
+        {
+          "id": "open-ring",
+          "at": 3.125,
+          "action": "first echo ring",
+          "soundRequired": true
+        }
+      ]
+    },
+    {
+      "id": "echo",
+      "start": 5,
+      "end": 8.75,
+      "type": "title",
+      "headlineEn": "Let it echo.",
+      "headline": "Let it echo.",
+      "description": "",
+      "descriptionAt": 0,
+      "claim": false,
+      "source": [],
+      "plainExplanation": "Echo rings spread from the dot; the dot slides left and grows a timeline rail.",
+      "component": null,
+      "actions": [
+        {
+          "id": "echo-rings",
+          "at": 0.0,
+          "action": "three rings spread",
+          "soundRequired": true
+        },
+        {
+          "id": "echo-rail",
+          "at": 2.0,
+          "action": "dot slides left and grows the rail",
+          "soundRequired": true
+        }
+      ]
+    },
+    {
+      "id": "write",
+      "start": 8.75,
+      "end": 17.5,
+      "type": "detail",
+      "headlineEn": "Write it down.",
+      "headline": "Write it down.",
+      "description": "Markdown, photos, links and tags, all from one editor.",
+      "descriptionAt": 0.4,
+      "claim": true,
+      "source": [
+        "repo:web/src/views/home/modules/TheEditor.vue",
+        "repo:web/src/views/home/modules/TheEditor/TheEditorButtons.vue",
+        "repo:README.md#L113",
+        "repo:README.md#L120"
+      ],
+      "plainExplanation": "The real Publish tab: a post is typed into the editor, the #notes tag is picked, and Publish is clicked.",
+      "component": "repo:web/src/views/home/HomeView.vue",
+      "actions": [
+        {
+          "id": "write-type",
+          "at": 1.25,
+          "action": "typing into the real editor",
+          "soundRequired": true
+        },
+        {
+          "id": "write-tag",
+          "at": 5.0,
+          "action": "open tag picker",
+          "soundRequired": true
+        },
+        {
+          "id": "write-tag-pick",
+          "at": 5.625,
+          "action": "pick #notes",
+          "soundRequired": true
+        },
+        {
+          "id": "write-tag-close",
+          "at": 6.25,
+          "action": "close tag picker",
+          "soundRequired": false
+        },
+        {
+          "id": "write-publish-open",
+          "at": 7.5,
+          "action": "open publish choices",
+          "soundRequired": true
+        },
+        {
+          "id": "write-publish",
+          "at": 8.125,
+          "action": "click Publish as public",
+          "soundRequired": true
+        }
+      ]
+    },
+    {
+      "id": "land",
+      "start": 17.5,
+      "end": 23.75,
+      "type": "detail",
+      "headlineEn": "It lands on\nyour timeline.",
+      "headline": "It lands on\nyour timeline.",
+      "description": "The new post sits on top of your own timeline, on your own domain.",
+      "descriptionAt": 0.4,
+      "claim": true,
+      "source": [
+        "repo:web/src/stores/editor/index.ts#L206",
+        "repo:web/src/views/home/modules/TheEchos.vue"
+      ],
+      "plainExplanation": "After publishing, Ech0 returns to the home timeline and the new Echo is first.",
+      "component": "repo:web/src/views/home/HomeView.vue",
+      "actions": [
+        {
+          "id": "land-ring",
+          "at": 0.625,
+          "action": "new Echo's date dot rings",
+          "soundRequired": true
+        }
+      ]
+    },
+    {
+      "id": "stream",
+      "start": 23.75,
+      "end": 31.25,
+      "type": "detail",
+      "headlineEn": "One quiet\nstream.",
+      "headline": "One quiet\nstream.",
+      "description": "Notes, photos and link cards, in the order you lived them.",
+      "descriptionAt": 0.4,
+      "claim": true,
+      "source": [
+        "repo:web/src/components/advanced/echo/cards/TheEchoCard.vue",
+        "repo:web/src/components/advanced/extension/cards/WebsiteCard.vue"
+      ],
+      "plainExplanation": "Scrolling the real timeline past a photo, a Markdown note, a second photo and a website card.",
+      "component": "repo:web/src/views/home/modules/TheEchos.vue",
+      "actions": [
+        {
+          "id": "stream-scroll",
+          "at": 0.3,
+          "action": "timeline scrolls",
+          "soundRequired": false
+        }
+      ]
+    },
+    {
+      "id": "reach",
+      "start": 31.25,
+      "end": 38.75,
+      "type": "detail",
+      "headlineEn": "Echoes that\nreach people.",
+      "headline": "Echoes that\nreach people.",
+      "description": "Readers follow by RSS, reply in comments, and connect their own Ech0.",
+      "descriptionAt": 0.4,
+      "claim": true,
+      "source": [
+        "repo:web/src/components/advanced/widget/TheConnectWidget.vue",
+        "repo:web/src/components/advanced/widget/TheCommentWidget.vue",
+        "repo:web/src/views/home/modules/HomeHeader.vue",
+        "repo:README.md#L125",
+        "repo:README.md#L107"
+      ],
+      "plainExplanation": "The real Status tab: activity heatmap, Copilot recap, connected Ech0 instances and recent comments; RSS is in the header.",
+      "component": "repo:web/src/views/home/modules/HomePage.vue",
+      "actions": [
+        {
+          "id": "reach-click",
+          "at": 1.25,
+          "action": "click Status",
+          "soundRequired": true
+        },
+        {
+          "id": "reach-rings",
+          "at": 2.5,
+          "action": "rings sweep the Status tab",
+          "soundRequired": false
+        },
+        {
+          "id": "reach-hit-connect",
+          "at": 4.283,
+          "action": "ring reaches connect",
+          "soundRequired": true
+        },
+        {
+          "id": "reach-hit-rss",
+          "at": 4.675,
+          "action": "ring reaches rss",
+          "soundRequired": true
+        },
+        {
+          "id": "reach-hit-comment",
+          "at": 4.967,
+          "action": "ring reaches comment",
+          "soundRequired": true
+        }
+      ]
+    },
+    {
+      "id": "copilot",
+      "start": 38.75,
+      "end": 48.75,
+      "type": "detail",
+      "headlineEn": "Ask your own\ntimeline.",
+      "headline": "Ask your own\ntimeline.",
+      "description": "Ech0 Copilot answers from your posts, and shows which ones.",
+      "descriptionAt": 0.4,
+      "claim": true,
+      "source": [
+        "repo:web/src/views/chat/modules/TheChatBox.vue",
+        "repo:README.md#L144"
+      ],
+      "plainExplanation": "The real Copilot chat: a question is typed and sent; retrieval runs over the timeline and the answer streams in with its source Echos.",
+      "component": "repo:web/src/views/chat/modules/ChatPage.vue",
+      "actions": [
+        {
+          "id": "copilot-type",
+          "at": 0.8,
+          "action": "type question",
+          "soundRequired": true
+        },
+        {
+          "id": "copilot-send",
+          "at": 2.5,
+          "action": "send",
+          "soundRequired": true
+        },
+        {
+          "id": "copilot-sources",
+          "at": 3.75,
+          "action": "sources found",
+          "soundRequired": true
+        },
+        {
+          "id": "copilot-answer",
+          "at": 4.25,
+          "action": "answer streams",
+          "soundRequired": false
+        }
+      ]
+    },
+    {
+      "id": "panel",
+      "start": 48.75,
+      "end": 66.25,
+      "type": "detail",
+      "headlineEn": "Run it\nyour way.",
+      "headline": "Run it\nyour way.",
+      "description": "A calm admin panel: stats, comments, files, MCP and live logs.",
+      "descriptionAt": 0.4,
+      "claim": true,
+      "source": [
+        "repo:web/src/views/panel/modules/PanelPage.vue",
+        "repo:web/src/views/panel/modules/TheDashboard.vue",
+        "repo:web/src/views/panel/modules/TheCommentManager.vue",
+        "repo:web/src/views/panel/modules/TheSetting/TheStorageFileList.vue",
+        "repo:web/src/views/panel/modules/TheSetting/TheMCPSetting.vue",
+        "repo:web/src/views/panel/modules/TheSystemLog.vue",
+        "repo:internal/mcp/manifest.go",
+        "repo:README.md#L139"
+      ],
+      "plainExplanation": "The real admin panel: the dashboard with totals and 7-day activity/visitor charts; then, by real nav clicks, comment moderation, the storage file manager, the MCP endpoint with every tool, and the live system log.",
+      "component": "repo:web/src/views/panel/PanelView.vue",
+      "actions": [
+        {
+          "id": "panel-fold",
+          "at": 2.5,
+          "action": "caption folds into a heading; panel fills the frame",
+          "soundRequired": true
+        },
+        {
+          "id": "panel-nav-comments",
+          "at": 5.0,
+          "action": "click Comments",
+          "soundRequired": true
+        },
+        {
+          "id": "panel-tab-comments",
+          "at": 5.625,
+          "action": "open Comment Management",
+          "soundRequired": true
+        },
+        {
+          "id": "panel-nav-storage",
+          "at": 7.5,
+          "action": "click Storage",
+          "soundRequired": true
+        },
+        {
+          "id": "panel-tab-files",
+          "at": 8.125,
+          "action": "open File Manager",
+          "soundRequired": true
+        },
+        {
+          "id": "panel-tree-root",
+          "at": 8.75,
+          "action": "expand Local Storage",
+          "soundRequired": true
+        },
+        {
+          "id": "panel-tree-images",
+          "at": 9.375,
+          "action": "open images/",
+          "soundRequired": true
+        },
+        {
+          "id": "panel-nav-ext",
+          "at": 10.0,
+          "action": "click Extensions",
+          "soundRequired": true
+        },
+        {
+          "id": "panel-tab-mcp",
+          "at": 10.625,
+          "action": "open MCP",
+          "soundRequired": true
+        },
+        {
+          "id": "panel-nav-logs",
+          "at": 13.75,
+          "action": "click Logs",
+          "soundRequired": true
+        },
+        {
+          "id": "panel-log-live",
+          "at": 14.15,
+          "action": "live log lines stream in",
+          "soundRequired": true
+        }
+      ]
+    },
+    {
+      "id": "own",
+      "start": 66.25,
+      "end": 75,
+      "type": "detail",
+      "headlineEn": "Yours to keep.",
+      "headline": "Yours to keep.",
+      "description": "Export a snapshot or a portable capsule any time. It all runs in one container.",
+      "descriptionAt": 0.4,
+      "claim": true,
+      "source": [
+        "repo:web/src/views/panel/modules/TheSetting/TheExportSetting.vue",
+        "repo:README.md#L74",
+        "repo:README.md#L101",
+        "repo:README.md#L184"
+      ],
+      "plainExplanation": "The real Data page (Export tab: Snapshot = full backup, Capsule = portable content; Capsule is clicked, which only selects the format); beside it, the README's one-line Docker command with the mapped data folder marked.",
+      "component": "repo:web/src/views/panel/modules/TheDataManagement.vue",
+      "actions": [
+        {
+          "id": "own-nav",
+          "at": 0.0,
+          "action": "click Data",
+          "soundRequired": true
+        },
+        {
+          "id": "own-tab",
+          "at": 0.625,
+          "action": "open Export",
+          "soundRequired": true
+        },
+        {
+          "id": "own-type",
+          "at": 1.25,
+          "action": "docker command typed",
+          "soundRequired": true
+        },
+        {
+          "id": "own-capsule",
+          "at": 5.0,
+          "action": "choose the Capsule export format",
+          "soundRequired": true
+        },
+        {
+          "id": "own-mark",
+          "at": 3.75,
+          "action": "/app/data marked",
+          "soundRequired": true
+        }
+      ]
+    },
+    {
+      "id": "close",
+      "start": 75,
+      "end": 80,
+      "type": "end",
+      "headlineEn": "Ech0",
+      "headline": "Ech0",
+      "description": "A timeline you own.",
+      "descriptionAt": 0.4,
+      "claim": false,
+      "source": [],
+      "plainExplanation": "The four strokes of the Ech0 logo come together; the wordmark and one line are typed.",
+      "component": null,
+      "actions": [
+        {
+          "id": "close-assemble",
+          "at": 0.5,
+          "action": "dash stroke flies in",
+          "soundRequired": true
+        },
+        {
+          "id": "close-assemble-2",
+          "at": 0.8125,
+          "action": "slash stroke flies in",
+          "soundRequired": true
+        },
+        {
+          "id": "close-assemble-3",
+          "at": 1.125,
+          "action": "bar stroke flies in",
+          "soundRequired": true
+        },
+        {
+          "id": "close-type",
+          "at": 2.0,
+          "action": "wordmark typed",
+          "soundRequired": true
+        },
+        {
+          "id": "close-end",
+          "at": 4.9,
+          "action": "end",
+          "soundRequired": false
+        }
+      ]
+    }
+  ],
+  "scope": {
+    "versions": "current product (v5.7.0)",
+    "platforms": [
+      "web-desktop (public site + admin panel)"
+    ],
+    "purpose": "brand promo, not release notes"
+  },
+  "bpm": 96
+}
