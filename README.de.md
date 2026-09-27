@@ -249,7 +249,7 @@ Für den schnellsten Einstieg reicht der oben gezeigte [In 60 Sekunden ausprobie
 
 **Entwicklung**
 
-Das lokale Setup, Umgebungsanforderungen und das Front-/Backend-Zusammenspiel sind in **[docs/dev/development.md](./docs/dev/development.md)** dokumentiert. Architektur und Konventionen findest du in [`CLAUDE.md`](./CLAUDE.md) und [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+Das lokale Setup, Umgebungsanforderungen und das Front-/Backend-Zusammenspiel sind in **[docs/dev/development.md](./docs/dev/development.md)** dokumentiert. Architektur und Konventionen findest du in [`CLAUDE.md`](./CLAUDE.md) und [`CONTRIBUTING.md`](./CONTRIBUTING.md). Ein interaktives Architekturdiagramm gibt es unter **[ech0.app/arch](https://www.ech0.app/arch)**.
 
 ---
 

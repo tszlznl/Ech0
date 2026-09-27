@@ -249,7 +249,7 @@ Docker Compose や Helm を使った手順は [かんたんデプロイ](#かん
 
 **開発**
 
-ローカル開発のセットアップ、環境要件、フロントエンド／バックエンド連携については **[docs/dev/development.md](./docs/dev/development.md)** を参照してください。より高レベルなアーキテクチャと規約については [`CLAUDE.md`](./CLAUDE.md) と [`CONTRIBUTING.md`](./CONTRIBUTING.md) をご覧ください。
+ローカル開発のセットアップ、環境要件、フロントエンド／バックエンド連携については **[docs/dev/development.md](./docs/dev/development.md)** を参照してください。より高レベルなアーキテクチャと規約については [`CLAUDE.md`](./CLAUDE.md) と [`CONTRIBUTING.md`](./CONTRIBUTING.md) をご覧ください。インタラクティブなアーキテクチャ図は **[ech0.app/arch](https://www.ech0.app/arch)** で公開しています。
 
 ---
 
