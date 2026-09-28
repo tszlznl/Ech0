@@ -6,9 +6,11 @@ import type { Component } from 'vue'
 import HomeView from '@/views/home/HomeView.vue'
 import ChatPage from '@/views/chat/modules/ChatPage.vue'
 import PanelView from '@/views/panel/PanelView.vue'
+import EchoView from '@/views/echo/EchoView.vue'
 
 export const SHOTS: Record<string, Component> = {
   home: HomeView,
   chat: ChatPage,
   panel: PanelView,
+  echo: EchoView,
 }

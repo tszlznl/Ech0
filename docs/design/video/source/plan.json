@@ -5,7 +5,7 @@
   "width": 1920,
   "height": 1080,
   "fps": 30,
-  "duration": 80,
+  "duration": 97.5,
   "repo": "../../../..",
   "audioRequired": true,
   "sfxRequired": true,
@@ -77,6 +77,51 @@
       },
       {
         "at": 9.999,
+        "actionId": "write-attach",
+        "file": "assets/sfx/click.wav",
+        "gain": 2.5,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 10.624,
+        "actionId": "write-video",
+        "file": "assets/sfx/click-alt.wav",
+        "gain": 2.8,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 12.499,
+        "actionId": "write-drop",
+        "file": "assets/sfx/pop.wav",
+        "gain": 1.45,
+        "role": "sfx",
+        "kind": "pop",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 14.497,
+        "actionId": "write-uploaded",
+        "file": "assets/sfx/success.wav",
+        "gain": 1.0,
+        "role": "sfx",
+        "kind": "ding-dong",
+        "syncOffset": 0.003
+      },
+      {
+        "at": 14.999,
+        "actionId": "write-to-text",
+        "file": "assets/sfx/click.wav",
+        "gain": 2.5,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 15.624,
         "actionId": "write-type",
         "file": "assets/sfx/typing-x6.wav",
         "gain": 3.4,
@@ -85,7 +130,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 13.749,
+        "at": 19.374,
         "actionId": "write-tag",
         "file": "assets/sfx/click.wav",
         "gain": 2.5,
@@ -94,7 +139,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 14.374,
+        "at": 19.999,
         "actionId": "write-tag-pick",
         "file": "assets/sfx/click-alt.wav",
         "gain": 2.8,
@@ -103,7 +148,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 16.249,
+        "at": 21.249,
         "actionId": "write-publish-open",
         "file": "assets/sfx/pop.wav",
         "gain": 1.45,
@@ -112,7 +157,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 16.874,
+        "at": 21.874,
         "actionId": "write-publish",
         "file": "assets/sfx/click.wav",
         "gain": 2.5,
@@ -121,7 +166,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 18.122,
+        "at": 23.122,
         "actionId": "land-ring",
         "file": "assets/sfx/success.wav",
         "gain": 1.25,
@@ -130,7 +175,88 @@
         "syncOffset": 0.003
       },
       {
-        "at": 32.499,
+        "at": 29.374,
+        "actionId": "detail-open",
+        "file": "assets/sfx/click.wav",
+        "gain": 2.5,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 30.624,
+        "actionId": "detail-share",
+        "file": "assets/sfx/pop.wav",
+        "gain": 1.45,
+        "role": "sfx",
+        "kind": "pop",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 31.874,
+        "actionId": "detail-copy",
+        "file": "assets/sfx/click-alt.wav",
+        "gain": 2.8,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 32.365,
+        "actionId": "detail-reader",
+        "file": "assets/sfx/sweep.wav",
+        "gain": 1.4,
+        "role": "sfx",
+        "kind": "transition",
+        "syncOffset": 0.135
+      },
+      {
+        "at": 33.124,
+        "actionId": "detail-like",
+        "file": "assets/sfx/pop.wav",
+        "gain": 1.45,
+        "role": "sfx",
+        "kind": "pop",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 33.749,
+        "actionId": "detail-form",
+        "file": "assets/sfx/click.wav",
+        "gain": 2.5,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 34.249,
+        "actionId": "detail-type",
+        "file": "assets/sfx/typing-x5.wav",
+        "gain": 4.0,
+        "role": "sfx",
+        "kind": "typing",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 37.497,
+        "actionId": "detail-submit",
+        "file": "assets/sfx/success.wav",
+        "gain": 1.25,
+        "role": "sfx",
+        "kind": "ding-dong",
+        "syncOffset": 0.003
+      },
+      {
+        "at": 40.624,
+        "actionId": "detail-back",
+        "file": "assets/sfx/click.wav",
+        "gain": 2.5,
+        "role": "sfx",
+        "kind": "click",
+        "syncOffset": 0.001
+      },
+      {
+        "at": 49.999,
         "actionId": "reach-click",
         "file": "assets/sfx/click.wav",
         "gain": 2.5,
@@ -139,7 +265,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 35.532,
+        "at": 53.032,
         "actionId": "reach-hit-connect",
         "file": "assets/sfx/click-alt.wav",
         "gain": 2.8,
@@ -148,7 +274,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 35.924,
+        "at": 53.424,
         "actionId": "reach-hit-rss",
         "file": "assets/sfx/click-alt.wav",
         "gain": 2.8,
@@ -157,7 +283,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 36.216,
+        "at": 53.716,
         "actionId": "reach-hit-comment",
         "file": "assets/sfx/click-alt.wav",
         "gain": 2.8,
@@ -166,7 +292,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 39.549,
+        "at": 57.049,
         "actionId": "copilot-type",
         "file": "assets/sfx/typing-x3.wav",
         "gain": 3.4,
@@ -175,7 +301,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 41.179,
+        "at": 58.679,
         "actionId": "copilot-send",
         "file": "assets/sfx/whoosh.wav",
         "gain": 1.7,
@@ -184,7 +310,7 @@
         "syncOffset": 0.071
       },
       {
-        "at": 42.499,
+        "at": 59.999,
         "actionId": "copilot-sources",
         "file": "assets/sfx/pop.wav",
         "gain": 1.45,
@@ -193,7 +319,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 51.179,
+        "at": 68.679,
         "actionId": "panel-fold",
         "file": "assets/sfx/whoosh.wav",
         "gain": 1.7,
@@ -202,7 +328,7 @@
         "syncOffset": 0.071
       },
       {
-        "at": 53.749,
+        "at": 71.249,
         "actionId": "panel-nav-comments",
         "file": "assets/sfx/click.wav",
         "gain": 2.5,
@@ -211,7 +337,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 54.374,
+        "at": 71.874,
         "actionId": "panel-tab-comments",
         "file": "assets/sfx/click-alt.wav",
         "gain": 2.8,
@@ -220,7 +346,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 56.249,
+        "at": 73.749,
         "actionId": "panel-nav-storage",
         "file": "assets/sfx/click.wav",
         "gain": 2.5,
@@ -229,7 +355,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 56.874,
+        "at": 74.374,
         "actionId": "panel-tab-files",
         "file": "assets/sfx/click-alt.wav",
         "gain": 2.8,
@@ -238,7 +364,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 57.499,
+        "at": 74.999,
         "actionId": "panel-tree-root",
         "file": "assets/sfx/pop.wav",
         "gain": 1.45,
@@ -247,7 +373,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 58.124,
+        "at": 75.624,
         "actionId": "panel-tree-images",
         "file": "assets/sfx/pop.wav",
         "gain": 1.45,
@@ -256,7 +382,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 58.749,
+        "at": 76.249,
         "actionId": "panel-nav-ext",
         "file": "assets/sfx/click.wav",
         "gain": 2.5,
@@ -265,7 +391,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 59.374,
+        "at": 76.874,
         "actionId": "panel-tab-mcp",
         "file": "assets/sfx/click-alt.wav",
         "gain": 2.8,
@@ -274,7 +400,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 62.499,
+        "at": 79.999,
         "actionId": "panel-nav-logs",
         "file": "assets/sfx/click.wav",
         "gain": 2.5,
@@ -283,7 +409,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 62.899,
+        "at": 80.399,
         "actionId": "panel-log-live",
         "file": "assets/sfx/toggle.wav",
         "gain": 2.4,
@@ -292,7 +418,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 66.249,
+        "at": 83.749,
         "actionId": "own-nav",
         "file": "assets/sfx/click.wav",
         "gain": 2.5,
@@ -301,7 +427,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 66.874,
+        "at": 84.374,
         "actionId": "own-tab",
         "file": "assets/sfx/click-alt.wav",
         "gain": 2.8,
@@ -310,7 +436,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 67.499,
+        "at": 84.999,
         "actionId": "own-type",
         "file": "assets/sfx/typing-x5.wav",
         "gain": 4.0,
@@ -319,7 +445,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 69.999,
+        "at": 87.499,
         "actionId": "own-mark",
         "file": "assets/sfx/click-alt.wav",
         "gain": 2.8,
@@ -328,7 +454,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 71.249,
+        "at": 88.749,
         "actionId": "own-capsule",
         "file": "assets/sfx/click.wav",
         "gain": 2.5,
@@ -337,7 +463,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 75.499,
+        "at": 92.999,
         "actionId": "close-assemble",
         "file": "assets/sfx/pop.wav",
         "gain": 1.45,
@@ -346,7 +472,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 75.8115,
+        "at": 93.3115,
         "actionId": "close-assemble-2",
         "file": "assets/sfx/pop.wav",
         "gain": 1.45,
@@ -355,7 +481,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 76.124,
+        "at": 93.624,
         "actionId": "close-assemble-3",
         "file": "assets/sfx/pop.wav",
         "gain": 1.45,
@@ -364,7 +490,7 @@
         "syncOffset": 0.001
       },
       {
-        "at": 76.999,
+        "at": 94.499,
         "actionId": "close-type",
         "file": "assets/sfx/typing.wav",
         "gain": 3.4,
@@ -440,55 +566,94 @@
     {
       "id": "write",
       "start": 8.75,
-      "end": 17.5,
+      "end": 22.5,
       "type": "detail",
       "headlineEn": "Write it down.",
       "headline": "Write it down.",
-      "description": "Markdown, photos, links and tags, all from one editor.",
+      "description": "Markdown, video, photos, links and tags, all from one editor.",
       "descriptionAt": 0.4,
       "claim": true,
       "source": [
-        "repo:web/src/views/home/modules/TheEditor.vue",
-        "repo:web/src/views/home/modules/TheEditor/TheEditorButtons.vue",
         "repo:README.md#L113",
-        "repo:README.md#L120"
+        "repo:README.md#L120",
+        "repo:README.md#L121",
+        "repo:web/src/components/advanced/TheUploader.vue",
+        "repo:web/src/lib/file/useUpload.ts",
+        "repo:web/src/views/home/modules/TheEditor.vue",
+        "repo:web/src/views/home/modules/TheEditor/TheEditorButtons.vue"
       ],
-      "plainExplanation": "The real Publish tab: a post is typed into the editor, the #notes tag is picked, and Publish is clicked.",
+      "plainExplanation": "The real Publish tab: Add attachment → Video → a clip is dropped on the uploader and uploads (progress bar) → back to the text box with the video attached; then the post is typed, #notes picked, and Publish as public clicked.",
       "component": "repo:web/src/views/home/HomeView.vue",
       "actions": [
         {
-          "id": "write-type",
+          "id": "write-attach",
           "at": 1.25,
+          "action": "click Add attachment",
+          "soundRequired": true
+        },
+        {
+          "id": "write-video",
+          "at": 1.875,
+          "action": "choose Video",
+          "soundRequired": true
+        },
+        {
+          "id": "write-drag",
+          "at": 2.5,
+          "action": "drag the clip in",
+          "soundRequired": false
+        },
+        {
+          "id": "write-drop",
+          "at": 3.75,
+          "action": "drop the clip on the uploader",
+          "soundRequired": true
+        },
+        {
+          "id": "write-uploaded",
+          "at": 5.75,
+          "action": "upload finishes",
+          "soundRequired": true
+        },
+        {
+          "id": "write-to-text",
+          "at": 6.25,
+          "action": "back to the text box",
+          "soundRequired": true
+        },
+        {
+          "id": "write-type",
+          "at": 6.875,
           "action": "typing into the real editor",
           "soundRequired": true
         },
         {
           "id": "write-tag",
-          "at": 5.0,
+          "at": 10.625,
           "action": "open tag picker",
           "soundRequired": true
         },
         {
           "id": "write-tag-pick",
-          "at": 5.625,
+          "at": 11.25,
           "action": "pick #notes",
           "soundRequired": true
         },
         {
           "id": "write-tag-close",
-          "at": 6.25,
+          "at": 11.875,
           "action": "close tag picker",
           "soundRequired": false
         },
         {
           "id": "write-publish-open",
-          "at": 7.5,
+          "at": 12.5,
           "action": "open publish choices",
           "soundRequired": true
         },
         {
           "id": "write-publish",
-          "at": 8.125,
+          "at": 13.125,
           "action": "click Publish as public",
           "soundRequired": true
         }
@@ -496,8 +661,8 @@
     },
     {
       "id": "land",
-      "start": 17.5,
-      "end": 23.75,
+      "start": 22.5,
+      "end": 28.75,
       "type": "detail",
       "headlineEn": "It lands on\nyour timeline.",
       "headline": "It lands on\nyour timeline.",
@@ -520,9 +685,87 @@
       ]
     },
     {
+      "id": "detail",
+      "start": 28.75,
+      "end": 41.25,
+      "type": "detail",
+      "headlineEn": "Pass it on.",
+      "headline": "Pass it on.",
+      "description": "Every Echo has its own page. Readers can like it, share it and reply.",
+      "descriptionAt": 0.4,
+      "claim": true,
+      "source": [
+        "repo:web/src/components/advanced/echo/cards/TheEchoCard.vue",
+        "repo:web/src/components/advanced/echo/cards/TheEchoDetail.vue",
+        "repo:web/src/components/advanced/echo/cards/TheEchoMeta.vue",
+        "repo:web/src/components/advanced/echo/cards/TheShareEchoPanel.vue",
+        "repo:web/src/components/advanced/TheComment.vue",
+        "repo:README.md#L125",
+        "repo:README.md#L126"
+      ],
+      "plainExplanation": "Clicking the new Echo's time opens its detail page. Mira opens the share menu and copies the link; the page is then shown signed out, as a reader who opened that link: they like it and post a reply through the comment form, which appears at once. Back returns to the timeline.",
+      "component": "repo:web/src/views/echo/EchoView.vue",
+      "actions": [
+        {
+          "id": "detail-open",
+          "at": 0.625,
+          "action": "click the Echo's time → detail page",
+          "soundRequired": true
+        },
+        {
+          "id": "detail-share",
+          "at": 1.875,
+          "action": "open share menu",
+          "soundRequired": true
+        },
+        {
+          "id": "detail-copy",
+          "at": 3.125,
+          "action": "copy link",
+          "soundRequired": true
+        },
+        {
+          "id": "detail-reader",
+          "at": 3.75,
+          "action": "page reopened as a signed-out reader",
+          "soundRequired": true
+        },
+        {
+          "id": "detail-like",
+          "at": 4.375,
+          "action": "like",
+          "soundRequired": true
+        },
+        {
+          "id": "detail-form",
+          "at": 5.0,
+          "action": "open the reply form",
+          "soundRequired": true
+        },
+        {
+          "id": "detail-type",
+          "at": 5.5,
+          "action": "reader types name, email and reply",
+          "soundRequired": true
+        },
+        {
+          "id": "detail-submit",
+          "at": 8.75,
+          "action": "post the reply",
+          "soundRequired": true
+        },
+        {
+          "id": "detail-back",
+          "at": 11.875,
+          "action": "back to the timeline",
+          "soundRequired": true
+        }
+      ]
+    },
+    {
       "id": "stream",
-      "start": 23.75,
-      "end": 31.25,
+      "start": 41.25,
+      "end": 48.75,
       "type": "detail",
       "headlineEn": "One quiet\nstream.",
       "headline": "One quiet\nstream.",
@@ -546,8 +789,8 @@
     },
     {
       "id": "reach",
-      "start": 31.25,
-      "end": 38.75,
+      "start": 48.75,
+      "end": 56.25,
       "type": "detail",
       "headlineEn": "Echoes that\nreach people.",
       "headline": "Echoes that\nreach people.",
@@ -598,8 +841,8 @@
     },
     {
       "id": "copilot",
-      "start": 38.75,
-      "end": 48.75,
+      "start": 56.25,
+      "end": 66.25,
       "type": "detail",
       "headlineEn": "Ask your own\ntimeline.",
       "headline": "Ask your own\ntimeline.",
@@ -641,8 +884,8 @@
     },
     {
       "id": "panel",
-      "start": 48.75,
-      "end": 66.25,
+      "start": 66.25,
+      "end": 83.75,
       "type": "detail",
       "headlineEn": "Run it\nyour way.",
       "headline": "Run it\nyour way.",
@@ -732,8 +975,8 @@
     },
     {
       "id": "own",
-      "start": 66.25,
-      "end": 75,
+      "start": 83.75,
+      "end": 92.5,
       "type": "detail",
       "headlineEn": "Yours to keep.",
       "headline": "Yours to keep.",
@@ -783,8 +1026,8 @@
     },
     {
       "id": "close",
-      "start": 75,
-      "end": 80,
+      "start": 92.5,
+      "end": 97.5,
       "type": "end",
       "headlineEn": "Ech0",
       "headline": "Ech0",

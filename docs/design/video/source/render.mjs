@@ -29,7 +29,8 @@ try {
   const page = await browser.newPage({viewport: {width: plan.width, height: plan.height}, deviceScaleFactor: 1});
   const failures = [];
   page.on('pageerror', e => failures.push(e.message));
-  page.on('requestfailed', r => failures.push('failed ' + r.url()));
+  // Media elements cancel in-flight range requests when seeking (net::ERR_ABORTED): not a failure.
+  page.on('requestfailed', r => { if (!/ERR_ABORTED/.test(r.failure()?.errorText || '')) failures.push('failed ' + r.url() + ' ' + (r.failure()?.errorText || '')); });
   page.on('response', r => { if (r.status() >= 400) failures.push(`${r.status()} ${r.url()}`); });
   await openFilm(page, url);
   await page.evaluate(async () => { await window.__filmReady; await document.fonts.ready; await Promise.all([...document.images].map(i => i.decode().catch(() => {}))); });

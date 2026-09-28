@@ -30,7 +30,13 @@ export const ECHOS = [
     {tags: [T('reading')], extension: {type: 'WEBSITE', payload: {title: 'The quiet web is still here', site: 'https://example.com/quiet-web'}}}),
   echo('e-build', 'Shipped reading mode for my little side project. Quiet pages, bigger type, nothing else.', at(8, 22, 40), {tags: [T('build')], fav_count: 9}),
 ];
-export const NEW_ECHO = echo('e-new', 'Moved my notes off the feed and onto my own server tonight.\n\nSame words. **My address.**', at(0, 9, 30), {tags: [T('notes')], fav_count: 0});
+const vid = (id, echo, name, w, h) => ({
+  id: 'ef-' + id, echo_id: echo, file_id: 'f-' + id, sort_order: 0,
+  file: {id: 'f-' + id, key: `videos/${name}`, storage_type: 'local', url: `/demo/${name}`, name, content_type: 'video/mp4', category: 'video', width: w, height: h, size: 1245184},
+});
+// Published in the write shot, with the clip uploaded there (real upload flow, fixture answer).
+export const NEW_ECHO = echo('e-new', 'Moved my notes off the feed and onto my own server tonight.\n\nSame words. **My address.**', at(0, 9, 30),
+  {tags: [T('notes')], fav_count: 0, echo_files: [vid('cats', 'e-new', 'cats-at-dusk.mp4', 1916, 1080)]});
 
 const heatmap = (() => {
   const out = []; let s = 11;
@@ -57,7 +63,14 @@ const settings = {
   site_title: 'Mira — notes & light', server_logo: '', server_name: 'Mira', server_url: 'https://mira.example',
   allow_register: false, default_locale: 'en-US', ICP_number: '', footer_content: '', footer_link: '', meting_api: '', custom_css: '', custom_js: '',
 };
-const state = {published: false};
+const state = {published: false, liked: false, readerComment: false};
+// Detail chapter: a reader's reply to the new Echo (posted through the real comment form).
+export const READER = {nickname: 'Jonas', email: 'jonas@example.com', content: 'Same words, my address. Love this. Following along via RSS.'};
+const detailComments = () => [
+  ...(state.readerComment ? [cm('c-reader', 'e-new', READER.nickname, READER.content, 0)] : []),
+  cm('c-lena', 'e-new', 'Lena', 'Stealing "same words, my address" for my own about page.', 0.2),
+];
+export const resetDetail = () => { state.liked = false; state.readerComment = false; };
 export const setPublished = v => { state.published = v; };
 export const isPublished = () => state.published;
 
@@ -84,6 +97,12 @@ export const API_FIXTURES = {
     return ok(null);
   },
   '/api/chat/session': ok([]),
+  '/api/echo/e-new': () => ok({...NEW_ECHO, fav_count: NEW_ECHO.fav_count + (state.liked ? 1 : 0)}),
+  '/api/echo/like/e-new': (url, init) => { if ((init?.method || 'GET').toUpperCase() !== 'GET') state.liked = true; return ok(null); },
+  '/api/comments': (url, init) => {
+    if ((init?.method || 'GET').toUpperCase() === 'POST') { state.readerComment = true; return ok({status: 'approved'}); }
+    return ok(url.searchParams.get('echo_id') === 'e-new' ? detailComments() : []);
+  },
   '/api/comments/public': ok(COMMENTS),
   '/api/comments/form': ok({form_token: 'film', min_submit_ms: 0, captcha_enabled: false, captcha_api_endpoint: '', enable_comment: true}),
   '/api/connect/list': ok(CONNECTS.map(c => ({id: c.id, connect_url: c.server_url}))),

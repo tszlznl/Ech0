@@ -6,7 +6,7 @@ import {shot, shots} from '../engine.js';
 import {Rings, pulseRings, Typed, typeInto, BEAT, $} from './common.jsx';
 import {onRender} from '../engine.js';
 
-const LABELS = {write: 'Write', land: 'Publish', stream: 'Read', reach: 'Reach', copilot: 'Ask', panel: 'Manage', own: 'Keep'};
+const LABELS = {write: 'Write', land: 'Publish', detail: 'Share', stream: 'Read', reach: 'Reach', copilot: 'Ask', panel: 'Manage', own: 'Keep'};
 const ENTRY_IDS = Object.keys(LABELS);
 export const DOT = {cx: 574, cy: 540, rx: 150, ry: 372};   // opening centre → rail anchor
 

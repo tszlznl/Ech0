@@ -4,7 +4,7 @@
     "land description may be too fast; inspect actual reading time",
     "Mix inputs/stem/master verified; listen to SFX audibility and verify this master was used in the final export",
     "Audio stream exists; loudness, audibility and synchronization still need review",
-    "4.27s nearly still around 9.5s (write); watch it: reading pause, or missing continuation? (hint only)"
+    "4.03s nearly still around 84.73s (own); watch it: reading pause, or missing continuation? (hint only)"
   ],
   "limits": [
     "No semantic verification of feature claims",
@@ -21,9 +21,9 @@
       "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
       "format_long_name": "QuickTime / MOV",
       "start_time": "0.000000",
-      "duration": "80.000000",
-      "size": "13659867",
-      "bit_rate": "1365986",
+      "duration": "97.500000",
+      "size": "19493065",
+      "bit_rate": "1599430",
       "probe_score": 100,
       "tags": {
         "major_brand": "isom",
@@ -63,11 +63,11 @@
         "time_base": "1/15360",
         "start_pts": 0,
         "start_time": "0.000000",
-        "duration_ts": 1228800,
-        "duration": "80.000000",
-        "bit_rate": "1092184",
+        "duration_ts": 1497600,
+        "duration": "97.500000",
+        "bit_rate": "1326096",
         "bits_per_raw_sample": "8",
-        "nb_frames": "2400",
+        "nb_frames": "2925",
         "extradata_size": 51,
         "disposition": {
           "default": 1,
@@ -124,10 +124,10 @@
         "time_base": "1/48000",
         "start_pts": 0,
         "start_time": "0.000000",
-        "duration_ts": 3840000,
-        "duration": "80.000000",
-        "bit_rate": "264960",
-        "nb_frames": "3751",
+        "duration_ts": 4680000,
+        "duration": "97.500000",
+        "bit_rate": "264539",
+        "nb_frames": "4572",
         "extradata_size": 5,
         "disposition": {
           "default": 1,
@@ -158,15 +158,15 @@
     ]
   },
   "pacing": {
-    "frames": 2399,
-    "stillRatio": 0.663,
-    "movingRatio": 0.134,
-    "hardChanges": 3,
-    "meanDiff": 0.614,
+    "frames": 2924,
+    "stillRatio": 0.647,
+    "movingRatio": 0.159,
+    "hardChanges": 16,
+    "meanDiff": 0.806,
     "longestStill": {
-      "seconds": 4.27,
-      "at": 9.5,
-      "shot": "write"
+      "seconds": 4.03,
+      "at": 84.73,
+      "shot": "own"
     },
     "thresholds": {
       "still": 0.15,

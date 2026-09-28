@@ -20,6 +20,7 @@ import BaseDialog from '@/components/common/BaseDialog.vue'
 import { useEchoStore } from '@/stores/echo'
 import { useEditorStore } from '@/stores/editor'
 import { useThemeStore } from '@/stores/theme'
+import { useUserStore } from '@/stores/user'
 import { SHOTS } from './shots'
 
 export const film = reactive({ t: 0 })
@@ -79,6 +80,15 @@ export async function setTheme(mode: 'light' | 'dark' | 'sunny') {
 }
 
 export const route = () => router.currentRoute.value.fullPath
+
+/** Detail chapter: view the page as a signed-out reader who opened a shared link (and back). */
+let owner: unknown = null
+export async function setVisitor(on: boolean) {
+  const users = useUserStore()
+  if (on && users.user) { owner = users.user; users.user = null }
+  if (!on && !users.user && owner) users.user = owner as typeof users.user
+  await nextTick()
+}
 
 /** Back-seek support: undo a publish so the write shot can replay from a clean editor. */
 export async function resetEditor() {

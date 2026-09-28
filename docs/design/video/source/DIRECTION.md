@@ -1,4 +1,4 @@
-# 影片方向 · Ech0 品牌宣传片（English, 80s, 16:9）
+# 影片方向 · Ech0 品牌宣传片（English, 97.5s, 16:9）
 
 ## 1. 参考拆解
 用户未提供参考视频。
@@ -22,6 +22,8 @@
 ## 4. 选择与理由
 
 > 第二轮修改（用户反馈）：加长到 80 秒，新增管理后台章节（mock 数据），全程保持 light 主题。
+> 第三轮修改（用户反馈）：发布后点时间进入 Echo 详情页，演示点赞、分享、评论这些读者互动；片长 92.5 秒。
+> 第四轮修改（用户反馈）：写作章节演示附件上传——把本地实例里的一段视频拖进编辑器上传，发布后的 Echo 带着视频；片长 97.5 秒。
 
 - **选 A**。用户要的是面向全量产品的营销片（不是更新日志），平台面只拍 Web 桌面端，风格沿用产品设计。A 让产品名、配色和核心界面落在同一个母题里：一条想法写下 → 发布 → 被读者、订阅和 Copilot "回响" → 最终仍然属于你。B 的暗色和冲击感与产品的克制气质相悖；C 只讲 AI，覆盖面太窄。
 - **本片专属手法**：
@@ -44,11 +46,12 @@
 |---|---|---|---|---|---|---|
 | 1 | 0.0–5.0 | open | 橙点 | 纸白空画面；第 1 拍（0.625s）亮起一颗橙点，产品光标在右侧逐字打出一句；第 5 拍荡出第一圈回声环 | **Say it once.** | 钢琴单音对点；pop、打字、sweep |
 | 2 | 5.0–8.75 | echo | 回声环 | 三圈环依次扩到画外，钢琴动机带延迟回声；7.0s 起橙点滑到左侧，长出 rail（本片自己的时间线） | **Let it echo.** | 动机 + 三次延迟回声；resolve、whoosh |
-| 3 | 8.75–17.5 | write | 真实编辑器 | 首页 Publish 标签页（真实 TheEditor）放大 1.85 倍；真实打字；打开标签选择器选 #notes；点 "+" 打开发布选项，第 27 拍点 "Publish as public" | **Write it down.** / Markdown, photos, links and tags, all from one editor. | 钢琴 ostinato 入；打字、click、pop |
-| 4 | 17.5–23.75 | land | 真实时间线 | 真实发布流程跳回时间线，新 Echo（Just now）在第一条；它的日期橙点荡出两圈回声环 | **It lands on your timeline.** / The new post sits on top of your own timeline, on your own domain. | 贝斯在下拍进入；success |
-| 5 | 23.75–31.25 | stream | 真实时间线 | 真实主列滚动：照片、Markdown 笔记、第二张照片、链接卡片 | **One quiet stream.** / Notes, photos and link cards, in the order you lived them. | 钢琴旋律 |
-| 6 | 31.25–38.75 | reach | 真实 Status 页 | 镜头拉远，光标点侧栏 Status；rail 橙点荡出三圈环，依次点亮 Connect（35.53s）、RSS（35.93s）、Comments（36.22s）；再推近到可读尺度 | **Echoes that reach people.** / Readers follow by RSS, reply in comments, and connect their own Ech0. | click + 三次轻 tick |
-| 7 | 38.75–48.75 | copilot | 真实 Copilot | 真实 TheChatBox：打出问题 → 发送 → 两次检索、覆盖 6 条 Echo → 流式回答 + 引用来源 | **Ask your own timeline.** / Ech0 Copilot answers from your posts, and shows which ones. | 琶音脉冲；打字、whoosh、pop |
-| 8 | 48.75–66.25 | panel | 真实管理后台 | 字卡正常进场，后台以全景出现在右侧；51.25s 字卡收成页眉（缩到 0.5、移到顶部，橙点随行），后台推近到全宽 1.5 倍，顶部欢迎区用渐变遮罩收掉。之后全是真实点击：53.75 Comments → Comment Management 审核表；56.25 Storage → File Manager → 展开 Local Storage → 打开 images/；58.75 Extensions → MCP（真实 manifest：29 个工具，endpoint 为 https://mira.example/mcp），镜头下移扫过工具列表；62.5 Logs，实时日志逐行推入 | **Run it your way.** / A calm admin panel: stats, comments, files, MCP and live logs. | 稳定明亮的律动；每次切页 click，子标签 click-alt，树节点 pop，日志 toggle |
-| 9 | 66.25–75.0 | own | 数据导出 + 部署命令 | 字卡回到常规位置；真实点 Data → Export，后台左侧导航和顶部被遮罩收掉，只留 Snapshot / Capsule 导出卡；左下浅色卡片逐字打出 README 的 docker run 命令，70.0s 标出 `/app/data` | **Yours to keep.** / Export a snapshot or a portable capsule any time. It all runs in one container. | 温暖渐强（Bb → C）；click、打字、click-alt |
-| 10 | 75.0–80.0 | close | 标志 | 橙点从 rail 飞到标志的"眼睛"；短横、斜线、底横三笔依次飞入，底板淡入；产品光标打出 "Ech0"，接一句话和一行信息 | **Ech0** / A timeline you own. / Open source · Self-hosted · ech0.app | 77.5s 落 Fmaj9 终止和弦；三次 pop、打字 |
+| 3 | 8.75–22.5 | write | 真实编辑器 | 首页 Publish 标签页（真实 TheEditor）放大 1.85 倍；10.0 点附件 → 10.625 选 Video → 光标带着文件卡片从画面右缘进来，12.5 在真实上传区触发 drop → 进度条 12.5–14.4 → 15.0 点返回，视频预览挂在输入框下方（镜头拉到 1.6 倍）；之后真实打字；打开标签选择器选 #notes；点 "+" 打开发布选项，第 35 拍（21.875s）点 "Publish as public" | **Write it down.** / Markdown, photos, links and tags, all from one editor. | 钢琴 ostinato 入；打字、click、pop |
+| 4 | 22.5–28.75 | land | 真实时间线 | 真实发布流程跳回时间线，新 Echo（Just now）在第一条；它的日期橙点荡出两圈回声环 | **It lands on your timeline.** / The new post sits on top of your own timeline, on your own domain. | 贝斯在下拍进入；success |
+| 5 | 28.75–41.25 | detail | 真实 Echo 详情页 | 29.375 真实点新 Echo 的时间标签进入 /echo/e-new（EchoView）；30.625 点分享 → 真实分享面板（Copy as Markdown、带链接的复制）；31.875 复制链接；32.5 页面以未登录读者视角重新打开（提示条 "A reader opens the shared link"）；33.125 点赞 0 → 1；33.75 展开评论表单，填昵称 Jonas、邮箱和回复，实时预览；37.5 提交，出现 "Comment published" 和 #2 Jonas；40.625 真实点 back 回到时间线；镜头逐帧跟随焦点：页头 → 点赞/分享行（分享面板完整入画）→ 评论表单 → 新评论停留约 1 秒 → 回到页头 | **Pass it on.** / Every Echo has its own page. Readers can like it, share it and reply. | 更轻、更私人的律动（无底鼓）；click、pop、sweep、打字、success |
+| 6 | 41.25–48.75 | stream | 真实时间线 | 真实主列滚动：照片、Markdown 笔记、第二张照片、链接卡片 | **One quiet stream.** / Notes, photos and link cards, in the order you lived them. | 钢琴旋律 |
+| 7 | 48.75–56.25 | reach | 真实 Status 页 | 镜头拉远，光标点侧栏 Status；rail 橙点荡出三圈环，依次点亮 Connect（53.03s）、RSS（53.43s）、Comments（53.72s）；再推近到可读尺度 | **Echoes that reach people.** / Readers follow by RSS, reply in comments, and connect their own Ech0. | click + 三次轻 tick |
+| 8 | 56.25–66.25 | copilot | 真实 Copilot | 真实 TheChatBox：打出问题 → 发送 → 两次检索、覆盖 6 条 Echo → 流式回答 + 引用来源 | **Ask your own timeline.** / Ech0 Copilot answers from your posts, and shows which ones. | 琶音脉冲；打字、whoosh、pop |
+| 9 | 66.25–83.75 | panel | 真实管理后台 | 字卡正常进场，后台以全景出现在右侧；68.75s 字卡收成页眉（缩到 0.5、移到顶部，橙点随行），后台推近到全宽 1.5 倍，顶部欢迎区用渐变遮罩收掉。之后全是真实点击：71.25 Comments → Comment Management 审核表；73.75 Storage → File Manager → 展开 Local Storage → 打开 images/；76.25 Extensions → MCP（真实 manifest：29 个工具，endpoint 为 https://mira.example/mcp），镜头下移扫过工具列表；80 Logs，实时日志逐行推入 | **Run it your way.** / A calm admin panel: stats, comments, files, MCP and live logs. | 稳定明亮的律动；每次切页 click，子标签 click-alt，树节点 pop，日志 toggle |
+| 10 | 83.75–92.5 | own | 数据导出 + 部署命令 | 字卡回到常规位置；真实点 Data → Export，后台左侧导航和顶部被遮罩收掉，只留 Snapshot / Capsule 导出卡；左下浅色卡片逐字打出 README 的 docker run 命令，87.5s 标出 `/app/data` | **Yours to keep.** / Export a snapshot or a portable capsule any time. It all runs in one container. | 温暖渐强（Bb → C）；click、打字、click-alt |
+| 11 | 92.5–97.5 | close | 标志 | 橙点从 rail 飞到标志的"眼睛"；短横、斜线、底横三笔依次飞入，底板淡入；产品光标打出 "Ech0"，接一句话和一行信息 | **Ech0** / A timeline you own. / Open source · Self-hosted · ech0.app | 90s 落 Fmaj9 终止和弦；三次 pop、打字 |

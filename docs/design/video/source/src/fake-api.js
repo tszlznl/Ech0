@@ -57,3 +57,25 @@ class FilmSocket extends Silent {
   close() { this.readyState = 3; this.onclose?.({type: 'close'}); }
 }
 window.WebSocket = FilmSocket;
+// Local file upload (web/src/lib/file/upload.ts: XHR POST /api/files/upload with FormData). The
+// write shot's driver advances progress by film time through window.__uploadFeed and then
+// answers with the backend's success envelope.
+const RealXHR = window.XMLHttpRequest;
+class FilmXHR {
+  constructor() { this.upload = {}; this.readyState = 0; this.status = 0; this.responseText = ''; this.headers = {}; }
+  open(method, url) { this.method = method; this.url = String(url); this.readyState = 1; }
+  setRequestHeader(k, v) { this.headers[k] = v; }
+  abort() { this.onabort?.(); }
+  send(body) {
+    if (!this.url.includes('/api/files/upload')) { const x = new RealXHR(); x.open(this.method, this.url); x.onload = () => { this.status = x.status; this.responseText = x.responseText; this.onload?.(); }; x.send(body); return; }
+    window.__filmApiLog?.push('XHR ' + this.url);
+    const file = body instanceof FormData ? body.get('file') : body;
+    const total = file?.size || 1;
+    window.__uploadFeed = {
+      total, done: false,
+      progress: p => this.upload.onprogress?.({lengthComputable: true, loaded: Math.round(total * p), total}),
+      finish: data => { if (window.__uploadFeed.done) return; window.__uploadFeed.done = true; this.readyState = 4; this.status = 200; this.responseText = JSON.stringify({code: 1, msg: '', data}); this.onload?.(); },
+    };
+  }
+}
+window.XMLHttpRequest = FilmXHR;

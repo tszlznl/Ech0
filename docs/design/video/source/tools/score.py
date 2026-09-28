@@ -1,22 +1,23 @@
 """Original score for the Ech0 film — code-synthesised, no samples or third-party audio.
-96 BPM (beat 0.625s, bar 2.5s), F major, 80s. Arrangement follows plan.json shot boundaries:
+96 BPM (beat 0.625s, bar 2.5s), F major, 97.5s. Arrangement follows plan.json shot boundaries:
   open 0–5      soft pad + one piano note on beat 1 (the dot), sparse notes
   echo 5–8.75   a 3-note motif with decaying delay repeats — a literal echo (the product's name)
-  write 8.75–17.5  felt-piano ostinato + soft shaker enter, leaves room for typing/click SFX
-  land 17.5–23.75  bass enters on the downbeat: arrival
-  stream 23.75–31.25 flowing piano melody over the ostinato
-  reach 31.25–38.75 fuller voicing, bell partials double the melody
-  copilot 38.75–48.75 arpeggiated pulse, melody steps back for reading
-  panel 48.75–66.25 the admin tour: steady bright pulse, light melody, room for click SFX
-  own 66.25–75   warm build (Bb → C lift) under the export page and the docker command
-  close 75–80    resolve to Fmaj9, final chord on beat 124 with a long tail
+  write 8.75–22.5  felt-piano ostinato + soft shaker enter (attach, upload, type), room for SFX
+  land 22.5–28.75  bass enters on the downbeat: arrival
+  detail 28.75–41.25 intimate, lighter pulse under share / like / reply (no kick)
+  stream 41.25–48.75 flowing piano melody over the ostinato
+  reach 48.75–56.25 fuller voicing, bell partials double the melody
+  copilot 56.25–66.25 arpeggiated pulse, melody steps back for reading
+  panel 66.25–83.75 the admin tour: steady bright pulse, light melody, room for click SFX
+  own 83.75–92.5   warm build (Bb → C lift) under the export page and the docker command
+  close 92.5–97.5 resolve to Fmaj9, final chord on beat 152 with a long tail
 Usage: python3 tools/score.py assets/music.wav
 """
 import sys, wave
 import numpy as np
 from scipy.signal import fftconvolve, butter, sosfilt
 
-SR = 48000; DUR = 80.0; N = int(SR * DUR)
+SR = 48000; DUR = 97.5; N = int(SR * DUR)
 BEAT = 60 / 96; BAR = 4 * BEAT
 rng = np.random.default_rng(1918)
 L = np.zeros(N); R = np.zeros(N)
@@ -127,32 +128,38 @@ def kicks(start, end, vel=0.28, every=2):
         if k % every == 0: add(soft_kick(vel), k * BEAT)
 
 # write
-pads(8.75, 17.5, 0.09); ostinato(8.75, 17.5, 0.24); shakers(10.0, 17.5, 0.022)
-# land — bass + kick on the downbeat at 17.5
-pads(17.5, 23.75, 0.085); ostinato(17.5, 23.75, 0.22); basses(17.5, 23.75); shakers(17.5, 23.75, 0.026); kicks(17.5, 23.75, 0.06)
-add(bell(88, 0.10), 18.125, 0.2)
+pads(8.75, 22.5, 0.09); ostinato(8.75, 22.5, 0.24); shakers(10.0, 22.5, 0.022)
+add(bell(84, 0.06), 14.5, 0.2)   # upload finished
+# land — bass + kick on the downbeat at 22.5
+pads(22.5, 28.75, 0.085); ostinato(22.5, 28.75, 0.22); basses(22.5, 28.75); shakers(22.5, 28.75, 0.026); kicks(22.5, 28.75, 0.06)
+add(bell(88, 0.10), 23.125, 0.2)
+# detail — Pass it on: intimate, lighter pulse (no kick) under share, like and reply
+pads(28.75, 41.25, 0.075); ostinato(28.75, 41.25, 0.15, pattern=(0, 2, 1, 2, 3, 2, 1, 2)); basses(28.75, 41.25, 0.06); shakers(30, 41.25, 0.018)
+for off, n, d in [(0, 77, 1.5), (1.5, 79, 0.5), (2, 81, 2), (6, 79, 1), (7, 77, 1), (8, 76, 2), (12, 77, 1.5), (13.5, 79, 0.5), (14, 81, 2)]:
+    add(piano(n, d * BEAT, 0.24), 30 + b(off), -0.05)
+add(bell(84, 0.06), 32.5, 0.25)
 # stream — melody over the ostinato
-pads(23.75, 31.25, 0.08); ostinato(23.75, 31.25, 0.18); basses(23.75, 31.25); shakers(23.75, 31.25, 0.026); kicks(23.75, 31.25, 0.06)
+pads(41.25, 48.75, 0.08); ostinato(41.25, 48.75, 0.18); basses(41.25, 48.75); shakers(41.25, 48.75, 0.026); kicks(41.25, 48.75, 0.06)
 mel = [(0, 81, 1.5), (1.5, 79, 0.5), (2, 77, 1), (3, 76, 1), (4, 74, 1.5), (5.5, 76, 0.5), (6, 77, 2), (8, 79, 1.5), (9.5, 81, 0.5), (10, 84, 2)]
-for off, n, d in mel: add(piano(n, d * BEAT, 0.34), 23.75 + b(off), 0.05)
+for off, n, d in mel: add(piano(n, d * BEAT, 0.34), 41.25 + b(off), 0.05)
 # reach — fuller; bells double the line
-pads(31.25, 38.75, 0.09); ostinato(31.25, 38.75, 0.20); basses(31.25, 38.75, 0.09); shakers(31.25, 38.75, 0.03); kicks(31.25, 38.75, 0.065)
-for off, n in [(0, 84), (2, 81), (4, 79), (6, 77), (8, 81)]: add(bell(n, 0.07), 31.25 + b(off), 0.3)
+pads(48.75, 56.25, 0.09); ostinato(48.75, 56.25, 0.20); basses(48.75, 56.25, 0.09); shakers(48.75, 56.25, 0.03); kicks(48.75, 56.25, 0.065)
+for off, n in [(0, 84), (2, 81), (4, 79), (6, 77), (8, 81)]: add(bell(n, 0.07), 48.75 + b(off), 0.3)
 # copilot — arpeggio pulse, melody backs off for reading
-pads(38.75, 48.75, 0.075); ostinato(38.75, 48.75, 0.15, pattern=(0, 1, 2, 3, 2, 1, 3, 2)); basses(38.75, 48.75, 0.075); shakers(38.75, 48.75, 0.02); kicks(38.75, 48.75, 0.05)
+pads(56.25, 66.25, 0.075); ostinato(56.25, 66.25, 0.15, pattern=(0, 1, 2, 3, 2, 1, 3, 2)); basses(56.25, 66.25, 0.075); shakers(56.25, 66.25, 0.02); kicks(56.25, 66.25, 0.05)
 # panel — the admin tour: steady, bright, uncluttered (clicks carry the rhythm on screen)
-pads(48.75, 66.25, 0.08); ostinato(48.75, 66.25, 0.19, pattern=(0, 2, 3, 1, 2, 4, 3, 1)); basses(48.75, 66.25, 0.085); shakers(48.75, 66.25, 0.028); kicks(48.75, 66.25, 0.06)
+pads(66.25, 83.75, 0.08); ostinato(66.25, 83.75, 0.19, pattern=(0, 2, 3, 1, 2, 4, 3, 1)); basses(66.25, 83.75, 0.085); shakers(66.25, 83.75, 0.028); kicks(66.25, 83.75, 0.06)
 tour = [(0, 81, 2), (2, 79, 1), (3, 77, 1), (4, 76, 2), (6, 77, 2), (8, 79, 1.5), (9.5, 81, 0.5), (10, 84, 2), (12, 81, 2), (14, 79, 2)]
-for off, n, d in tour: add(piano(n, d * BEAT, 0.26), 51.25 + b(off), 0.1)
-for off, n in [(0, 88), (8, 86), (16, 84)]: add(bell(n, 0.05), 53.75 + b(off), -0.3)
+for off, n, d in tour: add(piano(n, d * BEAT, 0.26), 68.75 + b(off), 0.1)
+for off, n in [(0, 88), (8, 86), (16, 84)]: add(bell(n, 0.05), 71.25 + b(off), -0.3)
 # own — warm build: Bb → C lift over two bars, pulse thins so the command reads
-pads(66.25, 75.0, 0.09); ostinato(66.25, 72.5, 0.16); basses(66.25, 72.5, 0.08); shakers(66.25, 75.0, 0.02)
-for k, n in enumerate([74, 76, 77, 79, 81, 79, 77, 81, 84]): add(piano(n, 0.9, 0.2 + 0.015 * k), 67.5 + k * b(1.5), 0.05)
-add(pad(CH['C'][1:], 2.5, 0.07, attack=1.2), 72.5)
-# close — resolve: Bb → C lift, then Fmaj9 on beat 124 with a long tail
-add(pad(CH['Bb'][1:], 2.5, 0.09, attack=0.3), 75.0)
-add(piano(77, 0.8, 0.28), 75.0 + b(0)); add(piano(79, 0.8, 0.26), 75.0 + b(1)); add(piano(81, 1.0, 0.3), 75.0 + b(2))
-final = 77.5
+pads(83.75, 92.5, 0.09); ostinato(83.75, 90, 0.16); basses(83.75, 90, 0.08); shakers(83.75, 92.5, 0.02)
+for k, n in enumerate([74, 76, 77, 79, 81, 79, 77, 81, 84]): add(piano(n, 0.9, 0.2 + 0.015 * k), 85 + k * b(1.5), 0.05)
+add(pad(CH['C'][1:], 2.5, 0.07, attack=1.2), 90)
+# close — resolve: Bb → C lift, then Fmaj9 on beat 152 with a long tail
+add(pad(CH['Bb'][1:], 2.5, 0.09, attack=0.3), 92.5)
+add(piano(77, 0.8, 0.28), 92.5 + b(0)); add(piano(79, 0.8, 0.26), 92.5 + b(1)); add(piano(81, 1.0, 0.3), 92.5 + b(2))
+final = 95
 for i, n in enumerate([41, 53, 57, 60, 64, 67, 72]): add(piano(n, 2.4, 0.30 if n > 50 else 0.2), final + i * 0.012, (i - 3) * 0.12)
 add(pad([57, 60, 64, 67], 2.5, 0.08, attack=0.2), final)
 add(bell(84, 0.08), final, -0.2)
