@@ -104,7 +104,9 @@ func (p *openaiResponsesProvider) buildInput(in []Message) responses.ResponseInp
 				)
 			}
 		case RoleTool:
-			items = append(items, responses.ResponseInputItemParamOfFunctionCallOutput(m.ToolCallID, m.Content))
+			out := responses.ResponseInputItemParamOfFunctionCallOutput(m.Content)
+			out.OfFunctionCallOutput.CallID = param.NewOpt(m.ToolCallID)
+			items = append(items, out)
 		default:
 			if len(m.Images) > 0 {
 				items = append(items, responses.ResponseInputItemParamOfMessage(
