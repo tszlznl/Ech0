@@ -145,6 +145,9 @@ func (p *openaiProvider) stream(ctx context.Context, req Request, ch chan<- Even
 
 	chatReq := p.buildRequest(req)
 	chatReq.Stream = true
+	// Without it a stream reports no usage at all; with it, the last chunk
+	// carries the request's token counts and no choices.
+	chatReq.StreamOptions = &openai.StreamOptions{IncludeUsage: true}
 
 	stream, err := p.client().CreateChatCompletionStream(ctx, chatReq)
 	if err != nil {
@@ -156,7 +159,11 @@ func (p *openaiProvider) stream(ctx context.Context, req Request, ch chan<- Even
 	acc := newToolCallAccumulator()
 	guard := &toolCallLeakGuard{}
 	splitter := &reasoningSplitter{}
-	var reasoning strings.Builder
+	var (
+		reasoning strings.Builder
+		finish    openai.FinishReason
+		usage     Usage
+	)
 
 	for {
 		resp, recvErr := stream.Recv()
@@ -167,8 +174,14 @@ func (p *openaiProvider) stream(ctx context.Context, req Request, ch chan<- Even
 			send(ctx, ch, Event{Kind: EventError, Err: recvErr})
 			return
 		}
+		if resp.Usage != nil {
+			usage = chatUsage(resp.Usage)
+		}
 		if len(resp.Choices) == 0 {
 			continue
+		}
+		if fr := resp.Choices[0].FinishReason; fr != "" {
+			finish = fr
 		}
 		delta := resp.Choices[0].Delta
 
@@ -197,6 +210,11 @@ func (p *openaiProvider) stream(ctx context.Context, req Request, ch chan<- Even
 		acc.add(delta.ToolCalls)
 	}
 
+	if finish == openai.FinishReasonContentFilter {
+		send(ctx, ch, Event{Kind: EventError, Err: errContentFiltered})
+		return
+	}
+
 	ansRest, reaRest := splitter.flush()
 	if reaRest != "" && !send(ctx, ch, Event{Kind: EventReasoningDelta, Text: reaRest}) {
 		return
@@ -221,7 +239,7 @@ func (p *openaiProvider) stream(ctx context.Context, req Request, ch chan<- Even
 			return
 		}
 	}
-	done := Event{Kind: EventDone}
+	done := Event{Kind: EventDone, Truncated: finish == openai.FinishReasonLength, Usage: usage}
 	if reasoning.Len() > 0 {
 		done.Native = openaiTurn{reasoning: reasoning.String()}
 	}
@@ -360,4 +378,14 @@ func markerPrefixHold(s string) int {
 		}
 	}
 	return hold
+}
+
+// chatUsage reads Chat Completions usage, where prompt_tokens already includes
+// the cached part.
+func chatUsage(u *openai.Usage) Usage {
+	out := Usage{InputTokens: u.PromptTokens, OutputTokens: u.CompletionTokens}
+	if u.PromptTokensDetails != nil {
+		out.CachedTokens = u.PromptTokensDetails.CachedTokens
+	}
+	return out
 }

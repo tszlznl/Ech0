@@ -169,6 +169,28 @@ type Event struct {
 	// Native rides on EventDone: the provider's own record of the turn, to be
 	// stored on the assistant Message the loop appends (see Message.Native).
 	Native any
+	// Truncated rides on EventDone: the output stopped at a length limit
+	// instead of finishing, so its text is partial and any tool call in it may
+	// be cut mid-argument.
+	Truncated bool
+	// Usage rides on EventDone: what the request cost, as the provider
+	// reported it. Zero when the provider reported nothing.
+	Usage Usage
+}
+
+// Usage is one request's token counts in the provider's own tokens.
+type Usage struct {
+	// InputTokens is everything the request carried, cached or not.
+	InputTokens int
+	// CachedTokens is the part of InputTokens read from the prompt cache.
+	CachedTokens int
+	OutputTokens int
+}
+
+func (u *Usage) add(o Usage) {
+	u.InputTokens += o.InputTokens
+	u.CachedTokens += o.CachedTokens
+	u.OutputTokens += o.OutputTokens
 }
 
 type RunStrings struct {
@@ -179,6 +201,9 @@ type RunStrings struct {
 	ContextTrimNote string
 	TruncateNote    string
 	Malformed       string
+	// OutputTruncated closes an answer the model could not finish because it
+	// ran into its output limit.
+	OutputTruncated string
 }
 
 type RunRequest struct {

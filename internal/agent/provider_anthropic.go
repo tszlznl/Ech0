@@ -66,6 +66,29 @@ func (p *anthropicProvider) buildParams(req Request) anthropic.MessageNewParams 
 	return params
 }
 
+// markCacheTail puts a cache breakpoint on the request's last block.
+//
+// The breakpoint on the system prompt covers only the tools and the prompt. A
+// tool loop resends the whole conversation every round, and without a
+// breakpoint at its end each round pays full price for everything the round
+// before already sent. Placed on the last block, it moves forward with the
+// conversation: each round reads the previous round's prefix from the cache and
+// writes its own for the next one. Streaming is the loop's path; a one-shot
+// Complete has no next round to read it, and would pay the cache write for
+// nothing.
+func markCacheTail(msgs []anthropic.MessageParam) {
+	if len(msgs) == 0 {
+		return
+	}
+	blocks := msgs[len(msgs)-1].Content
+	if len(blocks) == 0 {
+		return
+	}
+	if cc := blocks[len(blocks)-1].GetCacheControl(); cc != nil {
+		*cc = anthropic.NewCacheControlEphemeralParam()
+	}
+}
+
 func (p *anthropicProvider) generate(ctx context.Context, req Request) (string, []ToolCall, error) {
 	client := p.newClient()
 	resp, err := client.Messages.New(ctx, p.buildParams(req))
@@ -216,8 +239,10 @@ func (p *anthropicProvider) Stream(ctx context.Context, req Request) (<-chan Eve
 func (p *anthropicProvider) stream(ctx context.Context, req Request, ch chan<- Event) {
 	defer close(ch)
 
+	params := p.buildParams(req)
+	markCacheTail(params.Messages)
 	client := p.newClient()
-	stream := client.Messages.NewStreaming(ctx, p.buildParams(req))
+	stream := client.Messages.NewStreaming(ctx, params)
 
 	var acc anthropic.Message
 	for stream.Next() {
@@ -254,5 +279,21 @@ func (p *anthropicProvider) stream(ctx context.Context, req Request, ch chan<- E
 			return
 		}
 	}
-	send(ctx, ch, Event{Kind: EventDone, Native: anthropicTurn{content: acc.ToParam().Content}})
+	send(ctx, ch, Event{
+		Kind:      EventDone,
+		Native:    anthropicTurn{content: acc.ToParam().Content},
+		Truncated: acc.StopReason == anthropic.StopReasonMaxTokens || acc.StopReason == anthropic.StopReasonModelContextWindowExceeded,
+		Usage:     anthropicUsage(acc.Usage),
+	})
+}
+
+// anthropicUsage totals the input the way the other protocols report it.
+// Anthropic splits it three ways, and input_tokens alone is only the part
+// after the last cache breakpoint.
+func anthropicUsage(u anthropic.Usage) Usage {
+	return Usage{
+		InputTokens:  int(u.InputTokens + u.CacheReadInputTokens + u.CacheCreationInputTokens),
+		CachedTokens: int(u.CacheReadInputTokens),
+		OutputTokens: int(u.OutputTokens),
+	}
 }

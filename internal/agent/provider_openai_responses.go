@@ -21,6 +21,7 @@ const (
 	respEventReasoningSummaryDelta = "response.reasoning_summary_text.delta"
 	respEventOutputItemDone        = "response.output_item.done"
 	respEventCompleted             = "response.completed"
+	respEventIncomplete            = "response.incomplete"
 	respEventFailed                = "response.failed"
 	respEventError                 = "error"
 )
@@ -197,7 +198,11 @@ func (p *openaiResponsesProvider) stream(ctx context.Context, req Request, ch ch
 
 	pipe := &textPipeline{}
 	calls := &respToolCalls{}
-	var turn any
+	var (
+		turn      any
+		usage     Usage
+		truncated bool
+	)
 
 	for stream.Next() {
 		ev := stream.Current()
@@ -215,6 +220,14 @@ func (p *openaiResponsesProvider) stream(ctx context.Context, req Request, ch ch
 		case respEventCompleted:
 			calls.addFinal(ev.Response.Output)
 			turn = respReasoningOf(ev.Response.Output)
+			usage = respUsage(ev.Response.Usage)
+		case respEventIncomplete:
+			if ev.Response.IncompleteDetails.Reason == respIncompleteContentFilter {
+				send(ctx, ch, Event{Kind: EventError, Err: errContentFiltered})
+				return
+			}
+			truncated = true
+			usage = respUsage(ev.Response.Usage)
 		case respEventFailed:
 			send(ctx, ch, Event{Kind: EventError, Err: fmt.Errorf(
 				"openai responses: %s", respFailureMessage(ev.Response.Error),
@@ -240,7 +253,22 @@ func (p *openaiResponsesProvider) stream(ctx context.Context, req Request, ch ch
 			return
 		}
 	}
-	send(ctx, ch, Event{Kind: EventDone, Native: turn})
+	send(ctx, ch, Event{Kind: EventDone, Native: turn, Truncated: truncated, Usage: usage})
+}
+
+// respIncompleteContentFilter is the incomplete_details.reason for a response
+// the content filter stopped; the other reason, max_output_tokens, is a plain
+// truncation.
+const respIncompleteContentFilter = "content_filter"
+
+// respUsage reads Responses usage, where input_tokens already includes the
+// cached part.
+func respUsage(u responses.ResponseUsage) Usage {
+	return Usage{
+		InputTokens:  int(u.InputTokens),
+		CachedTokens: int(u.InputTokensDetails.CachedTokens),
+		OutputTokens: int(u.OutputTokens),
+	}
 }
 
 // respReasoningOf keeps the reasoning items that can be replayed. One without
