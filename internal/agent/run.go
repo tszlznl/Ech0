@@ -26,6 +26,7 @@ var defaultRunStrings = RunStrings{
 	ContextTrimNote: "（早前检索结果已省略以控制长度）",
 	TruncateNote:    "（结果过长，其余部分已截断）",
 	Malformed:       "该工具未被正确声明，已拒绝执行：",
+	OutputTruncated: "（输出达到模型的长度上限，回答未完成）",
 }
 
 func (s RunStrings) withDefaults() RunStrings {
@@ -49,6 +50,9 @@ func (s RunStrings) withDefaults() RunStrings {
 	}
 	if s.Malformed == "" {
 		s.Malformed = defaultRunStrings.Malformed
+	}
+	if s.OutputTruncated == "" {
+		s.OutputTruncated = defaultRunStrings.OutputTruncated
 	}
 	return s
 }
@@ -130,15 +134,46 @@ func runLoop(b *budget, provider Provider, req RunRequest, out chan<- AgentEvent
 	messages := req.Messages
 	seen := make(map[string]int)
 	strs := req.Strings.withDefaults()
+	win := &window{limit: req.MaxContextTokens, fixed: ToolDefTokens(req.Tools)}
+
+	var (
+		usage  Usage
+		rounds int
+	)
+	defer func() { logRun(rounds, usage) }()
+
+	// ask sends one round. A provider refusing it as longer than the model's
+	// window gets one retry, cut to fit — the estimate that sized it is only an
+	// estimate — provided nothing of the round reached the person yet and
+	// cutting actually freed something.
+	ask := func(choice ToolChoice) roundOutcome {
+		for retried := false; ; retried = true {
+			trimContext(messages, win.messageBudget(), strs)
+			sent := contextTokens(messages) + win.fixed
+			o := streamRound(b, provider, out, messages, toolDefs, choice)
+			rounds++
+			usage.add(o.usage)
+			if o.err == nil {
+				win.observe(sent, o.usage)
+				return o
+			}
+			if retried || o.emitted || !isContextOverflow(o.err) {
+				return o
+			}
+			win.overflowed(sent)
+			if trimContext(messages, win.messageBudget(), strs); contextTokens(messages)+win.fixed >= sent {
+				return o
+			}
+			logUtil.GetLogger().Warn("agent request exceeded the model context window, retrying trimmed",
+				slog.String("module", "agent"),
+				slog.Int("estimated_tokens", sent),
+				logUtil.Err(o.err))
+		}
+	}
 
 	for round := 0; round < maxRounds; round++ {
-		trimContext(messages, req.MaxContextTokens, strs)
-		o := streamRound(b, provider, out, messages, toolDefs, ToolChoiceAuto)
-		if o.aborted {
-			return
-		}
-		if o.err != nil {
-			emit(b.base, out, AgentEvent{Kind: AgentError, Err: o.err})
+		o := ask(ToolChoiceAuto)
+		if !settle(b, out, o, strs) {
 			return
 		}
 		if len(o.calls) == 0 {
@@ -164,24 +199,51 @@ func runLoop(b *budget, provider Provider, req RunRequest, out chan<- AgentEvent
 	if len(toolDefs) > 0 {
 		finalChoice = ToolChoiceNone
 	}
-	trimContext(messages, req.MaxContextTokens, strs)
-	o := streamRound(b, provider, out, messages, toolDefs, finalChoice)
-	if o.aborted {
-		return
+	if settle(b, out, ask(finalChoice), strs) {
+		emit(b.base, out, AgentEvent{Kind: AgentDone})
 	}
-	if o.err != nil {
+}
+
+// settle ends the run on a round that cannot go on, and reports whether it
+// may. A truncated round ends it too: its text stops mid-sentence, and a tool
+// call in it may be cut mid-argument — running that would act on arguments the
+// model never finished writing. So the calls are dropped, the answer is marked
+// as unfinished, and the run closes normally, keeping what was said.
+func settle(b *budget, out chan<- AgentEvent, o roundOutcome, strs RunStrings) bool {
+	switch {
+	case o.aborted:
+		return false
+	case o.err != nil:
 		emit(b.base, out, AgentEvent{Kind: AgentError, Err: o.err})
-		return
+		return false
+	case o.truncated:
+		if emit(b.base, out, AgentEvent{Kind: AgentDelta, Text: "\n\n" + strs.OutputTruncated}) {
+			emit(b.base, out, AgentEvent{Kind: AgentDone})
+		}
+		return false
 	}
-	emit(b.base, out, AgentEvent{Kind: AgentDone})
+	return true
+}
+
+func logRun(rounds int, u Usage) {
+	logUtil.GetLogger().Info("agent run finished",
+		slog.String("module", "agent"),
+		slog.Int("rounds", rounds),
+		slog.Int("input_tokens", u.InputTokens),
+		slog.Int("cached_tokens", u.CachedTokens),
+		slog.Int("output_tokens", u.OutputTokens))
 }
 
 type roundOutcome struct {
 	calls     []ToolCall
 	assistant string
 	native    any
-	aborted   bool
-	err       error
+	usage     Usage
+	truncated bool
+	// emitted is whether any of the round's text already went out.
+	emitted bool
+	aborted bool
+	err     error
 }
 
 func streamRound(
@@ -212,10 +274,12 @@ func streamRound(
 		switch ev.Kind {
 		case EventTextDelta:
 			text.WriteString(ev.Text)
+			o.emitted = true
 			if !emit(b.base, out, AgentEvent{Kind: AgentDelta, Text: ev.Text}) {
 				o.aborted = true
 			}
 		case EventReasoningDelta:
+			o.emitted = true
 			if !emit(b.base, out, AgentEvent{Kind: AgentReasoning, Text: ev.Text}) {
 				o.aborted = true
 			}
@@ -225,6 +289,8 @@ func streamRound(
 			o.err = ev.Err
 		case EventDone:
 			o.native = ev.Native
+			o.truncated = ev.Truncated
+			o.usage = ev.Usage
 		}
 		if o.aborted {
 			o.assistant = text.String()
@@ -436,6 +502,9 @@ func malformedTool(tool Tool, strs RunStrings) (ToolOutput, error) {
 // (tiles at high detail) land in this range for the sizes enrich sends.
 const imageTokenEstimate = 1600
 
+// trimTargetPercent is how far below the limit clearing goes once it has to.
+const trimTargetPercent = 80
+
 // trimContext keeps the request under limit tokens, giving things up in the
 // order they matter least:
 //
@@ -448,14 +517,24 @@ const imageTokenEstimate = 1600
 // The system prompt, the conversation and the tool calls themselves are never
 // touched: the caller budgets history, and a tool call without its result is a
 // request no provider accepts.
+//
+// Clearing rewrites the middle of the request, and a prompt cache holds only an
+// unchanged prefix, so every clear costs the cache from that point on. Step 1
+// therefore goes down to trimTargetPercent of the limit rather than just under
+// it, and the next rounds can grow by appending instead of clearing again —
+// why Anthropic's own context editing has clear_at_least. Steps 2 and 3 cut
+// only to the limit: what they take is usually the material the answer is
+// being written from.
 func trimContext(messages []Message, limit int, strs RunStrings) {
 	if limit <= 0 {
 		return
 	}
-	over := contextTokens(messages) - limit
-	if over <= 0 {
+	used := contextTokens(messages)
+	if used <= limit {
 		return
 	}
+	slack := limit - limit*trimTargetPercent/100
+	over := used - limit + slack
 
 	current := 0
 	for i := len(messages) - 1; i >= 0; i-- {
@@ -473,10 +552,11 @@ func trimContext(messages []Message, limit int, strs RunStrings) {
 		over -= EstimateTokens(m.Content) - EstimateTokens(strs.ContextTrimNote)
 		m.Content = strs.ContextTrimNote
 	}
+	over -= slack
 
 	for i := range messages {
 		if over <= 0 {
-			return
+			break
 		}
 		m := &messages[i]
 		if len(m.Images) == 0 {

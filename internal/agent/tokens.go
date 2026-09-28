@@ -4,6 +4,7 @@
 package agent
 
 import (
+	"encoding/json"
 	"strings"
 	"unicode"
 )
@@ -63,4 +64,15 @@ func TruncateTokens(s string, budget int, note string) string {
 		}
 	}
 	return strings.TrimRightFunc(s[:cut], unicode.IsSpace) + "\n" + note
+}
+
+// ToolDefTokens is what the tools' declarations cost, estimated. They are sent
+// with every request of a run, whether or not any tool is called.
+func ToolDefTokens(tools []Tool) int {
+	n := 0
+	for _, t := range tools {
+		raw, _ := json.Marshal(t.Def)
+		n += EstimateTokens(string(raw))
+	}
+	return n
 }

@@ -129,7 +129,7 @@ func (s *CopilotService) AskStream(ctx context.Context, question string, locale 
 	// prices them and the second carries the budget they leave room for.
 	systemPrompt := buildSystemPrompt(locale, today, tagNames, currentUser.Username)
 	plan := planContext(agentSetting.ContextWindow,
-		agent.EstimateTokens(systemPrompt)+toolDefTokens(tools(0))+agent.EstimateTokens(question))
+		agent.EstimateTokens(systemPrompt)+agent.ToolDefTokens(tools(0))+agent.EstimateTokens(question))
 
 	history := historyForModel(s.loadSession(ctx, userID), locale, plan.History, loc)
 

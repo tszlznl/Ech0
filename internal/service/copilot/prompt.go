@@ -27,6 +27,7 @@ func runStringsFor(locale string) agent.RunStrings {
 			ImageNote:       "（以下是上一步检索命中的 Echo 的配图，供你结合图片内容作答）",
 			ContextTrimNote: "（早前检索结果已省略以控制长度）",
 			TruncateNote:    "（结果过长，其余部分已截断）",
+			OutputTruncated: "（输出达到模型的长度上限，回答未完成）",
 		}
 	}
 	return agent.RunStrings{
@@ -36,6 +37,7 @@ func runStringsFor(locale string) agent.RunStrings {
 		ImageNote:       "(Below are images from the Echo matched in the previous step; use them to inform your answer.)",
 		ContextTrimNote: "(Earlier search results omitted to control length.)",
 		TruncateNote:    "(Result too long; the rest was cut.)",
+		OutputTruncated: "(The model hit its output length limit; this answer is incomplete.)",
 	}
 }
 

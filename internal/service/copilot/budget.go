@@ -3,12 +3,6 @@
 
 package service
 
-import (
-	"encoding/json"
-
-	"github.com/lin-snow/ech0/internal/agent"
-)
-
 // contextPlan divides one model's context window between the parts of a chat
 // request, all in estimated tokens (agent.EstimateTokens).
 //
@@ -62,14 +56,4 @@ func planContext(window, fixedTokens int) contextPlan {
 	material := max((free-history)*6/10, minAggregateBudget)
 
 	return contextPlan{Input: input, History: history, Material: material}
-}
-
-// toolDefTokens is what the tool declarations cost on every request.
-func toolDefTokens(tools []agent.Tool) int {
-	n := 0
-	for _, t := range tools {
-		raw, _ := json.Marshal(t.Def)
-		n += agent.EstimateTokens(string(raw))
-	}
-	return n
 }
